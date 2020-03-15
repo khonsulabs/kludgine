@@ -36,6 +36,8 @@ pub mod prelude {
 
 mod internal_prelude {
     pub use super::{KludgineError, KludgineResult};
+    pub use futures::channel::{mpsc, oneshot};
     pub use futures::executor::block_on;
+    pub use futures::sink::SinkExt;
     pub use lazy_static::lazy_static;
 }

@@ -1,9 +1,5 @@
 use crate::application::{Application, CloseResponse};
 use crate::internal_prelude::*;
-use futures::channel::{
-    mpsc::{unbounded, Receiver, Sender, UnboundedReceiver, UnboundedSender},
-    oneshot,
-};
 use futures::executor::ThreadPool;
 use futures::prelude::*;
 use glutin::window::WindowId;
@@ -13,7 +9,10 @@ use std::{
     time::{Duration, Instant},
 };
 
-mod msg;
+mod request;
+mod threading;
+use request::*;
+use threading::*;
 
 pub struct ApplicationRuntime<App> {
     app: App,
@@ -21,65 +20,18 @@ pub struct ApplicationRuntime<App> {
 }
 type ApplicationRuntimeHandle<App> = Arc<Mutex<ApplicationRuntime<App>>>;
 pub type RuntimeHandle<App> = Arc<Mutex<Runtime<App>>>;
+
 pub trait RuntimeHandleMethods {
     fn run(self);
 }
 
-pub trait EventProcessor: Send + Sync {
-    fn process_event(
-        &mut self,
-        event: glutin::event::Event<()>,
-        control_flow: &mut glutin::event_loop::ControlFlow,
-        display: &glium::Display,
-    );
-}
-lazy_static! {
-    static ref GLOBAL_RUNTIME_SENDER: Mutex<Option<UnboundedSender<RuntimeRequest>>> =
-        { Mutex::new(None) };
-    static ref GLOBAL_EVENT_HANDLER: Mutex<Option<Box<dyn EventProcessor>>> = Mutex::new(None);
-}
-
-pub(crate) enum RuntimeRequest {
-    // UpdateScene,
-    // NewWindow {
-//     notify: oneshot::Sender<KludgineResult<NewWindowResponse>>,
-// },
-}
-
-impl RuntimeRequest {
-    pub async fn send(self) -> KludgineResult<()> {
-        let sender = GLOBAL_RUNTIME_SENDER.lock().expect("Error locking mutex");
-        sender
-            .as_ref()
-            .expect("Runtime not initialized")
-            .send(self)
-            .await
-            .expect("Error sending runtime request");
-        Ok(())
-    }
-}
 /// Runtime is designed to consume the main thread. For cross-platform compatibility, ensure that you call Runtime::run from thee main thread.
 pub struct Runtime<App>
 where
     App: Application,
 {
     app_runtime: ApplicationRuntimeHandle<App>,
-    receiver: Mutex<UnboundedReceiver<RuntimeRequest>>,
-}
-
-impl<App> EventProcessor for RuntimeHandle<App>
-where
-    App: Application + 'static,
-{
-    fn process_event(
-        &mut self,
-        event: glutin::event::Event<()>,
-        control_flow: &mut glutin::event_loop::ControlFlow,
-        display: &glium::Display,
-    ) {
-        let mut guard = self.lock().expect("Error locking runtime");
-        guard.process_event(event, control_flow, display);
-    }
+    receiver: Mutex<mpsc::UnboundedReceiver<RuntimeRequest>>,
 }
 
 impl<App> Runtime<App>
@@ -153,7 +105,7 @@ where
     fn run(self) {
         // Install the global event handler, and also ensure we aren't trying to initialize two runtimes
         // This is necessary because EventLoop::run requires the function/closure passed to have a `static
-        // lifetime for valid reasons. Every approach at using only local variables I could not solve, so 
+        // lifetime for valid reasons. Every approach at using only local variables I could not solve, so
         // we wrap it in a mutex. This abstraction also wraps it in dynamic dispatch, because we can't have
         // a generic-type static variable.
         {
@@ -182,44 +134,6 @@ where
                 .as_mut()
                 .process_event(event, control_flow, &display);
         });
-    }
-}
-
-trait ThreadSafeApplicationRuntime<App> {
-    fn launch(&self) -> UnboundedReceiver<RuntimeRequest>;
-    fn should_quit(&self) -> bool;
-    fn close_requested(&self) -> CloseResponse;
-}
-
-impl<App> ThreadSafeApplicationRuntime<App> for ApplicationRuntimeHandle<App>
-where
-    App: Application + 'static,
-{
-    fn launch(&self) -> UnboundedReceiver<RuntimeRequest> {
-        let thread_runtime = self.clone();
-        let (sender, receiver) = unbounded();
-        let mut global_sender = GLOBAL_RUNTIME_SENDER
-            .lock()
-            .expect("Error locking global sender");
-        assert!(global_sender.is_none());
-        *global_sender = Some(sender);
-
-        let pool = {
-            let guard = self.lock().expect("Error locking runtime");
-            guard.pool.clone()
-        };
-        pool.spawn_ok(application_main(thread_runtime));
-        receiver
-    }
-
-    fn should_quit(&self) -> bool {
-        let guard = self.lock().expect("Error locking runtime");
-        guard.app.should_quit()
-    }
-
-    fn close_requested(&self) -> CloseResponse {
-        let guard = self.lock().expect("Error locking runtime");
-        guard.app.close_requested()
     }
 }
 
