@@ -13,6 +13,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+mod msg;
+
 pub struct ApplicationRuntime<App> {
     app: App,
     pool: ThreadPool,
@@ -38,6 +40,7 @@ lazy_static! {
 }
 
 pub(crate) enum RuntimeRequest {
+    // UpdateScene,
     // NewWindow {
 //     notify: oneshot::Sender<KludgineResult<NewWindowResponse>>,
 // },
@@ -54,10 +57,6 @@ impl RuntimeRequest {
             .expect("Error sending runtime request");
         Ok(())
     }
-}
-
-pub(crate) struct NewWindowResponse {
-    pub id: WindowId,
 }
 /// Runtime is designed to consume the main thread. For cross-platform compatibility, ensure that you call Runtime::run from thee main thread.
 pub struct Runtime<App>
@@ -98,6 +97,8 @@ where
             receiver: Mutex::new(receiver),
         }))
     }
+
+    /// Checks that the handle i
     fn process_event(
         &mut self,
         event: glutin::event::Event<()>,
@@ -150,6 +151,11 @@ where
     App: Application + 'static,
 {
     fn run(self) {
+        // Install the global event handler, and also ensure we aren't trying to initialize two runtimes
+        // This is necessary because EventLoop::run requires the function/closure passed to have a `static
+        // lifetime for valid reasons. Every approach at using only local variables I could not solve, so 
+        // we wrap it in a mutex. This abstraction also wraps it in dynamic dispatch, because we can't have
+        // a generic-type static variable.
         {
             let mut event_handler = GLOBAL_EVENT_HANDLER
                 .lock()
@@ -160,13 +166,11 @@ where
 
         let event_loop = glutin::event_loop::EventLoop::new();
         let wb = glutin::window::WindowBuilder::new()
-            .with_title("Cosmic Verge")
-            .with_inner_size(glutin::dpi::LogicalSize::new(1920.0, 1080.0));
+            .with_title("Cosmic Verge") // TODO Remove hardcoded name
+            .with_inner_size(glutin::dpi::LogicalSize::new(1920.0, 1080.0)); // TODO remove hardcoded size
         let cb = glutin::ContextBuilder::new();
 
-        // Load the OpenGL function pointers
         let display = glium::Display::new(wb, cb, &event_loop).unwrap();
-
         event_loop.run(move |event, _, control_flow| {
             let mut event_handler_guard = GLOBAL_EVENT_HANDLER
                 .lock()
