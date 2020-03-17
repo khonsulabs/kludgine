@@ -3,6 +3,7 @@ use crate::internal_prelude::*;
 use crate::scene2d::Scene2D;
 use futures::{executor::ThreadPool, future::Future};
 use std::{
+    borrow::Borrow,
     sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
@@ -21,23 +22,25 @@ where
     App: Application + 'static,
 {
     fn launch(
-        mut self,
+        self,
     ) -> (
         mpsc::UnboundedReceiver<RuntimeRequest>,
         mpsc::UnboundedSender<RuntimeEvent>,
     ) {
         let (event_sender, event_receiver) = mpsc::unbounded();
         let (request_sender, request_receiver) = mpsc::unbounded();
-        let mut global_sender = GLOBAL_RUNTIME_SENDER
-            .lock()
-            .expect("Error locking global sender");
-        assert!(global_sender.is_none());
-        *global_sender = Some(request_sender);
-        let mut global_receiver = GLOBAL_RUNTIME_RECEIVER
-            .lock()
-            .expect("Error locking global receiver");
-        assert!(global_sender.is_none());
-        *global_receiver = Some(event_receiver);
+        {
+            let mut global_sender = GLOBAL_RUNTIME_SENDER
+                .lock()
+                .expect("Error locking global sender");
+            assert!(global_sender.is_none());
+            *global_sender = Some(request_sender);
+            let mut global_receiver = GLOBAL_RUNTIME_RECEIVER
+                .lock()
+                .expect("Error locking global receiver");
+            assert!(global_receiver.is_none());
+            *global_receiver = Some(event_receiver);
+        }
         Runtime::spawn(self.async_main());
         (request_receiver, event_sender)
     }
@@ -59,6 +62,23 @@ where
     {
         let mut scene2d = Scene2D::new();
         loop {
+            {
+                while let Some(event) = {
+                    let mut guard = GLOBAL_RUNTIME_RECEIVER
+                        .lock()
+                        .expect("Error locking runtime reciver");
+                    let event_receiver = guard.as_mut().expect("Receiver was not set");
+                    event_receiver.try_next().unwrap_or_default()
+                } {
+                    match event {
+                        RuntimeEvent::CloseRequested => {
+                            if let CloseResponse::Close = self.app.close_requested().await {
+                                return RuntimeRequest::Quit.send().await;
+                            }
+                        }
+                    }
+                }
+            }
             self.app.render_2d(&mut scene2d).await?;
         }
         Ok(())
@@ -73,13 +93,13 @@ impl EventProcessor for Runtime {
         control_flow: &mut glutin::event_loop::ControlFlow,
         display: &glium::Display,
     ) {
-        // TODO
-        // if self.app_runtime.should_quit() {
-        //     *control_flow = glutin::event_loop::ControlFlow::Exit;
-        //     return;
-        // }
         while let Some(request) = self.request_receiver.try_next().unwrap_or_default() {
-            match request {}
+            match request {
+                RuntimeRequest::Quit => {
+                    *control_flow = glutin::event_loop::ControlFlow::Exit;
+                    return;
+                }
+            }
         }
 
         let now = Instant::now();
@@ -87,10 +107,8 @@ impl EventProcessor for Runtime {
         let render_frame = match event {
             glutin::event::Event::WindowEvent { event, .. } => match event {
                 glutin::event::WindowEvent::CloseRequested => {
-                    todo!();
-                    // if let CloseResponse::Close = self.app_runtime.close_requested() {
-                    //     *control_flow = glutin::event_loop::ControlFlow::Exit;
-                    // }
+                    block_on(self.event_sender.send(RuntimeEvent::CloseRequested))
+                        .unwrap_or_default();
                     false
                 }
                 _ => false,
@@ -172,5 +190,13 @@ impl Runtime {
         });
     }
 
-    pub fn spawn<Fut: Future>(future: Fut) {}
+    pub fn spawn<Fut: Future<Output = ()> + Send + 'static>(future: Fut) {
+        let pool = {
+            let guard = GLOBAL_THREAD_POOL
+                .lock()
+                .expect("Error locking thread pool");
+            guard.as_ref().expect("No thread pool created yet").clone()
+        };
+        pool.spawn_ok(future);
+    }
 }

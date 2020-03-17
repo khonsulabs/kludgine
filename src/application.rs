@@ -10,9 +10,8 @@ pub enum CloseResponse {
 pub trait Application: Sized + Send + Sync {
     // Methods called from the main thread
     fn new() -> Self;
-    fn should_quit(&self) -> bool;
 
-    fn close_requested(&self) -> CloseResponse {
+    async fn close_requested(&self) -> CloseResponse {
         CloseResponse::Close
     }
 
