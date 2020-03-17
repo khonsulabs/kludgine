@@ -20,3 +20,5 @@ impl RuntimeRequest {
         Ok(())
     }
 }
+
+pub(crate) enum RuntimeEvent {}

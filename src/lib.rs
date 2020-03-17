@@ -6,6 +6,7 @@ pub extern crate glutin;
 
 pub mod application;
 pub mod runtime;
+pub mod scene2d;
 
 #[cfg(test)]
 mod tests {
@@ -26,11 +27,7 @@ pub enum KludgineError {
 pub type KludgineResult<T> = Result<T, KludgineError>;
 
 pub mod prelude {
-    pub use super::{
-        application::Application,
-        glium, glutin,
-        runtime::{Runtime, RuntimeHandleMethods},
-    };
+    pub use super::{application::Application, glium, glutin, runtime::Runtime};
     pub use async_trait::async_trait;
 }
 
