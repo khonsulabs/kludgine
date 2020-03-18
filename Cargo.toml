@@ -15,3 +15,8 @@ async-std = "1"
 lazy_static = "1"
 thiserror="1"
 generational-arena = "0.2"
+mint="0.5"
+nalgebra={version="*", features=["mint"]}
+image="*"
+lyon="*"
+euclid={version="*", features=["mint"]}
