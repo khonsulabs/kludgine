@@ -17,7 +17,7 @@ pub trait Application: Sized + Send + Sync {
 
     // Async methods
     async fn initialize(&mut self);
-    async fn render_2d(&self, _scene: &mut Scene2D) -> KludgineResult<()> {
+    async fn render_2d(&mut self, _scene: &mut Scene2D) -> KludgineResult<()> {
         Ok(())
     }
 }

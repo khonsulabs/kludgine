@@ -1,8 +1,4 @@
-use super::{
-    request::{RuntimeEvent, RuntimeRequest},
-    CloseResponse, Runtime,
-};
-use crate::application::Application;
+use super::request::{RuntimeEvent, RuntimeRequest};
 use crate::internal_prelude::*;
 use futures::executor::ThreadPool;
 use lazy_static::lazy_static;

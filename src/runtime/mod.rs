@@ -2,11 +2,7 @@ use crate::application::{Application, CloseResponse};
 use crate::internal_prelude::*;
 use crate::scene2d::Scene2D;
 use futures::{executor::ThreadPool, future::Future};
-use std::{
-    borrow::Borrow,
-    sync::{Arc, Mutex},
-    time::{Duration, Instant},
-};
+use std::time::{Duration, Instant};
 
 mod request;
 mod threading;

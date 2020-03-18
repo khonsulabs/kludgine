@@ -1,19 +1,18 @@
-use euclid::{Point2D, Rect, Size2D, UnknownUnit};
+use crate::material::Material;
+use cgmath::Rad;
 use generational_arena::Arena;
 use lyon::tessellation::{
-    basic_shapes::stroke_rectangle, BasicVertexConstructor, Count, FillAttributes,
-    FillGeometryBuilder, GeometryBuilder, GeometryBuilderError, StrokeAttributes,
-    StrokeGeometryBuilder, StrokeOptions, VertexBuffers, VertexId,
+    basic_shapes::stroke_rectangle, Count, FillAttributes, FillGeometryBuilder, GeometryBuilder,
+    GeometryBuilderError, StrokeAttributes, StrokeGeometryBuilder, StrokeOptions, VertexId,
 };
-use nalgebra::{Vector2, Vector4};
 use std::sync::{Arc, Mutex};
 
-pub type Point = Point2D<f32, UnknownUnit>;
-pub type Rectangle = Rect<f32, UnknownUnit>;
-pub type Size = Size2D<f32, UnknownUnit>;
+pub type Point2D = euclid::Point2D<f32, euclid::UnknownUnit>;
+pub type Rect = euclid::Rect<f32, euclid::UnknownUnit>;
+pub type Size2D = euclid::Size2D<f32, euclid::UnknownUnit>;
 
 pub struct Scene2D {
-    arena: Mutex<Arena<()>>,
+    arena: Mutex<Arena<Arc<Mutex<MeshStorage>>>>,
 }
 
 impl Scene2D {
@@ -30,6 +29,21 @@ impl Scene2D {
 
 pub struct ScreenScene<'a> {
     scene: &'a Scene2D,
+}
+
+impl<'a> ScreenScene<'a> {
+    pub fn create_mesh(&self, shape: Shape, material: Material) -> Mesh2D {
+        let storage = Arc::new(Mutex::new(MeshStorage {
+            shape,
+            material,
+            angle: Rad(0.0),
+            scale: 1.0,
+            position: Point2D::new(0.0, 0.0),
+        }));
+        let mut arena = self.scene.arena.lock().expect("Error locking Arena");
+        let id = arena.insert(storage.clone());
+        Mesh2D { id, storage }
+    }
 }
 
 pub struct Mesh {}
@@ -62,7 +76,7 @@ impl GeometryBuilder for Shape {
 impl FillGeometryBuilder for Shape {
     fn add_fill_vertex(
         &mut self,
-        position: Point,
+        position: Point2D,
         _: FillAttributes,
     ) -> Result<VertexId, GeometryBuilderError> {
         let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
@@ -77,7 +91,7 @@ impl FillGeometryBuilder for Shape {
 impl StrokeGeometryBuilder for Shape {
     fn add_stroke_vertex(
         &mut self,
-        position: Point,
+        position: Point2D,
         _: StrokeAttributes,
     ) -> Result<VertexId, GeometryBuilderError> {
         let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
@@ -95,13 +109,13 @@ pub struct Shape {
 
 #[derive(Default)]
 struct ShapeStorage {
-    vertices: Vec<Point>,
-    texture_coordinates: Vec<Point>,
+    vertices: Vec<Point2D>,
+    texture_coordinates: Vec<Point2D>,
     triangles: Vec<(VertexId, VertexId, VertexId)>,
 }
 
 impl Shape {
-    pub fn rect(r: &Rectangle) -> Self {
+    pub fn rect(r: &Rect) -> Self {
         let mut shape = Self::default();
         stroke_rectangle(r, &StrokeOptions::default(), &mut shape)
             .expect("Error generating rectangle");
@@ -115,4 +129,22 @@ impl Default for Shape {
             storage: Arc::new(Mutex::new(ShapeStorage::default())),
         }
     }
+}
+
+#[derive(Clone)]
+pub struct Mesh2D {
+    pub id: generational_arena::Index,
+    storage: Arc<Mutex<MeshStorage>>,
+}
+
+struct MeshStorage {
+    pub shape: Shape,
+    pub material: Material,
+    pub position: Point2D,
+    pub scale: f32,
+    pub angle: Rad<f32>,
+}
+
+pub mod prelude {
+    pub use super::{Mesh2D, Point2D, Rect, Scene2D, ScreenScene, Shape, Size2D};
 }
