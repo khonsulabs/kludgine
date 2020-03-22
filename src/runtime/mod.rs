@@ -105,14 +105,11 @@ impl EventProcessor for Runtime {
                 }
             }
         }
-        match event {
-            glutin::event::Event::WindowEvent { window_id, event } => {
-                crate::window::RuntimeWindow::handle_event(window_id, event);
-            }
-            _ => {}
-        };
+        crate::window::RuntimeWindow::process_events(event);
 
-        crate::window::RuntimeWindow::render_all();
+        if render_frame {
+            crate::window::RuntimeWindow::render_all();
+        }
     }
 }
 

@@ -51,6 +51,7 @@ impl WindowMessage {
 }
 
 pub(crate) enum WindowEvent {
+    CloseRequested,
     Resize(Size2d),
 }
 
@@ -171,6 +172,12 @@ impl RuntimeWindow {
                     WindowEvent::Resize(size) => {
                         scene2d.size = size;
                     }
+                    WindowEvent::CloseRequested => {
+                        if let CloseResponse::Close = window.close_requested().await {
+                            WindowMessage::Close.send_to(id).await?;
+                            return Ok(());
+                        }
+                    }
                 }
             }
             window.render_2d(&mut scene2d).await?;
@@ -195,15 +202,30 @@ impl RuntimeWindow {
             .expect("Error running window loop.")
     }
 
-    pub(crate) fn handle_event(id: WindowId, event: glutin::event::WindowEvent) {
+    pub(crate) fn process_events(event: glutin::event::Event<()>) {
         WINDOWS.with(|windows| {
-            if let Some(window) = windows.borrow_mut().get_mut(&id) {
-                window.process_event(event);
+            match event {
+                glutin::event::Event::WindowEvent { window_id, event } => {
+                    if let Some(window) = windows.borrow_mut().get_mut(&window_id) {
+                        window.process_event(event);
+                    }
+                }
+                _ => {}
+            }
+
+            {
+                for window in windows.borrow_mut().values_mut() {
+                    window.receive_messages();
+                }
+            }
+
+            {
+                windows.borrow_mut().retain(|k, w| !w.should_close);
             }
         })
     }
 
-    pub(crate) fn process_event(&mut self, event: glutin::event::WindowEvent) {
+    pub(crate) fn receive_messages(&mut self) {
         while let Some(request) = self.receiver.try_next().unwrap_or_default() {
             match request {
                 WindowMessage::Close => {
@@ -218,18 +240,27 @@ impl RuntimeWindow {
                     self.wait_for_scene = false;
                 }
             }
+        }
 
-            let size = self.size();
-            let size_changed = match &self.last_known_size {
-                Some(last_known_size) => last_known_size != &size,
-                None => true,
-            };
+        let size = self.size();
+        let size_changed = match &self.last_known_size {
+            Some(last_known_size) => last_known_size != &size,
+            None => true,
+        };
 
-            if size_changed {
-                self.wait_for_scene = true;
-                self.last_known_size = Some(size);
-                block_on(self.event_sender.send(WindowEvent::Resize(size))).unwrap_or_default();
+        if size_changed {
+            self.wait_for_scene = true;
+            self.last_known_size = Some(size);
+            block_on(self.event_sender.send(WindowEvent::Resize(size))).unwrap_or_default();
+        }
+    }
+
+    pub(crate) fn process_event(&mut self, event: glutin::event::WindowEvent) {
+        match event {
+            glutin::event::WindowEvent::CloseRequested => {
+                block_on(self.event_sender.send(WindowEvent::CloseRequested)).unwrap_or_default();
             }
+            _ => {}
         }
     }
 
