@@ -7,7 +7,6 @@ pub(crate) enum RuntimeRequest {
     //     notify: oneshot::Sender<KludgineResult<NewWindowResponse>>,
     // },
     Quit,
-    UpdateScene(FlattenedScene),
 }
 
 impl RuntimeRequest {
@@ -24,7 +23,4 @@ impl RuntimeRequest {
     }
 }
 
-pub(crate) enum RuntimeEvent {
-    CloseRequested,
-    UpdateDimensions { size: Size2d },
-}
+pub(crate) enum RuntimeEvent {}

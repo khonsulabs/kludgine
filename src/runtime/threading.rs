@@ -10,7 +10,6 @@ pub trait EventProcessor: Send + Sync {
         &mut self,
         event: glutin::event::Event<()>,
         control_flow: &mut glutin::event_loop::ControlFlow,
-        window: &mut Window,
     );
 }
 lazy_static! {
