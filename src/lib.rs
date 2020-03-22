@@ -26,8 +26,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum KludgineError {
-    #[error("error receiving response from channel")]
-    InternalCommunicationError(#[from] futures::channel::oneshot::Canceled),
+    #[error("error sending a WindowMessage to a Window: {0}")]
+    InternalWindowMessageSendError(String),
 }
 
 pub type KludgineResult<T> = Result<T, KludgineError>;
@@ -35,7 +35,7 @@ pub type KludgineResult<T> = Result<T, KludgineError>;
 pub mod prelude {
     pub use super::{
         application::Application, glutin, material::Material, math::*, runtime::Runtime,
-        scene2d::prelude::*, KludgineError, KludgineResult,
+        scene2d::prelude::*, window::Window, KludgineError, KludgineResult,
     };
     pub use async_trait::async_trait;
     pub use color_processing::Color;

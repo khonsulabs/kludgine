@@ -1,26 +1,28 @@
 use crate::internal_prelude::*;
 use crate::{
-    runtime::{flattened_scene::FlattenedScene, Runtime},
+    runtime::{flattened_scene::FlattenedScene, request::RuntimeRequest, Runtime},
     scene2d::Scene2d,
 };
 use glutin::{
-    event_loop::EventLoop,
+    event_loop::EventLoopWindowTarget,
     window::{WindowBuilder, WindowId},
-    PossiblyCurrent, WindowedContext,
+    NotCurrent, PossiblyCurrent, WindowedContext,
 };
 use std::{
+    borrow::BorrowMut,
+    cell::RefCell,
     collections::HashMap,
     sync::{Arc, Mutex, Once},
 };
 static LOAD_SUPPORT: Once = Once::new();
 
 lazy_static! {
-    static ref WINDOW_CHANNELS: Mutex<HashMap<WindowId, mpsc::UnboundedSender<WindowMessage>>> =
-        { Mutex::new(HashMap::new()) };
+    static ref WINDOW_CHANNELS: Arc<Mutex<HashMap<WindowId, mpsc::UnboundedSender<WindowMessage>>>> =
+        { Arc::new(Mutex::new(HashMap::new())) };
 }
 
 thread_local! {
-    static WINDOWS: HashMap<WindowId, RuntimeWindow> = HashMap::new();
+    static WINDOWS: RefCell<HashMap<WindowId, RuntimeWindow>> = RefCell::new(HashMap::new());
 }
 
 pub(crate) enum WindowMessage {
@@ -28,12 +30,66 @@ pub(crate) enum WindowMessage {
     UpdateScene(FlattenedScene),
 }
 
+impl WindowMessage {
+    pub async fn send_to(self, id: WindowId) -> KludgineResult<()> {
+        let mut sender = {
+            let mut channels = WINDOW_CHANNELS
+                .lock()
+                .expect("Error locking window channels");
+            if let Some(sender) = channels.get_mut(&id) {
+                sender.clone()
+            } else {
+                return Err(KludgineError::InternalWindowMessageSendError(
+                    "Channel not found for id".to_owned(),
+                ));
+            }
+        };
+
+        sender.send(self).await.unwrap_or_default();
+        Ok(())
+    }
+}
+
 pub(crate) enum WindowEvent {
     Resize(Size2d),
 }
 
-pub struct RuntimeWindow {
-    context: WindowedContext<PossiblyCurrent>,
+enum TrackedContext {
+    Current(WindowedContext<PossiblyCurrent>),
+    NotCurrent(WindowedContext<NotCurrent>),
+}
+
+impl TrackedContext {
+    pub fn window(&self) -> &glutin::window::Window {
+        match self {
+            TrackedContext::Current(ctx) => ctx.window(),
+            TrackedContext::NotCurrent(ctx) => ctx.window(),
+        }
+    }
+
+    pub fn make_current(self) -> Self {
+        match self {
+            TrackedContext::Current(_) => {
+                panic!("Attempting to make the current context current again")
+            }
+            TrackedContext::NotCurrent(ctx) => {
+                TrackedContext::Current(unsafe { ctx.make_current() }.unwrap())
+            }
+        }
+    }
+
+    pub fn treat_as_not_current(self) -> Self {
+        match self {
+            TrackedContext::Current(ctx) => {
+                TrackedContext::NotCurrent(unsafe { ctx.treat_as_not_current() })
+            }
+            TrackedContext::NotCurrent(ctx) => TrackedContext::NotCurrent(ctx),
+        }
+    }
+}
+
+pub(crate) struct RuntimeWindow {
+    context: TrackedContext,
     receiver: mpsc::UnboundedReceiver<WindowMessage>,
     event_sender: mpsc::UnboundedSender<WindowEvent>,
     scene: Option<FlattenedScene>,
@@ -48,8 +104,7 @@ pub enum CloseResponse {
 }
 
 #[async_trait]
-pub trait Window: Send + Sync {
-    async fn new() -> Self;
+pub trait Window: Send + Sync + 'static {
     async fn close_requested(&self) -> CloseResponse {
         CloseResponse::Close
     }
@@ -60,9 +115,9 @@ pub trait Window: Send + Sync {
 }
 
 impl RuntimeWindow {
-    pub(crate) fn open<T>(wb: WindowBuilder, event_loop: &EventLoop<()>)
+    pub(crate) fn open<T>(wb: WindowBuilder, event_loop: &EventLoopWindowTarget<()>, window: Box<T>)
     where
-        T: Window + 'static,
+        T: Window + ?Sized,
     {
         let windowed_context = glutin::ContextBuilder::new()
             .build_windowed(wb, &event_loop)
@@ -73,6 +128,7 @@ impl RuntimeWindow {
         Runtime::spawn(Self::window_main::<T>(
             context.window().id(),
             event_receiver,
+            window,
         ));
 
         {
@@ -84,11 +140,11 @@ impl RuntimeWindow {
 
         LOAD_SUPPORT.call_once(|| gl::load_with(|s| context.get_proc_address(s) as *const _));
 
-        WINDOWS.with(|windows| {
-            windows.insert(
+        WINDOWS.with(|mut windows| {
+            windows.borrow_mut().insert(
                 context.window().id(),
                 Self {
-                    context,
+                    context: TrackedContext::NotCurrent(unsafe { context.treat_as_not_current() }),
                     receiver: message_receiver,
                     scene: None,
                     should_close: false,
@@ -102,12 +158,12 @@ impl RuntimeWindow {
 
     async fn window_loop<T>(
         id: WindowId,
-        event_receiver: mpsc::UnboundedReceiver<WindowEvent>,
+        mut event_receiver: mpsc::UnboundedReceiver<WindowEvent>,
+        mut window: Box<T>,
     ) -> KludgineResult<()>
     where
-        T: Window + 'static,
+        T: Window + ?Sized,
     {
-        let window = T::new().await;
         let mut scene2d = Scene2d::new();
         loop {
             while let Some(event) = event_receiver.try_next().unwrap_or_default() {
@@ -121,28 +177,33 @@ impl RuntimeWindow {
             let mut flattened_scene = FlattenedScene::default();
             flattened_scene.flatten_2d(&scene2d);
 
-            WindowMessage::UpdateScene(flattened_scene).send().await?;
+            WindowMessage::UpdateScene(flattened_scene)
+                .send_to(id)
+                .await?;
         }
     }
 
-    async fn window_main<T>(id: WindowId, event_receiver: mpsc::UnboundedReceiver<WindowEvent>)
-    where
-        T: Window + 'static,
+    async fn window_main<T>(
+        id: WindowId,
+        event_receiver: mpsc::UnboundedReceiver<WindowEvent>,
+        window: Box<T>,
+    ) where
+        T: Window + ?Sized,
     {
-        Self::window_loop::<T>(id, event_receiver)
+        Self::window_loop::<T>(id, event_receiver, window)
             .await
             .expect("Error running window loop.")
     }
 
     pub(crate) fn handle_event(id: WindowId, event: glutin::event::WindowEvent) {
         WINDOWS.with(|windows| {
-            if let Some(window) = windows.get(&id) {
+            if let Some(window) = windows.borrow_mut().get_mut(&id) {
                 window.process_event(event);
             }
         })
     }
 
-    pub(crate) fn process_event(&mut self, event: glutin::event::Event<()>) {
+    pub(crate) fn process_event(&mut self, event: glutin::event::WindowEvent) {
         while let Some(request) = self.receiver.try_next().unwrap_or_default() {
             match request {
                 WindowMessage::Close => {
@@ -173,20 +234,31 @@ impl RuntimeWindow {
     }
 
     pub(crate) fn render_all() {
-        WINDOWS.with(|windows| {
-            for window in windows.iter() {
-                window.render();
-            }
-        })
-    }
+        WINDOWS.with(|refcell| {
+            let windows = refcell.replace(HashMap::new());
+            let windows_to_render = windows.into_iter().map(|(_, w)| w).collect::<Vec<_>>();
+            let mut last_window: Option<RuntimeWindow> = None;
+            let mut finished_windows = HashMap::new();
 
-    fn render(&mut self) {
-        let context = self.context.make_current().expect("Error swapping context");
-        unsafe {
-            gl::ClearColor(0.2, 0.3, 0.3, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
-        }
-        if !self.wait_for_scene {}
+            for mut window in windows_to_render.into_iter() {
+                window.context = window.context.make_current();
+                if let Some(mut lw) = last_window {
+                    lw.context = lw.context.treat_as_not_current();
+                    finished_windows.insert(lw.context.window().id(), lw);
+                }
+                unsafe {
+                    gl::ClearColor(0.2, 0.3, 0.3, 1.0);
+                    gl::Clear(gl::COLOR_BUFFER_BIT);
+                }
+                last_window = Some(window);
+            }
+            if let Some(mut lw) = last_window {
+                lw.context = lw.context.treat_as_not_current();
+                finished_windows.insert(lw.context.window().id(), lw);
+            }
+
+            refcell.replace(finished_windows);
+        })
     }
 
     pub fn size(&self) -> Size2d {

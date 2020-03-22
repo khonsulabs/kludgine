@@ -1,8 +1,9 @@
 use crate::application::Application;
 use crate::internal_prelude::*;
 use crate::scene2d::Scene2d;
-use crate::window::Window;
+use crate::window::{RuntimeWindow, Window};
 use futures::{executor::ThreadPool, future::Future};
+use glutin::window::WindowBuilder;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -10,7 +11,7 @@ use std::{
 };
 
 pub(crate) mod flattened_scene;
-mod request;
+pub(crate) mod request;
 mod threading;
 use flattened_scene::FlattenedScene;
 use request::*;
@@ -52,7 +53,7 @@ where
     where
         App: Application + 'static,
     {
-        self.app.initialize();
+        self.app.initialize().await;
 
         self.run()
             .await
@@ -83,6 +84,7 @@ where
 impl EventProcessor for Runtime {
     fn process_event(
         &mut self,
+        event_loop: &glutin::event_loop::EventLoopWindowTarget<()>,
         event: glutin::event::Event<()>,
         control_flow: &mut glutin::event_loop::ControlFlow,
     ) {
@@ -94,6 +96,9 @@ impl EventProcessor for Runtime {
             > 16_666_667;
         while let Some(request) = self.request_receiver.try_next().unwrap_or_default() {
             match request {
+                RuntimeRequest::OpenWindow { window, builder } => {
+                    RuntimeWindow::open(builder, &event_loop, window);
+                }
                 RuntimeRequest::Quit => {
                     *control_flow = glutin::event_loop::ControlFlow::Exit;
                     return;
@@ -155,7 +160,7 @@ impl Runtime {
         }
     }
 
-    pub fn run(self) {
+    pub fn run(self) -> ! {
         // Install the global event handler, and also ensure we aren't trying to initialize two runtimes
         // This is necessary because EventLoop::run requires the function/closure passed to have a `static
         // lifetime for valid reasons. Every approach at using only local variables I could not solve, so
@@ -170,14 +175,16 @@ impl Runtime {
         }
 
         let event_loop = glutin::event_loop::EventLoop::new();
-        event_loop.run(move |event, _, control_flow| {
+        event_loop.run(move |event, event_loop, control_flow| {
             let mut event_handler_guard = GLOBAL_EVENT_HANDLER
                 .lock()
                 .expect("Error locking main event handler");
             let event_handler = event_handler_guard
                 .as_mut()
                 .expect("No event handler installed");
-            event_handler.as_mut().process_event(event, control_flow);
+            event_handler
+                .as_mut()
+                .process_event(&event_loop, event, control_flow);
         });
     }
 
@@ -189,5 +196,18 @@ impl Runtime {
             guard.as_ref().expect("No thread pool created yet").clone()
         };
         pool.spawn_ok(future);
+    }
+
+    pub async fn open_window<T>(builder: WindowBuilder, window: T)
+    where
+        T: Window + Sized,
+    {
+        RuntimeRequest::OpenWindow {
+            builder,
+            window: Box::new(window),
+        }
+        .send()
+        .await
+        .unwrap_or_default();
     }
 }

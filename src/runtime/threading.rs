@@ -8,6 +8,7 @@ use std::sync::Mutex;
 pub trait EventProcessor: Send + Sync {
     fn process_event(
         &mut self,
+        event_loop: &glutin::event_loop::EventLoopWindowTarget<()>,
         event: glutin::event::Event<()>,
         control_flow: &mut glutin::event_loop::ControlFlow,
     );
