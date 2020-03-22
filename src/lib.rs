@@ -2,14 +2,17 @@
 extern crate async_trait;
 #[macro_use]
 extern crate educe;
+#[macro_use]
+extern crate log;
 
-pub extern crate glium;
 pub extern crate glutin;
 
 pub mod application;
 pub mod material;
+pub mod math;
 pub mod runtime;
 pub mod scene2d;
+pub mod window;
 
 #[cfg(test)]
 mod tests {
@@ -31,7 +34,7 @@ pub type KludgineResult<T> = Result<T, KludgineError>;
 
 pub mod prelude {
     pub use super::{
-        application::Application, glium, glutin, material::Material, runtime::Runtime,
+        application::Application, glutin, material::Material, math::*, runtime::Runtime,
         scene2d::prelude::*, KludgineError, KludgineResult,
     };
     pub use async_trait::async_trait;
@@ -39,7 +42,7 @@ pub mod prelude {
 }
 
 mod internal_prelude {
-    pub use super::{KludgineError, KludgineResult};
+    pub use super::{math::*, KludgineError, KludgineResult};
     pub use color_processing::Color;
     pub use futures::channel::{mpsc, oneshot};
     pub use futures::executor::block_on;

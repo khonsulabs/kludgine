@@ -1,4 +1,4 @@
-use super::threading::GLOBAL_RUNTIME_SENDER;
+use super::{flattened_scene::FlattenedScene, threading::GLOBAL_RUNTIME_SENDER};
 use crate::internal_prelude::*;
 
 pub(crate) enum RuntimeRequest {
@@ -7,6 +7,7 @@ pub(crate) enum RuntimeRequest {
     //     notify: oneshot::Sender<KludgineResult<NewWindowResponse>>,
     // },
     Quit,
+    UpdateScene(FlattenedScene),
 }
 
 impl RuntimeRequest {
@@ -25,4 +26,5 @@ impl RuntimeRequest {
 
 pub(crate) enum RuntimeEvent {
     CloseRequested,
+    UpdateDimensions { size: Size2d },
 }

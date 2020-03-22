@@ -1,5 +1,5 @@
 use crate::internal_prelude::*;
-use crate::scene2d::Scene2D;
+use crate::scene2d::Scene2d;
 
 pub enum CloseResponse {
     RemainOpen,
@@ -17,7 +17,7 @@ pub trait Application: Sized + Send + Sync {
 
     // Async methods
     async fn initialize(&mut self);
-    async fn render_2d(&mut self, _scene: &mut Scene2D) -> KludgineResult<()> {
+    async fn render_2d(&mut self, _scene: &mut Scene2d) -> KludgineResult<()> {
         Ok(())
     }
 }

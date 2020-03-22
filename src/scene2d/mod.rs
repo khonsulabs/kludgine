@@ -1,48 +1,96 @@
+use crate::internal_prelude::*;
 use crate::material::Material;
 use cgmath::Rad;
+use cgmath::{prelude::*, Matrix4, Point3, Quaternion};
 use generational_arena::Arena;
 use lyon::tessellation::{
     basic_shapes::stroke_rectangle, Count, FillAttributes, FillGeometryBuilder, GeometryBuilder,
     GeometryBuilderError, StrokeAttributes, StrokeGeometryBuilder, StrokeOptions, VertexId,
 };
-use std::sync::{Arc, Mutex};
+use std::{
+    cmp::Ordering,
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
-pub type Point2D = euclid::Point2D<f32, euclid::UnknownUnit>;
-pub type Rect = euclid::Rect<f32, euclid::UnknownUnit>;
-pub type Size2D = euclid::Size2D<f32, euclid::UnknownUnit>;
-
-pub struct Scene2D {
-    arena: Mutex<Arena<Arc<Mutex<MeshStorage>>>>,
+pub struct Scene2d {
+    pub(crate) arena: Arena<Arc<Mutex<MeshStorage>>>,
+    pub(crate) placements: HashMap<generational_arena::Index, Placement2d>,
+    pub(crate) size: Size2d,
 }
 
-impl Scene2D {
+pub struct Scene2dNode {}
+
+impl Scene2d {
     pub fn new() -> Self {
         Self {
-            arena: Mutex::new(Arena::new()),
+            arena: Arena::new(),
+            size: Size2d::default(),
+            placements: HashMap::new(),
         }
     }
 
-    pub fn screen<'a>(&'a self) -> ScreenScene<'a> {
+    pub fn screen<'a>(&'a mut self) -> ScreenScene<'a> {
         ScreenScene { scene: self }
+    }
+
+    pub fn size(&self) -> Size2d {
+        self.size
+    }
+
+    pub(crate) fn projection(&self, location: &Placement2dLocation) -> Matrix4<f32> {
+        match location {
+            Placement2dLocation::Screen => {
+                cgmath::ortho(0.0, self.size.width, self.size.height, 0.0, 1.0, -1.0)
+            }
+            Placement2dLocation::Z(_z) => todo!(), // need camera, cgmath::perspective(110.0, self.size.width / self.size.height, , far),
+        }
     }
 }
 
 pub struct ScreenScene<'a> {
-    scene: &'a Scene2D,
+    scene: &'a mut Scene2d,
 }
 
 impl<'a> ScreenScene<'a> {
-    pub fn create_mesh(&self, shape: Shape, material: Material) -> Mesh2D {
+    pub fn create_mesh(&mut self, shape: Shape, material: Material) -> Mesh2d {
         let storage = Arc::new(Mutex::new(MeshStorage {
             shape,
             material,
             angle: Rad(0.0),
             scale: 1.0,
-            position: Point2D::new(0.0, 0.0),
+            position: Point2d::new(0.0, 0.0),
         }));
-        let mut arena = self.scene.arena.lock().expect("Error locking Arena");
-        let id = arena.insert(storage.clone());
-        Mesh2D { id, storage }
+        let id = self.scene.arena.insert(storage.clone());
+        Mesh2d { id, storage }
+    }
+
+    pub fn place_mesh(
+        &mut self,
+        mesh: Mesh2d,
+        relative_to: Option<generational_arena::Index>,
+        position: Point2d,
+        angle: Rad<f32>,
+        scale: f32,
+    ) {
+        self.scene
+            .placements
+            .entry(mesh.id)
+            .and_modify(|p| {
+                p.relative_to = relative_to;
+                p.position = position;
+                p.angle = angle;
+                p.scale = scale;
+                p.location = Placement2dLocation::Screen;
+            })
+            .or_insert_with(|| Placement2d {
+                mesh,
+                relative_to,
+                position,
+                angle,
+                scale,
+                location: Placement2dLocation::Screen,
+            });
     }
 }
 
@@ -76,7 +124,7 @@ impl GeometryBuilder for Shape {
 impl FillGeometryBuilder for Shape {
     fn add_fill_vertex(
         &mut self,
-        position: Point2D,
+        position: Point2d,
         _: FillAttributes,
     ) -> Result<VertexId, GeometryBuilderError> {
         let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
@@ -91,7 +139,7 @@ impl FillGeometryBuilder for Shape {
 impl StrokeGeometryBuilder for Shape {
     fn add_stroke_vertex(
         &mut self,
-        position: Point2D,
+        position: Point2d,
         _: StrokeAttributes,
     ) -> Result<VertexId, GeometryBuilderError> {
         let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
@@ -109,8 +157,8 @@ pub struct Shape {
 
 #[derive(Default)]
 struct ShapeStorage {
-    vertices: Vec<Point2D>,
-    texture_coordinates: Vec<Point2D>,
+    vertices: Vec<Point2d>,
+    texture_coordinates: Vec<Point2d>,
     triangles: Vec<(VertexId, VertexId, VertexId)>,
 }
 
@@ -132,19 +180,53 @@ impl Default for Shape {
 }
 
 #[derive(Clone)]
-pub struct Mesh2D {
+pub struct Mesh2d {
     pub id: generational_arena::Index,
     storage: Arc<Mutex<MeshStorage>>,
 }
 
-struct MeshStorage {
+pub(crate) struct MeshStorage {
     pub shape: Shape,
     pub material: Material,
-    pub position: Point2D,
+    pub position: Point2d,
     pub scale: f32,
     pub angle: Rad<f32>,
 }
 
 pub mod prelude {
-    pub use super::{Mesh2D, Point2D, Rect, Scene2D, ScreenScene, Shape, Size2D};
+    pub use super::{Mesh2d, Scene2d, ScreenScene, Shape};
+}
+
+pub(crate) struct Placement2d {
+    pub mesh: Mesh2d,
+    pub relative_to: Option<generational_arena::Index>,
+    pub position: Point2d,
+    pub angle: Rad<f32>,
+    pub scale: f32,
+    pub location: Placement2dLocation,
+}
+
+#[derive(PartialEq)]
+pub(crate) enum Placement2dLocation {
+    Screen,
+    Z(f32),
+}
+
+impl std::cmp::PartialOrd for Placement2dLocation {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match self {
+            Placement2dLocation::Screen => {
+                match other {
+                    Placement2dLocation::Screen => Some(Ordering::Equal),
+                    Placement2dLocation::Z(_) => Some(Ordering::Greater), // Screen is higher than Z
+                }
+            }
+            Placement2dLocation::Z(z) => {
+                match other {
+                    Placement2dLocation::Screen => Some(Ordering::Less), // Z is lower than Screen
+                    Placement2dLocation::Z(other_z) => z.partial_cmp(&other_z),
+                }
+            }
+        }
+    }
 }

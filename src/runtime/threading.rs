@@ -1,5 +1,6 @@
 use super::request::{RuntimeEvent, RuntimeRequest};
 use crate::internal_prelude::*;
+use crate::window::Window;
 use futures::executor::ThreadPool;
 use lazy_static::lazy_static;
 use std::sync::Mutex;
@@ -9,7 +10,7 @@ pub trait EventProcessor: Send + Sync {
         &mut self,
         event: glutin::event::Event<()>,
         control_flow: &mut glutin::event_loop::ControlFlow,
-        display: &glium::Display,
+        window: &mut Window,
     );
 }
 lazy_static! {
