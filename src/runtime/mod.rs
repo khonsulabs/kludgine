@@ -3,7 +3,7 @@ use crate::internal_prelude::*;
 use crate::window::{RuntimeWindow, Window};
 use futures::{executor::ThreadPool, future::Future};
 use glutin::window::WindowBuilder;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 pub(crate) mod flattened_scene;
 pub(crate) mod request;
@@ -94,7 +94,7 @@ impl EventProcessor for Runtime {
             .checked_duration_since(self.next_frame_target)
             .unwrap_or_default()
             .as_nanos()
-            > 16_666_667;
+            > 16_666_666;
         while let Some(request) = self.request_receiver.try_next().unwrap_or_default() {
             match request {
                 RuntimeRequest::OpenWindow { window, builder } => {
@@ -123,6 +123,15 @@ impl EventProcessor for Runtime {
             println!("Frame {}", self.frame_number);
             self.frame_number += 1;
             crate::window::RuntimeWindow::render_all();
+            self.next_frame_target = self
+                .next_frame_target
+                .checked_add(Duration::from_nanos(16_666_666))
+                .unwrap_or(self.next_frame_target);
+            if self.next_frame_target < now {
+                self.next_frame_target = now
+                    .checked_add(Duration::from_nanos(16_666_666))
+                    .unwrap_or(now);
+            }
             *control_flow = glutin::event_loop::ControlFlow::WaitUntil(self.next_frame_target);
         }
     }
