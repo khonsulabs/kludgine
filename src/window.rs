@@ -365,6 +365,7 @@ impl RuntimeWindow {
                 //     .or_insert_with(|| LoadedMesh::compile(mesh));
                 let loaded_mesh = LoadedMesh::compile(mesh);
                 let matrix = loaded_mesh.projection;
+                let model = loaded_mesh.model;
 
                 loaded_mesh.material.activate();
                 unsafe {
@@ -377,6 +378,15 @@ impl RuntimeWindow {
                         1,
                         gl::FALSE,
                         matrix.as_ptr() as *const f32,
+                    );
+                    gl::UniformMatrix4fv(
+                        gl::GetUniformLocation(
+                            loaded_mesh.material.shader_program,
+                            CString::new("model".as_bytes()).unwrap().as_ptr(),
+                        ),
+                        1,
+                        gl::FALSE,
+                        model.as_ptr() as *const f32,
                     );
                     gl::Uniform3f(
                         gl::GetUniformLocation(
@@ -417,6 +427,7 @@ struct LoadedMesh {
     pub vbo: u32,
     pub count: i32,
     pub projection: Matrix4<f32>,
+    pub model: Matrix4<f32>,
 }
 impl LoadedMesh {
     fn compile(mesh: &FlattenedMesh2d) -> LoadedMesh {
@@ -491,6 +502,7 @@ impl LoadedMesh {
             material,
             position: mesh.position,
             projection: mesh.projection,
+            model: mesh.model,
         }
     }
 }

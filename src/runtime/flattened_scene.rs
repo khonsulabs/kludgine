@@ -1,6 +1,6 @@
 use crate::materials::Material;
 use crate::scene2d::{Mesh2d, Placement2dLocation, Scene2d};
-use cgmath::{prelude::*, Matrix4, Point3, Quaternion, Vector4};
+use cgmath::{prelude::*, Matrix4, Quaternion, Vector3, Vector4};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
@@ -38,11 +38,17 @@ impl FlattenedScene {
             ));
         }
 
-        while let Some((placement, projection, orientation, mut position)) = stack.pop() {
+        while let Some((placement, projection, mut orientation, mut position)) = stack.pop() {
             let mesh = placement.mesh.clone();
 
+            let mesh_position = orientation.rotate_vector(Vector3::new(
+                placement.position.x,
+                placement.position.y,
+                0.0,
+            ));
             position = position
-                + (projection * Vector4::new(placement.position.x, placement.position.y, 0.0, 1.0));
+                + projection * Vector4::new(mesh_position.x, mesh_position.y, mesh_position.z, 1.0);
+            orientation = orientation * Quaternion::from_angle_z(placement.angle);
             // TODO orientation
             // Flatten this mesh
             //   * Translate position relatative to parent or 0,0
@@ -51,7 +57,7 @@ impl FlattenedScene {
             self.meshes.push(FlattenedMesh2d {
                 mesh,
                 projection,
-                orientation,
+                model: orientation.into(),
                 position,
             });
             //  Push all children
@@ -69,6 +75,6 @@ impl FlattenedScene {
 pub struct FlattenedMesh2d {
     pub mesh: Mesh2d,
     pub projection: Matrix4<f32>,
-    pub orientation: Quaternion<f32>,
+    pub model: Matrix4<f32>,
     pub position: Vector4<f32>,
 }

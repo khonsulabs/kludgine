@@ -12,10 +12,11 @@ pub enum Material {
 const VERTEX_SHADER_SOURCE: &str = r#"
     #version 140
     uniform mat4 matrix;
+    uniform mat4 model;
     uniform vec3 offset;
     in vec2 position;
     void main() {
-        gl_Position = vec4(offset, 1.0) + (matrix * vec4(position, 0.0, 1.0));
+        gl_Position = vec4(offset, 1.0) + (matrix * model * vec4(position, 0.0, 1.0));
     }
 "#;
 
