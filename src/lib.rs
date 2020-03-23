@@ -1,5 +1,5 @@
 #[macro_use]
-extern crate async_trait;
+pub extern crate async_trait;
 #[allow(unused_imports)]
 #[macro_use]
 extern crate educe;
