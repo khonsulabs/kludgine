@@ -1,7 +1,5 @@
-use crate::materials::Material;
-use crate::scene2d::{Mesh2d, Placement2dLocation, Scene2d};
+use crate::scene2d::{Mesh2d, Scene2d};
 use cgmath::{prelude::*, Matrix4, Quaternion, Vector3, Vector4};
-use std::cmp::Ordering;
 use std::collections::HashMap;
 
 #[derive(Default)]
@@ -19,7 +17,7 @@ impl FlattenedScene {
             Option<generational_arena::Index>,
             Vec<generational_arena::Index>,
         > = HashMap::new();
-        for (k, v) in scene.placements.iter() {
+        for (_, v) in scene.placements.iter() {
             placement_children
                 .entry(v.relative_to)
                 .and_modify(|children| children.push(v.mesh.id))

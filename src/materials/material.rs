@@ -1,4 +1,3 @@
-use super::prelude::*;
 use crate::internal_prelude::*;
 use cgmath::Vector4;
 use gl::types::*;

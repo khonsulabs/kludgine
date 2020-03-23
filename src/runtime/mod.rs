@@ -1,11 +1,9 @@
 use crate::application::Application;
 use crate::internal_prelude::*;
-use crate::scene2d::Scene2d;
 use crate::window::{RuntimeWindow, Window};
 use futures::{executor::ThreadPool, future::Future};
 use glutin::window::WindowBuilder;
 use std::{
-    collections::HashMap,
     sync::{Arc, Mutex},
     time::{Duration, Instant, SystemTime},
 };
@@ -13,7 +11,6 @@ use std::{
 pub(crate) mod flattened_scene;
 pub(crate) mod request;
 mod threading;
-use flattened_scene::FlattenedScene;
 use request::*;
 use threading::*;
 

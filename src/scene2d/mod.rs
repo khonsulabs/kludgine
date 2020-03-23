@@ -1,7 +1,7 @@
 use crate::internal_prelude::*;
 use crate::materials::Material;
+use cgmath::Matrix4;
 use cgmath::Rad;
-use cgmath::{prelude::*, Matrix4, Point3, Quaternion};
 use generational_arena::Arena;
 use lyon::tessellation::{
     basic_shapes::fill_rectangle, BasicGeometryBuilder, Count, FillAttributes, FillGeometryBuilder,
