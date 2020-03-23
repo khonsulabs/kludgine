@@ -34,11 +34,11 @@ impl FlattenedScene {
                 root,
                 scene.projection(&root.location),
                 Quaternion::<f32>::one(),
-                Vector4::<f32>::new(0.0, 0.0, 0.0, 1.0),
+                Vector4::<f32>::new(0.0, 0.0, 0.0, 0.0),
             ));
         }
 
-        while let Some((placement, projection, mut orientation, mut position)) = stack.pop() {
+        while let Some((placement, projection, mut orientation, position)) = stack.pop() {
             let mesh = placement.mesh.clone();
 
             let mesh_position = orientation.rotate_vector(Vector3::new(
@@ -46,8 +46,12 @@ impl FlattenedScene {
                 placement.position.y,
                 0.0,
             ));
-            position = position
-                + projection * Vector4::new(mesh_position.x, mesh_position.y, mesh_position.z, 1.0);
+
+            let position =
+                position + Vector4::new(mesh_position.x, mesh_position.y, mesh_position.z, 0.0);
+            let offset = projection * position;
+            println!("{:?}: {:?}", mesh.id, position);
+            println!("{:?}: {:?}", mesh.id, offset);
             orientation = orientation * Quaternion::from_angle_z(placement.angle);
             // TODO orientation
             // Flatten this mesh
@@ -58,7 +62,7 @@ impl FlattenedScene {
                 mesh,
                 projection,
                 model: orientation.into(),
-                position,
+                offset,
             });
             //  Push all children
             if let Some(children) = placement_children.get(&Some(placement.mesh.id)) {
@@ -76,5 +80,5 @@ pub struct FlattenedMesh2d {
     pub mesh: Mesh2d,
     pub projection: Matrix4<f32>,
     pub model: Matrix4<f32>,
-    pub position: Vector4<f32>,
+    pub offset: Vector4<f32>,
 }

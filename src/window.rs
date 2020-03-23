@@ -125,6 +125,7 @@ pub(crate) struct RuntimeWindow {
     should_close: bool,
     wait_for_scene: bool,
     last_known_size: Option<Size2d>,
+    last_known_scale_factor: Option<f32>,
     mesh_cache: HashMap<generational_arena::Index, LoadedMesh>,
 }
 
@@ -183,6 +184,7 @@ impl RuntimeWindow {
                     last_known_size: None,
                     event_sender,
                     mesh_cache: HashMap::new(),
+                    last_known_scale_factor: None,
                 },
             )
         });
@@ -281,22 +283,6 @@ impl RuntimeWindow {
                 }
             }
         }
-
-        let size = self.size();
-        let size_changed = match &self.last_known_size {
-            Some(last_known_size) => last_known_size != &size,
-            None => true,
-        };
-
-        if size_changed {
-            self.wait_for_scene = true;
-            self.last_known_size = Some(size);
-            block_on(self.event_sender.send(WindowEvent::Resize {
-                size,
-                scale_factor: self.scale_factor(),
-            }))
-            .unwrap_or_default();
-        }
     }
 
     pub(crate) fn process_event(&mut self, event: &glutin::event::WindowEvent) {
@@ -304,13 +290,31 @@ impl RuntimeWindow {
             GlutinWindowEvent::CloseRequested => {
                 block_on(self.event_sender.send(WindowEvent::CloseRequested)).unwrap_or_default();
             }
-            GlutinWindowEvent::Resized(size) => {}
+            GlutinWindowEvent::Resized(size) => {
+                self.last_known_size = Some(Size2d::new(size.width as f32, size.height as f32));
+                self.notify_size_changed();
+            }
             GlutinWindowEvent::ScaleFactorChanged {
                 scale_factor,
                 new_inner_size,
-            } => {}
+            } => {
+                self.last_known_scale_factor = Some(*scale_factor as f32);
+                self.last_known_size = Some(Size2d::new(
+                    new_inner_size.width as f32,
+                    new_inner_size.height as f32,
+                ));
+                self.notify_size_changed();
+            }
             _ => {}
         }
+    }
+
+    fn notify_size_changed(&mut self) {
+        block_on(self.event_sender.send(WindowEvent::Resize {
+            size: self.last_known_size.unwrap_or_default(),
+            scale_factor: self.last_known_scale_factor.unwrap_or(1.0),
+        }))
+        .unwrap_or_default();
     }
 
     pub(crate) fn render_all() {
@@ -352,6 +356,11 @@ impl RuntimeWindow {
     }
 
     fn render(&mut self) {
+        if self.last_known_size.is_none() {
+            self.last_known_size = Some(self.size());
+            self.last_known_scale_factor = Some(self.scale_factor());
+            self.notify_size_changed();
+        }
         use std::ffi::CString;
         use std::os::raw::c_void;
         if let Some(scene) = &self.scene {
@@ -500,7 +509,7 @@ impl LoadedMesh {
             vbo,
             count,
             material,
-            position: mesh.position,
+            position: mesh.offset,
             projection: mesh.projection,
             model: mesh.model,
         }

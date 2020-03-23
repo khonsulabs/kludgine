@@ -16,7 +16,7 @@ const VERTEX_SHADER_SOURCE: &str = r#"
     uniform vec3 offset;
     in vec2 position;
     void main() {
-        gl_Position = vec4(offset, 1.0) + (matrix * model * vec4(position, 0.0, 1.0));
+        gl_Position = vec4(offset, 0.0) + (matrix * model * vec4(position, 0.0, 1.0));
     }
 "#;
 
