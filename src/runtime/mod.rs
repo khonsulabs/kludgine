@@ -1,6 +1,6 @@
-use crate::application::Application;
 use crate::internal_prelude::*;
-use crate::window::{RuntimeWindow, Window};
+use crate::window::Window;
+use crate::{application::Application, runtime::window::RuntimeWindow};
 use futures::{executor::ThreadPool, future::Future};
 use glutin::window::WindowBuilder;
 use std::time::{Duration, Instant};
@@ -8,6 +8,7 @@ use std::time::{Duration, Instant};
 pub(crate) mod flattened_scene;
 pub(crate) mod request;
 mod threading;
+pub(crate) mod window;
 use request::*;
 use threading::*;
 
@@ -105,7 +106,7 @@ impl EventProcessor for Runtime {
                 }
             }
         }
-        crate::window::RuntimeWindow::process_events(&event);
+        RuntimeWindow::process_events(&event);
 
         match event {
             glutin::event::Event::NewEvents(cause) => match cause {
@@ -122,7 +123,7 @@ impl EventProcessor for Runtime {
         if render_frame {
             println!("Frame {}", self.frame_number);
             self.frame_number += 1;
-            crate::window::RuntimeWindow::render_all();
+            RuntimeWindow::render_all();
             self.next_frame_target = self
                 .next_frame_target
                 .checked_add(Duration::from_nanos(16_666_666))

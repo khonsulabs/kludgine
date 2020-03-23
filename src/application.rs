@@ -1,6 +1,6 @@
 use crate::{
-    runtime::Runtime,
-    window::{RuntimeWindow, Window},
+    runtime::{window::RuntimeWindow, Runtime},
+    window::Window,
 };
 use std::marker::PhantomData;
 
