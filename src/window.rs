@@ -4,6 +4,7 @@ use crate::{
     scene2d::Scene2d,
 };
 use glutin::{
+    event::{Event, WindowEvent as GlutinWindowEvent},
     event_loop::EventLoopWindowTarget,
     window::{WindowBuilder, WindowId},
     NotCurrent, PossiblyCurrent, WindowedContext,
@@ -12,6 +13,7 @@ use std::{
     borrow::BorrowMut,
     cell::RefCell,
     collections::HashMap,
+    ops::Deref,
     sync::{Arc, Mutex, Once},
 };
 static LOAD_SUPPORT: Once = Once::new();
@@ -60,6 +62,16 @@ enum TrackedContext {
     NotCurrent(WindowedContext<NotCurrent>),
 }
 
+impl Deref for TrackedContext {
+    type Target = WindowedContext<PossiblyCurrent>;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            TrackedContext::Current(ctx) => ctx,
+            TrackedContext::NotCurrent(ctx) => panic!(),
+        }
+    }
+}
 impl TrackedContext {
     pub fn window(&self) -> &glutin::window::Window {
         match self {
@@ -85,6 +97,13 @@ impl TrackedContext {
                 TrackedContext::NotCurrent(unsafe { ctx.treat_as_not_current() })
             }
             TrackedContext::NotCurrent(ctx) => TrackedContext::NotCurrent(ctx),
+        }
+    }
+
+    pub fn resize(&self, size: glutin::dpi::PhysicalSize<u32>) {
+        match self {
+            TrackedContext::Current(ctx) => ctx.resize(size),
+            TrackedContext::NotCurrent(ctx) => panic!(),
         }
     }
 }
@@ -209,10 +228,10 @@ impl RuntimeWindow {
         channels.len()
     }
 
-    pub(crate) fn process_events(event: &glutin::event::Event<()>) {
+    pub(crate) fn process_events(event: &Event<()>) {
         WINDOWS.with(|windows| {
             match event {
-                glutin::event::Event::WindowEvent { window_id, event } => {
+                Event::WindowEvent { window_id, event } => {
                     if let Some(window) = windows.borrow_mut().get_mut(&window_id) {
                         window.process_event(event);
                     }
@@ -264,9 +283,14 @@ impl RuntimeWindow {
 
     pub(crate) fn process_event(&mut self, event: &glutin::event::WindowEvent) {
         match event {
-            glutin::event::WindowEvent::CloseRequested => {
+            GlutinWindowEvent::CloseRequested => {
                 block_on(self.event_sender.send(WindowEvent::CloseRequested)).unwrap_or_default();
             }
+            GlutinWindowEvent::Resized(size) => {}
+            GlutinWindowEvent::ScaleFactorChanged {
+                scale_factor,
+                new_inner_size,
+            } => {}
             _ => {}
         }
     }
@@ -284,10 +308,18 @@ impl RuntimeWindow {
                     lw.context = lw.context.treat_as_not_current();
                     finished_windows.insert(lw.context.window().id(), lw);
                 }
+
+                window
+                    .context
+                    .deref()
+                    .resize(window.context.deref().window().inner_size());
+
                 unsafe {
-                    gl::ClearColor(0.2, 0.3, 0.3, 1.0);
+                    gl::ClearColor(0.0, 0.0, 0.0, 1.0);
                     gl::Clear(gl::COLOR_BUFFER_BIT);
                 }
+
+                window.context.deref().swap_buffers().unwrap();
                 last_window = Some(window);
             }
             if let Some(mut lw) = last_window {
