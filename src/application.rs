@@ -7,7 +7,7 @@ use std::marker::PhantomData;
 #[async_trait]
 pub trait Application: Sized + Send + Sync {
     // Async methods
-    async fn initialize(&mut self);
+    async fn initialize(&mut self) {}
     async fn should_exit(&mut self) -> bool {
         RuntimeWindow::count() == 0
     }
@@ -20,7 +20,11 @@ pub struct SingleWindowApplication<T> {
 
 pub trait WindowCreator<T> {
     fn get_window_builder() -> glutin::window::WindowBuilder {
-        glutin::window::WindowBuilder::new().with_title("Kludgine")
+        glutin::window::WindowBuilder::new().with_title(Self::window_title())
+    }
+
+    fn window_title() -> String {
+        "Kludgine".to_owned()
     }
 }
 

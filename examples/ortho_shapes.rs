@@ -10,9 +10,14 @@ struct OrthoShapes {
     created_shapes: bool,
 }
 
+impl WindowCreator<OrthoShapes> for OrthoShapes {
+    fn window_title() -> String {
+        "Ortho Shapes - Kludgine".to_owned()
+    }
+}
+
 #[async_trait]
 impl Window for OrthoShapes {
-    async fn initialize(&mut self) {}
     async fn render_2d(&mut self, scene: &mut Scene2d) -> KludgineResult<()> {
         if !self.created_shapes {
             self.created_shapes = true;
