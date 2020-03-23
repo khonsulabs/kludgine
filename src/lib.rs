@@ -12,6 +12,7 @@ pub mod math;
 pub mod runtime;
 pub mod scene2d;
 pub mod window;
+pub use color_processing::Color;
 
 #[cfg(test)]
 mod tests {
@@ -33,10 +34,17 @@ pub type KludgineResult<T> = Result<T, KludgineError>;
 
 pub mod prelude {
     pub use super::{
-        application::Application, glutin, materials::prelude::*, math::*, runtime::Runtime,
-        scene2d::prelude::*, window::Window, KludgineError, KludgineResult,
+        application::{Application, SingleWindowApplication, WindowCreator},
+        glutin,
+        materials::prelude::*,
+        math::*,
+        runtime::Runtime,
+        scene2d::prelude::*,
+        window::Window,
+        KludgineError, KludgineResult,
     };
     pub use async_trait::async_trait;
+    pub use cgmath::{prelude::*, Deg, Rad};
     pub use color_processing::Color;
 }
 

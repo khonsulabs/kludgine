@@ -1,6 +1,5 @@
 use super::request::{RuntimeEvent, RuntimeRequest};
 use crate::internal_prelude::*;
-use crate::window::Window;
 use futures::executor::ThreadPool;
 use lazy_static::lazy_static;
 use std::sync::Mutex;

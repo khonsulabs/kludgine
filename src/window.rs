@@ -3,12 +3,11 @@ use crate::{
     materials::prelude::*,
     runtime::{
         flattened_scene::{FlattenedMesh2d, FlattenedScene},
-        request::RuntimeRequest,
         Runtime,
     },
     scene2d::Scene2d,
 };
-use cgmath::{prelude::*, Matrix4, Quaternion, Vector4};
+use cgmath::{prelude::*, Matrix4, Vector4};
 use gl::types::*;
 use glutin::{
     event::{Event, WindowEvent as GlutinWindowEvent},
@@ -18,7 +17,6 @@ use glutin::{
 };
 use std::ptr;
 use std::{
-    borrow::BorrowMut,
     cell::RefCell,
     collections::HashMap,
     ops::Deref,
@@ -77,7 +75,7 @@ impl Deref for TrackedContext {
     fn deref(&self) -> &Self::Target {
         match self {
             TrackedContext::Current(ctx) => ctx,
-            TrackedContext::NotCurrent(ctx) => panic!(),
+            TrackedContext::NotCurrent(_) => panic!(),
         }
     }
 }
@@ -108,13 +106,6 @@ impl TrackedContext {
             TrackedContext::NotCurrent(ctx) => TrackedContext::NotCurrent(ctx),
         }
     }
-
-    pub fn resize(&self, size: glutin::dpi::PhysicalSize<u32>) {
-        match self {
-            TrackedContext::Current(ctx) => ctx.resize(size),
-            TrackedContext::NotCurrent(ctx) => panic!(),
-        }
-    }
 }
 
 pub(crate) struct RuntimeWindow {
@@ -126,7 +117,8 @@ pub(crate) struct RuntimeWindow {
     wait_for_scene: bool,
     last_known_size: Option<Size2d>,
     last_known_scale_factor: Option<f32>,
-    mesh_cache: HashMap<generational_arena::Index, LoadedMesh>,
+    // TODO re-enable cache, see comment near mesh_cache usage later in the file
+    // mesh_cache: HashMap<generational_arena::Index, LoadedMesh>,
 }
 
 pub enum CloseResponse {
@@ -172,7 +164,7 @@ impl RuntimeWindow {
 
         LOAD_SUPPORT.call_once(|| gl::load_with(|s| context.get_proc_address(s) as *const _));
 
-        WINDOWS.with(|mut windows| {
+        WINDOWS.with(|windows| {
             windows.borrow_mut().insert(
                 context.window().id(),
                 Self {
@@ -183,7 +175,6 @@ impl RuntimeWindow {
                     wait_for_scene: false,
                     last_known_size: None,
                     event_sender,
-                    mesh_cache: HashMap::new(),
                     last_known_scale_factor: None,
                 },
             )
@@ -262,7 +253,7 @@ impl RuntimeWindow {
             }
 
             {
-                windows.borrow_mut().retain(|k, w| !w.should_close);
+                windows.borrow_mut().retain(|_, w| !w.should_close);
             }
         })
     }
@@ -362,15 +353,13 @@ impl RuntimeWindow {
             self.notify_size_changed();
         }
         use std::ffi::CString;
-        use std::os::raw::c_void;
         if let Some(scene) = &self.scene {
             for mesh in scene.meshes.iter() {
-                let id = mesh.mesh.id;
                 // TODO We should be able to cache, but for some reason I can't get this to render without recompiling it each time.
                 // Something isn't persisting but looking at examples I'm at a loss as to what.
                 // let loaded_mesh = self
                 //     .mesh_cache
-                //     .entry(id)
+                //     .entry(mesh.mesh.id)
                 //     .or_insert_with(|| LoadedMesh::compile(mesh));
                 let loaded_mesh = LoadedMesh::compile(mesh);
                 let matrix = loaded_mesh.projection;
@@ -442,7 +431,6 @@ impl LoadedMesh {
     fn compile(mesh: &FlattenedMesh2d) -> LoadedMesh {
         use std::mem;
         use std::os::raw::c_void;
-        use std::str;
         let (vao, ebo, vbo, material, count) = {
             let storage = mesh.mesh.storage.lock().expect("Error locking mesh");
             let shape = storage.shape.storage.lock().expect("Error locking shape");

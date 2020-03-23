@@ -3,10 +3,7 @@ use crate::internal_prelude::*;
 use crate::window::{RuntimeWindow, Window};
 use futures::{executor::ThreadPool, future::Future};
 use glutin::window::WindowBuilder;
-use std::{
-    sync::{Arc, Mutex},
-    time::{Duration, Instant, SystemTime},
-};
+use std::time::Instant;
 
 pub(crate) mod flattened_scene;
 pub(crate) mod request;
@@ -93,7 +90,7 @@ impl EventProcessor for Runtime {
         control_flow: &mut glutin::event_loop::ControlFlow,
     ) {
         let now = Instant::now();
-        let mut render_frame = now
+        let render_frame = now
             .checked_duration_since(self.next_frame_target)
             .unwrap_or_default()
             .as_nanos()
@@ -140,7 +137,7 @@ pub struct Runtime {
 }
 
 impl Runtime {
-    pub fn new<App>() -> Self
+    pub fn new<App>(app: App) -> Self
     where
         App: Application + 'static,
     {
@@ -151,7 +148,6 @@ impl Runtime {
             assert!(pool_guard.is_none());
             *pool_guard = Some(ThreadPool::new().expect("Error creating ThreadPool"));
         }
-        let app = App::new();
         let app_runtime = ApplicationRuntime { app };
         let (request_receiver, event_sender) = app_runtime.launch();
 

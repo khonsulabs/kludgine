@@ -1,35 +1,25 @@
-use kludgine::{application::Application, runtime::Runtime};
+use kludgine::prelude::*;
 use kludgine::async_trait::async_trait;
 
 fn main() {
-    kludgine::runtime::Runtime::new::<OrthoShapes>().run();
+    Runtime::new(SingleWindowApplication::<OrthoShapes>::default()).run();
 }
 
-struct OrthoShapes;
+#[derive(Default)]
+struct OrthoShapes {
+    created_shapes: bool,
+}
+
+impl WindowCreator<OrthoShapes> for OrthoShapes {
+    
+}
 
 #[async_trait]
-impl Application for OrthoShapes {
-    fn new() -> Self {
-        Self {}
-    }
-    async fn initialize(&mut self) {
-        Runtime::open_window(
-            glutin::window::WindowBuilder::new().with_title("Cosmic Verge"),
-            MainWindow { meshes: Vec::new() },
-        )
-        .await
-    }
-}
-
-
-struct MainWindow {
-    meshes: Vec<Mesh2d>,
-}
-#[async_trait]
-impl Window for MainWindow {
+impl Window for OrthoShapes {
     async fn initialize(&mut self) {}
     async fn render_2d(&mut self, scene: &mut Scene2d) -> KludgineResult<()> {
-        if self.meshes.len() == 0 {
+        if !self.created_shapes {
+            self.created_shapes = true;
             let material = Material::Solid {
                 color: Color::new_rgba(255, 0, 0, 255),
             };
@@ -59,9 +49,6 @@ impl Window for MainWindow {
                 Deg(0.0).into(),
                 1.0,
             );
-            self.meshes.push(third_mesh);
-            self.meshes.push(second_mesh);
-            self.meshes.push(mesh);
         }
         Ok(())
     }

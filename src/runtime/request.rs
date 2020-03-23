@@ -1,4 +1,4 @@
-use super::{flattened_scene::FlattenedScene, threading::GLOBAL_RUNTIME_SENDER};
+use super::threading::GLOBAL_RUNTIME_SENDER;
 use crate::internal_prelude::*;
 use crate::window::Window;
 
