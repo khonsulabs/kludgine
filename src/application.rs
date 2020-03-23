@@ -1,5 +1,4 @@
-use crate::internal_prelude::*;
-use crate::scene2d::Scene2d;
+use crate::window::RuntimeWindow;
 
 #[async_trait]
 pub trait Application: Sized + Send + Sync {
@@ -8,4 +7,7 @@ pub trait Application: Sized + Send + Sync {
 
     // Async methods
     async fn initialize(&mut self);
+    async fn should_exit(&mut self) -> bool {
+        RuntimeWindow::count() == 0
+    }
 }

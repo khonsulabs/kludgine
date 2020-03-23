@@ -202,7 +202,14 @@ impl RuntimeWindow {
             .expect("Error running window loop.")
     }
 
-    pub(crate) fn process_events(event: glutin::event::Event<()>) {
+    pub(crate) fn count() -> usize {
+        let channels = WINDOW_CHANNELS
+            .lock()
+            .expect("Error locking window channels");
+        channels.len()
+    }
+
+    pub(crate) fn process_events(event: &glutin::event::Event<()>) {
         WINDOWS.with(|windows| {
             match event {
                 glutin::event::Event::WindowEvent { window_id, event } => {
@@ -255,7 +262,7 @@ impl RuntimeWindow {
         }
     }
 
-    pub(crate) fn process_event(&mut self, event: glutin::event::WindowEvent) {
+    pub(crate) fn process_event(&mut self, event: &glutin::event::WindowEvent) {
         match event {
             glutin::event::WindowEvent::CloseRequested => {
                 block_on(self.event_sender.send(WindowEvent::CloseRequested)).unwrap_or_default();

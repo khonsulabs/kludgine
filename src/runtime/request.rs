@@ -28,4 +28,6 @@ impl RuntimeRequest {
     }
 }
 
-pub(crate) enum RuntimeEvent {}
+pub(crate) enum RuntimeEvent {
+    Running,
+}

@@ -64,18 +64,25 @@ where
     where
         App: Application + 'static,
     {
-        let mut scene2d = Scene2d::new();
+        let mut running = false;
         loop {
-            {
-                while let Some(event) = {
-                    let mut guard = GLOBAL_RUNTIME_RECEIVER
-                        .lock()
-                        .expect("Error locking runtime reciver");
-                    let event_receiver = guard.as_mut().expect("Receiver was not set");
-                    event_receiver.try_next().unwrap_or_default()
-                } {
-                    match event {}
+            while let Some(event) = {
+                let mut guard = GLOBAL_RUNTIME_RECEIVER
+                    .lock()
+                    .expect("Error locking runtime reciver");
+                let event_receiver = guard.as_mut().expect("Receiver was not set");
+                event_receiver.try_next().unwrap_or_default()
+            } {
+                match event {
+                    RuntimeEvent::Running => {
+                        running = true;
+                    }
                 }
+            }
+
+            if running && self.app.should_exit().await {
+                RuntimeRequest::Quit.send().await?;
+                return Ok(());
             }
         }
     }
@@ -100,12 +107,23 @@ impl EventProcessor for Runtime {
                     RuntimeWindow::open(builder, &event_loop, window);
                 }
                 RuntimeRequest::Quit => {
-                    *control_flow = glutin::event_loop::ControlFlow::Exit;
-                    return;
+                    std::process::exit(0); // TODO There is a bug in winit when destructing https://github.com/rust-windowing/winit/blob/ad7d4939a8be2e0d9436d43d0351e2f7599a4237/src/platform_impl/macos/app_state.rs#L344
                 }
             }
         }
-        crate::window::RuntimeWindow::process_events(event);
+        crate::window::RuntimeWindow::process_events(&event);
+
+        match event {
+            glutin::event::Event::NewEvents(cause) => match cause {
+                glutin::event::StartCause::Init => {
+                    self.event_sender
+                        .unbounded_send(RuntimeEvent::Running)
+                        .unwrap_or_default();
+                }
+                _ => {}
+            },
+            _ => {}
+        }
 
         if render_frame {
             crate::window::RuntimeWindow::render_all();
