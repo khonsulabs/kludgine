@@ -24,8 +24,6 @@ pub trait WindowCreator<T> {
     }
 }
 
-impl<T> WindowCreator<T> for SingleWindowApplication<T> {}
-
 #[async_trait]
 impl<T> Application for SingleWindowApplication<T>
 where

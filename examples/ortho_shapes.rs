@@ -10,10 +10,6 @@ struct OrthoShapes {
     created_shapes: bool,
 }
 
-impl WindowCreator<OrthoShapes> for OrthoShapes {
-    
-}
-
 #[async_trait]
 impl Window for OrthoShapes {
     async fn initialize(&mut self) {}

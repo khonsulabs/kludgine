@@ -1,5 +1,6 @@
 use crate::internal_prelude::*;
 use crate::{
+    application::WindowCreator,
     materials::prelude::*,
     runtime::{
         flattened_scene::{FlattenedMesh2d, FlattenedScene},
@@ -136,6 +137,8 @@ pub trait Window: Send + Sync + 'static {
         Ok(())
     }
 }
+
+impl<T> WindowCreator<T> for T where T: Window {}
 
 impl RuntimeWindow {
     pub(crate) fn open<T>(wb: WindowBuilder, event_loop: &EventLoopWindowTarget<()>, window: Box<T>)
