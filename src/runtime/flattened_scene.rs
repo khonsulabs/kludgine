@@ -1,6 +1,6 @@
-use crate::material::Material;
+use crate::materials::Material;
 use crate::scene2d::{Mesh2d, Placement2dLocation, Scene2d};
-use cgmath::{prelude::*, Matrix4, Point3, Quaternion};
+use cgmath::{prelude::*, Matrix4, Point3, Quaternion, Vector4};
 use std::cmp::Ordering;
 use std::collections::HashMap;
 
@@ -34,20 +34,26 @@ impl FlattenedScene {
                 root,
                 scene.projection(&root.location),
                 Quaternion::<f32>::one(),
-                Point3::<f32>::origin(),
+                Vector4::<f32>::new(0.0, 0.0, 0.0, 1.0),
             ));
         }
 
-        while let Some((placement, projection, orientation, position)) = stack.pop() {
+        while let Some((placement, projection, orientation, mut position)) = stack.pop() {
+            let mesh = placement.mesh.clone();
+
+            position = position
+                + (projection * Vector4::new(placement.position.x, placement.position.y, 0.0, 1.0));
+            // TODO orientation
+            // Flatten this mesh
+            //   * Translate position relatative to parent or 0,0
+            //   * Append Z rotation quaternion
+
             self.meshes.push(FlattenedMesh2d {
-                mesh: placement.mesh.clone(),
+                mesh,
                 projection,
                 orientation,
                 position,
             });
-            // Flatten this mesh
-            //   * Translate position relatative to parent or 0,0
-            //   * Append Z rotation quaternion
             //  Push all children
             if let Some(children) = placement_children.get(&Some(placement.mesh.id)) {
                 for child_index in children.iter() {
@@ -64,5 +70,5 @@ pub struct FlattenedMesh2d {
     pub mesh: Mesh2d,
     pub projection: Matrix4<f32>,
     pub orientation: Quaternion<f32>,
-    pub position: Point3<f32>,
+    pub position: Vector4<f32>,
 }

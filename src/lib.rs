@@ -8,7 +8,7 @@ extern crate log;
 pub extern crate glutin;
 
 pub mod application;
-pub mod material;
+pub mod materials;
 pub mod math;
 pub mod runtime;
 pub mod scene2d;
@@ -34,7 +34,7 @@ pub type KludgineResult<T> = Result<T, KludgineError>;
 
 pub mod prelude {
     pub use super::{
-        application::Application, glutin, material::Material, math::*, runtime::Runtime,
+        application::Application, glutin, materials::prelude::*, math::*, runtime::Runtime,
         scene2d::prelude::*, window::Window, KludgineError, KludgineResult,
     };
     pub use async_trait::async_trait;

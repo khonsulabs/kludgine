@@ -7,7 +7,7 @@ use glutin::window::WindowBuilder;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
-    time::{Duration, Instant},
+    time::{Duration, Instant, SystemTime},
 };
 
 pub(crate) mod flattened_scene;
@@ -126,7 +126,10 @@ impl EventProcessor for Runtime {
         }
 
         if render_frame {
+            println!("Frame {}", self.frame_number);
+            self.frame_number += 1;
             crate::window::RuntimeWindow::render_all();
+            *control_flow = glutin::event_loop::ControlFlow::WaitUntil(self.next_frame_target);
         }
     }
 }
@@ -135,17 +138,8 @@ impl EventProcessor for Runtime {
 pub struct Runtime {
     request_receiver: mpsc::UnboundedReceiver<RuntimeRequest>,
     event_sender: mpsc::UnboundedSender<RuntimeEvent>,
-    current_scene: Option<FlattenedScene>,
-    mesh_cache: HashMap<generational_arena::Index, LoadedMesh>,
-    current_dimensions: Option<Size2d>,
-    wait_for_scene: bool,
     next_frame_target: Instant,
-}
-
-struct LoadedMesh {
-    pub id: generational_arena::Index,
-
-    pub texture: Option<i32>,
+    frame_number: u64,
 }
 
 impl Runtime {
@@ -167,11 +161,8 @@ impl Runtime {
         Self {
             request_receiver,
             event_sender,
-            current_scene: None,
-            current_dimensions: None,
-            wait_for_scene: false,
             next_frame_target: Instant::now(),
-            mesh_cache: HashMap::new(),
+            frame_number: 0,
         }
     }
 

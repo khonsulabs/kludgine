@@ -1,20 +1,29 @@
 use crate::internal_prelude::*;
 use crate::{
-    runtime::{flattened_scene::FlattenedScene, request::RuntimeRequest, Runtime},
+    materials::prelude::*,
+    runtime::{
+        flattened_scene::{FlattenedMesh2d, FlattenedScene},
+        request::RuntimeRequest,
+        Runtime,
+    },
     scene2d::Scene2d,
 };
+use cgmath::{prelude::*, Matrix4, Quaternion, Vector4};
+use gl::types::*;
 use glutin::{
     event::{Event, WindowEvent as GlutinWindowEvent},
     event_loop::EventLoopWindowTarget,
     window::{WindowBuilder, WindowId},
-    NotCurrent, PossiblyCurrent, WindowedContext,
+    GlRequest, NotCurrent, PossiblyCurrent, WindowedContext,
 };
+use std::ptr;
 use std::{
     borrow::BorrowMut,
     cell::RefCell,
     collections::HashMap,
     ops::Deref,
     sync::{Arc, Mutex, Once},
+    time::Duration,
 };
 static LOAD_SUPPORT: Once = Once::new();
 
@@ -54,7 +63,7 @@ impl WindowMessage {
 
 pub(crate) enum WindowEvent {
     CloseRequested,
-    Resize(Size2d),
+    Resize { size: Size2d, scale_factor: f32 },
 }
 
 enum TrackedContext {
@@ -116,6 +125,7 @@ pub(crate) struct RuntimeWindow {
     should_close: bool,
     wait_for_scene: bool,
     last_known_size: Option<Size2d>,
+    mesh_cache: HashMap<generational_arena::Index, LoadedMesh>,
 }
 
 pub enum CloseResponse {
@@ -140,6 +150,7 @@ impl RuntimeWindow {
         T: Window + ?Sized,
     {
         let windowed_context = glutin::ContextBuilder::new()
+            .with_gl(GlRequest::Latest)
             .build_windowed(wb, &event_loop)
             .unwrap();
         let context = unsafe { windowed_context.make_current().unwrap() };
@@ -171,6 +182,7 @@ impl RuntimeWindow {
                     wait_for_scene: false,
                     last_known_size: None,
                     event_sender,
+                    mesh_cache: HashMap::new(),
                 },
             )
         });
@@ -188,8 +200,9 @@ impl RuntimeWindow {
         loop {
             while let Some(event) = event_receiver.try_next().unwrap_or_default() {
                 match event {
-                    WindowEvent::Resize(size) => {
+                    WindowEvent::Resize { size, scale_factor } => {
                         scene2d.size = size;
+                        scene2d.scale_factor = scale_factor;
                     }
                     WindowEvent::CloseRequested => {
                         if let CloseResponse::Close = window.close_requested().await {
@@ -206,6 +219,7 @@ impl RuntimeWindow {
             WindowMessage::UpdateScene(flattened_scene)
                 .send_to(id)
                 .await?;
+            async_std::task::sleep(Duration::from_millis(1)).await;
         }
     }
 
@@ -277,7 +291,11 @@ impl RuntimeWindow {
         if size_changed {
             self.wait_for_scene = true;
             self.last_known_size = Some(size);
-            block_on(self.event_sender.send(WindowEvent::Resize(size))).unwrap_or_default();
+            block_on(self.event_sender.send(WindowEvent::Resize {
+                size,
+                scale_factor: self.scale_factor(),
+            }))
+            .unwrap_or_default();
         }
     }
 
@@ -319,6 +337,8 @@ impl RuntimeWindow {
                     gl::Clear(gl::COLOR_BUFFER_BIT);
                 }
 
+                window.render();
+
                 window.context.deref().swap_buffers().unwrap();
                 last_window = Some(window);
             }
@@ -331,8 +351,159 @@ impl RuntimeWindow {
         })
     }
 
+    fn render(&mut self) {
+        use std::ffi::CString;
+        use std::os::raw::c_void;
+        if let Some(scene) = &self.scene {
+            for mesh in scene.meshes.iter() {
+                let id = mesh.mesh.id;
+                // TODO We should be able to cache, but for some reason I can't get this to render without recompiling it each time.
+                // Something isn't persisting but looking at examples I'm at a loss as to what.
+                // let loaded_mesh = self
+                //     .mesh_cache
+                //     .entry(id)
+                //     .or_insert_with(|| LoadedMesh::compile(mesh));
+                let loaded_mesh = LoadedMesh::compile(mesh);
+                let matrix = loaded_mesh.projection;
+
+                loaded_mesh.material.activate();
+                unsafe {
+                    gl::BindVertexArray(loaded_mesh.vao);
+                    gl::UniformMatrix4fv(
+                        gl::GetUniformLocation(
+                            loaded_mesh.material.shader_program,
+                            CString::new("matrix".as_bytes()).unwrap().as_ptr(),
+                        ),
+                        1,
+                        gl::FALSE,
+                        matrix.as_ptr() as *const f32,
+                    );
+                    gl::Uniform3f(
+                        gl::GetUniformLocation(
+                            loaded_mesh.material.shader_program,
+                            CString::new("offset".as_bytes()).unwrap().as_ptr(),
+                        ),
+                        loaded_mesh.position.x,
+                        loaded_mesh.position.y,
+                        loaded_mesh.position.z,
+                    );
+                    gl::DrawElements(
+                        gl::TRIANGLES,
+                        loaded_mesh.count,
+                        gl::UNSIGNED_INT,
+                        ptr::null(),
+                    );
+                    gl::BindVertexArray(0);
+                }
+            }
+        }
+    }
+
     pub fn size(&self) -> Size2d {
         let inner_size = self.context.window().inner_size();
         Size2d::new(inner_size.width as f32, inner_size.height as f32)
+    }
+
+    pub fn scale_factor(&self) -> f32 {
+        self.context.window().scale_factor() as f32
+    }
+}
+
+struct LoadedMesh {
+    pub material: CompiledMaterial,
+    pub position: Vector4<f32>,
+    pub vao: u32,
+    pub ebo: u32,
+    pub vbo: u32,
+    pub count: i32,
+    pub projection: Matrix4<f32>,
+}
+impl LoadedMesh {
+    fn compile(mesh: &FlattenedMesh2d) -> LoadedMesh {
+        use std::mem;
+        use std::os::raw::c_void;
+        use std::str;
+        let (vao, ebo, vbo, material, count) = {
+            let storage = mesh.mesh.storage.lock().expect("Error locking mesh");
+            let shape = storage.shape.storage.lock().expect("Error locking shape");
+            let vertices: &[Point2d] = &shape.vertices;
+            let faces = shape
+                .triangles
+                .iter()
+                .map(|(a, b, c)| (a.0, b.0, c.0))
+                .collect::<Vec<(u32, u32, u32)>>();
+            let (vao, ebo, vbo) = unsafe {
+                let (mut vbo, mut vao, mut ebo) = (0, 0, 0);
+                gl::GenVertexArrays(1, &mut vao);
+                gl::GenBuffers(1, &mut vbo);
+                gl::GenBuffers(1, &mut ebo);
+                // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+                gl::BindVertexArray(vao);
+
+                gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+                gl::BufferData(
+                    gl::ARRAY_BUFFER,
+                    (vertices.len() * mem::size_of::<f32>() * 2) as GLsizeiptr,
+                    vertices.as_ptr() as *const c_void,
+                    gl::STATIC_DRAW,
+                );
+
+                gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
+                gl::BufferData(
+                    gl::ELEMENT_ARRAY_BUFFER,
+                    (faces.len() * mem::size_of::<u32>() * 3) as GLsizeiptr,
+                    faces.as_ptr() as *const c_void,
+                    gl::STATIC_DRAW,
+                );
+
+                gl::VertexAttribPointer(
+                    0,
+                    2,
+                    gl::FLOAT,
+                    gl::FALSE,
+                    2 * mem::size_of::<f32>() as GLsizei,
+                    ptr::null(),
+                );
+                gl::EnableVertexAttribArray(0);
+
+                // note that this is allowed, the call to gl::VertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+                //gl::BindBuffer(gl::ARRAY_BUFFER, 0);
+
+                // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+                // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+                //gl::BindVertexArray(0);
+
+                // uncomment this call to draw in wireframe polygons.
+                // gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
+                (vao, ebo, vbo)
+            };
+
+            let material = storage.material.compile();
+
+            (vao, ebo, vbo, material, faces.len() as i32 * 3)
+        };
+
+        LoadedMesh {
+            vao,
+            ebo,
+            vbo,
+            count,
+            material,
+            position: mesh.position,
+            projection: mesh.projection,
+        }
+    }
+}
+
+impl Drop for LoadedMesh {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteBuffers(1, &self.vbo);
+            self.vbo = 0;
+            gl::DeleteBuffers(1, &self.ebo);
+            self.ebo = 0;
+            gl::DeleteVertexArrays(1, &self.vao);
+            self.vao = 0;
+        }
     }
 }

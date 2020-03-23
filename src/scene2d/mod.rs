@@ -1,11 +1,12 @@
 use crate::internal_prelude::*;
-use crate::material::Material;
+use crate::materials::Material;
 use cgmath::Rad;
 use cgmath::{prelude::*, Matrix4, Point3, Quaternion};
 use generational_arena::Arena;
 use lyon::tessellation::{
-    basic_shapes::stroke_rectangle, Count, FillAttributes, FillGeometryBuilder, GeometryBuilder,
-    GeometryBuilderError, StrokeAttributes, StrokeGeometryBuilder, StrokeOptions, VertexId,
+    basic_shapes::fill_rectangle, BasicGeometryBuilder, Count, FillAttributes, FillGeometryBuilder,
+    FillOptions, GeometryBuilder, GeometryBuilderError, StrokeAttributes, StrokeGeometryBuilder,
+    VertexId,
 };
 use std::{
     cmp::Ordering,
@@ -17,6 +18,7 @@ pub struct Scene2d {
     pub(crate) arena: Arena<Arc<Mutex<MeshStorage>>>,
     pub(crate) placements: HashMap<generational_arena::Index, Placement2d>,
     pub(crate) size: Size2d,
+    pub(crate) scale_factor: f32,
 }
 
 pub struct Scene2dNode {}
@@ -27,6 +29,7 @@ impl Scene2d {
             arena: Arena::new(),
             size: Size2d::default(),
             placements: HashMap::new(),
+            scale_factor: 1.0,
         }
     }
 
@@ -40,9 +43,14 @@ impl Scene2d {
 
     pub(crate) fn projection(&self, location: &Placement2dLocation) -> Matrix4<f32> {
         match location {
-            Placement2dLocation::Screen => {
-                cgmath::ortho(0.0, self.size.width, self.size.height, 0.0, 1.0, -1.0)
-            }
+            Placement2dLocation::Screen => cgmath::ortho(
+                0.0,
+                self.size.width / self.scale_factor,
+                self.size.height / self.scale_factor,
+                0.0,
+                1.0,
+                -1.0,
+            ),
             Placement2dLocation::Z(_z) => todo!(), // need camera, cgmath::perspective(110.0, self.size.width / self.size.height, , far),
         }
     }
@@ -65,9 +73,22 @@ impl<'a> ScreenScene<'a> {
         Mesh2d { id, storage }
     }
 
+    pub fn create_mesh_clone(&mut self, copy: &Mesh2d) -> Mesh2d {
+        let copy_storage = copy.storage.lock().expect("Error locking copy storage");
+        let storage = Arc::new(Mutex::new(MeshStorage {
+            shape: copy_storage.shape.clone(),
+            material: copy_storage.material.clone(),
+            angle: copy_storage.angle,
+            scale: copy_storage.scale,
+            position: copy_storage.position,
+        }));
+        let id = self.scene.arena.insert(storage.clone());
+        Mesh2d { id, storage }
+    }
+
     pub fn place_mesh(
         &mut self,
-        mesh: Mesh2d,
+        mesh: &Mesh2d,
         relative_to: Option<generational_arena::Index>,
         position: Point2d,
         angle: Rad<f32>,
@@ -84,7 +105,7 @@ impl<'a> ScreenScene<'a> {
                 p.location = Placement2dLocation::Screen;
             })
             .or_insert_with(|| Placement2d {
-                mesh,
+                mesh: mesh.clone(),
                 relative_to,
                 position,
                 angle,
@@ -150,23 +171,34 @@ impl StrokeGeometryBuilder for Shape {
         Ok(VertexId(storage.vertices.len() as u32 - 1))
     }
 }
+
+impl BasicGeometryBuilder for Shape {
+    fn add_vertex(&mut self, position: Point2d) -> Result<VertexId, GeometryBuilderError> {
+        let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
+        if storage.vertices.len() as u32 >= std::u32::MAX {
+            return Err(GeometryBuilderError::TooManyVertices);
+        }
+        storage.vertices.push(position);
+        Ok(VertexId(storage.vertices.len() as u32 - 1))
+    }
+}
+
 #[derive(Clone)]
 pub struct Shape {
-    storage: Arc<Mutex<ShapeStorage>>,
+    pub(crate) storage: Arc<Mutex<ShapeStorage>>,
 }
 
 #[derive(Default)]
-struct ShapeStorage {
-    vertices: Vec<Point2d>,
-    texture_coordinates: Vec<Point2d>,
-    triangles: Vec<(VertexId, VertexId, VertexId)>,
+pub(crate) struct ShapeStorage {
+    pub vertices: Vec<Point2d>,
+    pub texture_coordinates: Vec<Point2d>,
+    pub triangles: Vec<(VertexId, VertexId, VertexId)>,
 }
 
 impl Shape {
     pub fn rect(r: &Rect) -> Self {
         let mut shape = Self::default();
-        stroke_rectangle(r, &StrokeOptions::default(), &mut shape)
-            .expect("Error generating rectangle");
+        fill_rectangle(r, &FillOptions::default(), &mut shape).expect("Error generating rectangle");
         shape
     }
 }
@@ -182,7 +214,7 @@ impl Default for Shape {
 #[derive(Clone)]
 pub struct Mesh2d {
     pub id: generational_arena::Index,
-    storage: Arc<Mutex<MeshStorage>>,
+    pub(crate) storage: Arc<Mutex<MeshStorage>>,
 }
 
 pub(crate) struct MeshStorage {
