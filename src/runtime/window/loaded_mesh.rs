@@ -1,5 +1,4 @@
-use crate::internal_prelude::*;
-use crate::{materials::prelude::*, runtime::flattened_scene::FlattenedMesh2d};
+use crate::{materials::prelude::*, runtime::flattened_scene::FlattenedMesh};
 use cgmath::{Matrix4, Vector4};
 use gl::types::*;
 use std::ptr;
@@ -16,18 +15,10 @@ pub(crate) struct LoadedMesh {
 }
 
 impl LoadedMesh {
-    pub fn compile(mesh: &FlattenedMesh2d) -> LoadedMesh {
+    pub fn compile(mesh: &FlattenedMesh) -> LoadedMesh {
         use std::mem;
         use std::os::raw::c_void;
         let (vao, ebo, vbo, material, count) = {
-            let storage = mesh.mesh.storage.lock().expect("Error locking mesh");
-            let shape = storage.shape.storage.lock().expect("Error locking shape");
-            let vertices: &[Point2d] = &shape.vertices;
-            let faces = shape
-                .triangles
-                .iter()
-                .map(|(a, b, c)| (a.0, b.0, c.0))
-                .collect::<Vec<(u32, u32, u32)>>();
             let (vao, ebo, vbo) = unsafe {
                 let (mut vbo, mut vao, mut ebo) = (0, 0, 0);
                 gl::GenVertexArrays(1, &mut vao);
@@ -39,25 +30,25 @@ impl LoadedMesh {
                 gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
                 gl::BufferData(
                     gl::ARRAY_BUFFER,
-                    (vertices.len() * mem::size_of::<f32>() * 2) as GLsizeiptr,
-                    vertices.as_ptr() as *const c_void,
+                    (mesh.vertices.len() * mem::size_of::<f32>() * 3) as GLsizeiptr,
+                    mesh.vertices.as_ptr() as *const c_void,
                     gl::STATIC_DRAW,
                 );
 
                 gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
                 gl::BufferData(
                     gl::ELEMENT_ARRAY_BUFFER,
-                    (faces.len() * mem::size_of::<u32>() * 3) as GLsizeiptr,
-                    faces.as_ptr() as *const c_void,
+                    (mesh.triangles.len() * mem::size_of::<u32>() * 3) as GLsizeiptr,
+                    mesh.triangles.as_ptr() as *const c_void,
                     gl::STATIC_DRAW,
                 );
 
                 gl::VertexAttribPointer(
                     0,
-                    2,
+                    3,
                     gl::FLOAT,
                     gl::FALSE,
-                    2 * mem::size_of::<f32>() as GLsizei,
+                    3 * mem::size_of::<f32>() as GLsizei,
                     ptr::null(),
                 );
                 gl::EnableVertexAttribArray(0);
@@ -74,9 +65,9 @@ impl LoadedMesh {
                 (vao, ebo, vbo)
             };
 
-            let material = storage.material.compile();
+            let material = mesh.material.compile();
 
-            (vao, ebo, vbo, material, faces.len() as i32 * 3)
+            (vao, ebo, vbo, material, mesh.triangles.len() as i32 * 3)
         };
 
         LoadedMesh {

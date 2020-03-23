@@ -1,10 +1,10 @@
-use crate::scene2d::{Mesh2d, Scene2d};
-use cgmath::{prelude::*, Matrix4, Quaternion, Vector3, Vector4};
+use crate::{materials::Material, scene2d::Scene2d};
+use cgmath::{prelude::*, Matrix4, Quaternion, Vector2, Vector3, Vector4};
 use std::collections::HashMap;
 
 #[derive(Default)]
 pub struct FlattenedScene {
-    pub meshes: Vec<FlattenedMesh2d>,
+    pub meshes: Vec<FlattenedMesh>,
 }
 
 impl FlattenedScene {
@@ -38,7 +38,7 @@ impl FlattenedScene {
         }
 
         while let Some((placement, projection, orientation, position, scale)) = stack.pop() {
-            let mesh = placement.mesh.clone();
+            let id = placement.mesh.id;
 
             let mesh_position = orientation.rotate_vector(Vector3::new(
                 placement.position.x,
@@ -57,8 +57,35 @@ impl FlattenedScene {
             let orientation = orientation * Quaternion::from_angle_z(placement.angle);
             let scale = scale * placement.scale;
 
-            self.meshes.push(FlattenedMesh2d {
-                mesh,
+            let (material, vertices, texture_coordinates, triangles) = {
+                let mesh = placement.mesh.storage.lock().expect("Error locking mesh");
+                let material = mesh.material.clone();
+                let shape = mesh.shape.storage.lock().expect("Error locking shape");
+                let vertices = shape
+                    .vertices
+                    .iter()
+                    .map(|v| Vector3::new(v.x, v.y, 0.0))
+                    .collect();
+                let texture_coordinates = shape
+                    .texture_coordinates
+                    .iter()
+                    .map(|v| Vector2::new(v.x, v.y))
+                    .collect();
+                let triangles = shape
+                    .triangles
+                    .iter()
+                    .map(|(a, b, c)| (a.0, b.0, c.0))
+                    .collect();
+
+                (material, vertices, texture_coordinates, triangles)
+            };
+
+            self.meshes.push(FlattenedMesh {
+                id,
+                material,
+                vertices,
+                texture_coordinates,
+                triangles,
                 projection,
                 model: Matrix4::from(orientation) * Matrix4::from_scale(scale),
                 offset,
@@ -76,8 +103,12 @@ impl FlattenedScene {
     }
 }
 
-pub struct FlattenedMesh2d {
-    pub mesh: Mesh2d,
+pub struct FlattenedMesh {
+    pub id: generational_arena::Index,
+    pub material: Material,
+    pub vertices: Vec<Vector3<f32>>,
+    pub texture_coordinates: Vec<Vector2<f32>>,
+    pub triangles: Vec<(u32, u32, u32)>,
     pub projection: Matrix4<f32>,
     pub model: Matrix4<f32>,
     pub offset: Vector4<f32>,
