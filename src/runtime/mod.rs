@@ -12,6 +12,8 @@ pub(crate) mod window;
 use request::*;
 use threading::*;
 
+const FRAME_DURATION: u64 = 6_944_444;
+
 pub struct ApplicationRuntime<App> {
     app: App,
 }
@@ -95,7 +97,7 @@ impl EventProcessor for Runtime {
             .checked_duration_since(self.next_frame_target)
             .unwrap_or_default()
             .as_nanos()
-            > 16_666_666;
+            > (FRAME_DURATION as u128);
         while let Some(request) = self.request_receiver.try_next().unwrap_or_default() {
             match request {
                 RuntimeRequest::OpenWindow { window, builder } => {
@@ -126,11 +128,11 @@ impl EventProcessor for Runtime {
             RuntimeWindow::render_all();
             self.next_frame_target = self
                 .next_frame_target
-                .checked_add(Duration::from_nanos(16_666_666))
+                .checked_add(Duration::from_nanos(FRAME_DURATION))
                 .unwrap_or(self.next_frame_target);
             if self.next_frame_target < now {
                 self.next_frame_target = now
-                    .checked_add(Duration::from_nanos(16_666_666))
+                    .checked_add(Duration::from_nanos(FRAME_DURATION))
                     .unwrap_or(now);
             }
             *control_flow = glutin::event_loop::ControlFlow::WaitUntil(self.next_frame_target);
