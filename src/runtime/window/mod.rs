@@ -319,20 +319,11 @@ impl RuntimeWindow {
                     gl::UniformMatrix4fv(
                         gl::GetUniformLocation(
                             loaded_mesh.material.shader_program,
-                            CString::new("rotation".as_bytes()).unwrap().as_ptr(),
+                            CString::new("model".as_bytes()).unwrap().as_ptr(),
                         ),
                         1,
                         gl::FALSE,
-                        loaded_mesh.rotation.as_ptr() as *const f32,
-                    );
-                    gl::UniformMatrix4fv(
-                        gl::GetUniformLocation(
-                            loaded_mesh.material.shader_program,
-                            CString::new("translation".as_bytes()).unwrap().as_ptr(),
-                        ),
-                        1,
-                        gl::FALSE,
-                        loaded_mesh.translation.as_ptr() as *const f32,
+                        loaded_mesh.model.as_ptr() as *const f32,
                     );
                     gl::DrawElements(
                         gl::TRIANGLES,

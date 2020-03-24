@@ -86,8 +86,7 @@ impl FlattenedScene {
                 texture_coordinates,
                 triangles,
                 projection,
-                rotation: Matrix4::from(orientation) * Matrix4::from_scale(scale),
-                translation,
+                model: translation * Matrix4::from(orientation) * Matrix4::from_scale(scale),
                 scale,
             });
             //  Push all children
@@ -110,7 +109,6 @@ pub struct FlattenedMesh {
     pub texture_coordinates: Vec<Vector2<f32>>,
     pub triangles: Vec<(u32, u32, u32)>,
     pub projection: Matrix4<f32>,
-    pub rotation: Matrix4<f32>,
-    pub translation: Matrix4<f32>,
+    pub model: Matrix4<f32>,
     pub scale: f32,
 }

@@ -9,16 +9,14 @@ pub(crate) struct LoadedMesh {
     pub ebo: u32,
     pub vbo: u32,
     pub count: i32,
-    pub translation: Matrix4<f32>,
+    pub model: Matrix4<f32>,
     pub projection: Matrix4<f32>,
-    pub rotation: Matrix4<f32>,
 }
 
 impl LoadedMesh {
     pub fn update(&mut self, mesh: &FlattenedMesh) {
         self.projection = mesh.projection;
-        self.translation = mesh.translation;
-        self.rotation = mesh.rotation;
+        self.model = mesh.model;
     }
 
     pub fn compile(mesh: &FlattenedMesh) -> LoadedMesh {
@@ -82,9 +80,8 @@ impl LoadedMesh {
             vbo,
             count,
             material,
-            translation: mesh.translation,
+            model: mesh.model,
             projection: mesh.projection,
-            rotation: mesh.rotation,
         }
     }
 }

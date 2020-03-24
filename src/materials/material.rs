@@ -11,11 +11,9 @@ pub enum Material {
 const VERTEX_SHADER_SOURCE: &str = r#"
     #version 140
     uniform mat4 projection;
-    uniform mat4 rotation;
-    uniform mat4 translation;
+    uniform mat4 model;
     in vec3 position;
     void main() {
-        mat4 model = translation * rotation;
         vec4 transformed = model * vec4(position, 1.0);
 
         gl_Position = projection * transformed;
