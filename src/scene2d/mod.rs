@@ -20,7 +20,7 @@ use std::{
     cmp::Ordering,
     collections::HashMap,
     ptr,
-    sync::{Arc, Mutex},
+    sync::{Arc, RwLock},
 };
 
 #[derive(Educe)]
@@ -42,7 +42,7 @@ pub(crate) struct ScreenSettings {
 }
 
 pub struct Scene2d {
-    pub(crate) arena: Arena<Arc<Mutex<MeshStorage>>>,
+    pub(crate) arena: Arena<Arc<RwLock<MeshStorage>>>,
     pub(crate) placements: HashMap<generational_arena::Index, Placement2d>,
     pub(crate) size: Size2d,
     pub(crate) screen_settings: ScreenSettings,
@@ -95,7 +95,7 @@ impl Scene2d {
 
     pub fn create_mesh<M: Into<Material>>(&mut self, shape: Shape, material: M) -> Mesh2d {
         let material = material.into();
-        let storage = Arc::new(Mutex::new(MeshStorage {
+        let storage = Arc::new(RwLock::new(MeshStorage {
             shape,
             material,
             angle: Rad(0.0),
@@ -107,8 +107,8 @@ impl Scene2d {
     }
 
     pub fn create_mesh_clone(&mut self, copy: &Mesh2d) -> Mesh2d {
-        let copy_storage = copy.storage.lock().expect("Error locking copy storage");
-        let storage = Arc::new(Mutex::new(MeshStorage {
+        let copy_storage = copy.storage.read().expect("Error locking copy storage");
+        let storage = Arc::new(RwLock::new(MeshStorage {
             shape: copy_storage.shape.clone(),
             material: copy_storage.material.clone(),
             angle: copy_storage.angle,
@@ -122,12 +122,12 @@ impl Scene2d {
 
 impl GeometryBuilder for Shape {
     fn begin_geometry(&mut self) {
-        let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
+        let mut storage = self.storage.write().expect("Error locking ShapeStorage");
         storage.vertices.clear();
     }
 
     fn end_geometry(&mut self) -> Count {
-        let storage = self.storage.lock().expect("Error locking ShapeStorage");
+        let storage = self.storage.read().expect("Error locking ShapeStorage");
         Count {
             vertices: (storage.vertices.len()) as u32,
             indices: storage.triangle_verticies.len() as u32,
@@ -135,14 +135,14 @@ impl GeometryBuilder for Shape {
     }
 
     fn add_triangle(&mut self, a: VertexId, b: VertexId, c: VertexId) {
-        let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
+        let mut storage = self.storage.write().expect("Error locking ShapeStorage");
         storage.triangle_verticies.push(a.0);
         storage.triangle_verticies.push(b.0);
         storage.triangle_verticies.push(c.0);
     }
 
     fn abort_geometry(&mut self) {
-        let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
+        let mut storage = self.storage.write().expect("Error locking ShapeStorage");
         storage.vertices.clear();
     }
 }
@@ -153,7 +153,7 @@ impl FillGeometryBuilder for Shape {
         position: Point2d,
         _: FillAttributes,
     ) -> Result<VertexId, GeometryBuilderError> {
-        let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
+        let mut storage = self.storage.write().expect("Error locking ShapeStorage");
         if storage.vertices.len() as u32 >= std::u32::MAX {
             return Err(GeometryBuilderError::TooManyVertices);
         }
@@ -170,7 +170,7 @@ impl StrokeGeometryBuilder for Shape {
         position: Point2d,
         _: StrokeAttributes,
     ) -> Result<VertexId, GeometryBuilderError> {
-        let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
+        let mut storage = self.storage.write().expect("Error locking ShapeStorage");
         if storage.vertices.len() as u32 >= std::u32::MAX {
             return Err(GeometryBuilderError::TooManyVertices);
         }
@@ -183,7 +183,7 @@ impl StrokeGeometryBuilder for Shape {
 
 impl BasicGeometryBuilder for Shape {
     fn add_vertex(&mut self, position: Point2d) -> Result<VertexId, GeometryBuilderError> {
-        let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
+        let mut storage = self.storage.write().expect("Error locking ShapeStorage");
         if storage.vertices.len() as u32 >= std::u32::MAX {
             return Err(GeometryBuilderError::TooManyVertices);
         }
@@ -196,7 +196,7 @@ impl BasicGeometryBuilder for Shape {
 
 #[derive(Clone)]
 pub struct Shape {
-    pub(crate) storage: Arc<Mutex<ShapeStorage>>,
+    pub(crate) storage: Arc<RwLock<ShapeStorage>>,
 }
 
 #[derive(Clone)]
@@ -242,7 +242,7 @@ impl Shape {
     }
 
     pub(crate) fn compile(&self) -> Arc<CompiledShape> {
-        let mut shape = self.storage.lock().expect("Error locking shape");
+        let mut shape = self.storage.write().expect("Error locking shape");
         if let None = &shape.compiled {
             let (vao, ebo, vbo) = unsafe {
                 let (mut vbo, mut vao, mut ebo) = (0, 0, 0);
@@ -295,7 +295,7 @@ impl Shape {
 impl Default for Shape {
     fn default() -> Self {
         Shape {
-            storage: Arc::new(Mutex::new(ShapeStorage::default())),
+            storage: Arc::new(RwLock::new(ShapeStorage::default())),
         }
     }
 }
@@ -303,7 +303,7 @@ impl Default for Shape {
 #[derive(Clone)]
 pub struct Mesh2d {
     pub id: generational_arena::Index,
-    pub(crate) storage: Arc<Mutex<MeshStorage>>,
+    pub(crate) storage: Arc<RwLock<MeshStorage>>,
 }
 
 pub(crate) struct MeshStorage {

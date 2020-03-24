@@ -12,7 +12,7 @@ pub(crate) mod window;
 use request::*;
 use threading::*;
 
-const FRAME_DURATION: u64 = 6_944_444;
+pub(crate) const FRAME_DURATION: u64 = 6_944_444;
 
 pub struct ApplicationRuntime<App> {
     app: App,

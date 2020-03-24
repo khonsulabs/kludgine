@@ -19,7 +19,7 @@ impl LoadedMesh {
 
     pub fn compile(mesh: &FlattenedMesh) -> LoadedMesh {
         let (shape, material) = {
-            let mesh = mesh.original.storage.lock().expect("Error locking mesh");
+            let mesh = mesh.original.storage.read().expect("Error locking mesh");
             let material = mesh.material.compile();
             let shape = mesh.shape.compile();
             (shape, material)

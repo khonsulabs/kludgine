@@ -76,7 +76,7 @@ impl FlattenedScene {
                         let scale = scale * placement.scale;
 
                         let material = {
-                            let mesh = placement.mesh.storage.lock().expect("Error locking mesh");
+                            let mesh = placement.mesh.storage.read().expect("Error locking mesh");
                             let material = mesh.material.clone();
 
                             material

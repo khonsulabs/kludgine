@@ -1,7 +1,7 @@
 use super::{Mesh2d, MeshStorage, Placement2d, Placement2dLocation, Scene2d, Shape};
 use crate::internal_prelude::*;
 use crate::materials::Material;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 pub struct ScreenScene<'a> {
     pub scene: &'a mut Scene2d,
 }
@@ -9,7 +9,7 @@ pub struct ScreenScene<'a> {
 impl<'a> ScreenScene<'a> {
     pub fn create_mesh<M: Into<Material>>(&mut self, shape: Shape, material: M) -> Mesh2d {
         let material = material.into();
-        let storage = Arc::new(Mutex::new(MeshStorage {
+        let storage = Arc::new(RwLock::new(MeshStorage {
             shape,
             material,
             angle: Rad(0.0),
@@ -21,8 +21,8 @@ impl<'a> ScreenScene<'a> {
     }
 
     pub fn create_mesh_clone(&mut self, copy: &Mesh2d) -> Mesh2d {
-        let copy_storage = copy.storage.lock().expect("Error locking copy storage");
-        let storage = Arc::new(Mutex::new(MeshStorage {
+        let copy_storage = copy.storage.read().expect("Error locking copy storage");
+        let storage = Arc::new(RwLock::new(MeshStorage {
             shape: copy_storage.shape.clone(),
             material: copy_storage.material.clone(),
             angle: copy_storage.angle,

@@ -1,6 +1,6 @@
 use crate::internal_prelude::*;
 use crate::{
-    runtime::{flattened_scene::FlattenedScene, Runtime},
+    runtime::{flattened_scene::FlattenedScene, Runtime, FRAME_DURATION},
     scene2d::Scene2d,
     window::{CloseResponse, Window},
 };
@@ -17,7 +17,7 @@ use std::{
     ops::Deref,
     ptr,
     sync::{Arc, Mutex, Once},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 mod loaded_mesh;
@@ -131,6 +131,7 @@ impl RuntimeWindow {
         T: Window + ?Sized,
     {
         let mut scene2d = Scene2d::new();
+        let mut next_frame_target = Instant::now();
         loop {
             while let Some(event) = event_receiver.try_next().unwrap_or_default() {
                 match event {
@@ -146,16 +147,38 @@ impl RuntimeWindow {
                     }
                 }
             }
-            if scene2d.size.width > 0.0 && scene2d.size.height > 0.0 {
-                window.render_2d(&mut scene2d).await?;
-                let mut flattened_scene = FlattenedScene::default();
-                flattened_scene.flatten_2d(&scene2d);
+            let frame_start = Instant::now();
+            if frame_start
+                .checked_duration_since(next_frame_target)
+                .unwrap_or_default()
+                .as_nanos()
+                > 0
+            {
+                if scene2d.size.width > 0.0 && scene2d.size.height > 0.0 {
+                    window.render_2d(&mut scene2d).await?;
+                    let mut flattened_scene = FlattenedScene::default();
+                    flattened_scene.flatten_2d(&scene2d);
 
-                WindowMessage::UpdateScene(flattened_scene)
-                    .send_to(id)
-                    .await?;
+                    WindowMessage::UpdateScene(flattened_scene)
+                        .send_to(id)
+                        .await?;
+                }
+                let now = Instant::now();
+                let elapsed_nanos = now
+                    .checked_duration_since(next_frame_target)
+                    .unwrap_or_default()
+                    .as_nanos() as i64;
+                println!("Elapsed nanos {}", elapsed_nanos);
+                if next_frame_target < now {
+                    next_frame_target = now;
+                }
+                next_frame_target = next_frame_target
+                    .checked_add(Duration::from_nanos(FRAME_DURATION))
+                    .unwrap_or(next_frame_target);
+                let sleep_nanos = (FRAME_DURATION as i64 - elapsed_nanos).max(0);
+                println!("Sleeping for {}", sleep_nanos);
+                async_std::task::sleep(Duration::from_nanos(sleep_nanos as u64)).await;
             }
-            async_std::task::sleep(Duration::from_millis(1)).await;
         }
     }
 
