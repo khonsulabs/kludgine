@@ -49,8 +49,7 @@ pub mod prelude {
 }
 
 mod internal_prelude {
-    pub use super::{math::*, KludgineError, KludgineResult};
-    pub use color_processing::Color;
+    pub use super::prelude::*;
     pub use futures::channel::{mpsc, oneshot};
     pub use futures::executor::block_on;
     pub use futures::sink::SinkExt;

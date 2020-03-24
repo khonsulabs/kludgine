@@ -43,7 +43,7 @@ impl FlattenedScene {
             let mesh_position = orientation.rotate_vector(Vector3::new(
                 placement.position.x,
                 placement.position.y,
-                0.0,
+                placement.z(),
             ));
 
             let position = position

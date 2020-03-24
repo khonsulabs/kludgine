@@ -13,9 +13,9 @@ const VERTEX_SHADER_SOURCE: &str = r#"
     uniform mat4 matrix;
     uniform mat4 model;
     uniform vec3 offset;
-    in vec2 position;
+    in vec3 position;
     void main() {
-        gl_Position = vec4(offset, 0.0) + (matrix * model * vec4(position, 0.0, 1.0));
+        gl_Position = vec4(offset, 0.0) + (matrix * model * vec4(position, 1.0));
     }
 "#;
 
@@ -24,7 +24,7 @@ const FRAGMENT_SHADER_SOURCE: &str = r#"
     uniform vec4 color;
     out vec4 f_color;
     void main() {
-        f_color = vec4(1.0,0.0,0.0,1.0);
+        f_color = color;
     }
 "#;
 

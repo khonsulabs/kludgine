@@ -146,13 +146,15 @@ impl RuntimeWindow {
                     }
                 }
             }
-            window.render_2d(&mut scene2d).await?;
-            let mut flattened_scene = FlattenedScene::default();
-            flattened_scene.flatten_2d(&scene2d);
+            if scene2d.size.width > 0.0 && scene2d.size.height > 0.0 {
+                window.render_2d(&mut scene2d).await?;
+                let mut flattened_scene = FlattenedScene::default();
+                flattened_scene.flatten_2d(&scene2d);
 
-            WindowMessage::UpdateScene(flattened_scene)
-                .send_to(id)
-                .await?;
+                WindowMessage::UpdateScene(flattened_scene)
+                    .send_to(id)
+                    .await?;
+            }
             async_std::task::sleep(Duration::from_millis(1)).await;
         }
     }

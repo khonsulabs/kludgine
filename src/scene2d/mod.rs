@@ -1,3 +1,8 @@
+mod perspective;
+mod screen;
+pub use perspective::PerspectiveScene;
+pub use screen::ScreenScene;
+
 use crate::internal_prelude::*;
 use crate::materials::Material;
 use cgmath::Matrix4;
@@ -37,6 +42,10 @@ impl Scene2d {
         ScreenScene { scene: self }
     }
 
+    pub fn perspective<'a>(&'a mut self) -> PerspectiveScene<'a> {
+        PerspectiveScene { scene: self }
+    }
+
     pub fn size(&self) -> Size2d {
         self.size
     }
@@ -51,16 +60,12 @@ impl Scene2d {
                 1.0,
                 -1.0,
             ),
-            Placement2dLocation::Z(_z) => todo!(), // need camera, cgmath::perspective(110.0, self.size.width / self.size.height, , far),
+            Placement2dLocation::Z(_) => {
+                cgmath::perspective(Deg(110.0), self.size.width / self.size.height, 1.0, 10.0)
+            }
         }
     }
-}
 
-pub struct ScreenScene<'a> {
-    scene: &'a mut Scene2d,
-}
-
-impl<'a> ScreenScene<'a> {
     pub fn create_mesh(&mut self, shape: Shape, material: Material) -> Mesh2d {
         let storage = Arc::new(Mutex::new(MeshStorage {
             shape,
@@ -69,7 +74,7 @@ impl<'a> ScreenScene<'a> {
             scale: 1.0,
             position: Point2d::new(0.0, 0.0),
         }));
-        let id = self.scene.arena.insert(storage.clone());
+        let id = self.arena.insert(storage.clone());
         Mesh2d { id, storage }
     }
 
@@ -82,36 +87,8 @@ impl<'a> ScreenScene<'a> {
             scale: copy_storage.scale,
             position: copy_storage.position,
         }));
-        let id = self.scene.arena.insert(storage.clone());
+        let id = self.arena.insert(storage.clone());
         Mesh2d { id, storage }
-    }
-
-    pub fn place_mesh(
-        &mut self,
-        mesh: &Mesh2d,
-        relative_to: Option<generational_arena::Index>,
-        position: Point2d,
-        angle: Rad<f32>,
-        scale: f32,
-    ) {
-        self.scene
-            .placements
-            .entry(mesh.id)
-            .and_modify(|p| {
-                p.relative_to = relative_to;
-                p.position = position;
-                p.angle = angle;
-                p.scale = scale;
-                p.location = Placement2dLocation::Screen;
-            })
-            .or_insert_with(|| Placement2d {
-                mesh: mesh.clone(),
-                relative_to,
-                position,
-                angle,
-                scale,
-                location: Placement2dLocation::Screen,
-            });
     }
 }
 
@@ -242,6 +219,15 @@ pub(crate) struct Placement2d {
 pub(crate) enum Placement2dLocation {
     Screen,
     Z(f32),
+}
+
+impl Placement2d {
+    pub fn z(&self) -> f32 {
+        match self.location {
+            Placement2dLocation::Screen => 0.0,
+            Placement2dLocation::Z(z) => z,
+        }
+    }
 }
 
 impl std::cmp::PartialOrd for Placement2dLocation {
