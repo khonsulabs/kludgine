@@ -15,6 +15,12 @@ pub(crate) struct LoadedMesh {
 }
 
 impl LoadedMesh {
+    pub fn update(&mut self, mesh: &FlattenedMesh) {
+        self.projection = mesh.projection;
+        self.translation = mesh.translation;
+        self.rotation = mesh.rotation;
+    }
+
     pub fn compile(mesh: &FlattenedMesh) -> LoadedMesh {
         use std::mem;
         use std::os::raw::c_void;

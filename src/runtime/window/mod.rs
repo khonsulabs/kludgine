@@ -74,8 +74,7 @@ pub(crate) struct RuntimeWindow {
     wait_for_scene: bool,
     last_known_size: Option<Size2d>,
     last_known_scale_factor: Option<f32>,
-    // TODO re-enable cache, see comment near mesh_cache usage later in the file
-    // mesh_cache: HashMap<generational_arena::Index, LoadedMesh>,
+    mesh_cache: HashMap<generational_arena::Index, LoadedMesh>,
 }
 
 impl RuntimeWindow {
@@ -117,6 +116,7 @@ impl RuntimeWindow {
                     last_known_size: None,
                     event_sender,
                     last_known_scale_factor: None,
+                    mesh_cache: HashMap::new(),
                 },
             )
         });
@@ -298,13 +298,11 @@ impl RuntimeWindow {
         use std::ffi::CString;
         if let Some(scene) = &self.scene {
             for mesh in scene.meshes.iter() {
-                // TODO We should be able to cache, but for some reason I can't get this to render without recompiling it each time.
-                // Something isn't persisting but looking at examples I'm at a loss as to what.
-                // let loaded_mesh = self
-                //     .mesh_cache
-                //     .entry(mesh.mesh.id)
-                //     .or_insert_with(|| LoadedMesh::compile(mesh));
-                let loaded_mesh = LoadedMesh::compile(mesh);
+                let loaded_mesh = self
+                    .mesh_cache
+                    .entry(mesh.id)
+                    .and_modify(|lm| lm.update(mesh))
+                    .or_insert_with(|| LoadedMesh::compile(mesh));
 
                 loaded_mesh.material.activate();
                 unsafe {
