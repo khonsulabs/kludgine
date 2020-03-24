@@ -304,9 +304,8 @@ impl RuntimeWindow {
                     .and_modify(|lm| lm.update(mesh))
                     .or_insert_with(|| LoadedMesh::compile(mesh));
 
-                loaded_mesh.material.activate();
+                loaded_mesh.activate();
                 unsafe {
-                    gl::BindVertexArray(loaded_mesh.vao);
                     gl::UniformMatrix4fv(
                         gl::GetUniformLocation(
                             loaded_mesh.material.shader_program,
@@ -327,7 +326,7 @@ impl RuntimeWindow {
                     );
                     gl::DrawElements(
                         gl::TRIANGLES,
-                        loaded_mesh.count,
+                        loaded_mesh.shape.count,
                         gl::UNSIGNED_INT,
                         ptr::null(),
                     );

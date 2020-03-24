@@ -13,7 +13,7 @@ pub enum MaterialKind {
 
 pub(crate) struct MaterialStorage {
     pub kind: MaterialKind,
-    compiled: Option<CompiledMaterial>,
+    compiled: Option<Arc<CompiledMaterial>>,
 }
 
 #[derive(Clone)]
@@ -53,7 +53,7 @@ const FRAGMENT_SHADER_SOURCE: &str = r#"
 "#;
 
 impl Material {
-    pub(crate) fn compile(&self) -> CompiledMaterial {
+    pub(crate) fn compile(&self) -> Arc<CompiledMaterial> {
         let mut storage = self.storage.lock().expect("Error locking material");
         if let None = &storage.compiled {
             match &storage.kind {
@@ -132,7 +132,7 @@ impl Material {
                         shader_program
                     };
 
-                    storage.compiled = Some(CompiledMaterial {
+                    storage.compiled = Some(Arc::new(CompiledMaterial {
                         shader_program,
                         color: Vector4::new(
                             color.red as f32 / 255.0,
@@ -140,7 +140,7 @@ impl Material {
                             color.green as f32 / 255.0,
                             color.alpha as f32 / 255.0,
                         ),
-                    });
+                    }));
                 }
             }
         }
@@ -175,6 +175,7 @@ impl CompiledMaterial {
             } else {
                 gl::Disable(gl::BLEND);
             }
+            assert!(gl::GetError() == 0);
         }
     }
 }

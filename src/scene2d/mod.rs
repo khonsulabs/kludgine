@@ -7,7 +7,6 @@ use crate::internal_prelude::*;
 use crate::materials::Material;
 use cgmath::Rad;
 use cgmath::{Matrix4, Vector2, Vector3};
-use crossbeam::atomic::AtomicCell;
 use generational_arena::Arena;
 use gl::types::*;
 use lyon::tessellation::{
@@ -23,10 +22,6 @@ use std::{
     ptr,
     sync::{Arc, Mutex},
 };
-
-lazy_static! {
-    static ref SHAPE_ID_CELL: AtomicCell<u64> = { AtomicCell::new(0) };
-}
 
 #[derive(Educe)]
 #[educe(Default)]
@@ -135,13 +130,15 @@ impl GeometryBuilder for Shape {
         let storage = self.storage.lock().expect("Error locking ShapeStorage");
         Count {
             vertices: (storage.vertices.len()) as u32,
-            indices: (storage.triangles.len() * 3) as u32,
+            indices: storage.triangle_verticies.len() as u32,
         }
     }
 
     fn add_triangle(&mut self, a: VertexId, b: VertexId, c: VertexId) {
         let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
-        storage.triangles.push((a.0, b.0, c.0));
+        storage.triangle_verticies.push(a.0);
+        storage.triangle_verticies.push(b.0);
+        storage.triangle_verticies.push(c.0);
     }
 
     fn abort_geometry(&mut self) {
@@ -223,12 +220,18 @@ impl Drop for CompiledShape {
     }
 }
 
+impl CompiledShape {
+    pub fn activate(&self) {
+        unsafe { gl::BindVertexArray(self.vao) };
+    }
+}
+
 #[derive(Default)]
 pub(crate) struct ShapeStorage {
     pub vertices: Vec<Vector3<f32>>,
     pub texture_coordinates: Vec<Vector2<f32>>,
-    pub triangles: Vec<(u32, u32, u32)>,
-    pub(crate) compiled: Option<CompiledShape>,
+    pub triangle_verticies: Vec<u32>,
+    pub(crate) compiled: Option<Arc<CompiledShape>>,
 }
 
 impl Shape {
@@ -238,7 +241,7 @@ impl Shape {
         shape
     }
 
-    pub(crate) fn compile(&self) -> CompiledShape {
+    pub(crate) fn compile(&self) -> Arc<CompiledShape> {
         let mut shape = self.storage.lock().expect("Error locking shape");
         if let None = &shape.compiled {
             let (vao, ebo, vbo) = unsafe {
@@ -260,11 +263,10 @@ impl Shape {
                 gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
                 gl::BufferData(
                     gl::ELEMENT_ARRAY_BUFFER,
-                    (shape.triangles.len() * mem::size_of::<u32>() * 3) as GLsizeiptr,
-                    shape.triangles.as_ptr() as *const c_void,
+                    (shape.triangle_verticies.len() * mem::size_of::<u32>()) as GLsizeiptr,
+                    shape.triangle_verticies.as_ptr() as *const c_void,
                     gl::STATIC_DRAW,
                 );
-
                 gl::VertexAttribPointer(
                     0,
                     3,
@@ -274,15 +276,16 @@ impl Shape {
                     ptr::null(),
                 );
                 gl::EnableVertexAttribArray(0);
+                assert!(gl::GetError() == 0);
 
                 (vao, ebo, vbo)
             };
-            shape.compiled = Some(CompiledShape {
+            shape.compiled = Some(Arc::new(CompiledShape {
                 vao,
                 ebo,
                 vbo,
-                count: shape.triangles.len() as i32,
-            })
+                count: shape.triangle_verticies.len() as i32,
+            }))
         }
 
         shape.compiled.as_ref().unwrap().clone()
