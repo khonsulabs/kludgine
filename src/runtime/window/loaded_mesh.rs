@@ -23,6 +23,9 @@ impl LoadedMesh {
         use std::mem;
         use std::os::raw::c_void;
         let (vao, ebo, vbo, material, count) = {
+            let mesh = mesh.original.storage.lock().expect("Error locking mesh");
+            let shape = mesh.shape.storage.lock().expect("Error locking shape");
+
             let (vao, ebo, vbo) = unsafe {
                 let (mut vbo, mut vao, mut ebo) = (0, 0, 0);
                 gl::GenVertexArrays(1, &mut vao);
@@ -34,16 +37,16 @@ impl LoadedMesh {
                 gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
                 gl::BufferData(
                     gl::ARRAY_BUFFER,
-                    (mesh.vertices.len() * mem::size_of::<f32>() * 3) as GLsizeiptr,
-                    mesh.vertices.as_ptr() as *const c_void,
+                    (shape.vertices.len() * mem::size_of::<f32>() * 3) as GLsizeiptr,
+                    shape.vertices.as_ptr() as *const c_void,
                     gl::STATIC_DRAW,
                 );
 
                 gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
                 gl::BufferData(
                     gl::ELEMENT_ARRAY_BUFFER,
-                    (mesh.triangles.len() * mem::size_of::<u32>() * 3) as GLsizeiptr,
-                    mesh.triangles.as_ptr() as *const c_void,
+                    (shape.triangles.len() * mem::size_of::<u32>() * 3) as GLsizeiptr,
+                    shape.triangles.as_ptr() as *const c_void,
                     gl::STATIC_DRAW,
                 );
 
@@ -71,7 +74,7 @@ impl LoadedMesh {
 
             let material = mesh.material.compile();
 
-            (vao, ebo, vbo, material, mesh.triangles.len() as i32 * 3)
+            (vao, ebo, vbo, material, shape.triangles.len() as i32 * 3)
         };
 
         LoadedMesh {

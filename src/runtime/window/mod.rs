@@ -300,7 +300,7 @@ impl RuntimeWindow {
             for mesh in scene.meshes.iter() {
                 let loaded_mesh = self
                     .mesh_cache
-                    .entry(mesh.id)
+                    .entry(mesh.original.id)
                     .and_modify(|lm| lm.update(mesh))
                     .or_insert_with(|| LoadedMesh::compile(mesh));
 

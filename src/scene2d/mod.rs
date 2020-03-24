@@ -5,8 +5,8 @@ pub use screen::ScreenScene;
 
 use crate::internal_prelude::*;
 use crate::materials::Material;
-use cgmath::Matrix4;
 use cgmath::Rad;
+use cgmath::{Matrix4, Vector2, Vector3};
 use generational_arena::Arena;
 use lyon::tessellation::{
     basic_shapes::fill_rectangle, BasicGeometryBuilder, Count, FillAttributes, FillGeometryBuilder,
@@ -115,8 +115,6 @@ impl Scene2d {
     }
 }
 
-pub struct Mesh {}
-
 impl GeometryBuilder for Shape {
     fn begin_geometry(&mut self) {
         let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
@@ -133,7 +131,7 @@ impl GeometryBuilder for Shape {
 
     fn add_triangle(&mut self, a: VertexId, b: VertexId, c: VertexId) {
         let mut storage = self.storage.lock().expect("Error locking ShapeStorage");
-        storage.triangles.push((a, b, c));
+        storage.triangles.push((a.0, b.0, c.0));
     }
 
     fn abort_geometry(&mut self) {
@@ -152,7 +150,9 @@ impl FillGeometryBuilder for Shape {
         if storage.vertices.len() as u32 >= std::u32::MAX {
             return Err(GeometryBuilderError::TooManyVertices);
         }
-        storage.vertices.push(position);
+        storage
+            .vertices
+            .push(Vector3::new(position.x, position.y, 0.0));
         Ok(VertexId(storage.vertices.len() as u32 - 1))
     }
 }
@@ -167,7 +167,9 @@ impl StrokeGeometryBuilder for Shape {
         if storage.vertices.len() as u32 >= std::u32::MAX {
             return Err(GeometryBuilderError::TooManyVertices);
         }
-        storage.vertices.push(position);
+        storage
+            .vertices
+            .push(Vector3::new(position.x, position.y, 0.0));
         Ok(VertexId(storage.vertices.len() as u32 - 1))
     }
 }
@@ -178,7 +180,9 @@ impl BasicGeometryBuilder for Shape {
         if storage.vertices.len() as u32 >= std::u32::MAX {
             return Err(GeometryBuilderError::TooManyVertices);
         }
-        storage.vertices.push(position);
+        storage
+            .vertices
+            .push(Vector3::new(position.x, position.y, 0.0));
         Ok(VertexId(storage.vertices.len() as u32 - 1))
     }
 }
@@ -190,9 +194,9 @@ pub struct Shape {
 
 #[derive(Default)]
 pub(crate) struct ShapeStorage {
-    pub vertices: Vec<Point2d>,
-    pub texture_coordinates: Vec<Point2d>,
-    pub triangles: Vec<(VertexId, VertexId, VertexId)>,
+    pub vertices: Vec<Vector3<f32>>,
+    pub texture_coordinates: Vec<Vector2<f32>>,
+    pub triangles: Vec<(u32, u32, u32)>,
 }
 
 impl Shape {
