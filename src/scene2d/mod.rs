@@ -7,17 +7,26 @@ use crate::internal_prelude::*;
 use crate::materials::Material;
 use cgmath::Rad;
 use cgmath::{Matrix4, Vector2, Vector3};
+use crossbeam::atomic::AtomicCell;
 use generational_arena::Arena;
+use gl::types::*;
 use lyon::tessellation::{
     basic_shapes::fill_rectangle, BasicGeometryBuilder, Count, FillAttributes, FillGeometryBuilder,
     FillOptions, GeometryBuilder, GeometryBuilderError, StrokeAttributes, StrokeGeometryBuilder,
     VertexId,
 };
+use std::mem;
+use std::os::raw::c_void;
 use std::{
     cmp::Ordering,
     collections::HashMap,
+    ptr,
     sync::{Arc, Mutex},
 };
+
+lazy_static! {
+    static ref SHAPE_ID_CELL: AtomicCell<u64> = { AtomicCell::new(0) };
+}
 
 #[derive(Educe)]
 #[educe(Default)]
@@ -89,7 +98,8 @@ impl Scene2d {
         }
     }
 
-    pub fn create_mesh(&mut self, shape: Shape, material: Material) -> Mesh2d {
+    pub fn create_mesh<M: Into<Material>>(&mut self, shape: Shape, material: M) -> Mesh2d {
+        let material = material.into();
         let storage = Arc::new(Mutex::new(MeshStorage {
             shape,
             material,
@@ -192,11 +202,33 @@ pub struct Shape {
     pub(crate) storage: Arc<Mutex<ShapeStorage>>,
 }
 
+#[derive(Clone)]
+pub(crate) struct CompiledShape {
+    pub vao: u32,
+    pub ebo: u32,
+    pub vbo: u32,
+    pub count: i32,
+}
+
+impl Drop for CompiledShape {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteBuffers(1, &self.vbo);
+            self.vbo = 0;
+            gl::DeleteBuffers(1, &self.ebo);
+            self.ebo = 0;
+            gl::DeleteVertexArrays(1, &self.vao);
+            self.vao = 0;
+        }
+    }
+}
+
 #[derive(Default)]
 pub(crate) struct ShapeStorage {
     pub vertices: Vec<Vector3<f32>>,
     pub texture_coordinates: Vec<Vector2<f32>>,
     pub triangles: Vec<(u32, u32, u32)>,
+    pub(crate) compiled: Option<CompiledShape>,
 }
 
 impl Shape {
@@ -204,6 +236,56 @@ impl Shape {
         let mut shape = Self::default();
         fill_rectangle(r, &FillOptions::default(), &mut shape).expect("Error generating rectangle");
         shape
+    }
+
+    pub(crate) fn compile(&self) -> CompiledShape {
+        let mut shape = self.storage.lock().expect("Error locking shape");
+        if let None = &shape.compiled {
+            let (vao, ebo, vbo) = unsafe {
+                let (mut vbo, mut vao, mut ebo) = (0, 0, 0);
+                gl::GenVertexArrays(1, &mut vao);
+                gl::GenBuffers(1, &mut vbo);
+                gl::GenBuffers(1, &mut ebo);
+                // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+                gl::BindVertexArray(vao);
+
+                gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
+                gl::BufferData(
+                    gl::ARRAY_BUFFER,
+                    (shape.vertices.len() * mem::size_of::<f32>() * 3) as GLsizeiptr,
+                    shape.vertices.as_ptr() as *const c_void,
+                    gl::STATIC_DRAW,
+                );
+
+                gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
+                gl::BufferData(
+                    gl::ELEMENT_ARRAY_BUFFER,
+                    (shape.triangles.len() * mem::size_of::<u32>() * 3) as GLsizeiptr,
+                    shape.triangles.as_ptr() as *const c_void,
+                    gl::STATIC_DRAW,
+                );
+
+                gl::VertexAttribPointer(
+                    0,
+                    3,
+                    gl::FLOAT,
+                    gl::FALSE,
+                    3 * mem::size_of::<f32>() as GLsizei,
+                    ptr::null(),
+                );
+                gl::EnableVertexAttribArray(0);
+
+                (vao, ebo, vbo)
+            };
+            shape.compiled = Some(CompiledShape {
+                vao,
+                ebo,
+                vbo,
+                count: shape.triangles.len() as i32,
+            })
+        }
+
+        shape.compiled.as_ref().unwrap().clone()
     }
 }
 

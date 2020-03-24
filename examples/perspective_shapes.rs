@@ -21,7 +21,7 @@ impl Window for PerspectiveShapes {
         if !self.created_shapes {
             self.created_shapes = true;
             for i in 1..10 {
-                let material = Material::Solid {
+                let material = MaterialKind::Solid {
                     color: Color::new(255, 0, 0, 50),
                 };
                 let mesh = scene.create_mesh(

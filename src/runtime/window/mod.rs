@@ -331,7 +331,6 @@ impl RuntimeWindow {
                         gl::UNSIGNED_INT,
                         ptr::null(),
                     );
-                    gl::BindVertexArray(0);
                 }
             }
         }

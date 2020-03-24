@@ -7,7 +7,8 @@ pub struct ScreenScene<'a> {
 }
 
 impl<'a> ScreenScene<'a> {
-    pub fn create_mesh(&mut self, shape: Shape, material: Material) -> Mesh2d {
+    pub fn create_mesh<M: Into<Material>>(&mut self, shape: Shape, material: M) -> Mesh2d {
+        let material = material.into();
         let storage = Arc::new(Mutex::new(MeshStorage {
             shape,
             material,
