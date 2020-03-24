@@ -19,11 +19,30 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+#[derive(Educe)]
+#[educe(Default)]
+pub(crate) struct PerspectiveSettings {
+    #[educe(Default(expression = "Deg(90.0)"))]
+    pub(crate) fov: Deg<f32>,
+    #[educe(Default = 0.01)]
+    pub(crate) znear: f32,
+    #[educe(Default = 1000.0)]
+    pub(crate) zfar: f32,
+}
+
+#[derive(Educe)]
+#[educe(Default)]
+pub(crate) struct ScreenSettings {
+    #[educe(Default = 1.0)]
+    pub(crate) scale_factor: f32,
+}
+
 pub struct Scene2d {
     pub(crate) arena: Arena<Arc<Mutex<MeshStorage>>>,
     pub(crate) placements: HashMap<generational_arena::Index, Placement2d>,
     pub(crate) size: Size2d,
-    pub(crate) scale_factor: f32,
+    pub(crate) screen_settings: ScreenSettings,
+    pub(crate) perspective_settings: PerspectiveSettings,
 }
 
 pub struct Scene2dNode {}
@@ -34,7 +53,8 @@ impl Scene2d {
             arena: Arena::new(),
             size: Size2d::default(),
             placements: HashMap::new(),
-            scale_factor: 1.0,
+            screen_settings: ScreenSettings::default(),
+            perspective_settings: PerspectiveSettings::default(),
         }
     }
 
@@ -54,15 +74,18 @@ impl Scene2d {
         match location {
             Placement2dLocation::Screen => cgmath::ortho(
                 0.0,
-                self.size.width / self.scale_factor,
-                self.size.height / self.scale_factor,
+                self.size.width / self.screen_settings.scale_factor,
+                self.size.height / self.screen_settings.scale_factor,
                 0.0,
                 1.0,
                 -1.0,
             ),
-            Placement2dLocation::Z(_) => {
-                cgmath::perspective(Deg(110.0), self.size.width / self.size.height, 0.01, 10.0)
-            }
+            Placement2dLocation::Z(_) => cgmath::perspective(
+                self.perspective_settings.fov,
+                self.size.width / self.size.height,
+                self.perspective_settings.znear,
+                self.perspective_settings.zfar,
+            ),
         }
     }
 

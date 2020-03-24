@@ -32,4 +32,27 @@ impl<'a> PerspectiveScene<'a> {
                 location: Placement2dLocation::Z(position.z),
             });
     }
+
+    pub fn set_fov<F: Into<Deg<f32>>>(&mut self, fov: F) {
+        self.scene.perspective_settings.fov = fov.into();
+    }
+
+    pub fn fov(&self) -> Deg<f32> {
+        self.scene.perspective_settings.fov
+    }
+
+    pub fn set_zrange(&mut self, znear: f32, zfar: f32) {
+        assert!(znear > 0.0);
+        assert!(zfar > znear);
+        self.scene.perspective_settings.znear = znear;
+        self.scene.perspective_settings.zfar = zfar;
+    }
+
+    pub fn znear(&self) -> f32 {
+        self.scene.perspective_settings.znear
+    }
+
+    pub fn zfar(&self) -> f32 {
+        self.scene.perspective_settings.zfar
+    }
 }

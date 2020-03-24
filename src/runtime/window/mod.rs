@@ -136,7 +136,7 @@ impl RuntimeWindow {
                 match event {
                     WindowEvent::Resize { size, scale_factor } => {
                         scene2d.size = size;
-                        scene2d.scale_factor = scale_factor;
+                        scene2d.screen_settings.scale_factor = scale_factor;
                     }
                     WindowEvent::CloseRequested => {
                         if let CloseResponse::Close = window.close_requested().await {
