@@ -1,17 +1,17 @@
 use crate::{materials::prelude::*, runtime::flattened_scene::FlattenedMesh};
-use cgmath::{Matrix4, Vector4};
+use cgmath::Matrix4;
 use gl::types::*;
 use std::ptr;
 
 pub(crate) struct LoadedMesh {
     pub material: CompiledMaterial,
-    pub position: Vector4<f32>,
     pub vao: u32,
     pub ebo: u32,
     pub vbo: u32,
     pub count: i32,
+    pub translation: Matrix4<f32>,
     pub projection: Matrix4<f32>,
-    pub model: Matrix4<f32>,
+    pub rotation: Matrix4<f32>,
 }
 
 impl LoadedMesh {
@@ -76,9 +76,9 @@ impl LoadedMesh {
             vbo,
             count,
             material,
-            position: mesh.offset,
+            translation: mesh.translation,
             projection: mesh.projection,
-            model: mesh.model,
+            rotation: mesh.rotation,
         }
     }
 }

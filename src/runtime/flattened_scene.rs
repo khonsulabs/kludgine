@@ -1,8 +1,8 @@
 use crate::{materials::Material, scene2d::Scene2d};
-use cgmath::{prelude::*, Matrix4, Quaternion, Vector2, Vector3, Vector4};
+use cgmath::{prelude::*, Matrix4, Quaternion, Vector2, Vector3};
 use std::collections::HashMap;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct FlattenedScene {
     pub meshes: Vec<FlattenedMesh>,
 }
@@ -32,7 +32,7 @@ impl FlattenedScene {
                 root,
                 scene.projection(&root.location),
                 Quaternion::<f32>::one(),
-                Vector4::<f32>::new(0.0, 0.0, 0.0, 0.0),
+                Vector3::<f32>::new(0.0, 0.0, 0.0),
                 1.0f32,
             ));
         }
@@ -47,13 +47,12 @@ impl FlattenedScene {
             ));
 
             let position = position
-                + Vector4::new(
+                + Vector3::new(
                     mesh_position.x * scale,
                     mesh_position.y * scale,
                     mesh_position.z * scale,
-                    0.0,
                 );
-            let offset = projection * position;
+            let translation = Matrix4::from_translation(position);
             let orientation = orientation * Quaternion::from_angle_z(placement.angle);
             let scale = scale * placement.scale;
 
@@ -87,8 +86,8 @@ impl FlattenedScene {
                 texture_coordinates,
                 triangles,
                 projection,
-                model: Matrix4::from(orientation) * Matrix4::from_scale(scale),
-                offset,
+                rotation: Matrix4::from(orientation) * Matrix4::from_scale(scale),
+                translation,
                 scale,
             });
             //  Push all children
@@ -96,13 +95,14 @@ impl FlattenedScene {
                 for child_index in children.iter() {
                     let placement = scene.placements.get(child_index).unwrap();
 
-                    stack.push((placement, projection, orientation, position, scale));
+                    stack.insert(0, (placement, projection, orientation, position, scale));
                 }
             }
         }
     }
 }
 
+#[derive(Debug)]
 pub struct FlattenedMesh {
     pub id: generational_arena::Index,
     pub material: Material,
@@ -110,7 +110,7 @@ pub struct FlattenedMesh {
     pub texture_coordinates: Vec<Vector2<f32>>,
     pub triangles: Vec<(u32, u32, u32)>,
     pub projection: Matrix4<f32>,
-    pub model: Matrix4<f32>,
-    pub offset: Vector4<f32>,
+    pub rotation: Matrix4<f32>,
+    pub translation: Matrix4<f32>,
     pub scale: f32,
 }

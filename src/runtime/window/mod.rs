@@ -305,8 +305,6 @@ impl RuntimeWindow {
                 //     .entry(mesh.mesh.id)
                 //     .or_insert_with(|| LoadedMesh::compile(mesh));
                 let loaded_mesh = LoadedMesh::compile(mesh);
-                let matrix = loaded_mesh.projection;
-                let model = loaded_mesh.model;
 
                 loaded_mesh.material.activate();
                 unsafe {
@@ -314,29 +312,29 @@ impl RuntimeWindow {
                     gl::UniformMatrix4fv(
                         gl::GetUniformLocation(
                             loaded_mesh.material.shader_program,
-                            CString::new("matrix".as_bytes()).unwrap().as_ptr(),
+                            CString::new("projection".as_bytes()).unwrap().as_ptr(),
                         ),
                         1,
                         gl::FALSE,
-                        matrix.as_ptr() as *const f32,
+                        loaded_mesh.projection.as_ptr() as *const f32,
                     );
                     gl::UniformMatrix4fv(
                         gl::GetUniformLocation(
                             loaded_mesh.material.shader_program,
-                            CString::new("model".as_bytes()).unwrap().as_ptr(),
+                            CString::new("rotation".as_bytes()).unwrap().as_ptr(),
                         ),
                         1,
                         gl::FALSE,
-                        model.as_ptr() as *const f32,
+                        loaded_mesh.rotation.as_ptr() as *const f32,
                     );
-                    gl::Uniform3f(
+                    gl::UniformMatrix4fv(
                         gl::GetUniformLocation(
                             loaded_mesh.material.shader_program,
-                            CString::new("offset".as_bytes()).unwrap().as_ptr(),
+                            CString::new("translation".as_bytes()).unwrap().as_ptr(),
                         ),
-                        loaded_mesh.position.x,
-                        loaded_mesh.position.y,
-                        loaded_mesh.position.z,
+                        1,
+                        gl::FALSE,
+                        loaded_mesh.translation.as_ptr() as *const f32,
                     );
                     gl::DrawElements(
                         gl::TRIANGLES,

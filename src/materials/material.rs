@@ -3,19 +3,22 @@ use cgmath::Vector4;
 use gl::types::*;
 use std::ffi::CString;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Material {
     Solid { color: Color },
 }
 
 const VERTEX_SHADER_SOURCE: &str = r#"
     #version 140
-    uniform mat4 matrix;
-    uniform mat4 model;
-    uniform vec3 offset;
+    uniform mat4 projection;
+    uniform mat4 rotation;
+    uniform mat4 translation;
     in vec3 position;
     void main() {
-        gl_Position = vec4(offset, 0.0) + (matrix * model * vec4(position, 1.0));
+        mat4 model = translation * rotation;
+        vec4 transformed = model * vec4(position, 1.0);
+
+        gl_Position = projection * transformed;
     }
 "#;
 
@@ -139,6 +142,12 @@ impl CompiledMaterial {
                 self.color.z,
                 self.color.w,
             );
+            if self.color.w < 1.0 {
+                gl::Enable(gl::BLEND);
+                gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            } else {
+                gl::Disable(gl::BLEND);
+            }
         }
     }
 }

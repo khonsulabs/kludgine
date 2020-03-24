@@ -7,12 +7,12 @@ extern crate educe;
 pub extern crate glutin;
 
 pub mod application;
+pub mod color;
 pub mod materials;
 pub mod math;
 pub mod runtime;
 pub mod scene2d;
 pub mod window;
-pub use color_processing::Color;
 
 #[cfg(test)]
 mod tests {
@@ -35,6 +35,7 @@ pub type KludgineResult<T> = Result<T, KludgineError>;
 pub mod prelude {
     pub use super::{
         application::{Application, SingleWindowApplication, WindowCreator},
+        color::Color,
         glutin,
         materials::prelude::*,
         math::*,
@@ -45,7 +46,6 @@ pub mod prelude {
     };
     pub use async_trait::async_trait;
     pub use cgmath::{prelude::*, Deg, Rad};
-    pub use color_processing::Color;
 }
 
 mod internal_prelude {

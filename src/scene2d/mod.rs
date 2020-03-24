@@ -61,7 +61,7 @@ impl Scene2d {
                 -1.0,
             ),
             Placement2dLocation::Z(_) => {
-                cgmath::perspective(Deg(110.0), self.size.width / self.size.height, 1.0, 10.0)
+                cgmath::perspective(Deg(110.0), self.size.width / self.size.height, 0.01, 10.0)
             }
         }
     }

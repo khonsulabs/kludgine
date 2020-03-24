@@ -1,7 +1,5 @@
-use super::{Mesh2d, MeshStorage, Placement2d, Placement2dLocation, Scene2d, Shape};
+use super::{Mesh2d, Placement2d, Placement2dLocation, Scene2d};
 use crate::internal_prelude::*;
-use crate::materials::Material;
-use std::sync::{Arc, Mutex};
 pub struct PerspectiveScene<'a> {
     pub scene: &'a mut Scene2d,
 }
