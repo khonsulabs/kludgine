@@ -1,11 +1,10 @@
 use crate::internal_prelude::*;
 use cgmath::{prelude::*, Matrix4, Quaternion, Vector3};
 use rayon::prelude::*;
-use std::collections::HashMap;
 use std::sync::mpsc::channel;
 
 pub struct FlattenedMesh {
-    pub original: Mesh2d,
+    pub original: Mesh,
     pub material: Material,
     pub projection: Matrix4<f32>,
     pub model: Matrix4<f32>,
@@ -23,25 +22,12 @@ impl FlattenedScene {
         // Those objects are "roots", and we can start rendering the scene with those roots:
         // Render Z depth then Layers
         // Since all relative_to's must be on the same placement style (ie, you can't put a Screen-relative item relative to an object in Z-space)
-        let mut placement_children: HashMap<
-            Option<generational_arena::Index>,
-            Vec<generational_arena::Index>,
-        > = HashMap::new();
-        for (_, v) in scene.placements.iter() {
-            placement_children
-                .entry(v.relative_to)
-                .and_modify(|children| children.push(v.mesh.id))
-                .or_insert_with(|| vec![v.mesh.id]);
-        }
-
-        let mut stack = placement_children
-            .get(&None)
-            .unwrap_or(&vec![])
-            .into_par_iter()
-            .map(|root_index| {
-                let root = scene.placements.get(root_index).unwrap();
+        let mut stack = scene
+            .children
+            .iter()
+            .map(|(_, root)| {
                 (
-                    root,
+                    root.clone(),
                     scene.projection(&root.location),
                     Quaternion::<f32>::one(),
                     Vector3::<f32>::new(0.0, 0.0, 0.0),
@@ -57,7 +43,7 @@ impl FlattenedScene {
                 .map_with(
                     sender,
                     |sender, (placement, projection, orientation, position, scale)| {
-                        let mesh = placement.mesh.clone();
+                        let mesh = scene.get(placement.id).unwrap();
 
                         let mesh_position = orientation.rotate_vector(Vector3::new(
                             placement.position.x,
@@ -75,23 +61,25 @@ impl FlattenedScene {
                         let orientation = orientation * Quaternion::from_angle_z(placement.angle);
                         let scale = scale * placement.scale;
 
+                        // Do Operations that lock the mesh for reading
                         let material = {
-                            let mesh = placement.mesh.storage.read().expect("Error locking mesh");
+                            let mesh = mesh.storage.read().expect("Error locking mesh");
                             let material = mesh.material.clone();
+
+                            for (_, placement) in mesh.children.iter() {
+                                sender
+                                    .send((
+                                        placement.clone(),
+                                        projection,
+                                        orientation,
+                                        position,
+                                        scale,
+                                    ))
+                                    .unwrap();
+                            }
 
                             material
                         };
-
-                        //  Push all children
-                        if let Some(children) = placement_children.get(&Some(placement.mesh.id)) {
-                            for child_index in children.iter() {
-                                let placement = scene.placements.get(child_index).unwrap();
-
-                                sender
-                                    .send((placement, projection, orientation, position, scale))
-                                    .unwrap();
-                            }
-                        }
 
                         FlattenedMesh {
                             original: mesh,

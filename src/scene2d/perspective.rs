@@ -1,5 +1,6 @@
-use super::{Mesh2d, Placement2d, Placement2dLocation, Scene2d};
+use super::{Mesh, Placement2d, Placement2dLocation, Scene2d};
 use crate::internal_prelude::*;
+use std::collections::HashMap;
 pub struct PerspectiveScene<'a> {
     pub scene: &'a mut Scene2d,
 }
@@ -7,30 +8,53 @@ pub struct PerspectiveScene<'a> {
 impl<'a> PerspectiveScene<'a> {
     pub fn place_mesh(
         &mut self,
-        mesh: &Mesh2d,
+        mesh: &Mesh,
         relative_to: Option<generational_arena::Index>,
         position: Point3d,
         angle: Rad<f32>,
         scale: f32,
-    ) {
-        self.scene
-            .placements
+    ) -> KludgineResult<()> {
+        match relative_to {
+            Some(relative_to) => match self.scene.get(relative_to) {
+                Some(relative_mesh) => {
+                    let mut storage = relative_mesh
+                        .storage
+                        .write()
+                        .expect("Error locking mesh for writing");
+                    Self::internal_place_mesh(&mut storage.children, &mesh, position, angle, scale)
+                }
+                None => Err(KludgineError::InvalidId(relative_to)),
+            },
+            None => {
+                Self::internal_place_mesh(&mut self.scene.children, mesh, position, angle, scale)
+            }
+        }
+    }
+
+    fn internal_place_mesh(
+        children: &mut HashMap<generational_arena::Index, Placement2d>,
+        mesh: &Mesh,
+        position: Point3d,
+        angle: Rad<f32>,
+        scale: f32,
+    ) -> KludgineResult<()> {
+        children
             .entry(mesh.id)
             .and_modify(|p| {
-                p.relative_to = relative_to;
                 p.position = Point2d::new(position.x, position.y);
                 p.angle = angle;
                 p.scale = scale;
                 p.location = Placement2dLocation::Z(position.z);
             })
             .or_insert_with(|| Placement2d {
-                mesh: mesh.clone(),
-                relative_to,
+                id: mesh.id,
                 position: Point2d::new(position.x, position.y),
                 angle,
                 scale,
                 location: Placement2dLocation::Z(position.z),
             });
+
+        Ok(())
     }
 
     pub fn set_fov<F: Into<Deg<f32>>>(&mut self, fov: F) {

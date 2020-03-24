@@ -27,6 +27,8 @@ use thiserror::Error;
 pub enum KludgineError {
     #[error("error sending a WindowMessage to a Window: {0}")]
     InternalWindowMessageSendError(String),
+    #[error("The id could not be found: {0:?}")]
+    InvalidId(generational_arena::Index),
 }
 
 pub type KludgineResult<T> = Result<T, KludgineError>;

@@ -43,7 +43,7 @@ pub(crate) struct ScreenSettings {
 
 pub struct Scene2d {
     pub(crate) arena: Arena<Arc<RwLock<MeshStorage>>>,
-    pub(crate) placements: HashMap<generational_arena::Index, Placement2d>,
+    pub(crate) children: HashMap<generational_arena::Index, Placement2d>,
     pub(crate) size: Size2d,
     pub(crate) screen_settings: ScreenSettings,
     pub(crate) perspective_settings: PerspectiveSettings,
@@ -56,7 +56,7 @@ impl Scene2d {
         Self {
             arena: Arena::new(),
             size: Size2d::default(),
-            placements: HashMap::new(),
+            children: HashMap::new(),
             screen_settings: ScreenSettings::default(),
             perspective_settings: PerspectiveSettings::default(),
         }
@@ -72,6 +72,16 @@ impl Scene2d {
 
     pub fn size(&self) -> Size2d {
         self.size
+    }
+
+    pub fn get(&self, id: generational_arena::Index) -> Option<Mesh> {
+        match self.arena.get(id) {
+            Some(storage) => Some(Mesh {
+                id,
+                storage: storage.clone(),
+            }),
+            None => None,
+        }
     }
 
     pub(crate) fn projection(&self, location: &Placement2dLocation) -> Matrix4<f32> {
@@ -93,7 +103,7 @@ impl Scene2d {
         }
     }
 
-    pub fn create_mesh<M: Into<Material>>(&mut self, shape: Shape, material: M) -> Mesh2d {
+    pub fn create_mesh<M: Into<Material>>(&mut self, shape: Shape, material: M) -> Mesh {
         let material = material.into();
         let storage = Arc::new(RwLock::new(MeshStorage {
             shape,
@@ -101,12 +111,13 @@ impl Scene2d {
             angle: Rad(0.0),
             scale: 1.0,
             position: Point2d::new(0.0, 0.0),
+            children: HashMap::new(),
         }));
         let id = self.arena.insert(storage.clone());
-        Mesh2d { id, storage }
+        Mesh { id, storage }
     }
 
-    pub fn create_mesh_clone(&mut self, copy: &Mesh2d) -> Mesh2d {
+    pub fn create_mesh_clone(&mut self, copy: &Mesh) -> Mesh {
         let copy_storage = copy.storage.read().expect("Error locking copy storage");
         let storage = Arc::new(RwLock::new(MeshStorage {
             shape: copy_storage.shape.clone(),
@@ -114,9 +125,10 @@ impl Scene2d {
             angle: copy_storage.angle,
             scale: copy_storage.scale,
             position: copy_storage.position,
+            children: HashMap::new(),
         }));
         let id = self.arena.insert(storage.clone());
-        Mesh2d { id, storage }
+        Mesh { id, storage }
     }
 }
 
@@ -301,7 +313,7 @@ impl Default for Shape {
 }
 
 #[derive(Clone)]
-pub struct Mesh2d {
+pub struct Mesh {
     pub id: generational_arena::Index,
     pub(crate) storage: Arc<RwLock<MeshStorage>>,
 }
@@ -312,22 +324,23 @@ pub(crate) struct MeshStorage {
     pub position: Point2d,
     pub scale: f32,
     pub angle: Rad<f32>,
+    pub children: HashMap<generational_arena::Index, Placement2d>,
 }
 
 pub mod prelude {
-    pub use super::{Mesh2d, Scene2d, ScreenScene, Shape};
+    pub use super::{Mesh, Scene2d, ScreenScene, Shape};
 }
 
+#[derive(Debug, Clone)]
 pub(crate) struct Placement2d {
-    pub mesh: Mesh2d,
-    pub relative_to: Option<generational_arena::Index>,
+    pub id: generational_arena::Index,
     pub position: Point2d,
     pub angle: Rad<f32>,
     pub scale: f32,
     pub location: Placement2dLocation,
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum Placement2dLocation {
     Screen,
     Z(f32),

@@ -35,7 +35,7 @@ impl Window for OrthoShapes {
                     Point2d::new(32.0, 0.0),
                     Deg(5.0).into(),
                     1.2,
-                );
+                )?;
                 last_mesh_id = Some(mesh.id);
             }
         }

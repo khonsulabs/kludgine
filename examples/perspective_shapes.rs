@@ -34,7 +34,7 @@ impl Window for PerspectiveShapes {
                     Point3d::new(0.0, 0.0, -(i as f32)),
                     Deg(0.0).into(),
                     1.0,
-                );
+                )?;
             }
         }
         Ok(())

@@ -1,4 +1,5 @@
 use kludgine::prelude::*;
+use rand::{Rng, thread_rng};
 
 /// This example is a simulation of a worst-case scenario for this engine where an enourmous string of related meshes
 /// break the parallelization capabilities. There are ways to optimize this, but it doesn't seem to be a particularly
@@ -23,8 +24,8 @@ impl WindowCreator<Stress> for Stress {
 impl Window for Stress {
     async fn render_2d(&mut self, scene: &mut Scene2d) -> KludgineResult<()> {
         if !self.created_shapes {
+            let mut rng = thread_rng();
             self.created_shapes = true;
-            let mut last_mesh_id = None;
             let material = MaterialKind::Solid {
                 color: Color::new(255, 0, 0, 255),
             };
@@ -34,14 +35,15 @@ impl Window for Stress {
             );
             for _ in 1..10000 {
                 let mesh = scene.create_mesh_clone(&mesh);
+                let x = rng.gen_range(0.0, scene.size().width);
+                let y = rng.gen_range(0.0, scene.size().height);
                 scene.screen().place_mesh(
                     &mesh,
-                    last_mesh_id,
-                    Point2d::new(1.0, 0.0),
-                    Deg(5.0).into(),
+                    None,
+                    Point2d::new(x, y),
+                    Deg(0.0).into(),
                     1.0,
                 )?;
-                last_mesh_id = Some(mesh.id);
             }
         }
         Ok(())
