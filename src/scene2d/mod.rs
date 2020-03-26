@@ -213,35 +213,37 @@ pub struct Shape {
 
 #[derive(Clone)]
 pub(crate) struct CompiledShape {
-    pub vao: u32,
-    pub ebo: u32,
-    pub vbo: u32,
+    pub vertex_array_object: u32,
+    pub entity_buffer_object: u32,
+    pub vertex_buffer_object: u32,
     pub count: i32,
 }
 
 impl Drop for CompiledShape {
     fn drop(&mut self) {
         unsafe {
-            gl::DeleteBuffers(1, &self.vbo);
-            self.vbo = 0;
-            gl::DeleteBuffers(1, &self.ebo);
-            self.ebo = 0;
-            gl::DeleteVertexArrays(1, &self.vao);
-            self.vao = 0;
+            gl::DeleteBuffers(1, &self.vertex_buffer_object);
+            self.vertex_buffer_object = 0;
+            gl::DeleteBuffers(1, &self.entity_buffer_object);
+            self.entity_buffer_object = 0;
+            gl::DeleteVertexArrays(1, &self.vertex_array_object);
+            self.vertex_array_object = 0;
         }
     }
 }
 
 impl CompiledShape {
     pub fn activate(&self) {
-        unsafe { gl::BindVertexArray(self.vao) };
+        unsafe {
+            gl::BindVertexArray(self.vertex_array_object);
+        }
     }
 }
 
 #[derive(Default)]
 pub(crate) struct ShapeStorage {
     pub vertices: Vec<Vector3<f32>>,
-    pub texture_coordinates: Vec<Vector2<f32>>,
+    pub texture_coordinates: Option<Vec<Vector2<f32>>>,
     pub triangle_verticies: Vec<u32>,
     pub(crate) compiled: Option<Arc<CompiledShape>>,
 }
@@ -253,9 +255,36 @@ impl Shape {
         shape
     }
 
-    pub(crate) fn compile(&self) -> Arc<CompiledShape> {
+    pub fn set_texture_coordinates(&self, texture_coordinates: Vec<Point2d>) {
+        let mut shape = self.storage.write().expect("Error locking shape for write");
+        shape.texture_coordinates = Some(
+            texture_coordinates
+                .into_iter()
+                .map(|c| Vector2::new(c.x, c.y))
+                .collect(),
+        );
+    }
+
+    pub(crate) fn compile(&self) -> KludgineResult<Arc<CompiledShape>> {
         let mut shape = self.storage.write().expect("Error locking shape");
         if let None = &shape.compiled {
+            let (vertices, has_texture_coords) =
+                if let Some(texture_coordinates) = &shape.texture_coordinates {
+                    let mut merged = Vec::with_capacity(shape.vertices.len() * 5);
+                    for (vert, text) in shape.vertices.iter().zip(texture_coordinates.iter()) {
+                        merged.push(vert.x);
+                        merged.push(vert.y);
+                        merged.push(vert.z);
+                        merged.push(text.x);
+                        merged.push(text.y);
+                    }
+                    (merged.as_ptr(), true)
+                } else {
+                    (shape.vertices.as_ptr() as *const f32, false)
+                };
+
+            let stride = if has_texture_coords { 5 } else { 3 };
+
             let (vao, ebo, vbo) = unsafe {
                 let (mut vbo, mut vao, mut ebo) = (0, 0, 0);
                 gl::GenVertexArrays(1, &mut vao);
@@ -267,10 +296,31 @@ impl Shape {
                 gl::BindBuffer(gl::ARRAY_BUFFER, vbo);
                 gl::BufferData(
                     gl::ARRAY_BUFFER,
-                    (shape.vertices.len() * mem::size_of::<f32>() * 3) as GLsizeiptr,
-                    shape.vertices.as_ptr() as *const c_void,
+                    (shape.vertices.len() * mem::size_of::<f32>() * stride) as GLsizeiptr,
+                    vertices as *const c_void,
                     gl::STATIC_DRAW,
                 );
+                gl::VertexAttribPointer(
+                    0,
+                    3,
+                    gl::FLOAT,
+                    gl::FALSE,
+                    (stride * mem::size_of::<f32>()) as GLsizei,
+                    ptr::null(),
+                );
+                gl::EnableVertexAttribArray(0);
+
+                if has_texture_coords {
+                    gl::VertexAttribPointer(
+                        1,
+                        2,
+                        gl::FLOAT,
+                        gl::FALSE,
+                        (stride * mem::size_of::<f32>()) as GLsizei,
+                        (3 * mem::size_of::<f32>()) as *const c_void,
+                    );
+                    gl::EnableVertexAttribArray(1);
+                }
 
                 gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
                 gl::BufferData(
@@ -279,28 +329,19 @@ impl Shape {
                     shape.triangle_verticies.as_ptr() as *const c_void,
                     gl::STATIC_DRAW,
                 );
-                gl::VertexAttribPointer(
-                    0,
-                    3,
-                    gl::FLOAT,
-                    gl::FALSE,
-                    3 * mem::size_of::<f32>() as GLsizei,
-                    ptr::null(),
-                );
-                gl::EnableVertexAttribArray(0);
-                assert!(gl::GetError() == 0);
+                assert_eq!(gl::GetError(), 0);
 
                 (vao, ebo, vbo)
             };
             shape.compiled = Some(Arc::new(CompiledShape {
-                vao,
-                ebo,
-                vbo,
+                vertex_array_object: vao,
+                entity_buffer_object: ebo,
+                vertex_buffer_object: vbo,
                 count: shape.triangle_verticies.len() as i32,
             }))
         }
 
-        shape.compiled.as_ref().unwrap().clone()
+        Ok(shape.compiled.as_ref().unwrap().clone())
     }
 }
 

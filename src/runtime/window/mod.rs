@@ -4,7 +4,6 @@ use crate::{
     scene2d::Scene2d,
     window::{CloseResponse, Window},
 };
-use cgmath::prelude::*;
 use glutin::{
     event::{Event, WindowEvent as GlutinWindowEvent},
     event_loop::EventLoopWindowTarget,
@@ -15,7 +14,6 @@ use std::{
     cell::RefCell,
     collections::HashMap,
     ops::Deref,
-    ptr,
     sync::{Arc, Mutex, Once},
     time::{Duration, Instant},
 };
@@ -299,6 +297,7 @@ impl RuntimeWindow {
                 }
 
                 window.render();
+                assert_eq!(unsafe { gl::GetError() }, 0);
 
                 window.context.deref().swap_buffers().unwrap();
                 last_window = Some(window);
@@ -318,42 +317,13 @@ impl RuntimeWindow {
             self.last_known_scale_factor = Some(self.scale_factor());
             self.notify_size_changed();
         }
-        use std::ffi::CString;
         if let Some(scene) = &self.scene {
             for mesh in scene.meshes.iter() {
-                let loaded_mesh = self
-                    .mesh_cache
+                self.mesh_cache
                     .entry(mesh.original.id)
                     .and_modify(|lm| lm.update(mesh))
-                    .or_insert_with(|| LoadedMesh::compile(mesh));
-
-                loaded_mesh.activate();
-                unsafe {
-                    gl::UniformMatrix4fv(
-                        gl::GetUniformLocation(
-                            loaded_mesh.material.shader_program,
-                            CString::new("projection".as_bytes()).unwrap().as_ptr(),
-                        ),
-                        1,
-                        gl::FALSE,
-                        loaded_mesh.projection.as_ptr() as *const f32,
-                    );
-                    gl::UniformMatrix4fv(
-                        gl::GetUniformLocation(
-                            loaded_mesh.material.shader_program,
-                            CString::new("model".as_bytes()).unwrap().as_ptr(),
-                        ),
-                        1,
-                        gl::FALSE,
-                        loaded_mesh.model.as_ptr() as *const f32,
-                    );
-                    gl::DrawElements(
-                        gl::TRIANGLES,
-                        loaded_mesh.shape.count,
-                        gl::UNSIGNED_INT,
-                        ptr::null(),
-                    );
-                }
+                    .or_insert_with(|| LoadedMesh::compile(mesh).unwrap())
+                    .render();
             }
         }
     }

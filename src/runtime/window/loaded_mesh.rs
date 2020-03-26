@@ -1,8 +1,9 @@
 use crate::{
-    materials::prelude::*, runtime::flattened_scene::FlattenedMesh, scene2d::CompiledShape,
+    internal_prelude::*, materials::prelude::*, runtime::flattened_scene::FlattenedMesh,
+    scene2d::CompiledShape,
 };
 use cgmath::Matrix4;
-use std::sync::Arc;
+use std::{ptr, sync::Arc};
 
 pub(crate) struct LoadedMesh {
     pub material: Arc<CompiledMaterial>,
@@ -17,24 +18,42 @@ impl LoadedMesh {
         self.model = mesh.model;
     }
 
-    pub fn compile(mesh: &FlattenedMesh) -> LoadedMesh {
+    pub fn compile(mesh: &FlattenedMesh) -> KludgineResult<LoadedMesh> {
         let (shape, material) = {
             let mesh = mesh.original.storage.read().expect("Error locking mesh");
-            let material = mesh.material.compile();
-            let shape = mesh.shape.compile();
+            let material = mesh.material.compile()?;
+            let shape = mesh.shape.compile()?;
             (shape, material)
         };
 
-        LoadedMesh {
+        Ok(LoadedMesh {
             shape,
             material,
             model: mesh.model,
             projection: mesh.projection,
-        }
+        })
     }
 
     pub fn activate(&self) {
         self.material.activate();
         self.shape.activate();
+    }
+
+    pub fn render(&self) {
+        self.activate();
+        self.material
+            .program
+            .set_uniform_matrix4f("projection", &self.projection);
+        self.material
+            .program
+            .set_uniform_matrix4f("model", &self.model);
+        unsafe {
+            gl::DrawElements(
+                gl::TRIANGLES,
+                self.shape.count,
+                gl::UNSIGNED_INT,
+                ptr::null(),
+            );
+        }
     }
 }

@@ -4,6 +4,7 @@ pub extern crate async_trait;
 extern crate educe;
 
 pub extern crate glutin;
+pub extern crate image;
 
 pub mod application;
 pub mod color;
@@ -11,6 +12,8 @@ pub mod materials;
 pub mod math;
 pub mod runtime;
 pub mod scene2d;
+pub mod shaders;
+pub mod texture;
 pub mod window;
 
 #[cfg(test)]
@@ -29,6 +32,10 @@ pub enum KludgineError {
     InternalWindowMessageSendError(String),
     #[error("The id could not be found: {0:?}")]
     InvalidId(generational_arena::Index),
+    #[error("error compiling shader: {0}")]
+    ShaderCompilationError(String),
+    #[error("error reading image: {0}")]
+    ImageError(#[from] image::ImageError),
 }
 
 pub type KludgineResult<T> = Result<T, KludgineError>;

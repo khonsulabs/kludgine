@@ -1,5 +1,6 @@
 pub mod material;
-pub mod solid;
+mod solid;
+mod textured;
 
 pub use material::Material;
 
