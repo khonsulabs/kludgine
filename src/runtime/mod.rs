@@ -123,7 +123,6 @@ impl EventProcessor for Runtime {
         }
 
         if render_frame {
-            println!("Frame {}", self.frame_number);
             self.frame_number += 1;
             RuntimeWindow::render_all();
             self.next_frame_target = self

@@ -166,7 +166,6 @@ impl RuntimeWindow {
                     .checked_duration_since(next_frame_target)
                     .unwrap_or_default()
                     .as_nanos() as i64;
-                println!("Elapsed nanos {}", elapsed_nanos);
                 if next_frame_target < now {
                     next_frame_target = now;
                 }
@@ -174,7 +173,6 @@ impl RuntimeWindow {
                     .checked_add(Duration::from_nanos(FRAME_DURATION))
                     .unwrap_or(next_frame_target);
                 let sleep_nanos = (FRAME_DURATION as i64 - elapsed_nanos).max(0);
-                println!("Sleeping for {}", sleep_nanos);
                 async_std::task::sleep(Duration::from_nanos(sleep_nanos as u64)).await;
             }
         }

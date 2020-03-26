@@ -25,7 +25,7 @@ impl Window for PerspectiveShapes {
                 texture: image.into(),
             };
             let shape = Shape::rect(&Rect::new(Point2d::new(-0.5, -0.5), Size2d::new(1.0, 1.0)));
-            shape.set_texture_coordinates(vec![Point2d::new(0.0, 0.0), Point2d::new(0.0, 1.0), Point2d::new(1.0, 1.0), Point2d::new(1.0, 0.0)]);
+            shape.set_texture_coordinates(vec![Point2d::new(0.0, 1.0), Point2d::new(0.0, 0.0), Point2d::new(1.0, 0.0), Point2d::new(1.0, 1.0)]);
             let mesh = scene.create_mesh(
                 shape,
                 material,

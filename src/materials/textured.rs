@@ -23,7 +23,7 @@ const FRAGMENT_SHADER_SOURCE: &str = r#"
     out vec4 FragmentColor;
 
     void main() {
-        FragmentColor = vec4(1.0,0.0,0.0,1.0);//texture(uniformTexture, TexCoord);
+        FragmentColor = texture(uniformTexture, TexCoord);
     }
 "#;
 
