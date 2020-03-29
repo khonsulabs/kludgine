@@ -2,10 +2,10 @@ use crate::internal_prelude::*;
 use crate::{
     runtime::{flattened_scene::FlattenedScene, Runtime, FRAME_DURATION},
     scene2d::Scene2d,
-    window::{CloseResponse, Window},
+    window::{CloseResponse, Event as KludgineInputEvent, InputEvent, Window},
 };
 use glutin::{
-    event::{DeviceId, ElementState, Event, KeyboardInput, WindowEvent as GlutinWindowEvent},
+    event::{ElementState, Event, WindowEvent as GlutinWindowEvent},
     event_loop::EventLoopWindowTarget,
     window::{WindowBuilder, WindowId},
     GlRequest,
@@ -60,14 +60,8 @@ impl WindowMessage {
 
 pub(crate) enum WindowEvent {
     CloseRequested,
-    Resize {
-        size: Size2d,
-        scale_factor: f32,
-    },
-    Keyboard {
-        device_id: DeviceId,
-        input: KeyboardInput,
-    },
+    Resize { size: Size2d, scale_factor: f32 },
+    Input(InputEvent),
 }
 
 pub(crate) struct RuntimeWindow {
@@ -150,19 +144,24 @@ impl RuntimeWindow {
                             return Ok(());
                         }
                     }
-                    WindowEvent::Keyboard { device_id, input } => {
+                    WindowEvent::Input(input) => {
                         // Notify the window of the raw event, before updaing our internal state
-                        window.keyboard_event(device_id, input).await?;
+                        window.process_input(input.clone()).await?;
 
-                        if let Some(keycode) = input.virtual_keycode {
-                            match input.state {
-                                ElementState::Pressed => {
-                                    scene2d.pressed_keys.insert(keycode);
-                                }
-                                ElementState::Released => {
-                                    scene2d.pressed_keys.remove(&keycode);
+                        match input.event {
+                            KludgineInputEvent::Keyboard { key, state } => {
+                                if let Some(key) = key {
+                                    match state {
+                                        ElementState::Pressed => {
+                                            scene2d.pressed_keys.insert(key);
+                                        }
+                                        ElementState::Released => {
+                                            scene2d.pressed_keys.remove(&key);
+                                        }
+                                    }
                                 }
                             }
+                            _ => {}
                         }
                     }
                 }
@@ -282,11 +281,58 @@ impl RuntimeWindow {
             }
             GlutinWindowEvent::KeyboardInput {
                 device_id, input, ..
-            } => block_on(self.event_sender.send(WindowEvent::Keyboard {
+            } => block_on(self.event_sender.send(WindowEvent::Input(InputEvent {
                 device_id: *device_id,
-                input: *input,
-            }))
+                event: KludgineInputEvent::Keyboard {
+                    key: input.virtual_keycode,
+                    state: input.state,
+                },
+            })))
             .unwrap_or_default(),
+            GlutinWindowEvent::MouseInput {
+                device_id,
+                button,
+                state,
+                ..
+            } => block_on(self.event_sender.send(WindowEvent::Input(InputEvent {
+                device_id: *device_id,
+                event: KludgineInputEvent::MouseButton {
+                    button: *button,
+                    state: *state,
+                },
+            })))
+            .unwrap_or_default(),
+            GlutinWindowEvent::MouseWheel {
+                device_id,
+                delta,
+                phase,
+                ..
+            } => block_on(self.event_sender.send(WindowEvent::Input(InputEvent {
+                device_id: *device_id,
+                event: KludgineInputEvent::MouseWheel {
+                    delta: *delta,
+                    touch_phase: *phase,
+                },
+            })))
+            .unwrap_or_default(),
+            GlutinWindowEvent::CursorMoved {
+                device_id,
+                position,
+                ..
+            } => block_on(self.event_sender.send(WindowEvent::Input(InputEvent {
+                device_id: *device_id,
+                event: KludgineInputEvent::MouseMoved {
+                    position: Some(Point2d::new(position.x as f32, position.y as f32)),
+                },
+            })))
+            .unwrap_or_default(),
+            GlutinWindowEvent::CursorLeft { device_id } => {
+                block_on(self.event_sender.send(WindowEvent::Input(InputEvent {
+                    device_id: *device_id,
+                    event: KludgineInputEvent::MouseMoved { position: None },
+                })))
+                .unwrap_or_default()
+            }
             _ => {}
         }
     }

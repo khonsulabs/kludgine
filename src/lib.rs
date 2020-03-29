@@ -49,14 +49,14 @@ pub mod prelude {
         color::Color,
         glutin::{
             self,
-            event::{DeviceId, KeyboardInput, VirtualKeyCode},
+            event::{DeviceId, KeyboardInput, MouseButton, MouseScrollDelta, VirtualKeyCode},
         },
         materials::prelude::*,
         math::*,
         runtime::Runtime,
         scene2d::prelude::*,
         shaders::{CompiledProgram, Program, ProgramSource},
-        window::Window,
+        window::{Event, InputEvent, Window},
         KludgineError, KludgineResult,
     };
     pub use async_trait::async_trait;
