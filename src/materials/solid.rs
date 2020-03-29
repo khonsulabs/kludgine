@@ -34,12 +34,12 @@ pub(crate) fn program() -> Program {
     .into()
 }
 
-struct SolidMaterial {
+pub(crate) struct SolidMaterial {
     color: Vector4<f32>,
 }
 
-pub(crate) fn simple_material(color: Vector4<f32>) -> Box<dyn SimpleMaterial> {
-    Box::new(SolidMaterial { color })
+pub(crate) fn simple_material(color: Vector4<f32>) -> SolidMaterial {
+    SolidMaterial { color }
 }
 
 impl SimpleMaterial for SolidMaterial {

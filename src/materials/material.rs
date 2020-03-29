@@ -19,18 +19,16 @@ pub enum MaterialKind {
         texture: Texture,
     },
     Custom {
-        custom_material: Arc<Box<dyn SimpleMaterial>>,
+        custom_material: Arc<RwLock<dyn SimpleMaterial>>,
     },
 }
 
-impl<T> From<T> for MaterialKind
+impl<T> From<Arc<RwLock<T>>> for MaterialKind
 where
     T: SimpleMaterial + Sized + 'static,
 {
-    fn from(from: T) -> Self {
-        MaterialKind::Custom {
-            custom_material: Arc::new(Box::new(from)),
-        }
+    fn from(custom_material: Arc<RwLock<T>>) -> Self {
+        MaterialKind::Custom { custom_material }
     }
 }
 
@@ -54,6 +52,16 @@ impl From<MaterialKind> for Material {
     }
 }
 
+impl<T> From<Arc<RwLock<T>>> for Material
+where
+    T: SimpleMaterial + Sized + 'static,
+{
+    fn from(simple_material: Arc<RwLock<T>>) -> Self {
+        let kind: MaterialKind = simple_material.into();
+        kind.into()
+    }
+}
+
 impl Material {
     pub(crate) fn compile(&self) -> KludgineResult<Arc<CompiledMaterial>> {
         // Optimize for reading already compiled materials, try to acquire just for reading.
@@ -73,12 +81,12 @@ impl Material {
         match &storage.kind {
             MaterialKind::Solid { color } => {
                 let program = solid::program().compile()?;
-                let simple_material = Arc::new(solid::simple_material(Vector4::new(
+                let simple_material = Arc::new(RwLock::new(solid::simple_material(Vector4::new(
                     color.red as f32 / 255.0,
                     color.blue as f32 / 255.0,
                     color.green as f32 / 255.0,
                     color.alpha as f32 / 255.0,
-                )));
+                ))));
                 storage.compiled = Some(Arc::new(CompiledMaterial {
                     program,
                     simple_material,
@@ -86,14 +94,20 @@ impl Material {
             }
             MaterialKind::Textured { texture } => {
                 let program = textured::program().compile()?;
-                let simple_material = Arc::new(textured::simple_material(texture.compile()));
+                let simple_material =
+                    Arc::new(RwLock::new(textured::simple_material(texture.compile())));
                 storage.compiled = Some(Arc::new(CompiledMaterial {
                     program,
                     simple_material,
                 }));
             }
             MaterialKind::Custom { custom_material } => {
-                let program = custom_material.program()?.compile()?;
+                let program = {
+                    let material = custom_material
+                        .read()
+                        .expect("Error reading custom_material");
+                    material.program()?.compile()?
+                };
                 storage.compiled = Some(Arc::new(CompiledMaterial {
                     program,
                     simple_material: custom_material.clone(),
@@ -113,12 +127,13 @@ impl Material {
 #[derive(Clone)]
 pub(crate) struct CompiledMaterial {
     pub program: Arc<CompiledProgram>,
-    pub simple_material: Arc<Box<dyn SimpleMaterial>>,
+    pub simple_material: Arc<RwLock<dyn SimpleMaterial>>,
 }
 
 impl CompiledMaterial {
     pub(crate) fn activate(&self) -> KludgineResult<()> {
         self.program.activate();
-        self.simple_material.activate(self.program.as_ref())
+        let material = self.simple_material.read().expect("Error reading material");
+        material.activate(self.program.as_ref())
     }
 }

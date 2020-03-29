@@ -41,12 +41,12 @@ pub(crate) fn program() -> Program {
     .into()
 }
 
-struct TexturedMaterial {
+pub(crate) struct TexturedMaterial {
     texture: Arc<CompiledTexture>,
 }
 
-pub(crate) fn simple_material(texture: Arc<CompiledTexture>) -> Box<dyn SimpleMaterial> {
-    Box::new(TexturedMaterial { texture })
+pub(crate) fn simple_material(texture: Arc<CompiledTexture>) -> TexturedMaterial {
+    TexturedMaterial { texture }
 }
 
 impl SimpleMaterial for TexturedMaterial {

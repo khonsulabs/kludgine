@@ -55,6 +55,7 @@ pub mod prelude {
         math::*,
         runtime::Runtime,
         scene2d::prelude::*,
+        shaders::{CompiledProgram, Program, ProgramSource},
         window::Window,
         KludgineError, KludgineResult,
     };
