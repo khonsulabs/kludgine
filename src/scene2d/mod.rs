@@ -91,18 +91,18 @@ impl Scene2d {
         }
     }
 
-    pub fn cached_mesh<S: Into<String>, F: FnOnce(&mut Scene2d) -> Mesh>(
+    pub fn cached_mesh<S: Into<String>, F: FnOnce(&mut Scene2d) -> KludgineResult<Mesh>>(
         &mut self,
         name: S,
         initializer: F,
-    ) -> Mesh {
+    ) -> KludgineResult<Mesh> {
         let name = name.into();
         match self.lazy_mesh_cache.get(&name) {
-            Some(mesh) => mesh.clone(),
+            Some(mesh) => Ok(mesh.clone()),
             None => {
-                let new_mesh = initializer(self);
+                let new_mesh = initializer(self)?;
                 self.lazy_mesh_cache.insert(name, new_mesh.clone());
-                new_mesh
+                Ok(new_mesh)
             }
         }
     }
