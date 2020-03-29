@@ -7,8 +7,8 @@ use crate::internal_prelude::*;
 use crate::materials::Material;
 use cgmath::Rad;
 use cgmath::{Matrix4, Vector2, Vector3};
-use generational_arena::Arena;
 use gl::types::*;
+use legion::prelude::*;
 use lyon::tessellation::{
     basic_shapes::fill_rectangle, BasicGeometryBuilder, Count, FillAttributes, FillGeometryBuilder,
     FillOptions, GeometryBuilder, GeometryBuilderError, StrokeAttributes, StrokeGeometryBuilder,
@@ -42,19 +42,21 @@ pub(crate) struct ScreenSettings {
 }
 
 pub struct Scene2d {
-    pub(crate) arena: Arena<Arc<RwLock<MeshStorage>>>,
-    pub(crate) children: HashMap<generational_arena::Index, Placement2d>,
+    pub universe: Universe,
+    pub world: World,
+    pub(crate) children: HashMap<Entity, Placement2d>,
     pub(crate) size: Size2d,
     pub(crate) screen_settings: ScreenSettings,
     pub(crate) perspective_settings: PerspectiveSettings,
 }
 
-pub struct Scene2dNode {}
-
 impl Scene2d {
     pub fn new() -> Self {
+        let universe = Universe::new();
+        let world = universe.create_world();
         Self {
-            arena: Arena::new(),
+            universe,
+            world,
             size: Size2d::default(),
             children: HashMap::new(),
             screen_settings: ScreenSettings::default(),
@@ -74,11 +76,11 @@ impl Scene2d {
         self.size
     }
 
-    pub fn get(&self, id: generational_arena::Index) -> Option<Mesh> {
-        match self.arena.get(id) {
-            Some(storage) => Some(Mesh {
+    pub fn get(&self, id: Entity) -> Option<Mesh> {
+        match self.world.get_component::<MeshHandle>(id) {
+            Some(handle) => Some(Mesh {
                 id,
-                storage: storage.clone(),
+                handle: handle.as_ref().clone(),
             }),
             None => None,
         }
@@ -113,12 +115,17 @@ impl Scene2d {
             position: Point2d::new(0.0, 0.0),
             children: HashMap::new(),
         }));
-        let id = self.arena.insert(storage.clone());
-        Mesh { id, storage }
+        let handle = MeshHandle { storage };
+        let id = self.world.insert((), vec![(handle.clone(),)])[0];
+        Mesh { id, handle }
     }
 
     pub fn create_mesh_clone(&mut self, copy: &Mesh) -> Mesh {
-        let copy_storage = copy.storage.read().expect("Error locking copy storage");
+        let copy_storage = copy
+            .handle
+            .storage
+            .read()
+            .expect("Error locking copy storage");
         let storage = Arc::new(RwLock::new(MeshStorage {
             shape: copy_storage.shape.clone(),
             material: copy_storage.material.clone(),
@@ -127,8 +134,9 @@ impl Scene2d {
             position: copy_storage.position,
             children: HashMap::new(),
         }));
-        let id = self.arena.insert(storage.clone());
-        Mesh { id, storage }
+        let handle = MeshHandle { storage };
+        let id = self.world.insert((), vec![(handle.clone(),)])[0];
+        Mesh { id, handle }
     }
 }
 
@@ -363,7 +371,12 @@ impl Default for Shape {
 
 #[derive(Clone)]
 pub struct Mesh {
-    pub id: generational_arena::Index,
+    pub id: Entity,
+    pub(crate) handle: MeshHandle,
+}
+
+#[derive(Clone)]
+pub struct MeshHandle {
     pub(crate) storage: Arc<RwLock<MeshStorage>>,
 }
 
@@ -373,7 +386,7 @@ pub(crate) struct MeshStorage {
     pub position: Point2d,
     pub scale: f32,
     pub angle: Rad<f32>,
-    pub children: HashMap<generational_arena::Index, Placement2d>,
+    pub children: HashMap<Entity, Placement2d>,
 }
 
 pub mod prelude {
@@ -382,7 +395,7 @@ pub mod prelude {
 
 #[derive(Debug, Clone)]
 pub(crate) struct Placement2d {
-    pub id: generational_arena::Index,
+    pub id: Entity,
     pub position: Point2d,
     pub angle: Rad<f32>,
     pub scale: f32,

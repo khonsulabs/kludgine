@@ -20,7 +20,12 @@ impl LoadedMesh {
 
     pub fn compile(mesh: &FlattenedMesh) -> KludgineResult<LoadedMesh> {
         let (shape, material) = {
-            let mesh = mesh.original.storage.read().expect("Error locking mesh");
+            let mesh = mesh
+                .original
+                .handle
+                .storage
+                .read()
+                .expect("Error locking mesh");
             let material = mesh.material.compile()?;
             let shape = mesh.shape.compile()?;
             (shape, material)

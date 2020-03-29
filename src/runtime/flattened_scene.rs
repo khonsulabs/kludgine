@@ -63,7 +63,7 @@ impl FlattenedScene {
 
                         // Do Operations that lock the mesh for reading
                         let material = {
-                            let mesh = mesh.storage.read().expect("Error locking mesh");
+                            let mesh = mesh.handle.storage.read().expect("Error locking mesh");
                             let material = mesh.material.clone();
 
                             for (_, placement) in mesh.children.iter() {

@@ -1,7 +1,7 @@
 use kludgine::prelude::*;
 
 fn main() {
-    Runtime::new(SingleWindowApplication::<PerspectiveShapes>::default()).run();
+    Runtime::new(SingleWindowApplication::<TextureWindow>::default()).run();
 }
 
 #[derive(Default)]
@@ -9,7 +9,7 @@ struct TextureWindow {
     created_shapes: bool,
 }
 
-impl WindowCreator<PerspectiveShapes> for TextureWindow {
+impl WindowCreator<TextureWindow> for TextureWindow {
     fn window_title() -> String {
         "Texture - Kludgine".to_owned()
     }

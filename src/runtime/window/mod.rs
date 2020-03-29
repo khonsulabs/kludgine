@@ -72,7 +72,7 @@ pub(crate) struct RuntimeWindow {
     wait_for_scene: bool,
     last_known_size: Option<Size2d>,
     last_known_scale_factor: Option<f32>,
-    mesh_cache: HashMap<generational_arena::Index, LoadedMesh>,
+    mesh_cache: HashMap<Entity, LoadedMesh>,
 }
 
 impl RuntimeWindow {
