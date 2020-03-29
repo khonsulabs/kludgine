@@ -33,6 +33,7 @@ pub(crate) struct PerspectiveSettings {
     pub(crate) znear: f32,
     #[educe(Default = 1000.0)]
     pub(crate) zfar: f32,
+    pub(crate) camera_position: Point3d,
 }
 
 #[derive(Educe)]

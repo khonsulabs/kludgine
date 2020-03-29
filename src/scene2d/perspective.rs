@@ -66,6 +66,14 @@ impl<'a> PerspectiveScene<'a> {
         self.scene.perspective_settings.fov
     }
 
+    pub fn set_camera_position(&mut self, position: Point3d) {
+        self.scene.perspective_settings.camera_position = position;
+    }
+
+    pub fn camera_position(&self) -> Point3d {
+        self.scene.perspective_settings.camera_position
+    }
+
     pub fn set_zrange(&mut self, znear: f32, zfar: f32) {
         assert!(znear > 0.0);
         assert!(zfar > znear);
