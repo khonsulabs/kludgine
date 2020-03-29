@@ -5,7 +5,7 @@ use crate::{
     window::{CloseResponse, Window},
 };
 use glutin::{
-    event::{Event, WindowEvent as GlutinWindowEvent},
+    event::{DeviceId, ElementState, Event, KeyboardInput, WindowEvent as GlutinWindowEvent},
     event_loop::EventLoopWindowTarget,
     window::{WindowBuilder, WindowId},
     GlRequest,
@@ -60,7 +60,14 @@ impl WindowMessage {
 
 pub(crate) enum WindowEvent {
     CloseRequested,
-    Resize { size: Size2d, scale_factor: f32 },
+    Resize {
+        size: Size2d,
+        scale_factor: f32,
+    },
+    Keyboard {
+        device_id: DeviceId,
+        input: KeyboardInput,
+    },
 }
 
 pub(crate) struct RuntimeWindow {
@@ -141,6 +148,21 @@ impl RuntimeWindow {
                         if let CloseResponse::Close = window.close_requested().await {
                             WindowMessage::Close.send_to(id).await?;
                             return Ok(());
+                        }
+                    }
+                    WindowEvent::Keyboard { device_id, input } => {
+                        // Notify the window of the raw event, before updaing our internal state
+                        window.keyboard_event(device_id, input).await?;
+
+                        if let Some(keycode) = input.virtual_keycode {
+                            match input.state {
+                                ElementState::Pressed => {
+                                    scene2d.pressed_keys.insert(keycode);
+                                }
+                                ElementState::Released => {
+                                    scene2d.pressed_keys.remove(&keycode);
+                                }
+                            }
                         }
                     }
                 }
@@ -258,6 +280,13 @@ impl RuntimeWindow {
                 ));
                 self.notify_size_changed();
             }
+            GlutinWindowEvent::KeyboardInput {
+                device_id, input, ..
+            } => block_on(self.event_sender.send(WindowEvent::Keyboard {
+                device_id: *device_id,
+                input: *input,
+            }))
+            .unwrap_or_default(),
             _ => {}
         }
     }

@@ -8,6 +8,7 @@ use crate::materials::Material;
 use cgmath::Rad;
 use cgmath::{Matrix4, Vector2, Vector3};
 use gl::types::*;
+use glutin::event::VirtualKeyCode;
 use legion::prelude::*;
 use lyon::tessellation::{
     basic_shapes::fill_rectangle, BasicGeometryBuilder, Count, FillAttributes, FillGeometryBuilder,
@@ -18,7 +19,7 @@ use std::mem;
 use std::os::raw::c_void;
 use std::{
     cmp::Ordering,
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     ptr,
     sync::{Arc, RwLock},
 };
@@ -44,6 +45,7 @@ pub(crate) struct ScreenSettings {
 pub struct Scene2d {
     pub universe: Universe,
     pub world: World,
+    pub pressed_keys: HashSet<VirtualKeyCode>,
     pub(crate) children: HashMap<Entity, Placement2d>,
     pub(crate) size: Size2d,
     pub(crate) screen_settings: ScreenSettings,
@@ -63,6 +65,7 @@ impl Scene2d {
             screen_settings: ScreenSettings::default(),
             perspective_settings: PerspectiveSettings::default(),
             lazy_mesh_cache: HashMap::new(),
+            pressed_keys: HashSet::new(),
         }
     }
 

@@ -47,7 +47,10 @@ pub mod prelude {
     pub use super::{
         application::{Application, SingleWindowApplication, WindowCreator},
         color::Color,
-        glutin,
+        glutin::{
+            self,
+            event::{DeviceId, KeyboardInput, VirtualKeyCode},
+        },
         materials::prelude::*,
         math::*,
         runtime::Runtime,
