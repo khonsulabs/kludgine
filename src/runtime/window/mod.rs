@@ -323,7 +323,7 @@ impl RuntimeWindow {
                     gl::Clear(gl::COLOR_BUFFER_BIT);
                 }
 
-                window.render();
+                window.render().expect("Error rendering window");
                 assert_eq!(unsafe { gl::GetError() }, 0);
 
                 window.context.deref().swap_buffers().unwrap();
@@ -338,7 +338,7 @@ impl RuntimeWindow {
         })
     }
 
-    fn render(&mut self) {
+    fn render(&mut self) -> KludgineResult<()> {
         if self.last_known_size.is_none() {
             self.last_known_size = Some(self.size());
             self.last_known_scale_factor = Some(self.scale_factor());
@@ -350,9 +350,10 @@ impl RuntimeWindow {
                     .entry(mesh.original.id)
                     .and_modify(|lm| lm.update(mesh))
                     .or_insert_with(|| LoadedMesh::compile(mesh).unwrap())
-                    .render();
+                    .render()?;
             }
         }
+        Ok(())
     }
 
     pub fn size(&self) -> Size2d {

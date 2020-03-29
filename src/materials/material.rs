@@ -1,14 +1,37 @@
 use super::{solid, textured};
 use crate::internal_prelude::*;
-use crate::shaders::CompiledProgram;
-use crate::texture::{CompiledTexture, Texture};
+use crate::shaders::{CompiledProgram, Program};
+use crate::texture::Texture;
 use cgmath::Vector4;
 use std::sync::{Arc, RwLock};
 
+pub trait SimpleMaterial: Sync + Send {
+    fn program(&self) -> KludgineResult<Program>;
+    fn activate(&self, program: &CompiledProgram) -> KludgineResult<()>;
+}
+
 #[derive(Clone)]
 pub enum MaterialKind {
-    Solid { color: Color },
-    Textured { texture: Texture },
+    Solid {
+        color: Color,
+    },
+    Textured {
+        texture: Texture,
+    },
+    Custom {
+        custom_material: Arc<Box<dyn SimpleMaterial>>,
+    },
+}
+
+impl<T> From<T> for MaterialKind
+where
+    T: SimpleMaterial + Sized + 'static,
+{
+    fn from(from: T) -> Self {
+        MaterialKind::Custom {
+            custom_material: Arc::new(Box::new(from)),
+        }
+    }
 }
 
 pub(crate) struct MaterialStorage {
@@ -50,24 +73,31 @@ impl Material {
         match &storage.kind {
             MaterialKind::Solid { color } => {
                 let program = solid::program().compile()?;
+                let simple_material = Arc::new(solid::simple_material(Vector4::new(
+                    color.red as f32 / 255.0,
+                    color.blue as f32 / 255.0,
+                    color.green as f32 / 255.0,
+                    color.alpha as f32 / 255.0,
+                )));
                 storage.compiled = Some(Arc::new(CompiledMaterial {
                     program,
-                    color: Some(Vector4::new(
-                        color.red as f32 / 255.0,
-                        color.blue as f32 / 255.0,
-                        color.green as f32 / 255.0,
-                        color.alpha as f32 / 255.0,
-                    )),
-                    texture: None,
+                    simple_material,
                 }));
             }
             MaterialKind::Textured { texture } => {
                 let program = textured::program().compile()?;
+                let simple_material = Arc::new(textured::simple_material(texture.compile()));
                 storage.compiled = Some(Arc::new(CompiledMaterial {
                     program,
-                    color: None,
-                    texture: Some(texture.compile()),
+                    simple_material,
                 }));
+            }
+            MaterialKind::Custom { custom_material } => {
+                let program = custom_material.program()?.compile()?;
+                storage.compiled = Some(Arc::new(CompiledMaterial {
+                    program,
+                    simple_material: custom_material.clone(),
+                }))
             }
         }
         assert_eq!(unsafe { gl::GetError() }, 0);
@@ -83,30 +113,12 @@ impl Material {
 #[derive(Clone)]
 pub(crate) struct CompiledMaterial {
     pub program: Arc<CompiledProgram>,
-    pub color: Option<Vector4<f32>>,
-    pub texture: Option<Arc<CompiledTexture>>,
+    pub simple_material: Arc<Box<dyn SimpleMaterial>>,
 }
 
 impl CompiledMaterial {
-    pub(crate) fn activate(&self) {
+    pub(crate) fn activate(&self) -> KludgineResult<()> {
         self.program.activate();
-        if let Some(color) = &self.color {
-            self.program.set_uniform_vec4("color", &color);
-            if color.w < 1.0 {
-                unsafe {
-                    gl::Enable(gl::BLEND);
-                    gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-                }
-            } else {
-                unsafe {
-                    gl::Disable(gl::BLEND);
-                }
-            }
-            assert_eq!(unsafe { gl::GetError() }, 0);
-        }
-        if let Some(texture) = &self.texture {
-            self.program.set_uniform_1i("uniformTexture", 0);
-            texture.activate();
-        }
+        self.simple_material.activate(self.program.as_ref())
     }
 }

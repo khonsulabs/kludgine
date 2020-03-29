@@ -39,13 +39,14 @@ impl LoadedMesh {
         })
     }
 
-    pub fn activate(&self) {
-        self.material.activate();
+    pub fn activate(&self) -> KludgineResult<()> {
+        self.material.activate()?;
         self.shape.activate();
+        Ok(())
     }
 
-    pub fn render(&self) {
-        self.activate();
+    pub fn render(&self) -> KludgineResult<()> {
+        self.activate()?;
         self.material
             .program
             .set_uniform_matrix4f("projection", &self.projection);
@@ -60,5 +61,6 @@ impl LoadedMesh {
                 ptr::null(),
             );
         }
+        Ok(())
     }
 }
