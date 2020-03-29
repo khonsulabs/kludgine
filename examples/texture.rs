@@ -5,18 +5,18 @@ fn main() {
 }
 
 #[derive(Default)]
-struct PerspectiveShapes {
+struct TextureWindow {
     created_shapes: bool,
 }
 
-impl WindowCreator<PerspectiveShapes> for PerspectiveShapes {
+impl WindowCreator<PerspectiveShapes> for TextureWindow {
     fn window_title() -> String {
         "Texture - Kludgine".to_owned()
     }
 }
 
 #[async_trait]
-impl Window for PerspectiveShapes {
+impl Window for TextureWindow {
     async fn render_2d(&mut self, scene: &mut Scene2d) -> KludgineResult<()> {
         if !self.created_shapes {
             self.created_shapes = true;
