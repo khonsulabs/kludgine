@@ -48,6 +48,7 @@ pub struct Scene2d {
     pub(crate) size: Size2d,
     pub(crate) screen_settings: ScreenSettings,
     pub(crate) perspective_settings: PerspectiveSettings,
+    pub(crate) lazy_mesh_cache: HashMap<String, Mesh>,
 }
 
 impl Scene2d {
@@ -61,6 +62,7 @@ impl Scene2d {
             children: HashMap::new(),
             screen_settings: ScreenSettings::default(),
             perspective_settings: PerspectiveSettings::default(),
+            lazy_mesh_cache: HashMap::new(),
         }
     }
 
@@ -83,6 +85,22 @@ impl Scene2d {
                 handle: handle.as_ref().clone(),
             }),
             None => None,
+        }
+    }
+
+    pub fn cached_mesh<S: Into<String>, F: FnOnce(&mut Scene2d) -> Mesh>(
+        &mut self,
+        name: S,
+        initializer: F,
+    ) -> Mesh {
+        let name = name.into();
+        match self.lazy_mesh_cache.get(&name) {
+            Some(mesh) => mesh.clone(),
+            None => {
+                let new_mesh = initializer(self);
+                self.lazy_mesh_cache.insert(name, new_mesh.clone());
+                new_mesh
+            }
         }
     }
 
