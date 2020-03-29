@@ -78,42 +78,24 @@ impl Material {
             .write()
             .expect("Error locking storage for compilation");
 
-        match &storage.kind {
-            MaterialKind::Solid { color } => {
-                let program = solid::program().compile()?;
-                let simple_material = Arc::new(RwLock::new(solid::simple_material(Vector4::new(
-                    color.red as f32 / 255.0,
-                    color.blue as f32 / 255.0,
-                    color.green as f32 / 255.0,
-                    color.alpha as f32 / 255.0,
-                ))));
-                storage.compiled = Some(Arc::new(CompiledMaterial {
-                    program,
-                    simple_material,
-                }));
-            }
-            MaterialKind::Textured { texture } => {
-                let program = textured::program().compile()?;
-                let simple_material =
-                    Arc::new(RwLock::new(textured::simple_material(texture.compile())));
-                storage.compiled = Some(Arc::new(CompiledMaterial {
-                    program,
-                    simple_material,
-                }));
-            }
-            MaterialKind::Custom { custom_material } => {
-                let program = {
-                    let material = custom_material
-                        .read()
-                        .expect("Error reading custom_material");
-                    material.program()?.compile()?
-                };
-                storage.compiled = Some(Arc::new(CompiledMaterial {
-                    program,
-                    simple_material: custom_material.clone(),
-                }))
-            }
-        }
+        let simple_material = match &storage.kind {
+            MaterialKind::Solid { color } => solid::simple_material(Vector4::new(
+                color.red as f32 / 255.0,
+                color.blue as f32 / 255.0,
+                color.green as f32 / 255.0,
+                color.alpha as f32 / 255.0,
+            )),
+            MaterialKind::Textured { texture } => textured::simple_material(texture.compile()),
+            MaterialKind::Custom { custom_material } => custom_material.clone(),
+        };
+        let program = {
+            let material = simple_material.read().expect("Error reading material");
+            material.program()?.compile()?
+        };
+        storage.compiled = Some(Arc::new(CompiledMaterial {
+            program,
+            simple_material,
+        }));
         assert_eq!(unsafe { gl::GetError() }, 0);
 
         Ok(storage

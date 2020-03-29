@@ -4,7 +4,7 @@ use crate::{
     shaders::{CompiledProgram, Program, ProgramSource},
     texture::CompiledTexture,
 };
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 const VERTEX_SHADER_SOURCE: &str = r#"
     #version 330 core
@@ -33,25 +33,21 @@ const FRAGMENT_SHADER_SOURCE: &str = r#"
     }
 "#;
 
-pub(crate) fn program() -> Program {
-    ProgramSource {
-        vertex_shader: Some(VERTEX_SHADER_SOURCE.to_owned()),
-        fragment_shader: Some(FRAGMENT_SHADER_SOURCE.to_owned()),
-    }
-    .into()
-}
-
 pub(crate) struct TexturedMaterial {
     texture: Arc<CompiledTexture>,
 }
 
-pub(crate) fn simple_material(texture: Arc<CompiledTexture>) -> TexturedMaterial {
-    TexturedMaterial { texture }
+pub(crate) fn simple_material(texture: Arc<CompiledTexture>) -> Arc<RwLock<dyn SimpleMaterial>> {
+    Arc::new(RwLock::new(TexturedMaterial { texture }))
 }
 
 impl SimpleMaterial for TexturedMaterial {
     fn program(&self) -> KludgineResult<Program> {
-        Ok(program())
+        Ok(ProgramSource {
+            vertex_shader: Some(VERTEX_SHADER_SOURCE.to_owned()),
+            fragment_shader: Some(FRAGMENT_SHADER_SOURCE.to_owned()),
+        }
+        .into())
     }
     fn activate(&self, program: &CompiledProgram) -> KludgineResult<()> {
         program.set_uniform_1i("uniformTexture", 0);
