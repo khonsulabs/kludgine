@@ -1,7 +1,5 @@
 use crate::internal_prelude::*;
 use cgmath::{prelude::*, Matrix4, Quaternion, Vector3};
-use rayon::prelude::*;
-use std::sync::mpsc::channel;
 
 pub struct FlattenedMesh {
     pub original: Mesh,
@@ -41,64 +39,59 @@ impl FlattenedScene {
             .collect::<Vec<_>>();
 
         while stack.len() > 0 {
-            let (sender, receiver) = channel();
+            let mut new_stack = Vec::new();
             let flattened_meshes = stack
-                .into_par_iter()
-                .map_with(
-                    sender,
-                    |sender, (placement, projection, orientation, position, scale)| {
-                        let mesh = scene.get(placement.id).unwrap();
+                .into_iter()
+                .map(|(placement, projection, orientation, position, scale)| {
+                    let mesh = scene.get(placement.id).unwrap();
 
-                        let mesh_position = orientation.rotate_vector(Vector3::new(
-                            placement.position.x,
-                            placement.position.y,
-                            placement.z(),
-                        ));
+                    let mesh_position = orientation.rotate_vector(Vector3::new(
+                        placement.position.x,
+                        placement.position.y,
+                        placement.z(),
+                    ));
 
-                        let position = position
-                            + Vector3::new(
-                                mesh_position.x * scale,
-                                mesh_position.y * scale,
-                                mesh_position.z * scale,
-                            );
-                        let translation = Matrix4::from_translation(position);
-                        let orientation = orientation * Quaternion::from_angle_z(placement.angle);
-                        let scale = scale * placement.scale;
+                    let position = position
+                        + Vector3::new(
+                            mesh_position.x * scale,
+                            mesh_position.y * scale,
+                            mesh_position.z * scale,
+                        );
+                    let translation = Matrix4::from_translation(position);
+                    let orientation = orientation * Quaternion::from_angle_z(placement.angle);
+                    let scale = scale * placement.scale;
 
-                        // Do Operations that lock the mesh for reading
-                        let material = {
-                            let mesh = mesh.handle.storage.read().expect("Error locking mesh");
-                            let material = mesh.material.clone();
+                    // Do Operations that lock the mesh for reading
+                    let material = {
+                        let mesh = mesh.handle.storage.read().expect("Error locking mesh");
+                        let material = mesh.material.clone();
 
-                            for (_, placement) in mesh.children.iter() {
-                                sender
-                                    .send((
-                                        placement.clone(),
-                                        projection,
-                                        orientation,
-                                        position,
-                                        scale,
-                                    ))
-                                    .unwrap();
-                            }
-
-                            material
-                        };
-
-                        FlattenedMesh {
-                            original: mesh,
-                            material,
-                            projection,
-                            model: translation
-                                * Matrix4::from(orientation)
-                                * Matrix4::from_scale(scale),
-                            scale,
+                        for (_, placement) in mesh.children.iter() {
+                            new_stack.push((
+                                placement.clone(),
+                                projection,
+                                orientation,
+                                position,
+                                scale,
+                            ));
                         }
-                    },
-                )
+
+                        material
+                    };
+
+                    FlattenedMesh {
+                        original: mesh,
+                        material,
+                        projection,
+                        model: translation
+                            * Matrix4::from(orientation)
+                            * Matrix4::from_scale(scale),
+                        scale,
+                    }
+                })
                 .collect::<Vec<_>>();
             self.meshes.extend(flattened_meshes);
-            stack = receiver.iter().collect();
+            stack = new_stack;
         }
     }
 }

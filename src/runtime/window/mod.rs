@@ -201,6 +201,12 @@ impl RuntimeWindow {
                     .unwrap_or(next_frame_target);
                 let sleep_nanos = (FRAME_DURATION as i64 - elapsed_nanos).max(0);
                 async_std::task::sleep(Duration::from_nanos(sleep_nanos as u64)).await;
+            } else {
+                let sleep_nanos = next_frame_target
+                    .checked_duration_since(frame_start)
+                    .unwrap_or_default()
+                    .as_nanos();
+                async_std::task::sleep(Duration::from_nanos(sleep_nanos as u64)).await;
             }
         }
     }

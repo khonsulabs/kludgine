@@ -58,27 +58,23 @@ where
     {
         let mut running = false;
         loop {
-            let mut still_receiving_events = true;
-            while still_receiving_events {
-                let result = {
-                    let mut guard = GLOBAL_RUNTIME_RECEIVER
-                        .lock()
-                        .expect("Error locking runtime reciver");
-                    let event_receiver = guard.as_mut().expect("Receiver was not set");
-                    event_receiver.try_recv()
-                };
-                match result {
-                    Ok(event) => match event {
-                        RuntimeEvent::Running => {
-                            running = true;
-                        }
-                    },
-                    Err(error) => match error {
-                        TryRecvError::Empty => {
-                            still_receiving_events = false;
-                        }
+            while let Some(event) = {
+                let mut guard = GLOBAL_RUNTIME_RECEIVER
+                    .lock()
+                    .expect("Error locking runtime reciver");
+                let event_receiver = guard.as_mut().expect("Receiver was not set");
+                match event_receiver.try_recv() {
+                    Ok(event) => Some(event),
+                    Err(err) => match err {
+                        TryRecvError::Empty => None,
                         TryRecvError::Disconnected => return Ok(()),
                     },
+                }
+            } {
+                match event {
+                    RuntimeEvent::Running => {
+                        running = true;
+                    }
                 }
             }
 
@@ -86,6 +82,7 @@ where
                 RuntimeRequest::Quit.send().await?;
                 return Ok(());
             }
+            async_std::task::sleep(Duration::from_millis(100)).await; // TODO limit
         }
     }
 }
