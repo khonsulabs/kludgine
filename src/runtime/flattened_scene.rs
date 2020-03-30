@@ -30,7 +30,11 @@ impl FlattenedScene {
                     root.clone(),
                     scene.projection(&root.location),
                     Quaternion::<f32>::one(),
-                    Vector3::<f32>::new(0.0, 0.0, 0.0),
+                    Vector3::new(
+                        -scene.perspective_settings.camera_position.x,
+                        -scene.perspective_settings.camera_position.y,
+                        -scene.perspective_settings.camera_position.z,
+                    ),
                     1.0f32,
                 )
             })
@@ -63,7 +67,7 @@ impl FlattenedScene {
 
                         // Do Operations that lock the mesh for reading
                         let material = {
-                            let mesh = mesh.storage.read().expect("Error locking mesh");
+                            let mesh = mesh.handle.storage.read().expect("Error locking mesh");
                             let material = mesh.material.clone();
 
                             for (_, placement) in mesh.children.iter() {

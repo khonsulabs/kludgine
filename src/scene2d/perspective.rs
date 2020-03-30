@@ -9,7 +9,7 @@ impl<'a> PerspectiveScene<'a> {
     pub fn place_mesh(
         &mut self,
         mesh: &Mesh,
-        relative_to: Option<generational_arena::Index>,
+        relative_to: Option<Entity>,
         position: Point3d,
         angle: Rad<f32>,
         scale: f32,
@@ -18,6 +18,7 @@ impl<'a> PerspectiveScene<'a> {
             Some(relative_to) => match self.scene.get(relative_to) {
                 Some(relative_mesh) => {
                     let mut storage = relative_mesh
+                        .handle
                         .storage
                         .write()
                         .expect("Error locking mesh for writing");
@@ -32,7 +33,7 @@ impl<'a> PerspectiveScene<'a> {
     }
 
     fn internal_place_mesh(
-        children: &mut HashMap<generational_arena::Index, Placement2d>,
+        children: &mut HashMap<Entity, Placement2d>,
         mesh: &Mesh,
         position: Point3d,
         angle: Rad<f32>,
@@ -63,6 +64,14 @@ impl<'a> PerspectiveScene<'a> {
 
     pub fn fov(&self) -> Deg<f32> {
         self.scene.perspective_settings.fov
+    }
+
+    pub fn set_camera_position(&mut self, position: Point3d) {
+        self.scene.perspective_settings.camera_position = position;
+    }
+
+    pub fn camera_position(&self) -> Point3d {
+        self.scene.perspective_settings.camera_position
     }
 
     pub fn set_zrange(&mut self, znear: f32, zfar: f32) {

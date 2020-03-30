@@ -1,4 +1,10 @@
-use crate::shaders::{Program, ProgramSource};
+use crate::{
+    internal_prelude::*,
+    materials::material::SimpleMaterial,
+    shaders::{CompiledProgram, Program, ProgramSource},
+};
+use cgmath::Vector4;
+use std::sync::{Arc, RwLock};
 
 const VERTEX_SHADER_SOURCE: &str = r#"
     #version 140
@@ -27,4 +33,32 @@ pub(crate) fn program() -> Program {
         fragment_shader: Some(FRAGMENT_SHADER_SOURCE.to_owned()),
     }
     .into()
+}
+
+pub(crate) struct SolidMaterial {
+    color: Vector4<f32>,
+}
+
+pub(crate) fn simple_material(color: Vector4<f32>) -> Arc<RwLock<dyn SimpleMaterial>> {
+    Arc::new(RwLock::new(SolidMaterial { color }))
+}
+
+impl SimpleMaterial for SolidMaterial {
+    fn program(&self) -> KludgineResult<Program> {
+        Ok(program())
+    }
+    fn activate(&self, program: &CompiledProgram) -> KludgineResult<()> {
+        program.set_uniform_vec4("color", &self.color);
+        if self.color.w < 1.0 {
+            unsafe {
+                gl::Enable(gl::BLEND);
+                gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            }
+        } else {
+            unsafe {
+                gl::Disable(gl::BLEND);
+            }
+        }
+        Ok(())
+    }
 }

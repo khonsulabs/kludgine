@@ -141,8 +141,8 @@ pub(crate) struct ProgramStorage {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct CompiledProgram {
-    program: u32,
+pub struct CompiledProgram {
+    pub program: u32,
 }
 
 impl CompiledProgram {

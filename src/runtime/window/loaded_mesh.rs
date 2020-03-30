@@ -20,7 +20,12 @@ impl LoadedMesh {
 
     pub fn compile(mesh: &FlattenedMesh) -> KludgineResult<LoadedMesh> {
         let (shape, material) = {
-            let mesh = mesh.original.storage.read().expect("Error locking mesh");
+            let mesh = mesh
+                .original
+                .handle
+                .storage
+                .read()
+                .expect("Error locking mesh");
             let material = mesh.material.compile()?;
             let shape = mesh.shape.compile()?;
             (shape, material)
@@ -34,13 +39,14 @@ impl LoadedMesh {
         })
     }
 
-    pub fn activate(&self) {
-        self.material.activate();
+    pub fn activate(&self) -> KludgineResult<()> {
+        self.material.activate()?;
         self.shape.activate();
+        Ok(())
     }
 
-    pub fn render(&self) {
-        self.activate();
+    pub fn render(&self) -> KludgineResult<()> {
+        self.activate()?;
         self.material
             .program
             .set_uniform_matrix4f("projection", &self.projection);
@@ -55,5 +61,6 @@ impl LoadedMesh {
                 ptr::null(),
             );
         }
+        Ok(())
     }
 }

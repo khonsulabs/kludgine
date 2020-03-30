@@ -21,7 +21,7 @@ async-trait = "0.1"
 async-std = "1"
 lazy_static = "1"
 thiserror="1"
-generational-arena = "0.2"
+legion = {git="https://github.com/TomGillen/legion.git"}
 mint="0.5"
 nalgebra={version="*", features=["mint"]}
 image="*"

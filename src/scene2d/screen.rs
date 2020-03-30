@@ -1,4 +1,4 @@
-use super::{Mesh, MeshStorage, Placement2d, Placement2dLocation, Scene2d, Shape};
+use super::{Mesh, MeshHandle, MeshStorage, Placement2d, Placement2dLocation, Scene2d, Shape};
 use crate::internal_prelude::*;
 use crate::materials::Material;
 use std::{
@@ -20,12 +20,17 @@ impl<'a> ScreenScene<'a> {
             position: Point2d::new(0.0, 0.0),
             children: HashMap::new(),
         }));
-        let id = self.scene.arena.insert(storage.clone());
-        Mesh { id, storage }
+        let handle = MeshHandle { storage };
+        let id = self.scene.world.insert((), vec![(handle.clone(),)])[0];
+        Mesh { id, handle }
     }
 
     pub fn create_mesh_clone(&mut self, copy: &Mesh) -> Mesh {
-        let copy_storage = copy.storage.read().expect("Error locking copy storage");
+        let copy_storage = copy
+            .handle
+            .storage
+            .read()
+            .expect("Error locking copy storage");
         let storage = Arc::new(RwLock::new(MeshStorage {
             shape: copy_storage.shape.clone(),
             material: copy_storage.material.clone(),
@@ -34,14 +39,15 @@ impl<'a> ScreenScene<'a> {
             position: copy_storage.position,
             children: copy_storage.children.clone(), // TODO Do a deep clone so
         }));
-        let id = self.scene.arena.insert(storage.clone());
-        Mesh { id, storage }
+        let handle = MeshHandle { storage };
+        let id = self.scene.world.insert((), vec![(handle.clone(),)])[0];
+        Mesh { id, handle }
     }
 
     pub fn place_mesh(
         &mut self,
         mesh: &Mesh,
-        relative_to: Option<generational_arena::Index>,
+        relative_to: Option<Entity>,
         position: Point2d,
         angle: Rad<f32>,
         scale: f32,
@@ -50,6 +56,7 @@ impl<'a> ScreenScene<'a> {
             Some(relative_to) => match self.scene.get(relative_to) {
                 Some(relative_mesh) => {
                     let mut storage = relative_mesh
+                        .handle
                         .storage
                         .write()
                         .expect("Error locking mesh for writing");
@@ -64,7 +71,7 @@ impl<'a> ScreenScene<'a> {
     }
 
     fn internal_place_mesh(
-        children: &mut HashMap<generational_arena::Index, Placement2d>,
+        children: &mut HashMap<Entity, Placement2d>,
         mesh: &Mesh,
         position: Point2d,
         angle: Rad<f32>,

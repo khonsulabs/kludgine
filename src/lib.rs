@@ -5,6 +5,7 @@ extern crate educe;
 
 pub extern crate glutin;
 pub extern crate image;
+pub extern crate legion;
 
 pub mod application;
 pub mod color;
@@ -15,6 +16,8 @@ pub mod scene2d;
 pub mod shaders;
 pub mod texture;
 pub mod window;
+
+use legion::prelude::*;
 
 #[cfg(test)]
 mod tests {
@@ -31,7 +34,7 @@ pub enum KludgineError {
     #[error("error sending a WindowMessage to a Window: {0}")]
     InternalWindowMessageSendError(String),
     #[error("The id could not be found: {0:?}")]
-    InvalidId(generational_arena::Index),
+    InvalidId(Entity),
     #[error("error compiling shader: {0}")]
     ShaderCompilationError(String),
     #[error("error reading image: {0}")]
@@ -44,16 +47,21 @@ pub mod prelude {
     pub use super::{
         application::{Application, SingleWindowApplication, WindowCreator},
         color::Color,
-        glutin,
+        glutin::{
+            self,
+            event::{DeviceId, KeyboardInput, MouseButton, MouseScrollDelta, VirtualKeyCode},
+        },
         materials::prelude::*,
         math::*,
         runtime::Runtime,
         scene2d::prelude::*,
-        window::Window,
+        shaders::{CompiledProgram, Program, ProgramSource},
+        window::{Event, InputEvent, Window},
         KludgineError, KludgineResult,
     };
     pub use async_trait::async_trait;
     pub use cgmath::{prelude::*, Deg, Rad};
+    pub use legion::prelude::*;
 }
 
 mod internal_prelude {
