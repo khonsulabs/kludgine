@@ -16,14 +16,14 @@ pub(crate) enum RuntimeRequest {
 
 impl RuntimeRequest {
     pub async fn send(self) -> KludgineResult<()> {
-        let mut sender: mpsc::UnboundedSender<RuntimeRequest> = {
+        let sender: Sender<RuntimeRequest> = {
             let guard = GLOBAL_RUNTIME_SENDER.lock().expect("Error locking mutex");
             match *guard {
                 Some(ref sender) => sender.clone(),
                 None => panic!("Uninitialized runtime"),
             }
         };
-        sender.send(self).await.unwrap_or_default();
+        sender.send(self).unwrap_or_default();
         Ok(())
     }
 }

@@ -1,10 +1,7 @@
 use super::{Mesh, MeshHandle, MeshStorage, Placement2d, Placement2dLocation, Scene2d, Shape};
 use crate::internal_prelude::*;
 use crate::materials::Material;
-use std::{
-    collections::HashMap,
-    sync::{Arc, RwLock},
-};
+use std::collections::HashMap;
 pub struct ScreenScene<'a> {
     pub scene: &'a mut Scene2d,
 }
@@ -12,14 +9,14 @@ pub struct ScreenScene<'a> {
 impl<'a> ScreenScene<'a> {
     pub fn create_mesh<M: Into<Material>>(&mut self, shape: Shape, material: M) -> Mesh {
         let material = material.into();
-        let storage = Arc::new(RwLock::new(MeshStorage {
+        let storage = KludgineHandle::wrap(MeshStorage {
             shape,
             material,
             angle: Rad(0.0),
             scale: 1.0,
             position: Point2d::new(0.0, 0.0),
             children: HashMap::new(),
-        }));
+        });
         let handle = MeshHandle { storage };
         let id = self.scene.world.insert((), vec![(handle.clone(),)])[0];
         Mesh { id, handle }
@@ -31,14 +28,14 @@ impl<'a> ScreenScene<'a> {
             .storage
             .read()
             .expect("Error locking copy storage");
-        let storage = Arc::new(RwLock::new(MeshStorage {
+        let storage = KludgineHandle::wrap(MeshStorage {
             shape: copy_storage.shape.clone(),
             material: copy_storage.material.clone(),
             angle: copy_storage.angle,
             scale: copy_storage.scale,
             position: copy_storage.position,
             children: copy_storage.children.clone(), // TODO Do a deep clone so
-        }));
+        });
         let handle = MeshHandle { storage };
         let id = self.scene.world.insert((), vec![(handle.clone(),)])[0];
         Mesh { id, handle }

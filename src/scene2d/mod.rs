@@ -21,7 +21,6 @@ use std::{
     cmp::Ordering,
     collections::{HashMap, HashSet},
     ptr,
-    sync::{Arc, RwLock},
 };
 
 #[derive(Educe)]
@@ -129,14 +128,14 @@ impl Scene2d {
 
     pub fn create_mesh<M: Into<Material>>(&mut self, shape: Shape, material: M) -> Mesh {
         let material = material.into();
-        let storage = Arc::new(RwLock::new(MeshStorage {
+        let storage = KludgineHandle::wrap(MeshStorage {
             shape,
             material,
             angle: Rad(0.0),
             scale: 1.0,
             position: Point2d::new(0.0, 0.0),
             children: HashMap::new(),
-        }));
+        });
         let handle = MeshHandle { storage };
         let id = self.world.insert((), vec![(handle.clone(),)])[0];
         Mesh { id, handle }
@@ -148,14 +147,14 @@ impl Scene2d {
             .storage
             .read()
             .expect("Error locking copy storage");
-        let storage = Arc::new(RwLock::new(MeshStorage {
+        let storage = KludgineHandle::wrap(MeshStorage {
             shape: copy_storage.shape.clone(),
             material: copy_storage.material.clone(),
             angle: copy_storage.angle,
             scale: copy_storage.scale,
             position: copy_storage.position,
             children: HashMap::new(),
-        }));
+        });
         let handle = MeshHandle { storage };
         let id = self.world.insert((), vec![(handle.clone(),)])[0];
         Mesh { id, handle }
@@ -238,7 +237,7 @@ impl BasicGeometryBuilder for Shape {
 
 #[derive(Clone)]
 pub struct Shape {
-    pub(crate) storage: Arc<RwLock<ShapeStorage>>,
+    pub(crate) storage: KludgineHandle<ShapeStorage>,
 }
 
 #[derive(Clone)]
@@ -386,7 +385,7 @@ impl Shape {
 impl Default for Shape {
     fn default() -> Self {
         Shape {
-            storage: Arc::new(RwLock::new(ShapeStorage::default())),
+            storage: KludgineHandle::wrap(ShapeStorage::default()),
         }
     }
 }
@@ -399,7 +398,7 @@ pub struct Mesh {
 
 #[derive(Clone)]
 pub struct MeshHandle {
-    pub(crate) storage: Arc<RwLock<MeshStorage>>,
+    pub(crate) storage: KludgineHandle<MeshStorage>,
 }
 
 pub(crate) struct MeshStorage {

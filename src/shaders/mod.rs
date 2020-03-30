@@ -1,15 +1,11 @@
 use crate::internal_prelude::*;
 use cgmath::{Matrix4, Vector4};
 use gl::types::*;
-use std::{
-    ffi::CString,
-    ptr, str,
-    sync::{Arc, RwLock},
-};
+use std::{ffi::CString, ptr, str};
 
 #[derive(Clone)]
 pub struct Program {
-    pub(crate) storage: Arc<RwLock<ProgramStorage>>,
+    pub(crate) storage: KludgineHandle<ProgramStorage>,
 }
 
 #[derive(Default)]
@@ -21,10 +17,10 @@ pub struct ProgramSource {
 impl From<ProgramSource> for Program {
     fn from(source: ProgramSource) -> Self {
         Self {
-            storage: Arc::new(RwLock::new(ProgramStorage {
+            storage: KludgineHandle::wrap(ProgramStorage {
                 source,
                 compiled: None,
-            })),
+            }),
         }
     }
 }

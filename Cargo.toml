@@ -26,6 +26,7 @@ cgmath="*"
 educe={version="*", default-features=false, features=["Default"]}
 log="*"
 rayon="*"
+crossbeam="*"
 
 [dev-dependencies]
 rand="*"

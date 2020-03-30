@@ -13,9 +13,9 @@ pub trait EventProcessor: Send + Sync {
     );
 }
 lazy_static! {
-    pub(crate) static ref GLOBAL_RUNTIME_SENDER: Mutex<Option<mpsc::UnboundedSender<RuntimeRequest>>> =
+    pub(crate) static ref GLOBAL_RUNTIME_SENDER: Mutex<Option<Sender<RuntimeRequest>>> =
         { Mutex::new(None) };
-    pub(crate) static ref GLOBAL_RUNTIME_RECEIVER: Mutex<Option<mpsc::UnboundedReceiver<RuntimeEvent>>> =
+    pub(crate) static ref GLOBAL_RUNTIME_RECEIVER: Mutex<Option<Receiver<RuntimeEvent>>> =
         { Mutex::new(None) };
     pub(crate) static ref GLOBAL_EVENT_HANDLER: Mutex<Option<Box<dyn EventProcessor>>> =
         Mutex::new(None);
