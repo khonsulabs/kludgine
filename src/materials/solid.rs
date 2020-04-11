@@ -4,7 +4,6 @@ use crate::{
     shaders::{CompiledProgram, Program, ProgramSource},
 };
 use cgmath::Vector4;
-use std::sync::{Arc, RwLock};
 
 const VERTEX_SHADER_SOURCE: &str = r#"
     #version 140
@@ -39,8 +38,8 @@ pub(crate) struct SolidMaterial {
     color: Vector4<f32>,
 }
 
-pub(crate) fn simple_material(color: Vector4<f32>) -> Arc<RwLock<dyn SimpleMaterial>> {
-    Arc::new(RwLock::new(SolidMaterial { color }))
+pub(crate) fn simple_material(color: Vector4<f32>) -> KludgineHandle<dyn SimpleMaterial> {
+    KludgineHandle::wrap(SolidMaterial { color })
 }
 
 impl SimpleMaterial for SolidMaterial {

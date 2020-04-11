@@ -1,5 +1,4 @@
 use kludgine::prelude::*;
-use std::sync::{Arc, RwLock};
 use rand::{Rng, thread_rng};
 
 fn main() {
@@ -7,7 +6,7 @@ fn main() {
 }
 
 struct ShaderWindow {
-    material: Arc<RwLock<CustomShaderMaterial>>,
+    material: KludgineHandle<CustomShaderMaterial>,
 }
 
 impl WindowCreator<ShaderWindow> for ShaderWindow {
@@ -19,11 +18,11 @@ impl WindowCreator<ShaderWindow> for ShaderWindow {
 impl Default for ShaderWindow {
     fn default() -> Self {
         Self {
-            material: Arc::new(RwLock::new(CustomShaderMaterial {
+            material: KludgineHandle::wrap(CustomShaderMaterial {
                 color_one: Vector4::new(1.0, 0.0, 0.0, 1.0),
                 color_two: Vector4::new(0.0, 1.0, 0.0, 1.0),
                 frame: 0,
-            })),
+            }),
         }
     }
 }

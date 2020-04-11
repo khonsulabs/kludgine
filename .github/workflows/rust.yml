@@ -1,0 +1,17 @@
+name: Rust
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: khonsulabs/build-rust:latest
+      options: "--security-opt seccomp=unconfined"
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Run tests on stable
+        run: cargo test --all-features
+      - name: Run tests on nightly
+        run: cargo test +nightly --all-features

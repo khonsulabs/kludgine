@@ -4,7 +4,6 @@ use crate::{
     shaders::{CompiledProgram, Program, ProgramSource},
     texture::CompiledTexture,
 };
-use std::sync::{Arc, RwLock};
 
 const VERTEX_SHADER_SOURCE: &str = r#"
     #version 330 core
@@ -37,8 +36,8 @@ pub(crate) struct TexturedMaterial {
     texture: Arc<CompiledTexture>,
 }
 
-pub(crate) fn simple_material(texture: Arc<CompiledTexture>) -> Arc<RwLock<dyn SimpleMaterial>> {
-    Arc::new(RwLock::new(TexturedMaterial { texture }))
+pub(crate) fn simple_material(texture: Arc<CompiledTexture>) -> KludgineHandle<dyn SimpleMaterial> {
+    KludgineHandle::wrap(TexturedMaterial { texture })
 }
 
 impl SimpleMaterial for TexturedMaterial {

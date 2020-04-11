@@ -1,19 +1,19 @@
+use crate::internal_prelude::*;
 use image::DynamicImage;
 use std::os::raw::c_void;
-use std::sync::{Arc, RwLock};
 
 #[derive(Clone)]
 pub struct Texture {
-    pub(crate) storage: Arc<RwLock<TextureStorage>>,
+    pub(crate) storage: KludgineHandle<TextureStorage>,
 }
 
 impl From<DynamicImage> for Texture {
     fn from(img: DynamicImage) -> Self {
         Self {
-            storage: Arc::new(RwLock::new(TextureStorage {
+            storage: KludgineHandle::wrap(TextureStorage {
                 image: img,
                 compiled: None,
-            })),
+            }),
         }
     }
 }

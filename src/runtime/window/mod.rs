@@ -25,7 +25,7 @@ use tracked_context::TrackedContext;
 static LOAD_SUPPORT: Once = Once::new();
 
 lazy_static! {
-    static ref WINDOW_CHANNELS: Arc<Mutex<HashMap<WindowId, mpsc::UnboundedSender<WindowMessage>>>> =
+    static ref WINDOW_CHANNELS: Arc<Mutex<HashMap<WindowId, Sender<WindowMessage>>>> =
         { Arc::new(Mutex::new(HashMap::new())) };
 }
 
@@ -40,7 +40,7 @@ pub(crate) enum WindowMessage {
 
 impl WindowMessage {
     pub async fn send_to(self, id: WindowId) -> KludgineResult<()> {
-        let mut sender = {
+        let sender = {
             let mut channels = WINDOW_CHANNELS
                 .lock()
                 .expect("Error locking window channels");
@@ -53,7 +53,7 @@ impl WindowMessage {
             }
         };
 
-        sender.send(self).await.unwrap_or_default();
+        sender.send(self).unwrap_or_default();
         Ok(())
     }
 }
@@ -66,8 +66,8 @@ pub(crate) enum WindowEvent {
 
 pub(crate) struct RuntimeWindow {
     context: TrackedContext,
-    receiver: mpsc::UnboundedReceiver<WindowMessage>,
-    event_sender: mpsc::UnboundedSender<WindowEvent>,
+    receiver: Receiver<WindowMessage>,
+    event_sender: Sender<WindowEvent>,
     scene: Option<FlattenedScene>,
     should_close: bool,
     wait_for_scene: bool,
@@ -86,8 +86,8 @@ impl RuntimeWindow {
             .build_windowed(wb, &event_loop)
             .unwrap();
         let context = unsafe { windowed_context.make_current().unwrap() };
-        let (message_sender, message_receiver) = mpsc::unbounded();
-        let (event_sender, event_receiver) = mpsc::unbounded();
+        let (message_sender, message_receiver) = unbounded();
+        let (event_sender, event_receiver) = unbounded();
         Runtime::spawn(Self::window_main::<T>(
             context.window().id(),
             event_receiver,
@@ -123,7 +123,7 @@ impl RuntimeWindow {
 
     async fn window_loop<T>(
         id: WindowId,
-        mut event_receiver: mpsc::UnboundedReceiver<WindowEvent>,
+        event_receiver: Receiver<WindowEvent>,
         mut window: Box<T>,
     ) -> KludgineResult<()>
     where
@@ -132,7 +132,13 @@ impl RuntimeWindow {
         let mut scene2d = Scene2d::new();
         let mut next_frame_target = Instant::now();
         loop {
-            while let Some(event) = event_receiver.try_next().unwrap_or_default() {
+            while let Some(event) = match event_receiver.try_recv() {
+                Ok(event) => Some(event),
+                Err(err) => match err {
+                    TryRecvError::Empty => None,
+                    TryRecvError::Disconnected => return Ok(()),
+                },
+            } {
                 match event {
                     WindowEvent::Resize { size, scale_factor } => {
                         scene2d.size = size;
@@ -195,15 +201,18 @@ impl RuntimeWindow {
                     .unwrap_or(next_frame_target);
                 let sleep_nanos = (FRAME_DURATION as i64 - elapsed_nanos).max(0);
                 async_std::task::sleep(Duration::from_nanos(sleep_nanos as u64)).await;
+            } else {
+                let sleep_nanos = next_frame_target
+                    .checked_duration_since(frame_start)
+                    .unwrap_or_default()
+                    .as_nanos();
+                async_std::task::sleep(Duration::from_nanos(sleep_nanos as u64)).await;
             }
         }
     }
 
-    async fn window_main<T>(
-        id: WindowId,
-        event_receiver: mpsc::UnboundedReceiver<WindowEvent>,
-        window: Box<T>,
-    ) where
+    async fn window_main<T>(id: WindowId, event_receiver: Receiver<WindowEvent>, window: Box<T>)
+    where
         T: Window + ?Sized,
     {
         Self::window_loop::<T>(id, event_receiver, window)
@@ -242,7 +251,7 @@ impl RuntimeWindow {
     }
 
     pub(crate) fn receive_messages(&mut self) {
-        while let Some(request) = self.receiver.try_next().unwrap_or_default() {
+        while let Ok(request) = self.receiver.try_recv() {
             match request {
                 WindowMessage::Close => {
                     let mut channels = WINDOW_CHANNELS
@@ -262,7 +271,9 @@ impl RuntimeWindow {
     pub(crate) fn process_event(&mut self, event: &glutin::event::WindowEvent) {
         match event {
             GlutinWindowEvent::CloseRequested => {
-                block_on(self.event_sender.send(WindowEvent::CloseRequested)).unwrap_or_default();
+                self.event_sender
+                    .send(WindowEvent::CloseRequested)
+                    .unwrap_or_default();
             }
             GlutinWindowEvent::Resized(size) => {
                 self.last_known_size = Some(Size2d::new(size.width as f32, size.height as f32));
@@ -281,68 +292,77 @@ impl RuntimeWindow {
             }
             GlutinWindowEvent::KeyboardInput {
                 device_id, input, ..
-            } => block_on(self.event_sender.send(WindowEvent::Input(InputEvent {
-                device_id: *device_id,
-                event: KludgineInputEvent::Keyboard {
-                    key: input.virtual_keycode,
-                    state: input.state,
-                },
-            })))
-            .unwrap_or_default(),
+            } => self
+                .event_sender
+                .send(WindowEvent::Input(InputEvent {
+                    device_id: *device_id,
+                    event: KludgineInputEvent::Keyboard {
+                        key: input.virtual_keycode,
+                        state: input.state,
+                    },
+                }))
+                .unwrap_or_default(),
             GlutinWindowEvent::MouseInput {
                 device_id,
                 button,
                 state,
                 ..
-            } => block_on(self.event_sender.send(WindowEvent::Input(InputEvent {
-                device_id: *device_id,
-                event: KludgineInputEvent::MouseButton {
-                    button: *button,
-                    state: *state,
-                },
-            })))
-            .unwrap_or_default(),
+            } => self
+                .event_sender
+                .send(WindowEvent::Input(InputEvent {
+                    device_id: *device_id,
+                    event: KludgineInputEvent::MouseButton {
+                        button: *button,
+                        state: *state,
+                    },
+                }))
+                .unwrap_or_default(),
             GlutinWindowEvent::MouseWheel {
                 device_id,
                 delta,
                 phase,
                 ..
-            } => block_on(self.event_sender.send(WindowEvent::Input(InputEvent {
-                device_id: *device_id,
-                event: KludgineInputEvent::MouseWheel {
-                    delta: *delta,
-                    touch_phase: *phase,
-                },
-            })))
-            .unwrap_or_default(),
+            } => self
+                .event_sender
+                .send(WindowEvent::Input(InputEvent {
+                    device_id: *device_id,
+                    event: KludgineInputEvent::MouseWheel {
+                        delta: *delta,
+                        touch_phase: *phase,
+                    },
+                }))
+                .unwrap_or_default(),
             GlutinWindowEvent::CursorMoved {
                 device_id,
                 position,
                 ..
-            } => block_on(self.event_sender.send(WindowEvent::Input(InputEvent {
-                device_id: *device_id,
-                event: KludgineInputEvent::MouseMoved {
-                    position: Some(Point2d::new(position.x as f32, position.y as f32)),
-                },
-            })))
-            .unwrap_or_default(),
-            GlutinWindowEvent::CursorLeft { device_id } => {
-                block_on(self.event_sender.send(WindowEvent::Input(InputEvent {
+            } => self
+                .event_sender
+                .send(WindowEvent::Input(InputEvent {
+                    device_id: *device_id,
+                    event: KludgineInputEvent::MouseMoved {
+                        position: Some(Point2d::new(position.x as f32, position.y as f32)),
+                    },
+                }))
+                .unwrap_or_default(),
+            GlutinWindowEvent::CursorLeft { device_id } => self
+                .event_sender
+                .send(WindowEvent::Input(InputEvent {
                     device_id: *device_id,
                     event: KludgineInputEvent::MouseMoved { position: None },
-                })))
-                .unwrap_or_default()
-            }
+                }))
+                .unwrap_or_default(),
             _ => {}
         }
     }
 
     fn notify_size_changed(&mut self) {
-        block_on(self.event_sender.send(WindowEvent::Resize {
-            size: self.last_known_size.unwrap_or_default(),
-            scale_factor: self.last_known_scale_factor.unwrap_or(1.0),
-        }))
-        .unwrap_or_default();
+        self.event_sender
+            .send(WindowEvent::Resize {
+                size: self.last_known_size.unwrap_or_default(),
+                scale_factor: self.last_known_scale_factor.unwrap_or(1.0),
+            })
+            .unwrap_or_default();
     }
 
     pub(crate) fn render_all() {

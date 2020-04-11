@@ -22,14 +22,9 @@ impl<App> ApplicationRuntime<App>
 where
     App: Application + 'static,
 {
-    fn launch(
-        self,
-    ) -> (
-        mpsc::UnboundedReceiver<RuntimeRequest>,
-        mpsc::UnboundedSender<RuntimeEvent>,
-    ) {
-        let (event_sender, event_receiver) = mpsc::unbounded();
-        let (request_sender, request_receiver) = mpsc::unbounded();
+    fn launch(self) -> (Receiver<RuntimeRequest>, Sender<RuntimeEvent>) {
+        let (event_sender, event_receiver) = unbounded();
+        let (request_sender, request_receiver) = unbounded();
         {
             let mut global_sender = GLOBAL_RUNTIME_SENDER
                 .lock()
@@ -68,7 +63,13 @@ where
                     .lock()
                     .expect("Error locking runtime reciver");
                 let event_receiver = guard.as_mut().expect("Receiver was not set");
-                event_receiver.try_next().unwrap_or_default()
+                match event_receiver.try_recv() {
+                    Ok(event) => Some(event),
+                    Err(err) => match err {
+                        TryRecvError::Empty => None,
+                        TryRecvError::Disconnected => return Ok(()),
+                    },
+                }
             } {
                 match event {
                     RuntimeEvent::Running => {
@@ -81,6 +82,7 @@ where
                 RuntimeRequest::Quit.send().await?;
                 return Ok(());
             }
+            async_std::task::sleep(Duration::from_millis(100)).await; // TODO limit
         }
     }
 }
@@ -98,7 +100,7 @@ impl EventProcessor for Runtime {
             .unwrap_or_default()
             .as_nanos()
             > (FRAME_DURATION as u128);
-        while let Some(request) = self.request_receiver.try_next().unwrap_or_default() {
+        while let Ok(request) = self.request_receiver.try_recv() {
             match request {
                 RuntimeRequest::OpenWindow { window, builder } => {
                     RuntimeWindow::open(builder, &event_loop, window);
@@ -112,11 +114,10 @@ impl EventProcessor for Runtime {
 
         match event {
             glutin::event::Event::NewEvents(cause) => match cause {
-                glutin::event::StartCause::Init => {
-                    self.event_sender
-                        .unbounded_send(RuntimeEvent::Running)
-                        .unwrap_or_default();
-                }
+                glutin::event::StartCause::Init => self
+                    .event_sender
+                    .send(RuntimeEvent::Running)
+                    .unwrap_or_default(),
                 _ => {}
             },
             _ => {}
@@ -141,8 +142,8 @@ impl EventProcessor for Runtime {
 
 /// Runtime is designed to consume the main thread. For cross-platform compatibility, ensure that you call Runtime::run from thee main thread.
 pub struct Runtime {
-    request_receiver: mpsc::UnboundedReceiver<RuntimeRequest>,
-    event_sender: mpsc::UnboundedSender<RuntimeEvent>,
+    request_receiver: Receiver<RuntimeRequest>,
+    event_sender: Sender<RuntimeEvent>,
     next_frame_target: Instant,
     frame_number: u64,
 }

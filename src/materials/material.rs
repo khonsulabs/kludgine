@@ -3,7 +3,6 @@ use crate::internal_prelude::*;
 use crate::shaders::{CompiledProgram, Program};
 use crate::texture::Texture;
 use cgmath::Vector4;
-use std::sync::{Arc, RwLock};
 
 pub trait SimpleMaterial: Sync + Send {
     fn program(&self) -> KludgineResult<Program>;
@@ -19,15 +18,15 @@ pub enum MaterialKind {
         texture: Texture,
     },
     Custom {
-        custom_material: Arc<RwLock<dyn SimpleMaterial>>,
+        custom_material: KludgineHandle<dyn SimpleMaterial>,
     },
 }
 
-impl<T> From<Arc<RwLock<T>>> for MaterialKind
+impl<T> From<KludgineHandle<T>> for MaterialKind
 where
     T: SimpleMaterial + Sized + 'static,
 {
-    fn from(custom_material: Arc<RwLock<T>>) -> Self {
+    fn from(custom_material: KludgineHandle<T>) -> Self {
         MaterialKind::Custom { custom_material }
     }
 }
@@ -39,24 +38,24 @@ pub(crate) struct MaterialStorage {
 
 #[derive(Clone)]
 pub struct Material {
-    storage: Arc<RwLock<MaterialStorage>>,
+    storage: KludgineHandle<MaterialStorage>,
 }
 
 impl From<MaterialKind> for Material {
     fn from(kind: MaterialKind) -> Self {
-        let storage = Arc::new(RwLock::new(MaterialStorage {
+        let storage = KludgineHandle::wrap(MaterialStorage {
             kind,
             compiled: None,
-        }));
+        });
         Self { storage }
     }
 }
 
-impl<T> From<Arc<RwLock<T>>> for Material
+impl<T> From<KludgineHandle<T>> for Material
 where
     T: SimpleMaterial + Sized + 'static,
 {
-    fn from(simple_material: Arc<RwLock<T>>) -> Self {
+    fn from(simple_material: KludgineHandle<T>) -> Self {
         let kind: MaterialKind = simple_material.into();
         kind.into()
     }
@@ -109,7 +108,7 @@ impl Material {
 #[derive(Clone)]
 pub(crate) struct CompiledMaterial {
     pub program: Arc<CompiledProgram>,
-    pub simple_material: Arc<RwLock<dyn SimpleMaterial>>,
+    pub simple_material: KludgineHandle<dyn SimpleMaterial>,
 }
 
 impl CompiledMaterial {
