@@ -20,7 +20,7 @@ impl Window for Simple {
         if scene.is_initial_frame() {
             let texture = Texture::load("examples/k.png")?;
             let sprite = SourceSprite::entire_texture(texture);
-            scene.render_sprite_at(sprite, Point::zero());
+            scene.render_sprite_at(sprite.clone(), Point::zero());
         }
         Ok(())
     }

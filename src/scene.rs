@@ -184,7 +184,15 @@ impl Frame {
                 .push(FrameCommand::DrawBatch(KludgineHandle::new(current_batch)));
         }
 
-        // TODO remove unreferenced textures
+        let dead_texture_ids = self
+            .textures
+            .keys()
+            .filter(|id| !referenced_texture_ids.contains(id))
+            .map(|id| *id)
+            .collect::<Vec<_>>();
+        for id in dead_texture_ids {
+            self.textures.remove(&id);
+        }
 
         self.updated_at = Some(Moment::now());
     }

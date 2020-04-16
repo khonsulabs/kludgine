@@ -1,17 +1,16 @@
 use super::{
     application::Application,
     timing::FrequencyLimiter,
-    window::{RuntimeWindow, Window},
+    window::{RuntimeWindow, Window, WindowBuilder},
     KludgineResult,
 };
 use crossbeam::channel::{unbounded, Receiver, Sender, TryRecvError};
 use futures::{executor::ThreadPool, future::Future};
 use std::time::Duration;
-use winit::window::WindowBuilder;
 
 pub(crate) enum RuntimeRequest {
     OpenWindow {
-        builder: winit::window::WindowBuilder,
+        builder: WindowBuilder,
         window: Box<dyn Window>,
     },
     Quit,
@@ -142,7 +141,7 @@ impl EventProcessor for Runtime {
         while let Ok(request) = self.request_receiver.try_recv() {
             match request {
                 RuntimeRequest::OpenWindow { window, builder } => {
-                    RuntimeWindow::open(builder, &event_loop, window);
+                    RuntimeWindow::open(builder.into(), &event_loop, window);
                 }
                 RuntimeRequest::Quit => {
                     std::process::exit(0); // TODO There is a bug in winit when destructing https://github.com/rust-windowing/winit/blob/ad7d4939a8be2e0d9436d43d0351e2f7599a4237/src/platform_impl/macos/app_state.rs#L344

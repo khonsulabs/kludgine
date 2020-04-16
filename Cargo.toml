@@ -24,6 +24,7 @@ futures = {version="0.3", features=["thread-pool"]}
 lazy_static="*"
 async-std = "1"
 chrono = "*"
+educe="0.4"
 
 [dev-dependencies]
 rand="*"

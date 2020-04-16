@@ -31,7 +31,7 @@ use winit::{
         VirtualKeyCode, WindowEvent as WinitWindowEvent,
     },
     event_loop::EventLoopWindowTarget,
-    window::{WindowBuilder, WindowId},
+    window::{WindowBuilder as WinitWindowBuilder, WindowId},
 };
 
 pub enum CloseResponse {
@@ -76,6 +76,38 @@ pub trait Window: Send + Sync + 'static {
 
     async fn process_input(&mut self, _event: InputEvent) -> KludgineResult<()> {
         Ok(())
+    }
+}
+
+#[derive(Default)]
+pub struct WindowBuilder {
+    title: Option<String>,
+    size: Option<Size>,
+}
+
+impl WindowBuilder {
+    pub fn with_title<T: Into<String>>(mut self, title: T) -> Self {
+        self.title = Some(title.into());
+        self
+    }
+
+    pub fn with_size(mut self, size: Size) -> Self {
+        self.size = Some(size);
+        self
+    }
+}
+
+impl Into<WinitWindowBuilder> for WindowBuilder {
+    fn into(self) -> WinitWindowBuilder {
+        let mut builder = WinitWindowBuilder::new();
+        if let Some(title) = self.title {
+            builder = builder.with_title(title);
+        }
+        if let Some(size) = self.size {
+            builder = builder.with_inner_size(size);
+        }
+
+        builder
     }
 }
 
@@ -135,7 +167,7 @@ pub(crate) struct RuntimeWindow {
 
 impl RuntimeWindow {
     pub(crate) fn open<T>(
-        wb: WindowBuilder,
+        wb: WinitWindowBuilder,
         event_loop: &EventLoopWindowTarget<()>,
         app_window: Box<T>,
     ) where

@@ -13,6 +13,15 @@ impl Size {
     }
 }
 
+impl Into<winit::dpi::Size> for Size {
+    fn into(self) -> winit::dpi::Size {
+        winit::dpi::Size::Physical(winit::dpi::PhysicalSize::new(
+            self.width as u32,
+            self.height as u32,
+        ))
+    }
+}
+
 pub trait KludgineRect {
     fn new(origin: Point, size: Size) -> Self;
 }

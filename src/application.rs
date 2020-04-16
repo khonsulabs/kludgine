@@ -1,6 +1,6 @@
 use super::{
     runtime::Runtime,
-    window::{RuntimeWindow, Window},
+    window::{RuntimeWindow, Window, WindowBuilder},
 };
 use async_trait::async_trait;
 use std::marker::PhantomData;
@@ -20,8 +20,8 @@ pub struct SingleWindowApplication<T> {
 }
 
 pub trait WindowCreator<T> {
-    fn get_window_builder() -> winit::window::WindowBuilder {
-        winit::window::WindowBuilder::new().with_title(Self::window_title())
+    fn get_window_builder() -> WindowBuilder {
+        WindowBuilder::default().with_title(Self::window_title())
     }
 
     fn window_title() -> String {
