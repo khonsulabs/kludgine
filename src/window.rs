@@ -7,18 +7,12 @@ use super::{
 };
 use async_trait::async_trait;
 
-use crossbeam::{
-    channel::{unbounded, Receiver, Sender, TryRecvError},
-    sync::ShardedLock,
-};
+use crossbeam::channel::{unbounded, Receiver, Sender, TryRecvError};
 use lazy_static::lazy_static;
 use rgx::core::*;
 
 use rgx::kit;
-use rgx::kit::{
-    shape2d::{self, Fill, Shape},
-    sprite2d, Repeat, ZDepth,
-};
+use rgx::kit::{shape2d, sprite2d, Repeat, ZDepth};
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -462,12 +456,12 @@ impl RuntimeWindow {
             self.swap_chain = self.renderer.swap_chain(w, h, PresentMode::NoVsync);
         }
 
-        let (mx, my) = (self.size().width / 2.0, self.size().height / 2.0);
-        let buffer = shape2d::Batch::singleton(
-            Shape::circle(Point::new(mx, size.height as f32 - my), 20., 32)
-                .fill(Fill::Solid(Rgba::new(1., 0., 0., 1.))),
-        )
-        .finish(&self.renderer);
+        // let (mx, my) = (self.size().width / 2.0, self.size().height / 2.0);
+        // let buffer = shape2d::Batch::singleton(
+        //     Shape::circle(Point::new(mx, size.height as f32 - my), 20., 32)
+        //         .fill(Fill::Solid(Rgba::new(1., 0., 0., 1.))),
+        // )
+        // .finish(&self.renderer);
 
         let output = self.swap_chain.next();
         let mut frame = self.renderer.frame();
@@ -562,8 +556,8 @@ impl RuntimeWindow {
                 }
             }
 
-            pass.set_pipeline(&self.shape_pipeline);
-            pass.draw_buffer(&buffer);
+            // pass.set_pipeline(&self.shape_pipeline);
+            // pass.draw_buffer(&buffer);
         }
 
         self.renderer.present(frame);

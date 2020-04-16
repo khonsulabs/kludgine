@@ -4,10 +4,7 @@ use super::{
     KludgineHandle, KludgineResult,
 };
 use image::{DynamicImage, RgbaImage};
-use rgx::{
-    core::{BindingGroup, VertexBuffer},
-    kit::sprite2d,
-};
+use rgx::core::BindingGroup;
 
 use crossbeam::atomic::AtomicCell;
 use lazy_static::lazy_static;
