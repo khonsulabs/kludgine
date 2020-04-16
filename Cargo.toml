@@ -20,10 +20,10 @@ anyhow="*"
 crossbeam="*"
 image="*"
 async-trait="*"
-legion = {git="https://github.com/TomGillen/legion.git"}
 futures = {version="0.3", features=["thread-pool"]}
 lazy_static="*"
 async-std = "1"
+chrono = "*"
 
 [dev-dependencies]
 rand="*"

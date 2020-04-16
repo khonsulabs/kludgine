@@ -1,18 +1,15 @@
 use super::{
     application::Application,
+    timing::FrequencyLimiter,
     window::{RuntimeWindow, Window},
     KludgineResult,
 };
 use crossbeam::channel::{unbounded, Receiver, Sender, TryRecvError};
 use futures::{executor::ThreadPool, future::Future};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use winit::window::WindowBuilder;
 
 pub(crate) enum RuntimeRequest {
-    // UpdateScene,
-    // NewWindow {
-    //     notify: oneshot::Sender<KludgineResult<NewWindowResponse>>,
-    // },
     OpenWindow {
         builder: winit::window::WindowBuilder,
         window: Box<dyn Window>,
@@ -129,7 +126,7 @@ where
                 RuntimeRequest::Quit.send().await?;
                 return Ok(());
             }
-            async_std::task::sleep(Duration::from_millis(100)).await; // TODO limit
+            async_std::task::sleep(Duration::from_millis(100)).await;
         }
     }
 }
@@ -141,12 +138,7 @@ impl EventProcessor for Runtime {
         event: winit::event::Event<()>,
         control_flow: &mut winit::event_loop::ControlFlow,
     ) {
-        let now = Instant::now();
-        let render_frame = now
-            .checked_duration_since(self.next_frame_target)
-            .unwrap_or_default()
-            .as_nanos()
-            > (FRAME_DURATION as u128);
+        let render_frame = self.frame_limiter.ready();
         while let Ok(request) = self.request_receiver.try_recv() {
             match request {
                 RuntimeRequest::OpenWindow { window, builder } => {
@@ -173,16 +165,8 @@ impl EventProcessor for Runtime {
         if render_frame {
             self.frame_number += 1;
             RuntimeWindow::render_all();
-            self.next_frame_target = self
-                .next_frame_target
-                .checked_add(Duration::from_nanos(FRAME_DURATION))
-                .unwrap_or(self.next_frame_target);
-            if self.next_frame_target < now {
-                self.next_frame_target = now
-                    .checked_add(Duration::from_nanos(FRAME_DURATION))
-                    .unwrap_or(now);
-            }
-            *control_flow = winit::event_loop::ControlFlow::WaitUntil(self.next_frame_target);
+            *control_flow =
+                winit::event_loop::ControlFlow::WaitUntil(self.frame_limiter.advance_frame());
         }
     }
 }
@@ -191,7 +175,7 @@ impl EventProcessor for Runtime {
 pub struct Runtime {
     request_receiver: Receiver<RuntimeRequest>,
     event_sender: Sender<RuntimeEvent>,
-    next_frame_target: Instant,
+    frame_limiter: FrequencyLimiter,
     frame_number: u64,
 }
 
@@ -213,7 +197,7 @@ impl Runtime {
         Self {
             request_receiver,
             event_sender,
-            next_frame_target: Instant::now(),
+            frame_limiter: FrequencyLimiter::new(Duration::from_nanos(FRAME_DURATION)),
             frame_number: 0,
         }
     }

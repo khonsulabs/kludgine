@@ -38,3 +38,12 @@ where
         Runtime::open_window(T::get_window_builder(), T::default()).await
     }
 }
+
+impl<T> SingleWindowApplication<T>
+where
+    T: Window + Default + WindowCreator<T> + 'static,
+{
+    pub fn run(self) -> ! {
+        Runtime::new(self).run()
+    }
+}

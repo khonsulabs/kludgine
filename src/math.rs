@@ -22,3 +22,13 @@ impl KludgineRect for Rect {
         Rect::sized(origin.x, origin.y, size.width, size.height)
     }
 }
+
+pub trait Zeroable {
+    fn zero() -> Self;
+}
+
+impl Zeroable for Point {
+    fn zero() -> Self {
+        Self::new(0.0, 0.0)
+    }
+}
