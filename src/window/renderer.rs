@@ -56,7 +56,6 @@ impl FrameRenderer {
         loop {
             if let Some(remaining) = limiter.remaining() {
                 if !self.keep_running.load() {
-                    println!("Closing window thread");
                     return;
                 }
 
