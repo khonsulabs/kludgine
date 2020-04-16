@@ -1,18 +1,19 @@
 use super::{
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
-    scene::{Frame, FrameCommand, Scene},
+    scene::{Frame, Scene},
     timing::FrequencyLimiter,
     KludgineError, KludgineHandle, KludgineResult,
 };
 use async_trait::async_trait;
 
-use crossbeam::channel::{unbounded, Receiver, Sender, TryRecvError};
+use crossbeam::{
+    atomic::AtomicCell,
+    channel::{unbounded, Receiver, Sender, TryRecvError},
+};
 use lazy_static::lazy_static;
 use rgx::core::*;
 
-use rgx::kit;
-use rgx::kit::{shape2d, sprite2d, Repeat, ZDepth};
 use std::{
     cell::RefCell,
     collections::HashMap,
@@ -27,6 +28,9 @@ use winit::{
     event_loop::EventLoopWindowTarget,
     window::{WindowBuilder as WinitWindowBuilder, WindowId},
 };
+
+mod renderer;
+use renderer::FrameRenderer;
 
 pub enum CloseResponse {
     RemainOpen,
@@ -146,17 +150,11 @@ pub(crate) enum WindowEvent {
 
 pub(crate) struct RuntimeWindow {
     window: winit::window::Window,
-    renderer: Renderer,
-    swap_chain: SwapChain,
-    sprite_pipeline: sprite2d::Pipeline,
-    shape_pipeline: shape2d::Pipeline,
     receiver: Receiver<WindowMessage>,
     event_sender: Sender<WindowEvent>,
-    should_close: bool,
-    last_known_size: Option<Size>,
-    last_known_scale_factor: Option<f32>,
-    frame: KludgineHandle<Frame>,
-    //mesh_cache: HashMap<Entity, LoadedMesh>,
+    last_known_size: Size,
+    last_known_scale_factor: f32,
+    keep_running: Arc<AtomicCell<bool>>,
 }
 
 impl RuntimeWindow {
@@ -168,51 +166,48 @@ impl RuntimeWindow {
         T: Window + ?Sized,
     {
         let window = wb.build(event_loop).expect("Error building window");
+        let window_id = window.id();
         let renderer = Renderer::new(&window).expect("Error creating renderer for window");
-        let swap_chain = renderer.swap_chain(
-            window.inner_size().width,
-            window.inner_size().height,
-            PresentMode::NoVsync,
-        );
-        let shape_pipeline = renderer.pipeline(Blending::default());
-        let sprite_pipeline = renderer.pipeline(Blending::default());
 
         let (message_sender, message_receiver) = unbounded();
         let (event_sender, event_receiver) = unbounded();
         let frame = KludgineHandle::new(Frame::default());
         Runtime::spawn(Self::window_main::<T>(
-            window.id(),
+            window_id,
             frame.clone(),
             event_receiver,
             app_window,
         ));
 
+        let keep_running = Arc::new(AtomicCell::new(true));
+        FrameRenderer::run(
+            renderer,
+            frame,
+            keep_running.clone(),
+            window.inner_size().width,
+            window.inner_size().height,
+        );
+
         {
             let mut channels = WINDOW_CHANNELS
                 .lock()
                 .expect("Error locking window channels map");
-            channels.insert(window.id(), message_sender);
+            channels.insert(window_id, message_sender);
         }
 
-        WINDOWS.with(|windows| {
-            windows.borrow_mut().insert(
-                window.id(),
-                Self {
-                    window,
-                    renderer,
-                    swap_chain,
-                    sprite_pipeline,
-                    shape_pipeline,
-                    receiver: message_receiver,
-                    frame,
-                    should_close: false,
-                    last_known_size: None,
-                    event_sender,
-                    last_known_scale_factor: None,
-                    //mesh_cache: HashMap::new(),
-                },
-            )
-        });
+        let size = window.inner_size();
+        let size = Size::new(size.width as f32, size.height as f32);
+        let mut runtime_window = Self {
+            receiver: message_receiver,
+            last_known_size: size,
+            keep_running,
+            event_sender,
+            last_known_scale_factor: window.scale_factor() as f32,
+            window,
+        };
+        runtime_window.notify_size_changed();
+
+        WINDOWS.with(|windows| windows.borrow_mut().insert(window_id, runtime_window));
     }
 
     async fn window_loop<T>(
@@ -319,7 +314,7 @@ impl RuntimeWindow {
             }
 
             {
-                windows.borrow_mut().retain(|_, w| !w.should_close);
+                windows.borrow_mut().retain(|_, w| w.keep_running.load());
             }
         })
     }
@@ -332,7 +327,7 @@ impl RuntimeWindow {
                         .lock()
                         .expect("Error locking window channels map");
                     channels.remove(&self.window.id());
-                    self.should_close = true;
+                    self.keep_running.store(false);
                 }
             }
         }
@@ -346,18 +341,16 @@ impl RuntimeWindow {
                     .unwrap_or_default();
             }
             WinitWindowEvent::Resized(size) => {
-                self.last_known_size = Some(Size::new(size.width as f32, size.height as f32));
+                self.last_known_size = Size::new(size.width as f32, size.height as f32);
                 self.notify_size_changed();
             }
             WinitWindowEvent::ScaleFactorChanged {
                 scale_factor,
                 new_inner_size,
             } => {
-                self.last_known_scale_factor = Some(*scale_factor as f32);
-                self.last_known_size = Some(Size::new(
-                    new_inner_size.width as f32,
-                    new_inner_size.height as f32,
-                ));
+                self.last_known_scale_factor = *scale_factor as f32;
+                self.last_known_size =
+                    Size::new(new_inner_size.width as f32, new_inner_size.height as f32);
                 self.notify_size_changed();
             }
             WinitWindowEvent::KeyboardInput {
@@ -429,148 +422,9 @@ impl RuntimeWindow {
     fn notify_size_changed(&mut self) {
         self.event_sender
             .send(WindowEvent::Resize {
-                size: self.last_known_size.unwrap_or_default(),
-                scale_factor: self.last_known_scale_factor.unwrap_or(1.0),
+                size: self.last_known_size,
+                scale_factor: self.last_known_scale_factor,
             })
             .unwrap_or_default();
-    }
-
-    pub(crate) fn render_all() {
-        WINDOWS.with(|refcell| {
-            for window in refcell.borrow_mut().values_mut() {
-                window.render().expect("Error rendering window");
-            }
-        })
-    }
-
-    fn render(&mut self) -> KludgineResult<()> {
-        let size = self.size();
-        if self.last_known_size.is_none() {
-            self.last_known_size = Some(size);
-            self.last_known_scale_factor = Some(self.scale_factor());
-            self.notify_size_changed();
-        }
-        let (w, h) = (size.width as u32, size.height as u32);
-
-        if self.swap_chain.width != w || self.swap_chain.height != h {
-            self.swap_chain = self.renderer.swap_chain(w, h, PresentMode::NoVsync);
-        }
-
-        // let (mx, my) = (self.size().width / 2.0, self.size().height / 2.0);
-        // let buffer = shape2d::Batch::singleton(
-        //     Shape::circle(Point::new(mx, size.height as f32 - my), 20., 32)
-        //         .fill(Fill::Solid(Rgba::new(1., 0., 0., 1.))),
-        // )
-        // .finish(&self.renderer);
-
-        let output = self.swap_chain.next();
-        let mut frame = self.renderer.frame();
-
-        self.renderer.update_pipeline(
-            &self.shape_pipeline,
-            kit::ortho(output.width, output.height, Default::default()),
-            &mut frame,
-        );
-
-        self.renderer.update_pipeline(
-            &self.sprite_pipeline,
-            kit::ortho(output.width, output.height, Default::default()),
-            &mut frame,
-        );
-
-        {
-            let mut pass = frame.pass(PassOp::Clear(Rgba::TRANSPARENT), &output);
-            let engine_frame = self.frame.read().expect("Error reading frame");
-            for command in engine_frame.commands.iter() {
-                match command {
-                    FrameCommand::LoadTexture(texture_handle) => {
-                        let mut loaded_texture = texture_handle
-                            .write()
-                            .expect("Error locking texture to load");
-                        if loaded_texture.binding.is_none() {
-                            let sampler = self.renderer.sampler(Filter::Nearest, Filter::Nearest);
-
-                            let (gpu_texture, texels) = {
-                                let texture = loaded_texture
-                                    .texture
-                                    .read()
-                                    .expect("Error reading texture");
-                                let (w, h) = texture.image.dimensions();
-                                let pixels = texture.image.pixels().map(|p| *p).collect::<Vec<_>>();
-                                let pixels = Rgba8::align(&pixels);
-
-                                (self.renderer.texture(w as u32, h as u32), pixels.to_owned())
-                            };
-
-                            self.renderer
-                                .submit(&[Op::Fill(&gpu_texture, texels.as_slice())]);
-
-                            loaded_texture.binding = Some(self.sprite_pipeline.binding(
-                                &self.renderer,
-                                &gpu_texture,
-                                &sampler,
-                            ));
-                        }
-                    }
-                    FrameCommand::DrawBatch(batch_handle) => {
-                        let batch = batch_handle.read().expect("Error locking batch to render");
-                        let loaded_texture = batch
-                            .loaded_texture
-                            .read()
-                            .expect("Error locking texture to render");
-                        let texture = loaded_texture
-                            .texture
-                            .read()
-                            .expect("Error reading texture");
-
-                        let mut gpu_batch =
-                            sprite2d::Batch::new(texture.image.width(), texture.image.height());
-                        for sprite_handle in batch.sprites.iter() {
-                            let sprite = sprite_handle
-                                .read()
-                                .expect("Error locking sprite to render");
-                            let source = sprite
-                                .source
-                                .read()
-                                .expect("Error locking source to render");
-                            gpu_batch.add(
-                                source.location,
-                                sprite.render_at,
-                                ZDepth::default(),
-                                Rgba::new(1.0, 1.0, 1.0, 0.0),
-                                1.0,
-                                Repeat::default(),
-                            );
-                        }
-                        let buffer = gpu_batch.finish(&self.renderer);
-
-                        pass.set_pipeline(&self.sprite_pipeline);
-                        pass.draw(
-                            &buffer,
-                            loaded_texture
-                                .binding
-                                .as_ref()
-                                .expect("Empty binding on texture"),
-                        );
-                    }
-                }
-            }
-
-            // pass.set_pipeline(&self.shape_pipeline);
-            // pass.draw_buffer(&buffer);
-        }
-
-        self.renderer.present(frame);
-
-        Ok(())
-    }
-
-    pub fn size(&self) -> Size {
-        let inner_size = self.window.inner_size();
-        Size::new(inner_size.width as f32, inner_size.height as f32)
-    }
-
-    pub fn scale_factor(&self) -> f32 {
-        self.window.scale_factor() as f32
     }
 }

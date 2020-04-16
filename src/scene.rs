@@ -122,6 +122,7 @@ impl Scene {
 pub(crate) struct Frame {
     pub started_at: Option<Moment>,
     pub updated_at: Option<Moment>,
+    pub size: Size,
     pub commands: Vec<FrameCommand>,
     pub(crate) textures: HashMap<u64, KludgineHandle<LoadedTexture>>,
 }
@@ -130,6 +131,8 @@ impl Frame {
     pub fn update(&mut self, scene: &Scene) {
         self.started_at = Some(scene.now());
         self.commands.clear();
+
+        self.size = scene.size;
 
         let mut referenced_texture_ids = HashSet::new();
 

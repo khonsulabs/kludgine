@@ -1,6 +1,5 @@
 use super::{
     application::Application,
-    timing::FrequencyLimiter,
     window::{RuntimeWindow, Window, WindowBuilder},
     KludgineResult,
 };
@@ -137,7 +136,6 @@ impl EventProcessor for Runtime {
         event: winit::event::Event<()>,
         control_flow: &mut winit::event_loop::ControlFlow,
     ) {
-        let render_frame = self.frame_limiter.ready();
         while let Ok(request) = self.request_receiver.try_recv() {
             match request {
                 RuntimeRequest::OpenWindow { window, builder } => {
@@ -161,12 +159,7 @@ impl EventProcessor for Runtime {
             _ => {}
         }
 
-        if render_frame {
-            self.frame_number += 1;
-            RuntimeWindow::render_all();
-            *control_flow =
-                winit::event_loop::ControlFlow::WaitUntil(self.frame_limiter.advance_frame());
-        }
+        *control_flow = winit::event_loop::ControlFlow::Poll;
     }
 }
 
@@ -174,8 +167,6 @@ impl EventProcessor for Runtime {
 pub struct Runtime {
     request_receiver: Receiver<RuntimeRequest>,
     event_sender: Sender<RuntimeEvent>,
-    frame_limiter: FrequencyLimiter,
-    frame_number: u64,
 }
 
 impl Runtime {
@@ -196,8 +187,6 @@ impl Runtime {
         Self {
             request_receiver,
             event_sender,
-            frame_limiter: FrequencyLimiter::new(Duration::from_nanos(FRAME_DURATION)),
-            frame_number: 0,
         }
     }
 
