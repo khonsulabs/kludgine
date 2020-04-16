@@ -1,16 +1,63 @@
-use crate::internal_prelude::*;
-use crate::window::Window;
-use crate::{application::Application, runtime::window::RuntimeWindow};
+use super::{
+    application::Application,
+    window::{RuntimeWindow, Window},
+    KludgineResult,
+};
+use crossbeam::channel::{unbounded, Receiver, Sender, TryRecvError};
 use futures::{executor::ThreadPool, future::Future};
-use glutin::window::WindowBuilder;
 use std::time::{Duration, Instant};
+use winit::window::WindowBuilder;
 
-pub(crate) mod flattened_scene;
-pub(crate) mod request;
-mod threading;
-pub(crate) mod window;
-use request::*;
-use threading::*;
+pub(crate) enum RuntimeRequest {
+    // UpdateScene,
+    // NewWindow {
+    //     notify: oneshot::Sender<KludgineResult<NewWindowResponse>>,
+    // },
+    OpenWindow {
+        builder: winit::window::WindowBuilder,
+        window: Box<dyn Window>,
+    },
+    Quit,
+}
+
+impl RuntimeRequest {
+    pub async fn send(self) -> KludgineResult<()> {
+        let sender: Sender<RuntimeRequest> = {
+            let guard = GLOBAL_RUNTIME_SENDER.lock().expect("Error locking mutex");
+            match *guard {
+                Some(ref sender) => sender.clone(),
+                None => panic!("Uninitialized runtime"),
+            }
+        };
+        sender.send(self).unwrap_or_default();
+        Ok(())
+    }
+}
+
+pub(crate) enum RuntimeEvent {
+    Running,
+}
+
+use lazy_static::lazy_static;
+use std::sync::Mutex;
+
+pub trait EventProcessor: Send + Sync {
+    fn process_event(
+        &mut self,
+        event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
+        event: winit::event::Event<()>,
+        control_flow: &mut winit::event_loop::ControlFlow,
+    );
+}
+lazy_static! {
+    pub(crate) static ref GLOBAL_RUNTIME_SENDER: Mutex<Option<Sender<RuntimeRequest>>> =
+        { Mutex::new(None) };
+    pub(crate) static ref GLOBAL_RUNTIME_RECEIVER: Mutex<Option<Receiver<RuntimeEvent>>> =
+        { Mutex::new(None) };
+    pub(crate) static ref GLOBAL_EVENT_HANDLER: Mutex<Option<Box<dyn EventProcessor>>> =
+        Mutex::new(None);
+    pub(crate) static ref GLOBAL_THREAD_POOL: Mutex<Option<ThreadPool>> = Mutex::new(None);
+}
 
 pub(crate) const FRAME_DURATION: u64 = 6_944_444;
 
@@ -90,9 +137,9 @@ where
 impl EventProcessor for Runtime {
     fn process_event(
         &mut self,
-        event_loop: &glutin::event_loop::EventLoopWindowTarget<()>,
-        event: glutin::event::Event<()>,
-        control_flow: &mut glutin::event_loop::ControlFlow,
+        event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
+        event: winit::event::Event<()>,
+        control_flow: &mut winit::event_loop::ControlFlow,
     ) {
         let now = Instant::now();
         let render_frame = now
@@ -113,8 +160,8 @@ impl EventProcessor for Runtime {
         RuntimeWindow::process_events(&event);
 
         match event {
-            glutin::event::Event::NewEvents(cause) => match cause {
-                glutin::event::StartCause::Init => self
+            winit::event::Event::NewEvents(cause) => match cause {
+                winit::event::StartCause::Init => self
                     .event_sender
                     .send(RuntimeEvent::Running)
                     .unwrap_or_default(),
@@ -135,7 +182,7 @@ impl EventProcessor for Runtime {
                     .checked_add(Duration::from_nanos(FRAME_DURATION))
                     .unwrap_or(now);
             }
-            *control_flow = glutin::event_loop::ControlFlow::WaitUntil(self.next_frame_target);
+            *control_flow = winit::event_loop::ControlFlow::WaitUntil(self.next_frame_target);
         }
     }
 }
@@ -185,7 +232,7 @@ impl Runtime {
             *event_handler = Some(Box::new(self));
         }
 
-        let event_loop = glutin::event_loop::EventLoop::new();
+        let event_loop = winit::event_loop::EventLoop::new();
         event_loop.run(move |event, event_loop, control_flow| {
             let mut event_handler_guard = GLOBAL_EVENT_HANDLER
                 .lock()

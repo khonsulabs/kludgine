@@ -1,7 +1,8 @@
-use crate::{
-    runtime::{window::RuntimeWindow, Runtime},
-    window::Window,
+use super::{
+    runtime::Runtime,
+    window::{RuntimeWindow, Window},
 };
+use async_trait::async_trait;
 use std::marker::PhantomData;
 
 #[async_trait]
@@ -19,8 +20,8 @@ pub struct SingleWindowApplication<T> {
 }
 
 pub trait WindowCreator<T> {
-    fn get_window_builder() -> glutin::window::WindowBuilder {
-        glutin::window::WindowBuilder::new().with_title(Self::window_title())
+    fn get_window_builder() -> winit::window::WindowBuilder {
+        winit::window::WindowBuilder::new().with_title(Self::window_title())
     }
 
     fn window_title() -> String {

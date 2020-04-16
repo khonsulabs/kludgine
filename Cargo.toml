@@ -10,28 +10,20 @@ edition = "2018"
 default = []
 
 bundled-fonts = ["bundled-fonts-roboto"]
-
+bundled-fonts-roboto = []
 
 [dependencies]
-glutin="0.24"
-winit = "0.22.0"
-gl="0.14"
-futures = {version="0.3.4", features=["thread-pool"]}
-async-trait = "0.1"
-async-std = "1"
-lazy_static = "1"
-thiserror="1"
-legion = {git="https://github.com/TomGillen/legion.git"}
-mint="0.5"
-nalgebra={version="*", features=["mint"]}
-image="*"
-lyon="*"
-euclid={version="*", features=["mint"]}
-color_processing="*"
-cgmath="*"
-educe={version="*", default-features=false, features=["Default"]}
-log="*"
+rgx = {version = "0.8", features=["renderer"]}
+winit = "*"
+thiserror="*"
+anyhow="*"
 crossbeam="*"
+image="*"
+async-trait="*"
+legion = {git="https://github.com/TomGillen/legion.git"}
+futures = {version="0.3", features=["thread-pool"]}
+lazy_static="*"
+async-std = "1"
 
 [dev-dependencies]
 rand="*"
