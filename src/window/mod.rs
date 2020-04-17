@@ -68,7 +68,7 @@ pub trait Window: Send + Sync + 'static {
         CloseResponse::Close
     }
     async fn initialize(&mut self) {}
-    async fn render_2d(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
+    async fn render(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
         Ok(())
     }
 
@@ -268,7 +268,7 @@ impl RuntimeWindow {
                 if scene.size.width > 0.0 && scene.size.height > 0.0 {
                     loop_limiter.advance_frame();
                     scene.start_frame();
-                    window.render_2d(&mut scene).await?;
+                    window.render(&mut scene).await?;
                     let mut guard = frame.write().expect("Error locking frame");
                     guard.update(&scene);
                 }
