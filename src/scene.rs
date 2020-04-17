@@ -62,7 +62,7 @@ impl Scene {
         self.elapsed.is_none()
     }
 
-    pub fn render_sprite_at(&mut self, source_sprite: SourceSprite, location: Point) {
+    pub fn render_sprite_at(&mut self, source_sprite: &SourceSprite, location: Point) {
         let (w, h) = {
             let source = source_sprite
                 .handle
@@ -72,7 +72,7 @@ impl Scene {
         };
         self.sprites.push(Sprite::new(
             Rect::sized(location.x, location.y, w, h),
-            source_sprite,
+            source_sprite.clone(),
         ));
     }
 

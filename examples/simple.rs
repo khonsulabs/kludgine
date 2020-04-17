@@ -6,7 +6,9 @@ fn main() {
 }
 
 #[derive(Default)]
-struct Simple {}
+struct Simple {
+    source_sprite: Option<SourceSprite>,
+}
 
 impl WindowCreator<Simple> for Simple {
     fn window_title() -> String {
@@ -17,11 +19,13 @@ impl WindowCreator<Simple> for Simple {
 #[async_trait]
 impl Window for Simple {
     async fn render_2d(&mut self, scene: &mut Scene) -> KludgineResult<()> {
-        if scene.is_initial_frame() {
+        if self.source_sprite.is_none() {
             let texture = Texture::load("examples/k.png")?;
-            let sprite = SourceSprite::entire_texture(texture);
-            scene.render_sprite_at(sprite.clone(), Point::zero());
+            self.source_sprite = Some(SourceSprite::entire_texture(texture));
         }
+
+        scene.render_sprite_at(self.source_sprite.as_ref().unwrap(), Point::zero());
+
         Ok(())
     }
 }
