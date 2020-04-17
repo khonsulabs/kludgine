@@ -110,6 +110,7 @@ impl FrameRenderer {
                 match command {
                     FrameCommand::LoadTexture(texture_handle) => {
                         let mut loaded_texture = texture_handle
+                            .handle
                             .write()
                             .expect("Error locking texture to load");
                         if loaded_texture.binding.is_none() {
@@ -118,6 +119,7 @@ impl FrameRenderer {
                             let (gpu_texture, texels) = {
                                 let texture = loaded_texture
                                     .texture
+                                    .handle
                                     .read()
                                     .expect("Error reading texture");
                                 let (w, h) = texture.image.dimensions();
@@ -141,10 +143,12 @@ impl FrameRenderer {
                         let batch = batch_handle.read().expect("Error locking batch to render");
                         let loaded_texture = batch
                             .loaded_texture
+                            .handle
                             .read()
                             .expect("Error locking texture to render");
                         let texture = loaded_texture
                             .texture
+                            .handle
                             .read()
                             .expect("Error reading texture");
 
@@ -152,10 +156,12 @@ impl FrameRenderer {
                             sprite2d::Batch::new(texture.image.width(), texture.image.height());
                         for sprite_handle in batch.sprites.iter() {
                             let sprite = sprite_handle
+                                .handle
                                 .read()
                                 .expect("Error locking sprite to render");
                             let source = sprite
                                 .source
+                                .handle
                                 .read()
                                 .expect("Error locking source to render");
                             gpu_batch.add(

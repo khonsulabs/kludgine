@@ -14,7 +14,7 @@ pub enum KludgineError {
 
 pub type KludgineResult<T> = Result<T, KludgineError>;
 
-pub struct KludgineHandle<T>(Arc<ShardedLock<T>>);
+pub(crate) struct KludgineHandle<T>(Arc<ShardedLock<T>>);
 
 impl<T> KludgineHandle<T> {
     pub fn new(wrapped: T) -> Self {
@@ -50,7 +50,7 @@ pub mod prelude {
         runtime::Runtime,
         scene::{Scene, SourceSprite, Sprite, Texture},
         window::Window,
-        KludgineError, KludgineHandle, KludgineResult,
+        KludgineError, KludgineResult,
     };
     pub use async_trait::async_trait;
 }

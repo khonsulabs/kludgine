@@ -19,7 +19,7 @@ pub struct Scene {
     pub pressed_keys: HashSet<VirtualKeyCode>,
     pub(crate) scale_factor: f32,
     pub(crate) size: Size,
-    pub(crate) sprites: Vec<KludgineHandle<Sprite>>,
+    pub(crate) sprites: Vec<Sprite>,
     now: Option<Moment>,
     elapsed: Option<Duration>,
 }
@@ -42,7 +42,8 @@ impl Scene {
         self.elapsed = match last_start {
             Some(last_start) => self.now().checked_duration_since(&last_start),
             None => None,
-        }
+        };
+        self.sprites.clear();
     }
 
     pub fn size(&self) -> Size {
@@ -61,13 +62,12 @@ impl Scene {
         self.elapsed.is_none()
     }
 
-    pub fn render_sprite_at(
-        &mut self,
-        source_sprite: KludgineHandle<SourceSprite>,
-        location: Point,
-    ) {
+    pub fn render_sprite_at(&mut self, source_sprite: SourceSprite, location: Point) {
         let (w, h) = {
-            let source = source_sprite.read().expect("Error locking source_sprite");
+            let source = source_sprite
+                .handle
+                .read()
+                .expect("Error locking source_sprite");
             (source.location.width(), source.location.height())
         };
         self.sprites.push(Sprite::new(
@@ -124,7 +124,7 @@ pub(crate) struct Frame {
     pub updated_at: Option<Moment>,
     pub size: Size,
     pub commands: Vec<FrameCommand>,
-    pub(crate) textures: HashMap<u64, KludgineHandle<LoadedTexture>>,
+    pub(crate) textures: HashMap<u64, LoadedTexture>,
 }
 
 impl Frame {
@@ -140,14 +140,17 @@ impl Frame {
         let mut current_batch: Option<SpriteBatch> = None;
         for sprite_handle in scene.sprites.iter() {
             let sprite = sprite_handle
+                .handle
                 .read()
                 .expect("Error locking sprite for update");
             let source = sprite
                 .source
+                .handle
                 .read()
                 .expect("Error locking source for update");
             let texture = source
                 .texture
+                .handle
                 .read()
                 .expect("Error locking texture for update");
 
@@ -165,6 +168,7 @@ impl Frame {
                     .entry(texture.id)
                     .or_insert(LoadedTexture::new(source.texture.clone()));
                 let loaded_texture = loaded_texture_handle
+                    .handle
                     .read()
                     .expect("Error locking loaded_texture");
                 if loaded_texture.binding.is_none() {
@@ -199,83 +203,112 @@ impl Frame {
 }
 
 pub(crate) enum FrameCommand {
-    LoadTexture(KludgineHandle<LoadedTexture>),
+    LoadTexture(LoadedTexture),
     DrawBatch(KludgineHandle<SpriteBatch>),
 }
 
 lazy_static! {
     static ref TEXTURE_ID_CELL: AtomicCell<u64> = { AtomicCell::new(0) };
 }
+
+#[derive(Clone)]
 pub struct Texture {
+    pub(crate) handle: KludgineHandle<TextureData>,
+}
+
+pub(crate) struct TextureData {
     pub id: u64,
     pub image: RgbaImage,
 }
 
 impl Texture {
-    pub fn new(image: DynamicImage) -> KludgineHandle<Self> {
+    pub fn new(image: DynamicImage) -> Self {
         let image = image.to_rgba();
         let id = TEXTURE_ID_CELL.fetch_add(1);
-        KludgineHandle::new(Self { id, image })
+        Self {
+            handle: KludgineHandle::new(TextureData { id, image }),
+        }
     }
 
-    pub fn load<P: AsRef<Path>>(from_path: P) -> KludgineResult<KludgineHandle<Self>> {
+    pub fn load<P: AsRef<Path>>(from_path: P) -> KludgineResult<Self> {
         let img = image::open(from_path)?;
 
         Ok(Self::new(img))
     }
 }
 
+#[derive(Clone)]
 pub struct LoadedTexture {
-    pub texture: KludgineHandle<Texture>,
+    pub(crate) handle: KludgineHandle<LoadedTextureData>,
+}
+
+pub(crate) struct LoadedTextureData {
+    pub texture: Texture,
     pub(crate) binding: Option<BindingGroup>,
 }
 
 impl LoadedTexture {
-    pub fn new(texture: KludgineHandle<Texture>) -> KludgineHandle<Self> {
-        KludgineHandle::new(Self {
-            texture,
-            binding: None,
-        })
+    pub fn new(texture: Texture) -> Self {
+        LoadedTexture {
+            handle: KludgineHandle::new(LoadedTextureData {
+                texture,
+                binding: None,
+            }),
+        }
     }
 }
 
+#[derive(Clone)]
 pub struct SourceSprite {
+    pub(crate) handle: KludgineHandle<SourceSpriteData>,
+}
+
+pub(crate) struct SourceSpriteData {
     pub location: Rect,
-    pub texture: KludgineHandle<Texture>,
+    pub texture: Texture,
 }
 
 impl SourceSprite {
-    pub fn new(location: Rect, texture: KludgineHandle<Texture>) -> KludgineHandle<Self> {
-        KludgineHandle::new(Self { location, texture })
+    pub fn new(location: Rect, texture: Texture) -> Self {
+        SourceSprite {
+            handle: KludgineHandle::new(SourceSpriteData { location, texture }),
+        }
     }
 
-    pub fn entire_texture(texture: KludgineHandle<Texture>) -> KludgineHandle<Self> {
+    pub fn entire_texture(texture: Texture) -> Self {
         let (w, h) = {
-            let texture = texture.read().expect("Error reading source sprice");
+            let texture = texture.handle.read().expect("Error reading source sprice");
             (texture.image.width() as f32, texture.image.height() as f32)
         };
         Self::new(Rect::sized(0.0, 0.0, w, h), texture)
     }
 }
 
+#[derive(Clone)]
 pub struct Sprite {
-    pub render_at: Rect,
-    pub(crate) source: KludgineHandle<SourceSprite>,
+    pub(crate) handle: KludgineHandle<SpriteData>,
 }
 
 impl Sprite {
-    pub fn new(render_at: Rect, source: KludgineHandle<SourceSprite>) -> KludgineHandle<Self> {
-        KludgineHandle::new(Self { render_at, source })
+    pub fn new(render_at: Rect, source: SourceSprite) -> Self {
+        Self {
+            handle: KludgineHandle::new(SpriteData { render_at, source }),
+        }
     }
 }
 
+pub(crate) struct SpriteData {
+    pub render_at: Rect,
+    pub source: SourceSprite,
+}
+
 pub(crate) struct SpriteBatch {
-    pub loaded_texture: KludgineHandle<LoadedTexture>,
-    pub(crate) sprites: Vec<KludgineHandle<Sprite>>,
+    pub loaded_texture: LoadedTexture,
+    pub sprites: Vec<Sprite>,
 }
 
 impl SpriteBatch {
-    pub fn new(loaded_texture: KludgineHandle<LoadedTexture>) -> Self {
+    pub fn new(loaded_texture: LoadedTexture) -> Self {
         SpriteBatch {
             loaded_texture,
             sprites: Vec::new(),

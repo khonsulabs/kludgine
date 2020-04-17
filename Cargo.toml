@@ -25,6 +25,7 @@ lazy_static="*"
 async-std = "1"
 chrono = "*"
 educe="0.4"
+rusttype= { version = "0.8", features=["gpu_cache"]}
 
 [dev-dependencies]
 rand="*"
