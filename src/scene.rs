@@ -195,10 +195,7 @@ impl Frame {
                     if current_texture_id.is_none()
                         || current_texture_id.as_ref().unwrap() != &texture.id
                     {
-                        if let Some(current_batch) = current_batch {
-                            self.commands
-                                .push(FrameCommand::DrawBatch(KludgineHandle::new(current_batch)));
-                        }
+                        self.commit_batch(current_batch);
                         current_texture_id = Some(texture.id);
                         referenced_texture_ids.insert(texture.id);
 
@@ -223,6 +220,7 @@ impl Frame {
                     current_batch.sprites.push(sprite_handle.clone());
                 }
                 Element::Text(text) => {
+                    current_batch = self.commit_batch(current_batch);
                     let text_data = text
                         .handle
                         .read()
@@ -232,7 +230,6 @@ impl Frame {
                         .handle
                         .read()
                         .expect("Error locking font for updating frame");
-                    // TODO current_batch = None; -- probably refactor, "finishing" a batch needs to be done here too
                     let loaded_font = self
                         .fonts
                         .get(&font.id)
@@ -245,10 +242,7 @@ impl Frame {
             }
         }
 
-        if let Some(current_batch) = current_batch {
-            self.commands
-                .push(FrameCommand::DrawBatch(KludgineHandle::new(current_batch)));
-        }
+        self.commit_batch(current_batch);
 
         let dead_texture_ids = self
             .textures
@@ -261,6 +255,15 @@ impl Frame {
         }
 
         self.updated_at = Some(Moment::now());
+    }
+
+    fn commit_batch(&mut self, batch: Option<SpriteBatch>) -> Option<SpriteBatch> {
+        if let Some(batch) = batch {
+            self.commands
+                .push(FrameCommand::DrawBatch(KludgineHandle::new(batch)));
+        }
+
+        None
     }
 
     fn cache_glyphs(&mut self, scene: &Scene) {
