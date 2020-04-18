@@ -9,8 +9,8 @@ edition = "2018"
 [features]
 default = []
 
-bundled-fonts = ["bundled-fonts-roboto"]
-bundled-fonts-roboto = []
+bundled-fonts = []
+bundled-fonts-roboto = ["bundled-fonts"]
 
 [dependencies]
 rgx = {version = "0.8", features=["renderer"]}
@@ -25,7 +25,11 @@ lazy_static="*"
 async-std = "1"
 chrono = "*"
 educe="0.4"
-rusttype= { version = "0.8", features=["gpu_cache"]}
+rusttype= { version = "0.9", features=["gpu_cache"]}
 
 [dev-dependencies]
 rand="*"
+
+[[example]]
+name = "text"
+required-features = ["bundled-fonts-roboto"]
