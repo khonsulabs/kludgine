@@ -8,6 +8,7 @@ use std::path::Path;
 lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicCell<u64> = { AtomicCell::new(0) };
 }
+
 #[derive(Clone)]
 pub struct Texture {
     pub(crate) handle: KludgineHandle<TextureData>,

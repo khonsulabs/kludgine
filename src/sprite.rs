@@ -1,33 +1,4 @@
-use super::{
-    math::Rect,
-    texture::{LoadedTexture, Texture},
-    KludgineHandle,
-};
-#[derive(Clone)]
-pub struct SourceSprite {
-    pub(crate) handle: KludgineHandle<SourceSpriteData>,
-}
-
-pub(crate) struct SourceSpriteData {
-    pub location: Rect,
-    pub texture: Texture,
-}
-
-impl SourceSprite {
-    pub fn new(location: Rect, texture: Texture) -> Self {
-        SourceSprite {
-            handle: KludgineHandle::new(SourceSpriteData { location, texture }),
-        }
-    }
-
-    pub fn entire_texture(texture: Texture) -> Self {
-        let (w, h) = {
-            let texture = texture.handle.read().expect("Error reading source sprice");
-            (texture.image.width() as f32, texture.image.height() as f32)
-        };
-        Self::new(Rect::sized(0.0, 0.0, w, h), texture)
-    }
-}
+use super::{math::Rect, source_sprite::SourceSprite, texture::LoadedTexture, KludgineHandle};
 
 #[derive(Clone)]
 pub struct Sprite {

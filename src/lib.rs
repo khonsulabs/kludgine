@@ -37,13 +37,16 @@ impl<T> Clone for KludgineHandle<T> {
 }
 
 pub mod application;
+pub mod atlas;
 pub mod frame;
 pub mod math;
 pub mod runtime;
 pub mod scene;
+pub mod source_sprite;
 pub mod sprite;
 pub mod text;
 pub mod texture;
+pub mod tilemap;
 pub mod timing;
 pub mod window;
 
@@ -53,7 +56,8 @@ pub mod prelude {
         math::{Point, Rect, Size, Zeroable},
         runtime::Runtime,
         scene::Scene,
-        sprite::{SourceSprite, Sprite},
+        source_sprite::SourceSprite,
+        sprite::Sprite,
         texture::Texture,
         window::Window,
         KludgineError, KludgineResult,

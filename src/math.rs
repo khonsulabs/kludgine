@@ -1,5 +1,5 @@
-pub type Point = rgx::math::algebra::Point2<f32>;
-pub type Rect = rgx::rect::Rect<f32>;
+pub type Point<S = f32> = rgx::math::algebra::Point2<S>;
+pub type Rect<S = f32> = rgx::rect::Rect<S>;
 
 #[derive(Copy, Clone, Default)]
 pub struct Size {

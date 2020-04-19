@@ -1,6 +1,7 @@
 use super::{
     math::{Point, Rect, Size},
-    sprite::{SourceSprite, Sprite},
+    source_sprite::SourceSprite,
+    sprite::Sprite,
     text::{Font, Text},
     timing::Moment,
 };
@@ -68,7 +69,7 @@ impl Scene {
             (source.location.width(), source.location.height())
         };
         self.elements.push(Element::Sprite(Sprite::new(
-            Rect::sized(location.x, location.y, w, h),
+            Rect::sized(location.x, location.y, w as f32, h as f32),
             source_sprite.clone(),
         )));
     }
