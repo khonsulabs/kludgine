@@ -37,8 +37,6 @@ impl<T> Clone for KludgineHandle<T> {
 }
 
 pub mod application;
-#[cfg(feature = "bundled-fonts")]
-pub mod bundled_fonts;
 pub mod frame;
 pub mod math;
 pub mod runtime;
@@ -63,5 +61,5 @@ pub mod prelude {
     pub use async_trait::async_trait;
 
     #[cfg(feature = "bundled-fonts")]
-    pub use super::bundled_fonts;
+    pub use super::text::bundled_fonts;
 }

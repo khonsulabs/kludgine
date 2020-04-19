@@ -4,6 +4,9 @@ use lazy_static::lazy_static;
 use rgx::core::*;
 use rusttype::gpu_cache;
 
+#[cfg(feature = "bundled-fonts")]
+pub mod bundled_fonts;
+
 lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicCell<u64> = { AtomicCell::new(0) };
 }
