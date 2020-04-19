@@ -1,7 +1,8 @@
 use super::{
+    frame::Frame,
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
-    scene::{Frame, Scene},
+    scene::Scene,
     timing::FrequencyLimiter,
     KludgineError, KludgineHandle, KludgineResult,
 };

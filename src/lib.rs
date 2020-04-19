@@ -39,9 +39,13 @@ impl<T> Clone for KludgineHandle<T> {
 pub mod application;
 #[cfg(feature = "bundled-fonts")]
 pub mod bundled_fonts;
+pub mod frame;
 pub mod math;
 pub mod runtime;
 pub mod scene;
+pub mod sprite;
+pub mod text;
+pub mod texture;
 pub mod timing;
 pub mod window;
 
@@ -50,7 +54,9 @@ pub mod prelude {
         application::{Application, SingleWindowApplication, WindowCreator},
         math::{Point, Rect, Size, Zeroable},
         runtime::Runtime,
-        scene::{Scene, SourceSprite, Sprite, Texture},
+        scene::Scene,
+        sprite::{SourceSprite, Sprite},
+        texture::Texture,
         window::Window,
         KludgineError, KludgineResult,
     };

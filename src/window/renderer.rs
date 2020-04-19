@@ -1,6 +1,6 @@
 use crate::{
+    frame::{FontUpdate, Frame, FrameCommand},
     runtime::{Runtime, FRAME_DURATION},
-    scene::{FontUpdate, Frame, FrameCommand},
     timing::FrequencyLimiter,
     KludgineHandle, KludgineResult,
 };

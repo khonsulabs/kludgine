@@ -1,4 +1,4 @@
-use super::scene::Font;
+use super::text::Font;
 use lazy_static::lazy_static;
 use std::include_bytes;
 
