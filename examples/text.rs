@@ -6,9 +6,7 @@ fn main() {
 }
 
 #[derive(Default)]
-struct TextExample {
-    source_sprite: Option<SourceSprite>,
-}
+struct TextExample {}
 
 impl WindowCreator<TextExample> for TextExample {
     fn window_title() -> String {
@@ -19,7 +17,13 @@ impl WindowCreator<TextExample> for TextExample {
 #[async_trait]
 impl Window for TextExample {
     async fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
-        scene.render_text_at("Hello, World!", &bundled_fonts::ROBOTO, 48.0, Point::new(0.0, scene.size().height - 50.0), None);
+        scene.render_text_at(
+            "Hello, World!",
+            &bundled_fonts::ROBOTO,
+            48.0,
+            Point::new(0.0, scene.size().height - 50.0),
+            None,
+        );
 
         Ok(())
     }
