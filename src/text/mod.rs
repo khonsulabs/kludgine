@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use rgx::core::*;
 use rusttype::gpu_cache;
 
-#[cfg(feature = "bundled-fonts")]
+#[cfg(feature = "bundled-fonts-enabled")]
 pub mod bundled_fonts;
 
 lazy_static! {

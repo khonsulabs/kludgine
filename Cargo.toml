@@ -9,8 +9,9 @@ edition = "2018"
 [features]
 default = []
 
-bundled-fonts = []
-bundled-fonts-roboto = ["bundled-fonts"]
+bundled-fonts = ["bundled-fonts-roboto"]
+bundled-fonts-enabled = []
+bundled-fonts-roboto = ["bundled-fonts-enabled"]
 
 [dependencies]
 rgx = {version = "0.8", features=["renderer"]}

@@ -60,6 +60,6 @@ pub mod prelude {
     };
     pub use async_trait::async_trait;
 
-    #[cfg(feature = "bundled-fonts")]
+    #[cfg(feature = "bundled-fonts-enabled")]
     pub use super::text::bundled_fonts;
 }
