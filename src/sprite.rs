@@ -9,6 +9,11 @@ use std::{collections::HashMap, time::Duration};
 
 #[derive(Clone)]
 pub struct Sprite {
+    pub(crate) handle: KludgineHandle<SpriteData>,
+}
+
+#[derive(Clone)]
+pub(crate) struct SpriteData {
     title: Option<String>,
     elapsed_since_frame_change: Duration,
     current_tag: Option<String>,
@@ -22,11 +27,20 @@ impl Sprite {
         frames: KludgineHandle<HashMap<Option<String>, Vec<SpriteFrame>>>,
     ) -> Self {
         Self {
-            title,
-            frames,
-            current_frame: 0,
-            current_tag: None,
-            elapsed_since_frame_change: Duration::from_millis(0),
+            handle: KludgineHandle::new(SpriteData {
+                title,
+                frames,
+                current_frame: 0,
+                current_tag: None,
+                elapsed_since_frame_change: Duration::from_millis(0),
+            }),
+        }
+    }
+
+    pub fn new_instance(&self) -> Self {
+        let data = self.handle.read().expect("Error locking sprite to copy");
+        Self {
+            handle: KludgineHandle::new(data.clone()),
         }
     }
 
@@ -45,13 +59,7 @@ impl Sprite {
         );
         let frames = KludgineHandle::new(frames);
 
-        Self {
-            title: None,
-            current_tag: None,
-            current_frame: 0,
-            elapsed_since_frame_change: Duration::from_millis(0),
-            frames,
-        }
+        Self::new(None, frames)
     }
 
     /// Loads [Aseprite](https://www.aseprite.org/) JSON export format, when using the correct settings
@@ -144,28 +152,33 @@ impl Sprite {
         Ok(Sprite::new(title, KludgineHandle::new(frames)))
     }
 
-    pub fn set_current_tag<S: Into<String>>(&mut self, tag: Option<S>) {
-        self.current_tag = tag.map_or(None, |t| Some(t.into()));
+    pub fn set_current_tag<S: Into<String>>(&self, tag: Option<S>) {
+        let mut sprite = self.handle.write().expect("Error locking sprite");
+        sprite.current_tag = tag.map_or(None, |t| Some(t.into()));
     }
 
-    pub(crate) fn get_frame(&mut self, elapsed: Option<Duration>) -> KludgineResult<AtlasSpriteId> {
+    pub(crate) fn get_frame(&self, elapsed: Option<Duration>) -> KludgineResult<AtlasSpriteId> {
+        let mut sprite = self.handle.write().expect("Error locking sprite");
         if let Some(elapsed) = elapsed {
-            self.elapsed_since_frame_change += elapsed;
+            sprite.elapsed_since_frame_change += elapsed;
 
-            let current_frame_duration = self.with_current_frame(|frame| frame.duration)?;
+            let current_frame_duration = sprite.with_current_frame(|frame| frame.duration)?;
             if let Some(frame_duration) = current_frame_duration {
-                if self.elapsed_since_frame_change > frame_duration {
-                    self.elapsed_since_frame_change = Duration::from_nanos(
-                        (self.elapsed_since_frame_change.as_nanos() % frame_duration.as_nanos())
+                if sprite.elapsed_since_frame_change > frame_duration {
+                    sprite.elapsed_since_frame_change = Duration::from_nanos(
+                        (sprite.elapsed_since_frame_change.as_nanos() % frame_duration.as_nanos())
                             as u64,
                     );
-                    self.advance_frame()?;
+                    sprite.advance_frame()?;
                 }
             }
         }
 
-        Ok(self.with_current_frame(|frame| frame.sprite_id)?)
+        Ok(sprite.with_current_frame(|frame| frame.sprite_id)?)
     }
+}
+
+impl SpriteData {
     fn advance_frame(&mut self) -> KludgineResult<()> {
         self.current_frame = self.next_frame()?;
         Ok(())

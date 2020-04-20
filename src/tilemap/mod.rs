@@ -31,38 +31,29 @@ where
     }
 
     pub fn draw(&self, scene: &mut Scene, location: Point<i32>) -> KludgineResult<()> {
-        // Offset the location using the origin and multiply it by the zoom
+        // Normally we don't need to worry about the origin, but in the case of TileMap
+        // it will fill the screen with whatever the provider returns for each tile coordinate
         let location = Point::new(
-            (location.x as f32 + scene.origin().x) * scene.zoom(),
-            (location.y as f32 + scene.origin().y) * scene.zoom(),
+            location.x as f32 + scene.origin().x,
+            location.y as f32 + scene.origin().y,
         );
 
-        // The tile map will attempt to render tiles using the location as the origin, and
-        // tiles to the left and up will be negative coordinates.
+        // We need to start at the upper-left of inverting the location
         let min_x = (-location.x / self.tile_size.width as f32).floor() as i32;
         let min_y = (-location.y / self.tile_size.height as f32).floor() as i32;
-
-        // If we have a partial tile showing on the left or upper, we need to account for it
-        // We need to adjust by the screen scale factor here, but not zoom because that's already factored in
-        let extra_x_needed =
-            (location.x % self.tile_size.width as f32).abs() * scene.scale_factor();
-        let extra_y_needed =
-            (location.y % self.tile_size.height as f32).abs() * scene.scale_factor();
-
-        let tiles_wide = ((scene.size().width as f32 + extra_x_needed)
-            / self.tile_size.width as f32)
-            .ceil() as i32;
-        let tiles_high = ((scene.size().height as f32 + extra_y_needed)
-            / self.tile_size.height as f32)
-            .ceil() as i32;
+        let extra_x = (location.x % self.tile_size.width as f32).abs();
+        let extra_y = (location.y % self.tile_size.height as f32).abs();
+        let total_width = scene.size().width as f32 + extra_x * scene.effective_scale_factor();
+        let total_height = scene.size().height as f32 + extra_y * scene.effective_scale_factor();
+        let tiles_wide = (total_width / self.tile_size.width as f32).ceil() as i32;
+        let tiles_high = (total_height / self.tile_size.height as f32).ceil() as i32;
 
         for y in min_y..(min_y + tiles_high) {
             for x in min_x..(min_x + tiles_wide) {
                 let location = Point::new(x, y);
                 match self.provider.get_tile(location) {
                     Some(tile) => {
-                        let mut sprite =
-                            tile.sprite.write().expect("Error locking tile for update");
+                        let sprite = tile.sprite.read().expect("Error locking tile for update");
                         let frame = sprite.get_frame(scene.elapsed())?;
                         let sprite = self.atlases.get(&frame)?;
 
