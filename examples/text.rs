@@ -21,7 +21,7 @@ impl Window for TextExample {
             "Hello, World!",
             &bundled_fonts::ROBOTO,
             48.0,
-            Point::new(0.0, scene.size().height - 50.0),
+            Point::new(0.0, 50.0),
             None,
         );
 

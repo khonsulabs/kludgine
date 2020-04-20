@@ -31,6 +31,7 @@ async-std = "1"
 chrono = "0.4"
 educe="0.4"
 rusttype= { version = "0.9", features=["gpu_cache"]}
+json = "0.12"
 
 [dev-dependencies]
 rand="0.7"

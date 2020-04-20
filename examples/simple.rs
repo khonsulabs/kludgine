@@ -20,11 +20,12 @@ impl WindowCreator<Simple> for Simple {
 impl Window for Simple {
     async fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
         if self.source_sprite.is_none() {
-            let texture = Texture::load("examples/k.png")?;
+            let texture = Texture::load("examples/assets/k.png")?;
             self.source_sprite = Some(SourceSprite::entire_texture(texture));
         }
+        let sprite = self.source_sprite.as_ref().unwrap();
 
-        scene.render_sprite_at(self.source_sprite.as_ref().unwrap(), Point::zero());
+        sprite.render_at(scene, Point::zero());
 
         Ok(())
     }

@@ -33,46 +33,70 @@ use winit::{
 mod renderer;
 use renderer::FrameRenderer;
 
+/// How to react to a request to close a window
 pub enum CloseResponse {
+    /// Window should remain open
     RemainOpen,
+    /// Window should close
     Close,
 }
 
+/// An Event from a device
 #[derive(Clone)]
 pub struct InputEvent {
+    /// The device that triggered this event
     pub device_id: DeviceId,
+    /// The event that was triggered
     pub event: Event,
 }
 
+/// An input Event
 #[derive(Clone)]
 pub enum Event {
+    /// A keyboard event
     Keyboard {
         key: Option<VirtualKeyCode>,
         state: ElementState,
     },
+    /// A mouse button event
     MouseButton {
         button: MouseButton,
         state: ElementState,
     },
-    MouseMoved {
-        position: Option<Point>,
-    },
+    /// Mouse cursor event
+    MouseMoved { position: Option<Point> },
+    /// Mouse wheel event
     MouseWheel {
         delta: MouseScrollDelta,
         touch_phase: TouchPhase,
     },
 }
 
+/// Trait to implement a Window
 #[async_trait]
 pub trait Window: Send + Sync + 'static {
-    async fn close_requested(&self) -> CloseResponse {
-        CloseResponse::Close
+    /// The window was requested to be closed, most likely from the Close Button. Override
+    /// this implementation if you want logic in place to prevent a window from closing.
+    async fn close_requested(&self) -> KludgineResult<CloseResponse> {
+        Ok(CloseResponse::Close)
     }
-    async fn initialize(&mut self) {}
+
+    /// Called once the Window is opened
+    async fn initialize(&mut self) -> KludgineResult<()> {
+        Ok(())
+    }
+
+    /// Called once for each frame, directly before `render`
+    async fn update(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
+        Ok(())
+    }
+
+    /// Called once for each frame of rendering
     async fn render(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
         Ok(())
     }
 
+    /// An input event occurred for this window
     async fn process_input(&mut self, _event: InputEvent) -> KludgineResult<()> {
         Ok(())
     }
@@ -220,6 +244,7 @@ impl RuntimeWindow {
     where
         T: Window + ?Sized,
     {
+        window.initialize().await?;
         let mut scene = Scene::new();
         let mut loop_limiter = FrequencyLimiter::new(Duration::from_nanos(FRAME_DURATION));
         loop {
@@ -232,11 +257,11 @@ impl RuntimeWindow {
             } {
                 match event {
                     WindowEvent::Resize { size, scale_factor } => {
-                        scene.size = size;
-                        scene.scale_factor = scale_factor;
+                        scene.set_internal_size(size);
+                        scene.set_scale_factor(scale_factor);
                     }
                     WindowEvent::CloseRequested => {
-                        if let CloseResponse::Close = window.close_requested().await {
+                        if let CloseResponse::Close = window.close_requested().await? {
                             WindowMessage::Close.send_to(id).await?;
                             return Ok(());
                         }
@@ -266,9 +291,10 @@ impl RuntimeWindow {
             if let Some(wait_for) = loop_limiter.remaining() {
                 async_std::task::sleep(wait_for).await;
             } else {
-                if scene.size.width > 0.0 && scene.size.height > 0.0 {
+                if scene.size().width > 0.0 && scene.size().height > 0.0 {
                     loop_limiter.advance_frame();
                     scene.start_frame();
+                    window.update(&mut scene).await?;
                     window.render(&mut scene).await?;
                     let mut guard = frame.write().expect("Error locking frame");
                     guard.update(&scene);
