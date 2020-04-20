@@ -69,7 +69,7 @@ impl Scene {
     ) {
         self.elements.push(Element::Text(Text::new(
             font.clone(),
-            size,
+            size * self.scale_factor,
             text.into(),
             location,
             max_width,

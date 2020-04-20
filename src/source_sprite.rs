@@ -37,7 +37,12 @@ impl SourceSprite {
             (source.location.width(), source.location.height())
         };
         scene.elements.push(Element::Sprite(RenderedSprite::new(
-            Rect::sized(location.x, location.y, w as f32, h as f32),
+            Rect::sized(
+                location.x * scene.scale_factor,
+                location.y * scene.scale_factor,
+                w as f32 * scene.scale_factor,
+                h as f32 * scene.scale_factor,
+            ),
             self.clone(),
         )));
     }
