@@ -62,6 +62,7 @@ pub mod window;
 pub mod prelude {
     pub use super::{
         application::{Application, SingleWindowApplication, WindowCreator},
+        include_aseprite_sprite,
         math::{KludgineRect, Point, Rect, Size, Zeroable},
         runtime::Runtime,
         scene::Scene,

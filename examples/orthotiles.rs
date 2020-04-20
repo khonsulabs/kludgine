@@ -93,8 +93,7 @@ impl Window for OrthoTiles {
 
 impl OrthoTiles {
     fn load_assets(&mut self) -> KludgineResult<()> {
-        let texture = Texture::load("examples/assets/grass.png")?;
-        let sprite = Sprite::load_aseprite_json(include_str!("assets/grass.json"), texture)?;
+        let sprite = include_aseprite_sprite!("assets/grass.json", "assets/grass.png")?;
         sprite.set_current_tag(Some("Swaying"))?;
 
         let mut map = PersistentTileMap::persistent_with_size(
@@ -109,11 +108,7 @@ impl OrthoTiles {
 
         self.map = Some(map);
 
-        let texture = Texture::load("examples/assets/stickguy.png")?;
-        self.stickguy = Some(Sprite::load_aseprite_json(
-            include_str!("assets/stickguy.json"),
-            texture,
-        )?);
+        self.stickguy = Some(include_aseprite_sprite!("assets/stickguy.json", "assets/stickguy.png")?);
         Ok(())
     }
 }

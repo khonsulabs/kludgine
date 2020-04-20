@@ -34,6 +34,12 @@ impl Texture {
         Ok(Self::new(img))
     }
 
+    pub fn from_bytes(bytes: &[u8]) -> KludgineResult<Self> {
+        let img = image::load_from_memory(bytes)?;
+
+        Ok(Self::new(img))
+    }
+
     pub fn size(&self) -> Size<u32> {
         let texture = self
             .handle

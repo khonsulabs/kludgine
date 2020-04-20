@@ -6,6 +6,17 @@ use super::{
 };
 use std::{collections::HashMap, time::Duration};
 
+#[macro_export]
+macro_rules! include_aseprite_sprite {
+    ($json_path:expr, $image_path:expr) => {{
+        let image_bytes = std::include_bytes!($image_path);
+        match Texture::from_bytes(image_bytes) {
+            Ok(texture) => Sprite::load_aseprite_json(include_str!($json_path), texture),
+            Err(err) => Err(err),
+        }
+    }};
+}
+
 pub enum AnimationMode {
     Forward,
     Reverse,
