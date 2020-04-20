@@ -33,8 +33,8 @@ where
     pub fn draw(&self, scene: &mut Scene, location: Point<i32>) -> KludgineResult<()> {
         let min_x = (-location.x as f32 / self.tile_size.width as f32).floor() as i32;
         let min_y = (-location.y as f32 / self.tile_size.height as f32).floor() as i32;
-        let width = (scene.size.width as f32 / self.tile_size.width as f32).ceil() as i32;
-        let height = (scene.size.height as f32 / self.tile_size.height as f32).ceil() as i32;
+        let width = (scene.size().width as f32 / self.tile_size.width as f32).ceil() as i32;
+        let height = (scene.size().height as f32 / self.tile_size.height as f32).ceil() as i32;
         for y in min_y..(min_y + height) {
             for x in min_x..(min_x + width) {
                 let location = Point::new(x, y);

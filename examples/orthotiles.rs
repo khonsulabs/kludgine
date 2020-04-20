@@ -16,6 +16,8 @@ impl WindowCreator<OrthoTiles> for OrthoTiles {
     }
 }
 
+static MAP_SIZE: u32 = 100;
+
 #[async_trait]
 impl Window for OrthoTiles {
     async fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
@@ -27,10 +29,10 @@ impl Window for OrthoTiles {
             sprite.set_current_tag(Some("Swaying"));
 
             let mut map =
-                PersistentTileMap::persistent_with_size(Size::new(32, 32), Size::new(10, 10));
+                PersistentTileMap::persistent_with_size(Size::new(32, 32), Size::new(MAP_SIZE, MAP_SIZE));
             map.register_atlas(atlas);
-            for x in 0..10 {
-                for y in 0..10 {
+            for x in 0..MAP_SIZE {
+                for y in 0..MAP_SIZE {
                     map.set(Point::new(x, y), Some(sprite.clone()));
                 }
             }
