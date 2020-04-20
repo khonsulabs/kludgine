@@ -46,7 +46,6 @@ impl<T> Clone for KludgineHandle<T> {
 }
 
 pub mod application;
-pub mod atlas;
 pub mod frame;
 pub mod math;
 pub mod runtime;
@@ -63,7 +62,6 @@ pub mod window;
 pub mod prelude {
     pub use super::{
         application::{Application, SingleWindowApplication, WindowCreator},
-        atlas::{Atlas, AtlasId, AtlasSpriteId},
         math::{KludgineRect, Point, Rect, Size, Zeroable},
         runtime::Runtime,
         scene::Scene,

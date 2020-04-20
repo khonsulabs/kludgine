@@ -1,5 +1,4 @@
 use super::{
-    atlas::{Atlas, AtlasCollection},
     math::{Point, Size},
     scene::Scene,
     sprite::Sprite,
@@ -11,7 +10,6 @@ use std::mem;
 pub struct TileMap<P> {
     provider: P,
     tile_size: Size<u32>,
-    atlases: AtlasCollection,
 }
 
 impl<P> TileMap<P>
@@ -22,12 +20,7 @@ where
         Self {
             tile_size,
             provider,
-            atlases: AtlasCollection::new(),
         }
-    }
-
-    pub fn register_atlas(&mut self, atlas: Atlas) {
-        self.atlases.register(atlas);
     }
 
     pub fn draw(&self, scene: &mut Scene, location: Point<i32>) -> KludgineResult<()> {
@@ -42,10 +35,12 @@ where
         let min_x = (-location.x / self.tile_size.width as f32).floor() as i32;
         let min_y = (-location.y / self.tile_size.height as f32).floor() as i32;
         // The portion of a tile that needs to be added to the total width because of the initial drawing location
-        let extra_x = (location.x % self.tile_size.width as f32).abs();
-        let extra_y = (location.y % self.tile_size.height as f32).abs();
-        let total_width = scene.size().width as f32 + extra_x * scene.effective_scale_factor();
-        let total_height = scene.size().height as f32 + extra_y * scene.effective_scale_factor();
+        let extra_x = ((location.x) % self.tile_size.width as f32).abs();
+        // The y coordinate needs to be offset by the inverse since the coordinate system is being flipped behind the scenes
+        let extra_y =
+            self.tile_size.height as f32 - ((location.y) % self.tile_size.height as f32).abs();
+        let total_width = scene.size().width as f32 + extra_x;
+        let total_height = scene.size().height as f32 + extra_y;
         let tiles_wide = (total_width / self.tile_size.width as f32).ceil() as i32;
         let tiles_high = (total_height / self.tile_size.height as f32).ceil() as i32;
 
@@ -55,12 +50,8 @@ where
                 match self.provider.get_tile(location) {
                     Some(tile) => {
                         let sprite = tile.sprite.read().expect("Error locking tile for update");
-                        let frame = sprite.get_frame(scene.elapsed())?;
-                        let sprite = self.atlases.get(&frame)?;
-
-                        if let Some(sprite) = sprite {
-                            sprite.render_at(scene, self.coordinate_for_tile(location));
-                        }
+                        let sprite = sprite.get_frame(scene.elapsed())?;
+                        sprite.render_at(scene, self.coordinate_for_tile(location));
                     }
                     None => {} // TODO: Add a default tile option
                 }
