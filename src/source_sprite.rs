@@ -34,14 +34,18 @@ impl SourceSprite {
     pub fn render_at(&self, scene: &mut Scene, location: Point) {
         let (w, h) = {
             let source = self.handle.read().expect("Error locking source_sprite");
-            (source.location.width(), source.location.height())
+            (
+                source.location.width() as f32,
+                source.location.height() as f32,
+            )
         };
+        let location = scene.user_to_device_point(Point::new(location.x, location.y + h));
         scene.elements.push(Element::Sprite(RenderedSprite::new(
             Rect::sized(
                 location.x * scene.scale_factor,
                 location.y * scene.scale_factor,
-                w as f32 * scene.scale_factor,
-                h as f32 * scene.scale_factor,
+                w * scene.scale_factor,
+                h * scene.scale_factor,
             ),
             self.clone(),
         )));

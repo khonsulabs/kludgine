@@ -1,5 +1,5 @@
 use super::{
-    math::{Point, Size},
+    math::{Point, Rect, Size},
     sprite::RenderedSprite,
     text::{Font, Text},
     timing::Moment,
@@ -74,8 +74,15 @@ impl Scene {
             font.clone(),
             size * self.scale_factor,
             text.into(),
-            location * self.scale_factor,
+            self.user_to_device_point(location) * self.scale_factor,
             max_width,
         )));
+    }
+
+    pub(crate) fn user_to_device_point<S>(&self, point: Point<S>) -> Point<S>
+    where
+        S: From<f32> + std::ops::Sub<Output = S>,
+    {
+        Point::new(point.x, Into::<S>::into(self.size().height) - point.y)
     }
 }

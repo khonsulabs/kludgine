@@ -20,7 +20,7 @@ impl WindowCreator<Isometric> for Isometric {
 impl Window for Isometric {
     async fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
         if self.map.is_none() {
-            let texture = Texture::load("examples/isometric_tile.png")?;
+            let texture = Texture::load("examples/assets/isometric_tile.png")?;
 
             let mut atlas = Atlas::from(texture);
             let sprite = Sprite::single_frame(&mut atlas);
