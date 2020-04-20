@@ -41,6 +41,7 @@ where
         // We need to start at the upper-left of inverting the location
         let min_x = (-location.x / self.tile_size.width as f32).floor() as i32;
         let min_y = (-location.y / self.tile_size.height as f32).floor() as i32;
+        // The portion of a tile that needs to be added to the total width because of the initial drawing location
         let extra_x = (location.x % self.tile_size.width as f32).abs();
         let extra_y = (location.y % self.tile_size.height as f32).abs();
         let total_width = scene.size().width as f32 + extra_x * scene.effective_scale_factor();
