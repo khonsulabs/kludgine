@@ -6,6 +6,27 @@ use super::{
 };
 use std::{collections::HashMap, time::Duration};
 
+pub enum AnimationMode {
+    Forward,
+    Reverse,
+    PingPong,
+}
+
+impl AnimationMode {
+    fn default_direction(&self) -> AnimationDirection {
+        match self {
+            AnimationMode::Forward | AnimationMode::PingPong => AnimationDirection::Forward,
+            AnimationMode::Reverse => AnimationDirection::Reverse,
+        }
+    }
+}
+
+#[derive(Clone)]
+enum AnimationDirection {
+    Forward,
+    Reverse,
+}
+
 #[derive(Clone)]
 pub struct Sprite {
     pub(crate) handle: KludgineHandle<SpriteData>,
@@ -17,21 +38,23 @@ pub(crate) struct SpriteData {
     elapsed_since_frame_change: Duration,
     current_tag: Option<String>,
     current_frame: usize,
-    frames: KludgineHandle<HashMap<Option<String>, Vec<SpriteFrame>>>,
+    current_animation_direction: AnimationDirection,
+    animations: KludgineHandle<HashMap<Option<String>, SpriteAnimation>>,
 }
 
 impl Sprite {
     pub(crate) fn new(
         title: Option<String>,
-        frames: KludgineHandle<HashMap<Option<String>, Vec<SpriteFrame>>>,
+        animations: KludgineHandle<HashMap<Option<String>, SpriteAnimation>>,
     ) -> Self {
         Self {
             handle: KludgineHandle::new(SpriteData {
                 title,
-                frames,
+                animations,
                 current_frame: 0,
                 current_tag: None,
                 elapsed_since_frame_change: Duration::from_millis(0),
+                current_animation_direction: AnimationDirection::Forward,
             }),
         }
     }
@@ -49,12 +72,13 @@ impl Sprite {
         let mut frames = HashMap::new();
         frames.insert(
             None,
-            vec![SpriteFrame {
-                source,
-                tag: None,
-                tag_frame: 0,
-                duration: None,
-            }],
+            SpriteAnimation::new(
+                vec![SpriteFrame {
+                    source,
+                    duration: None,
+                }],
+                AnimationMode::Forward,
+            ),
         );
         let frames = KludgineHandle::new(frames);
 
@@ -63,7 +87,9 @@ impl Sprite {
 
     /// Loads [Aseprite](https://www.aseprite.org/) JSON export format, when using the correct settings
     ///
-    /// For the JSON data, use the item name of {title}_{tag}_{tagframe}.{extension}
+    /// For the JSON data, use the Hash export option (default), and use either spaces or underscores (_)
+    /// inbetween the fields in the name. Ensure `{frame}` is the last field in the name before the extension.
+    /// E.g., `{tag}_{frame}.{extension}`
     pub fn load_aseprite_json(raw_json: &str, texture: Texture) -> KludgineResult<Self> {
         let json = json::parse(raw_json)?;
 
@@ -76,30 +102,24 @@ impl Sprite {
         }
         // TODO Validate that the texture size matches the JSON size
 
-        let mut title = None;
-        let mut frames = HashMap::new();
+        let title = match meta["image"].as_str() {
+            Some(image) => Some(image.to_owned()),
+            None => None,
+        };
 
+        let mut frames = HashMap::new();
         for (name, frame) in json["frames"].entries() {
             // Remove the extension, if present
             let name = name.split(".").next().unwrap();
-            // Split by _ as per the documentation of this method.
-            let name_parts = name.split("_").collect::<Vec<_>>();
-            if name_parts.len() != 3 {
-                return Err(KludgineError::SpriteParseError(
-                    "invalid aseprite json: Frame name does not match the {title}_{tag}_{tagframe}.{extension} format".to_owned(),
-                ));
-            }
-
-            title = Some(name_parts[0].to_owned());
-            let tag = name_parts[1].to_owned();
-            let tag_frame = match name_parts[2].parse::<usize>() {
-                Ok(frame) => frame,
-                Err(_) => {
-                    return Err(KludgineError::SpriteParseError(
-                        "invalid aseprite json: tagframe was not numeric.".to_owned(),
-                    ))
-                }
-            };
+            // Split by _ or ' 'as per the documentation of this method.
+            let name_parts = name.split(|c| c == '_' || c == ' ').collect::<Vec<_>>();
+            let frame_number = name_parts[name_parts.len() - 1]
+                .parse::<usize>()
+                .map_err(|_| {
+                    KludgineError::SpriteParseError(
+                        "invalid aseprite json: frame was not numeric.".to_owned(),
+                    )
+                })?;
 
             let duration = match frame["duration"].as_u64() {
                 Some(millis) => Duration::from_millis(millis),
@@ -135,26 +155,69 @@ impl Sprite {
 
             let source = SourceSprite::new(frame, texture.clone());
 
-            let tag_frames = frames
-                .entry(Some(tag.clone()))
-                .or_insert_with(|| Vec::new());
-
-            // TODO Insert sorted
-            tag_frames.push(SpriteFrame {
-                tag: Some(tag),
-                tag_frame: tag_frame,
-                duration: Some(duration),
-                source,
-            });
+            frames.insert(
+                frame_number,
+                SpriteFrame {
+                    duration: Some(duration),
+                    source,
+                },
+            );
         }
 
-        Ok(Sprite::new(title, KludgineHandle::new(frames)))
+        let mut animations = HashMap::new();
+        for tag in meta["frameTags"].members() {
+            let direction = if tag["direction"] == "forward" {
+                AnimationMode::Forward
+            } else if tag["direction"] == "reverse" {
+                AnimationMode::Reverse
+            } else if tag["direction"] == "pingpong" {
+                AnimationMode::PingPong
+            } else {
+                return Err(KludgineError::SpriteParseError(
+                    "invalid aseprite json: frameTags direction is an unknown value".to_owned(),
+                ));
+            };
+
+            let name = match tag["name"].as_str() {
+                Some(s) => Some(s.to_owned()),
+                None => None,
+            };
+
+            let start_frame = tag["from"].as_usize().ok_or_else(|| {
+                KludgineError::SpriteParseError(
+                    "invalid aseprite json: frameTags from was not numeric".to_owned(),
+                )
+            })?;
+            let end_frame = tag["to"].as_usize().ok_or_else(|| {
+                KludgineError::SpriteParseError(
+                    "invalid aseprite json: frameTags from was not numeric".to_owned(),
+                )
+            })?;
+            let mut animation_frames = Vec::new();
+            for i in start_frame..(end_frame + 1) {
+                let frame = frames.get(&i).ok_or(KludgineError::SpriteParseError(
+                    "invalid aseprite json: frameTags frame was out of bounds".to_owned(),
+                ))?;
+                animation_frames.push(frame.clone());
+            }
+
+            animations.insert(name, SpriteAnimation::new(animation_frames, direction));
+        }
+
+        Ok(Sprite::new(title, KludgineHandle::new(animations)))
     }
 
     pub fn set_current_tag<S: Into<String>>(&self, tag: Option<S>) -> KludgineResult<()> {
         let new_tag = tag.map_or(None, |t| Some(t.into()));
         let mut sprite = self.handle.write().expect("Error locking sprite");
         if sprite.current_tag != new_tag {
+            sprite.current_animation_direction = {
+                let animations = sprite.animations.read().expect("Error locking animations");
+                let animation = animations
+                    .get(&new_tag)
+                    .ok_or_else(|| KludgineError::InvalidSpriteTag)?;
+                animation.mode.default_direction()
+            };
             sprite.current_frame = 0;
             sprite.current_tag = new_tag;
         }
@@ -189,28 +252,44 @@ impl SpriteData {
         Ok(())
     }
     fn next_frame(&mut self) -> KludgineResult<usize> {
-        let starting_frame = self.current_frame;
+        let starting_frame = self.current_frame as i32;
         let frames = self
-            .frames
+            .animations
             .read()
             .expect("Error locking frames for reading");
-        let tag_frames = frames
+        let animation = frames
             .get(&self.current_tag)
             .ok_or(KludgineError::InvalidSpriteTag)?;
 
-        for i in (starting_frame + 1)..tag_frames.len() {
-            if tag_frames[i].tag == self.current_tag {
-                return Ok(i);
-            }
-        }
+        let next_frame = match self.current_animation_direction {
+            AnimationDirection::Forward => starting_frame + 1,
+            AnimationDirection::Reverse => starting_frame - 1,
+        };
 
-        for i in 0..(starting_frame + 1) {
-            if tag_frames[i].tag == self.current_tag {
-                return Ok(i);
+        Ok(if next_frame < 0 {
+            match animation.mode {
+                AnimationMode::Forward => unreachable!(),
+                AnimationMode::Reverse => {
+                    // Cycle back to the last frame
+                    animation.frames.len() - 1
+                }
+                AnimationMode::PingPong => {
+                    self.current_animation_direction = AnimationDirection::Forward;
+                    1
+                }
             }
-        }
-
-        unreachable!()
+        } else if next_frame as usize >= animation.frames.len() {
+            match animation.mode {
+                AnimationMode::Reverse => unreachable!(),
+                AnimationMode::Forward => 0,
+                AnimationMode::PingPong => {
+                    self.current_animation_direction = AnimationDirection::Reverse;
+                    (animation.frames.len() - 2).max(0)
+                }
+            }
+        } else {
+            next_frame as usize
+        })
     }
 
     fn with_current_frame<F, R>(&self, f: F) -> KludgineResult<R>
@@ -218,20 +297,30 @@ impl SpriteData {
         F: Fn(&SpriteFrame) -> R,
     {
         let frames = self
-            .frames
+            .animations
             .read()
             .expect("Error locking frames for reading");
-        let tag_frames = frames
+        let animation = frames
             .get(&self.current_tag)
             .ok_or(KludgineError::InvalidSpriteTag)?;
 
-        Ok(f(&tag_frames[self.current_frame]))
+        Ok(f(&animation.frames[self.current_frame]))
     }
 }
 
+pub struct SpriteAnimation {
+    frames: Vec<SpriteFrame>,
+    mode: AnimationMode,
+}
+
+impl SpriteAnimation {
+    pub fn new(frames: Vec<SpriteFrame>, mode: AnimationMode) -> Self {
+        Self { frames, mode }
+    }
+}
+
+#[derive(Clone)]
 pub struct SpriteFrame {
-    tag: Option<String>,
-    tag_frame: usize,
     source: SourceSprite,
     duration: Option<Duration>,
 }
@@ -271,8 +360,6 @@ impl SpriteFrameBuilder {
     pub fn build(self) -> SpriteFrame {
         SpriteFrame {
             source: self.source,
-            tag: self.tag,
-            tag_frame: self.tag_frame.unwrap_or_default(),
             duration: self.duration,
         }
     }
