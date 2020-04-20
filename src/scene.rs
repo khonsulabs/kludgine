@@ -44,7 +44,10 @@ impl Scene {
     }
 
     pub fn size(&self) -> Size {
-        self.size
+        Size::new(
+            self.size.width / self.scale_factor,
+            self.size.height / self.scale_factor,
+        )
     }
 
     pub fn now(&self) -> Moment {
@@ -71,7 +74,7 @@ impl Scene {
             font.clone(),
             size * self.scale_factor,
             text.into(),
-            location,
+            location * self.scale_factor,
             max_width,
         )));
     }
