@@ -237,6 +237,7 @@ impl RuntimeWindow {
     where
         T: Window + ?Sized,
     {
+        window.initialize().await;
         let mut scene = Scene::new();
         let mut loop_limiter = FrequencyLimiter::new(Duration::from_nanos(FRAME_DURATION));
         loop {
@@ -249,8 +250,8 @@ impl RuntimeWindow {
             } {
                 match event {
                     WindowEvent::Resize { size, scale_factor } => {
-                        scene.size = size;
-                        scene.scale_factor = scale_factor;
+                        scene.set_internal_size(size);
+                        scene.set_scale_factor(scale_factor);
                     }
                     WindowEvent::CloseRequested => {
                         if let CloseResponse::Close = window.close_requested().await {
@@ -283,7 +284,7 @@ impl RuntimeWindow {
             if let Some(wait_for) = loop_limiter.remaining() {
                 async_std::task::sleep(wait_for).await;
             } else {
-                if scene.size.width > 0.0 && scene.size.height > 0.0 {
+                if scene.size().width > 0.0 && scene.size().height > 0.0 {
                     loop_limiter.advance_frame();
                     scene.start_frame();
                     window.render(&mut scene).await?;

@@ -1,5 +1,5 @@
 use super::{
-    math::{Point, Rect, Size},
+    math::{Point, Size, Zeroable},
     sprite::RenderedSprite,
     text::{Font, Text},
     timing::Moment,
@@ -14,8 +14,10 @@ pub(crate) enum Element {
 
 pub struct Scene {
     pub pressed_keys: HashSet<VirtualKeyCode>,
-    pub(crate) scale_factor: f32,
-    pub(crate) size: Size,
+    scale_factor: f32,
+    origin: Point,
+    zoom: f32,
+    size: Size,
     pub(crate) elements: Vec<Element>,
     now: Option<Moment>,
     elapsed: Option<Duration>,
@@ -30,7 +32,45 @@ impl Scene {
             now: None,
             elapsed: None,
             elements: Vec::new(),
+            origin: Point::zero(),
+            zoom: 1.0,
         }
+    }
+
+    pub(crate) fn set_internal_size(&mut self, size: Size) {
+        self.size = size;
+    }
+
+    pub(crate) fn internal_size(&self) -> Size {
+        self.size
+    }
+
+    pub(crate) fn set_scale_factor(&mut self, scale_factor: f32) {
+        self.scale_factor = scale_factor;
+    }
+
+    pub fn scale_factor(&self) -> f32 {
+        self.scale_factor
+    }
+
+    pub fn zoom(&self) -> f32 {
+        self.zoom
+    }
+
+    pub fn set_zoom(&mut self, zoom: f32) {
+        self.zoom = zoom;
+    }
+
+    pub fn origin(&self) -> Point {
+        self.origin
+    }
+
+    pub fn set_origin(&mut self, origin: Point) {
+        self.origin = origin;
+    }
+
+    pub(crate) fn effective_scale_factor(&self) -> f32 {
+        self.scale_factor * self.zoom
     }
 
     pub(crate) fn start_frame(&mut self) {
@@ -45,8 +85,8 @@ impl Scene {
 
     pub fn size(&self) -> Size {
         Size::new(
-            self.size.width / self.scale_factor,
-            self.size.height / self.scale_factor,
+            self.size.width / self.effective_scale_factor(),
+            self.size.height / self.effective_scale_factor(),
         )
     }
 
@@ -81,8 +121,11 @@ impl Scene {
 
     pub(crate) fn user_to_device_point<S>(&self, point: Point<S>) -> Point<S>
     where
-        S: From<f32> + std::ops::Sub<Output = S>,
+        S: From<f32> + std::ops::Sub<Output = S> + std::ops::Add<Output = S>,
     {
-        Point::new(point.x, Into::<S>::into(self.size().height) - point.y)
+        Point::new(
+            point.x + Into::<S>::into(self.origin.x),
+            Into::<S>::into(self.size().height) - (point.y + Into::<S>::into(self.origin.y)),
+        )
     }
 }

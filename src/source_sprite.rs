@@ -42,10 +42,10 @@ impl SourceSprite {
         let location = scene.user_to_device_point(Point::new(location.x, location.y + h));
         scene.elements.push(Element::Sprite(RenderedSprite::new(
             Rect::sized(
-                location.x * scene.scale_factor,
-                location.y * scene.scale_factor,
-                w * scene.scale_factor,
-                h * scene.scale_factor,
+                location.x * scene.effective_scale_factor(),
+                location.y * scene.effective_scale_factor(),
+                w * scene.effective_scale_factor(),
+                h * scene.effective_scale_factor(),
             ),
             self.clone(),
         )));

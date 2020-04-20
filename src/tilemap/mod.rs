@@ -31,12 +31,33 @@ where
     }
 
     pub fn draw(&self, scene: &mut Scene, location: Point<i32>) -> KludgineResult<()> {
-        let min_x = (-location.x as f32 / self.tile_size.width as f32).floor() as i32;
-        let min_y = (-location.y as f32 / self.tile_size.height as f32).floor() as i32;
-        let width = (scene.size().width as f32 / self.tile_size.width as f32).ceil() as i32;
-        let height = (scene.size().height as f32 / self.tile_size.height as f32).ceil() as i32;
-        for y in min_y..(min_y + height) {
-            for x in min_x..(min_x + width) {
+        // Offset the location using the origin and multiply it by the zoom
+        let location = Point::new(
+            (location.x as f32 + scene.origin().x) * scene.zoom(),
+            (location.y as f32 + scene.origin().y) * scene.zoom(),
+        );
+
+        // The tile map will attempt to render tiles using the location as the origin, and
+        // tiles to the left and up will be negative coordinates.
+        let min_x = (-location.x / self.tile_size.width as f32).floor() as i32;
+        let min_y = (-location.y / self.tile_size.height as f32).floor() as i32;
+
+        // If we have a partial tile showing on the left or upper, we need to account for it
+        // We need to adjust by the screen scale factor here, but not zoom because that's already factored in
+        let extra_x_needed =
+            (location.x % self.tile_size.width as f32).abs() * scene.scale_factor();
+        let extra_y_needed =
+            (location.y % self.tile_size.height as f32).abs() * scene.scale_factor();
+
+        let tiles_wide = ((scene.size().width as f32 + extra_x_needed)
+            / self.tile_size.width as f32)
+            .ceil() as i32;
+        let tiles_high = ((scene.size().height as f32 + extra_y_needed)
+            / self.tile_size.height as f32)
+            .ceil() as i32;
+
+        for y in min_y..(min_y + tiles_high) {
+            for x in min_x..(min_x + tiles_wide) {
                 let location = Point::new(x, y);
                 match self.provider.get_tile(location) {
                     Some(tile) => {
@@ -49,7 +70,7 @@ where
                             sprite.render_at(scene, self.coordinate_for_tile(location));
                         }
                     }
-                    None => {}
+                    None => {} // TODO: Add a default tile option
                 }
             }
         }

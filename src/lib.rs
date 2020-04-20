@@ -73,10 +73,11 @@ pub mod prelude {
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,
         },
-        window::Window,
+        window::{Event, InputEvent, Window},
         KludgineError, KludgineResult,
     };
     pub use async_trait::async_trait;
+    pub use winit::event::*;
 
     #[cfg(feature = "bundled-fonts-enabled")]
     pub use super::text::bundled_fonts;
