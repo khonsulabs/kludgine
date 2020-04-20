@@ -100,7 +100,12 @@ impl Sprite {
                 "invalid aseprite json: No `meta` section".to_owned(),
             ));
         }
-        // TODO Validate that the texture size matches the JSON size
+
+        if meta["size"]["w"] != texture.size().width || meta["size"]["h"] != texture.size().height {
+            return Err(KludgineError::SpriteParseError(
+                "invalid aseprite json: Size did not match input texture".to_owned(),
+            ));
+        }
 
         let title = match meta["image"].as_str() {
             Some(image) => Some(image.to_owned()),
