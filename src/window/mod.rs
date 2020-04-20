@@ -77,12 +77,19 @@ pub enum Event {
 pub trait Window: Send + Sync + 'static {
     /// The window was requested to be closed, most likely from the Close Button. Override
     /// this implementation if you want logic in place to prevent a window from closing.
-    async fn close_requested(&self) -> CloseResponse {
-        CloseResponse::Close
+    async fn close_requested(&self) -> KludgineResult<CloseResponse> {
+        Ok(CloseResponse::Close)
     }
 
     /// Called once the Window is opened
-    async fn initialize(&mut self) {}
+    async fn initialize(&mut self) -> KludgineResult<()> {
+        Ok(())
+    }
+
+    /// Called once for each frame, directly before `render`
+    async fn update(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
+        Ok(())
+    }
 
     /// Called once for each frame of rendering
     async fn render(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
@@ -237,7 +244,7 @@ impl RuntimeWindow {
     where
         T: Window + ?Sized,
     {
-        window.initialize().await;
+        window.initialize().await?;
         let mut scene = Scene::new();
         let mut loop_limiter = FrequencyLimiter::new(Duration::from_nanos(FRAME_DURATION));
         loop {
@@ -254,7 +261,7 @@ impl RuntimeWindow {
                         scene.set_scale_factor(scale_factor);
                     }
                     WindowEvent::CloseRequested => {
-                        if let CloseResponse::Close = window.close_requested().await {
+                        if let CloseResponse::Close = window.close_requested().await? {
                             WindowMessage::Close.send_to(id).await?;
                             return Ok(());
                         }
@@ -287,6 +294,7 @@ impl RuntimeWindow {
                 if scene.size().width > 0.0 && scene.size().height > 0.0 {
                     loop_limiter.advance_frame();
                     scene.start_frame();
+                    window.update(&mut scene).await?;
                     window.render(&mut scene).await?;
                     let mut guard = frame.write().expect("Error locking frame");
                     guard.update(&scene);

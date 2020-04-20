@@ -34,11 +34,8 @@ where
         // We need to start at the upper-left of inverting the location
         let min_x = (-location.x / self.tile_size.width as f32).floor() as i32;
         let min_y = (-location.y / self.tile_size.height as f32).floor() as i32;
-        // The portion of a tile that needs to be added to the total width because of the initial drawing location
-        let extra_x = ((location.x) % self.tile_size.width as f32).abs();
-        // The y coordinate needs to be offset by the inverse since the coordinate system is being flipped behind the scenes
-        let extra_y =
-            self.tile_size.height as f32 - ((location.y) % self.tile_size.height as f32).abs();
+        let extra_x = (self.tile_size.width - 1) as f32;
+        let extra_y = (self.tile_size.height - 1) as f32;
         let total_width = scene.size().width as f32 + extra_x;
         let total_height = scene.size().height as f32 + extra_y;
         let tiles_wide = (total_width / self.tile_size.width as f32).ceil() as i32;
