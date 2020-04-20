@@ -6,12 +6,21 @@ use thiserror::Error;
 pub enum KludgineError {
     #[error("error sending a WindowMessage to a Window: {0}")]
     InternalWindowMessageSendError(String),
-    #[error("error compiling shader: {0}")]
-    ShaderCompilationError(String),
     #[error("error reading image: {0}")]
     ImageError(#[from] image::ImageError),
+    #[error("error parsing json: {0}")]
+    JsonError(#[from] json::Error),
+    #[error("AtlasSpriteId belongs to an Atlas not registered in this collection")]
+    InvalidAtlasSpriteId,
+    #[error("error parsing sprite data: {0}")]
+    SpriteParseError(String),
+    #[error("no frames could be found for the current tag")]
+    InvalidSpriteTag,
 }
-
+/// Alias for [`Result<T,E>`] where `E` is [`KludgineError`]
+///
+/// [`Result<T,E>`]: http://doc.rust-lang.org/std/result/enum.Result.html
+/// [`KludgineError`]: enum.KludgineError.html
 pub type KludgineResult<T> = Result<T, KludgineError>;
 
 pub(crate) struct KludgineHandle<T>(Arc<ShardedLock<T>>);
@@ -50,15 +59,20 @@ pub mod tilemap;
 pub mod timing;
 pub mod window;
 
+/// Convenience module that exports the public interface of Kludgine
 pub mod prelude {
     pub use super::{
         application::{Application, SingleWindowApplication, WindowCreator},
-        math::{Point, Rect, Size, Zeroable},
+        atlas::{Atlas, AtlasId, AtlasSpriteId},
+        math::{KludgineRect, Point, Rect, Size, Zeroable},
         runtime::Runtime,
         scene::Scene,
         source_sprite::SourceSprite,
         sprite::Sprite,
         texture::Texture,
+        tilemap::{
+            PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,
+        },
         window::Window,
         KludgineError, KludgineResult,
     };

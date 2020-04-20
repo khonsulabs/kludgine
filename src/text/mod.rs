@@ -11,6 +11,7 @@ lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicCell<u64> = { AtomicCell::new(0) };
 }
 
+/// Font provides TrueType Font rendering
 #[derive(Clone)]
 pub struct Font {
     pub(crate) handle: KludgineHandle<FontData>,
@@ -59,8 +60,8 @@ pub(crate) struct LoadedFontData {
 }
 
 #[derive(Clone)]
-pub struct Text {
-    pub(crate) handle: KludgineHandle<TextData>,
+pub(crate) struct Text {
+    pub handle: KludgineHandle<TextData>,
 }
 
 impl Text {

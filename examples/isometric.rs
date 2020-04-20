@@ -7,7 +7,7 @@ fn main() {
 
 #[derive(Default)]
 struct Isometric {
-    source_sprite: Option<SourceSprite>,
+    map: Option<PersistentTileMap>,
 }
 
 impl WindowCreator<Isometric> for Isometric {
@@ -19,12 +19,25 @@ impl WindowCreator<Isometric> for Isometric {
 #[async_trait]
 impl Window for Isometric {
     async fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
-        if self.source_sprite.is_none() {
-            let texture = Texture::load("examples/isometric_title.png")?;
-            self.source_sprite = Some(SourceSprite::entire_texture(&texture));
+        if self.map.is_none() {
+            let texture = Texture::load("examples/isometric_tile.png")?;
+
+            let mut atlas = Atlas::from(texture);
+            let sprite = Sprite::single_frame(&mut atlas);
+
+            let mut map =
+                PersistentTileMap::persistent_with_size(Size::new(120, 80), Size::new(10, 10));
+            map.register_atlas(atlas);
+            map.set(Point::new(0, 0), Some(sprite.clone()));
+            map.set(Point::new(0, 1), Some(sprite.clone()));
+            map.set(Point::new(1, 1), Some(sprite.clone()));
+            map.set(Point::new(1, 0), Some(sprite));
+
+            self.map = Some(map);
         }
 
-        scene.render_sprite_at(self.source_sprite.as_ref().unwrap(), Point::zero());
+        let map = self.map.as_ref().unwrap();
+        map.draw(scene, Point::zero())?;
 
         Ok(())
     }

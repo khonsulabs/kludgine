@@ -1,14 +1,19 @@
-use super::{math::Rect, source_sprite::SourceSprite, texture::Texture};
+use super::{
+    math::{Rect, Size},
+    source_sprite::SourceSprite,
+    texture::Texture,
+    KludgineError, KludgineHandle, KludgineResult,
+};
 use crossbeam::atomic::AtomicCell;
 use lazy_static::lazy_static;
 use std::collections::HashMap;
 
 lazy_static! {
-    static ref GLOBAL_ID_CELL: AtomicCell<usize> = { AtomicCell::new(0) };
+    static ref GLOBAL_ID_CELL: AtomicCell<u32> = { AtomicCell::new(0) };
 }
 
 #[derive(Hash, Eq, PartialEq, Copy, Clone)]
-pub struct AtlasId(usize);
+pub struct AtlasId(u32);
 
 impl AtlasId {
     pub(crate) fn new() -> Self {
@@ -17,39 +22,95 @@ impl AtlasId {
 }
 
 #[derive(Hash, Eq, PartialEq, Copy, Clone)]
-pub struct AtlasSpriteId(AtlasId, usize);
+pub struct AtlasSpriteId(AtlasId, u32);
 
 pub struct Atlas {
-    pub(crate) id: AtlasId,
-    pub(crate) texture: Texture,
-    pub(crate) sprites: HashMap<AtlasSpriteId, SourceSprite>,
+    handle: KludgineHandle<AtlasData>,
+}
+
+pub(crate) struct AtlasData {
+    pub id: AtlasId,
+    pub texture: Texture,
+    pub sprites: HashMap<AtlasSpriteId, SourceSprite>,
 }
 
 impl From<Texture> for Atlas {
     fn from(texture: Texture) -> Self {
         Atlas {
-            id: AtlasId::new(),
-            texture,
-            sprites: HashMap::new(),
+            handle: KludgineHandle::new(AtlasData {
+                id: AtlasId::new(),
+                texture,
+                sprites: HashMap::new(),
+            }),
         }
     }
 }
 
 impl Atlas {
     pub fn define_sprite(&mut self, rect: Rect<u32>) -> AtlasSpriteId {
-        let next_id = AtlasSpriteId(self.id, self.sprites.len());
+        let mut atlas = self
+            .handle
+            .write()
+            .expect("Error locking atlas to define sprite");
 
-        self.sprites
-            .insert(next_id, SourceSprite::new(rect, &self.texture));
+        let next_id = AtlasSpriteId(atlas.id, atlas.sprites.len() as u32);
+        let texture = atlas.texture.clone();
+
+        atlas
+            .sprites
+            .insert(next_id, SourceSprite::new(rect, texture));
 
         next_id
     }
 
     pub fn get(&self, id: &AtlasSpriteId) -> Option<SourceSprite> {
-        if let Some(sprite) = self.sprites.get(id) {
+        let atlas = self
+            .handle
+            .read()
+            .expect("Error locking atlas to define sprite");
+        if let Some(sprite) = atlas.sprites.get(id) {
             Some(sprite.clone())
         } else {
             None
+        }
+    }
+
+    pub fn id(&self) -> AtlasId {
+        let atlas = self
+            .handle
+            .read()
+            .expect("Error locking atlas to retrieve id");
+        atlas.id
+    }
+
+    pub fn size(&self) -> Size<u32> {
+        let atlas = self
+            .handle
+            .read()
+            .expect("Error locking atlas to retrieve id");
+        atlas.texture.size()
+    }
+}
+
+pub(crate) struct AtlasCollection {
+    atlases: HashMap<AtlasId, Atlas>,
+}
+
+impl AtlasCollection {
+    pub fn new() -> Self {
+        Self {
+            atlases: HashMap::new(),
+        }
+    }
+
+    pub fn register(&mut self, atlas: Atlas) {
+        self.atlases.insert(atlas.id(), atlas);
+    }
+
+    pub fn get(&self, id: &AtlasSpriteId) -> KludgineResult<Option<SourceSprite>> {
+        match self.atlases.get(&id.0) {
+            Some(atlas) => Ok(atlas.get(id)),
+            None => Err(KludgineError::InvalidAtlasSpriteId),
         }
     }
 }

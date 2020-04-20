@@ -1,4 +1,4 @@
-use super::{KludgineHandle, KludgineResult};
+use super::{math::Size, KludgineHandle, KludgineResult};
 use crossbeam::atomic::AtomicCell;
 use image::{DynamicImage, RgbaImage};
 use lazy_static::lazy_static;
@@ -32,6 +32,15 @@ impl Texture {
         let img = image::open(from_path)?;
 
         Ok(Self::new(img))
+    }
+
+    pub fn size(&self) -> Size<u32> {
+        let texture = self
+            .handle
+            .read()
+            .expect("Error locking texture to get size");
+        let (w, h) = texture.image.dimensions();
+        Size::new(w as u32, h as u32)
     }
 }
 

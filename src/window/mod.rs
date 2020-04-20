@@ -33,46 +33,63 @@ use winit::{
 mod renderer;
 use renderer::FrameRenderer;
 
+/// How to react to a request to close a window
 pub enum CloseResponse {
+    /// Window should remain open
     RemainOpen,
+    /// Window should close
     Close,
 }
 
+/// An Event from a device
 #[derive(Clone)]
 pub struct InputEvent {
+    /// The device that triggered this event
     pub device_id: DeviceId,
+    /// The event that was triggered
     pub event: Event,
 }
 
+/// An input Event
 #[derive(Clone)]
 pub enum Event {
+    /// A keyboard event
     Keyboard {
         key: Option<VirtualKeyCode>,
         state: ElementState,
     },
+    /// A mouse button event
     MouseButton {
         button: MouseButton,
         state: ElementState,
     },
-    MouseMoved {
-        position: Option<Point>,
-    },
+    /// Mouse cursor event
+    MouseMoved { position: Option<Point> },
+    /// Mouse wheel event
     MouseWheel {
         delta: MouseScrollDelta,
         touch_phase: TouchPhase,
     },
 }
 
+/// Trait to implement a Window
 #[async_trait]
 pub trait Window: Send + Sync + 'static {
+    /// The window was requested to be closed, most likely from the Close Button. Override
+    /// this implementation if you want logic in place to prevent a window from closing.
     async fn close_requested(&self) -> CloseResponse {
         CloseResponse::Close
     }
+
+    /// Called once the Window is opened
     async fn initialize(&mut self) {}
+
+    /// Called once for each frame of rendering
     async fn render(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
         Ok(())
     }
 
+    /// An input event occurred for this window
     async fn process_input(&mut self, _event: InputEvent) -> KludgineResult<()> {
         Ok(())
     }

@@ -1,7 +1,6 @@
 use super::{
-    math::{Point, Rect, Size},
-    source_sprite::SourceSprite,
-    sprite::Sprite,
+    math::{Point, Size},
+    sprite::RenderedSprite,
     text::{Font, Text},
     timing::Moment,
 };
@@ -9,7 +8,7 @@ use std::{collections::HashSet, time::Duration};
 use winit::event::VirtualKeyCode;
 
 pub(crate) enum Element {
-    Sprite(Sprite),
+    Sprite(RenderedSprite),
     Text(Text),
 }
 
@@ -58,20 +57,6 @@ impl Scene {
 
     pub fn is_initial_frame(&self) -> bool {
         self.elapsed.is_none()
-    }
-
-    pub fn render_sprite_at(&mut self, source_sprite: &SourceSprite, location: Point) {
-        let (w, h) = {
-            let source = source_sprite
-                .handle
-                .read()
-                .expect("Error locking source_sprite");
-            (source.location.width(), source.location.height())
-        };
-        self.elements.push(Element::Sprite(Sprite::new(
-            Rect::sized(location.x, location.y, w as f32, h as f32),
-            source_sprite.clone(),
-        )));
     }
 
     pub fn render_text_at<S: Into<String>>(
