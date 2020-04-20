@@ -16,7 +16,8 @@
 //! # Examples
 //!
 //! ```rust
-//! async fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
+//! # use kludgine::prelude::*;
+//! async fn render(scene: &mut Scene) -> KludgineResult<()> {
 //!     scene.render_text_at(
 //!         "Hello, World!",
 //!         &bundled_fonts::ROBOTO,
