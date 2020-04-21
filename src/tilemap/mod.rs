@@ -2,7 +2,7 @@ use super::{
     math::{Point, Size},
     scene::Scene,
     sprite::Sprite,
-    KludgineHandle, KludgineResult,
+    KludgineResult,
 };
 use std::mem;
 
@@ -58,11 +58,10 @@ where
                 let location = Point::new(x, y);
                 match self.provider.get_tile(location) {
                     Some(tile) => {
-                        let sprite = tile.sprite.read().expect("Error locking tile for update");
-                        let sprite = sprite.get_frame(scene.elapsed())?;
+                        let sprite = tile.sprite.get_frame(scene.elapsed())?;
                         sprite.render_at(scene, self.coordinate_for_tile(location));
                     }
-                    None => {} // TODO: Add a default tile option
+                    None => {}
                 }
             }
         }
@@ -99,7 +98,7 @@ pub trait TileProvider {
 #[derive(Clone)]
 pub struct Tile {
     location: Point<i32>,
-    sprite: KludgineHandle<Sprite>,
+    sprite: Sprite,
 }
 
 /// Provides a simple interface for tile maps that have specific bounds
@@ -140,7 +139,7 @@ impl PersistentTileProvider {
             sprite.map_or(None, |sprite| {
                 Some(Tile {
                     location: Point::new(location.x as i32, location.y as i32),
-                    sprite: KludgineHandle::new(sprite),
+                    sprite,
                 })
             }),
         );
