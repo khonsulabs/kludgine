@@ -10,6 +10,7 @@ use std::mem;
 pub struct TileMap<P> {
     provider: P,
     tile_size: Size<u32>,
+    stagger: Option<Size<u32>>,
 }
 
 impl<P> TileMap<P>
@@ -20,7 +21,12 @@ where
         Self {
             tile_size,
             provider,
+            stagger: None,
         }
+    }
+
+    pub fn set_stagger(&mut self, stagger: Size<u32>) {
+        self.stagger = Some(stagger);
     }
 
     pub fn draw(&self, scene: &mut Scene, location: Point<i32>) -> KludgineResult<()> {
@@ -31,6 +37,12 @@ where
             location.y as f32 + scene.origin().y,
         );
 
+        let tile_height = if let Some(stagger) = &self.stagger {
+            stagger.height
+        } else {
+            self.tile_size.height
+        };
+
         // We need to start at the upper-left of inverting the location
         let min_x = (-location.x / self.tile_size.width as f32).floor() as i32;
         let min_y = (-location.y / self.tile_size.height as f32).floor() as i32;
@@ -39,7 +51,7 @@ where
         let total_width = scene.size().width as f32 + extra_x;
         let total_height = scene.size().height as f32 + extra_y;
         let tiles_wide = (total_width / self.tile_size.width as f32).ceil() as i32;
-        let tiles_high = (total_height / self.tile_size.height as f32).ceil() as i32;
+        let tiles_high = (total_height / tile_height as f32).ceil() as i32;
 
         for y in min_y..(min_y + tiles_high) {
             for x in min_x..(min_x + tiles_wide) {
@@ -59,10 +71,22 @@ where
     }
 
     fn coordinate_for_tile(&self, location: Point<i32>) -> Point<f32> {
-        Point::new(
-            (location.x * self.tile_size.width as i32) as f32,
-            (location.y * self.tile_size.height as i32) as f32,
-        )
+        if let Some(stagger) = &self.stagger {
+            let x_stagger = if location.y % 2 == 0 {
+                stagger.width as i32
+            } else {
+                0
+            };
+            Point::new(
+                (location.x * self.tile_size.width as i32 - x_stagger) as f32,
+                (location.y * stagger.height as i32) as f32,
+            )
+        } else {
+            Point::new(
+                (location.x * self.tile_size.width as i32) as f32,
+                (location.y * self.tile_size.height as i32) as f32,
+            )
+        }
     }
 }
 
