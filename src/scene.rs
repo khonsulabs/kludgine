@@ -4,6 +4,7 @@ use super::{
     text::{Font, Text},
     timing::Moment,
 };
+use platforms::target::{OS, TARGET_OS};
 use std::{collections::HashSet, time::Duration};
 use winit::event::VirtualKeyCode;
 
@@ -21,6 +22,22 @@ pub struct Scene {
     pub(crate) elements: Vec<Element>,
     now: Option<Moment>,
     elapsed: Option<Duration>,
+}
+
+pub struct Modifiers {
+    pub control: bool,
+    pub alt: bool,
+    pub os: bool,
+    pub shift: bool,
+}
+
+impl Modifiers {
+    pub fn primary_modifier(&self) -> bool {
+        match TARGET_OS {
+            OS::MacOS | OS::iOS => self.os,
+            _ => self.control,
+        }
+    }
 }
 
 impl Scene {
@@ -67,6 +84,28 @@ impl Scene {
 
     pub fn set_origin(&mut self, origin: Point) {
         self.origin = origin;
+    }
+
+    pub fn key_pressed(&self, key: VirtualKeyCode) -> bool {
+        self.pressed_keys.contains(&key)
+    }
+
+    pub fn any_key_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
+        for key in keys {
+            if self.pressed_keys.contains(key) {
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn modifiers_pressed(&self) -> Modifiers {
+        Modifiers {
+            control: self.any_key_pressed(&[VirtualKeyCode::RControl, VirtualKeyCode::LControl]),
+            alt: self.any_key_pressed(&[VirtualKeyCode::RAlt, VirtualKeyCode::LAlt]),
+            shift: self.any_key_pressed(&[VirtualKeyCode::LShift, VirtualKeyCode::RShift]),
+            os: self.any_key_pressed(&[VirtualKeyCode::RWin, VirtualKeyCode::LWin]),
+        }
     }
 
     pub(crate) fn effective_scale_factor(&self) -> f32 {

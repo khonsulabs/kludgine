@@ -235,6 +235,18 @@ impl RuntimeWindow {
         WINDOWS.with(|windows| windows.borrow_mut().insert(window_id, runtime_window));
     }
 
+    async fn request_window_close<T>(id:WindowId,
+        window: &Box<T>,) -> KludgineResult<bool> 
+        where
+            T: Window + ?Sized,{
+        
+        if let CloseResponse::Close = window.close_requested().await? {
+            WindowMessage::Close.send_to(id).await?;
+            return Ok(true);
+        }
+        Ok(false)
+    }
+
     async fn window_loop<T>(
         id: WindowId,
         frame: KludgineHandle<Frame>,
@@ -261,9 +273,8 @@ impl RuntimeWindow {
                         scene.set_scale_factor(scale_factor);
                     }
                     WindowEvent::CloseRequested => {
-                        if let CloseResponse::Close = window.close_requested().await? {
-                            WindowMessage::Close.send_to(id).await?;
-                            return Ok(());
+                        if Self::request_window_close(id, &window).await? {
+                            return Ok(())
                         }
                     }
                     WindowEvent::Input(input) => {
@@ -291,6 +302,13 @@ impl RuntimeWindow {
             if let Some(wait_for) = loop_limiter.remaining() {
                 async_std::task::sleep(wait_for).await;
             } else {
+                // CHeck for Cmd + W or Alt + f4 to close the window.
+                let modifiers = scene.modifiers_pressed();
+                if modifiers.primary_modifier() && scene.key_pressed(VirtualKeyCode::W) {
+                    if Self::request_window_close(id, &window).await? {
+                        return Ok(())
+                    }
+                }
                 if scene.size().width > 0.0 && scene.size().height > 0.0 {
                     loop_limiter.advance_frame();
                     scene.start_frame();
