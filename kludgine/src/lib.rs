@@ -1,5 +1,5 @@
 use crossbeam::sync::{ShardedLock, ShardedLockReadGuard, ShardedLockWriteGuard};
-use std::sync::{Arc, PoisonError};
+use std::sync::{Arc, PoisonError, Weak};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -37,6 +37,10 @@ impl<T> KludgineHandle<T> {
     pub fn read(&self) -> Result<ShardedLockReadGuard<T>, PoisonError<ShardedLockReadGuard<T>>> {
         self.0.read()
     }
+
+    pub fn downgrade(&self) -> Weak<ShardedLock<T>> {
+        Arc::downgrade(&self.0)
+    }
 }
 
 impl<T> Clone for KludgineHandle<T> {
@@ -56,6 +60,7 @@ pub mod text;
 pub mod texture;
 pub mod tilemap;
 pub mod timing;
+pub mod ui;
 pub mod window;
 
 /// Convenience module that exports the public interface of Kludgine
