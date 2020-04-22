@@ -30,13 +30,9 @@ pub trait WindowCreator<T> {
 }
 
 #[async_trait]
-impl<T> Application for SingleWindowApplication<T>
-where
-    T: Window + Default + WindowCreator<T> + 'static,
+impl<T> Application for SingleWindowApplication<T> where
+    T: Window + Default + WindowCreator<T> + 'static
 {
-    async fn initialize(&mut self) {
-        Runtime::open_window(T::get_window_builder(), T::default()).await
-    }
 }
 
 impl<T> SingleWindowApplication<T>
@@ -44,6 +40,6 @@ where
     T: Window + Default + WindowCreator<T> + 'static,
 {
     pub fn run(self) -> ! {
-        Runtime::new(self).run()
+        Runtime::new(self).run(T::get_window_builder(), T::default())
     }
 }

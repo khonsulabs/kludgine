@@ -26,8 +26,7 @@ use winit::{
         DeviceId, ElementState, Event as WinitEvent, MouseButton, MouseScrollDelta, TouchPhase,
         VirtualKeyCode, WindowEvent as WinitWindowEvent,
     },
-    event_loop::EventLoopWindowTarget,
-    window::{WindowBuilder as WinitWindowBuilder, WindowId},
+    window::{Window as WinitWindow, WindowBuilder as WinitWindowBuilder, WindowId},
 };
 
 mod renderer;
@@ -183,14 +182,10 @@ pub(crate) struct RuntimeWindow {
 }
 
 impl RuntimeWindow {
-    pub(crate) fn open<T>(
-        wb: WinitWindowBuilder,
-        event_loop: &EventLoopWindowTarget<()>,
-        app_window: Box<T>,
-    ) where
+    pub(crate) fn open<T>(window: WinitWindow, app_window: Box<T>)
+    where
         T: Window + ?Sized,
     {
-        let window = wb.build(event_loop).expect("Error building window");
         let window_id = window.id();
         let renderer = Renderer::new(&window).expect("Error creating renderer for window");
 
@@ -235,11 +230,10 @@ impl RuntimeWindow {
         WINDOWS.with(|windows| windows.borrow_mut().insert(window_id, runtime_window));
     }
 
-    async fn request_window_close<T>(id:WindowId,
-        window: &Box<T>,) -> KludgineResult<bool> 
-        where
-            T: Window + ?Sized,{
-        
+    async fn request_window_close<T>(id: WindowId, window: &Box<T>) -> KludgineResult<bool>
+    where
+        T: Window + ?Sized,
+    {
         if let CloseResponse::Close = window.close_requested().await? {
             WindowMessage::Close.send_to(id).await?;
             return Ok(true);
@@ -274,7 +268,7 @@ impl RuntimeWindow {
                     }
                     WindowEvent::CloseRequested => {
                         if Self::request_window_close(id, &window).await? {
-                            return Ok(())
+                            return Ok(());
                         }
                     }
                     WindowEvent::Input(input) => {
@@ -306,7 +300,7 @@ impl RuntimeWindow {
                 let modifiers = scene.modifiers_pressed();
                 if modifiers.primary_modifier() && scene.key_pressed(VirtualKeyCode::W) {
                     if Self::request_window_close(id, &window).await? {
-                        return Ok(())
+                        return Ok(());
                     }
                 }
                 if scene.size().width > 0.0 && scene.size().height > 0.0 {

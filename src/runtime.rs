@@ -5,6 +5,7 @@ use super::{
 };
 use crossbeam::channel::{unbounded, Receiver, Sender, TryRecvError};
 use futures::{executor::ThreadPool, future::Future};
+use platforms::target::{OS, TARGET_OS};
 use std::time::Duration;
 
 pub(crate) enum RuntimeRequest {
@@ -139,7 +140,9 @@ impl EventProcessor for Runtime {
         while let Ok(request) = self.request_receiver.try_recv() {
             match request {
                 RuntimeRequest::OpenWindow { window, builder } => {
-                    RuntimeWindow::open(builder.into(), &event_loop, window);
+                    let builder: winit::window::WindowBuilder = builder.into();
+                    let winit_window = builder.build(&event_loop).unwrap();
+                    RuntimeWindow::open(winit_window, window);
                 }
                 RuntimeRequest::Quit => {
                     std::process::exit(0); // TODO There is a bug in winit when destructing https://github.com/rust-windowing/winit/blob/ad7d4939a8be2e0d9436d43d0351e2f7599a4237/src/platform_impl/macos/app_state.rs#L344
@@ -190,7 +193,17 @@ impl Runtime {
         }
     }
 
-    pub fn run(self) -> ! {
+    fn should_run_in_exclusive_mode() -> bool {
+        match TARGET_OS {
+            OS::Android | OS::iOS => true,
+            _ => false,
+        }
+    }
+
+    pub fn run<T>(self, initial_window: WindowBuilder, window: T) -> !
+    where
+        T: Window + Sized,
+    {
         // Install the global event handler, and also ensure we aren't trying to initialize two runtimes
         // This is necessary because EventLoop::run requires the function/closure passed to have a `static
         // lifetime for valid reasons. Every approach at using only local variables I could not solve, so
@@ -205,6 +218,23 @@ impl Runtime {
         }
 
         let event_loop = winit::event_loop::EventLoop::new();
+        let mut initial_window: winit::window::WindowBuilder = initial_window.into();
+
+        if Self::should_run_in_exclusive_mode() {
+            let mut exclusive_mode = None;
+            for monitor in event_loop.available_monitors() {
+                for mode in monitor.video_modes() {
+                    exclusive_mode = Some(mode); // TODO pick the best mode, not the last
+                }
+            }
+
+            initial_window = initial_window.with_fullscreen(Some(
+                winit::window::Fullscreen::Exclusive(exclusive_mode.unwrap()),
+            ));
+        }
+
+        let initial_window = initial_window.build(&event_loop).unwrap();
+        RuntimeWindow::open(initial_window, Box::new(window));
         event_loop.run(move |event, event_loop, control_flow| {
             let mut event_handler_guard = GLOBAL_EVENT_HANDLER
                 .lock()
