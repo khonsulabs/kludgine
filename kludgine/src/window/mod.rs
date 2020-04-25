@@ -91,7 +91,7 @@ pub trait Window: Send + Sync + 'static {
     }
 
     /// Called once for each frame of rendering
-    async fn render(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
+    fn render(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
         Ok(())
     }
 
@@ -307,7 +307,7 @@ impl RuntimeWindow {
                     loop_limiter.advance_frame();
                     scene.start_frame();
                     window.update(&mut scene).await?;
-                    window.render(&mut scene).await?;
+                    window.render(&mut scene)?;
                     let mut guard = frame.write().expect("Error locking frame");
                     guard.update(&scene);
                 }

@@ -243,16 +243,6 @@ impl FrameRenderer {
                             let v_metrics = font
                                 .font
                                 .v_metrics(rusttype::Scale::uniform(text_data.size));
-                            // let batch = sprite2d::Batch::singleton(
-                            //     512,
-                            //     512,
-                            //     Rect::new(0.0, 0.0, 512.0, 512.0),
-                            //     Rect::new(0.0, 0.0, 512.0, 512.0),
-                            //     ZDepth::default(),
-                            //     Rgba::RED,
-                            //     1.0,
-                            //     Repeat::default(),
-                            // );
                             let mut batch = sprite2d::Batch::new(texture.w, texture.h);
                             for (uv_rect, screen_rect) in text_data
                                 .positioned_glyphs
@@ -287,7 +277,7 @@ impl FrameRenderer {
                                     source,
                                     dest,
                                     ZDepth::default(),
-                                    Rgba::RED,
+                                    text_data.color,
                                     1.0,
                                     Repeat::default(),
                                 );

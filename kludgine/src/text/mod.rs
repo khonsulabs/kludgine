@@ -27,6 +27,27 @@ impl Font {
             }),
         })
     }
+
+    pub fn metrics(&self, size: f32) -> rusttype::VMetrics {
+        let font = self.handle.read().expect("Error reading font");
+        font.font.v_metrics(rusttype::Scale::uniform(size))
+    }
+
+    pub fn family(&self) -> Option<String> {
+        let font = self.handle.read().expect("Error reading font");
+        match &font.font {
+            rusttype::Font::Ref(f) => f.family_name(),
+            _ => None,
+        }
+    }
+
+    pub fn weight(&self) -> ttf_parser::Weight {
+        let font = self.handle.read().expect("Error reading font");
+        match &font.font {
+            rusttype::Font::Ref(f) => f.weight(),
+            _ => ttf_parser::Weight::Normal,
+        }
+    }
 }
 
 pub(crate) struct FontData {
@@ -66,9 +87,10 @@ pub(crate) struct Text {
 
 impl Text {
     pub fn new(
+        text: String,
         font: Font,
         size: f32,
-        text: String,
+        color: Rgba,
         location: Point,
         max_width: Option<f32>,
     ) -> Self {
@@ -77,6 +99,7 @@ impl Text {
                 font,
                 text,
                 size,
+                color,
                 location,
                 max_width,
                 positioned_glyphs: None,
@@ -89,6 +112,7 @@ pub struct TextData {
     pub font: Font,
     pub size: f32,
     pub text: String,
+    pub color: Rgba,
     pub location: Point,
     pub max_width: Option<f32>,
     pub positioned_glyphs: Option<Vec<rusttype::PositionedGlyph<'static>>>,

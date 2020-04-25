@@ -5,7 +5,7 @@ authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
 edition = "2018"
 
 [features]
-default = []
+default = ["bundled-fonts"]
 
 # Enable all bundled fonts. All bundled fonts are licensed under the Apache License 2.0.
 # For more information, see here: https://github.com/khonsulabs/kludgine/tree/master/fonts/README.md
@@ -31,13 +31,18 @@ educe="0.4"
 rusttype= { version = "0.9", features=["gpu_cache"]}
 json = "0.12"
 platforms = "0.2"
-stretch = "0.3"
 generational-arena = "*"
 kludgine-macros={path = "../kludgine-macros"}
+dashmap="3"
+ttf-parser = "0.5"
 
 [dev-dependencies]
 rand="0.7"
 
 [[example]]
 name = "text"
+required-features = ["bundled-fonts-roboto"]
+
+[[example]]
+name = "ui"
 required-features = ["bundled-fonts-roboto"]

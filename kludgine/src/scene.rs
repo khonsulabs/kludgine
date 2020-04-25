@@ -5,6 +5,7 @@ use super::{
     timing::Moment,
 };
 use platforms::target::{OS, TARGET_OS};
+use rgx::color::Rgba;
 use std::{collections::HashSet, time::Duration};
 use winit::event::VirtualKeyCode;
 
@@ -146,15 +147,17 @@ impl Scene {
         text: S,
         font: &Font,
         size: f32,
+        color: Rgba,
         location: Point,
         max_width: Option<f32>,
     ) {
         self.elements.push(Element::Text(Text::new(
+            text.into(),
             font.clone(),
             size * self.scale_factor,
-            text.into(),
+            color,
             self.user_to_device_point(location) * self.scale_factor,
-            max_width,
+            max_width.map(|w| w * self.scale_factor),
         )));
     }
 

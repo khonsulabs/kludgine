@@ -16,6 +16,8 @@ pub enum KludgineError {
     SpriteParseError(String),
     #[error("no frames could be found for the current tag")]
     InvalidSpriteTag,
+    #[error("font family not found: {0}")]
+    FontFamilyNotFound(String),
 }
 /// Alias for [`Result<T,E>`] where `E` is [`KludgineError`]
 ///
@@ -76,6 +78,10 @@ pub mod prelude {
         texture::Texture,
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,
+        },
+        ui::{
+            style::*, Component, Controller, Label, UserInterface, View, ViewBuilder, ViewCore,
+            ViewCoreBuilder,
         },
         window::{Event, InputEvent, Window},
         KludgineError, KludgineResult,

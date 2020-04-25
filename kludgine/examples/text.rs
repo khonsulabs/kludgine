@@ -16,11 +16,12 @@ impl WindowCreator<TextExample> for TextExample {
 
 #[async_trait]
 impl Window for TextExample {
-    async fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
+    fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
         scene.render_text_at(
             "Hello, World!",
             &bundled_fonts::ROBOTO,
             48.0,
+            Rgba::RED,
             Point::new(0.0, 50.0),
             None,
         );

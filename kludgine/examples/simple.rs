@@ -18,7 +18,7 @@ impl WindowCreator<Simple> for Simple {
 
 #[async_trait]
 impl Window for Simple {
-    async fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
+    fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
         if self.source_sprite.is_none() {
             let texture = Texture::load("examples/assets/k.png")?;
             self.source_sprite = Some(SourceSprite::entire_texture(texture));

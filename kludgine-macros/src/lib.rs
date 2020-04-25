@@ -4,7 +4,7 @@ use proc_macro::TokenStream;
 use quote::quote;
 use syn;
 
-#[proc_macro_derive(View)]
+#[proc_macro_derive(ViewCore)]
 pub fn derive_view(input: TokenStream) -> TokenStream {
     // Construct a representation of Rust code as a syntax tree
     // that we can manipulate
@@ -17,10 +17,12 @@ pub fn derive_view(input: TokenStream) -> TokenStream {
 fn impl_view(ast: &syn::DeriveInput) -> TokenStream {
     let name = &ast.ident;
     let gen = quote! {
-        #[async_trait]
         impl ViewCore for #name {
-            async fn style(&self) -> Style {
-                self.view.style
+            fn base_view(&self) -> &BaseView {
+                &self.view
+            }
+            fn base_view_mut(&mut self) -> &mut BaseView {
+                &mut self.view
             }
         }
     };

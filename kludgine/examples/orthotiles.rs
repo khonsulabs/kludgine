@@ -37,13 +37,13 @@ impl Window for OrthoTiles {
         // Our default animation is Idle
         let mut animation = "Idle";
         if scene.pressed_keys.contains(&VirtualKeyCode::Right) {
-            animation ="WalkRight";
+            animation = "WalkRight";
             self.x += 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
         } else if scene.pressed_keys.contains(&VirtualKeyCode::Left) {
             animation = "WalkLeft";
             self.x -= 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
         }
-        
+
         if scene.pressed_keys.contains(&VirtualKeyCode::Up) {
             self.y -= 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
         } else if scene.pressed_keys.contains(&VirtualKeyCode::Down) {
@@ -61,7 +61,7 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    async fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
+    fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
         // The map is drawn at a static location of 0,0 (upper-left)
         // It will be offset scene.origin()
         let map = self.map.as_ref().unwrap();
@@ -90,7 +90,6 @@ impl Window for OrthoTiles {
     }
 }
 
-
 impl OrthoTiles {
     fn load_assets(&mut self) -> KludgineResult<()> {
         let sprite = include_aseprite_sprite!("assets/grass.json", "assets/grass.png")?;
@@ -108,7 +107,10 @@ impl OrthoTiles {
 
         self.map = Some(map);
 
-        self.stickguy = Some(include_aseprite_sprite!("assets/stickguy.json", "assets/stickguy.png")?);
+        self.stickguy = Some(include_aseprite_sprite!(
+            "assets/stickguy.json",
+            "assets/stickguy.png"
+        )?);
         Ok(())
     }
 }
