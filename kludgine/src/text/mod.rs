@@ -81,11 +81,11 @@ pub(crate) struct LoadedFontData {
 }
 
 #[derive(Clone)]
-pub(crate) struct Text {
-    pub handle: KludgineHandle<TextData>,
+pub(crate) struct RenderedSpan {
+    pub handle: KludgineHandle<SpanData>,
 }
 
-impl Text {
+impl RenderedSpan {
     pub fn new(
         text: String,
         font: Font,
@@ -95,7 +95,7 @@ impl Text {
         max_width: Option<f32>,
     ) -> Self {
         Self {
-            handle: KludgineHandle::new(TextData {
+            handle: KludgineHandle::new(SpanData {
                 font,
                 text,
                 size,
@@ -108,7 +108,7 @@ impl Text {
     }
 }
 
-pub struct TextData {
+pub struct SpanData {
     pub font: Font,
     pub size: f32,
     pub text: String,

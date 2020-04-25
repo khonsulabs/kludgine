@@ -1,7 +1,7 @@
 use super::{
     math::{Point, Size, Zeroable},
     sprite::RenderedSprite,
-    text::{Font, Text},
+    text::{Font, RenderedSpan},
     timing::Moment,
 };
 use platforms::target::{OS, TARGET_OS};
@@ -11,7 +11,7 @@ use winit::event::VirtualKeyCode;
 
 pub(crate) enum Element {
     Sprite(RenderedSprite),
-    Text(Text),
+    Text(RenderedSpan),
 }
 
 pub struct Scene {
@@ -151,7 +151,7 @@ impl Scene {
         location: Point,
         max_width: Option<f32>,
     ) {
-        self.elements.push(Element::Text(Text::new(
+        self.elements.push(Element::Text(RenderedSpan::new(
             text.into(),
             font.clone(),
             size * self.scale_factor,

@@ -2,7 +2,7 @@ use super::{
     math::Size,
     scene::{Element, Scene},
     sprite::SpriteBatch,
-    text::{LoadedFont, Text},
+    text::{LoadedFont, RenderedSpan},
     texture::LoadedTexture,
     timing::Moment,
     KludgineHandle,
@@ -244,5 +244,8 @@ impl Frame {
 pub(crate) enum FrameCommand {
     LoadTexture(LoadedTexture),
     DrawBatch(KludgineHandle<SpriteBatch>),
-    DrawText { text: Text, loaded_font: LoadedFont },
+    DrawText {
+        text: RenderedSpan,
+        loaded_font: LoadedFont,
+    },
 }
