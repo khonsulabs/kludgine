@@ -11,24 +11,7 @@
 //!
 //! To enable a single font, look at the documentation of the font in question.
 //!
-//! Unreferenced fonts appear to be stripped from release builds.
-//!
-//! # Examples
-//!
-//! ```rust
-//! # use kludgine::prelude::*;
-//! async fn render(scene: &mut Scene) -> KludgineResult<()> {
-//!     scene.render_text_at(
-//!         "Hello, World!",
-//!         &bundled_fonts::ROBOTO,
-//!         48.0,
-//!         Point::new(0.0, scene.size().height - 50.0),
-//!         None,
-//!     );
-//!
-//!     Ok(())
-//! }
-//! ```
+//! WHen enabled, the Scene object's font library is initialized with all bundled fonts that are enabled.
 
 use super::Font;
 use lazy_static::lazy_static;
@@ -39,6 +22,7 @@ macro_rules! include_font {
         Font::try_from_bytes(bytes as &[u8]).expect("Error loading bundled font")
     }};
 }
+
 lazy_static! {
     /// Roboto Regular font, licensed under APL 2.0, feature flag `bundled-fonts-roboto`
     #[cfg(feature="bundled-fonts-roboto")]
