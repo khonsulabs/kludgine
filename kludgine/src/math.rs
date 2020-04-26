@@ -1,6 +1,6 @@
 pub type Rect<S = f32> = rgx::rect::Rect<S>;
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct Point<S = f32> {
     pub x: S,
     pub y: S,

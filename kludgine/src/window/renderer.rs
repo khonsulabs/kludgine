@@ -235,7 +235,6 @@ impl FrameRenderer {
                             .read()
                             .expect("Error locking font to render");
                         if let Some(texture) = loaded_font_data.texture.as_ref() {
-                            let v_metrics = text.line_metrics;
                             let mut batch = sprite2d::Batch::new(texture.w, texture.h);
                             for (uv_rect, screen_rect) in
                                 text_data.positioned_glyphs.iter().filter_map(|g| {
@@ -256,9 +255,9 @@ impl FrameRenderer {
                                 // of the text, not at the bottom.
                                 let dest = Rect::new(
                                     text.location.x + screen_rect.min.x as f32,
-                                    text.location.y + (v_metrics.ascent - screen_rect.min.y as f32),
+                                    text.location.y - screen_rect.min.y as f32,
                                     text.location.x + screen_rect.max.x as f32,
-                                    text.location.y + (v_metrics.ascent - screen_rect.max.y as f32),
+                                    text.location.y - screen_rect.max.y as f32,
                                 );
                                 batch.add(
                                     source,

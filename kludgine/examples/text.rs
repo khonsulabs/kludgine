@@ -21,7 +21,7 @@ impl Window for TextExample {
             Span::new(
                 "W",
                 Style {
-                    color: Some(Rgba::RED),
+                    color: Some(Color::RED),
                     font_size: Some(120.0),
                     ..Default::default()
                 },
@@ -29,7 +29,7 @@ impl Window for TextExample {
             Span::new(
                 "W",
                 Style {
-                    color: Some(Rgba::WHITE),
+                    color: Some(Color::WHITE),
                     font_size: Some(60.0),
                     ..Default::default()
                 },
@@ -37,7 +37,7 @@ impl Window for TextExample {
             Span::new(
                 "W",
                 Style {
-                    color: Some(Rgba::BLUE),
+                    color: Some(Color::BLUE),
                     font_size: Some(120.0),
                     ..Default::default()
                 },
@@ -45,7 +45,7 @@ impl Window for TextExample {
         ])
         .render_at(
             scene,
-            Point::new(0.0, 240.0),
+            Point::new(0.0, 120.0),
             TextWrap::SingleLine {
                 max_width: scene.size().width,
                 truncate: false,

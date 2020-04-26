@@ -142,19 +142,20 @@ impl Text {
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
         let prepared_text = self.wrap(scene, wrapping)?;
-        let mut current_line_top = 0.0;
+        let mut current_line_baseline = 0.0;
         let effective_scale_factor = scene.effective_scale_factor();
 
         for line in prepared_text.lines.iter() {
             let metrics = line.metrics.as_ref().unwrap();
-            let cursor_position = Point::new(location.x, location.y + current_line_top);
+            let cursor_position = Point::new(location.x, location.y + current_line_baseline);
             for span in line.spans.iter() {
-                let mut location =
-                    scene.user_to_device_point(cursor_position) * effective_scale_factor;
+                let mut location = scene
+                    .user_to_device_point(Point::new(cursor_position.x, cursor_position.y))
+                    * effective_scale_factor;
                 location.x += span.x();
-                scene.push_element(Element::Text(span.translate(location, *metrics)));
+                scene.push_element(Element::Text(span.translate(location)));
             }
-            current_line_top = current_line_top
+            current_line_baseline = current_line_baseline
                 + (metrics.ascent - metrics.descent + metrics.line_gap) / effective_scale_factor;
         }
 
@@ -306,15 +307,16 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
             let mut current_glyphs = Vec::new();
             std::mem::swap(&mut self.current_glyphs, &mut current_glyphs);
 
-            let metrics = self.current_vmetrics.as_ref().unwrap();
+            let font = self.current_font.as_ref().unwrap().clone();
+            let metrics = font.metrics(current_style.font_size);
             self.current_line.spans.push(PreparedSpan::new(
-                self.current_font.as_ref().unwrap().clone(),
+                font,
                 current_style.font_size,
                 current_style.color,
                 self.current_span_offset,
                 self.caret - self.current_span_offset,
                 current_glyphs,
-                *metrics,
+                metrics,
             ));
             self.current_span_offset = self.caret + self.current_span_offset;
             self.caret = 0.0;
@@ -410,7 +412,6 @@ impl PreparedLine {
 #[derive(Clone)]
 pub(crate) struct PreparedSpan {
     pub location: Point,
-    pub line_metrics: rusttype::VMetrics,
     pub handle: KludgineHandle<PreparedSpanData>,
 }
 
@@ -422,11 +423,10 @@ impl PreparedSpan {
         x: f32,
         width: f32,
         positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
-        line_metrics: rusttype::VMetrics,
+        metrics: rusttype::VMetrics,
     ) -> Self {
         Self {
             location: Point::new(0.0, 0.0),
-            line_metrics,
             handle: KludgineHandle::new(PreparedSpanData {
                 font,
                 size,
@@ -434,14 +434,14 @@ impl PreparedSpan {
                 x,
                 width,
                 positioned_glyphs,
+                metrics,
             }),
         }
     }
 
-    pub fn translate(&self, location: Point, line_metrics: rusttype::VMetrics) -> Self {
+    pub fn translate(&self, location: Point) -> Self {
         Self {
             location,
-            line_metrics,
             handle: self.handle.clone(),
         }
     }
@@ -470,4 +470,5 @@ pub struct PreparedSpanData {
     pub x: f32,
     pub width: f32,
     pub positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
+    pub metrics: rusttype::VMetrics,
 }

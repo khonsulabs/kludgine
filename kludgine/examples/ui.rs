@@ -34,9 +34,10 @@ impl Controller for Interface {
             .with_value("Hello, World!")
             .with_style(Style {
                 font_size: Some(60.0),
-                color: Some(Rgba::new(0.0, 0.5, 0.5, 1.0)),
+                color: Some(Color::new(0.0, 0.5, 0.5, 1.0)),
                 ..Default::default()
             })
+            .with_padding(Surround::uniform(10.0))
             .build()
     }
 }
