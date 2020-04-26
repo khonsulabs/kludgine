@@ -1,5 +1,5 @@
 use super::{
-    math::{KludgineRect, Point, Rect},
+    math::{Point, Size},
     scene::{Element, SceneTarget},
     style::{EffectiveStyle, Style},
     KludgineHandle, KludgineResult,
@@ -149,11 +149,13 @@ impl Text {
             let metrics = line.metrics.as_ref().unwrap();
             let cursor_position = Point::new(location.x, location.y + current_line_top);
             for span in line.spans.iter() {
-                let location = scene.user_to_device_point(cursor_position) * effective_scale_factor;
+                let mut location =
+                    scene.user_to_device_point(cursor_position) * effective_scale_factor;
+                location.x += span.x();
                 scene.push_element(Element::Text(span.translate(location, *metrics)));
             }
-            current_line_top =
-                current_line_top + metrics.ascent - metrics.descent + metrics.line_gap;
+            current_line_top = current_line_top
+                + (metrics.ascent - metrics.descent + metrics.line_gap) / effective_scale_factor;
         }
 
         Ok(())
@@ -161,7 +163,7 @@ impl Text {
 }
 
 pub struct TextWrapper<'a, 'b> {
-    caret: rusttype::Point<f32>,
+    caret: f32,
     current_vmetrics: Option<rusttype::VMetrics>,
     last_glyph_id: Option<rusttype::GlyphId>,
     options: TextWrap,
@@ -171,7 +173,23 @@ pub struct TextWrapper<'a, 'b> {
     current_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
     current_font: Option<Font>,
     current_style: Option<EffectiveStyle>,
-    current_span_location: rusttype::Point<f32>,
+    current_span_offset: f32,
+}
+
+fn max_f(a: f32, b: f32) -> f32 {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+fn min_f(a: f32, b: f32) -> f32 {
+    if a < b {
+        a
+    } else {
+        b
+    }
 }
 
 impl<'a, 'b> TextWrapper<'a, 'b> {
@@ -181,8 +199,8 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
         options: TextWrap,
     ) -> KludgineResult<PreparedText> {
         TextWrapper {
-            caret: rusttype::point(0.0, 0.0),
-            current_span_location: rusttype::point(0.0, 0.0),
+            caret: 0.0,
+            current_span_offset: 0.0,
             current_vmetrics: None,
             last_glyph_id: None,
             options,
@@ -229,30 +247,37 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
 
                 let base_glyph = primary_font.glyph(c);
                 if let Some(id) = self.last_glyph_id.take() {
-                    self.caret.x +=
+                    self.caret +=
                         primary_font.pair_kerning(effective_style.font_size, id, base_glyph.id());
                 }
                 self.last_glyph_id = Some(base_glyph.id());
                 let mut glyph = base_glyph
                     .scaled(Scale::uniform(effective_style.font_size))
-                    .positioned(self.caret);
+                    .positioned(rusttype::point(self.caret, 0.0));
 
                 if let Some(max_width) = self.options.max_width(self.scene.effective_scale_factor())
                 {
                     if let Some(bb) = glyph.pixel_bounding_box() {
-                        if self.current_span_location.x + bb.max.x as f32 > max_width {
+                        if self.current_span_offset + bb.max.x as f32 > max_width {
                             self.new_line();
-                            glyph.set_position(self.caret);
+                            glyph.set_position(rusttype::point(self.caret, 0.0));
                             self.last_glyph_id = None;
                         }
                     }
                 }
 
-                if self.current_vmetrics.is_none() {
-                    self.current_vmetrics = Some(primary_font.metrics(effective_style.font_size));
+                let metrics = primary_font.metrics(effective_style.font_size);
+                if let Some(current_vmetrics) = &self.current_vmetrics {
+                    self.current_vmetrics = Some(rusttype::VMetrics {
+                        ascent: max_f(current_vmetrics.ascent, metrics.ascent),
+                        descent: min_f(current_vmetrics.descent, metrics.descent),
+                        line_gap: max_f(current_vmetrics.line_gap, metrics.line_gap),
+                    });
+                } else {
+                    self.current_vmetrics = Some(metrics);
                 }
 
-                self.caret.x += glyph.unpositioned().h_metrics().advance_width;
+                self.caret += glyph.unpositioned().h_metrics().advance_width;
 
                 if (self.current_style.is_none()
                     || self.current_style.as_ref() != Some(&effective_style))
@@ -280,42 +305,35 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
             let current_style = current_style.unwrap();
             let mut current_glyphs = Vec::new();
             std::mem::swap(&mut self.current_glyphs, &mut current_glyphs);
+
+            let metrics = self.current_vmetrics.as_ref().unwrap();
             self.current_line.spans.push(PreparedSpan::new(
                 self.current_font.as_ref().unwrap().clone(),
                 current_style.font_size,
                 current_style.color,
-                Rect::new(
-                    self.current_span_location.x,
-                    self.current_span_location.y,
-                    self.caret.x,
-                    self.caret.y,
-                ),
-                self.options.max_width(self.scene.effective_scale_factor()),
+                self.current_span_offset,
+                self.caret - self.current_span_offset,
                 current_glyphs,
-                self.current_vmetrics.unwrap(),
+                *metrics,
             ));
-            self.current_span_location = rusttype::point(
-                self.caret.x + self.current_span_location.x,
-                self.current_span_location.y,
-            );
-            self.caret = rusttype::point(0.0, self.caret.y);
+            self.current_span_offset = self.caret + self.current_span_offset;
+            self.caret = 0.0;
         }
     }
 
     fn new_line(&mut self) {
         self.new_span();
 
-        let metrics = self.current_vmetrics.unwrap();
-        self.caret = rusttype::point(
-            0.0,
-            self.caret.y + metrics.ascent - metrics.descent + metrics.line_gap,
-        );
-        self.current_span_location = self.caret;
+        self.caret = 0.0;
+        self.current_span_offset = 0.0;
 
-        self.current_vmetrics = None;
         let mut current_line = PreparedLine::default();
         std::mem::swap(&mut current_line, &mut self.current_line);
+
+        let metrics = self.current_vmetrics.unwrap();
         current_line.metrics = Some(metrics);
+        self.current_vmetrics = None;
+
         self.prepared_text.lines.push(current_line);
     }
 }
@@ -374,14 +392,18 @@ pub struct PreparedLine {
 }
 
 impl PreparedLine {
-    pub fn bounds(&self) -> Rect {
-        self.spans
-            .iter()
-            .fold(None, |total: Option<Rect>, span| match total {
-                Some(total_bounds) => Some(total_bounds.union(&span.bounds())),
-                None => Some(span.bounds()),
-            })
-            .unwrap()
+    pub fn size(&self) -> Size {
+        if self.spans.len() == 0 {
+            return Size::new(0.0, self.height());
+        }
+        let first = self.spans.get(0).unwrap();
+        let last = self.spans.get(self.spans.len() - 1).unwrap();
+        Size::new(last.x() + last.width() - first.x(), self.height())
+    }
+
+    pub fn height(&self) -> f32 {
+        let metrics = self.metrics.as_ref().unwrap();
+        metrics.ascent - metrics.descent + metrics.line_gap
     }
 }
 
@@ -397,8 +419,8 @@ impl PreparedSpan {
         font: Font,
         size: f32,
         color: Rgba,
-        bounds: Rect,
-        max_width: Option<f32>,
+        x: f32,
+        width: f32,
         positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
         line_metrics: rusttype::VMetrics,
     ) -> Self {
@@ -409,8 +431,8 @@ impl PreparedSpan {
                 font,
                 size,
                 color,
-                bounds,
-                max_width,
+                x,
+                width,
                 positioned_glyphs,
             }),
         }
@@ -424,12 +446,20 @@ impl PreparedSpan {
         }
     }
 
-    pub fn bounds(&self) -> Rect {
+    pub fn x(&self) -> f32 {
         let handle = self
             .handle
             .read()
             .expect("Error locking PreparedSpan for read");
-        handle.bounds
+        handle.x
+    }
+
+    pub fn width(&self) -> f32 {
+        let handle = self
+            .handle
+            .read()
+            .expect("Error locking PreparedSpan for read");
+        handle.width
     }
 }
 
@@ -437,7 +467,7 @@ pub struct PreparedSpanData {
     pub font: Font,
     pub size: f32,
     pub color: Rgba,
-    pub bounds: Rect,
-    pub max_width: Option<f32>,
+    pub x: f32,
+    pub width: f32,
     pub positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
 }

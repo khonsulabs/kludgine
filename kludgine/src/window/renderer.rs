@@ -255,18 +255,10 @@ impl FrameRenderer {
                                 // For the destination, we need to invert the y coordinate because without that step, the baseline will be at the top
                                 // of the text, not at the bottom.
                                 let dest = Rect::new(
-                                    text.location.x
-                                        + text_data.bounds.x1
-                                        + screen_rect.min.x as f32,
-                                    text.location.y
-                                        + text_data.bounds.y1
-                                        + (v_metrics.ascent - screen_rect.min.y as f32),
-                                    text.location.x
-                                        + text_data.bounds.x1
-                                        + screen_rect.max.x as f32,
-                                    text.location.y
-                                        + text_data.bounds.y1
-                                        + (v_metrics.ascent - screen_rect.max.y as f32),
+                                    text.location.x + screen_rect.min.x as f32,
+                                    text.location.y + (v_metrics.ascent - screen_rect.min.y as f32),
+                                    text.location.x + screen_rect.max.x as f32,
+                                    text.location.y + (v_metrics.ascent - screen_rect.max.y as f32),
                                 );
                                 batch.add(
                                     source,
