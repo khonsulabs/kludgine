@@ -1,7 +1,7 @@
 use super::{
     math::{Point, Size},
     scene::{Element, SceneTarget},
-    style::{EffectiveStyle, Style},
+    style::EffectiveStyle,
     KludgineHandle, KludgineResult,
 };
 use crossbeam::atomic::AtomicCell;
@@ -103,11 +103,11 @@ pub(crate) struct LoadedFontData {
 #[derive(Debug)]
 pub struct Span {
     pub text: String,
-    pub style: Style,
+    pub style: EffectiveStyle,
 }
 
 impl Span {
-    pub fn new<S: Into<String>>(text: S, style: Style) -> Self {
+    pub fn new<S: Into<String>>(text: S, style: EffectiveStyle) -> Self {
         Self {
             text: text.into(),
             style,
@@ -121,9 +121,9 @@ pub struct Text {
 }
 
 impl Text {
-    pub fn span<S: Into<String>>(text: S, style: Style) -> Self {
+    pub fn span<S: Into<String>>(text: S, style: &EffectiveStyle) -> Self {
         Self {
-            spans: vec![Span::new(text, style)],
+            spans: vec![Span::new(text, style.clone())],
         }
     }
 
@@ -217,17 +217,16 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
 
     fn wrap_text(mut self, text: &Text) -> KludgineResult<PreparedText> {
         for span in text.spans.iter() {
-            let effective_style = span.style.effective_style(self.scene);
             if self.current_style.is_none() {
-                self.current_style = Some(effective_style.clone());
-            } else if self.current_style.as_ref() != Some(&effective_style) {
+                self.current_style = Some(span.style.clone());
+            } else if self.current_style.as_ref() != Some(&span.style) {
                 self.new_span();
-                self.current_style = Some(effective_style.clone());
+                self.current_style = Some(span.style.clone());
             }
 
             let primary_font = self
                 .scene
-                .lookup_font(&effective_style.font_family, effective_style.font_weight)?;
+                .lookup_font(&span.style.font_family, span.style.font_weight)?;
 
             for c in span.text.chars() {
                 if c.is_control() {
@@ -236,7 +235,7 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                             // If there's no current line height, we should initialize it with the primary font's height
                             if self.current_vmetrics.is_none() {
                                 self.current_vmetrics =
-                                    Some(primary_font.metrics(effective_style.font_size));
+                                    Some(primary_font.metrics(span.style.font_size));
                             }
 
                             self.new_line();
@@ -249,11 +248,11 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                 let base_glyph = primary_font.glyph(c);
                 if let Some(id) = self.last_glyph_id.take() {
                     self.caret +=
-                        primary_font.pair_kerning(effective_style.font_size, id, base_glyph.id());
+                        primary_font.pair_kerning(span.style.font_size, id, base_glyph.id());
                 }
                 self.last_glyph_id = Some(base_glyph.id());
                 let mut glyph = base_glyph
-                    .scaled(Scale::uniform(effective_style.font_size))
+                    .scaled(Scale::uniform(span.style.font_size))
                     .positioned(rusttype::point(self.caret, 0.0));
 
                 if let Some(max_width) = self.options.max_width(self.scene.effective_scale_factor())
@@ -267,7 +266,7 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                     }
                 }
 
-                let metrics = primary_font.metrics(effective_style.font_size);
+                let metrics = primary_font.metrics(span.style.font_size);
                 if let Some(current_vmetrics) = &self.current_vmetrics {
                     self.current_vmetrics = Some(rusttype::VMetrics {
                         ascent: max_f(current_vmetrics.ascent, metrics.ascent),
@@ -281,13 +280,13 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                 self.caret += glyph.unpositioned().h_metrics().advance_width;
 
                 if (self.current_style.is_none()
-                    || self.current_style.as_ref() != Some(&effective_style))
+                    || self.current_style.as_ref() != Some(&span.style))
                     || (self.current_font.is_none()
                         || self.current_font.as_ref().unwrap().id() != primary_font.id())
                 {
                     self.new_span();
                     self.current_font = Some(primary_font.clone());
-                    self.current_style = Some(effective_style.clone());
+                    self.current_style = Some(span.style.clone());
                 }
 
                 self.current_glyphs.push(glyph);
@@ -385,6 +384,19 @@ impl TextWrap {
 #[derive(Default)]
 pub struct PreparedText {
     lines: Vec<PreparedLine>,
+}
+
+impl PreparedText {
+    pub fn size(&self) -> Size {
+        let (width, height) = self
+            .lines
+            .iter()
+            .fold((0f32, 0f32), |(width, height), line| {
+                let line_size = line.size();
+                (max_f(width, line_size.width), height + line_size.height)
+            });
+        Size::new(width, height)
+    }
 }
 
 #[derive(Default)]

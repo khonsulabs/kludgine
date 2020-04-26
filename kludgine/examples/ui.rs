@@ -37,7 +37,7 @@ impl Controller for Interface {
                 color: Some(Color::new(0.0, 0.5, 0.5, 1.0)),
                 ..Default::default()
             })
-            .with_padding(Surround::uniform(10.0))
+            .with_padding(Surround::uniform(Dimension::Auto))
             .build()
     }
 }

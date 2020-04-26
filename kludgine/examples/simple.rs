@@ -25,7 +25,7 @@ impl Window for Simple {
         }
         let sprite = self.source_sprite.as_ref().unwrap();
 
-        sprite.render_at(scene, Point::zero());
+        sprite.render_at(scene, Point::default());
 
         Ok(())
     }

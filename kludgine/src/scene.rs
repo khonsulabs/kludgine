@@ -1,5 +1,5 @@
 use super::{
-    math::{Point, Size, Zeroable},
+    math::{Point, Size},
     sprite::RenderedSprite,
     style::Weight,
     text::{Font, PreparedSpan},
@@ -91,7 +91,7 @@ impl<'a> SceneTarget<'a> {
 
     pub fn origin(&self) -> Point {
         match &self {
-            SceneTarget::Scene(_) => Point::zero(),
+            SceneTarget::Scene(_) => Point::default(),
             SceneTarget::Camera { origin, .. } => *origin,
         }
     }

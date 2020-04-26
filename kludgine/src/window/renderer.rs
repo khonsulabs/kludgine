@@ -205,12 +205,12 @@ impl FrameRenderer {
                                 .expect("Error locking source to render");
                             gpu_batch.add(
                                 Rect::new(
-                                    source.location.x1 as f32,
-                                    source.location.y1 as f32,
-                                    source.location.x2 as f32,
-                                    source.location.y2 as f32,
+                                    source.location.x1() as f32,
+                                    source.location.y1() as f32,
+                                    source.location.x2() as f32,
+                                    source.location.y2() as f32,
                                 ),
-                                sprite.render_at,
+                                sprite.render_at.into(),
                                 ZDepth::default(),
                                 Rgba::new(1.0, 1.0, 1.0, 0.0),
                                 1.0,

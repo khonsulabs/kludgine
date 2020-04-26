@@ -1,7 +1,7 @@
 use super::{
-    math::{Point, Rect, Size},
+    math::{Dimension, Point, Rect, Size, Surround},
     scene::{Scene, SceneTarget},
-    style::{Color, Dimension, Layout, Style, Surround, Weight},
+    style::{Color, EffectiveStyle, Layout, Style, Weight},
     text::{Text, TextWrap},
     KludgineError, KludgineHandle, KludgineResult,
 };
@@ -56,13 +56,15 @@ impl UserInterface {
                 .read()
                 .expect("Error locking component");
             let mut view = root.controller.view()?;
-            view.layout_within(Rect::sized(
-                0.0,
-                0.0,
-                scene.size().width,
-                scene.size().height,
-            ))?;
-            view.render(scene, &ui.base_style)?;
+            view.update_style(scene, &ui.base_style)?;
+            view.layout_within(
+                scene,
+                Rect::sized(
+                    Point::new(0.0, 0.0),
+                    Size::new(scene.size().width, scene.size().height),
+                ),
+            )?;
+            view.render(scene)?;
         }
         Ok(())
     }
@@ -91,14 +93,20 @@ pub trait Controller {
 }
 
 pub trait View {
-    fn render(&self, scene: &mut SceneTarget, inherited_style: &Style) -> KludgineResult<()>;
-    fn layout_within(&mut self, bounds: Rect) -> KludgineResult<()>;
-    fn content_size(&self) -> KludgineResult<Size>;
+    fn render(&self, scene: &mut SceneTarget) -> KludgineResult<()>;
+    fn layout_within(&mut self, scene: &mut SceneTarget, bounds: Rect) -> KludgineResult<()>;
+    fn update_style(
+        &mut self,
+        scene: &mut SceneTarget,
+        inherited_style: &Style,
+    ) -> KludgineResult<()>;
+    fn content_size(&self, bounds: &Rect, scene: &mut SceneTarget) -> KludgineResult<Size>;
 }
 
 #[derive(Default, Clone)]
 pub struct BaseView {
     style: Style,
+    effective_style: EffectiveStyle,
     layout: Layout,
     bounds: Rect,
 }
@@ -106,6 +114,65 @@ pub struct BaseView {
 impl BaseView {
     pub fn set_style(&mut self, style: Style) {
         self.style = style;
+    }
+
+    pub fn layout_within(&mut self, content_size: &Size, bounds: Rect) -> KludgineResult<()> {
+        let (effective_padding_left, effective_padding_right) = Self::compute_padding(
+            self.layout.padding.left,
+            self.layout.padding.right,
+            content_size.width,
+            bounds.size.width,
+        );
+        let (effective_padding_top, effective_padding_bottom) = Self::compute_padding(
+            self.layout.padding.top,
+            self.layout.padding.bottom,
+            content_size.height,
+            bounds.size.height,
+        );
+        self.bounds = Rect::new(
+            Point::new(
+                bounds.x1() + effective_padding_left,
+                bounds.y1() + effective_padding_top,
+            ),
+            Point::new(
+                bounds.x2() - effective_padding_right,
+                bounds.y2() - effective_padding_bottom,
+            ),
+        );
+        Ok(())
+    }
+
+    fn compute_padding(
+        side1: Dimension,
+        side2: Dimension,
+        content_measurement: f32,
+        bounding_measurement: f32,
+    ) -> (f32, f32) {
+        let mut remaining_width = bounding_measurement - content_measurement;
+        let mut auto_width_measurements = 0;
+        if let Some(points) = side1.points() {
+            remaining_width -= points;
+        } else {
+            auto_width_measurements += 1;
+        }
+
+        if let Some(points) = side2.points() {
+            remaining_width -= points;
+        } else {
+            auto_width_measurements += 1;
+        }
+
+        let effective_side1 = match side1 {
+            Dimension::Auto => remaining_width / auto_width_measurements as f32,
+            Dimension::Points(points) => points,
+        };
+
+        let effective_side2 = match side2 {
+            Dimension::Auto => remaining_width / auto_width_measurements as f32,
+            Dimension::Points(points) => points,
+        };
+
+        (effective_side1, effective_side2)
     }
 }
 
@@ -202,35 +269,48 @@ pub struct Label {
 }
 
 impl View for Label {
-    fn render(&self, scene: &mut SceneTarget, inherited_style: &Style) -> KludgineResult<()> {
-        if let Some(value) = &self.value {
-            let inherited_style = self.view.style.inherit_from(&inherited_style);
-            let effective_style = inherited_style.effective_style(scene);
-            let font =
-                scene.lookup_font(&effective_style.font_family, effective_style.font_weight)?;
-            let metrics = font.metrics(effective_style.font_size);
-            Text::span(value, inherited_style).render_at(
+    fn render(&self, scene: &mut SceneTarget) -> KludgineResult<()> {
+        let font = scene.lookup_font(
+            &self.view.effective_style.font_family,
+            self.view.effective_style.font_weight,
+        )?;
+        let metrics = font.metrics(self.view.effective_style.font_size);
+        match self.create_text()? {
+            Some(text) => text.render_at(
                 scene,
                 Point::new(
-                    self.view.bounds.x1,
-                    self.view.bounds.y1 + metrics.ascent / scene.effective_scale_factor(),
+                    self.view.bounds.origin.x,
+                    self.view.bounds.origin.y + metrics.ascent / scene.effective_scale_factor(),
                 ),
-                TextWrap::SingleLine {
-                    max_width: self.view.bounds.width(),
-                    truncate: true,
-                },
-            )?;
+                self.wrapping(&self.view.bounds),
+            ),
+            None => Ok(()),
         }
+    }
+
+    fn update_style(
+        &mut self,
+        scene: &mut SceneTarget,
+        inherited_style: &Style,
+    ) -> KludgineResult<()> {
+        let inherited_style = self.view.style.inherit_from(&inherited_style);
+        self.view.effective_style = inherited_style.effective_style(scene);
         Ok(())
     }
 
-    fn layout_within(&mut self, bounds: Rect) -> KludgineResult<()> {
-        self.view.bounds = bounds;
-        Ok(())
+    fn layout_within(&mut self, scene: &mut SceneTarget, bounds: Rect) -> KludgineResult<()> {
+        self.view
+            .layout_within(&self.content_size(&bounds, scene)?, bounds)
     }
 
-    fn content_size(&self) -> KludgineResult<Size> {
-        todo!()
+    fn content_size(&self, bounds: &Rect, scene: &mut SceneTarget) -> KludgineResult<Size> {
+        let size = match self.create_text()? {
+            Some(text) => {
+                text.wrap(scene, self.wrapping(bounds))?.size() / scene.effective_scale_factor()
+            }
+            None => Size::default(),
+        };
+        Ok(size)
     }
 }
 
@@ -238,6 +318,21 @@ impl Label {
     pub fn with_value<S: Into<String>>(&mut self, value: S) -> &mut Self {
         self.value = Some(value.into());
         self
+    }
+
+    fn create_text(&self) -> KludgineResult<Option<Text>> {
+        if let Some(value) = &self.value {
+            Ok(Some(Text::span(value, &self.view.effective_style)))
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn wrapping(&self, bounds: &Rect) -> TextWrap {
+        TextWrap::SingleLine {
+            max_width: bounds.size.width,
+            truncate: true,
+        }
     }
 }
 // Component -> Controller

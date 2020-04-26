@@ -71,7 +71,7 @@ pub mod prelude {
     pub use super::{
         application::{Application, SingleWindowApplication, WindowCreator},
         include_aseprite_sprite,
-        math::{KludgineRect, Point, Rect, Size, Zeroable},
+        math::{Dimension, Point, Rect, Size, Surround},
         runtime::Runtime,
         scene::{Scene, SceneTarget},
         source_sprite::SourceSprite,

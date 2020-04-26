@@ -1,5 +1,5 @@
 use super::{
-    math::Rect,
+    math::{Point, Rect, Size},
     source_sprite::SourceSprite,
     texture::{LoadedTexture, Texture},
     KludgineError, KludgineHandle, KludgineResult,
@@ -79,7 +79,10 @@ impl Sprite {
 
     pub fn single_frame(texture: Texture) -> Self {
         let size = texture.size();
-        let source = SourceSprite::new(Rect::sized(0, 0, size.width, size.height), texture);
+        let source = SourceSprite::new(
+            Rect::sized(Point::default(), Size::new(size.width, size.height)),
+            texture,
+        );
         let mut frames = HashMap::new();
         frames.insert(
             None,
@@ -147,26 +150,30 @@ impl Sprite {
             };
 
             let frame = Rect::sized(
-                frame["frame"]["x"].as_u32().ok_or_else(|| {
-                    KludgineError::SpriteParseError(
-                        "invalid aseprite json: frame x was not valid".to_owned(),
-                    )
-                })?,
-                frame["frame"]["y"].as_u32().ok_or_else(|| {
-                    KludgineError::SpriteParseError(
-                        "invalid aseprite json: frame y was not valid".to_owned(),
-                    )
-                })?,
-                frame["frame"]["w"].as_u32().ok_or_else(|| {
-                    KludgineError::SpriteParseError(
-                        "invalid aseprite json: frame w was not valid".to_owned(),
-                    )
-                })?,
-                frame["frame"]["h"].as_u32().ok_or_else(|| {
-                    KludgineError::SpriteParseError(
-                        "invalid aseprite json: frame h was not valid".to_owned(),
-                    )
-                })?,
+                Point::new(
+                    frame["frame"]["x"].as_u32().ok_or_else(|| {
+                        KludgineError::SpriteParseError(
+                            "invalid aseprite json: frame x was not valid".to_owned(),
+                        )
+                    })?,
+                    frame["frame"]["y"].as_u32().ok_or_else(|| {
+                        KludgineError::SpriteParseError(
+                            "invalid aseprite json: frame y was not valid".to_owned(),
+                        )
+                    })?,
+                ),
+                Size::new(
+                    frame["frame"]["w"].as_u32().ok_or_else(|| {
+                        KludgineError::SpriteParseError(
+                            "invalid aseprite json: frame w was not valid".to_owned(),
+                        )
+                    })?,
+                    frame["frame"]["h"].as_u32().ok_or_else(|| {
+                        KludgineError::SpriteParseError(
+                            "invalid aseprite json: frame h was not valid".to_owned(),
+                        )
+                    })?,
+                ),
             );
 
             let source = SourceSprite::new(frame, texture.clone());

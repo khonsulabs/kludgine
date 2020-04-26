@@ -29,7 +29,7 @@ impl Window for Isometric {
 
     fn render(&mut self, scene: &mut SceneTarget) -> KludgineResult<()> {
         let map = self.map.as_ref().unwrap();
-        map.draw(scene, Point::zero())?;
+        map.draw(scene, Point::default())?;
 
         Ok(())
     }

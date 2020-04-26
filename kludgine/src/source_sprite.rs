@@ -1,6 +1,6 @@
 use super::{
     math::Point,
-    math::Rect,
+    math::{Rect, Size},
     scene::{Element, SceneTarget},
     sprite::RenderedSprite,
     texture::Texture,
@@ -28,25 +28,26 @@ impl SourceSprite {
             let texture = texture.handle.read().expect("Error reading source sprice");
             (texture.image.width(), texture.image.height())
         };
-        Self::new(Rect::sized(0, 0, w, h), texture)
+        Self::new(Rect::sized(Point::new(0, 0), Size::new(w, h)), texture)
     }
 
     pub fn render_at(&self, scene: &mut SceneTarget, location: Point) {
         let (w, h) = {
             let source = self.handle.read().expect("Error locking source_sprite");
             (
-                source.location.width() as f32,
-                source.location.height() as f32,
+                source.location.size.width as f32,
+                source.location.size.height as f32,
             )
         };
         let location = scene.user_to_device_point(Point::new(location.x, location.y + h));
         let effective_scale_factor = scene.effective_scale_factor();
         scene.push_element(Element::Sprite(RenderedSprite::new(
             Rect::sized(
-                location.x * effective_scale_factor,
-                location.y * effective_scale_factor,
-                w * effective_scale_factor,
-                h * effective_scale_factor,
+                Point::new(
+                    location.x * effective_scale_factor,
+                    location.y * effective_scale_factor,
+                ),
+                Size::new(w * effective_scale_factor, h * effective_scale_factor),
             ),
             self.clone(),
         )));

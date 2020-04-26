@@ -24,7 +24,8 @@ impl Window for TextExample {
                     color: Some(Color::RED),
                     font_size: Some(120.0),
                     ..Default::default()
-                },
+                }
+                .effective_style(scene),
             ),
             Span::new(
                 "W",
@@ -32,7 +33,8 @@ impl Window for TextExample {
                     color: Some(Color::WHITE),
                     font_size: Some(60.0),
                     ..Default::default()
-                },
+                }
+                .effective_style(scene),
             ),
             Span::new(
                 "W",
@@ -40,7 +42,8 @@ impl Window for TextExample {
                     color: Some(Color::BLUE),
                     font_size: Some(120.0),
                     ..Default::default()
-                },
+                }
+                .effective_style(scene),
             ),
         ])
         .render_at(

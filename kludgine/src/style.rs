@@ -1,28 +1,9 @@
 use crate::{
-    math::{Point, Size},
+    math::{Dimension, Point, Size, Surround},
     scene::SceneTarget,
 };
 pub use rgx::color::Rgba as Color;
 pub use ttf_parser::Weight;
-
-#[derive(Copy, Clone, PartialEq, Debug)]
-pub enum Dimension {
-    Auto,
-    /// Scale-corrected to the users preference of DPI
-    Points(f32),
-}
-
-impl Default for Dimension {
-    fn default() -> Self {
-        Dimension::Auto
-    }
-}
-
-impl From<f32> for Dimension {
-    fn from(value: f32) -> Self {
-        Dimension::Points(value.into())
-    }
-}
 
 #[derive(Default, Clone, Debug)]
 pub struct Layout {
@@ -32,42 +13,6 @@ pub struct Layout {
     pub border: Surround<Dimension>,
     pub min_size: Size<Dimension>,
     pub max_size: Size<Dimension>,
-}
-
-#[derive(Copy, Clone, PartialEq, Debug, Default)]
-pub struct Surround<S> {
-    pub left: S,
-    pub top: S,
-    pub right: S,
-    pub bottom: S,
-}
-
-impl<S> Surround<S>
-where
-    S: Into<Dimension>,
-{
-    pub fn into_dimensions(self) -> Surround<Dimension> {
-        Surround {
-            left: self.left.into(),
-            top: self.top.into(),
-            right: self.right.into(),
-            bottom: self.bottom.into(),
-        }
-    }
-}
-
-impl<S> Surround<S>
-where
-    S: Copy,
-{
-    pub fn uniform(measurement: S) -> Self {
-        Self {
-            left: measurement,
-            top: measurement,
-            right: measurement,
-            bottom: measurement,
-        }
-    }
 }
 
 #[derive(Default, Clone, Debug)]
@@ -101,7 +46,7 @@ impl Style {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Default)]
 pub struct EffectiveStyle {
     pub font_family: String,
     pub font_size: f32,
