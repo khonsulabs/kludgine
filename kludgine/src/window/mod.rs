@@ -2,7 +2,7 @@ use super::{
     frame::Frame,
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
-    scene::Scene,
+    scene::{Scene, SceneTarget},
     timing::FrequencyLimiter,
     KludgineError, KludgineHandle, KludgineResult,
 };
@@ -91,7 +91,7 @@ pub trait Window: Send + Sync + 'static {
     }
 
     /// Called once for each frame of rendering
-    fn render(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
+    fn render(&mut self, _scene: &mut SceneTarget) -> KludgineResult<()> {
         Ok(())
     }
 
@@ -309,7 +309,7 @@ impl RuntimeWindow {
                     loop_limiter.advance_frame();
                     scene.start_frame();
                     window.update(&mut scene).await?;
-                    window.render(&mut scene)?;
+                    window.render(&mut SceneTarget::Scene(&mut scene))?;
                     let mut guard = frame.write().expect("Error locking frame");
                     guard.update(&scene);
                 }

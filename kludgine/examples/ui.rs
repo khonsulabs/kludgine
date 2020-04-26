@@ -16,7 +16,7 @@ impl WindowCreator<UIExample> for UIExample {
 
 #[async_trait]
 impl Window for UIExample {
-    fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
+    fn render(&mut self, scene: &mut SceneTarget) -> KludgineResult<()> {
         let ui = UserInterface::new(Style::default());
         let component = ui.create_component(Interface {});
         ui.set_root(&component);

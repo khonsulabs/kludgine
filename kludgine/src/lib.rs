@@ -73,7 +73,7 @@ pub mod prelude {
         include_aseprite_sprite,
         math::{KludgineRect, Point, Rect, Size, Zeroable},
         runtime::Runtime,
-        scene::Scene,
+        scene::{Scene, SceneTarget},
         source_sprite::SourceSprite,
         sprite::Sprite,
         style::*,

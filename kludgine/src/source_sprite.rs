@@ -1,7 +1,7 @@
 use super::{
     math::Point,
     math::Rect,
-    scene::{Element, Scene},
+    scene::{Element, SceneTarget},
     sprite::RenderedSprite,
     texture::Texture,
     KludgineHandle,
@@ -31,7 +31,7 @@ impl SourceSprite {
         Self::new(Rect::sized(0, 0, w, h), texture)
     }
 
-    pub fn render_at(&self, scene: &mut Scene, location: Point) {
+    pub fn render_at(&self, scene: &mut SceneTarget, location: Point) {
         let (w, h) = {
             let source = self.handle.read().expect("Error locking source_sprite");
             (
@@ -40,12 +40,13 @@ impl SourceSprite {
             )
         };
         let location = scene.user_to_device_point(Point::new(location.x, location.y + h));
-        scene.elements.push(Element::Sprite(RenderedSprite::new(
+        let effective_scale_factor = scene.effective_scale_factor();
+        scene.push_element(Element::Sprite(RenderedSprite::new(
             Rect::sized(
-                location.x * scene.effective_scale_factor(),
-                location.y * scene.effective_scale_factor(),
-                w * scene.effective_scale_factor(),
-                h * scene.effective_scale_factor(),
+                location.x * effective_scale_factor,
+                location.y * effective_scale_factor,
+                w * effective_scale_factor,
+                h * effective_scale_factor,
             ),
             self.clone(),
         )));

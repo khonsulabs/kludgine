@@ -18,11 +18,102 @@ pub(crate) enum Element {
     Text(PreparedSpan),
 }
 
+pub enum SceneTarget<'a> {
+    Scene(&'a mut Scene),
+    Camera {
+        origin: Point,
+        zoom: f32,
+        scene: &'a mut Scene,
+    },
+}
+
+impl<'a> SceneTarget<'a> {
+    pub fn size(&self) -> Size {
+        let size = match &self {
+            SceneTarget::Scene(scene) => scene.size(),
+            SceneTarget::Camera { scene, .. } => scene.size(),
+        };
+        Size::new(
+            size.width / self.effective_scale_factor(),
+            size.height / self.effective_scale_factor(),
+        )
+    }
+
+    pub fn effective_scale_factor(&self) -> f32 {
+        match &self {
+            SceneTarget::Scene(scene) => scene.scale_factor(),
+            SceneTarget::Camera { scene, zoom, .. } => scene.scale_factor() * zoom,
+        }
+    }
+
+    pub(crate) fn push_element(&mut self, element: Element) {
+        match self {
+            SceneTarget::Scene(scene) => scene.elements.push(element),
+            SceneTarget::Camera { scene, .. } => scene.elements.push(element),
+        }
+    }
+
+    pub fn set_camera(&mut self, zoom: f32, look_at: Point<f32>) -> SceneTarget {
+        let origin = Point::new(
+            -look_at.x + self.size().width / 2.0 / zoom,
+            -look_at.y + self.size().height / 2.0 / zoom,
+        );
+        match self {
+            SceneTarget::Scene(scene) => SceneTarget::Camera {
+                scene: *scene,
+                zoom,
+                origin,
+            },
+            SceneTarget::Camera { scene, .. } => SceneTarget::Camera {
+                scene: *scene,
+                zoom,
+                origin,
+            },
+        }
+    }
+
+    pub(crate) fn user_to_device_point<S>(&self, point: Point<S>) -> Point<S>
+    where
+        S: From<f32> + std::ops::Sub<Output = S> + std::ops::Add<Output = S>,
+    {
+        Point::new(
+            point.x + Into::<S>::into(self.origin().x),
+            Into::<S>::into(self.size().height) - (point.y + Into::<S>::into(self.origin().y)),
+        )
+    }
+
+    pub fn lookup_font(&mut self, family: &str, weight: Weight) -> KludgineResult<Font> {
+        match &self {
+            SceneTarget::Scene(scene) => scene.lookup_font(family, weight),
+            SceneTarget::Camera { scene, .. } => scene.lookup_font(family, weight),
+        }
+    }
+
+    pub fn origin(&self) -> Point {
+        match &self {
+            SceneTarget::Scene(_) => Point::zero(),
+            SceneTarget::Camera { origin, .. } => *origin,
+        }
+    }
+
+    pub fn zoom(&self) -> f32 {
+        match &self {
+            SceneTarget::Scene(_) => 1.0,
+            SceneTarget::Camera { zoom, .. } => *zoom,
+        }
+    }
+
+    pub fn elapsed(&self) -> Option<Duration> {
+        match &self {
+            SceneTarget::Scene(scene) => scene.elapsed(),
+            SceneTarget::Camera { scene, .. } => scene.elapsed(),
+        }
+    }
+}
+
 pub struct Scene {
     pub pressed_keys: HashSet<VirtualKeyCode>,
     scale_factor: f32,
-    origin: Point,
-    zoom: f32,
     size: Size,
     pub(crate) elements: Vec<Element>,
     now: Option<Moment>,
@@ -55,8 +146,6 @@ impl Scene {
             now: None,
             elapsed: None,
             elements: Vec::new(),
-            origin: Point::zero(),
-            zoom: 1.0,
             fonts: HashMap::new(),
         }
     }
@@ -75,22 +164,6 @@ impl Scene {
 
     pub fn scale_factor(&self) -> f32 {
         self.scale_factor
-    }
-
-    pub fn zoom(&self) -> f32 {
-        self.zoom
-    }
-
-    pub fn set_zoom(&mut self, zoom: f32) {
-        self.zoom = zoom;
-    }
-
-    pub fn origin(&self) -> Point {
-        self.origin
-    }
-
-    pub fn set_origin(&mut self, origin: Point) {
-        self.origin = origin;
     }
 
     pub fn key_pressed(&self, key: VirtualKeyCode) -> bool {
@@ -115,10 +188,6 @@ impl Scene {
         }
     }
 
-    pub(crate) fn effective_scale_factor(&self) -> f32 {
-        self.scale_factor * self.zoom
-    }
-
     pub(crate) fn start_frame(&mut self) {
         let last_start = self.now;
         self.now = Some(Moment::now());
@@ -130,10 +199,7 @@ impl Scene {
     }
 
     pub fn size(&self) -> Size {
-        Size::new(
-            self.size.width / self.effective_scale_factor(),
-            self.size.height / self.effective_scale_factor(),
-        )
+        self.size
     }
 
     pub fn now(&self) -> Moment {
@@ -146,16 +212,6 @@ impl Scene {
 
     pub fn is_initial_frame(&self) -> bool {
         self.elapsed.is_none()
-    }
-
-    pub(crate) fn user_to_device_point<S>(&self, point: Point<S>) -> Point<S>
-    where
-        S: From<f32> + std::ops::Sub<Output = S> + std::ops::Add<Output = S>,
-    {
-        Point::new(
-            point.x + Into::<S>::into(self.origin.x),
-            Into::<S>::into(self.size().height) - (point.y + Into::<S>::into(self.origin.y)),
-        )
     }
 
     pub fn register_font(&mut self, font: &Font) {

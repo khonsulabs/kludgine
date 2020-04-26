@@ -1,6 +1,6 @@
 use super::{
     math::{Point, Size},
-    scene::Scene,
+    scene::SceneTarget,
     sprite::Sprite,
     KludgineResult,
 };
@@ -29,7 +29,7 @@ where
         self.stagger = Some(stagger);
     }
 
-    pub fn draw(&self, scene: &mut Scene, location: Point<i32>) -> KludgineResult<()> {
+    pub fn draw(&self, scene: &mut SceneTarget, location: Point<i32>) -> KludgineResult<()> {
         // Normally we don't need to worry about the origin, but in the case of TileMap
         // it will fill the screen with whatever the provider returns for each tile coordinate
         let location = Point::new(

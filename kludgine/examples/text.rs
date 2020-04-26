@@ -16,7 +16,7 @@ impl WindowCreator<TextExample> for TextExample {
 
 #[async_trait]
 impl Window for TextExample {
-    fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
+    fn render(&mut self, scene: &mut SceneTarget) -> KludgineResult<()> {
         Text::new(vec![
             Span::new(
                 "W",
@@ -30,7 +30,7 @@ impl Window for TextExample {
                 "W",
                 Style {
                     color: Some(Rgba::WHITE),
-                    font_size: Some(60.0), // TODO I think there's still metric calls happening on the backend renderer, we need to have that pre-computed?
+                    font_size: Some(60.0),
                     ..Default::default()
                 },
             ),
@@ -45,7 +45,7 @@ impl Window for TextExample {
         ])
         .render_at(
             scene,
-            Point::new(0.0, 120.0),
+            Point::new(0.0, 240.0),
             TextWrap::SingleLine {
                 max_width: scene.size().width,
                 truncate: false,

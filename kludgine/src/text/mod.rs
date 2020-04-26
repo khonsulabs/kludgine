@@ -1,6 +1,6 @@
 use super::{
-    math::Point,
-    scene::{Element, Scene},
+    math::{KludgineRect, Point, Rect},
+    scene::{Element, SceneTarget},
     style::{EffectiveStyle, Style},
     KludgineHandle, KludgineResult,
 };
@@ -100,55 +100,6 @@ pub(crate) struct LoadedFontData {
     pub(crate) texture: Option<rgx::core::Texture>,
 }
 
-#[derive(Clone)]
-pub(crate) struct PreparedSpan {
-    pub location: Point,
-    pub line_metrics: rusttype::VMetrics,
-    pub handle: KludgineHandle<RenderedSpanData>,
-}
-
-impl PreparedSpan {
-    pub fn new(
-        font: Font,
-        size: f32,
-        color: Rgba,
-        location: Point,
-        max_width: Option<f32>,
-        positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
-        line_metrics: rusttype::VMetrics,
-    ) -> Self {
-        Self {
-            location: Point::new(0.0, 0.0),
-            line_metrics,
-            handle: KludgineHandle::new(RenderedSpanData {
-                font,
-                size,
-                color,
-                location,
-                max_width,
-                positioned_glyphs,
-            }),
-        }
-    }
-
-    pub fn translate(&self, location: Point, line_metrics: rusttype::VMetrics) -> Self {
-        Self {
-            location,
-            line_metrics,
-            handle: self.handle.clone(),
-        }
-    }
-}
-
-pub struct RenderedSpanData {
-    pub font: Font,
-    pub size: f32,
-    pub color: Rgba,
-    pub location: Point,
-    pub max_width: Option<f32>,
-    pub positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
-}
-
 #[derive(Debug)]
 pub struct Span {
     pub text: String,
@@ -180,27 +131,26 @@ impl Text {
         Self { spans }
     }
 
-    pub fn wrap(&self, scene: &mut Scene, options: TextWrap) -> KludgineResult<PreparedText> {
+    pub fn wrap(&self, scene: &mut SceneTarget, options: TextWrap) -> KludgineResult<PreparedText> {
         TextWrapper::wrap(self, scene, options) // TODO cache result
     }
 
     pub fn render_at(
         &self,
-        scene: &mut Scene,
+        scene: &mut SceneTarget,
         location: Point,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
         let prepared_text = self.wrap(scene, wrapping)?;
         let mut current_line_top = 0.0;
+        let effective_scale_factor = scene.effective_scale_factor();
 
         for line in prepared_text.lines.iter() {
             let metrics = line.metrics.as_ref().unwrap();
             let cursor_position = Point::new(location.x, location.y + current_line_top);
             for span in line.spans.iter() {
-                scene.elements.push(Element::Text(span.translate(
-                    scene.user_to_device_point(cursor_position) * scene.effective_scale_factor(),
-                    *metrics,
-                )));
+                let location = scene.user_to_device_point(cursor_position) * effective_scale_factor;
+                scene.push_element(Element::Text(span.translate(location, *metrics)));
             }
             current_line_top =
                 current_line_top + metrics.ascent - metrics.descent + metrics.line_gap;
@@ -210,12 +160,12 @@ impl Text {
     }
 }
 
-pub struct TextWrapper<'a> {
+pub struct TextWrapper<'a, 'b> {
     caret: rusttype::Point<f32>,
     current_vmetrics: Option<rusttype::VMetrics>,
     last_glyph_id: Option<rusttype::GlyphId>,
     options: TextWrap,
-    scene: &'a mut Scene,
+    scene: &'a mut SceneTarget<'b>,
     prepared_text: PreparedText,
     current_line: PreparedLine,
     current_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
@@ -224,8 +174,12 @@ pub struct TextWrapper<'a> {
     current_span_location: rusttype::Point<f32>,
 }
 
-impl<'a> TextWrapper<'a> {
-    pub fn wrap(text: &Text, scene: &mut Scene, options: TextWrap) -> KludgineResult<PreparedText> {
+impl<'a, 'b> TextWrapper<'a, 'b> {
+    pub fn wrap(
+        text: &Text,
+        scene: &'a mut SceneTarget<'b>,
+        options: TextWrap,
+    ) -> KludgineResult<PreparedText> {
         TextWrapper {
             caret: rusttype::point(0.0, 0.0),
             current_span_location: rusttype::point(0.0, 0.0),
@@ -244,7 +198,7 @@ impl<'a> TextWrapper<'a> {
 
     fn wrap_text(mut self, text: &Text) -> KludgineResult<PreparedText> {
         for span in text.spans.iter() {
-            let effective_style = span.style.effective_style();
+            let effective_style = span.style.effective_style(self.scene);
             if self.current_style.is_none() {
                 self.current_style = Some(effective_style.clone());
             } else if self.current_style.as_ref() != Some(&effective_style) {
@@ -330,7 +284,12 @@ impl<'a> TextWrapper<'a> {
                 self.current_font.as_ref().unwrap().clone(),
                 current_style.font_size,
                 current_style.color,
-                Point::new(self.current_span_location.x, self.current_span_location.y),
+                Rect::new(
+                    self.current_span_location.x,
+                    self.current_span_location.y,
+                    self.caret.x,
+                    self.caret.y,
+                ),
                 self.options.max_width(self.scene.effective_scale_factor()),
                 current_glyphs,
                 self.current_vmetrics.unwrap(),
@@ -412,4 +371,73 @@ pub struct PreparedText {
 pub struct PreparedLine {
     spans: Vec<PreparedSpan>,
     metrics: Option<rusttype::VMetrics>,
+}
+
+impl PreparedLine {
+    pub fn bounds(&self) -> Rect {
+        self.spans
+            .iter()
+            .fold(None, |total: Option<Rect>, span| match total {
+                Some(total_bounds) => Some(total_bounds.union(&span.bounds())),
+                None => Some(span.bounds()),
+            })
+            .unwrap()
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct PreparedSpan {
+    pub location: Point,
+    pub line_metrics: rusttype::VMetrics,
+    pub handle: KludgineHandle<PreparedSpanData>,
+}
+
+impl PreparedSpan {
+    pub fn new(
+        font: Font,
+        size: f32,
+        color: Rgba,
+        bounds: Rect,
+        max_width: Option<f32>,
+        positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
+        line_metrics: rusttype::VMetrics,
+    ) -> Self {
+        Self {
+            location: Point::new(0.0, 0.0),
+            line_metrics,
+            handle: KludgineHandle::new(PreparedSpanData {
+                font,
+                size,
+                color,
+                bounds,
+                max_width,
+                positioned_glyphs,
+            }),
+        }
+    }
+
+    pub fn translate(&self, location: Point, line_metrics: rusttype::VMetrics) -> Self {
+        Self {
+            location,
+            line_metrics,
+            handle: self.handle.clone(),
+        }
+    }
+
+    pub fn bounds(&self) -> Rect {
+        let handle = self
+            .handle
+            .read()
+            .expect("Error locking PreparedSpan for read");
+        handle.bounds
+    }
+}
+
+pub struct PreparedSpanData {
+    pub font: Font,
+    pub size: f32,
+    pub color: Rgba,
+    pub bounds: Rect,
+    pub max_width: Option<f32>,
+    pub positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
 }

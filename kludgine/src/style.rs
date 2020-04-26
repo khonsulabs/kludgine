@@ -1,4 +1,4 @@
-use crate::math::Size;
+use crate::{math::Size, scene::SceneTarget};
 pub use rgx::color::Rgba;
 pub use ttf_parser::Weight;
 
@@ -38,10 +38,10 @@ impl Style {
         }
     }
 
-    pub fn effective_style(&self) -> EffectiveStyle {
+    pub fn effective_style(&self, scene: &mut SceneTarget) -> EffectiveStyle {
         EffectiveStyle {
             font_family: self.font.clone().unwrap_or_else(|| "sans-serif".to_owned()),
-            font_size: self.font_size.unwrap_or(14.0),
+            font_size: self.font_size.unwrap_or(14.0) * scene.effective_scale_factor(),
             font_weight: self.font_weight.unwrap_or(Weight::Normal),
             color: self.color.unwrap_or(Rgba::BLACK),
         }

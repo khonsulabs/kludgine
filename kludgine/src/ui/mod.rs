@@ -1,6 +1,6 @@
 use super::{
     math::{Point, Rect, Size},
-    scene::Scene,
+    scene::{Scene, SceneTarget},
     style::{Layout, Style},
     text::{Text, TextWrap},
     KludgineError, KludgineHandle, KludgineResult,
@@ -46,7 +46,7 @@ impl UserInterface {
         ui.root = Some(component.id);
     }
 
-    pub fn render(&self, scene: &mut Scene) -> KludgineResult<()> {
+    pub fn render(&self, scene: &mut SceneTarget) -> KludgineResult<()> {
         let ui = self.handle.read().expect("Error locking UI to write");
         if let Some(id) = ui.root {
             let root = ui
@@ -93,7 +93,7 @@ pub trait Controller {
 pub trait View {
     fn render(
         &self,
-        scene: &mut Scene,
+        scene: &mut SceneTarget,
         ui: &UserInterface,
         inherited_style: &Style,
     ) -> KludgineResult<()>;
@@ -160,13 +160,13 @@ pub struct Label {
 impl View for Label {
     fn render(
         &self,
-        scene: &mut Scene,
+        scene: &mut SceneTarget,
         ui: &UserInterface,
         inherited_style: &Style,
     ) -> KludgineResult<()> {
         if let Some(value) = &self.value {
             let inherited_style = self.view.style.inherit_from(&inherited_style);
-            let effective_style = inherited_style.effective_style();
+            let effective_style = inherited_style.effective_style(scene);
             let font =
                 scene.lookup_font(&effective_style.font_family, effective_style.font_weight)?;
             let metrics = font.metrics(effective_style.font_size);
