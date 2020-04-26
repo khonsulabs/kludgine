@@ -24,7 +24,7 @@ static MAP_SIZE: u32 = 100;
 
 #[async_trait]
 impl Window for OrthoTiles {
-    async fn initialize(&mut self) -> KludgineResult<()> {
+    async fn initialize(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
         self.load_assets()?;
         self.zoom = 1.0;
         self.x = MAP_SIZE as f32 * 32.0 / 2.0;

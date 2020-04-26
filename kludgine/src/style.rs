@@ -2,7 +2,7 @@ use crate::math::Size;
 pub use rgx::color::Rgba;
 pub use ttf_parser::Weight;
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Dimension {
     Auto,
     /// Scale-corrected to the users preference of DPI
@@ -15,12 +15,12 @@ impl Default for Dimension {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Layout {
     pub min_size: Size<Dimension>,
     pub max_size: Size<Dimension>,
 }
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Style {
     pub font: Option<String>,
     pub font_size: Option<f32>,
@@ -48,6 +48,7 @@ impl Style {
     }
 }
 
+#[derive(PartialEq, Clone, Debug)]
 pub struct EffectiveStyle {
     pub font_family: String,
     pub font_size: f32,

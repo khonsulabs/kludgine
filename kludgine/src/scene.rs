@@ -1,17 +1,21 @@
 use super::{
     math::{Point, Size, Zeroable},
     sprite::RenderedSprite,
-    text::{Font, RenderedSpan},
+    style::Weight,
+    text::{Font, PreparedSpan},
     timing::Moment,
+    KludgineError, KludgineResult,
 };
 use platforms::target::{OS, TARGET_OS};
-use rgx::color::Rgba;
-use std::{collections::HashSet, time::Duration};
+use std::{
+    collections::{HashMap, HashSet},
+    time::Duration,
+};
 use winit::event::VirtualKeyCode;
 
 pub(crate) enum Element {
     Sprite(RenderedSprite),
-    Text(RenderedSpan),
+    Text(PreparedSpan),
 }
 
 pub struct Scene {
@@ -23,6 +27,7 @@ pub struct Scene {
     pub(crate) elements: Vec<Element>,
     now: Option<Moment>,
     elapsed: Option<Duration>,
+    fonts: HashMap<String, Vec<Font>>,
 }
 
 pub struct Modifiers {
@@ -52,6 +57,7 @@ impl Scene {
             elements: Vec::new(),
             origin: Point::zero(),
             zoom: 1.0,
+            fonts: HashMap::new(),
         }
     }
 
@@ -142,25 +148,6 @@ impl Scene {
         self.elapsed.is_none()
     }
 
-    pub fn render_text_at<S: Into<String>>(
-        &mut self,
-        text: S,
-        font: &Font,
-        size: f32,
-        color: Rgba,
-        location: Point,
-        max_width: Option<f32>,
-    ) {
-        self.elements.push(Element::Text(RenderedSpan::new(
-            text.into(),
-            font.clone(),
-            size * self.scale_factor,
-            color,
-            self.user_to_device_point(location) * self.scale_factor,
-            max_width.map(|w| w * self.scale_factor),
-        )));
-    }
-
     pub(crate) fn user_to_device_point<S>(&self, point: Point<S>) -> Point<S>
     where
         S: From<f32> + std::ops::Sub<Output = S> + std::ops::Add<Output = S>,
@@ -169,5 +156,61 @@ impl Scene {
             point.x + Into::<S>::into(self.origin.x),
             Into::<S>::into(self.size().height) - (point.y + Into::<S>::into(self.origin.y)),
         )
+    }
+
+    pub fn register_font(&mut self, font: &Font) {
+        let family = font.family().expect("Unable to register VecFonts");
+        self.fonts
+            .entry(family)
+            .and_modify(|fonts| fonts.push(font.clone()))
+            .or_insert_with(|| vec![font.clone()]);
+    }
+
+    pub(crate) fn register_bundled_fonts(&mut self) {
+        #[cfg(feature = "bundled-fonts-roboto")]
+        {
+            self.register_font(&crate::text::bundled_fonts::ROBOTO);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_ITALIC);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_BLACK);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_BLACK_ITALIC);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_BOLD);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_BOLD_ITALIC);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_LIGHT);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_LIGHT_ITALIC);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_MEDIUM);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_MEDIUM_ITALIC);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_THIN);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_THIN_ITALIC);
+        }
+    }
+
+    pub fn lookup_font(&self, family: &str, weight: Weight) -> KludgineResult<Font> {
+        let family = if family.eq_ignore_ascii_case("sans-serif") {
+            "Roboto"
+        } else {
+            family
+        };
+        match self.fonts.get(family) {
+            Some(fonts) => {
+                let mut closest_font = None;
+                let mut closest_weight = None;
+
+                for font in fonts.iter() {
+                    if font.weight() == weight {
+                        return Ok(font.clone());
+                    } else {
+                        let delta =
+                            (font.weight().to_number() as i32 - weight.to_number() as i32).abs();
+                        if closest_weight.is_none() || closest_weight.unwrap() > delta {
+                            closest_weight = Some(delta);
+                            closest_font = Some(font.clone());
+                        }
+                    }
+                }
+
+                closest_font.ok_or_else(|| KludgineError::FontFamilyNotFound(family.to_owned()))
+            }
+            None => Err(KludgineError::FontFamilyNotFound(family.to_owned())),
+        }
     }
 }

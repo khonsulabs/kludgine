@@ -14,11 +14,10 @@ impl WindowCreator<UIExample> for UIExample {
     }
 }
 
+#[async_trait]
 impl Window for UIExample {
     fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
         let ui = UserInterface::new(Style::default());
-        ui.register_bundled_fonts();
-
         let component = ui.create_component(Interface {});
         ui.set_root(&component);
         ui.render(scene)?;

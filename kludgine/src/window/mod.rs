@@ -81,7 +81,7 @@ pub trait Window: Send + Sync + 'static {
     }
 
     /// Called once the Window is opened
-    async fn initialize(&mut self) -> KludgineResult<()> {
+    async fn initialize(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
         Ok(())
     }
 
@@ -250,8 +250,10 @@ impl RuntimeWindow {
     where
         T: Window + ?Sized,
     {
-        window.initialize().await?;
         let mut scene = Scene::new();
+        #[cfg(feature = "bundled-fonts-enabled")]
+        scene.register_bundled_fonts();
+        window.initialize(&mut scene).await?;
         let mut loop_limiter = FrequencyLimiter::new(Duration::from_nanos(FRAME_DURATION));
         loop {
             while let Some(event) = match event_receiver.try_recv() {

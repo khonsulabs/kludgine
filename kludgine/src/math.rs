@@ -1,7 +1,7 @@
 pub type Point<S = f32> = rgx::math::algebra::Point2<S>;
 pub type Rect<S = f32> = rgx::rect::Rect<S>;
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct Size<S = f32> {
     pub width: S,
     pub height: S,

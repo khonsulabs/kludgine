@@ -2,7 +2,7 @@ use super::{
     math::Size,
     scene::{Element, Scene},
     sprite::SpriteBatch,
-    text::{LoadedFont, RenderedSpan},
+    text::{LoadedFont, PreparedSpan},
     texture::LoadedTexture,
     timing::Moment,
     KludgineHandle,
@@ -142,58 +142,10 @@ impl Frame {
             .filter(|e| e.is_some())
             .map(|e| e.unwrap())
         {
-            let mut text = text.handle.write().expect("Error locking text for caching");
-            if text.positioned_glyphs.is_none() {
-                text.positioned_glyphs = Some({
-                    let font = text
-                        .font
-                        .handle
-                        .read()
-                        .expect("Error locking font for caching");
-                    referenced_fonts.insert(font.id);
+            let text = text.handle.read().expect("Error locking text for caching");
+            referenced_fonts.insert(text.font.id());
 
-                    let mut result = Vec::new();
-
-                    let scale = rusttype::Scale::uniform(text.size);
-                    let v_metrics = font.font.v_metrics(scale);
-                    let advance_height = v_metrics.ascent - v_metrics.descent + v_metrics.line_gap;
-                    let mut caret = rusttype::point(0.0, v_metrics.ascent);
-                    let mut last_glyph_id = None;
-                    for c in text.text.chars() {
-                        if c.is_control() {
-                            match c {
-                                '\r' => {
-                                    caret = rusttype::point(0.0, caret.y + advance_height);
-                                }
-                                '\n' => {}
-                                _ => {}
-                            }
-                            continue;
-                        }
-                        let base_glyph = font.font.glyph(c);
-                        if let Some(id) = last_glyph_id.take() {
-                            caret.x += font.font.pair_kerning(scale, id, base_glyph.id());
-                        }
-                        last_glyph_id = Some(base_glyph.id());
-                        let mut glyph = base_glyph.scaled(scale).positioned(caret);
-                        if let Some(width) = text.max_width {
-                            if let Some(bb) = glyph.pixel_bounding_box() {
-                                if bb.max.x > width as i32 {
-                                    caret = rusttype::point(0.0, caret.y + advance_height);
-                                    glyph.set_position(caret);
-                                    last_glyph_id = None;
-                                }
-                            }
-                        }
-                        caret.x += glyph.unpositioned().h_metrics().advance_width;
-                        result.push(glyph);
-                    }
-
-                    result
-                });
-            }
-
-            for glpyh in text.positioned_glyphs.as_ref().unwrap().iter() {
+            for glpyh in text.positioned_glyphs.iter() {
                 let font = text
                     .font
                     .handle
@@ -245,7 +197,7 @@ pub(crate) enum FrameCommand {
     LoadTexture(LoadedTexture),
     DrawBatch(KludgineHandle<SpriteBatch>),
     DrawText {
-        text: RenderedSpan,
+        text: PreparedSpan,
         loaded_font: LoadedFont,
     },
 }

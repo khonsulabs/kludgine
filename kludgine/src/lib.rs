@@ -58,6 +58,7 @@ pub mod runtime;
 pub mod scene;
 pub mod source_sprite;
 pub mod sprite;
+pub mod style;
 pub mod text;
 pub mod texture;
 pub mod tilemap;
@@ -75,12 +76,14 @@ pub mod prelude {
         scene::Scene,
         source_sprite::SourceSprite,
         sprite::Sprite,
+        style::*,
+        text::{Span, Text, TextWrap},
         texture::Texture,
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,
         },
         ui::{
-            style::*, Component, Controller, Label, UserInterface, View, ViewBuilder, ViewCore,
+            Component, Controller, Label, UserInterface, View, ViewBuilder, ViewCore,
             ViewCoreBuilder,
         },
         window::{Event, InputEvent, Window},

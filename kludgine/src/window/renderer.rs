@@ -95,9 +95,9 @@ impl FrameRenderer {
             }
             let mut pixels = Vec::with_capacity(data.len() * 4);
             for p in data.iter() {
-                pixels.push(1);
-                pixels.push(1);
-                pixels.push(1);
+                pixels.push(*p);
+                pixels.push(*p);
+                pixels.push(*p);
                 pixels.push(*p);
             }
             let pixels = Rgba8::align(&pixels);
@@ -235,21 +235,10 @@ impl FrameRenderer {
                             .read()
                             .expect("Error locking font to render");
                         if let Some(texture) = loaded_font_data.texture.as_ref() {
-                            let font = loaded_font_data
-                                .font
-                                .handle
-                                .read()
-                                .expect("Error locking font for rendering");
-                            let v_metrics = font
-                                .font
-                                .v_metrics(rusttype::Scale::uniform(text_data.size));
+                            let v_metrics = text.line_metrics;
                             let mut batch = sprite2d::Batch::new(texture.w, texture.h);
-                            for (uv_rect, screen_rect) in text_data
-                                .positioned_glyphs
-                                .as_ref()
-                                .expect("Rendering text with no glyphs")
-                                .iter()
-                                .filter_map(|g| {
+                            for (uv_rect, screen_rect) in
+                                text_data.positioned_glyphs.iter().filter_map(|g| {
                                     loaded_font_data.cache.rect_for(0, g).ok().flatten()
                                 })
                             {
@@ -266,11 +255,17 @@ impl FrameRenderer {
                                 // For the destination, we need to invert the y coordinate because without that step, the baseline will be at the top
                                 // of the text, not at the bottom.
                                 let dest = Rect::new(
-                                    text_data.location.x + screen_rect.min.x as f32,
-                                    text_data.location.y
+                                    text.location.x
+                                        + text_data.location.x
+                                        + screen_rect.min.x as f32,
+                                    text.location.y
+                                        + text_data.location.y
                                         + (v_metrics.ascent - screen_rect.min.y as f32),
-                                    text_data.location.x + screen_rect.max.x as f32,
-                                    text_data.location.y
+                                    text.location.x
+                                        + text_data.location.x
+                                        + screen_rect.max.x as f32,
+                                    text.location.y
+                                        + text_data.location.y
                                         + (v_metrics.ascent - screen_rect.max.y as f32),
                                 );
                                 batch.add(

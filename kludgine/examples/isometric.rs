@@ -19,7 +19,7 @@ static MAP_SIZE: u32 = 100;
 
 #[async_trait]
 impl Window for Isometric {
-    async fn initialize(&mut self) -> KludgineResult<()> {
+    async fn initialize(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
         self.load_assets()?;
         // self.zoom = 1.0;
         // self.x = MAP_SIZE as f32 * 32.0 / 2.0;
@@ -37,7 +37,7 @@ impl Window for Isometric {
 
 impl Isometric {
     fn load_assets(&mut self) -> KludgineResult<()> {
-        let texture = Texture::load("examples/assets/isometric_tile.png")?;
+        let texture = Texture::load("kludgine/examples/assets/isometric_tile.png")?;
         let sprite = Sprite::single_frame(texture);
 
         let mut map = PersistentTileMap::persistent_with_size(
