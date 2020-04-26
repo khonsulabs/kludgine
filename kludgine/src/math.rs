@@ -195,6 +195,19 @@ where
 
 impl<S> Surround<S>
 where
+    S: Into<Dimension> + Copy,
+{
+    pub fn minimum_width(&self) -> f32 {
+        self.left.into().points().unwrap_or(0.0) + self.right.into().points().unwrap_or(0.0)
+    }
+
+    pub fn minimum_height(&self) -> f32 {
+        self.top.into().points().unwrap_or(0.0) + self.bottom.into().points().unwrap_or(0.0)
+    }
+}
+
+impl<S> Surround<S>
+where
     S: Copy,
 {
     pub fn uniform(measurement: S) -> Self {

@@ -1,5 +1,5 @@
 use crate::{
-    math::{Dimension, Point, Size, Surround},
+    math::{Dimension, Point, Rect, Size, Surround},
     scene::SceneTarget,
 };
 pub use rgx::color::Rgba as Color;
@@ -13,6 +13,73 @@ pub struct Layout {
     pub border: Surround<Dimension>,
     pub min_size: Size<Dimension>,
     pub max_size: Size<Dimension>,
+}
+
+impl Layout {
+    pub fn size_with_minimal_padding(&self, size: &Size) -> Size {
+        Size::new(
+            size.width - self.padding.minimum_width(),
+            size.height - self.padding.minimum_height(),
+        )
+    }
+
+    pub fn compute_bounds(&self, content_size: &Size, bounds: Rect) -> Rect {
+        let (effective_padding_left, effective_padding_right) = Self::compute_padding(
+            self.padding.left,
+            self.padding.right,
+            content_size.width,
+            bounds.size.width,
+        );
+        let (effective_padding_top, effective_padding_bottom) = Self::compute_padding(
+            self.padding.top,
+            self.padding.bottom,
+            content_size.height,
+            bounds.size.height,
+        );
+        Rect::new(
+            Point::new(
+                bounds.x1() + effective_padding_left,
+                bounds.y1() + effective_padding_top,
+            ),
+            Point::new(
+                bounds.x2() - effective_padding_right,
+                bounds.y2() - effective_padding_bottom,
+            ),
+        )
+    }
+
+    pub fn compute_padding(
+        side1: Dimension,
+        side2: Dimension,
+        content_measurement: f32,
+        bounding_measurement: f32,
+    ) -> (f32, f32) {
+        let mut remaining_width = bounding_measurement - content_measurement;
+        let mut auto_width_measurements = 0;
+        if let Some(points) = side1.points() {
+            remaining_width -= points;
+        } else {
+            auto_width_measurements += 1;
+        }
+
+        if let Some(points) = side2.points() {
+            remaining_width -= points;
+        } else {
+            auto_width_measurements += 1;
+        }
+
+        let effective_side1 = match side1 {
+            Dimension::Auto => remaining_width / auto_width_measurements as f32,
+            Dimension::Points(points) => points,
+        };
+
+        let effective_side2 = match side2 {
+            Dimension::Auto => remaining_width / auto_width_measurements as f32,
+            Dimension::Points(points) => points,
+        };
+
+        (effective_side1, effective_side2)
+    }
 }
 
 #[derive(Default, Clone, Debug)]

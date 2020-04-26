@@ -38,6 +38,10 @@ impl Controller for Interface {
                 ..Default::default()
             })
             .with_padding(Surround::uniform(Dimension::Auto))
+            .with_margin(Surround {
+                left: Dimension::Points(50.0),
+                ..Default::default()
+            })
             .build()
     }
 }

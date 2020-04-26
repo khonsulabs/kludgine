@@ -117,62 +117,8 @@ impl BaseView {
     }
 
     pub fn layout_within(&mut self, content_size: &Size, bounds: Rect) -> KludgineResult<()> {
-        let (effective_padding_left, effective_padding_right) = Self::compute_padding(
-            self.layout.padding.left,
-            self.layout.padding.right,
-            content_size.width,
-            bounds.size.width,
-        );
-        let (effective_padding_top, effective_padding_bottom) = Self::compute_padding(
-            self.layout.padding.top,
-            self.layout.padding.bottom,
-            content_size.height,
-            bounds.size.height,
-        );
-        self.bounds = Rect::new(
-            Point::new(
-                bounds.x1() + effective_padding_left,
-                bounds.y1() + effective_padding_top,
-            ),
-            Point::new(
-                bounds.x2() - effective_padding_right,
-                bounds.y2() - effective_padding_bottom,
-            ),
-        );
+        self.bounds = self.layout.compute_bounds(content_size, bounds);
         Ok(())
-    }
-
-    fn compute_padding(
-        side1: Dimension,
-        side2: Dimension,
-        content_measurement: f32,
-        bounding_measurement: f32,
-    ) -> (f32, f32) {
-        let mut remaining_width = bounding_measurement - content_measurement;
-        let mut auto_width_measurements = 0;
-        if let Some(points) = side1.points() {
-            remaining_width -= points;
-        } else {
-            auto_width_measurements += 1;
-        }
-
-        if let Some(points) = side2.points() {
-            remaining_width -= points;
-        } else {
-            auto_width_measurements += 1;
-        }
-
-        let effective_side1 = match side1 {
-            Dimension::Auto => remaining_width / auto_width_measurements as f32,
-            Dimension::Points(points) => points,
-        };
-
-        let effective_side2 = match side2 {
-            Dimension::Auto => remaining_width / auto_width_measurements as f32,
-            Dimension::Points(points) => points,
-        };
-
-        (effective_side1, effective_side2)
     }
 }
 
@@ -282,7 +228,7 @@ impl View for Label {
                     self.view.bounds.origin.x,
                     self.view.bounds.origin.y + metrics.ascent / scene.effective_scale_factor(),
                 ),
-                self.wrapping(&self.view.bounds),
+                self.wrapping(&self.view.bounds.size),
             ),
             None => Ok(()),
         }
@@ -306,7 +252,12 @@ impl View for Label {
     fn content_size(&self, bounds: &Rect, scene: &mut SceneTarget) -> KludgineResult<Size> {
         let size = match self.create_text()? {
             Some(text) => {
-                text.wrap(scene, self.wrapping(bounds))?.size() / scene.effective_scale_factor()
+                text.wrap(
+                    scene,
+                    self.wrapping(&self.view.layout.size_with_minimal_padding(&bounds.size)),
+                )?
+                .size()
+                    / scene.effective_scale_factor()
             }
             None => Size::default(),
         };
@@ -328,9 +279,9 @@ impl Label {
         }
     }
 
-    fn wrapping(&self, bounds: &Rect) -> TextWrap {
+    fn wrapping(&self, size: &Size) -> TextWrap {
         TextWrap::SingleLine {
-            max_width: bounds.size.width,
+            max_width: size.width,
             truncate: true,
         }
     }
