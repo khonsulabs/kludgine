@@ -252,3 +252,19 @@ impl From<f32> for Dimension {
         Dimension::Points(value.into())
     }
 }
+
+pub fn max_f(a: f32, b: f32) -> f32 {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+pub fn min_f(a: f32, b: f32) -> f32 {
+    if a < b {
+        a
+    } else {
+        b
+    }
+}

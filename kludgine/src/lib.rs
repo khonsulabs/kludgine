@@ -1,5 +1,5 @@
 use crossbeam::sync::{ShardedLock, ShardedLockReadGuard, ShardedLockWriteGuard};
-use std::sync::{Arc, PoisonError, Weak};
+use std::sync::{Arc, PoisonError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -18,6 +18,8 @@ pub enum KludgineError {
     InvalidSpriteTag,
     #[error("font family not found: {0}")]
     FontFamilyNotFound(String),
+    #[error("argument is out of bounds")]
+    OutOfBounds,
 }
 /// Alias for [`Result<T,E>`] where `E` is [`KludgineError`]
 ///
@@ -25,6 +27,7 @@ pub enum KludgineError {
 /// [`KludgineError`]: enum.KludgineError.html
 pub type KludgineResult<T> = Result<T, KludgineError>;
 
+#[derive(Debug)]
 pub(crate) struct KludgineHandle<T>(Arc<ShardedLock<T>>);
 
 impl<T> KludgineHandle<T> {
@@ -38,10 +41,6 @@ impl<T> KludgineHandle<T> {
 
     pub fn read(&self) -> Result<ShardedLockReadGuard<T>, PoisonError<ShardedLockReadGuard<T>>> {
         self.0.read()
-    }
-
-    pub fn downgrade(&self) -> Weak<ShardedLock<T>> {
-        Arc::downgrade(&self.0)
     }
 }
 
@@ -83,8 +82,9 @@ pub mod prelude {
             PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,
         },
         ui::{
-            Component, Controller, Label, UserInterface, View, ViewBuilder, ViewCore,
-            ViewCoreBuilder,
+            label::Label,
+            view::{View, ViewBuilder, ViewCore, ViewCoreBuilder},
+            Component, Controller, UserInterface,
         },
         window::{Event, InputEvent, Window},
         KludgineError, KludgineResult,

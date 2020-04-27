@@ -1,5 +1,5 @@
 use super::{
-    math::{Point, Size},
+    math::{max_f, min_f, Point, Size},
     scene::{Element, SceneTarget},
     style::EffectiveStyle,
     KludgineHandle, KludgineResult,
@@ -175,22 +175,6 @@ pub struct TextWrapper<'a, 'b> {
     current_font: Option<Font>,
     current_style: Option<EffectiveStyle>,
     current_span_offset: f32,
-}
-
-fn max_f(a: f32, b: f32) -> f32 {
-    if a > b {
-        a
-    } else {
-        b
-    }
-}
-
-fn min_f(a: f32, b: f32) -> f32 {
-    if a < b {
-        a
-    } else {
-        b
-    }
 }
 
 impl<'a, 'b> TextWrapper<'a, 'b> {

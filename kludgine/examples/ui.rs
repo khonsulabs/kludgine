@@ -18,14 +18,14 @@ impl WindowCreator<UIExample> for UIExample {
 impl Window for UIExample {
     fn render(&mut self, scene: &mut SceneTarget) -> KludgineResult<()> {
         let ui = UserInterface::new(Style::default());
-        let component = ui.create_component(Interface {});
-        ui.set_root(&component);
+        ui.set_root(Component::new(Interface {}));
         ui.render(scene)?;
 
         Ok(())
     }
 }
 
+#[derive(Debug)]
 struct Interface {}
 
 impl Controller for Interface {
