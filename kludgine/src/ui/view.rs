@@ -4,16 +4,26 @@ use crate::{
     style::{Color, EffectiveStyle, Layout, Style, Weight},
     KludgineResult,
 };
+use async_trait::async_trait;
 
-pub trait View: std::fmt::Debug {
-    fn render(&self, scene: &mut SceneTarget) -> KludgineResult<()>;
-    fn layout_within(&mut self, scene: &mut SceneTarget, bounds: Rect) -> KludgineResult<()>;
-    fn update_style(
+#[async_trait]
+pub trait View: std::fmt::Debug + Sync + Send {
+    async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()>;
+    async fn layout_within<'a>(
         &mut self,
-        scene: &mut SceneTarget,
+        scene: &mut SceneTarget<'a>,
+        bounds: Rect,
+    ) -> KludgineResult<()>;
+    async fn update_style<'a>(
+        &mut self,
+        scene: &mut SceneTarget<'a>,
         inherited_style: &Style,
     ) -> KludgineResult<()>;
-    fn content_size(&self, maximum_size: &Size, scene: &mut SceneTarget) -> KludgineResult<Size>;
+    async fn content_size<'a>(
+        &self,
+        maximum_size: &Size,
+        scene: &mut SceneTarget<'a>,
+    ) -> KludgineResult<Size>;
 }
 
 #[derive(Default, Clone, Debug)]

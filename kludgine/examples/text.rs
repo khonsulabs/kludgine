@@ -2,10 +2,9 @@ extern crate kludgine;
 use kludgine::prelude::*;
 
 fn main() {
-    SingleWindowApplication::<TextExample>::default().run();
+    SingleWindowApplication::run(TextExample {});
 }
 
-#[derive(Default)]
 struct TextExample {}
 
 impl WindowCreator<TextExample> for TextExample {
@@ -16,7 +15,7 @@ impl WindowCreator<TextExample> for TextExample {
 
 #[async_trait]
 impl Window for TextExample {
-    fn render(&mut self, scene: &mut SceneTarget) -> KludgineResult<()> {
+    async fn render<'a>(&mut self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
         Text::new(vec![
             Span::new(
                 "W",
@@ -54,5 +53,6 @@ impl Window for TextExample {
                 truncate: false,
             },
         )
+        .await
     }
 }

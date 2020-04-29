@@ -1,5 +1,5 @@
-use crossbeam::sync::{ShardedLock, ShardedLockReadGuard, ShardedLockWriteGuard};
-use std::sync::{Arc, PoisonError};
+use futures::lock::Mutex;
+use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -27,28 +27,7 @@ pub enum KludgineError {
 /// [`KludgineError`]: enum.KludgineError.html
 pub type KludgineResult<T> = Result<T, KludgineError>;
 
-#[derive(Debug)]
-pub(crate) struct KludgineHandle<T>(Arc<ShardedLock<T>>);
-
-impl<T> KludgineHandle<T> {
-    pub fn new(wrapped: T) -> Self {
-        Self(Arc::new(ShardedLock::new(wrapped)))
-    }
-
-    pub fn write(&self) -> Result<ShardedLockWriteGuard<T>, PoisonError<ShardedLockWriteGuard<T>>> {
-        self.0.write()
-    }
-
-    pub fn read(&self) -> Result<ShardedLockReadGuard<T>, PoisonError<ShardedLockReadGuard<T>>> {
-        self.0.read()
-    }
-}
-
-impl<T> Clone for KludgineHandle<T> {
-    fn clone(&self) -> Self {
-        Self(self.0.clone())
-    }
-}
+pub type KludgineHandle<T> = Arc<Mutex<T>>;
 
 pub mod application;
 pub mod frame;

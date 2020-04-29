@@ -29,7 +29,11 @@ where
         self.stagger = Some(stagger);
     }
 
-    pub fn draw(&self, scene: &mut SceneTarget, location: Point<i32>) -> KludgineResult<()> {
+    pub async fn draw<'a>(
+        &self,
+        scene: &mut SceneTarget<'a>,
+        location: Point<i32>,
+    ) -> KludgineResult<()> {
         // Normally we don't need to worry about the origin, but in the case of TileMap
         // it will fill the screen with whatever the provider returns for each tile coordinate
         let location = Point::new(
@@ -58,8 +62,10 @@ where
                 let location = Point::new(x, y);
                 match self.provider.get_tile(location) {
                     Some(tile) => {
-                        let sprite = tile.sprite.get_frame(scene.elapsed())?;
-                        sprite.render_at(scene, self.coordinate_for_tile(location));
+                        let sprite = tile.sprite.get_frame(scene.elapsed()).await?;
+                        sprite
+                            .render_at(scene, self.coordinate_for_tile(location))
+                            .await;
                     }
                     None => {}
                 }

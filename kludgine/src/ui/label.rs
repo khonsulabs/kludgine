@@ -6,6 +6,7 @@ use crate::{
     ui::view::{BaseView, View, ViewCore},
     KludgineResult,
 };
+use async_trait::async_trait;
 use kludgine_macros::ViewCore;
 
 #[derive(ViewCore, Debug, Default, Clone)]
@@ -14,29 +15,35 @@ pub struct Label {
     value: Option<String>,
 }
 
+#[async_trait]
 impl View for Label {
-    fn render(&self, scene: &mut SceneTarget) -> KludgineResult<()> {
-        let font = scene.lookup_font(
-            &self.view.effective_style.font_family,
-            self.view.effective_style.font_weight,
-        )?;
-        let metrics = font.metrics(self.view.effective_style.font_size);
+    async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+        let font = scene
+            .lookup_font(
+                &self.view.effective_style.font_family,
+                self.view.effective_style.font_weight,
+            )
+            .await?;
+        let metrics = font.metrics(self.view.effective_style.font_size).await;
         match self.create_text()? {
-            Some(text) => text.render_at(
-                scene,
-                Point::new(
-                    self.view.bounds.origin.x,
-                    self.view.bounds.origin.y + metrics.ascent / scene.effective_scale_factor(),
-                ),
-                self.wrapping(&self.view.bounds.size),
-            ),
+            Some(text) => {
+                text.render_at(
+                    scene,
+                    Point::new(
+                        self.view.bounds.origin.x,
+                        self.view.bounds.origin.y + metrics.ascent / scene.effective_scale_factor(),
+                    ),
+                    self.wrapping(&self.view.bounds.size),
+                )
+                .await
+            }
             None => Ok(()),
         }
     }
 
-    fn update_style(
+    async fn update_style<'a>(
         &mut self,
-        scene: &mut SceneTarget,
+        scene: &mut SceneTarget<'a>,
         inherited_style: &Style,
     ) -> KludgineResult<()> {
         let inherited_style = self.view.style.inherit_from(&inherited_style);
@@ -44,19 +51,29 @@ impl View for Label {
         Ok(())
     }
 
-    fn layout_within(&mut self, scene: &mut SceneTarget, bounds: Rect) -> KludgineResult<()> {
+    async fn layout_within<'a>(
+        &mut self,
+        scene: &mut SceneTarget<'a>,
+        bounds: Rect,
+    ) -> KludgineResult<()> {
         self.view
-            .layout_within(&self.content_size(&bounds.size, scene)?, bounds)
+            .layout_within(&self.content_size(&bounds.size, scene).await?, bounds)
     }
 
-    fn content_size(&self, maximum_size: &Size, scene: &mut SceneTarget) -> KludgineResult<Size> {
+    async fn content_size<'a>(
+        &self,
+        maximum_size: &Size,
+        scene: &mut SceneTarget<'a>,
+    ) -> KludgineResult<Size> {
         let size = match self.create_text()? {
             Some(text) => {
                 text.wrap(
                     scene,
                     self.wrapping(&self.view.layout.size_with_minimal_padding(&maximum_size)),
-                )?
+                )
+                .await?
                 .size()
+                .await
                     / scene.effective_scale_factor()
             }
             None => Size::default(),

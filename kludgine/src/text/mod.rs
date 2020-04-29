@@ -5,9 +5,11 @@ use super::{
     KludgineHandle, KludgineResult,
 };
 use crossbeam::atomic::AtomicCell;
+use futures::{future::join_all, lock::Mutex};
 use lazy_static::lazy_static;
 use rgx::core::*;
 use rusttype::{gpu_cache, Scale};
+use std::sync::Arc;
 
 #[cfg(feature = "bundled-fonts-enabled")]
 pub mod bundled_fonts;
@@ -26,46 +28,46 @@ impl Font {
     pub fn try_from_bytes(bytes: &'static [u8]) -> Option<Font> {
         let font = rusttype::Font::try_from_bytes(bytes)?;
         Some(Font {
-            handle: KludgineHandle::new(FontData {
+            handle: Arc::new(Mutex::new(FontData {
                 font,
                 id: GLOBAL_ID_CELL.fetch_add(1),
-            }),
+            })),
         })
     }
 
-    pub fn id(&self) -> u64 {
-        let font = self.handle.read().expect("Error reading font");
+    pub async fn id(&self) -> u64 {
+        let font = self.handle.lock().await;
         font.id
     }
 
-    pub fn metrics(&self, size: f32) -> rusttype::VMetrics {
-        let font = self.handle.read().expect("Error reading font");
+    pub async fn metrics(&self, size: f32) -> rusttype::VMetrics {
+        let font = self.handle.lock().await;
         font.font.v_metrics(rusttype::Scale::uniform(size))
     }
 
-    pub fn family(&self) -> Option<String> {
-        let font = self.handle.read().expect("Error reading font");
+    pub async fn family(&self) -> Option<String> {
+        let font = self.handle.lock().await;
         match &font.font {
             rusttype::Font::Ref(f) => f.family_name(),
             _ => None,
         }
     }
 
-    pub fn weight(&self) -> ttf_parser::Weight {
-        let font = self.handle.read().expect("Error reading font");
+    pub async fn weight(&self) -> ttf_parser::Weight {
+        let font = self.handle.lock().await;
         match &font.font {
             rusttype::Font::Ref(f) => f.weight(),
             _ => ttf_parser::Weight::Normal,
         }
     }
 
-    pub fn glyph(&self, c: char) -> rusttype::Glyph<'static> {
-        let font = self.handle.read().expect("Error reading font");
+    pub async fn glyph(&self, c: char) -> rusttype::Glyph<'static> {
+        let font = self.handle.lock().await;
         font.font.glyph(c)
     }
 
-    pub fn pair_kerning(&self, size: f32, a: rusttype::GlyphId, b: rusttype::GlyphId) -> f32 {
-        let font = self.handle.read().expect("Error reading font");
+    pub async fn pair_kerning(&self, size: f32, a: rusttype::GlyphId, b: rusttype::GlyphId) -> f32 {
+        let font = self.handle.lock().await;
         font.font.pair_kerning(Scale::uniform(size), a, b)
     }
 }
@@ -83,12 +85,12 @@ pub(crate) struct LoadedFont {
 impl LoadedFont {
     pub fn new(font: &Font) -> Self {
         Self {
-            handle: KludgineHandle::new(LoadedFontData {
+            handle: Arc::new(Mutex::new(LoadedFontData {
                 font: font.clone(),
                 cache: gpu_cache::Cache::builder().dimensions(512, 512).build(),
                 binding: None,
                 texture: None,
-            }),
+            })),
         }
     }
 }
@@ -131,17 +133,21 @@ impl Text {
         Self { spans }
     }
 
-    pub fn wrap(&self, scene: &mut SceneTarget, options: TextWrap) -> KludgineResult<PreparedText> {
-        TextWrapper::wrap(self, scene, options) // TODO cache result
+    pub async fn wrap<'a>(
+        &self,
+        scene: &mut SceneTarget<'a>,
+        options: TextWrap,
+    ) -> KludgineResult<PreparedText> {
+        TextWrapper::wrap(self, scene, options).await // TODO cache result
     }
 
-    pub fn render_at(
+    pub async fn render_at<'a>(
         &self,
-        scene: &mut SceneTarget,
+        scene: &mut SceneTarget<'a>,
         location: Point,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
-        let prepared_text = self.wrap(scene, wrapping)?;
+        let prepared_text = self.wrap(scene, wrapping).await?;
         let mut current_line_baseline = 0.0;
         let effective_scale_factor = scene.effective_scale_factor();
 
@@ -152,7 +158,7 @@ impl Text {
                 let mut location = scene
                     .user_to_device_point(Point::new(cursor_position.x, cursor_position.y))
                     * effective_scale_factor;
-                location.x += span.x();
+                location.x += span.x().await;
                 scene.push_element(Element::Text(span.translate(location)));
             }
             current_line_baseline = current_line_baseline
@@ -178,7 +184,7 @@ pub struct TextWrapper<'a, 'b> {
 }
 
 impl<'a, 'b> TextWrapper<'a, 'b> {
-    pub fn wrap(
+    pub async fn wrap(
         text: &Text,
         scene: &'a mut SceneTarget<'b>,
         options: TextWrap,
@@ -197,20 +203,22 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
             current_style: None,
         }
         .wrap_text(text)
+        .await
     }
 
-    fn wrap_text(mut self, text: &Text) -> KludgineResult<PreparedText> {
+    async fn wrap_text(mut self, text: &Text) -> KludgineResult<PreparedText> {
         for span in text.spans.iter() {
             if self.current_style.is_none() {
                 self.current_style = Some(span.style.clone());
             } else if self.current_style.as_ref() != Some(&span.style) {
-                self.new_span();
+                self.new_span().await;
                 self.current_style = Some(span.style.clone());
             }
 
             let primary_font = self
                 .scene
-                .lookup_font(&span.style.font_family, span.style.font_weight)?;
+                .lookup_font(&span.style.font_family, span.style.font_weight)
+                .await?;
 
             for c in span.text.chars() {
                 if c.is_control() {
@@ -219,20 +227,21 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                             // If there's no current line height, we should initialize it with the primary font's height
                             if self.current_vmetrics.is_none() {
                                 self.current_vmetrics =
-                                    Some(primary_font.metrics(span.style.font_size));
+                                    Some(primary_font.metrics(span.style.font_size).await);
                             }
 
-                            self.new_line();
+                            self.new_line().await;
                         }
                         _ => {}
                     }
                     continue;
                 }
 
-                let base_glyph = primary_font.glyph(c);
+                let base_glyph = primary_font.glyph(c).await;
                 if let Some(id) = self.last_glyph_id.take() {
-                    self.caret +=
-                        primary_font.pair_kerning(span.style.font_size, id, base_glyph.id());
+                    self.caret += primary_font
+                        .pair_kerning(span.style.font_size, id, base_glyph.id())
+                        .await;
                 }
                 self.last_glyph_id = Some(base_glyph.id());
                 let mut glyph = base_glyph
@@ -243,14 +252,14 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                 {
                     if let Some(bb) = glyph.pixel_bounding_box() {
                         if self.current_span_offset + bb.max.x as f32 > max_width {
-                            self.new_line();
+                            self.new_line().await;
                             glyph.set_position(rusttype::point(self.caret, 0.0));
                             self.last_glyph_id = None;
                         }
                     }
                 }
 
-                let metrics = primary_font.metrics(span.style.font_size);
+                let metrics = primary_font.metrics(span.style.font_size).await;
                 if let Some(current_vmetrics) = &self.current_vmetrics {
                     self.current_vmetrics = Some(rusttype::VMetrics {
                         ascent: max_f(current_vmetrics.ascent, metrics.ascent),
@@ -266,9 +275,10 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                 if (self.current_style.is_none()
                     || self.current_style.as_ref() != Some(&span.style))
                     || (self.current_font.is_none()
-                        || self.current_font.as_ref().unwrap().id() != primary_font.id())
+                        || self.current_font.as_ref().unwrap().id().await
+                            != primary_font.id().await)
                 {
-                    self.new_span();
+                    self.new_span().await;
                     self.current_font = Some(primary_font.clone());
                     self.current_style = Some(span.style.clone());
                 }
@@ -277,12 +287,12 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
             }
         }
 
-        self.new_line();
+        self.new_line().await;
 
         Ok(self.prepared_text)
     }
 
-    fn new_span(&mut self) {
+    async fn new_span(&mut self) {
         if self.current_glyphs.len() > 0 {
             let mut current_style = None;
             std::mem::swap(&mut current_style, &mut self.current_style);
@@ -291,7 +301,7 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
             std::mem::swap(&mut self.current_glyphs, &mut current_glyphs);
 
             let font = self.current_font.as_ref().unwrap().clone();
-            let metrics = font.metrics(current_style.font_size);
+            let metrics = font.metrics(current_style.font_size).await;
             self.current_line.spans.push(PreparedSpan::new(
                 font,
                 current_style.font_size,
@@ -306,8 +316,8 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
         }
     }
 
-    fn new_line(&mut self) {
-        self.new_span();
+    async fn new_line(&mut self) {
+        self.new_span().await;
 
         self.caret = 0.0;
         self.current_span_offset = 0.0;
@@ -371,12 +381,11 @@ pub struct PreparedText {
 }
 
 impl PreparedText {
-    pub fn size(&self) -> Size {
-        let (width, height) = self
-            .lines
-            .iter()
-            .fold((0f32, 0f32), |(width, height), line| {
-                let line_size = line.size();
+    pub async fn size(&self) -> Size {
+        let line_sizes = join_all(self.lines.iter().map(|line| line.size())).await;
+        let (width, height) = line_sizes
+            .into_iter()
+            .fold((0f32, 0f32), |(width, height), line_size| {
                 (max_f(width, line_size.width), height + line_size.height)
             });
         Size::new(width, height)
@@ -390,13 +399,16 @@ pub struct PreparedLine {
 }
 
 impl PreparedLine {
-    pub fn size(&self) -> Size {
+    pub async fn size(&self) -> Size {
         if self.spans.len() == 0 {
             return Size::new(0.0, self.height());
         }
         let first = self.spans.get(0).unwrap();
         let last = self.spans.get(self.spans.len() - 1).unwrap();
-        Size::new(last.x() + last.width() - first.x(), self.height())
+        Size::new(
+            last.x().await + last.width().await - first.x().await,
+            self.height(),
+        )
     }
 
     pub fn height(&self) -> f32 {
@@ -423,7 +435,7 @@ impl PreparedSpan {
     ) -> Self {
         Self {
             location: Point::new(0.0, 0.0),
-            handle: KludgineHandle::new(PreparedSpanData {
+            handle: Arc::new(Mutex::new(PreparedSpanData {
                 font,
                 size,
                 color,
@@ -431,7 +443,7 @@ impl PreparedSpan {
                 width,
                 positioned_glyphs,
                 metrics,
-            }),
+            })),
         }
     }
 
@@ -442,19 +454,13 @@ impl PreparedSpan {
         }
     }
 
-    pub fn x(&self) -> f32 {
-        let handle = self
-            .handle
-            .read()
-            .expect("Error locking PreparedSpan for read");
+    pub async fn x(&self) -> f32 {
+        let handle = self.handle.lock().await;
         handle.x
     }
 
-    pub fn width(&self) -> f32 {
-        let handle = self
-            .handle
-            .read()
-            .expect("Error locking PreparedSpan for read");
+    pub async fn width(&self) -> f32 {
+        let handle = self.handle.lock().await;
         handle.width
     }
 }

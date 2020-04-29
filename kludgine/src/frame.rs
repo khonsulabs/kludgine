@@ -7,7 +7,11 @@ use super::{
     timing::Moment,
     KludgineHandle,
 };
-use std::collections::{HashMap, HashSet};
+use futures::lock::Mutex;
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 #[derive(Default)]
 pub(crate) struct Frame {
     pub started_at: Option<Moment>,
@@ -26,11 +30,11 @@ pub(crate) struct FontUpdate {
 }
 
 impl Frame {
-    pub fn update(&mut self, scene: &Scene) {
+    pub async fn update(&mut self, scene: &Scene) {
         self.started_at = Some(scene.now());
         self.commands.clear();
 
-        self.cache_glyphs(scene);
+        self.cache_glyphs(scene).await;
 
         self.size = scene.internal_size();
 
@@ -41,20 +45,9 @@ impl Frame {
         for element in scene.elements.iter() {
             match element {
                 Element::Sprite(sprite_handle) => {
-                    let sprite = sprite_handle
-                        .handle
-                        .read()
-                        .expect("Error locking sprite for update");
-                    let source = sprite
-                        .source
-                        .handle
-                        .read()
-                        .expect("Error locking source for update");
-                    let texture = source
-                        .texture
-                        .handle
-                        .read()
-                        .expect("Error locking texture for update");
+                    let sprite = sprite_handle.handle.lock().await;
+                    let source = sprite.source.handle.lock().await;
+                    let texture = source.texture.handle.lock().await;
 
                     if current_texture_id.is_none()
                         || current_texture_id.as_ref().unwrap() != &texture.id
@@ -68,10 +61,7 @@ impl Frame {
                             .textures
                             .entry(texture.id)
                             .or_insert_with(|| LoadedTexture::new(&source.texture));
-                        let loaded_texture = loaded_texture_handle
-                            .handle
-                            .read()
-                            .expect("Error locking loaded_texture");
+                        let loaded_texture = loaded_texture_handle.handle.lock().await;
                         if loaded_texture.binding.is_none() {
                             self.commands
                                 .push(FrameCommand::LoadTexture(loaded_texture_handle.clone()));
@@ -85,15 +75,8 @@ impl Frame {
                 }
                 Element::Text(text) => {
                     current_batch = self.commit_batch(current_batch);
-                    let text_data = text
-                        .handle
-                        .read()
-                        .expect("Error locking text for updating frame");
-                    let font = text_data
-                        .font
-                        .handle
-                        .read()
-                        .expect("Error locking font for updating frame");
+                    let text_data = text.handle.lock().await;
+                    let font = text_data.font.handle.lock().await;
                     let loaded_font = self
                         .fonts
                         .get(&font.id)
@@ -124,13 +107,13 @@ impl Frame {
     fn commit_batch(&mut self, batch: Option<SpriteBatch>) -> Option<SpriteBatch> {
         if let Some(batch) = batch {
             self.commands
-                .push(FrameCommand::DrawBatch(KludgineHandle::new(batch)));
+                .push(FrameCommand::DrawBatch(Arc::new(Mutex::new(batch))));
         }
 
         None
     }
 
-    fn cache_glyphs(&mut self, scene: &Scene) {
+    async fn cache_glyphs(&mut self, scene: &Scene) {
         let mut referenced_fonts = HashSet::new();
         for text in scene
             .elements
@@ -142,24 +125,17 @@ impl Frame {
             .filter(|e| e.is_some())
             .map(|e| e.unwrap())
         {
-            let text = text.handle.read().expect("Error locking text for caching");
-            referenced_fonts.insert(text.font.id());
+            let text = text.handle.lock().await;
+            referenced_fonts.insert(text.font.id().await);
 
             for glpyh in text.positioned_glyphs.iter() {
-                let font = text
-                    .font
-                    .handle
-                    .read()
-                    .expect("Error locking font for caching");
+                let font = text.font.handle.lock().await;
 
                 let loaded_font = self
                     .fonts
                     .entry(font.id)
                     .or_insert_with(|| LoadedFont::new(&text.font));
-                let mut loaded_font_data = loaded_font
-                    .handle
-                    .write()
-                    .expect("Error locking loaded font for writing");
+                let mut loaded_font_data = loaded_font.handle.lock().await;
                 loaded_font_data.cache.queue_glyph(0, glpyh.clone());
             }
         }
@@ -175,10 +151,7 @@ impl Frame {
         }
 
         for font in self.fonts.values().map(|f| f.clone()).collect::<Vec<_>>() {
-            let mut loaded_font_data = font
-                .handle
-                .write()
-                .expect("Error locking loaded font for writing");
+            let mut loaded_font_data = font.handle.lock().await;
             loaded_font_data
                 .cache
                 .cache_queued(|rect, data| {

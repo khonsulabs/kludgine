@@ -61,13 +61,13 @@ impl FrameRenderer {
 
                 async_std::task::sleep(remaining).await;
             }
-            self.render().expect("Error rendering window");
+            self.render().await.expect("Error rendering window");
             limiter.advance_frame();
         }
     }
 
-    pub fn render(&mut self) -> KludgineResult<()> {
-        let mut engine_frame = self.frame.write().expect("Error locking frame");
+    pub async fn render(&mut self) -> KludgineResult<()> {
+        let mut engine_frame = self.frame.lock().await;
         let (w, h) = {
             (
                 engine_frame.size.width as u32,
@@ -79,10 +79,7 @@ impl FrameRenderer {
         }
 
         for FontUpdate { font, rect, data } in engine_frame.pending_font_updates.iter() {
-            let mut loaded_font = font
-                .handle
-                .write()
-                .expect("Error locking font for updating GPU");
+            let mut loaded_font = font.handle.lock().await;
             if loaded_font.texture.is_none() {
                 let texture = self.renderer.texture(512, 512);
                 let sampler = self.renderer.sampler(Filter::Nearest, Filter::Nearest);
@@ -148,19 +145,12 @@ impl FrameRenderer {
             for command in engine_frame.commands.iter() {
                 match command {
                     FrameCommand::LoadTexture(texture_handle) => {
-                        let mut loaded_texture = texture_handle
-                            .handle
-                            .write()
-                            .expect("Error locking texture to load");
+                        let mut loaded_texture = texture_handle.handle.lock().await;
                         if loaded_texture.binding.is_none() {
                             let sampler = self.renderer.sampler(Filter::Nearest, Filter::Nearest);
 
                             let (gpu_texture, texels) = {
-                                let texture = loaded_texture
-                                    .texture
-                                    .handle
-                                    .read()
-                                    .expect("Error reading texture");
+                                let texture = loaded_texture.texture.handle.lock().await;
                                 let (w, h) = texture.image.dimensions();
                                 let pixels = texture.image.pixels().map(|p| *p).collect::<Vec<_>>();
                                 let pixels = Rgba8::align(&pixels);
@@ -179,30 +169,15 @@ impl FrameRenderer {
                         }
                     }
                     FrameCommand::DrawBatch(batch_handle) => {
-                        let batch = batch_handle.read().expect("Error locking batch to render");
-                        let loaded_texture = batch
-                            .loaded_texture
-                            .handle
-                            .read()
-                            .expect("Error locking texture to render");
-                        let texture = loaded_texture
-                            .texture
-                            .handle
-                            .read()
-                            .expect("Error reading texture");
+                        let batch = batch_handle.lock().await;
+                        let loaded_texture = batch.loaded_texture.handle.lock().await;
+                        let texture = loaded_texture.texture.handle.lock().await;
 
                         let mut gpu_batch =
                             sprite2d::Batch::new(texture.image.width(), texture.image.height());
                         for sprite_handle in batch.sprites.iter() {
-                            let sprite = sprite_handle
-                                .handle
-                                .read()
-                                .expect("Error locking sprite to render");
-                            let source = sprite
-                                .source
-                                .handle
-                                .read()
-                                .expect("Error locking source to render");
+                            let sprite = sprite_handle.handle.lock().await;
+                            let source = sprite.source.handle.lock().await;
                             gpu_batch.add(
                                 Rect::new(
                                     source.location.x1() as f32,
@@ -229,11 +204,8 @@ impl FrameRenderer {
                         );
                     }
                     FrameCommand::DrawText { text, loaded_font } => {
-                        let text_data = text.handle.read().expect("Error locking text to render");
-                        let loaded_font_data = loaded_font
-                            .handle
-                            .read()
-                            .expect("Error locking font to render");
+                        let text_data = text.handle.lock().await;
+                        let loaded_font_data = loaded_font.handle.lock().await;
                         if let Some(texture) = loaded_font_data.texture.as_ref() {
                             let mut batch = sprite2d::Batch::new(texture.w, texture.h);
                             for (uv_rect, screen_rect) in

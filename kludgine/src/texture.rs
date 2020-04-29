@@ -1,9 +1,10 @@
 use super::{math::Size, KludgineHandle, KludgineResult};
 use crossbeam::atomic::AtomicCell;
+use futures::lock::Mutex;
 use image::{DynamicImage, RgbaImage};
 use lazy_static::lazy_static;
 use rgx::core::*;
-use std::path::Path;
+use std::{path::Path, sync::Arc};
 
 lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicCell<u64> = { AtomicCell::new(0) };
@@ -24,7 +25,7 @@ impl Texture {
         let image = image.to_rgba();
         let id = GLOBAL_ID_CELL.fetch_add(1);
         Self {
-            handle: KludgineHandle::new(TextureData { id, image }),
+            handle: Arc::new(Mutex::new(TextureData { id, image })),
         }
     }
 
@@ -40,11 +41,8 @@ impl Texture {
         Ok(Self::new(img))
     }
 
-    pub fn size(&self) -> Size<u32> {
-        let texture = self
-            .handle
-            .read()
-            .expect("Error locking texture to get size");
+    pub async fn size(&self) -> Size<u32> {
+        let texture = self.handle.lock().await;
         let (w, h) = texture.image.dimensions();
         Size::new(w as u32, h as u32)
     }
@@ -63,10 +61,10 @@ pub(crate) struct LoadedTextureData {
 impl LoadedTexture {
     pub fn new(texture: &Texture) -> Self {
         LoadedTexture {
-            handle: KludgineHandle::new(LoadedTextureData {
+            handle: Arc::new(Mutex::new(LoadedTextureData {
                 texture: texture.clone(),
                 binding: None,
-            }),
+            })),
         }
     }
 }

@@ -1,23 +1,22 @@
 extern crate kludgine;
+use futures::executor::block_on;
 use kludgine::prelude::*;
 
 fn main() {
-    SingleWindowApplication::<UIExample>::default().run();
+    SingleWindowApplication::run(block_on(UIExample::new()));
 }
 
-#[derive(Default)]
-struct UIExample {}
+struct UIExample {
+    ui: UserInterface,
+}
 
-impl WindowCreator<UIExample> for UIExample {
-    fn window_title() -> String {
-        "Text - Kludgine".to_owned()
+impl UIExample {
+    async fn new() -> Self {
+        Self {
+            ui: Self::create_interface().await.unwrap(),
+        }
     }
-}
-
-#[async_trait]
-impl Window for UIExample {
-    fn render(&mut self, scene: &mut SceneTarget) -> KludgineResult<()> {
-        let ui = UserInterface::new(Style::default());
+    async fn create_interface() -> KludgineResult<UserInterface> {
         let grid = Component::new(
             Grid::new(4, 4)
                 .with_cell(Point::new(0, 0), Component::new(Interface { message: "A" }))?
@@ -25,9 +24,27 @@ impl Window for UIExample {
                 .with_cell(Point::new(0, 1), Component::new(Interface { message: "C" }))?
                 .with_cell(Point::new(1, 1), Component::new(Interface { message: "D" }))?,
         );
-        ui.set_root(grid);
-        ui.render(scene)?;
+        let ui = UserInterface::new(Style::default());
+        ui.set_root(grid).await;
+        Ok(ui)
+    }
+}
 
+impl WindowCreator<UIExample> for UIExample {
+    fn window_title() -> String {
+        "User Interface - Kludgine".to_owned()
+    }
+}
+
+#[async_trait]
+impl Window for UIExample {
+    async fn render<'a>(&mut self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+        self.ui.render(scene).await?;
+
+        Ok(())
+    }
+
+    async fn process_input(&mut self, _event: InputEvent) -> KludgineResult<()> {
         Ok(())
     }
 }
@@ -37,8 +54,9 @@ struct Interface {
     message: &'static str,
 }
 
+#[async_trait]
 impl Controller for Interface {
-    fn view(&self) -> KludgineResult<Box<dyn View>> {
+    async fn view(&self) -> KludgineResult<Box<dyn View>> {
         Label::default()
             .with_value(self.message)
             .with_style(Style {

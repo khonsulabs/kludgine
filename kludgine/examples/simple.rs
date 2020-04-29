@@ -2,7 +2,7 @@ extern crate kludgine;
 use kludgine::prelude::*;
 
 fn main() {
-    SingleWindowApplication::<Simple>::default().run();
+    SingleWindowApplication::run(Simple::default());
 }
 
 #[derive(Default)]
@@ -18,14 +18,14 @@ impl WindowCreator<Simple> for Simple {
 
 #[async_trait]
 impl Window for Simple {
-    fn render(&mut self, scene: &mut SceneTarget) -> KludgineResult<()> {
+    async fn render<'a>(&mut self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
         if self.source_sprite.is_none() {
             let texture = Texture::load("examples/assets/k.png")?;
-            self.source_sprite = Some(SourceSprite::entire_texture(texture));
+            self.source_sprite = Some(SourceSprite::entire_texture(texture).await);
         }
         let sprite = self.source_sprite.as_ref().unwrap();
 
-        sprite.render_at(scene, Point::default());
+        sprite.render_at(scene, Point::default()).await;
 
         Ok(())
     }

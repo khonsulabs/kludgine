@@ -82,10 +82,10 @@ impl<'a> SceneTarget<'a> {
         )
     }
 
-    pub fn lookup_font(&mut self, family: &str, weight: Weight) -> KludgineResult<Font> {
+    pub async fn lookup_font(&mut self, family: &str, weight: Weight) -> KludgineResult<Font> {
         match &self {
-            SceneTarget::Scene(scene) => scene.lookup_font(family, weight),
-            SceneTarget::Camera { scene, .. } => scene.lookup_font(family, weight),
+            SceneTarget::Scene(scene) => scene.lookup_font(family, weight).await,
+            SceneTarget::Camera { scene, .. } => scene.lookup_font(family, weight).await,
         }
     }
 
@@ -214,33 +214,45 @@ impl Scene {
         self.elapsed.is_none()
     }
 
-    pub fn register_font(&mut self, font: &Font) {
-        let family = font.family().expect("Unable to register VecFonts");
+    pub async fn register_font(&mut self, font: &Font) {
+        let family = font.family().await.expect("Unable to register VecFonts");
         self.fonts
             .entry(family)
             .and_modify(|fonts| fonts.push(font.clone()))
             .or_insert_with(|| vec![font.clone()]);
     }
 
-    pub(crate) fn register_bundled_fonts(&mut self) {
+    pub(crate) async fn register_bundled_fonts(&mut self) {
         #[cfg(feature = "bundled-fonts-roboto")]
         {
-            self.register_font(&crate::text::bundled_fonts::ROBOTO);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_ITALIC);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_BLACK);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_BLACK_ITALIC);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_BOLD);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_BOLD_ITALIC);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_LIGHT);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_LIGHT_ITALIC);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_MEDIUM);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_MEDIUM_ITALIC);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_THIN);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_THIN_ITALIC);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO)
+                .await;
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_ITALIC)
+                .await;
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_BLACK)
+                .await;
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_BLACK_ITALIC)
+                .await;
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_BOLD)
+                .await;
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_BOLD_ITALIC)
+                .await;
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_LIGHT)
+                .await;
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_LIGHT_ITALIC)
+                .await;
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_MEDIUM)
+                .await;
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_MEDIUM_ITALIC)
+                .await;
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_THIN)
+                .await;
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_THIN_ITALIC)
+                .await;
         }
     }
 
-    pub fn lookup_font(&self, family: &str, weight: Weight) -> KludgineResult<Font> {
+    pub async fn lookup_font(&self, family: &str, weight: Weight) -> KludgineResult<Font> {
         let family = if family.eq_ignore_ascii_case("sans-serif") {
             "Roboto"
         } else {
@@ -252,11 +264,12 @@ impl Scene {
                 let mut closest_weight = None;
 
                 for font in fonts.iter() {
-                    if font.weight() == weight {
+                    if font.weight().await == weight {
                         return Ok(font.clone());
                     } else {
-                        let delta =
-                            (font.weight().to_number() as i32 - weight.to_number() as i32).abs();
+                        let delta = (font.weight().await.to_number() as i32
+                            - weight.to_number() as i32)
+                            .abs();
                         if closest_weight.is_none() || closest_weight.unwrap() > delta {
                             closest_weight = Some(delta);
                             closest_font = Some(font.clone());

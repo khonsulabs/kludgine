@@ -4,6 +4,8 @@ use super::{
     style::Style,
     KludgineHandle, KludgineResult,
 };
+use async_trait::async_trait;
+use futures::lock::Mutex;
 use std::sync::Arc;
 
 pub mod grid;
@@ -15,78 +17,77 @@ pub struct UserInterface {
     handle: KludgineHandle<UserInterfaceData>,
 }
 
+#[derive(Debug)]
+pub(crate) struct UserInterfaceData {
+    root: Option<Component>,
+    base_style: Style,
+    hover: Option<Component>,
+}
+
 impl UserInterface {
     pub fn new(base_style: Style) -> Self {
         Self {
-            handle: KludgineHandle::new(UserInterfaceData {
+            handle: Arc::new(Mutex::new(UserInterfaceData {
                 root: None,
                 base_style,
-            }),
+                hover: None,
+            })),
         }
     }
 
-    pub fn set_root(&self, component: Component) {
-        let mut ui = self.handle.write().expect("Error locking UI to write");
+    pub async fn set_root(&self, component: Component) {
+        let mut ui = self.handle.lock().await;
         ui.root = Some(component);
     }
 
-    pub fn render(&self, scene: &mut SceneTarget) -> KludgineResult<()> {
-        let ui = self.handle.read().expect("Error locking UI to write");
+    pub async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+        let ui = self.handle.lock().await;
         if let Some(root_component) = &ui.root {
-            let root = root_component
-                .handle
-                .read()
-                .expect("Error locking component");
-            let mut view = root.controller.view()?;
-            view.update_style(scene, &ui.base_style)?;
+            let root = root_component.handle.lock().await;
+            let mut view = root.controller.view().await?;
+            view.update_style(scene, &ui.base_style).await?;
             view.layout_within(
                 scene,
                 Rect::sized(
                     Point::new(0.0, 0.0),
                     Size::new(scene.size().width, scene.size().height),
                 ),
-            )?;
-            view.render(scene)?;
+            )
+            .await?;
+            view.render(scene).await?;
         }
         Ok(())
     }
-}
-
-#[derive(Debug)]
-pub(crate) struct UserInterfaceData {
-    root: Option<Component>,
-    base_style: Style,
 }
 
 #[derive(Clone, Debug)]
 pub struct Component {
     handle: KludgineHandle<ComponentData>,
 }
+
+#[derive(Debug)]
+pub(crate) struct ComponentData {
+    controller: Box<dyn Controller>,
+    view: Option<Box<dyn View>>,
+}
+
 impl Component {
     pub fn new<C: Controller + 'static>(controller: C) -> Component {
-        let handle = KludgineHandle::new(ComponentData {
-            controller: Arc::new(controller),
+        let handle = Arc::new(Mutex::new(ComponentData {
+            controller: Box::new(controller),
             view: None,
-        });
+        }));
 
         Component { handle }
     }
 
-    pub fn view(&self) -> KludgineResult<Box<dyn View>> {
-        let handle = self
-            .handle
-            .read()
-            .expect("Error locking component for read");
-        handle.controller.view()
+    async fn view(&self) -> KludgineResult<Box<dyn View>> {
+        let handle = self.handle.lock().await;
+        handle.controller.view().await
     }
 }
 
-#[derive(Debug)]
-pub(crate) struct ComponentData {
-    controller: Arc<dyn Controller>,
-    view: Option<Box<dyn View>>,
-}
-
-pub trait Controller: std::fmt::Debug {
-    fn view(&self) -> KludgineResult<Box<dyn View>>;
+#[async_trait]
+pub trait Controller: std::fmt::Debug + Sync + Send + 'static {
+    async fn view(&self) -> KludgineResult<Box<dyn View>>;
 }

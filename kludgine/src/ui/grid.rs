@@ -8,7 +8,10 @@ use crate::{
     style::Style,
     KludgineError, KludgineHandle, KludgineResult,
 };
+use async_trait::async_trait;
+use futures::{future::join_all, lock::Mutex};
 use kludgine_macros::ViewCore;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct Grid {
@@ -23,9 +26,9 @@ pub enum GridEntry {
 }
 
 impl GridEntry {
-    pub fn view(&self) -> KludgineResult<Option<Box<dyn View>>> {
+    pub async fn view(&self) -> KludgineResult<Option<Box<dyn View>>> {
         let view = match self {
-            GridEntry::Component(component) => Some(component.view()?),
+            GridEntry::Component(component) => Some(component.view().await?),
             GridEntry::Empty => None,
         };
 
@@ -33,9 +36,13 @@ impl GridEntry {
     }
 }
 
+#[async_trait]
 impl Controller for Grid {
-    fn view(&self) -> KludgineResult<Box<dyn View>> {
-        let views: KludgineResult<Vec<_>> = self.cells.iter().map(|c| c.view()).collect();
+    async fn view(&self) -> KludgineResult<Box<dyn View>> {
+        let views: KludgineResult<Vec<_>> = join_all(self.cells.iter().map(|c| c.view()))
+            .await
+            .into_iter()
+            .collect();
 
         GridView::new(self.width, self.height(), views?)
             .with_padding(Surround::uniform(0.0))
@@ -89,41 +96,47 @@ pub struct GridView {
     cells: Vec<Option<KludgineHandle<Box<dyn View>>>>,
 }
 
+#[async_trait]
 impl View for GridView {
-    fn render(&self, scene: &mut SceneTarget) -> KludgineResult<()> {
+    async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
         for cell in self.cells.iter() {
             if let Some(cell) = cell {
-                let view = cell.read().expect("Error locking view for render");
-                view.render(scene)?
+                let view = cell.lock().await;
+                view.render(scene).await?
             }
         }
         Ok(())
     }
 
-    fn update_style(
+    async fn update_style<'a>(
         &mut self,
-        scene: &mut SceneTarget,
+        scene: &mut SceneTarget<'a>,
         inherited_style: &Style,
     ) -> KludgineResult<()> {
         let inherited_style = self.view.style.inherit_from(&inherited_style);
         self.view.effective_style = inherited_style.effective_style(scene);
 
         for cell in self.cells.iter_mut().filter_map(|e| e.as_ref().to_owned()) {
-            let mut view = cell.write().expect("Error locking view for update_style");
-            view.update_style(scene, &inherited_style)?;
+            let mut view = cell.lock().await;
+            view.update_style(scene, &inherited_style).await?;
         }
 
         Ok(())
     }
 
-    fn layout_within(&mut self, scene: &mut SceneTarget, bounds: Rect) -> KludgineResult<()> {
+    async fn layout_within<'a>(
+        &mut self,
+        scene: &mut SceneTarget<'a>,
+        bounds: Rect,
+    ) -> KludgineResult<()> {
         // Let the base view handle padding
         self.view
-            .layout_within(&self.content_size(&bounds.size, scene)?, bounds)?;
+            .layout_within(&self.content_size(&bounds.size, scene).await?, bounds)?;
 
         // Use the new bounding box to compute our desired sizes
-        let (desired_size, column_widths, row_heights) =
-            self.calculate_desired_sizes(&self.view.bounds.size, scene)?;
+        let (desired_size, column_widths, row_heights) = self
+            .calculate_desired_sizes(&self.view.bounds.size, scene)
+            .await?;
 
         let empty_columns = column_widths.iter().filter(|w| *w <= &0.0).count();
         let empty_rows = row_heights.iter().filter(|h| *h <= &0.0).count();
@@ -151,9 +164,8 @@ impl View for GridView {
                                 Point::new(x_pos, y_pos),
                                 Size::new(column_width, row_height),
                             );
-                            let mut view =
-                                cell.write().expect("Error locking view for layout_within");
-                            view.layout_within(scene, cell_bounds)?;
+                            let mut view = cell.lock().await;
+                            view.layout_within(scene, cell_bounds).await?;
                         }
                         x_pos += column_width;
                     }
@@ -164,8 +176,12 @@ impl View for GridView {
         Ok(())
     }
 
-    fn content_size(&self, maximum_size: &Size, scene: &mut SceneTarget) -> KludgineResult<Size> {
-        let (desired_size, ..) = self.calculate_desired_sizes(maximum_size, scene)?;
+    async fn content_size<'a>(
+        &self,
+        maximum_size: &Size,
+        scene: &mut SceneTarget<'a>,
+    ) -> KludgineResult<Size> {
+        let (desired_size, ..) = self.calculate_desired_sizes(maximum_size, scene).await?;
         Ok(desired_size)
     }
 }
@@ -178,15 +194,15 @@ impl GridView {
             height,
             cells: cells
                 .into_iter()
-                .map(|v| v.map(|view| KludgineHandle::new(view)))
+                .map(|v| v.map(|view| Arc::new(Mutex::new(view))))
                 .collect(),
         }
     }
 
-    fn calculate_desired_sizes(
+    async fn calculate_desired_sizes<'a>(
         &self,
         maximum_size: &Size,
-        scene: &mut SceneTarget,
+        scene: &mut SceneTarget<'a>,
     ) -> KludgineResult<(Size<f32>, Vec<f32>, Vec<f32>)> {
         let inner_size = &self.view.layout.size_with_minimal_padding(&maximum_size);
         let mut column_widths = Vec::with_capacity(self.width as usize);
@@ -202,8 +218,8 @@ impl GridView {
             for x in 0..self.width {
                 match self.cells.get((y * self.width + x) as usize).unwrap() {
                     Some(cell) => {
-                        let view = cell.read().expect("Error locking view for render");
-                        let cell_size = view.content_size(&inner_size, scene)?;
+                        let view = cell.lock().await;
+                        let cell_size = view.content_size(&inner_size, scene).await?;
                         column_widths[x as usize] =
                             max_f(column_widths[x as usize], cell_size.width);
                         row_heights[y as usize] = max_f(row_heights[y as usize], cell_size.height);

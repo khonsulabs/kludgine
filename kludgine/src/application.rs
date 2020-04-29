@@ -10,11 +10,10 @@ pub trait Application: Sized + Send + Sync {
     // Async methods
     async fn initialize(&mut self) {}
     async fn should_exit(&mut self) -> bool {
-        RuntimeWindow::count() == 0
+        RuntimeWindow::count().await == 0
     }
 }
 
-#[derive(Default)]
 pub struct SingleWindowApplication<T> {
     phantom: PhantomData<T>,
 }
@@ -30,16 +29,16 @@ pub trait WindowCreator<T> {
 }
 
 #[async_trait]
-impl<T> Application for SingleWindowApplication<T> where
-    T: Window + Default + WindowCreator<T> + 'static
-{
-}
+impl<T> Application for SingleWindowApplication<T> where T: Window + WindowCreator<T> + 'static {}
 
 impl<T> SingleWindowApplication<T>
 where
-    T: Window + Default + WindowCreator<T> + 'static,
+    T: Window + WindowCreator<T> + 'static,
 {
-    pub fn run(self) -> ! {
-        Runtime::new(self).run(T::get_window_builder(), T::default())
+    pub fn run(window: T) -> ! {
+        let app = Self {
+            phantom: PhantomData::default(),
+        };
+        Runtime::new(app).run(T::get_window_builder(), window)
     }
 }

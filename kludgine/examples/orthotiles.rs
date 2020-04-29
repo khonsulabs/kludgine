@@ -2,7 +2,7 @@ extern crate kludgine;
 use kludgine::prelude::*;
 
 fn main() {
-    SingleWindowApplication::<OrthoTiles>::default().run();
+    SingleWindowApplication::run(OrthoTiles::default());
 }
 
 #[derive(Default)]
@@ -24,7 +24,7 @@ static MAP_SIZE: u32 = 100;
 #[async_trait]
 impl Window for OrthoTiles {
     async fn initialize(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
-        self.load_assets()?;
+        self.load_assets().await?;
         self.zoom = 1.0;
         self.position.x = MAP_SIZE as f32 * 32.0 / 2.0;
         self.position.y = self.position.x;
@@ -48,25 +48,27 @@ impl Window for OrthoTiles {
         } else if scene.pressed_keys.contains(&VirtualKeyCode::Down) {
             self.position.y += 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
         }
-        stickguy.set_current_tag(Some(animation))?;
+        stickguy.set_current_tag(Some(animation)).await?;
 
         Ok(())
     }
 
-    fn render(&mut self, scene: &mut SceneTarget) -> KludgineResult<()> {
+    async fn render<'a>(&mut self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
         let mut camera_scene = scene.set_camera(self.zoom, self.position);
         // The map is drawn at a static location of 0,0 (upper-left)
         // It will be offset scene.origin()
         let map = self.map.as_ref().unwrap();
-        map.draw(&mut camera_scene, Point::new(0, 0))?;
+        map.draw(&mut camera_scene, Point::new(0, 0)).await?;
 
         // Draw the stickguy with the current frame of animation
         let stickguy = self.stickguy.as_ref().unwrap();
-        let sprite = stickguy.get_frame(camera_scene.elapsed())?;
-        sprite.render_at(
-            &mut camera_scene,
-            Point::new(self.position.x - 16.0, self.position.y - 16.0),
-        );
+        let sprite = stickguy.get_frame(camera_scene.elapsed()).await?;
+        sprite
+            .render_at(
+                &mut camera_scene,
+                Point::new(self.position.x - 16.0, self.position.y - 16.0),
+            )
+            .await;
 
         Ok(())
     }
@@ -87,9 +89,9 @@ impl Window for OrthoTiles {
 }
 
 impl OrthoTiles {
-    fn load_assets(&mut self) -> KludgineResult<()> {
-        let sprite = include_aseprite_sprite!("assets/grass.json", "assets/grass.png")?;
-        sprite.set_current_tag(Some("Swaying"))?;
+    async fn load_assets(&mut self) -> KludgineResult<()> {
+        let sprite = include_aseprite_sprite!("assets/grass.json", "assets/grass.png").await?;
+        sprite.set_current_tag(Some("Swaying")).await?;
 
         let mut map = PersistentTileMap::persistent_with_size(
             Size::new(32, 32),
@@ -97,16 +99,14 @@ impl OrthoTiles {
         );
         for x in 0..MAP_SIZE {
             for y in 0..MAP_SIZE {
-                map.set(Point::new(x, y), Some(sprite.new_instance()));
+                map.set(Point::new(x, y), Some(sprite.new_instance().await));
             }
         }
 
         self.map = Some(map);
 
-        self.stickguy = Some(include_aseprite_sprite!(
-            "assets/stickguy.json",
-            "assets/stickguy.png"
-        )?);
+        self.stickguy =
+            Some(include_aseprite_sprite!("assets/stickguy.json", "assets/stickguy.png").await?);
         Ok(())
     }
 }
