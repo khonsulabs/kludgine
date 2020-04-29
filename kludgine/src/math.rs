@@ -171,6 +171,48 @@ where
     }
 }
 
+impl<S> std::ops::Div<Size<S>> for Size<S>
+where
+    S: std::ops::Div<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn div(self, s: Size<S>) -> Self {
+        Self {
+            width: self.width / s.width,
+            height: self.height / s.height,
+        }
+    }
+}
+
+impl<S> std::ops::Sub<Size<S>> for Size<S>
+where
+    S: std::ops::Sub<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn sub(self, s: Size<S>) -> Self {
+        Self {
+            width: self.width - s.width,
+            height: self.height - s.height,
+        }
+    }
+}
+
+impl<S> std::ops::Add<Size<S>> for Size<S>
+where
+    S: std::ops::Add<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn add(self, s: Size<S>) -> Self {
+        Self {
+            width: self.width + s.width,
+            height: self.height + s.height,
+        }
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
 pub struct Surround<S> {
     pub left: S,

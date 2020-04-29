@@ -82,6 +82,7 @@ pub mod prelude {
             PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,
         },
         ui::{
+            grid::Grid,
             label::Label,
             view::{View, ViewBuilder, ViewCore, ViewCoreBuilder},
             Component, Controller, UserInterface,
