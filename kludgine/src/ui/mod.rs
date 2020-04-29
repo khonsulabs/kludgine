@@ -4,8 +4,8 @@ use super::{
     style::Style,
     KludgineHandle, KludgineResult,
 };
+use async_std::sync::RwLock;
 use async_trait::async_trait;
-use futures::lock::Mutex;
 use std::sync::Arc;
 
 pub mod grid;
@@ -27,7 +27,7 @@ pub(crate) struct UserInterfaceData {
 impl UserInterface {
     pub fn new(base_style: Style) -> Self {
         Self {
-            handle: Arc::new(Mutex::new(UserInterfaceData {
+            handle: Arc::new(RwLock::new(UserInterfaceData {
                 root: None,
                 base_style,
                 hover: None,
@@ -36,14 +36,14 @@ impl UserInterface {
     }
 
     pub async fn set_root(&self, component: Component) {
-        let mut ui = self.handle.lock().await;
+        let mut ui = self.handle.write().await;
         ui.root = Some(component);
     }
 
     pub async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
-        let ui = self.handle.lock().await;
+        let ui = self.handle.read().await;
         if let Some(root_component) = &ui.root {
-            let root = root_component.handle.lock().await;
+            let root = root_component.handle.read().await;
             let mut view = root.controller.view().await?;
             view.update_style(scene, &ui.base_style).await?;
             view.layout_within(
@@ -73,7 +73,7 @@ pub(crate) struct ComponentData {
 
 impl Component {
     pub fn new<C: Controller + 'static>(controller: C) -> Component {
-        let handle = Arc::new(Mutex::new(ComponentData {
+        let handle = Arc::new(RwLock::new(ComponentData {
             controller: Box::new(controller),
             view: None,
         }));
@@ -82,7 +82,7 @@ impl Component {
     }
 
     async fn view(&self) -> KludgineResult<Box<dyn View>> {
-        let handle = self.handle.lock().await;
+        let handle = self.handle.read().await;
         handle.controller.view().await
     }
 }

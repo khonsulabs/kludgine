@@ -4,7 +4,7 @@ use super::{
     texture::{LoadedTexture, Texture},
     KludgineError, KludgineHandle, KludgineResult,
 };
-use futures::lock::Mutex;
+use async_std::sync::RwLock;
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
 #[macro_export]
@@ -62,7 +62,7 @@ impl Sprite {
         animations: KludgineHandle<HashMap<Option<String>, SpriteAnimation>>,
     ) -> Self {
         Self {
-            handle: Arc::new(Mutex::new(SpriteData {
+            handle: Arc::new(RwLock::new(SpriteData {
                 title,
                 animations,
                 current_frame: 0,
@@ -74,9 +74,9 @@ impl Sprite {
     }
 
     pub async fn new_instance(&self) -> Self {
-        let data = self.handle.lock().await;
+        let data = self.handle.read().await;
         Self {
-            handle: Arc::new(Mutex::new(data.clone())),
+            handle: Arc::new(RwLock::new(data.clone())),
         }
     }
 
@@ -97,7 +97,7 @@ impl Sprite {
                 AnimationMode::Forward,
             ),
         );
-        let frames = Arc::new(Mutex::new(frames));
+        let frames = Arc::new(RwLock::new(frames));
 
         Self::new(None, frames)
     }
@@ -231,15 +231,15 @@ impl Sprite {
             animations.insert(name, SpriteAnimation::new(animation_frames, direction));
         }
 
-        Ok(Sprite::new(title, Arc::new(Mutex::new(animations))))
+        Ok(Sprite::new(title, Arc::new(RwLock::new(animations))))
     }
 
     pub async fn set_current_tag<S: Into<String>>(&self, tag: Option<S>) -> KludgineResult<()> {
         let new_tag = tag.map_or(None, |t| Some(t.into()));
-        let mut sprite = self.handle.lock().await;
+        let mut sprite = self.handle.write().await;
         if sprite.current_tag != new_tag {
             sprite.current_animation_direction = {
-                let animations = sprite.animations.lock().await;
+                let animations = sprite.animations.read().await;
                 let animation = animations
                     .get(&new_tag)
                     .ok_or_else(|| KludgineError::InvalidSpriteTag)?;
@@ -253,7 +253,7 @@ impl Sprite {
     }
 
     pub async fn get_frame(&self, elapsed: Option<Duration>) -> KludgineResult<SourceSprite> {
-        let mut sprite = self.handle.lock().await;
+        let mut sprite = self.handle.write().await;
         if let Some(elapsed) = elapsed {
             sprite.elapsed_since_frame_change += elapsed;
 
@@ -282,7 +282,7 @@ impl SpriteData {
     }
     async fn next_frame(&mut self) -> KludgineResult<usize> {
         let starting_frame = self.current_frame as i32;
-        let frames = self.animations.lock().await;
+        let frames = self.animations.read().await;
         let animation = frames
             .get(&self.current_tag)
             .ok_or(KludgineError::InvalidSpriteTag)?;
@@ -322,7 +322,7 @@ impl SpriteData {
     where
         F: Fn(&SpriteFrame) -> R,
     {
-        let frames = self.animations.lock().await;
+        let frames = self.animations.read().await;
         let animation = frames
             .get(&self.current_tag)
             .ok_or(KludgineError::InvalidSpriteTag)?;
@@ -396,7 +396,7 @@ pub(crate) struct RenderedSprite {
 impl RenderedSprite {
     pub fn new(render_at: Rect, source: SourceSprite) -> Self {
         Self {
-            handle: Arc::new(Mutex::new(RenderedSpriteData { render_at, source })),
+            handle: Arc::new(RwLock::new(RenderedSpriteData { render_at, source })),
         }
     }
 }

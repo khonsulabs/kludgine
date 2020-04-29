@@ -7,7 +7,7 @@ use super::{
     timing::Moment,
     KludgineHandle,
 };
-use futures::lock::Mutex;
+use async_std::sync::RwLock;
 use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
@@ -45,9 +45,9 @@ impl Frame {
         for element in scene.elements.iter() {
             match element {
                 Element::Sprite(sprite_handle) => {
-                    let sprite = sprite_handle.handle.lock().await;
-                    let source = sprite.source.handle.lock().await;
-                    let texture = source.texture.handle.lock().await;
+                    let sprite = sprite_handle.handle.read().await;
+                    let source = sprite.source.handle.read().await;
+                    let texture = source.texture.handle.read().await;
 
                     if current_texture_id.is_none()
                         || current_texture_id.as_ref().unwrap() != &texture.id
@@ -61,7 +61,7 @@ impl Frame {
                             .textures
                             .entry(texture.id)
                             .or_insert_with(|| LoadedTexture::new(&source.texture));
-                        let loaded_texture = loaded_texture_handle.handle.lock().await;
+                        let loaded_texture = loaded_texture_handle.handle.read().await;
                         if loaded_texture.binding.is_none() {
                             self.commands
                                 .push(FrameCommand::LoadTexture(loaded_texture_handle.clone()));
@@ -75,8 +75,8 @@ impl Frame {
                 }
                 Element::Text(text) => {
                     current_batch = self.commit_batch(current_batch);
-                    let text_data = text.handle.lock().await;
-                    let font = text_data.font.handle.lock().await;
+                    let text_data = text.handle.read().await;
+                    let font = text_data.font.handle.read().await;
                     let loaded_font = self
                         .fonts
                         .get(&font.id)
@@ -107,7 +107,7 @@ impl Frame {
     fn commit_batch(&mut self, batch: Option<SpriteBatch>) -> Option<SpriteBatch> {
         if let Some(batch) = batch {
             self.commands
-                .push(FrameCommand::DrawBatch(Arc::new(Mutex::new(batch))));
+                .push(FrameCommand::DrawBatch(Arc::new(RwLock::new(batch))));
         }
 
         None
@@ -125,17 +125,17 @@ impl Frame {
             .filter(|e| e.is_some())
             .map(|e| e.unwrap())
         {
-            let text = text.handle.lock().await;
+            let text = text.handle.read().await;
             referenced_fonts.insert(text.font.id().await);
 
             for glpyh in text.positioned_glyphs.iter() {
-                let font = text.font.handle.lock().await;
+                let font = text.font.handle.read().await;
 
                 let loaded_font = self
                     .fonts
                     .entry(font.id)
                     .or_insert_with(|| LoadedFont::new(&text.font));
-                let mut loaded_font_data = loaded_font.handle.lock().await;
+                let mut loaded_font_data = loaded_font.handle.write().await;
                 loaded_font_data.cache.queue_glyph(0, glpyh.clone());
             }
         }
@@ -151,7 +151,7 @@ impl Frame {
         }
 
         for font in self.fonts.values().map(|f| f.clone()).collect::<Vec<_>>() {
-            let mut loaded_font_data = font.handle.lock().await;
+            let mut loaded_font_data = font.handle.write().await;
             loaded_font_data
                 .cache
                 .cache_queued(|rect, data| {

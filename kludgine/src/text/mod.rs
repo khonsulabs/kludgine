@@ -4,8 +4,9 @@ use super::{
     style::EffectiveStyle,
     KludgineHandle, KludgineResult,
 };
+use async_std::sync::RwLock;
 use crossbeam::atomic::AtomicCell;
-use futures::{future::join_all, lock::Mutex};
+use futures::future::join_all;
 use lazy_static::lazy_static;
 use rgx::core::*;
 use rusttype::{gpu_cache, Scale};
@@ -28,7 +29,7 @@ impl Font {
     pub fn try_from_bytes(bytes: &'static [u8]) -> Option<Font> {
         let font = rusttype::Font::try_from_bytes(bytes)?;
         Some(Font {
-            handle: Arc::new(Mutex::new(FontData {
+            handle: Arc::new(RwLock::new(FontData {
                 font,
                 id: GLOBAL_ID_CELL.fetch_add(1),
             })),
@@ -36,17 +37,17 @@ impl Font {
     }
 
     pub async fn id(&self) -> u64 {
-        let font = self.handle.lock().await;
+        let font = self.handle.read().await;
         font.id
     }
 
     pub async fn metrics(&self, size: f32) -> rusttype::VMetrics {
-        let font = self.handle.lock().await;
+        let font = self.handle.read().await;
         font.font.v_metrics(rusttype::Scale::uniform(size))
     }
 
     pub async fn family(&self) -> Option<String> {
-        let font = self.handle.lock().await;
+        let font = self.handle.read().await;
         match &font.font {
             rusttype::Font::Ref(f) => f.family_name(),
             _ => None,
@@ -54,7 +55,7 @@ impl Font {
     }
 
     pub async fn weight(&self) -> ttf_parser::Weight {
-        let font = self.handle.lock().await;
+        let font = self.handle.read().await;
         match &font.font {
             rusttype::Font::Ref(f) => f.weight(),
             _ => ttf_parser::Weight::Normal,
@@ -62,12 +63,12 @@ impl Font {
     }
 
     pub async fn glyph(&self, c: char) -> rusttype::Glyph<'static> {
-        let font = self.handle.lock().await;
+        let font = self.handle.read().await;
         font.font.glyph(c)
     }
 
     pub async fn pair_kerning(&self, size: f32, a: rusttype::GlyphId, b: rusttype::GlyphId) -> f32 {
-        let font = self.handle.lock().await;
+        let font = self.handle.read().await;
         font.font.pair_kerning(Scale::uniform(size), a, b)
     }
 }
@@ -85,7 +86,7 @@ pub(crate) struct LoadedFont {
 impl LoadedFont {
     pub fn new(font: &Font) -> Self {
         Self {
-            handle: Arc::new(Mutex::new(LoadedFontData {
+            handle: Arc::new(RwLock::new(LoadedFontData {
                 font: font.clone(),
                 cache: gpu_cache::Cache::builder().dimensions(512, 512).build(),
                 binding: None,
@@ -435,7 +436,7 @@ impl PreparedSpan {
     ) -> Self {
         Self {
             location: Point::new(0.0, 0.0),
-            handle: Arc::new(Mutex::new(PreparedSpanData {
+            handle: Arc::new(RwLock::new(PreparedSpanData {
                 font,
                 size,
                 color,
@@ -455,12 +456,12 @@ impl PreparedSpan {
     }
 
     pub async fn x(&self) -> f32 {
-        let handle = self.handle.lock().await;
+        let handle = self.handle.read().await;
         handle.x
     }
 
     pub async fn width(&self) -> f32 {
-        let handle = self.handle.lock().await;
+        let handle = self.handle.read().await;
         handle.width
     }
 }

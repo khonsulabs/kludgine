@@ -1,6 +1,6 @@
 use super::{math::Size, KludgineHandle, KludgineResult};
+use async_std::sync::RwLock;
 use crossbeam::atomic::AtomicCell;
-use futures::lock::Mutex;
 use image::{DynamicImage, RgbaImage};
 use lazy_static::lazy_static;
 use rgx::core::*;
@@ -25,7 +25,7 @@ impl Texture {
         let image = image.to_rgba();
         let id = GLOBAL_ID_CELL.fetch_add(1);
         Self {
-            handle: Arc::new(Mutex::new(TextureData { id, image })),
+            handle: Arc::new(RwLock::new(TextureData { id, image })),
         }
     }
 
@@ -42,7 +42,7 @@ impl Texture {
     }
 
     pub async fn size(&self) -> Size<u32> {
-        let texture = self.handle.lock().await;
+        let texture = self.handle.read().await;
         let (w, h) = texture.image.dimensions();
         Size::new(w as u32, h as u32)
     }
@@ -61,7 +61,7 @@ pub(crate) struct LoadedTextureData {
 impl LoadedTexture {
     pub fn new(texture: &Texture) -> Self {
         LoadedTexture {
-            handle: Arc::new(Mutex::new(LoadedTextureData {
+            handle: Arc::new(RwLock::new(LoadedTextureData {
                 texture: texture.clone(),
                 binding: None,
             })),

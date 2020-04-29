@@ -15,7 +15,8 @@ use crossbeam::{
 use lazy_static::lazy_static;
 use rgx::core::*;
 
-use futures::{executor::block_on, lock::Mutex};
+use async_std::sync::RwLock;
+use futures::executor::block_on;
 use std::{cell::RefCell, collections::HashMap, sync::Arc, time::Duration};
 use winit::{
     event::{
@@ -130,8 +131,8 @@ impl Into<WinitWindowBuilder> for WindowBuilder {
 }
 
 lazy_static! {
-    static ref WINDOW_CHANNELS: Arc<Mutex<HashMap<WindowId, Sender<WindowMessage>>>> =
-        { Arc::new(Mutex::new(HashMap::new())) };
+    static ref WINDOW_CHANNELS: Arc<RwLock<HashMap<WindowId, Sender<WindowMessage>>>> =
+        { Arc::new(RwLock::new(HashMap::new())) };
 }
 
 thread_local! {
@@ -145,7 +146,7 @@ pub(crate) enum WindowMessage {
 impl WindowMessage {
     pub async fn send_to(self, id: WindowId) -> KludgineResult<()> {
         let sender = {
-            let mut channels = WINDOW_CHANNELS.lock().await;
+            let mut channels = WINDOW_CHANNELS.write().await;
             if let Some(sender) = channels.get_mut(&id) {
                 sender.clone()
             } else {
@@ -185,7 +186,7 @@ impl RuntimeWindow {
 
         let (message_sender, message_receiver) = unbounded();
         let (event_sender, event_receiver) = unbounded();
-        let frame = Arc::new(Mutex::new(Frame::default()));
+        let frame = Arc::new(RwLock::new(Frame::default()));
         Runtime::spawn(Self::window_main::<T>(
             window_id,
             frame.clone(),
@@ -203,7 +204,7 @@ impl RuntimeWindow {
         );
 
         {
-            let mut channels = block_on(WINDOW_CHANNELS.lock());
+            let mut channels = block_on(WINDOW_CHANNELS.write());
             channels.insert(window_id, message_sender);
         }
 
@@ -302,7 +303,7 @@ impl RuntimeWindow {
                     scene.start_frame();
                     window.update(&mut scene).await?;
                     window.render(&mut SceneTarget::Scene(&mut scene)).await?;
-                    let mut guard = frame.lock().await;
+                    let mut guard = frame.write().await;
                     guard.update(&scene).await;
                 }
             }
@@ -323,7 +324,7 @@ impl RuntimeWindow {
     }
 
     pub(crate) async fn count() -> usize {
-        let channels = WINDOW_CHANNELS.lock().await;
+        let channels = WINDOW_CHANNELS.read().await;
         channels.len()
     }
 
@@ -354,7 +355,7 @@ impl RuntimeWindow {
         while let Ok(request) = self.receiver.try_recv() {
             match request {
                 WindowMessage::Close => {
-                    let mut channels = block_on(WINDOW_CHANNELS.lock());
+                    let mut channels = block_on(WINDOW_CHANNELS.write());
                     channels.remove(&self.window.id());
                     self.keep_running.store(false);
                 }

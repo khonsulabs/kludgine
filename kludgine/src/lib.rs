@@ -1,4 +1,4 @@
-use futures::lock::Mutex;
+use async_std::sync::RwLock;
 use std::sync::Arc;
 use thiserror::Error;
 
@@ -27,7 +27,7 @@ pub enum KludgineError {
 /// [`KludgineError`]: enum.KludgineError.html
 pub type KludgineResult<T> = Result<T, KludgineError>;
 
-pub type KludgineHandle<T> = Arc<Mutex<T>>;
+pub type KludgineHandle<T> = Arc<RwLock<T>>;
 
 pub mod application;
 pub mod frame;

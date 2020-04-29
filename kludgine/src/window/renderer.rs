@@ -67,7 +67,7 @@ impl FrameRenderer {
     }
 
     pub async fn render(&mut self) -> KludgineResult<()> {
-        let mut engine_frame = self.frame.lock().await;
+        let mut engine_frame = self.frame.write().await;
         let (w, h) = {
             (
                 engine_frame.size.width as u32,
@@ -79,7 +79,7 @@ impl FrameRenderer {
         }
 
         for FontUpdate { font, rect, data } in engine_frame.pending_font_updates.iter() {
-            let mut loaded_font = font.handle.lock().await;
+            let mut loaded_font = font.handle.write().await;
             if loaded_font.texture.is_none() {
                 let texture = self.renderer.texture(512, 512);
                 let sampler = self.renderer.sampler(Filter::Nearest, Filter::Nearest);
@@ -145,12 +145,12 @@ impl FrameRenderer {
             for command in engine_frame.commands.iter() {
                 match command {
                     FrameCommand::LoadTexture(texture_handle) => {
-                        let mut loaded_texture = texture_handle.handle.lock().await;
+                        let mut loaded_texture = texture_handle.handle.write().await;
                         if loaded_texture.binding.is_none() {
                             let sampler = self.renderer.sampler(Filter::Nearest, Filter::Nearest);
 
                             let (gpu_texture, texels) = {
-                                let texture = loaded_texture.texture.handle.lock().await;
+                                let texture = loaded_texture.texture.handle.read().await;
                                 let (w, h) = texture.image.dimensions();
                                 let pixels = texture.image.pixels().map(|p| *p).collect::<Vec<_>>();
                                 let pixels = Rgba8::align(&pixels);
@@ -169,15 +169,15 @@ impl FrameRenderer {
                         }
                     }
                     FrameCommand::DrawBatch(batch_handle) => {
-                        let batch = batch_handle.lock().await;
-                        let loaded_texture = batch.loaded_texture.handle.lock().await;
-                        let texture = loaded_texture.texture.handle.lock().await;
+                        let batch = batch_handle.read().await;
+                        let loaded_texture = batch.loaded_texture.handle.read().await;
+                        let texture = loaded_texture.texture.handle.read().await;
 
                         let mut gpu_batch =
                             sprite2d::Batch::new(texture.image.width(), texture.image.height());
                         for sprite_handle in batch.sprites.iter() {
-                            let sprite = sprite_handle.handle.lock().await;
-                            let source = sprite.source.handle.lock().await;
+                            let sprite = sprite_handle.handle.read().await;
+                            let source = sprite.source.handle.read().await;
                             gpu_batch.add(
                                 Rect::new(
                                     source.location.x1() as f32,
@@ -204,8 +204,8 @@ impl FrameRenderer {
                         );
                     }
                     FrameCommand::DrawText { text, loaded_font } => {
-                        let text_data = text.handle.lock().await;
-                        let loaded_font_data = loaded_font.handle.lock().await;
+                        let text_data = text.handle.read().await;
+                        let loaded_font_data = loaded_font.handle.read().await;
                         if let Some(texture) = loaded_font_data.texture.as_ref() {
                             let mut batch = sprite2d::Batch::new(texture.w, texture.h);
                             for (uv_rect, screen_rect) in

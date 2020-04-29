@@ -8,8 +8,9 @@ use crate::{
     style::Style,
     KludgineError, KludgineHandle, KludgineResult,
 };
+use async_std::sync::RwLock;
 use async_trait::async_trait;
-use futures::{future::join_all, lock::Mutex};
+use futures::future::join_all;
 use kludgine_macros::ViewCore;
 use std::sync::Arc;
 
@@ -101,7 +102,7 @@ impl View for GridView {
     async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
         for cell in self.cells.iter() {
             if let Some(cell) = cell {
-                let view = cell.lock().await;
+                let view = cell.read().await;
                 view.render(scene).await?
             }
         }
@@ -117,7 +118,7 @@ impl View for GridView {
         self.view.effective_style = inherited_style.effective_style(scene);
 
         for cell in self.cells.iter_mut().filter_map(|e| e.as_ref().to_owned()) {
-            let mut view = cell.lock().await;
+            let mut view = cell.write().await;
             view.update_style(scene, &inherited_style).await?;
         }
 
@@ -164,7 +165,7 @@ impl View for GridView {
                                 Point::new(x_pos, y_pos),
                                 Size::new(column_width, row_height),
                             );
-                            let mut view = cell.lock().await;
+                            let mut view = cell.write().await;
                             view.layout_within(scene, cell_bounds).await?;
                         }
                         x_pos += column_width;
@@ -194,7 +195,7 @@ impl GridView {
             height,
             cells: cells
                 .into_iter()
-                .map(|v| v.map(|view| Arc::new(Mutex::new(view))))
+                .map(|v| v.map(|view| Arc::new(RwLock::new(view))))
                 .collect(),
         }
     }
@@ -218,7 +219,7 @@ impl GridView {
             for x in 0..self.width {
                 match self.cells.get((y * self.width + x) as usize).unwrap() {
                     Some(cell) => {
-                        let view = cell.lock().await;
+                        let view = cell.read().await;
                         let cell_size = view.content_size(&inner_size, scene).await?;
                         column_widths[x as usize] =
                             max_f(column_widths[x as usize], cell_size.width);

@@ -6,7 +6,7 @@ use super::{
     texture::Texture,
     KludgineHandle,
 };
-use futures::lock::Mutex;
+use async_std::sync::RwLock;
 use std::sync::Arc;
 #[derive(Clone)]
 pub struct SourceSprite {
@@ -21,13 +21,13 @@ pub(crate) struct SourceSpriteData {
 impl SourceSprite {
     pub fn new(location: Rect<u32>, texture: Texture) -> Self {
         SourceSprite {
-            handle: Arc::new(Mutex::new(SourceSpriteData { location, texture })),
+            handle: Arc::new(RwLock::new(SourceSpriteData { location, texture })),
         }
     }
 
     pub async fn entire_texture(texture: Texture) -> Self {
         let (w, h) = {
-            let texture = texture.handle.lock().await;
+            let texture = texture.handle.read().await;
             (texture.image.width(), texture.image.height())
         };
         Self::new(Rect::sized(Point::new(0, 0), Size::new(w, h)), texture)
@@ -35,7 +35,7 @@ impl SourceSprite {
 
     pub async fn render_at<'a>(&self, scene: &mut SceneTarget<'a>, location: Point) {
         let (w, h) = {
-            let source = self.handle.lock().await;
+            let source = self.handle.read().await;
             (
                 source.location.size.width as f32,
                 source.location.size.height as f32,
