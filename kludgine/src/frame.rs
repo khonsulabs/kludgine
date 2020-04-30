@@ -2,7 +2,7 @@ use super::{
     math::Size,
     scene::{Element, Scene},
     sprite::SpriteBatch,
-    text::{LoadedFont, PreparedSpan},
+    text::{font::LoadedFont, prepared::PreparedSpan},
     texture::LoadedTexture,
     timing::Moment,
     KludgineHandle,

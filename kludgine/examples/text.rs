@@ -18,7 +18,7 @@ impl Window for TextExample {
     async fn render<'a>(&mut self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
         Text::new(vec![
             Span::new(
-                "W",
+                "Wrapping ",
                 Style {
                     color: Some(Color::RED),
                     font_size: Some(120.0),
@@ -27,7 +27,7 @@ impl Window for TextExample {
                 .effective_style(scene),
             ),
             Span::new(
-                "W",
+                "rapped ",
                 Style {
                     color: Some(Color::WHITE),
                     font_size: Some(60.0),
@@ -36,7 +36,7 @@ impl Window for TextExample {
                 .effective_style(scene),
             ),
             Span::new(
-                "W",
+                "Words to live by",
                 Style {
                     color: Some(Color::BLUE),
                     font_size: Some(120.0),

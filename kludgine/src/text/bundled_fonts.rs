@@ -13,7 +13,7 @@
 //!
 //! WHen enabled, the Scene object's font library is initialized with all bundled fonts that are enabled.
 
-use super::Font;
+use super::font::Font;
 use lazy_static::lazy_static;
 
 macro_rules! include_font {

@@ -1,8 +1,8 @@
-use super::{
+use crate::{
     math::{Point, Size},
     sprite::RenderedSprite,
     style::Weight,
-    text::{Font, PreparedSpan},
+    text::{font::Font, prepared::PreparedSpan},
     timing::Moment,
     KludgineError, KludgineResult,
 };

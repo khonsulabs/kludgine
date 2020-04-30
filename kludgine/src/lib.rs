@@ -55,7 +55,7 @@ pub mod prelude {
         source_sprite::SourceSprite,
         sprite::Sprite,
         style::*,
-        text::{Span, Text, TextWrap},
+        text::{wrap::TextWrap, Span, Text},
         texture::Texture,
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,

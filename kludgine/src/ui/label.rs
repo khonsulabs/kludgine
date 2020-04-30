@@ -1,7 +1,7 @@
 use crate::{
     math::{Point, Rect, Size},
     scene::SceneTarget,
-    text::{Text, TextWrap},
+    text::{wrap::TextWrap, Text},
     ui::view::{BaseView, View, ViewCore},
     KludgineResult,
 };

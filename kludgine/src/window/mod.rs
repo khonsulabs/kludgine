@@ -439,7 +439,6 @@ impl RuntimeWindow {
                 .send(WindowEvent::Input(InputEvent {
                     device_id: *device_id,
                     event: Event::MouseMoved {
-                        // TODO: Convert this point to the proper Y coordinate, figure out which math is right
                         position: Some(Point::new(
                             position.x as f32 / self.last_known_scale_factor,
                             position.y as f32 / self.last_known_scale_factor,
