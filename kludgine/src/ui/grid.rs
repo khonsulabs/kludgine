@@ -8,11 +8,9 @@ use crate::{
     style::Style,
     KludgineError, KludgineHandle, KludgineResult,
 };
-use async_std::sync::RwLock;
 use async_trait::async_trait;
 use futures::future::join_all;
 use kludgine_macros::ViewCore;
-use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct Grid {
@@ -27,7 +25,7 @@ pub enum GridEntry {
 }
 
 impl GridEntry {
-    pub async fn view(&self) -> KludgineResult<Option<Box<dyn View>>> {
+    pub async fn view(&self) -> KludgineResult<Option<KludgineHandle<Box<dyn View>>>> {
         let view = match self {
             GridEntry::Component(component) => Some(component.view().await?),
             GridEntry::Empty => None,
@@ -39,7 +37,7 @@ impl GridEntry {
 
 #[async_trait]
 impl Controller for Grid {
-    async fn view(&self) -> KludgineResult<Box<dyn View>> {
+    async fn view(&self) -> KludgineResult<KludgineHandle<Box<dyn View>>> {
         let views: KludgineResult<Vec<_>> = join_all(self.cells.iter().map(|c| c.view()))
             .await
             .into_iter()
@@ -114,8 +112,7 @@ impl View for GridView {
         scene: &mut SceneTarget<'a>,
         inherited_style: &Style,
     ) -> KludgineResult<()> {
-        let inherited_style = self.view.style.inherit_from(&inherited_style);
-        self.view.effective_style = inherited_style.effective_style(scene);
+        self.compute_effective_style(inherited_style, scene);
 
         for cell in self.cells.iter_mut().filter_map(|e| e.as_ref().to_owned()) {
             let mut view = cell.write().await;
@@ -185,18 +182,38 @@ impl View for GridView {
         let (desired_size, ..) = self.calculate_desired_sizes(maximum_size, scene).await?;
         Ok(desired_size)
     }
+
+    async fn hovered_at(&mut self, window_position: Point) -> KludgineResult<()> {
+        View::hovered_at(self, window_position).await?;
+        for cell in self.cells.iter_mut().filter_map(|f| f.as_ref()) {
+            let mut view = cell.write().await;
+            if view.bounds().contains(window_position) {
+                view.hovered_at(window_position).await?;
+                break;
+            }
+        }
+        Ok(())
+    }
+    async fn unhovered(&mut self) -> KludgineResult<()> {
+        View::unhovered(self).await?;
+        for cell in self.cells.iter_mut().filter_map(|f| f.as_ref()) {
+            let mut view = cell.write().await;
+            if view.base_view().mouse_status.is_some() {
+                view.unhovered().await?;
+                break;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl GridView {
-    pub fn new(width: u32, height: u32, cells: Vec<Option<Box<dyn View>>>) -> Self {
+    pub fn new(width: u32, height: u32, cells: Vec<Option<KludgineHandle<Box<dyn View>>>>) -> Self {
         Self {
             view: BaseView::default(),
             width,
             height,
-            cells: cells
-                .into_iter()
-                .map(|v| v.map(|view| Arc::new(RwLock::new(view))))
-                .collect(),
+            cells,
         }
     }
 

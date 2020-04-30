@@ -2,12 +2,19 @@ use crate::{
     math::{Dimension, Point, Rect, Size, Surround},
     scene::SceneTarget,
     style::{Color, EffectiveStyle, Layout, Style, Weight},
-    KludgineResult,
+    KludgineHandle, KludgineResult,
 };
+use async_std::sync::RwLock;
 use async_trait::async_trait;
+use std::sync::Arc;
+
+#[derive(Clone, Debug)]
+pub enum MouseStatus {
+    Hovered(Point),
+}
 
 #[async_trait]
-pub trait View: std::fmt::Debug + Sync + Send {
+pub trait View: ViewCore + Send {
     async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()>;
     async fn layout_within<'a>(
         &mut self,
@@ -24,14 +31,34 @@ pub trait View: std::fmt::Debug + Sync + Send {
         maximum_size: &Size,
         scene: &mut SceneTarget<'a>,
     ) -> KludgineResult<Size>;
+
+    async fn hovered_at(&mut self, window_position: Point) -> KludgineResult<()> {
+        self.base_view_mut().mouse_status = Some(MouseStatus::Hovered(window_position));
+        Ok(())
+    }
+
+    async fn unhovered(&mut self) -> KludgineResult<()> {
+        self.base_view_mut().mouse_status = {
+            match &self.base_view().mouse_status {
+                // This is written this way because when we implement mouse down state, this will need to be expanded to track mouse up properly
+                Some(status) => match status {
+                    MouseStatus::Hovered(_) => None,
+                },
+                None => None,
+            }
+        };
+        Ok(())
+    }
 }
 
 #[derive(Default, Clone, Debug)]
 pub struct BaseView {
     pub style: Style,
+    pub hover_style: Style,
     pub effective_style: EffectiveStyle,
     pub layout: Layout,
     pub bounds: Rect,
+    pub mouse_status: Option<MouseStatus>,
 }
 
 impl BaseView {
@@ -45,26 +72,49 @@ impl BaseView {
     }
 }
 
-pub trait ViewCore: View {
+#[async_trait]
+pub trait ViewCore: std::fmt::Debug + Sync + Send {
     fn base_view(&self) -> &BaseView;
     fn base_view_mut(&mut self) -> &mut BaseView;
+
+    fn bounds(&self) -> Rect {
+        self.base_view().bounds
+    }
+
+    fn compute_effective_style(&mut self, inherited_style: &Style, scene: &mut SceneTarget) {
+        self.base_view_mut().effective_style = self
+            .current_style()
+            .inherit_from(inherited_style)
+            .effective_style(scene);
+    }
+
+    fn current_style(&self) -> Style {
+        let base_view = self.base_view();
+        match &base_view.mouse_status {
+            Some(mouse_status) => match mouse_status {
+                MouseStatus::Hovered(_) => base_view.hover_style.inherit_from(&base_view.style),
+            },
+            None => self.base_view().style.clone(),
+        }
+    }
 }
 
 pub trait ViewBuilder {
-    fn build(&self) -> KludgineResult<Box<dyn View>>;
+    fn build(&self) -> KludgineResult<KludgineHandle<Box<dyn View>>>;
 }
 
 impl<T> ViewBuilder for T
 where
     T: View + Clone + Sized + 'static,
 {
-    fn build(&self) -> KludgineResult<Box<dyn View>> {
-        Ok(Box::new(self.clone()))
+    fn build(&self) -> KludgineResult<KludgineHandle<Box<dyn View>>> {
+        Ok(Arc::new(RwLock::new(Box::new(self.clone()))))
     }
 }
 
 pub trait ViewCoreBuilder {
     fn with_style(&mut self, style: Style) -> &mut Self;
+    fn with_hover_style(&mut self, style: Style) -> &mut Self;
     fn with_font_family(&mut self, font_family: String) -> &mut Self;
     fn with_font_size(&mut self, font_size: f32) -> &mut Self;
     fn with_font_weight(&mut self, font_weight: Weight) -> &mut Self;
@@ -82,6 +132,10 @@ where
 {
     fn with_style(&mut self, style: Style) -> &mut Self {
         self.base_view_mut().style = style;
+        self
+    }
+    fn with_hover_style(&mut self, style: Style) -> &mut Self {
+        self.base_view_mut().hover_style = style;
         self
     }
 

@@ -67,7 +67,7 @@ pub mod prelude {
             Component, Controller, UserInterface,
         },
         window::{Event, InputEvent, Window},
-        KludgineError, KludgineResult,
+        KludgineError, KludgineHandle, KludgineResult,
     };
     pub use async_trait::async_trait;
     pub use winit::event::*;

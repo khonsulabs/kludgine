@@ -44,8 +44,8 @@ impl Window for UIExample {
         Ok(())
     }
 
-    async fn process_input(&mut self, _event: InputEvent) -> KludgineResult<()> {
-        Ok(())
+    async fn process_input(&mut self, event: InputEvent) -> KludgineResult<()> {
+        self.ui.process_input(event).await.map(|_| ())
     }
 }
 
@@ -56,12 +56,16 @@ struct Interface {
 
 #[async_trait]
 impl Controller for Interface {
-    async fn view(&self) -> KludgineResult<Box<dyn View>> {
+    async fn view(&self) -> KludgineResult<KludgineHandle<Box<dyn View>>> {
         Label::default()
             .with_value(self.message)
             .with_style(Style {
                 font_size: Some(60.0),
                 color: Some(Color::new(0.0, 0.5, 0.5, 1.0)),
+                ..Default::default()
+            })
+            .with_hover_style(Style {
+                color: Some(Color::new(0.5, 1.0, 1.0, 1.0)),
                 ..Default::default()
             })
             .with_padding(Surround::uniform(Dimension::Auto))

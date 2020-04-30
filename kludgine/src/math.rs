@@ -65,6 +65,13 @@ where
             Point::new(self.x2() - surround.right, self.y2() - surround.bottom),
         )
     }
+
+    pub fn contains(&self, point: Point<S>) -> bool {
+        self.origin.x <= point.x
+            && self.x2() >= point.x
+            && self.origin.y <= point.y
+            && self.y2() >= point.y
+    }
 }
 
 impl<S> Into<rgx::rect::Rect<S>> for Rect<S>
@@ -308,5 +315,32 @@ pub fn min_f(a: f32, b: f32) -> f32 {
         a
     } else {
         b
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_rect_contains() {
+        let rect = Rect::new(Point::new(1i32, 10), Point::new(3, 12));
+        // lower x, lower y
+        assert!(!rect.contains(Point::new(0, 9)));
+        // lower x, equal y
+        assert!(!rect.contains(Point::new(0, 10)));
+        // equal x, lower y
+        assert!(!rect.contains(Point::new(1, 9)));
+        // equal x1, equal y1
+        assert!(rect.contains(Point::new(1, 10)));
+        // inside
+        assert!(rect.contains(Point::new(2, 11)));
+        // equal x2, equal y2
+        assert!(rect.contains(Point::new(3, 12)));
+        // greater x2, equal y2
+        assert!(!rect.contains(Point::new(4, 12)));
+        // equal x2, greater y2
+        assert!(!rect.contains(Point::new(3, 13)));
+        // greater x2, greater y2
+        assert!(!rect.contains(Point::new(4, 13)));
     }
 }
