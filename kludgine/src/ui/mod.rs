@@ -44,8 +44,7 @@ impl UserInterface {
     pub async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
         let ui = self.handle.read().await;
         if let Some(root_component) = &ui.root {
-            let root = root_component.handle.read().await;
-            let view_handle = root.controller.view().await?;
+            let view_handle = root_component.view().await?;
             let mut view = view_handle.write().await;
             view.update_style(scene, &ui.base_style).await?;
             view.layout_within(
@@ -129,12 +128,9 @@ impl Component {
     pub async fn mouse_moved(&self, window_position: Point) -> KludgineResult<EventStatus> {
         let view_handle = self.view().await?;
         let mut view = view_handle.write().await;
-        println!("Moved {:?}, {:?}", view.bounds(), window_position);
         if view.bounds().contains(window_position) {
-            println!("Hovered");
             view.hovered_at(window_position).await?
         } else if view.base_view().mouse_status.is_some() {
-            println!("Unhovered");
             view.unhovered().await?
         }
         Ok(EventStatus::Ignored)

@@ -184,18 +184,19 @@ impl View for GridView {
     }
 
     async fn hovered_at(&mut self, window_position: Point) -> KludgineResult<()> {
-        View::hovered_at(self, window_position).await?;
+        self.view.hovered_at(window_position)?;
         for cell in self.cells.iter_mut().filter_map(|f| f.as_ref()) {
             let mut view = cell.write().await;
             if view.bounds().contains(window_position) {
                 view.hovered_at(window_position).await?;
-                break;
+            } else if view.base_view().mouse_status.is_some() {
+                view.unhovered().await?;
             }
         }
         Ok(())
     }
     async fn unhovered(&mut self) -> KludgineResult<()> {
-        View::unhovered(self).await?;
+        self.view.unhovered()?;
         for cell in self.cells.iter_mut().filter_map(|f| f.as_ref()) {
             let mut view = cell.write().await;
             if view.base_view().mouse_status.is_some() {

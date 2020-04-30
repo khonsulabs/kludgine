@@ -16,16 +16,22 @@ pub enum MouseStatus {
 #[async_trait]
 pub trait View: ViewCore + Send {
     async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()>;
+
     async fn layout_within<'a>(
         &mut self,
         scene: &mut SceneTarget<'a>,
         bounds: Rect,
     ) -> KludgineResult<()>;
+
     async fn update_style<'a>(
         &mut self,
         scene: &mut SceneTarget<'a>,
         inherited_style: &Style,
-    ) -> KludgineResult<()>;
+    ) -> KludgineResult<()> {
+        self.compute_effective_style(inherited_style, scene);
+        Ok(())
+    }
+
     async fn content_size<'a>(
         &self,
         maximum_size: &Size,
@@ -33,21 +39,11 @@ pub trait View: ViewCore + Send {
     ) -> KludgineResult<Size>;
 
     async fn hovered_at(&mut self, window_position: Point) -> KludgineResult<()> {
-        self.base_view_mut().mouse_status = Some(MouseStatus::Hovered(window_position));
-        Ok(())
+        self.base_view_mut().hovered_at(window_position)
     }
 
     async fn unhovered(&mut self) -> KludgineResult<()> {
-        self.base_view_mut().mouse_status = {
-            match &self.base_view().mouse_status {
-                // This is written this way because when we implement mouse down state, this will need to be expanded to track mouse up properly
-                Some(status) => match status {
-                    MouseStatus::Hovered(_) => None,
-                },
-                None => None,
-            }
-        };
-        Ok(())
+        self.base_view_mut().unhovered()
     }
 }
 
@@ -68,6 +64,24 @@ impl BaseView {
 
     pub fn layout_within(&mut self, content_size: &Size, bounds: Rect) -> KludgineResult<()> {
         self.bounds = self.layout.compute_bounds(content_size, bounds);
+        Ok(())
+    }
+
+    pub fn hovered_at(&mut self, window_position: Point) -> KludgineResult<()> {
+        self.mouse_status = Some(MouseStatus::Hovered(window_position));
+        Ok(())
+    }
+
+    pub fn unhovered(&mut self) -> KludgineResult<()> {
+        self.mouse_status = {
+            match &self.mouse_status {
+                // This is written this way because when we implement mouse down state, this will need to be expanded to track mouse up properly
+                Some(status) => match status {
+                    MouseStatus::Hovered(_) => None,
+                },
+                None => None,
+            }
+        };
         Ok(())
     }
 }

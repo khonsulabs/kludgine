@@ -41,16 +41,6 @@ impl View for Label {
         }
     }
 
-    async fn update_style<'a>(
-        &mut self,
-        scene: &mut SceneTarget<'a>,
-        inherited_style: &Style,
-    ) -> KludgineResult<()> {
-        let inherited_style = self.view.style.inherit_from(&inherited_style);
-        self.view.effective_style = inherited_style.effective_style(scene);
-        Ok(())
-    }
-
     async fn layout_within<'a>(
         &mut self,
         scene: &mut SceneTarget<'a>,
