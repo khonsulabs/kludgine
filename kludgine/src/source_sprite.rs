@@ -6,8 +6,6 @@ use super::{
     texture::Texture,
     KludgineHandle,
 };
-use async_std::sync::RwLock;
-use std::sync::Arc;
 #[derive(Clone)]
 pub struct SourceSprite {
     pub(crate) handle: KludgineHandle<SourceSpriteData>,
@@ -21,7 +19,7 @@ pub(crate) struct SourceSpriteData {
 impl SourceSprite {
     pub fn new(location: Rect<u32>, texture: Texture) -> Self {
         SourceSprite {
-            handle: Arc::new(RwLock::new(SourceSpriteData { location, texture })),
+            handle: KludgineHandle::new(SourceSpriteData { location, texture }),
         }
     }
 

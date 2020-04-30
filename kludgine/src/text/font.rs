@@ -1,10 +1,8 @@
 use crate::KludgineHandle;
-use async_std::sync::RwLock;
 use crossbeam::atomic::AtomicCell;
 use lazy_static::lazy_static;
 use rgx::core::*;
 use rusttype::{gpu_cache, Scale};
-use std::sync::Arc;
 lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicCell<u64> = { AtomicCell::new(0) };
 }
@@ -19,10 +17,10 @@ impl Font {
     pub fn try_from_bytes(bytes: &'static [u8]) -> Option<Font> {
         let font = rusttype::Font::try_from_bytes(bytes)?;
         Some(Font {
-            handle: Arc::new(RwLock::new(FontData {
+            handle: KludgineHandle::new(FontData {
                 font,
                 id: GLOBAL_ID_CELL.fetch_add(1),
-            })),
+            }),
         })
     }
 
@@ -76,12 +74,12 @@ pub(crate) struct LoadedFont {
 impl LoadedFont {
     pub fn new(font: &Font) -> Self {
         Self {
-            handle: Arc::new(RwLock::new(LoadedFontData {
+            handle: KludgineHandle::new(LoadedFontData {
                 font: font.clone(),
                 cache: gpu_cache::Cache::builder().dimensions(512, 512).build(),
                 binding: None,
                 texture: None,
-            })),
+            }),
         }
     }
 }

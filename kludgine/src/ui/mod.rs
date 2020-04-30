@@ -5,9 +5,7 @@ use super::{
     window::{Event, EventStatus, InputEvent},
     KludgineHandle, KludgineResult,
 };
-use async_std::sync::RwLock;
 use async_trait::async_trait;
-use std::sync::Arc;
 
 pub mod grid;
 pub mod label;
@@ -28,11 +26,11 @@ pub(crate) struct UserInterfaceData {
 impl UserInterface {
     pub fn new(base_style: Style) -> Self {
         Self {
-            handle: Arc::new(RwLock::new(UserInterfaceData {
+            handle: KludgineHandle::new(UserInterfaceData {
                 root: None,
                 base_style,
                 hover: None,
-            })),
+            }),
         }
     }
 
@@ -102,11 +100,11 @@ pub(crate) struct ComponentData {
 
 impl Component {
     pub fn new<C: Controller + 'static>(controller: C) -> Component {
-        let handle = Arc::new(RwLock::new(ComponentData {
+        let handle = KludgineHandle::new(ComponentData {
             controller: Box::new(controller),
             view: None,
             hovered_at: None,
-        }));
+        });
 
         Component { handle }
     }

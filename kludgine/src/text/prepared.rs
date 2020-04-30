@@ -4,9 +4,7 @@ use crate::{
     text::Font,
     KludgineHandle,
 };
-use async_std::sync::RwLock;
 use futures::future::join_all;
-use std::sync::Arc;
 
 #[derive(Default)]
 pub struct PreparedText {
@@ -68,7 +66,7 @@ impl PreparedSpan {
     ) -> Self {
         Self {
             location: Point::new(0.0, 0.0),
-            handle: Arc::new(RwLock::new(PreparedSpanData {
+            handle: KludgineHandle::new(PreparedSpanData {
                 font,
                 size,
                 color,
@@ -76,7 +74,7 @@ impl PreparedSpan {
                 width,
                 positioned_glyphs,
                 metrics,
-            })),
+            }),
         }
     }
 

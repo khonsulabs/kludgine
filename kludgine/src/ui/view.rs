@@ -4,9 +4,7 @@ use crate::{
     style::{Color, EffectiveStyle, Layout, Style, Weight},
     KludgineHandle, KludgineResult,
 };
-use async_std::sync::RwLock;
 use async_trait::async_trait;
-use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub enum MouseStatus {
@@ -125,7 +123,7 @@ where
     T: View + Clone + Sized + 'static,
 {
     fn build(&self) -> KludgineResult<KludgineHandle<Box<dyn View>>> {
-        Ok(Arc::new(RwLock::new(Box::new(self.clone()))))
+        Ok(KludgineHandle::new(Box::new(self.clone())))
     }
 }
 

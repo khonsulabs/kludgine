@@ -7,11 +7,7 @@ use super::{
     timing::Moment,
     KludgineHandle,
 };
-use async_std::sync::RwLock;
-use std::{
-    collections::{HashMap, HashSet},
-    sync::Arc,
-};
+use std::collections::{HashMap, HashSet};
 #[derive(Default)]
 pub(crate) struct Frame {
     pub started_at: Option<Moment>,
@@ -107,7 +103,7 @@ impl Frame {
     fn commit_batch(&mut self, batch: Option<SpriteBatch>) -> Option<SpriteBatch> {
         if let Some(batch) = batch {
             self.commands
-                .push(FrameCommand::DrawBatch(Arc::new(RwLock::new(batch))));
+                .push(FrameCommand::DrawBatch(KludgineHandle::new(batch)));
         }
 
         None

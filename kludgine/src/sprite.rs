@@ -4,8 +4,7 @@ use super::{
     texture::{LoadedTexture, Texture},
     KludgineError, KludgineHandle, KludgineResult,
 };
-use async_std::sync::RwLock;
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, time::Duration};
 
 #[macro_export]
 macro_rules! include_aseprite_sprite {
@@ -62,21 +61,21 @@ impl Sprite {
         animations: KludgineHandle<HashMap<Option<String>, SpriteAnimation>>,
     ) -> Self {
         Self {
-            handle: Arc::new(RwLock::new(SpriteData {
+            handle: KludgineHandle::new(SpriteData {
                 title,
                 animations,
                 current_frame: 0,
                 current_tag: None,
                 elapsed_since_frame_change: Duration::from_millis(0),
                 current_animation_direction: AnimationDirection::Forward,
-            })),
+            }),
         }
     }
 
     pub async fn new_instance(&self) -> Self {
         let data = self.handle.read().await;
         Self {
-            handle: Arc::new(RwLock::new(data.clone())),
+            handle: KludgineHandle::new(data.clone()),
         }
     }
 
@@ -97,7 +96,7 @@ impl Sprite {
                 AnimationMode::Forward,
             ),
         );
-        let frames = Arc::new(RwLock::new(frames));
+        let frames = KludgineHandle::new(frames);
 
         Self::new(None, frames)
     }
@@ -231,7 +230,7 @@ impl Sprite {
             animations.insert(name, SpriteAnimation::new(animation_frames, direction));
         }
 
-        Ok(Sprite::new(title, Arc::new(RwLock::new(animations))))
+        Ok(Sprite::new(title, KludgineHandle::new(animations)))
     }
 
     pub async fn set_current_tag<S: Into<String>>(&self, tag: Option<S>) -> KludgineResult<()> {
@@ -396,7 +395,7 @@ pub(crate) struct RenderedSprite {
 impl RenderedSprite {
     pub fn new(render_at: Rect, source: SourceSprite) -> Self {
         Self {
-            handle: Arc::new(RwLock::new(RenderedSpriteData { render_at, source })),
+            handle: KludgineHandle::new(RenderedSpriteData { render_at, source }),
         }
     }
 }

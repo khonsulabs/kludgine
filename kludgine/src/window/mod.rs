@@ -15,7 +15,6 @@ use crossbeam::{
 use lazy_static::lazy_static;
 use rgx::core::*;
 
-use async_std::sync::RwLock;
 use futures::executor::block_on;
 use std::{cell::RefCell, collections::HashMap, sync::Arc, time::Duration};
 use winit::{
@@ -136,8 +135,8 @@ impl Into<WinitWindowBuilder> for WindowBuilder {
 }
 
 lazy_static! {
-    static ref WINDOW_CHANNELS: Arc<RwLock<HashMap<WindowId, Sender<WindowMessage>>>> =
-        { Arc::new(RwLock::new(HashMap::new())) };
+    static ref WINDOW_CHANNELS: KludgineHandle<HashMap<WindowId, Sender<WindowMessage>>> =
+        { KludgineHandle::new(HashMap::new()) };
 }
 
 thread_local! {
@@ -191,7 +190,7 @@ impl RuntimeWindow {
 
         let (message_sender, message_receiver) = unbounded();
         let (event_sender, event_receiver) = unbounded();
-        let frame = Arc::new(RwLock::new(Frame::default()));
+        let frame = KludgineHandle::new(Frame::default());
         Runtime::spawn(Self::window_main::<T>(
             window_id,
             frame.clone(),

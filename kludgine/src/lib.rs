@@ -1,6 +1,10 @@
-use async_std::sync::RwLock;
+use async_std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::sync::Arc;
 use thiserror::Error;
+
+#[cfg(test)]
+#[macro_use]
+extern crate futures_await_test;
 
 #[derive(Error, Debug)]
 pub enum KludgineError {
@@ -27,7 +31,34 @@ pub enum KludgineError {
 /// [`KludgineError`]: enum.KludgineError.html
 pub type KludgineResult<T> = Result<T, KludgineError>;
 
-pub type KludgineHandle<T> = Arc<RwLock<T>>;
+#[derive(Debug)]
+pub struct KludgineHandle<T> {
+    handle: Arc<RwLock<T>>,
+}
+
+impl<T> KludgineHandle<T> {
+    pub fn new(wrapped: T) -> Self {
+        Self {
+            handle: Arc::new(RwLock::new(wrapped)),
+        }
+    }
+
+    pub async fn read<'a>(&'a self) -> RwLockReadGuard<'a, T> {
+        self.handle.read().await
+    }
+
+    pub async fn write<'a>(&'a self) -> RwLockWriteGuard<'a, T> {
+        self.handle.write().await
+    }
+}
+
+impl<T> Clone for KludgineHandle<T> {
+    fn clone(&self) -> Self {
+        Self {
+            handle: self.handle.clone(),
+        }
+    }
+}
 
 pub mod application;
 pub mod frame;
