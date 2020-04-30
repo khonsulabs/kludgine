@@ -112,11 +112,12 @@ impl View for GridView {
         scene: &mut SceneTarget<'a>,
         inherited_style: &Style,
     ) -> KludgineResult<()> {
-        self.compute_effective_style(inherited_style, scene);
+        let current_style = self.compute_effective_style(inherited_style, scene);
 
+        // TODO Scene is limiting this from being something that can be parallelized
         for cell in self.cells.iter_mut().filter_map(|e| e.as_ref().to_owned()) {
             let mut view = cell.write().await;
-            view.update_style(scene, &inherited_style).await?;
+            view.update_style(scene, &current_style).await?;
         }
 
         Ok(())

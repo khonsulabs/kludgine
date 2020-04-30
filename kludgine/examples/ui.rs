@@ -65,15 +65,11 @@ impl Controller for Interface {
                 ..Default::default()
             })
             .with_hover_style(Style {
-                font_size: Some(60.0),
+                font_size: Some(80.0),
                 color: Some(Color::new(1.0, 1.0, 1.0, 1.0)),
                 ..Default::default()
             })
             .with_padding(Surround::uniform(Dimension::Auto))
-            .with_margin(Surround {
-                left: Dimension::Points(50.0),
-                ..Default::default()
-            })
             .build()
     }
 }

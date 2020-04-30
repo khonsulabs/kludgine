@@ -95,11 +95,14 @@ pub trait ViewCore: std::fmt::Debug + Sync + Send {
         self.base_view().bounds
     }
 
-    fn compute_effective_style(&mut self, inherited_style: &Style, scene: &mut SceneTarget) {
-        self.base_view_mut().effective_style = self
-            .current_style()
-            .inherit_from(inherited_style)
-            .effective_style(scene);
+    fn compute_effective_style(
+        &mut self,
+        inherited_style: &Style,
+        scene: &mut SceneTarget,
+    ) -> Style {
+        let current_style = self.current_style().inherit_from(inherited_style);
+        self.base_view_mut().effective_style = current_style.effective_style(scene);
+        current_style
     }
 
     fn current_style(&self) -> Style {
