@@ -261,11 +261,13 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
     }
 
     async fn new_line(&mut self) {
+        let previous_lexer_state = self.lexer_state;
         self.new_span().await;
 
         self.lexer_state = LexerState::AtLineStart;
         self.caret = 0.0;
         self.current_span_offset = 0.0;
+        self.last_glyph_id = None;
 
         if self.current_glyphs.len() > 0 {
             // Reset the position information for the current glyphs
@@ -279,7 +281,9 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                     max_x = max_x.max(bb.max.x);
                 }
             }
+            self.last_glyph_id = Some(self.current_glyphs[self.current_glyphs.len() - 1].id());
             self.caret = max_x as f32;
+            self.lexer_state = previous_lexer_state;
         }
 
         let mut current_line = PreparedLine::default();
@@ -419,7 +423,6 @@ mod tests {
         )
         .await
         .expect("Error wrapping text");
-        println!("{:#?}", wrap);
         assert_eq!(wrap.lines.len(), 2);
         assert_eq!(wrap.lines[0].spans.len(), 1);
         assert_eq!(
@@ -440,6 +443,10 @@ mod tests {
                 .positioned_glyphs
                 .len(),
             4
+        );
+        assert_ne!(
+            wrap.lines[0].spans[0].handle.read().await.metrics,
+            wrap.lines[1].spans[0].handle.read().await.metrics
         );
     }
 }
