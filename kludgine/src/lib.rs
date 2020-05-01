@@ -1,5 +1,6 @@
 use async_std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
-use std::sync::Arc;
+use futures::executor::block_on;
+use std::{fmt::Display, sync::Arc};
 use thiserror::Error;
 
 #[cfg(test)]
@@ -57,6 +58,18 @@ impl<T> Clone for KludgineHandle<T> {
         Self {
             handle: self.handle.clone(),
         }
+    }
+}
+
+impl<T> Display for KludgineHandle<T>
+where
+    T: Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "KludgineHandle<")?;
+        let inner = block_on(self.handle.read());
+        inner.fmt(f)?;
+        write!(f, ">")
     }
 }
 

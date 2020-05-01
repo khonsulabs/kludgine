@@ -8,7 +8,7 @@ lazy_static! {
 }
 
 /// Font provides TrueType Font rendering
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Font {
     pub(crate) handle: KludgineHandle<FontData>,
 }
@@ -61,6 +61,7 @@ impl Font {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct FontData {
     pub(crate) id: u64,
     pub(crate) font: rusttype::Font<'static>,

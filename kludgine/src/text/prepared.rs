@@ -6,7 +6,7 @@ use crate::{
 };
 use futures::future::join_all;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct PreparedText {
     pub lines: Vec<PreparedLine>,
 }
@@ -23,7 +23,7 @@ impl PreparedText {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct PreparedLine {
     pub spans: Vec<PreparedSpan>,
     pub metrics: Option<rusttype::VMetrics>,
@@ -48,7 +48,7 @@ impl PreparedLine {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PreparedSpan {
     pub location: Point,
     pub handle: KludgineHandle<PreparedSpanData>,
@@ -96,6 +96,7 @@ impl PreparedSpan {
     }
 }
 
+#[derive(Debug)]
 pub struct PreparedSpanData {
     pub font: Font,
     pub size: f32,

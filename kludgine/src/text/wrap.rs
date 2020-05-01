@@ -7,7 +7,7 @@ use crate::{
 };
 use rusttype::{PositionedGlyph, Scale};
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum LexerState {
     /// We have wrapped to a new line
     AtLineStart,
@@ -107,8 +107,13 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                     self.current_glyphs.push(glyph);
                 }
             }
+
+            // Commit the current glyphs to the existing span, since we're getting a new span and styles
+            // probably will change.
+            self.commit_current_glyphs(None).await;
         }
 
+        self.commit_current_glyphs(None).await;
         self.new_line().await;
 
         Ok(self.prepared_text)
@@ -158,14 +163,14 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                     } else if c.is_whitespace() {
                         self.lexer_state = LexerState::AfterWord;
                     } else {
-                        self.commit_current_glyphs(LexerState::InWord).await;
+                        self.commit_current_glyphs(Some(LexerState::InWord)).await;
                     }
                 }
                 LexerState::AfterWord => {
                     if c.is_ascii_punctuation() {
                         self.lexer_state = LexerState::TrailingPunctuation;
                     } else if !c.is_whitespace() {
-                        self.commit_current_glyphs(LexerState::InWord).await;
+                        self.commit_current_glyphs(Some(LexerState::InWord)).await;
                     }
                 }
             }
@@ -185,7 +190,7 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
         if let Some(max_width) = self.options.max_width(self.scene.effective_scale_factor()) {
             if let Some(bb) = glyph.pixel_bounding_box() {
                 if self.current_span_offset + bb.max.x as f32 > max_width {
-                    // TODO If the character that is causing us to need to wrap to the next line is whitespace,
+                    // If the character that is causing us to need to wrap to the next line is whitespace,
                     // the current word should be committed to the current line. If it's punctuation, it belongs to the
                     // word. <-- case in point
                     match self.lexer_state {
@@ -193,18 +198,22 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                             // Wrap without committing.
                             // Except, if a single glyph is too wide to draw without being wrapped, return it so that it's
                             // rendered anyways.
-                            if self.current_glyphs.len() < 1 {
+                            if self.current_committed_glyphs.len() + self.current_glyphs.len() == 0
+                            {
                                 return Some(glyph);
                             }
                         }
                         LexerState::AfterWord => {
                             // Commit then wrap.
-                            self.commit_current_glyphs(LexerState::AfterWord).await;
+                            self.commit_current_glyphs(Some(LexerState::AfterWord))
+                                .await;
                         }
                         LexerState::AtLineStart => unreachable!(),
                     }
 
                     self.new_line().await;
+                    self.current_font = Some(primary_font.clone());
+                    self.current_style = Some(span.style.clone());
                     glyph.set_position(rusttype::point(self.caret, 0.0));
                     self.last_glyph_id = None;
                 }
@@ -213,13 +222,15 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
         Some(glyph)
     }
 
-    async fn commit_current_glyphs(&mut self, transition_to_state: LexerState) {
+    async fn commit_current_glyphs(&mut self, transition_to_state: Option<LexerState>) {
         if self.current_glyphs.len() > 0 {
             let mut current_glyphs = Vec::new();
             std::mem::swap(&mut self.current_glyphs, &mut current_glyphs);
             self.current_committed_glyphs.extend(current_glyphs);
         }
-        self.lexer_state = transition_to_state;
+        if let Some(transition_to_state) = transition_to_state {
+            self.lexer_state = transition_to_state;
+        }
     }
 
     async fn new_span(&mut self) {
@@ -252,6 +263,10 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
     async fn new_line(&mut self) {
         self.new_span().await;
 
+        self.lexer_state = LexerState::AtLineStart;
+        self.caret = 0.0;
+        self.current_span_offset = 0.0;
+
         if self.current_glyphs.len() > 0 {
             // Reset the position information for the current glyphs
             let first_offset = self.current_glyphs[0].position().x;
@@ -266,10 +281,6 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
             }
             self.caret = max_x as f32;
         }
-
-        self.lexer_state = LexerState::AtLineStart;
-        self.caret = 0.0;
-        self.current_span_offset = 0.0;
 
         let mut current_line = PreparedLine::default();
         std::mem::swap(&mut current_line, &mut self.current_line);
@@ -330,7 +341,8 @@ mod tests {
     use crate::{scene::Scene, style::Style, text::Span};
 
     #[async_test]
-    async fn simple_wrap_test() {
+    /// This test should have "This line should " be on the first line and "wrap" on the second
+    async fn wrap_one_word() {
         let mut scene = Scene::new();
         scene.register_bundled_fonts().await;
         let mut scene_target = SceneTarget::Scene(&mut scene);
@@ -351,6 +363,83 @@ mod tests {
         )
         .await
         .expect("Error wrapping text");
-        assert_eq!(wrap.lines.len(), 4);
+        assert_eq!(wrap.lines.len(), 2);
+        assert_eq!(wrap.lines[0].spans.len(), 1);
+        assert_eq!(
+            wrap.lines[0].spans[0]
+                .handle
+                .read()
+                .await
+                .positioned_glyphs
+                .len(),
+            17
+        );
+        assert_eq!(wrap.lines[1].spans.len(), 1);
+        assert_eq!(
+            wrap.lines[1].spans[0]
+                .handle
+                .read()
+                .await
+                .positioned_glyphs
+                .len(),
+            4
+        );
+    }
+
+    #[async_test]
+    /// This test should have "This line should " be on the first line and "wrap" on the second
+    async fn wrap_one_word_different_span() {
+        let mut scene = Scene::new();
+        scene.register_bundled_fonts().await;
+        let mut scene_target = SceneTarget::Scene(&mut scene);
+        let wrap = Text::new(vec![
+            Span::new(
+                "This line should ",
+                Style {
+                    font_size: Some(12.0),
+                    ..Default::default()
+                }
+                .effective_style(&mut scene_target),
+            ),
+            Span::new(
+                "wrap",
+                Style {
+                    font_size: Some(10.0),
+                    ..Default::default()
+                }
+                .effective_style(&mut scene_target),
+            ),
+        ])
+        .wrap(
+            &mut scene_target,
+            TextWrap::MultiLine {
+                width: 80.0,
+                height: f32::MAX,
+            },
+        )
+        .await
+        .expect("Error wrapping text");
+        println!("{:#?}", wrap);
+        assert_eq!(wrap.lines.len(), 2);
+        assert_eq!(wrap.lines[0].spans.len(), 1);
+        assert_eq!(
+            wrap.lines[0].spans[0]
+                .handle
+                .read()
+                .await
+                .positioned_glyphs
+                .len(),
+            17
+        );
+        assert_eq!(wrap.lines[1].spans.len(), 1);
+        assert_eq!(
+            wrap.lines[1].spans[0]
+                .handle
+                .read()
+                .await
+                .positioned_glyphs
+                .len(),
+            4
+        );
     }
 }
