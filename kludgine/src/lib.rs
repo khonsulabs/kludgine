@@ -108,9 +108,9 @@ pub mod prelude {
             grid::Grid,
             label::Label,
             view::{View, ViewBuilder, ViewCore, ViewCoreBuilder},
-            Component, Controller, UserInterface,
+            Component, ComponentEventStatus, Controller, UserInterface,
         },
-        window::{Event, InputEvent, Window},
+        window::{Event, EventStatus, InputEvent, Window},
         KludgineError, KludgineHandle, KludgineResult,
     };
     pub use async_trait::async_trait;

@@ -9,6 +9,7 @@ use async_trait::async_trait;
 #[derive(Clone, Debug)]
 pub enum MouseStatus {
     Hovered(Point),
+    Activated(Point),
 }
 
 #[async_trait]
@@ -43,12 +44,21 @@ pub trait View: ViewCore + Send {
     async fn unhovered(&mut self) -> KludgineResult<()> {
         self.base_view_mut().unhovered()
     }
+
+    async fn activated_at(&mut self, window_position: Point) -> KludgineResult<()> {
+        self.base_view_mut().activated_at(window_position)
+    }
+
+    async fn deactivated(&mut self) -> KludgineResult<()> {
+        self.base_view_mut().deactivated()
+    }
 }
 
 #[derive(Default, Clone, Debug)]
 pub struct BaseView {
     pub style: Style,
     pub hover_style: Style,
+    pub activated_style: Style,
     pub effective_style: EffectiveStyle,
     pub layout: Layout,
     pub bounds: Rect,
@@ -76,6 +86,26 @@ impl BaseView {
                 // This is written this way because when we implement mouse down state, this will need to be expanded to track mouse up properly
                 Some(status) => match status {
                     MouseStatus::Hovered(_) => None,
+                    MouseStatus::Activated(_) => None,
+                },
+                None => None,
+            }
+        };
+        Ok(())
+    }
+
+    pub fn activated_at(&mut self, window_position: Point) -> KludgineResult<()> {
+        self.mouse_status = Some(MouseStatus::Hovered(window_position));
+        Ok(())
+    }
+
+    pub fn deactivated(&mut self) -> KludgineResult<()> {
+        self.mouse_status = {
+            match &self.mouse_status {
+                // This is written this way because when we implement mouse down state, this will need to be expanded to track mouse up properly
+                Some(status) => match status {
+                    MouseStatus::Hovered(_) => None,
+                    MouseStatus::Activated(location) => Some(MouseStatus::Hovered(*location)),
                 },
                 None => None,
             }
@@ -108,6 +138,9 @@ pub trait ViewCore: std::fmt::Debug + Sync + Send {
         match &base_view.mouse_status {
             Some(mouse_status) => match mouse_status {
                 MouseStatus::Hovered(_) => base_view.hover_style.inherit_from(&base_view.style),
+                MouseStatus::Activated(_) => base_view
+                    .activated_style
+                    .inherit_from(&base_view.hover_style.inherit_from(&base_view.style)),
             },
             None => self.base_view().style.clone(),
         }

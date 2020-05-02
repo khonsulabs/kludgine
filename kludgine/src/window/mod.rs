@@ -36,9 +36,26 @@ pub enum CloseResponse {
     Close,
 }
 
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum EventStatus {
     Ignored,
     Processed,
+}
+
+impl Default for EventStatus {
+    fn default() -> Self {
+        EventStatus::Ignored
+    }
+}
+
+impl EventStatus {
+    pub fn update_with(&mut self, other: Self) {
+        *self = if self == &EventStatus::Processed || other == EventStatus::Processed {
+            EventStatus::Processed
+        } else {
+            EventStatus::Ignored
+        };
+    }
 }
 
 /// An Event from a device
