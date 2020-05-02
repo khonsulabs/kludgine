@@ -142,3 +142,21 @@ pub trait Controller: std::fmt::Debug + Sync + Send + 'static {
         Ok(EventStatus::Ignored)
     }
 }
+
+#[derive(Debug)]
+pub struct ViewController {
+    view: KludgineHandle<Box<dyn View>>,
+}
+
+impl ViewController {
+    pub fn new(view: KludgineHandle<Box<dyn View>>) -> Self {
+        Self { view }
+    }
+}
+
+#[async_trait]
+impl Controller for ViewController {
+    async fn view(&self) -> KludgineResult<KludgineHandle<Box<dyn View>>> {
+        Ok(self.view.clone())
+    }
+}

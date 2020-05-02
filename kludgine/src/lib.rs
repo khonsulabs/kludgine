@@ -108,7 +108,7 @@ pub mod prelude {
             grid::Grid,
             label::Label,
             view::{View, ViewBuilder, ViewCore, ViewCoreBuilder},
-            Component, Controller, UserInterface,
+            Component, Controller, UserInterface, ViewController,
         },
         window::{Event, InputEvent, Window},
         KludgineError, KludgineHandle, KludgineResult,
