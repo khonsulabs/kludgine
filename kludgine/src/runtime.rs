@@ -4,9 +4,10 @@ use super::{
     KludgineResult,
 };
 use crossbeam::channel::{unbounded, Receiver, Sender, TryRecvError};
-use futures::{executor::ThreadPool, future::Future};
+use futures::future::Future;
 use platforms::target::{OS, TARGET_OS};
 use std::time::Duration;
+use tokio::runtime::Runtime as TokioRuntime;
 
 pub(crate) enum RuntimeRequest {
     OpenWindow {
@@ -52,7 +53,7 @@ lazy_static! {
         { Mutex::new(None) };
     pub(crate) static ref GLOBAL_EVENT_HANDLER: Mutex<Option<Box<dyn EventProcessor>>> =
         Mutex::new(None);
-    pub(crate) static ref GLOBAL_THREAD_POOL: Mutex<Option<ThreadPool>> = Mutex::new(None);
+    pub(crate) static ref GLOBAL_THREAD_POOL: Mutex<Option<TokioRuntime>> = Mutex::new(None);
 }
 
 pub(crate) const FRAME_DURATION: u64 = 6_944_444;
@@ -182,7 +183,7 @@ impl Runtime {
                 .lock()
                 .expect("Error locking global thread pool");
             assert!(pool_guard.is_none());
-            *pool_guard = Some(ThreadPool::new().expect("Error creating ThreadPool"));
+            *pool_guard = Some(TokioRuntime::new().expect("Error creating ThreadPool"));
         }
         let app_runtime = ApplicationRuntime { app };
         let (request_receiver, event_sender) = app_runtime.launch();
@@ -249,13 +250,7 @@ impl Runtime {
     }
 
     pub fn spawn<Fut: Future<Output = ()> + Send + 'static>(future: Fut) {
-        let pool = {
-            let guard = GLOBAL_THREAD_POOL
-                .lock()
-                .expect("Error locking thread pool");
-            guard.as_ref().expect("No thread pool created yet").clone()
-        };
-        pool.spawn_ok(future);
+        tokio::spawn(future);
     }
 
     pub async fn open_window<T>(builder: WindowBuilder, window: T)
