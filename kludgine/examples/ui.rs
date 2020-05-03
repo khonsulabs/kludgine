@@ -19,10 +19,22 @@ impl UIExample {
     async fn create_interface() -> KludgineResult<UserInterface> {
         let grid = Component::new(
             Grid::new(4, 4)
-                .with_cell(Point::new(0, 0), Component::new(Interface { message: "A" }))?
-                .with_cell(Point::new(1, 0), Component::new(Interface { message: "B" }))?
-                .with_cell(Point::new(0, 1), Component::new(Interface { message: "C" }))?
-                .with_cell(Point::new(1, 1), Component::new(Interface { message: "D" }))?,
+                .with_cell(
+                    Point::new(0, 0),
+                    Component::new(Interface { click_count: 0 }),
+                )?
+                .with_cell(
+                    Point::new(1, 0),
+                    Component::new(Interface { click_count: 0 }),
+                )?
+                .with_cell(
+                    Point::new(0, 1),
+                    Component::new(Interface { click_count: 0 }),
+                )?
+                .with_cell(
+                    Point::new(1, 1),
+                    Component::new(Interface { click_count: 0 }),
+                )?,
         );
         let ui = UserInterface::new(Style::default());
         ui.set_root(grid).await;
@@ -51,14 +63,14 @@ impl Window for UIExample {
 
 #[derive(Debug)]
 struct Interface {
-    message: &'static str,
+    click_count: i32,
 }
 
 #[async_trait]
 impl Controller for Interface {
     async fn view(&self) -> KludgineResult<KludgineHandle<Box<dyn View>>> {
         Label::default()
-            .with_value(self.message)
+            .with_value(self.click_count.to_string())
             .with_style(Style {
                 font_size: Some(60.0),
                 color: Some(Color::new(0.0, 0.5, 0.5, 1.0)),
@@ -70,5 +82,15 @@ impl Controller for Interface {
             })
             .with_padding(Surround::uniform(Dimension::Auto))
             .build()
+    }
+
+    async fn mouse_button_down(
+        &mut self,
+        _component: &Component,
+        _button: MouseButton,
+        __window_position: Point,
+    ) -> KludgineResult<ComponentEventStatus> {
+        self.click_count += 1;
+        Ok(ComponentEventStatus::rebuild_view_processed())
     }
 }

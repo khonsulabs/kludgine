@@ -1,6 +1,6 @@
 use super::{
     view::{BaseView, View, ViewBuilder, ViewCore, ViewCoreBuilder},
-    Component, Controller,
+    Component, ComponentEventStatus, Controller,
 };
 use crate::{
     math::{max_f, Point, Rect, Size, Surround},
@@ -11,6 +11,7 @@ use crate::{
 use async_trait::async_trait;
 use futures::future::join_all;
 use kludgine_macros::ViewCore;
+use winit::event::MouseButton;
 
 #[derive(Debug)]
 pub struct Grid {
@@ -33,6 +34,14 @@ impl GridEntry {
 
         Ok(view)
     }
+
+    pub fn component(&self) -> Option<Component> {
+        if let GridEntry::Component(component) = self {
+            Some(component.clone())
+        } else {
+            None
+        }
+    }
 }
 
 #[async_trait]
@@ -46,6 +55,45 @@ impl Controller for Grid {
         GridView::new(self.width, self.height(), views?)
             .with_padding(Surround::uniform(0.0))
             .build()
+    }
+    async fn mouse_button_down(
+        &mut self,
+        _component: &Component,
+        button: MouseButton,
+        window_position: Point,
+    ) -> KludgineResult<ComponentEventStatus> {
+        let mut handled = ComponentEventStatus::ignored();
+        for child in self.cells.iter().filter_map(|e| e.component()) {
+            let hit = {
+                let view_handle = child.view().await?;
+                let view = view_handle.read().await;
+                view.bounds().contains(window_position)
+            };
+            if hit {
+                handled.update_with(child.mouse_button_down(button, window_position).await?);
+            }
+        }
+        Ok(handled)
+    }
+
+    async fn mouse_button_up(
+        &mut self,
+        _component: &Component,
+        button: MouseButton,
+        window_position: Point,
+    ) -> KludgineResult<ComponentEventStatus> {
+        let mut handled = ComponentEventStatus::ignored();
+        for child in self.cells.iter().filter_map(|e| e.component()) {
+            let hit = {
+                let view_handle = child.view().await?;
+                let view = view_handle.read().await;
+                view.bounds().contains(window_position)
+            };
+            if hit {
+                handled.update_with(child.mouse_button_up(button, window_position).await?);
+            }
+        }
+        Ok(handled)
     }
 }
 
