@@ -23,10 +23,10 @@ impl PreparedText {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct PreparedLine {
     pub spans: Vec<PreparedSpan>,
-    pub metrics: Option<rusttype::VMetrics>,
+    pub metrics: rusttype::VMetrics,
 }
 
 impl PreparedLine {
@@ -43,8 +43,7 @@ impl PreparedLine {
     }
 
     pub fn height(&self) -> f32 {
-        let metrics = self.metrics.as_ref().unwrap();
-        metrics.ascent - metrics.descent + metrics.line_gap
+        self.metrics.ascent - self.metrics.descent + self.metrics.line_gap
     }
 }
 

@@ -27,7 +27,7 @@ pub struct TextWrapper<'a, 'b> {
     scene: &'a mut SceneTarget<'b>,
     prepared_text: PreparedText,
     lexer_state: LexerState,
-    current_line: PreparedLine,
+    current_line_spans: Vec<PreparedSpan>,
     current_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
     current_committed_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
     current_font: Option<Font>,
@@ -49,7 +49,7 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
             options,
             scene,
             prepared_text: PreparedText::default(),
-            current_line: PreparedLine::default(),
+            current_line_spans: Vec::new(),
             current_glyphs: Vec::new(),
             current_committed_glyphs: Vec::new(),
             current_font: None,
@@ -246,7 +246,7 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
 
             let font = self.current_font.as_ref().unwrap().clone();
             let metrics = font.metrics(current_style.font_size).await;
-            self.current_line.spans.push(PreparedSpan::new(
+            self.current_line_spans.push(PreparedSpan::new(
                 font,
                 current_style.font_size,
                 current_style.color,
@@ -286,11 +286,14 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
             self.lexer_state = previous_lexer_state;
         }
 
-        let mut current_line = PreparedLine::default();
-        std::mem::swap(&mut current_line, &mut self.current_line);
+        let mut current_line_spans = Vec::new();
+        std::mem::swap(&mut current_line_spans, &mut self.current_line_spans);
 
         let metrics = self.current_vmetrics.unwrap();
-        current_line.metrics = Some(metrics);
+        let current_line = PreparedLine {
+            spans: current_line_spans,
+            metrics,
+        };
         self.current_vmetrics = None;
 
         self.prepared_text.lines.push(current_line);

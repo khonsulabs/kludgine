@@ -59,12 +59,35 @@ impl Text {
         location: Point,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
+        self.render_core(scene, location, true, wrapping).await
+    }
+
+    pub async fn render_baseline_at<'a>(
+        &self,
+        scene: &mut SceneTarget<'a>,
+        location: Point,
+        wrapping: TextWrap,
+    ) -> KludgineResult<()> {
+        self.render_core(scene, location, false, wrapping).await
+    }
+
+    async fn render_core<'a>(
+        &self,
+        scene: &mut SceneTarget<'a>,
+        location: Point,
+        offset_baseline: bool,
+        wrapping: TextWrap,
+    ) -> KludgineResult<()> {
         let prepared_text = self.wrap(scene, wrapping).await?;
         let mut current_line_baseline = 0.0;
         let effective_scale_factor = scene.effective_scale_factor();
 
+        if offset_baseline && prepared_text.lines.len() > 0 {
+            current_line_baseline += prepared_text.lines[0].metrics.ascent / effective_scale_factor;
+        }
+
         for line in prepared_text.lines.iter() {
-            let metrics = line.metrics.as_ref().unwrap();
+            let metrics = line.metrics;
             let cursor_position = Point::new(location.x, location.y + current_line_baseline);
             for span in line.spans.iter() {
                 let mut location = scene

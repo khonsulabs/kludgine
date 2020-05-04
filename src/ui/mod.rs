@@ -363,7 +363,7 @@ impl Component {
         current_style
     }
 
-    async fn current_style(&self) -> Style {
+    pub async fn current_style(&self) -> Style {
         let component = self.handle.read().await;
         match &component.base_view.mouse_status {
             Some(mouse_status) => match mouse_status {
