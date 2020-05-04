@@ -1,5 +1,50 @@
-[workspace]
-members = [
-  "kludgine",
-  "kludgine-macros"
-]
+[package]
+name = "kludgine"
+version = "0.1.0"
+authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
+edition = "2018"
+
+[features]
+default = ["bundled-fonts"]
+
+# Enable all bundled fonts. All bundled fonts are licensed under the Apache License 2.0.
+# For more information, see here: https://github.com/khonsulabs/kludgine/tree/master/fonts/README.md
+bundled-fonts = ["bundled-fonts-roboto"]
+bundled-fonts-roboto = ["bundled-fonts-enabled"]
+
+# Internal feature that exports the bundled_fonts module
+bundled-fonts-enabled = []
+
+[dependencies]
+rgx = {version = "0.8", features=["renderer"]}
+winit = "0.22"
+thiserror="1.0"
+anyhow="1.0"
+crossbeam="0.7"
+image="0.23"
+async-trait="0.1"
+futures = {version="0.3", features=["thread-pool"]}
+lazy_static="1"
+async-std = "1"
+chrono = "0.4"
+educe="0.4"
+rusttype= { version = "0.9", features=["gpu_cache"]}
+json = "0.12"
+platforms = "0.2"
+generational-arena = "*"
+kludgine-macros={path = "../kludgine-macros"}
+dashmap="3"
+ttf-parser = "0.5"
+tokio={version="0.2", features=["full"]}
+
+[dev-dependencies]
+rand="0.7"
+futures-await-test="0.3"
+
+[[example]]
+name = "text"
+required-features = ["bundled-fonts-roboto"]
+
+[[example]]
+name = "ui"
+required-features = ["bundled-fonts-roboto"]
