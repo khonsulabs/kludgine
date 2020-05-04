@@ -52,4 +52,9 @@ impl SourceSprite {
             self.clone(),
         )));
     }
+
+    pub async fn size(&self) -> Size<u32> {
+        let sprite = self.handle.read().await;
+        sprite.texture.size().await
+    }
 }

@@ -92,7 +92,7 @@ pub mod window;
 pub mod prelude {
     pub use super::{
         application::{Application, SingleWindowApplication, WindowCreator},
-        include_aseprite_sprite,
+        include_aseprite_sprite, include_texture,
         math::{Dimension, Point, Rect, Size, Surround},
         runtime::Runtime,
         scene::{Scene, SceneTarget},

@@ -3,6 +3,7 @@ use super::{
     window::{RuntimeWindow, Window, WindowBuilder},
 };
 use async_trait::async_trait;
+use futures::Future;
 use std::marker::PhantomData;
 
 #[async_trait]
@@ -39,6 +40,16 @@ where
         let app = Self {
             phantom: PhantomData::default(),
         };
-        Runtime::new(app).run(T::get_window_builder(), window)
+        Runtime::new(app).run(T::get_window_builder(), async move { window })
+    }
+    pub fn run_with<C, F>(window_func: C) -> !
+    where
+        C: FnOnce() -> F,
+        F: Future<Output = T> + Send + Sync + 'static,
+    {
+        let app = Self {
+            phantom: PhantomData::default(),
+        };
+        Runtime::new(app).run(T::get_window_builder(), window_func())
     }
 }

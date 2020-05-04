@@ -9,6 +9,14 @@ lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicCell<u64> = { AtomicCell::new(0) };
 }
 
+#[macro_export]
+macro_rules! include_texture {
+    ($image_path:expr) => {{
+        let image_bytes = std::include_bytes!($image_path);
+        Texture::from_bytes(image_bytes)
+    }};
+}
+
 #[derive(Clone)]
 pub struct Texture {
     pub(crate) handle: KludgineHandle<TextureData>,

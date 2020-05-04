@@ -201,9 +201,10 @@ impl Runtime {
         }
     }
 
-    pub fn run<T>(self, initial_window: WindowBuilder, window: T) -> !
+    pub fn run<T, F>(self, initial_window: WindowBuilder, window: F) -> !
     where
-        T: Window + Sized,
+        T: Window + Sized + 'static,
+        F: Future<Output = T> + Send + Sync + 'static,
     {
         // Install the global event handler, and also ensure we aren't trying to initialize two runtimes
         // This is necessary because EventLoop::run requires the function/closure passed to have a `static
@@ -233,7 +234,7 @@ impl Runtime {
                 winit::window::Fullscreen::Exclusive(exclusive_mode.unwrap()),
             ));
         }
-
+        let window = Runtime::block_on(window);
         let initial_window = initial_window.build(&event_loop).unwrap();
         RuntimeWindow::open(initial_window, Box::new(window));
         event_loop.run(move |event, event_loop, control_flow| {
@@ -250,7 +251,15 @@ impl Runtime {
     }
 
     pub fn spawn<Fut: Future<Output = ()> + Send + 'static>(future: Fut) {
-        tokio::spawn(future);
+        let pool = GLOBAL_THREAD_POOL.lock().expect("Error getting runtime");
+        pool.as_ref().unwrap().spawn(future);
+    }
+
+    pub fn block_on<Fut: Future<Output = R> + Send + Sync + 'static, R: Send + Sync + 'static>(
+        future: Fut,
+    ) -> R {
+        let mut pool = GLOBAL_THREAD_POOL.lock().expect("Error getting runtime");
+        pool.as_mut().unwrap().block_on(future)
     }
 
     pub async fn open_window<T>(builder: WindowBuilder, window: T)
