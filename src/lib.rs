@@ -104,6 +104,7 @@ pub mod prelude {
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,
         },
+        timing::FrequencyLimiter,
         ui::{
             grid::Grid, label::Label, Component, ComponentEventStatus, Controller, UserInterface,
         },

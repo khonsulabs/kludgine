@@ -250,9 +250,11 @@ impl Runtime {
         });
     }
 
-    pub fn spawn<Fut: Future<Output = ()> + Send + 'static>(future: Fut) {
+    pub fn spawn<Fut: Future<Output = ()> + Send + 'static>(
+        future: Fut,
+    ) -> tokio::task::JoinHandle<()> {
         let pool = GLOBAL_THREAD_POOL.lock().expect("Error getting runtime");
-        pool.as_ref().unwrap().spawn(future);
+        pool.as_ref().unwrap().spawn(future)
     }
 
     pub fn block_on<Fut: Future<Output = R> + Send + Sync + 'static, R: Send + Sync + 'static>(
@@ -273,5 +275,10 @@ impl Runtime {
         .send()
         .await
         .unwrap_or_default();
+    }
+
+    pub async fn handle() -> tokio::runtime::Handle {
+        let pool = GLOBAL_THREAD_POOL.lock().expect("Error getting runtime");
+        pool.as_ref().unwrap().handle().clone()
     }
 }
