@@ -109,6 +109,13 @@ impl<'a> SceneTarget<'a> {
             SceneTarget::Camera { scene, .. } => scene.elapsed(),
         }
     }
+
+    pub fn pressed_keys(&self) -> &HashSet<VirtualKeyCode> {
+        match &self {
+            SceneTarget::Scene(scene) => &scene.pressed_keys,
+            SceneTarget::Camera { scene, .. } => &scene.pressed_keys,
+        }
+    }
 }
 
 pub struct Scene {

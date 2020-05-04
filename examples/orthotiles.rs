@@ -31,21 +31,21 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    async fn update(&mut self, scene: &mut Scene) -> KludgineResult<()> {
+    async fn update<'a>(&mut self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
         let stickguy = self.stickguy.as_ref().unwrap();
         // Our default animation is Idle
         let mut animation = "Idle";
-        if scene.pressed_keys.contains(&VirtualKeyCode::Right) {
+        if scene.pressed_keys().contains(&VirtualKeyCode::Right) {
             animation = "WalkRight";
             self.position.x += 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
-        } else if scene.pressed_keys.contains(&VirtualKeyCode::Left) {
+        } else if scene.pressed_keys().contains(&VirtualKeyCode::Left) {
             animation = "WalkLeft";
             self.position.x -= 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
         }
 
-        if scene.pressed_keys.contains(&VirtualKeyCode::Up) {
+        if scene.pressed_keys().contains(&VirtualKeyCode::Up) {
             self.position.y -= 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
-        } else if scene.pressed_keys.contains(&VirtualKeyCode::Down) {
+        } else if scene.pressed_keys().contains(&VirtualKeyCode::Down) {
             self.position.y += 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
         }
         stickguy.set_current_tag(Some(animation)).await?;
@@ -53,7 +53,7 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    async fn render<'a>(&mut self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+    async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
         let mut camera_scene = scene.set_camera(self.zoom, self.position);
         // The map is drawn at a static location of 0,0 (upper-left)
         // It will be offset scene.origin()

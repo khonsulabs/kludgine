@@ -104,12 +104,12 @@ pub trait Window: Send + Sync + 'static {
     }
 
     /// Called once for each frame, directly before `render`
-    async fn update(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
+    async fn update<'a>(&mut self, _scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
         Ok(())
     }
 
     /// Called once for each frame of rendering
-    async fn render<'a>(&mut self, _scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+    async fn render<'a>(&self, _scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
         Ok(())
     }
 
@@ -322,8 +322,11 @@ impl RuntimeWindow {
                 if scene.size().width > 0.0 && scene.size().height > 0.0 {
                     loop_limiter.advance_frame();
                     scene.start_frame();
-                    window.update(&mut scene).await?;
-                    window.render(&mut SceneTarget::Scene(&mut scene)).await?;
+                    {
+                        let mut target = SceneTarget::Scene(&mut scene);
+                        window.update(&mut target).await?;
+                        window.render(&mut target).await?;
+                    }
                     let mut guard = frame.write().await;
                     guard.update(&scene).await;
                 }
