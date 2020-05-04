@@ -32,7 +32,6 @@ rusttype= { version = "0.9", features=["gpu_cache"]}
 json = "0.12"
 platforms = "0.2"
 generational-arena = "*"
-kludgine-macros={path = "../kludgine-macros"}
 dashmap="3"
 ttf-parser = "0.5"
 tokio={version="0.2", features=["full"]}
