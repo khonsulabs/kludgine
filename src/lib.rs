@@ -92,14 +92,14 @@ pub mod window;
 pub mod prelude {
     pub use super::{
         application::{Application, SingleWindowApplication, WindowCreator},
-        include_aseprite_sprite, include_texture,
+        include_aseprite_sprite, include_font, include_texture,
         math::{Dimension, Point, Rect, Size, Surround},
         runtime::Runtime,
         scene::{Scene, SceneTarget},
         source_sprite::SourceSprite,
         sprite::Sprite,
         style::*,
-        text::{wrap::TextWrap, Span, Text},
+        text::{font::Font, wrap::TextWrap, Span, Text},
         texture::Texture,
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,

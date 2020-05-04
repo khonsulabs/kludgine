@@ -16,6 +16,7 @@
 use super::font::Font;
 use lazy_static::lazy_static;
 
+#[macro_export]
 macro_rules! include_font {
     ($path:expr) => {{
         let bytes = std::include_bytes!($path);
