@@ -1,7 +1,7 @@
 use super::{
     math::{Point, Rect, Size},
     scene::SceneTarget,
-    style::Style,
+    style::{EffectiveStyle, Layout, Style},
     window::{Event, EventStatus, InputEvent},
     KludgineHandle, KludgineResult,
 };
@@ -12,7 +12,7 @@ use winit::event::{ElementState, MouseButton};
 pub mod grid;
 pub mod label;
 pub mod view;
-use view::View;
+use view::{BaseView, MouseStatus};
 #[derive(Clone)]
 pub struct UserInterface {
     handle: KludgineHandle<UserInterfaceData>,
@@ -39,6 +39,8 @@ impl UserInterface {
             }),
         }
     }
+    /// MOVE THE BASE VIEW INTO COMPONENT AND MAKE THE COMPONENT MANAGE LAYOUT
+    /// Make a render function that takes the scene and bounds
 
     pub async fn set_root(&self, component: Component) {
         let mut ui = self.handle.write().await;
@@ -48,18 +50,17 @@ impl UserInterface {
     pub async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
         let ui = self.handle.read().await;
         if let Some(root_component) = &ui.root {
-            let view_handle = root_component.view().await?;
-            let mut view = view_handle.write().await;
-            view.update_style(scene, &ui.base_style).await?;
-            view.layout_within(
-                scene,
-                Rect::sized(
-                    Point::new(0.0, 0.0),
-                    Size::new(scene.size().width, scene.size().height),
-                ),
-            )
-            .await?;
-            view.render(scene).await?;
+            root_component.update_style(scene, &ui.base_style).await?;
+            root_component
+                .layout_within(
+                    scene,
+                    Rect::sized(
+                        Point::new(0.0, 0.0),
+                        Size::new(scene.size().width, scene.size().height),
+                    ),
+                )
+                .await?;
+            root_component.render(scene).await?;
         }
         Ok(())
     }
@@ -124,6 +125,14 @@ pub struct Component {
     handle: KludgineHandle<ComponentData>,
 }
 
+#[derive(Debug)]
+pub(crate) struct ComponentData {
+    controller: Box<dyn Controller>,
+    base_view: BaseView,
+    hovered_at: Option<Point>,
+    last_known_bounds: Rect,
+}
+
 #[derive(Default, Debug)]
 pub struct ComponentEventStatus {
     handled: EventStatus,
@@ -177,90 +186,53 @@ impl ComponentEventStatus {
     }
 }
 
-#[derive(Debug)]
-pub(crate) struct ComponentData {
-    controller: Box<dyn Controller>,
-    view: Option<KludgineHandle<Box<dyn View>>>,
-    hovered_at: Option<Point>,
-    last_known_bounds: Rect,
-}
-
 impl Component {
     pub fn new<C: Controller + 'static>(controller: C) -> Component {
         let handle = KludgineHandle::new(ComponentData {
             controller: Box::new(controller),
-            view: None,
             hovered_at: None,
             last_known_bounds: Rect::default(),
+            base_view: BaseView::default(),
         });
 
         Component { handle }
-    }
-
-    async fn view(&self) -> KludgineResult<KludgineHandle<Box<dyn View>>> {
-        let mut handle = self.handle.write().await;
-        let view = match handle.view.as_ref() {
-            Some(view) => view.clone(),
-            None => {
-                let view = handle.controller.view().await?;
-                handle.view = Some(view.clone());
-                view
-            }
-        };
-
-        Ok(view)
     }
 
     pub async fn mouse_moved(
         &self,
         window_position: Point,
     ) -> KludgineResult<ComponentEventStatus> {
-        let handled = {
-            // Talk to the controller before updating the view
-            let mut component = self.handle.write().await;
-            let mut handled = ComponentEventStatus::ignored();
-            if component.hovered_at.is_none() {
-                handled.update_with(component.controller.mouse_entered(self).await?);
-            }
-            let status = component
+        // Talk to the controller before updating the view
+        let mut component = self.handle.write().await;
+        let mut handled = ComponentEventStatus::ignored();
+        if component.hovered_at.is_none() {
+            handled.update_with(component.controller.mouse_entered(self).await?);
+        }
+        handled.update_with(
+            component
                 .controller
                 .mouse_moved(self, window_position)
-                .await?;
-            if status.rebuild_view {
-                component.view = None;
-            }
-            status
-        };
+                .await?,
+        );
 
         // Update the view's hover information
-        let view_handle = self.view().await?;
-        let mut view = view_handle.write().await;
-        if view.bounds().contains(window_position) {
-            view.hovered_at(window_position).await?
-        } else if view.base_view().mouse_status.is_some() {
-            view.unhovered().await?
+        if component.base_view.bounds.contains(window_position) {
+            component.base_view.hovered_at(window_position)?;
+        } else if component.base_view.mouse_status.is_some() {
+            component.base_view.unhovered()?;
         }
         Ok(handled)
     }
 
     pub async fn mouse_exited(&self) -> KludgineResult<ComponentEventStatus> {
-        let handled = {
-            // Talk to the controller before updating the view
-            let mut component = self.handle.write().await;
-            let status = component.controller.mouse_exited(self).await?;
-            if status.rebuild_view {
-                component.view = None;
-            }
-            status
-        };
+        // Talk to the controller before updating the view
+        let mut component = self.handle.write().await;
+        let status = component.controller.mouse_exited(self).await?;
 
-        // Update the view's hover information
-        let view_handle = self.view().await?;
-        let mut view = view_handle.write().await;
-        if view.base_view().mouse_status.is_some() {
-            view.unhovered().await?
+        if component.base_view.mouse_status.is_some() {
+            component.base_view.unhovered()?;
         }
-        Ok(handled)
+        Ok(status)
     }
 
     pub async fn mouse_button_down(
@@ -268,27 +240,19 @@ impl Component {
         button: MouseButton,
         window_position: Point,
     ) -> KludgineResult<ComponentEventStatus> {
-        let handled = {
-            // Talk to the controller before updating the view
-            let mut component = self.handle.write().await;
-            let status = component
-                .controller
-                .mouse_button_down(self, button, window_position)
-                .await?;
-            if status.rebuild_view {
-                component.view = None;
-            }
-            status
-        };
+        // Talk to the controller before updating the view
+        let mut component = self.handle.write().await;
+        let status = component
+            .controller
+            .mouse_button_down(self, button, window_position)
+            .await?;
 
-        let view_handle = self.view().await?;
-        let mut view = view_handle.write().await;
-        if view.bounds().contains(window_position) {
-            view.activated_at(window_position).await?
-        } else if view.base_view().mouse_status.is_some() {
-            view.deactivated().await?
+        if component.base_view.bounds.contains(window_position) {
+            component.base_view.activated_at(window_position)?;
+        } else if component.base_view.mouse_status.is_some() {
+            component.base_view.deactivated()?;
         }
-        Ok(handled)
+        Ok(status)
     }
 
     pub async fn mouse_button_up(
@@ -296,25 +260,126 @@ impl Component {
         button: MouseButton,
         window_position: Point,
     ) -> KludgineResult<ComponentEventStatus> {
-        let handled = {
-            // Talk to the controller before updating the view
-            let mut component = self.handle.write().await;
-            let status = component
-                .controller
-                .mouse_button_up(self, button, window_position)
-                .await?;
-            if status.rebuild_view {
-                component.view = None;
-            }
-            status
-        };
+        // Talk to the controller before updating the view
+        let mut component = self.handle.write().await;
+        let status = component
+            .controller
+            .mouse_button_up(self, button, window_position)
+            .await?;
 
-        let view_handle = self.view().await?;
-        let mut view = view_handle.write().await;
-        if view.base_view().mouse_status.is_some() {
-            view.deactivated().await?
+        if component.base_view.mouse_status.is_some() {
+            component.base_view.deactivated()?;
         }
-        Ok(handled)
+        Ok(status)
+    }
+
+    async fn layout_within<'a>(
+        &self,
+        scene: &mut SceneTarget<'a>,
+        bounds: Rect,
+    ) -> KludgineResult<()> {
+        let mut component = self.handle.write().await;
+        let size = self
+            .content_size(&component.base_view.bounds.size, scene)
+            .await?;
+        component.base_view.layout_within(&size, bounds)?;
+        component
+            .controller
+            .layout_within(self, scene, bounds)
+            .await
+    }
+
+    async fn content_size<'a>(
+        &self,
+        maximum_size: &Size,
+        scene: &mut SceneTarget<'a>,
+    ) -> KludgineResult<Size> {
+        let component = self.handle.read().await;
+        component
+            .controller
+            .content_size(self, maximum_size, scene)
+            .await
+    }
+
+    async fn update_style<'a>(
+        &self,
+        scene: &mut SceneTarget<'a>,
+        inherited_style: &Style,
+    ) -> KludgineResult<()> {
+        let mut component = self.handle.write().await;
+        if component
+            .controller
+            .update_style(self, scene, inherited_style)
+            .await?
+            == EventStatus::Ignored
+        {
+            self.compute_effective_style(inherited_style, scene).await;
+        }
+        Ok(())
+    }
+
+    async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+        let component = self.handle.read().await;
+        component.controller.render(self, scene).await
+    }
+
+    pub async fn bounds(&self) -> Rect {
+        let component = self.handle.read().await;
+        component.base_view.bounds
+    }
+
+    pub async fn layout(&self) -> Layout {
+        let component = self.handle.read().await;
+        component.base_view.layout.clone()
+    }
+
+    pub async fn effective_style(&self) -> EffectiveStyle {
+        let component = self.handle.read().await;
+        component.base_view.effective_style.clone()
+    }
+
+    pub async fn set_style(&mut self, style: Style) {
+        let mut component = self.handle.write().await;
+        component.base_view.style = style;
+    }
+    pub async fn set_hover_style(&mut self, style: Style) {
+        let mut component = self.handle.write().await;
+        component.base_view.hover_style = style;
+    }
+
+    pub async fn set_layout(&mut self, layout: Layout) {
+        let mut component = self.handle.write().await;
+        component.base_view.layout = layout;
+    }
+
+    pub async fn compute_effective_style<'a>(
+        &self,
+        inherited_style: &Style,
+        scene: &mut SceneTarget<'a>,
+    ) -> Style {
+        let current_style = self.current_style().await.inherit_from(inherited_style);
+        let mut component = self.handle.write().await;
+        component.base_view.effective_style = current_style.effective_style(scene);
+        current_style
+    }
+
+    async fn current_style(&self) -> Style {
+        let component = self.handle.read().await;
+        match &component.base_view.mouse_status {
+            Some(mouse_status) => match mouse_status {
+                MouseStatus::Hovered(_) => component
+                    .base_view
+                    .hover_style
+                    .inherit_from(&component.base_view.style),
+                MouseStatus::Activated(_) => component.base_view.activated_style.inherit_from(
+                    &component
+                        .base_view
+                        .hover_style
+                        .inherit_from(&component.base_view.style),
+                ),
+            },
+            None => component.base_view.style.clone(),
+        }
     }
     // pub async fn clicked(
     //     &self,
@@ -343,7 +408,20 @@ impl Component {
 
 #[async_trait]
 pub trait Controller: std::fmt::Debug + Sync + Send + 'static {
-    async fn view(&self) -> KludgineResult<KludgineHandle<Box<dyn View>>>;
+    async fn render<'a>(
+        &self,
+        _component: &Component,
+        _scene: &mut SceneTarget<'a>,
+    ) -> KludgineResult<()>;
+
+    async fn update_style<'a>(
+        &mut self,
+        _component: &Component,
+        _scene: &mut SceneTarget<'a>,
+        _inherited_style: &Style,
+    ) -> KludgineResult<EventStatus> {
+        Ok(EventStatus::Ignored)
+    }
     async fn mouse_exited(
         &mut self,
         _component: &Component,
@@ -379,6 +457,22 @@ pub trait Controller: std::fmt::Debug + Sync + Send + 'static {
     ) -> KludgineResult<ComponentEventStatus> {
         Ok(ComponentEventStatus::ignored())
     }
+
+    async fn layout_within<'a>(
+        &mut self,
+        _component: &Component,
+        _scene: &mut SceneTarget<'a>,
+        _bounds: Rect,
+    ) -> KludgineResult<()> {
+        Ok(())
+    }
+
+    async fn content_size<'a>(
+        &self,
+        _component: &Component,
+        _maximum_size: &Size,
+        _scene: &mut SceneTarget<'a>,
+    ) -> KludgineResult<Size>;
     // TODO add button tracking to provide click events
     // async fn clicked_at(
     //     &mut self,
@@ -387,22 +481,4 @@ pub trait Controller: std::fmt::Debug + Sync + Send + 'static {
     // ) -> KludgineResult<ComponentEventStatus> {
     //     Ok(ComponentEventStatus::ignored())
     // }
-}
-
-#[derive(Debug)]
-pub struct ViewController {
-    view: KludgineHandle<Box<dyn View>>,
-}
-
-impl ViewController {
-    pub fn new(view: KludgineHandle<Box<dyn View>>) -> Self {
-        Self { view }
-    }
-}
-
-#[async_trait]
-impl Controller for ViewController {
-    async fn view(&self) -> KludgineResult<KludgineHandle<Box<dyn View>>> {
-        Ok(self.view.clone())
-    }
 }

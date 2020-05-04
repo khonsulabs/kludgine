@@ -1,38 +1,40 @@
 use crate::{
-    math::{Point, Rect, Size},
+    math::{Point, Size},
     scene::SceneTarget,
+    style::EffectiveStyle,
     text::{wrap::TextWrap, Text},
-    ui::view::{BaseView, View, ViewCore},
+    ui::{Component, Controller},
     KludgineResult,
 };
 use async_trait::async_trait;
-use kludgine_macros::ViewCore;
 
-#[derive(ViewCore, Debug, Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct Label {
-    view: BaseView,
     value: Option<String>,
 }
 
 #[async_trait]
-impl View for Label {
-    async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+impl Controller for Label {
+    async fn render<'a>(
+        &self,
+        component: &Component,
+        scene: &mut SceneTarget<'a>,
+    ) -> KludgineResult<()> {
+        let effective_style = component.effective_style().await;
+        let bounds = component.bounds().await;
         let font = scene
-            .lookup_font(
-                &self.view.effective_style.font_family,
-                self.view.effective_style.font_weight,
-            )
+            .lookup_font(&effective_style.font_family, effective_style.font_weight)
             .await?;
-        let metrics = font.metrics(self.view.effective_style.font_size).await;
-        match self.create_text()? {
+        let metrics = font.metrics(effective_style.font_size).await;
+        match self.create_text(&effective_style)? {
             Some(text) => {
                 text.render_at(
                     scene,
                     Point::new(
-                        self.view.bounds.origin.x,
-                        self.view.bounds.origin.y + metrics.ascent / scene.effective_scale_factor(),
+                        bounds.origin.x,
+                        bounds.origin.y + metrics.ascent / scene.effective_scale_factor(),
                     ),
-                    self.wrapping(&self.view.bounds.size),
+                    self.wrapping(&bounds.size),
                 )
                 .await
             }
@@ -40,25 +42,22 @@ impl View for Label {
         }
     }
 
-    async fn layout_within<'a>(
-        &mut self,
-        scene: &mut SceneTarget<'a>,
-        bounds: Rect,
-    ) -> KludgineResult<()> {
-        self.view
-            .layout_within(&self.content_size(&bounds.size, scene).await?, bounds)
-    }
-
     async fn content_size<'a>(
         &self,
+        component: &Component,
         maximum_size: &Size,
         scene: &mut SceneTarget<'a>,
     ) -> KludgineResult<Size> {
-        let size = match self.create_text()? {
+        let size = match self.create_text(&component.effective_style().await)? {
             Some(text) => {
                 text.wrap(
                     scene,
-                    self.wrapping(&self.view.layout.size_with_minimal_padding(&maximum_size)),
+                    self.wrapping(
+                        &component
+                            .layout()
+                            .await
+                            .size_with_minimal_padding(&maximum_size),
+                    ),
                 )
                 .await?
                 .size()
@@ -77,9 +76,9 @@ impl Label {
         self
     }
 
-    fn create_text(&self) -> KludgineResult<Option<Text>> {
+    fn create_text(&self, effective_style: &EffectiveStyle) -> KludgineResult<Option<Text>> {
         if let Some(value) = &self.value {
-            Ok(Some(Text::span(value, &self.view.effective_style)))
+            Ok(Some(Text::span(value, effective_style)))
         } else {
             Ok(None)
         }

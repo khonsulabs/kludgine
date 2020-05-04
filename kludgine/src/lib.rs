@@ -105,10 +105,7 @@ pub mod prelude {
             PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,
         },
         ui::{
-            grid::Grid,
-            label::Label,
-            view::{View, ViewBuilder, ViewCore, ViewCoreBuilder},
-            Component, ComponentEventStatus, Controller, UserInterface, ViewController,
+            grid::Grid, label::Label, Component, ComponentEventStatus, Controller, UserInterface,
         },
         window::{Event, EventStatus, InputEvent, Window},
         KludgineError, KludgineHandle, KludgineResult,
@@ -118,4 +115,6 @@ pub mod prelude {
 
     #[cfg(feature = "bundled-fonts-enabled")]
     pub use super::text::bundled_fonts;
+
+    pub use lazy_static::lazy_static;
 }
