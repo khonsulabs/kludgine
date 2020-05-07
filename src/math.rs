@@ -136,7 +136,7 @@ pub struct Size<S = f32> {
 }
 
 impl<S> Size<S> {
-    pub fn new(width: S, height: S) -> Self {
+    pub const fn new(width: S, height: S) -> Self {
         Size { width, height }
     }
 }

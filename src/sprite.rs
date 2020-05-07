@@ -19,6 +19,7 @@ macro_rules! include_aseprite_sprite {
     };
 }
 
+#[derive(Clone)]
 pub enum AnimationMode {
     Forward,
     Reverse,
@@ -70,6 +71,19 @@ impl Sprite {
                 current_animation_direction: AnimationDirection::Forward,
             }),
         }
+    }
+
+    /// For merging multiple Sprites that have no tags within them
+    pub async fn merged(source: HashMap<String, Self>) -> Self {
+        let mut combined = HashMap::new();
+        let mut title = None;
+        for (name, sprite) in source {
+            let handle = sprite.handle.read().await;
+            let animations = handle.animations.read().await;
+            combined.insert(Some(name.clone()), animations[&None].clone());
+            title = title.or(handle.title.clone());
+        }
+        Self::new(title, KludgineHandle::new(combined))
     }
 
     pub async fn new_instance(&self) -> Self {
@@ -230,6 +244,17 @@ impl Sprite {
             animations.insert(name, SpriteAnimation::new(animation_frames, direction));
         }
 
+        let mut frames: Vec<_> = frames.into_iter().collect();
+        frames.sort_by(|a, b| a.0.cmp(&b.0));
+
+        animations.insert(
+            None,
+            SpriteAnimation::new(
+                frames.iter().map(|(_, f)| f.clone()).collect(),
+                AnimationMode::Forward,
+            ),
+        );
+
         Ok(Sprite::new(title, KludgineHandle::new(animations)))
     }
 
@@ -330,6 +355,7 @@ impl SpriteData {
     }
 }
 
+#[derive(Clone)]
 pub struct SpriteAnimation {
     frames: Vec<SpriteFrame>,
     mode: AnimationMode,
