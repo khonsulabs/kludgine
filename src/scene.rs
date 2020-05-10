@@ -54,10 +54,7 @@ impl<'a> SceneTarget<'a> {
     }
 
     pub fn set_camera(&mut self, zoom: f32, look_at: Point<f32>) -> SceneTarget {
-        let origin = Point::new(
-            -look_at.x + self.size().width / 2.0 / zoom,
-            -look_at.y + self.size().height / 2.0 / zoom,
-        );
+        let origin = Point::new(-look_at.x, -look_at.y);
         match self {
             SceneTarget::Scene(scene) => SceneTarget::Camera {
                 scene: *scene,
@@ -68,6 +65,21 @@ impl<'a> SceneTarget<'a> {
                 scene: *scene,
                 zoom,
                 origin,
+            },
+        }
+    }
+
+    pub fn set_zoom(&mut self, zoom: f32) -> SceneTarget {
+        match self {
+            SceneTarget::Scene(scene) => SceneTarget::Camera {
+                scene: *scene,
+                zoom,
+                origin: Point::new(0.0, 0.0),
+            },
+            SceneTarget::Camera { scene, origin, .. } => SceneTarget::Camera {
+                scene: *scene,
+                zoom,
+                origin: *origin,
             },
         }
     }
@@ -115,6 +127,10 @@ impl<'a> SceneTarget<'a> {
             SceneTarget::Scene(scene) => &scene.pressed_keys,
             SceneTarget::Camera { scene, .. } => &scene.pressed_keys,
         }
+    }
+
+    pub fn key_pressed(&self, key: VirtualKeyCode) -> bool {
+        self.pressed_keys().contains(&key)
     }
 }
 

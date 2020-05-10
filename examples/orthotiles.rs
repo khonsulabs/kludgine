@@ -54,7 +54,8 @@ impl Window for OrthoTiles {
     }
 
     async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
-        let mut camera_scene = scene.set_camera(self.zoom, self.position);
+        let mut camera_scene =
+            scene.set_camera(self.zoom, self.position - scene.size() / 2.0 / self.zoom);
         // The map is drawn at a static location of 0,0 (upper-left)
         // It will be offset scene.origin()
         let map = self.map.as_ref().unwrap();

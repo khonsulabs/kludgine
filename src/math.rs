@@ -220,6 +220,34 @@ where
     }
 }
 
+impl<S> std::ops::Add<Size<S>> for Point<S>
+where
+    S: std::ops::Add<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn add(self, s: Size<S>) -> Self {
+        Self {
+            x: self.x + s.width,
+            y: self.y + s.height,
+        }
+    }
+}
+
+impl<S> std::ops::Sub<Size<S>> for Point<S>
+where
+    S: std::ops::Sub<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn sub(self, s: Size<S>) -> Self {
+        Self {
+            x: self.x - s.width,
+            y: self.y - s.height,
+        }
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
 pub struct Surround<S> {
     pub left: S,
