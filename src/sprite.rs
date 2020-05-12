@@ -4,15 +4,17 @@ use super::{
     texture::{LoadedTexture, Texture},
     KludgineError, KludgineHandle, KludgineResult,
 };
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, iter::IntoIterator, time::Duration};
 
 #[macro_export]
 macro_rules! include_aseprite_sprite {
-    ($json_path:expr, $image_path:expr) => {
+    ($path:expr) => {
         async {
-            let image_bytes = std::include_bytes!($image_path);
+            let image_bytes = std::include_bytes!(concat!($path, ".png"));
             match Texture::from_bytes(image_bytes) {
-                Ok(texture) => Sprite::load_aseprite_json(include_str!($json_path), texture).await,
+                Ok(texture) => {
+                    Sprite::load_aseprite_json(include_str!(concat!($path, ".json")), texture).await
+                }
                 Err(err) => Err(err),
             }
         }
@@ -74,13 +76,13 @@ impl Sprite {
     }
 
     /// For merging multiple Sprites that have no tags within them
-    pub async fn merged(source: HashMap<String, Self>) -> Self {
+    pub async fn merged<'a, S: Into<String>, I: IntoIterator<Item = (S, Self)>>(source: I) -> Self {
         let mut combined = HashMap::new();
         let mut title = None;
         for (name, sprite) in source {
             let handle = sprite.handle.read().await;
             let animations = handle.animations.read().await;
-            combined.insert(Some(name.clone()), animations[&None].clone());
+            combined.insert(Some(name.into()), animations[&None].clone());
             title = title.or(handle.title.clone());
         }
         Self::new(title, KludgineHandle::new(combined))
