@@ -3,7 +3,6 @@ use super::{
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
     scene::{Scene, SceneTarget},
-    timing::FrequencyLimiter,
     KludgineError, KludgineHandle, KludgineResult,
 };
 use async_trait::async_trait;
@@ -268,7 +267,7 @@ impl RuntimeWindow {
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         window.initialize(&mut scene).await?;
-        let mut loop_limiter = FrequencyLimiter::new(Duration::from_nanos(FRAME_DURATION));
+        let mut interval = tokio::time::interval(Duration::from_nanos(FRAME_DURATION));
         loop {
             while let Some(event) = match event_receiver.try_recv() {
                 Ok(event) => Some(event),
@@ -309,28 +308,26 @@ impl RuntimeWindow {
                     }
                 }
             }
-            if let Some(wait_for) = loop_limiter.remaining() {
-                async_std::task::sleep(wait_for).await;
-            } else {
-                // CHeck for Cmd + W or Alt + f4 to close the window.
-                let modifiers = scene.modifiers_pressed();
-                if modifiers.primary_modifier() && scene.key_pressed(VirtualKeyCode::W) {
-                    if Self::request_window_close(id, &window).await? {
-                        return Ok(());
-                    }
-                }
-                if scene.size().width > 0.0 && scene.size().height > 0.0 {
-                    loop_limiter.advance_frame();
-                    scene.start_frame();
-                    {
-                        let mut target = SceneTarget::Scene(&mut scene);
-                        window.update(&mut target).await?;
-                        window.render(&mut target).await?;
-                    }
-                    let mut guard = frame.write().await;
-                    guard.update(&scene).await;
+
+            // CHeck for Cmd + W or Alt + f4 to close the window.
+            let modifiers = scene.modifiers_pressed();
+            if modifiers.primary_modifier() && scene.key_pressed(VirtualKeyCode::W) {
+                if Self::request_window_close(id, &window).await? {
+                    return Ok(());
                 }
             }
+
+            if scene.size().width > 0.0 && scene.size().height > 0.0 {
+                scene.start_frame();
+                {
+                    let mut target = SceneTarget::Scene(&mut scene);
+                    window.update(&mut target).await?;
+                    window.render(&mut target).await?;
+                }
+                let mut guard = frame.write().await;
+                guard.update(&scene).await;
+            }
+            interval.tick().await;
         }
     }
 

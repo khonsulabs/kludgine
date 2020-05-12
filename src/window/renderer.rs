@@ -1,7 +1,6 @@
 use crate::{
     frame::{FontUpdate, Frame, FrameCommand},
     runtime::{Runtime, FRAME_DURATION},
-    timing::FrequencyLimiter,
     KludgineHandle, KludgineResult,
 };
 use crossbeam::atomic::AtomicCell;
@@ -52,17 +51,15 @@ impl FrameRenderer {
     }
 
     async fn render_loop(mut self) {
-        let mut limiter = FrequencyLimiter::new(Duration::from_nanos(FRAME_DURATION));
+        let mut interval = tokio::time::interval(Duration::from_nanos(FRAME_DURATION));
         loop {
-            if let Some(remaining) = limiter.remaining() {
-                if !self.keep_running.load() {
-                    return;
-                }
+            interval.tick().await;
 
-                async_std::task::sleep(remaining).await;
+            if !self.keep_running.load() {
+                return;
             }
+            
             self.render().await.expect("Error rendering window");
-            limiter.advance_frame();
         }
     }
 
