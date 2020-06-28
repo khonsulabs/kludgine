@@ -8,12 +8,32 @@ use rgx::core::*;
 use rgx::kit;
 use rgx::kit::{shape2d, sprite2d, Repeat, ZDepth};
 use std::{sync::Arc, time::Duration};
+use tokio::sync::mpsc::{channel, Receiver, Sender};
+
+pub(crate) struct FrameSynchronizer {
+    receiver: Receiver<Frame>,
+    sender: Sender<Frame>,
+}
+
+impl FrameSynchronizer {
+    pub async fn take(&mut self) -> Frame {
+        self.receiver.recv().await.unwrap()
+    }
+
+    pub fn try_take(&mut self) -> Option<Frame> {
+        self.receiver.try_recv().ok()
+    }
+
+    pub async fn relinquish(&mut self, frame: Frame) {
+        self.sender.send(frame).await;
+    }
+}
 
 pub(crate) struct FrameRenderer {
     keep_running: Arc<AtomicCell<bool>>,
     renderer: Renderer,
     swap_chain: SwapChain,
-    frame: KludgineHandle<Frame>,
+    frame_synchronizer: FrameSynchronizer,
     sprite_pipeline: sprite2d::Pipeline,
     shape_pipeline: shape2d::Pipeline,
 }
@@ -21,50 +41,81 @@ pub(crate) struct FrameRenderer {
 impl FrameRenderer {
     fn new(
         renderer: Renderer,
-        frame: KludgineHandle<Frame>,
+        frame_synchronizer: FrameSynchronizer,
         keep_running: Arc<AtomicCell<bool>>,
         initial_width: u32,
         initial_height: u32,
     ) -> Self {
-        let swap_chain = renderer.swap_chain(initial_width, initial_height, PresentMode::NoVsync);
+        let swap_chain = renderer.swap_chain(initial_width, initial_height, PresentMode::Vsync);
         let shape_pipeline = renderer.pipeline(Blending::default());
         let sprite_pipeline = renderer.pipeline(Blending::default());
         Self {
             renderer,
             keep_running,
             swap_chain,
-            frame,
+            frame_synchronizer,
             sprite_pipeline,
             shape_pipeline,
         }
     }
     pub fn run(
         renderer: Renderer,
-        frame: KludgineHandle<Frame>,
         keep_running: Arc<AtomicCell<bool>>,
         initial_width: u32,
         initial_height: u32,
-    ) {
-        let frame_renderer =
-            FrameRenderer::new(renderer, frame, keep_running, initial_width, initial_height);
+    ) -> FrameSynchronizer {
+        let (renderer_sender, renderer_receiver) = channel(1);
+        let (client_sender, client_receiver) = channel(1);
+
+        let client_synchronizer = FrameSynchronizer {
+            sender: renderer_sender,
+            receiver: client_receiver,
+        };
+        let renderer_synchronizer = FrameSynchronizer {
+            sender: client_sender,
+            receiver: renderer_receiver,
+        };
+
+        let frame_renderer = FrameRenderer::new(
+            renderer,
+            renderer_synchronizer,
+            keep_running,
+            initial_width,
+            initial_height,
+        );
         Runtime::spawn(frame_renderer.render_loop());
+
+        client_synchronizer
     }
 
     async fn render_loop(mut self) {
         let mut interval = tokio::time::interval(Duration::from_nanos(FRAME_DURATION));
         loop {
-            interval.tick().await;
-
             if !self.keep_running.load() {
                 return;
             }
-            
+
+            // The way tick works is it initializes the future with now, and then when you await it
+            // it elapses the full period from when it was initialized. Since we want our frames to run
+            // at a consistent rate, we need to create the tick then await it after we do our processing
+            // so that it will just wait the remaining time of our target framerate.
+            let tick = interval.tick();
+            println!("render_loop executing");
             self.render().await.expect("Error rendering window");
+            println!("render_loop finished");
+
+            tick.await;
         }
     }
 
     pub async fn render(&mut self) -> KludgineResult<()> {
-        let mut engine_frame = self.frame.write().await;
+        let mut engine_frame = self.frame_synchronizer.take().await;
+        let result = self.render_frame(&mut engine_frame).await;
+        self.frame_synchronizer.relinquish(engine_frame).await;
+        result
+    }
+
+    async fn render_frame(&mut self, engine_frame: &mut Frame) -> KludgineResult<()> {
         let (w, h) = {
             (
                 engine_frame.size.width as u32,
@@ -112,7 +163,7 @@ impl FrameRenderer {
         engine_frame.pending_font_updates.clear();
 
         if self.swap_chain.width != w || self.swap_chain.height != h {
-            self.swap_chain = self.renderer.swap_chain(w, h, PresentMode::NoVsync);
+            self.swap_chain = self.renderer.swap_chain(w, h, PresentMode::Vsync);
         }
 
         // let (mx, my) = (self.size().width / 2.0, self.size().height / 2.0);

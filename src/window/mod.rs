@@ -25,7 +25,7 @@ use winit::{
 };
 
 mod renderer;
-use renderer::FrameRenderer;
+use renderer::{FrameRenderer, FrameSynchronizer};
 
 /// How to react to a request to close a window
 pub enum CloseResponse {
@@ -206,22 +206,18 @@ impl RuntimeWindow {
 
         let (message_sender, message_receiver) = unbounded();
         let (event_sender, event_receiver) = unbounded();
-        let frame = KludgineHandle::new(Frame::default());
-        Runtime::spawn(Self::window_main::<T>(
-            window_id,
-            frame.clone(),
-            event_receiver,
-            app_window,
-        ));
 
         let keep_running = Arc::new(AtomicCell::new(true));
-        FrameRenderer::run(
+        let mut frame_synchronizer = FrameRenderer::run(
             renderer,
-            frame,
             keep_running.clone(),
             window.inner_size().width,
             window.inner_size().height,
         );
+        Runtime::spawn(async move {
+            frame_synchronizer.relinquish(Frame::default()).await;
+            Self::window_main::<T>(window_id, frame_synchronizer, event_receiver, app_window).await
+        });
 
         {
             let mut channels = block_on(WINDOW_CHANNELS.write());
@@ -256,7 +252,7 @@ impl RuntimeWindow {
 
     async fn window_loop<T>(
         id: WindowId,
-        frame: KludgineHandle<Frame>,
+        mut frame_synchronizer: FrameSynchronizer,
         event_receiver: Receiver<WindowEvent>,
         mut window: Box<T>,
     ) -> KludgineResult<()>
@@ -318,14 +314,21 @@ impl RuntimeWindow {
             }
 
             if scene.size().width > 0.0 && scene.size().height > 0.0 {
+                println!("Starting client render");
                 scene.start_frame();
                 {
                     let mut target = SceneTarget::Scene(&mut scene);
                     window.update(&mut target).await?;
                     window.render(&mut target).await?;
                 }
-                let mut guard = frame.write().await;
-                guard.update(&scene).await;
+                println!("Locking frame");
+                if let Some(mut frame) = frame_synchronizer.try_take() {
+                    frame.update(&scene).await;
+                    frame_synchronizer.relinquish(frame).await;
+                    println!("Done updating frame");
+                } else {
+                    println!("Frame not available, sleeping");
+                }
             }
             interval.tick().await;
         }
@@ -333,13 +336,13 @@ impl RuntimeWindow {
 
     async fn window_main<T>(
         id: WindowId,
-        frame: KludgineHandle<Frame>,
+        frame_synchronizer: FrameSynchronizer,
         event_receiver: Receiver<WindowEvent>,
         window: Box<T>,
     ) where
         T: Window + ?Sized,
     {
-        Self::window_loop::<T>(id, frame, event_receiver, window)
+        Self::window_loop::<T>(id, frame_synchronizer, event_receiver, window)
             .await
             .expect("Error running window loop.")
     }
