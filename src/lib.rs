@@ -1,3 +1,4 @@
+#![deny(clippy::all)]
 use async_std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use futures::executor::block_on;
 use std::{fmt::Display, sync::Arc};

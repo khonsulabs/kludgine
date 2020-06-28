@@ -11,6 +11,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
+      - name: Run clippy
+        run: cargo clippy
       - name: Run tests on stable
         run: cargo test --all-features
       - name: Run tests on nightly
