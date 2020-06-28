@@ -75,15 +75,12 @@ impl Window for OrthoTiles {
     }
 
     async fn process_input(&mut self, event: InputEvent) -> KludgineResult<()> {
-        match event.event {
-            Event::MouseWheel { delta, .. } => {
-                let zoom_amount = match delta {
-                    MouseScrollDelta::LineDelta(_x, y) => y,
-                    MouseScrollDelta::PixelDelta(point) => point.y as f32,
-                };
-                self.zoom = (self.zoom + zoom_amount / 100.0).min(10.0).max(0.2);
-            }
-            _ => {}
+        if let Event::MouseWheel { delta, .. } = event.event {
+            let zoom_amount = match delta {
+                MouseScrollDelta::LineDelta(_x, y) => y,
+                MouseScrollDelta::PixelDelta(point) => point.y as f32,
+            };
+            self.zoom = (self.zoom + zoom_amount / 100.0).min(10.0).max(0.2);
         }
         Ok(())
     }

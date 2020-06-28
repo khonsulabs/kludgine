@@ -31,15 +31,16 @@ pub struct PreparedLine {
 
 impl PreparedLine {
     pub async fn size(&self) -> Size {
-        if self.spans.len() == 0 {
+        if self.spans.is_empty() {
             return Size::new(0.0, self.height());
         }
         let first = self.spans.get(0).unwrap();
-        let last = self.spans.get(self.spans.len() - 1).unwrap();
-        Size::new(
-            last.x().await + last.width().await - first.x().await,
-            self.height(),
-        )
+        let last = self.spans.last().unwrap();
+
+        let last_x = last.x().await;
+        let last_width = last.width().await;
+        let first_x = first.x().await;
+        Size::new(last_x + last_width - first_x, self.height())
     }
 
     pub fn height(&self) -> f32 {

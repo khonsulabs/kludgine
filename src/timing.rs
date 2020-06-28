@@ -36,7 +36,7 @@ impl FrequencyLimiter {
     pub fn new<D: Into<Duration>>(limit: D) -> Self {
         let limit = limit.into();
         Self {
-            limit: limit.into(),
+            limit,
             next_target: None,
         }
     }

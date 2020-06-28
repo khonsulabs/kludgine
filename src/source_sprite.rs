@@ -31,7 +31,7 @@ impl SourceSprite {
         Self::new(Rect::sized(Point::new(0, 0), Size::new(w, h)), texture)
     }
 
-    pub async fn render_at<'a>(&self, scene: &mut SceneTarget<'a>, location: Point) {
+    pub async fn render_at(&self, scene: &mut SceneTarget<'_>, location: Point) {
         let (w, h) = {
             let source = self.handle.read().await;
             (

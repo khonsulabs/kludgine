@@ -45,35 +45,35 @@ impl Text {
         Self { spans }
     }
 
-    pub async fn wrap<'a>(
+    pub async fn wrap(
         &self,
-        scene: &mut SceneTarget<'a>,
+        scene: &mut SceneTarget<'_>,
         options: TextWrap,
     ) -> KludgineResult<PreparedText> {
         TextWrapper::wrap(self, scene, options).await // TODO cache result
     }
 
-    pub async fn render_at<'a>(
+    pub async fn render_at(
         &self,
-        scene: &mut SceneTarget<'a>,
+        scene: &mut SceneTarget<'_>,
         location: Point,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
         self.render_core(scene, location, true, wrapping).await
     }
 
-    pub async fn render_baseline_at<'a>(
+    pub async fn render_baseline_at(
         &self,
-        scene: &mut SceneTarget<'a>,
+        scene: &mut SceneTarget<'_>,
         location: Point,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
         self.render_core(scene, location, false, wrapping).await
     }
 
-    async fn render_core<'a>(
+    async fn render_core(
         &self,
-        scene: &mut SceneTarget<'a>,
+        scene: &mut SceneTarget<'_>,
         location: Point,
         offset_baseline: bool,
         wrapping: TextWrap,
@@ -82,7 +82,7 @@ impl Text {
         let mut current_line_baseline = 0.0;
         let effective_scale_factor = scene.effective_scale_factor();
 
-        if offset_baseline && prepared_text.lines.len() > 0 {
+        if offset_baseline && !prepared_text.lines.is_empty() {
             current_line_baseline += prepared_text.lines[0].metrics.ascent / effective_scale_factor;
         }
 
@@ -96,8 +96,8 @@ impl Text {
                 location.x += span.x().await;
                 scene.push_element(Element::Text(span.translate(location)));
             }
-            current_line_baseline = current_line_baseline
-                + (metrics.ascent - metrics.descent + metrics.line_gap) / effective_scale_factor;
+            current_line_baseline +=
+                (metrics.ascent - metrics.descent + metrics.line_gap) / effective_scale_factor;
         }
 
         Ok(())

@@ -15,10 +15,10 @@ pub struct Label {
 
 #[async_trait]
 impl Controller for Label {
-    async fn render<'a>(
+    async fn render(
         &self,
         component: &Component,
-        scene: &mut SceneTarget<'a>,
+        scene: &mut SceneTarget<'_>,
     ) -> KludgineResult<()> {
         let effective_style = component.effective_style().await;
         let bounds = component.bounds().await;
@@ -42,11 +42,11 @@ impl Controller for Label {
         }
     }
 
-    async fn content_size<'a>(
+    async fn content_size(
         &self,
         component: &Component,
         maximum_size: &Size,
-        scene: &mut SceneTarget<'a>,
+        scene: &mut SceneTarget<'_>,
     ) -> KludgineResult<Size> {
         let size = match self.create_text(&component.effective_style().await)? {
             Some(text) => {

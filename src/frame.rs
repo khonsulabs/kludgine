@@ -91,7 +91,7 @@ impl Frame {
             .textures
             .keys()
             .filter(|id| !referenced_texture_ids.contains(id))
-            .map(|id| *id)
+            .cloned()
             .collect::<Vec<_>>();
         for id in dead_texture_ids {
             self.textures.remove(&id);
@@ -140,13 +140,13 @@ impl Frame {
             .fonts
             .keys()
             .filter(|id| !referenced_fonts.contains(id))
-            .map(|id| *id)
+            .cloned()
             .collect::<Vec<_>>();
         for id in fonts_to_remove {
             self.fonts.remove(&id);
         }
 
-        for font in self.fonts.values().map(|f| f.clone()).collect::<Vec<_>>() {
+        for font in self.fonts.values().cloned().collect::<Vec<_>>() {
             let mut loaded_font_data = font.handle.write().await;
             loaded_font_data
                 .cache

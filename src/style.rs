@@ -93,7 +93,10 @@ pub struct Style {
 impl Style {
     pub fn inherit_from(&self, parent: &Style) -> Self {
         Self {
-            font_family: self.font_family.clone().or(parent.font_family.clone()),
+            font_family: self
+                .font_family
+                .clone()
+                .or_else(|| parent.font_family.clone()),
             font_size: self.font_size.or(parent.font_size),
             font_weight: self.font_weight.or(parent.font_weight),
             color: self.color.or(parent.color),

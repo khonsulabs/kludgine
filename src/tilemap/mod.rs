@@ -60,14 +60,11 @@ where
         for y in min_y..(min_y + tiles_high) {
             for x in min_x..(min_x + tiles_wide) {
                 let location = Point::new(x, y);
-                match self.provider.get_tile(location) {
-                    Some(tile) => {
-                        let sprite = tile.sprite.get_frame(scene.elapsed()).await?;
-                        sprite
-                            .render_at(scene, self.coordinate_for_tile(location))
-                            .await;
-                    }
-                    None => {}
+                if let Some(tile) = self.provider.get_tile(location) {
+                    let sprite = tile.sprite.get_frame(scene.elapsed()).await?;
+                    sprite
+                        .render_at(scene, self.coordinate_for_tile(location))
+                        .await;
                 }
             }
         }
@@ -125,9 +122,7 @@ impl TileProvider for PersistentTileProvider {
 
         self.tiles
             .get(self.point_to_index(Point::new(location.x as u32, location.y as u32)))
-            .map_or(None, |tile| {
-                tile.as_ref().map_or(None, |tile| Some(tile.clone()))
-            })
+            .and_then(|tile| tile.clone())
     }
 }
 
@@ -142,11 +137,9 @@ impl PersistentTileProvider {
         let index = self.point_to_index(location);
         mem::replace(
             &mut self.tiles[index],
-            sprite.map_or(None, |sprite| {
-                Some(Tile {
-                    location: Point::new(location.x as i32, location.y as i32),
-                    sprite,
-                })
+            sprite.map(|sprite| Tile {
+                location: Point::new(location.x as i32, location.y as i32),
+                sprite,
             }),
         );
     }

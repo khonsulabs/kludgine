@@ -152,7 +152,7 @@ impl Into<WinitWindowBuilder> for WindowBuilder {
 
 lazy_static! {
     static ref WINDOW_CHANNELS: KludgineHandle<HashMap<WindowId, Sender<WindowMessage>>> =
-        { KludgineHandle::new(HashMap::new()) };
+        KludgineHandle::new(HashMap::new());
 }
 
 thread_local! {
@@ -239,7 +239,7 @@ impl RuntimeWindow {
         WINDOWS.with(|windows| windows.borrow_mut().insert(window_id, runtime_window));
     }
 
-    async fn request_window_close<T>(id: WindowId, window: &Box<T>) -> KludgineResult<bool>
+    async fn request_window_close<T>(id: WindowId, window: &T) -> KludgineResult<bool>
     where
         T: Window + ?Sized,
     {
@@ -259,7 +259,7 @@ impl RuntimeWindow {
     where
         T: Window + ?Sized,
     {
-        let mut scene = Scene::new();
+        let mut scene = Scene::default();
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         window.initialize(&mut scene).await?;
@@ -278,7 +278,7 @@ impl RuntimeWindow {
                         scene.set_scale_factor(scale_factor);
                     }
                     WindowEvent::CloseRequested => {
-                        if Self::request_window_close(id, &window).await? {
+                        if Self::request_window_close(id, window.as_ref()).await? {
                             return Ok(());
                         }
                     }
@@ -286,20 +286,17 @@ impl RuntimeWindow {
                         // Notify the window of the raw event, before updaing our internal state
                         window.process_input(input.clone()).await?;
 
-                        match input.event {
-                            Event::Keyboard { key, state } => {
-                                if let Some(key) = key {
-                                    match state {
-                                        ElementState::Pressed => {
-                                            scene.pressed_keys.insert(key);
-                                        }
-                                        ElementState::Released => {
-                                            scene.pressed_keys.remove(&key);
-                                        }
+                        if let Event::Keyboard { key, state } = input.event {
+                            if let Some(key) = key {
+                                match state {
+                                    ElementState::Pressed => {
+                                        scene.pressed_keys.insert(key);
+                                    }
+                                    ElementState::Released => {
+                                        scene.pressed_keys.remove(&key);
                                     }
                                 }
                             }
-                            _ => {}
                         }
                     }
                 }
@@ -307,10 +304,11 @@ impl RuntimeWindow {
 
             // CHeck for Cmd + W or Alt + f4 to close the window.
             let modifiers = scene.modifiers_pressed();
-            if modifiers.primary_modifier() && scene.key_pressed(VirtualKeyCode::W) {
-                if Self::request_window_close(id, &window).await? {
-                    return Ok(());
-                }
+            if modifiers.primary_modifier()
+                && scene.key_pressed(VirtualKeyCode::W)
+                && Self::request_window_close(id, window.as_ref()).await?
+            {
+                return Ok(());
             }
 
             if scene.size().width > 0.0 && scene.size().height > 0.0 {
@@ -354,13 +352,10 @@ impl RuntimeWindow {
 
     pub(crate) fn process_events(event: &WinitEvent<()>) {
         WINDOWS.with(|windows| {
-            match event {
-                WinitEvent::WindowEvent { window_id, event } => {
-                    if let Some(window) = windows.borrow_mut().get_mut(&window_id) {
-                        window.process_event(event);
-                    }
+            if let WinitEvent::WindowEvent { window_id, event } = event {
+                if let Some(window) = windows.borrow_mut().get_mut(&window_id) {
+                    window.process_event(event);
                 }
-                _ => {}
             }
 
             {

@@ -4,23 +4,23 @@ use lazy_static::lazy_static;
 use rgx::core::*;
 use rusttype::{gpu_cache, Scale};
 lazy_static! {
-    static ref GLOBAL_ID_CELL: AtomicCell<u64> = { AtomicCell::new(0) };
+    static ref GLOBAL_ID_CELL: AtomicCell<u64> = AtomicCell::new(0);
 }
 
 /// Font provides TrueType Font rendering
 #[derive(Clone, Debug)]
 pub struct Font {
+    pub(crate) id: u64,
     pub(crate) handle: KludgineHandle<FontData>,
 }
 
 impl Font {
     pub fn try_from_bytes(bytes: &'static [u8]) -> Option<Font> {
         let font = rusttype::Font::try_from_bytes(bytes)?;
+        let id = GLOBAL_ID_CELL.fetch_add(1);
         Some(Font {
-            handle: KludgineHandle::new(FontData {
-                font,
-                id: GLOBAL_ID_CELL.fetch_add(1),
-            }),
+            id,
+            handle: KludgineHandle::new(FontData { font, id }),
         })
     }
 

@@ -160,8 +160,8 @@ impl Modifiers {
     }
 }
 
-impl Scene {
-    pub fn new() -> Self {
+impl Default for Scene {
+    fn default() -> Self {
         Self {
             scale_factor: 1.0,
             size: Size::default(),
@@ -172,7 +172,9 @@ impl Scene {
             fonts: HashMap::new(),
         }
     }
+}
 
+impl Scene {
     pub(crate) fn set_internal_size(&mut self, size: Size) {
         self.size = size;
     }

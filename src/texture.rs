@@ -6,7 +6,7 @@ use rgx::core::*;
 use std::path::Path;
 
 lazy_static! {
-    static ref GLOBAL_ID_CELL: AtomicCell<u64> = { AtomicCell::new(0) };
+    static ref GLOBAL_ID_CELL: AtomicCell<u64> = AtomicCell::new(0);
 }
 
 #[macro_export]

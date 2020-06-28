@@ -326,7 +326,7 @@ impl Default for Dimension {
 
 impl From<f32> for Dimension {
     fn from(value: f32) -> Self {
-        Dimension::Points(value.into())
+        Dimension::Points(value)
     }
 }
 

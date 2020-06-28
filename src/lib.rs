@@ -45,11 +45,11 @@ impl<T> KludgineHandle<T> {
         }
     }
 
-    pub async fn read<'a>(&'a self) -> RwLockReadGuard<'a, T> {
+    pub async fn read(&self) -> RwLockReadGuard<'_, T> {
         self.handle.read().await
     }
 
-    pub async fn write<'a>(&'a self) -> RwLockWriteGuard<'a, T> {
+    pub async fn write(&self) -> RwLockWriteGuard<'_, T> {
         self.handle.write().await
     }
 }

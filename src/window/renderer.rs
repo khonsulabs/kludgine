@@ -1,7 +1,7 @@
 use crate::{
     frame::{FontUpdate, Frame, FrameCommand},
     runtime::{Runtime, FRAME_DURATION},
-    KludgineHandle, KludgineResult,
+    KludgineResult,
 };
 use crossbeam::atomic::AtomicCell;
 use rgx::core::*;
@@ -33,7 +33,10 @@ impl FrameSynchronizer {
     }
 
     pub async fn take(&mut self) -> Frame {
-        self.receiver.recv().await.unwrap()
+        // Ignoring the error because if the sender/receiver is disconnected
+        // the window is closing and we should just ignore the error and let
+        // it close.
+        self.receiver.recv().await.unwrap_or_default()
     }
 
     pub fn try_take(&mut self) -> Option<Frame> {
@@ -41,7 +44,10 @@ impl FrameSynchronizer {
     }
 
     pub async fn relinquish(&mut self, frame: Frame) {
-        self.sender.send(frame).await;
+        // Ignoring the error because if the sender/receiver is disconnected
+        // the window is closing and we should just ignore the error and let
+        // it close.
+        self.sender.send(frame).await.unwrap_or_default();
     }
 }
 
@@ -206,7 +212,7 @@ impl FrameRenderer {
                             let (gpu_texture, texels) = {
                                 let texture = loaded_texture.texture.handle.read().await;
                                 let (w, h) = texture.image.dimensions();
-                                let pixels = texture.image.pixels().map(|p| *p).collect::<Vec<_>>();
+                                let pixels = texture.image.pixels().cloned().collect::<Vec<_>>();
                                 let pixels = Rgba8::align(&pixels);
 
                                 (self.renderer.texture(w as u32, h as u32), pixels.to_owned())

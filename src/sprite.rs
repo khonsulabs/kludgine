@@ -83,7 +83,7 @@ impl Sprite {
             let handle = sprite.handle.read().await;
             let animations = handle.animations.read().await;
             combined.insert(Some(name.into()), animations[&None].clone());
-            title = title.or(handle.title.clone());
+            title = title.or_else(|| handle.title.clone());
         }
         Self::new(title, KludgineHandle::new(combined))
     }
@@ -148,7 +148,7 @@ impl Sprite {
         let mut frames = HashMap::new();
         for (name, frame) in json["frames"].entries() {
             // Remove the extension, if present
-            let name = name.split(".").next().unwrap();
+            let name = name.split('.').next().unwrap();
             // Split by _ or ' 'as per the documentation of this method.
             let name_parts = name.split(|c| c == '_' || c == ' ').collect::<Vec<_>>();
             let frame_number = name_parts[name_parts.len() - 1]
@@ -237,9 +237,11 @@ impl Sprite {
             })?;
             let mut animation_frames = Vec::new();
             for i in start_frame..(end_frame + 1) {
-                let frame = frames.get(&i).ok_or(KludgineError::SpriteParseError(
-                    "invalid aseprite json: frameTags frame was out of bounds".to_owned(),
-                ))?;
+                let frame = frames.get(&i).ok_or_else(|| {
+                    KludgineError::SpriteParseError(
+                        "invalid aseprite json: frameTags frame was out of bounds".to_owned(),
+                    )
+                })?;
                 animation_frames.push(frame.clone());
             }
 
@@ -261,7 +263,7 @@ impl Sprite {
     }
 
     pub async fn set_current_tag<S: Into<String>>(&self, tag: Option<S>) -> KludgineResult<()> {
-        let new_tag = tag.map_or(None, |t| Some(t.into()));
+        let new_tag = tag.map(|t| t.into());
         let mut sprite = self.handle.write().await;
         if sprite.current_tag != new_tag {
             sprite.current_animation_direction = {

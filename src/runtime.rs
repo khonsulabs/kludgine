@@ -48,9 +48,9 @@ pub trait EventProcessor: Send + Sync {
 }
 lazy_static! {
     pub(crate) static ref GLOBAL_RUNTIME_SENDER: Mutex<Option<Sender<RuntimeRequest>>> =
-        { Mutex::new(None) };
+        Mutex::new(None);
     pub(crate) static ref GLOBAL_RUNTIME_RECEIVER: Mutex<Option<Receiver<RuntimeEvent>>> =
-        { Mutex::new(None) };
+        Mutex::new(None);
     pub(crate) static ref GLOBAL_EVENT_HANDLER: Mutex<Option<Box<dyn EventProcessor>>> =
         Mutex::new(None);
     pub(crate) static ref GLOBAL_THREAD_POOL: Mutex<Option<TokioRuntime>> = Mutex::new(None);
@@ -152,15 +152,10 @@ impl EventProcessor for Runtime {
         }
         RuntimeWindow::process_events(&event);
 
-        match event {
-            winit::event::Event::NewEvents(cause) => match cause {
-                winit::event::StartCause::Init => self
-                    .event_sender
-                    .send(RuntimeEvent::Running)
-                    .unwrap_or_default(),
-                _ => {}
-            },
-            _ => {}
+        if let winit::event::Event::NewEvents(winit::event::StartCause::Init) = event {
+            self.event_sender
+                .send(RuntimeEvent::Running)
+                .unwrap_or_default();
         }
 
         *control_flow = winit::event_loop::ControlFlow::Poll;

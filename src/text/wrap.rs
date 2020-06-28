@@ -96,8 +96,7 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                     if (self.current_style.is_none()
                         || self.current_style.as_ref() != Some(&span.style))
                         || (self.current_font.is_none()
-                            || self.current_font.as_ref().unwrap().id().await
-                                != primary_font.id().await)
+                            || self.current_font.as_ref().unwrap().id != primary_font.id)
                     {
                         self.new_span().await;
                         self.current_font = Some(primary_font.clone());
@@ -126,17 +125,13 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
         primary_font: &Font,
     ) -> Option<PositionedGlyph<'static>> {
         if c.is_control() {
-            match c {
-                '\n' => {
-                    // If there's no current line height, we should initialize it with the primary font's height
-                    if self.current_vmetrics.is_none() {
-                        self.current_vmetrics =
-                            Some(primary_font.metrics(span.style.font_size).await);
-                    }
-
-                    self.new_line().await;
+            if c == '\n' {
+                // If there's no current line height, we should initialize it with the primary font's height
+                if self.current_vmetrics.is_none() {
+                    self.current_vmetrics = Some(primary_font.metrics(span.style.font_size).await);
                 }
-                _ => {}
+
+                self.new_line().await;
             }
             return None;
         } else {
@@ -223,7 +218,7 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
     }
 
     async fn commit_current_glyphs(&mut self, transition_to_state: Option<LexerState>) {
-        if self.current_glyphs.len() > 0 {
+        if !self.current_glyphs.is_empty() {
             let mut current_glyphs = Vec::new();
             std::mem::swap(&mut self.current_glyphs, &mut current_glyphs);
             self.current_committed_glyphs.extend(current_glyphs);
@@ -234,7 +229,7 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
     }
 
     async fn new_span(&mut self) {
-        if self.current_committed_glyphs.len() > 0 {
+        if !self.current_committed_glyphs.is_empty() {
             let mut current_style = None;
             std::mem::swap(&mut current_style, &mut self.current_style);
             let current_style = current_style.unwrap();
@@ -255,7 +250,7 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
                 current_committed_glyphs,
                 metrics,
             ));
-            self.current_span_offset = self.caret + self.current_span_offset;
+            self.current_span_offset += self.caret;
             self.caret = 0.0;
         }
     }
@@ -269,8 +264,8 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
         self.current_span_offset = 0.0;
         self.last_glyph_id = None;
 
-        if self.current_glyphs.len() > 0 {
-            // Reset the position information for the current glyphs
+        if !self.current_glyphs.is_empty() {
+            // !is_empty()ation for the current glyphs
             let first_offset = self.current_glyphs[0].position().x;
             let mut max_x = 0i32;
             for glyph in self.current_glyphs.iter_mut() {
@@ -350,7 +345,7 @@ mod tests {
     #[async_test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word() {
-        let mut scene = Scene::new();
+        let mut scene = Scene::default();
         scene.register_bundled_fonts().await;
         let mut scene_target = SceneTarget::Scene(&mut scene);
         let wrap = Text::new(vec![Span::new(
@@ -396,7 +391,7 @@ mod tests {
     #[async_test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word_different_span() {
-        let mut scene = Scene::new();
+        let mut scene = Scene::default();
         scene.register_bundled_fonts().await;
         let mut scene_target = SceneTarget::Scene(&mut scene);
         let wrap = Text::new(vec![

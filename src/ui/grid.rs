@@ -62,10 +62,10 @@ impl Controller for Grid {
         Ok(handled)
     }
 
-    async fn render<'a>(
+    async fn render(
         &self,
         _component: &Component,
-        scene: &mut SceneTarget<'a>,
+        scene: &mut SceneTarget<'_>,
     ) -> KludgineResult<()> {
         for cell in self.cells.iter() {
             if let Some(cell) = cell.component() {
@@ -75,10 +75,10 @@ impl Controller for Grid {
         Ok(())
     }
 
-    async fn update_style<'a>(
+    async fn update_style(
         &mut self,
         component: &Component,
-        scene: &mut SceneTarget<'a>,
+        scene: &mut SceneTarget<'_>,
         inherited_style: &Style,
     ) -> KludgineResult<EventStatus> {
         let current_style = component
@@ -93,21 +93,21 @@ impl Controller for Grid {
         Ok(EventStatus::Processed)
     }
 
-    async fn content_size<'a>(
+    async fn content_size(
         &self,
         component: &Component,
         maximum_size: &Size,
-        scene: &mut SceneTarget<'a>,
+        scene: &mut SceneTarget<'_>,
     ) -> KludgineResult<Size> {
         let (desired_size, ..) = self
             .calculate_desired_sizes(component, maximum_size, scene)
             .await?;
         Ok(desired_size)
     }
-    async fn layout_within<'a>(
+    async fn layout_within(
         &mut self,
         component: &Component,
-        scene: &mut SceneTarget<'a>,
+        scene: &mut SceneTarget<'_>,
         _bounds: Rect,
     ) -> KludgineResult<()> {
         let bounds = component.bounds().await;
@@ -189,11 +189,11 @@ impl Grid {
         self.cells.len() as u32 / self.width
     }
 
-    async fn calculate_desired_sizes<'a>(
+    async fn calculate_desired_sizes(
         &self,
         component: &Component,
         maximum_size: &Size,
-        scene: &mut SceneTarget<'a>,
+        scene: &mut SceneTarget<'_>,
     ) -> KludgineResult<(Size<f32>, Vec<f32>, Vec<f32>)> {
         let inner_size = component
             .layout()
