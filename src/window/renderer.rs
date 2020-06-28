@@ -16,6 +16,22 @@ pub(crate) struct FrameSynchronizer {
 }
 
 impl FrameSynchronizer {
+    pub fn pair() -> (FrameSynchronizer, FrameSynchronizer) {
+        let (a_sender, a_receiver) = channel(1);
+        let (b_sender, b_receiver) = channel(1);
+
+        let a_synchronizer = FrameSynchronizer {
+            sender: b_sender,
+            receiver: a_receiver,
+        };
+        let b_synchronizer = FrameSynchronizer {
+            sender: a_sender,
+            receiver: b_receiver,
+        };
+
+        (a_synchronizer, b_synchronizer)
+    }
+
     pub async fn take(&mut self) -> Frame {
         self.receiver.recv().await.unwrap()
     }
@@ -64,17 +80,7 @@ impl FrameRenderer {
         initial_width: u32,
         initial_height: u32,
     ) -> FrameSynchronizer {
-        let (renderer_sender, renderer_receiver) = channel(1);
-        let (client_sender, client_receiver) = channel(1);
-
-        let client_synchronizer = FrameSynchronizer {
-            sender: renderer_sender,
-            receiver: client_receiver,
-        };
-        let renderer_synchronizer = FrameSynchronizer {
-            sender: client_sender,
-            receiver: renderer_receiver,
-        };
+        let (client_synchronizer, renderer_synchronizer) = FrameSynchronizer::pair();
 
         let frame_renderer = FrameRenderer::new(
             renderer,
