@@ -4,8 +4,9 @@ use crate::{
     style::Weight,
     text::{font::Font, prepared::PreparedSpan},
     timing::Moment,
-    KludgineError, KludgineResult,
+    KludgineError, KludgineHandle, KludgineResult,
 };
+use async_std::sync::{RwLockReadGuard, RwLockWriteGuard};
 use platforms::target::{OS, TARGET_OS};
 use std::{
     collections::{HashMap, HashSet},
@@ -18,79 +19,94 @@ pub(crate) enum Element {
     Text(PreparedSpan),
 }
 
-pub enum SceneTarget<'a> {
-    Scene(&'a mut Scene),
+#[derive(Clone)]
+pub enum SceneTarget {
+    Scene(Scene),
     Camera {
         origin: Point,
         zoom: f32,
-        scene: &'a mut Scene,
+        scene: Scene,
     },
 }
 
-impl<'a> SceneTarget<'a> {
-    pub fn size(&self) -> Size {
+impl SceneTarget {
+    pub async fn size(&self) -> Size {
         let size = match &self {
             SceneTarget::Scene(scene) => scene.size(),
             SceneTarget::Camera { scene, .. } => scene.size(),
-        };
+        }
+        .await;
+        let effective_scale_factor = self.effective_scale_factor().await;
         Size::new(
-            size.width / self.effective_scale_factor(),
-            size.height / self.effective_scale_factor(),
+            size.width / effective_scale_factor,
+            size.height / effective_scale_factor,
         )
     }
 
-    pub fn effective_scale_factor(&self) -> f32 {
+    pub async fn effective_scale_factor(&self) -> f32 {
         match &self {
-            SceneTarget::Scene(scene) => scene.scale_factor(),
-            SceneTarget::Camera { scene, zoom, .. } => scene.scale_factor() * zoom,
+            SceneTarget::Scene(scene) => scene.scale_factor().await,
+            SceneTarget::Camera { scene, zoom, .. } => scene.scale_factor().await * zoom,
         }
     }
 
-    pub(crate) fn push_element(&mut self, element: Element) {
+    async fn scene(&self) -> RwLockReadGuard<'_, SceneData> {
         match self {
-            SceneTarget::Scene(scene) => scene.elements.push(element),
-            SceneTarget::Camera { scene, .. } => scene.elements.push(element),
+            SceneTarget::Scene(scene) => scene.data.read().await,
+            SceneTarget::Camera { scene, .. } => scene.data.read().await,
         }
     }
 
-    pub fn set_camera(&mut self, zoom: f32, look_at: Point<f32>) -> SceneTarget {
+    async fn scene_mut(&self) -> RwLockWriteGuard<'_, SceneData> {
+        match self {
+            SceneTarget::Scene(scene) => scene.data.write().await,
+            SceneTarget::Camera { scene, .. } => scene.data.write().await,
+        }
+    }
+
+    pub(crate) async fn push_element(&self, element: Element) {
+        self.scene_mut().await.elements.push(element);
+    }
+
+    pub fn set_camera(&self, zoom: f32, look_at: Point<f32>) -> SceneTarget {
         let origin = Point::new(-look_at.x, -look_at.y);
         match self {
             SceneTarget::Scene(scene) => SceneTarget::Camera {
-                scene: *scene,
+                scene: scene.clone(),
                 zoom,
                 origin,
             },
             SceneTarget::Camera { scene, .. } => SceneTarget::Camera {
-                scene: *scene,
+                scene: scene.clone(),
                 zoom,
                 origin,
             },
         }
     }
 
-    pub fn set_zoom(&mut self, zoom: f32) -> SceneTarget {
+    pub fn set_zoom(&self, zoom: f32) -> SceneTarget {
         match self {
             SceneTarget::Scene(scene) => SceneTarget::Camera {
-                scene: *scene,
+                scene: scene.clone(),
                 zoom,
                 origin: Point::new(0.0, 0.0),
             },
             SceneTarget::Camera { scene, origin, .. } => SceneTarget::Camera {
-                scene: *scene,
+                scene: scene.clone(),
                 zoom,
                 origin: *origin,
             },
         }
     }
 
-    pub(crate) fn user_to_device_point<S>(&self, point: Point<S>) -> Point<S>
+    pub(crate) async fn user_to_device_point<S>(&self, point: Point<S>) -> Point<S>
     where
         S: From<f32> + std::ops::Sub<Output = S> + std::ops::Add<Output = S>,
     {
         Point::new(
             point.x + Into::<S>::into(self.origin().x),
-            Into::<S>::into(self.size().height) - (point.y + Into::<S>::into(self.origin().y)),
+            Into::<S>::into(self.size().await.height)
+                - (point.y + Into::<S>::into(self.origin().y)),
         )
     }
 
@@ -115,26 +131,25 @@ impl<'a> SceneTarget<'a> {
         }
     }
 
-    pub fn elapsed(&self) -> Option<Duration> {
-        match &self {
-            SceneTarget::Scene(scene) => scene.elapsed(),
-            SceneTarget::Camera { scene, .. } => scene.elapsed(),
-        }
+    pub async fn elapsed(&self) -> Option<Duration> {
+        self.scene().await.elapsed
     }
 
-    pub fn pressed_keys(&self) -> &HashSet<VirtualKeyCode> {
-        match &self {
-            SceneTarget::Scene(scene) => &scene.pressed_keys,
-            SceneTarget::Camera { scene, .. } => &scene.pressed_keys,
-        }
+    pub async fn pressed_keys(&self) -> HashSet<VirtualKeyCode> {
+        self.scene().await.pressed_keys.clone()
     }
 
-    pub fn key_pressed(&self, key: VirtualKeyCode) -> bool {
-        self.pressed_keys().contains(&key)
+    pub async fn key_pressed(&self, key: VirtualKeyCode) -> bool {
+        self.scene().await.pressed_keys.contains(&key)
     }
 }
 
+#[derive(Clone)]
 pub struct Scene {
+    pub(crate) data: KludgineHandle<SceneData>,
+}
+
+pub(crate) struct SceneData {
     pub pressed_keys: HashSet<VirtualKeyCode>,
     scale_factor: f32,
     size: Size,
@@ -163,85 +178,106 @@ impl Modifiers {
 impl Default for Scene {
     fn default() -> Self {
         Self {
-            scale_factor: 1.0,
-            size: Size::default(),
-            pressed_keys: HashSet::new(),
-            now: None,
-            elapsed: None,
-            elements: Vec::new(),
-            fonts: HashMap::new(),
+            data: KludgineHandle::new(SceneData {
+                scale_factor: 1.0,
+                size: Size::default(),
+                pressed_keys: HashSet::new(),
+                now: None,
+                elapsed: None,
+                elements: Vec::new(),
+                fonts: HashMap::new(),
+            }),
         }
     }
 }
 
 impl Scene {
-    pub(crate) fn set_internal_size(&mut self, size: Size) {
-        self.size = size;
+    pub(crate) async fn set_internal_size(&self, size: Size) {
+        let mut scene = self.data.write().await;
+        scene.size = size;
     }
 
-    pub(crate) fn internal_size(&self) -> Size {
-        self.size
+    pub(crate) async fn internal_size(&self) -> Size {
+        let scene = self.data.read().await;
+        scene.size
     }
 
-    pub(crate) fn set_scale_factor(&mut self, scale_factor: f32) {
-        self.scale_factor = scale_factor;
+    pub(crate) async fn set_scale_factor(&mut self, scale_factor: f32) {
+        let mut scene = self.data.write().await;
+        scene.scale_factor = scale_factor;
     }
 
-    pub fn scale_factor(&self) -> f32 {
-        self.scale_factor
+    pub async fn scale_factor(&self) -> f32 {
+        let scene = self.data.read().await;
+        scene.scale_factor
     }
 
-    pub fn key_pressed(&self, key: VirtualKeyCode) -> bool {
-        self.pressed_keys.contains(&key)
+    pub async fn key_pressed(&self, key: VirtualKeyCode) -> bool {
+        let scene = self.data.read().await;
+        scene.pressed_keys.contains(&key)
     }
 
-    pub fn any_key_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
+    pub async fn any_key_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
+        let scene = self.data.read().await;
         for key in keys {
-            if self.pressed_keys.contains(key) {
+            if scene.pressed_keys.contains(key) {
                 return true;
             }
         }
         false
     }
 
-    pub fn modifiers_pressed(&self) -> Modifiers {
+    pub async fn modifiers_pressed(&self) -> Modifiers {
+        let (control, alt, shift, os) = tokio::join!(
+            self.any_key_pressed(&[VirtualKeyCode::RControl, VirtualKeyCode::LControl]),
+            self.any_key_pressed(&[VirtualKeyCode::RAlt, VirtualKeyCode::LAlt]),
+            self.any_key_pressed(&[VirtualKeyCode::LShift, VirtualKeyCode::RShift]),
+            self.any_key_pressed(&[VirtualKeyCode::RWin, VirtualKeyCode::LWin])
+        );
         Modifiers {
-            control: self.any_key_pressed(&[VirtualKeyCode::RControl, VirtualKeyCode::LControl]),
-            alt: self.any_key_pressed(&[VirtualKeyCode::RAlt, VirtualKeyCode::LAlt]),
-            shift: self.any_key_pressed(&[VirtualKeyCode::LShift, VirtualKeyCode::RShift]),
-            os: self.any_key_pressed(&[VirtualKeyCode::RWin, VirtualKeyCode::LWin]),
+            control,
+            alt,
+            shift,
+            os,
         }
     }
 
-    pub(crate) fn start_frame(&mut self) {
-        let last_start = self.now;
-        self.now = Some(Moment::now());
-        self.elapsed = match last_start {
-            Some(last_start) => self.now().checked_duration_since(&last_start),
+    pub(crate) async fn start_frame(&mut self) {
+        let mut scene = self.data.write().await;
+        let last_start = scene.now;
+        scene.now = Some(Moment::now());
+        scene.elapsed = match last_start {
+            Some(last_start) => scene.now.unwrap().checked_duration_since(&last_start),
             None => None,
         };
-        self.elements.clear();
+        scene.elements.clear();
     }
 
-    pub fn size(&self) -> Size {
-        self.size
+    pub async fn size(&self) -> Size {
+        let scene = self.data.read().await;
+        scene.size
     }
 
-    pub fn now(&self) -> Moment {
-        self.now.expect("now() called without starting a frame")
+    pub async fn now(&self) -> Moment {
+        let scene = self.data.read().await;
+        scene.now.expect("now() called without starting a frame")
     }
 
-    pub fn elapsed(&self) -> Option<Duration> {
-        self.elapsed
+    pub async fn elapsed(&self) -> Option<Duration> {
+        let scene = self.data.read().await;
+        scene.elapsed
     }
 
-    pub fn is_initial_frame(&self) -> bool {
-        self.elapsed.is_none()
+    pub async fn is_initial_frame(&self) -> bool {
+        let scene = self.data.read().await;
+        scene.elapsed.is_none()
     }
 
     pub async fn register_font(&mut self, font: &Font) {
         let family = font.family().await.expect("Unable to register VecFonts");
-        self.fonts
+        let mut scene = self.data.write().await;
+        scene
+            .fonts
             .entry(family)
             .and_modify(|fonts| fonts.push(font.clone()))
             .or_insert_with(|| vec![font.clone()]);
@@ -283,7 +319,8 @@ impl Scene {
         } else {
             family
         };
-        match self.fonts.get(family) {
+        let scene = self.data.read().await;
+        match scene.fonts.get(family) {
             Some(fonts) => {
                 let mut closest_font = None;
                 let mut closest_weight = None;

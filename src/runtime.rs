@@ -252,7 +252,7 @@ impl Runtime {
         pool.as_ref().unwrap().spawn(future)
     }
 
-    pub fn block_on<Fut: Future<Output = R> + Send + Sync + 'static, R: Send + Sync + 'static>(
+    pub fn block_on<Fut: Future<Output = R> + Send + 'static, R: Send + Sync + 'static>(
         future: Fut,
     ) -> R {
         let mut pool = GLOBAL_THREAD_POOL.lock().expect("Error getting runtime");

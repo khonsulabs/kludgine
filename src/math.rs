@@ -72,6 +72,13 @@ where
             && self.origin.y <= point.y
             && self.y2() >= point.y
     }
+
+    pub fn area(&self) -> S
+    where
+        S: std::ops::Mul<Output = S> + Copy,
+    {
+        self.size.area()
+    }
 }
 
 impl<S> Into<rgx::rect::Rect<S>> for Rect<S>
@@ -138,6 +145,13 @@ pub struct Size<S = f32> {
 impl<S> Size<S> {
     pub const fn new(width: S, height: S) -> Self {
         Size { width, height }
+    }
+
+    pub fn area(&self) -> S
+    where
+        S: std::ops::Mul<Output = S> + Copy,
+    {
+        self.width * self.height
     }
 }
 

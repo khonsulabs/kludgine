@@ -19,12 +19,12 @@ enum LexerState {
     AfterWord,
 }
 
-pub struct TextWrapper<'a, 'b> {
+pub struct TextWrapper {
     caret: f32,
     current_vmetrics: Option<rusttype::VMetrics>,
     last_glyph_id: Option<rusttype::GlyphId>,
     options: TextWrap,
-    scene: &'a mut SceneTarget<'b>,
+    scene: SceneTarget,
     prepared_text: PreparedText,
     lexer_state: LexerState,
     current_line_spans: Vec<PreparedSpan>,
@@ -35,10 +35,10 @@ pub struct TextWrapper<'a, 'b> {
     current_span_offset: f32,
 }
 
-impl<'a, 'b> TextWrapper<'a, 'b> {
+impl TextWrapper {
     pub async fn wrap(
         text: &Text,
-        scene: &'a mut SceneTarget<'b>,
+        scene: &SceneTarget,
         options: TextWrap,
     ) -> KludgineResult<PreparedText> {
         TextWrapper {
@@ -47,7 +47,7 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
             current_vmetrics: None,
             last_glyph_id: None,
             options,
-            scene,
+            scene: scene.clone(),
             prepared_text: PreparedText::default(),
             current_line_spans: Vec::new(),
             current_glyphs: Vec::new(),
@@ -182,7 +182,10 @@ impl<'a, 'b> TextWrapper<'a, 'b> {
             .scaled(Scale::uniform(span.style.font_size))
             .positioned(rusttype::point(self.caret, 0.0));
 
-        if let Some(max_width) = self.options.max_width(self.scene.effective_scale_factor()) {
+        if let Some(max_width) = self
+            .options
+            .max_width(self.scene.effective_scale_factor().await)
+        {
             if let Some(bb) = glyph.pixel_bounding_box() {
                 if self.current_span_offset + bb.max.x as f32 > max_width {
                     // If the character that is causing us to need to wrap to the next line is whitespace,
@@ -347,17 +350,18 @@ mod tests {
     async fn wrap_one_word() {
         let mut scene = Scene::default();
         scene.register_bundled_fonts().await;
-        let mut scene_target = SceneTarget::Scene(&mut scene);
+        let scene_target = SceneTarget::Scene(scene);
         let wrap = Text::new(vec![Span::new(
             "This line should wrap",
             Style {
                 font_size: Some(12.0),
                 ..Default::default()
             }
-            .effective_style(&mut scene_target),
+            .effective_style(&scene_target)
+            .await,
         )])
         .wrap(
-            &mut scene_target,
+            &scene_target,
             TextWrap::MultiLine {
                 width: 80.0,
                 height: f32::MAX,
@@ -393,27 +397,28 @@ mod tests {
     async fn wrap_one_word_different_span() {
         let mut scene = Scene::default();
         scene.register_bundled_fonts().await;
-        let mut scene_target = SceneTarget::Scene(&mut scene);
+        let scene_target = SceneTarget::Scene(scene);
+
+        let first_style = Style {
+            font_size: Some(12.0),
+            ..Default::default()
+        }
+        .effective_style(&scene_target)
+        .await;
+
+        let second_style = Style {
+            font_size: Some(10.0),
+            ..Default::default()
+        }
+        .effective_style(&scene_target)
+        .await;
+
         let wrap = Text::new(vec![
-            Span::new(
-                "This line should ",
-                Style {
-                    font_size: Some(12.0),
-                    ..Default::default()
-                }
-                .effective_style(&mut scene_target),
-            ),
-            Span::new(
-                "wrap",
-                Style {
-                    font_size: Some(10.0),
-                    ..Default::default()
-                }
-                .effective_style(&mut scene_target),
-            ),
+            Span::new("This line should ", first_style),
+            Span::new("wrap", second_style),
         ])
         .wrap(
-            &mut scene_target,
+            &scene_target,
             TextWrap::MultiLine {
                 width: 80.0,
                 height: f32::MAX,

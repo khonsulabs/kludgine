@@ -18,7 +18,7 @@ impl Controller for Label {
     async fn render(
         &self,
         component: &Component,
-        scene: &mut SceneTarget<'_>,
+        scene: &SceneTarget,
     ) -> KludgineResult<()> {
         let effective_style = component.effective_style().await;
         let bounds = component.bounds().await;
@@ -46,7 +46,7 @@ impl Controller for Label {
         &self,
         component: &Component,
         maximum_size: &Size,
-        scene: &mut SceneTarget<'_>,
+        scene: &SceneTarget,
     ) -> KludgineResult<Size> {
         let size = match self.create_text(&component.effective_style().await)? {
             Some(text) => {

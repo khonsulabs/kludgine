@@ -17,11 +17,12 @@ macro_rules! include_texture {
     }};
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Texture {
     pub(crate) handle: KludgineHandle<TextureData>,
 }
 
+#[derive(Debug)]
 pub(crate) struct TextureData {
     pub id: u64,
     pub image: RgbaImage,

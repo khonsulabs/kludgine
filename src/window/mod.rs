@@ -103,12 +103,12 @@ pub trait Window: Send + Sync + 'static {
     }
 
     /// Called once for each frame, directly before `render`
-    async fn update<'a>(&mut self, _scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+    async fn update<'a>(&mut self, _scene: &SceneTarget) -> KludgineResult<()> {
         Ok(())
     }
 
     /// Called once for each frame of rendering
-    async fn render<'a>(&self, _scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+    async fn render<'a>(&self, _scene: &SceneTarget) -> KludgineResult<()> {
         Ok(())
     }
 
@@ -274,8 +274,8 @@ impl RuntimeWindow {
             } {
                 match event {
                     WindowEvent::Resize { size, scale_factor } => {
-                        scene.set_internal_size(size);
-                        scene.set_scale_factor(scale_factor);
+                        scene.set_internal_size(size).await;
+                        scene.set_scale_factor(scale_factor).await;
                     }
                     WindowEvent::CloseRequested => {
                         if Self::request_window_close(id, window.as_ref()).await? {
@@ -288,6 +288,7 @@ impl RuntimeWindow {
 
                         if let Event::Keyboard { key, state } = input.event {
                             if let Some(key) = key {
+                                let mut scene = scene.data.write().await;
                                 match state {
                                     ElementState::Pressed => {
                                         scene.pressed_keys.insert(key);
@@ -303,21 +304,21 @@ impl RuntimeWindow {
             }
 
             // CHeck for Cmd + W or Alt + f4 to close the window.
-            let modifiers = scene.modifiers_pressed();
+            let modifiers = scene.modifiers_pressed().await;
             if modifiers.primary_modifier()
-                && scene.key_pressed(VirtualKeyCode::W)
+                && scene.key_pressed(VirtualKeyCode::W).await
                 && Self::request_window_close(id, window.as_ref()).await?
             {
                 return Ok(());
             }
 
-            if scene.size().width > 0.0 && scene.size().height > 0.0 {
+            if scene.size().await.area() > 0.0 {
                 println!("Starting client render");
-                scene.start_frame();
+                scene.start_frame().await;
                 {
-                    let mut target = SceneTarget::Scene(&mut scene);
-                    window.update(&mut target).await?;
-                    window.render(&mut target).await?;
+                    let target = SceneTarget::Scene(scene.clone());
+                    window.update(&target).await?;
+                    window.render(&target).await?;
                 }
                 println!("Locking frame");
                 if let Some(mut frame) = frame_synchronizer.try_take() {

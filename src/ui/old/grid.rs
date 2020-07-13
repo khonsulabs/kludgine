@@ -65,7 +65,7 @@ impl Controller for Grid {
     async fn render(
         &self,
         _component: &Component,
-        scene: &mut SceneTarget<'_>,
+        scene: &SceneTarget,
     ) -> KludgineResult<()> {
         for cell in self.cells.iter() {
             if let Some(cell) = cell.component() {
@@ -78,7 +78,7 @@ impl Controller for Grid {
     async fn update_style(
         &mut self,
         component: &Component,
-        scene: &mut SceneTarget<'_>,
+        scene: &SceneTarget,
         inherited_style: &Style,
     ) -> KludgineResult<EventStatus> {
         let current_style = component
@@ -97,7 +97,7 @@ impl Controller for Grid {
         &self,
         component: &Component,
         maximum_size: &Size,
-        scene: &mut SceneTarget<'_>,
+        scene: &SceneTarget,
     ) -> KludgineResult<Size> {
         let (desired_size, ..) = self
             .calculate_desired_sizes(component, maximum_size, scene)
@@ -107,7 +107,7 @@ impl Controller for Grid {
     async fn layout_within(
         &mut self,
         component: &Component,
-        scene: &mut SceneTarget<'_>,
+        scene: &SceneTarget,
         _bounds: Rect,
     ) -> KludgineResult<()> {
         let bounds = component.bounds().await;
@@ -193,7 +193,7 @@ impl Grid {
         &self,
         component: &Component,
         maximum_size: &Size,
-        scene: &mut SceneTarget<'_>,
+        scene: &SceneTarget,
     ) -> KludgineResult<(Size<f32>, Vec<f32>, Vec<f32>)> {
         let inner_size = component
             .layout()

@@ -47,7 +47,7 @@ impl UserInterface {
         ui.root = Some(component);
     }
 
-    pub async fn render(&self, scene: &mut SceneTarget<'_>) -> KludgineResult<()> {
+    pub async fn render(&self, scene: &SceneTarget) -> KludgineResult<()> {
         let ui = self.handle.read().await;
         if let Some(root_component) = &ui.root {
             root_component.update_style(scene, &ui.base_style).await?;
@@ -273,7 +273,7 @@ impl Component {
         Ok(status)
     }
 
-    async fn layout_within(&self, scene: &mut SceneTarget<'_>, bounds: Rect) -> KludgineResult<()> {
+    async fn layout_within(&self, scene: &SceneTarget, bounds: Rect) -> KludgineResult<()> {
         let mut component = self.handle.write().await;
         let size = self
             .content_size(&component.base_view.bounds.size, scene)
@@ -288,7 +288,7 @@ impl Component {
     async fn content_size(
         &self,
         maximum_size: &Size,
-        scene: &mut SceneTarget<'_>,
+        scene: &SceneTarget,
     ) -> KludgineResult<Size> {
         let component = self.handle.read().await;
         component
@@ -299,7 +299,7 @@ impl Component {
 
     async fn update_style(
         &self,
-        scene: &mut SceneTarget<'_>,
+        scene: &SceneTarget,
         inherited_style: &Style,
     ) -> KludgineResult<()> {
         let mut component = self.handle.write().await;
@@ -314,7 +314,7 @@ impl Component {
         Ok(())
     }
 
-    async fn render(&self, scene: &mut SceneTarget<'_>) -> KludgineResult<()> {
+    async fn render(&self, scene: &SceneTarget) -> KludgineResult<()> {
         let component = self.handle.read().await;
         component.controller.render(self, scene).await
     }
@@ -351,7 +351,7 @@ impl Component {
     pub async fn compute_effective_style(
         &self,
         inherited_style: &Style,
-        scene: &mut SceneTarget<'_>,
+        scene: &SceneTarget,
     ) -> Style {
         let current_style = self.current_style().await.inherit_from(inherited_style);
         let mut component = self.handle.write().await;
@@ -407,13 +407,13 @@ pub trait Controller: std::fmt::Debug + Sync + Send + 'static {
     async fn render(
         &self,
         _component: &Component,
-        _scene: &mut SceneTarget<'_>,
+        _scene: &SceneTarget,
     ) -> KludgineResult<()>;
 
     async fn update_style(
         &mut self,
         _component: &Component,
-        _scene: &mut SceneTarget<'_>,
+        _scene: &SceneTarget,
         _inherited_style: &Style,
     ) -> KludgineResult<EventStatus> {
         Ok(EventStatus::Ignored)
@@ -457,7 +457,7 @@ pub trait Controller: std::fmt::Debug + Sync + Send + 'static {
     async fn layout_within(
         &mut self,
         _component: &Component,
-        _scene: &mut SceneTarget<'_>,
+        _scene: &SceneTarget,
         _bounds: Rect,
     ) -> KludgineResult<()> {
         Ok(())
@@ -467,7 +467,7 @@ pub trait Controller: std::fmt::Debug + Sync + Send + 'static {
         &self,
         _component: &Component,
         _maximum_size: &Size,
-        _scene: &mut SceneTarget<'_>,
+        _scene: &SceneTarget,
     ) -> KludgineResult<Size>;
     // TODO add button tracking to provide click events
     // async fn clicked_at(

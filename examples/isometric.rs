@@ -27,7 +27,7 @@ impl Window for Isometric {
         Ok(())
     }
 
-    async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+    async fn render<'a>(&self, scene: &SceneTarget) -> KludgineResult<()> {
         let map = self.map.as_ref().unwrap();
         map.draw(scene, Point::default()).await?;
 

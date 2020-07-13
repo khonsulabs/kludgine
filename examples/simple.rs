@@ -23,7 +23,7 @@ impl Window for Simple {
         self.source_sprite = Some(SourceSprite::entire_texture(texture).await);
         Ok(())
     }
-    async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+    async fn render<'a>(&self, scene: &SceneTarget) -> KludgineResult<()> {
         let sprite = self.source_sprite.as_ref().unwrap();
 
         sprite.render_at(scene, Point::default()).await;

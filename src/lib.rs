@@ -74,6 +74,32 @@ where
     }
 }
 
+#[macro_use]
+mod internal_macros {
+
+    #[macro_export]
+    macro_rules! hash_map {
+        ($($key:expr => $value:expr),+) => {{
+            let mut map = std::collections::HashMap::new();
+            $(
+                map.insert($key, $value);
+            )+
+            map
+        }};
+    }
+
+    #[macro_export]
+    macro_rules! hash_set {
+        ($($value:expr),+) => {{
+            let mut set = std::collections::HashSet::new();
+            $(
+                set.insert($value);
+            )+
+            set
+        }};
+    }
+}
+
 pub mod application;
 pub mod frame;
 pub mod math;
@@ -106,9 +132,7 @@ pub mod prelude {
             PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,
         },
         timing::FrequencyLimiter,
-        ui::{
-            grid::Grid, label::Label, Component, ComponentEventStatus, Controller, UserInterface,
-        },
+        ui::UserInterface,
         window::{Event, EventStatus, InputEvent, Window},
         KludgineError, KludgineHandle, KludgineResult,
     };

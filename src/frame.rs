@@ -27,17 +27,18 @@ pub(crate) struct FontUpdate {
 
 impl Frame {
     pub async fn update(&mut self, scene: &Scene) {
-        self.started_at = Some(scene.now());
+        self.started_at = Some(scene.now().await);
         self.commands.clear();
 
         self.cache_glyphs(scene).await;
 
-        self.size = scene.internal_size();
+        self.size = scene.internal_size().await;
 
         let mut referenced_texture_ids = HashSet::new();
 
         let mut current_texture_id: Option<u64> = None;
         let mut current_batch: Option<SpriteBatch> = None;
+        let scene = scene.data.read().await;
         for element in scene.elements.iter() {
             match element {
                 Element::Sprite(sprite_handle) => {
@@ -111,6 +112,7 @@ impl Frame {
 
     async fn cache_glyphs(&mut self, scene: &Scene) {
         let mut referenced_fonts = HashSet::new();
+        let scene = scene.data.read().await;
         for text in scene
             .elements
             .iter()

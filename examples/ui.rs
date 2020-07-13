@@ -1,65 +1,69 @@
-// extern crate kludgine;
-// use futures::executor::block_on;
-// use kludgine::prelude::*;
+extern crate kludgine;
+use futures::executor::block_on;
+use kludgine::prelude::*;
 
-// fn main() {
-//     SingleWindowApplication::run(block_on(UIExample::new()));
-// }
+fn main() {
+    SingleWindowApplication::run(block_on(UIExample::new()));
+}
 
-// struct UIExample {
-//     ui: UserInterface,
-// }
+struct UIExample {
+    ui: UserInterface,
+}
 
-// impl UIExample {
-//     async fn new() -> Self {
-//         Self {
-//             ui: Self::create_interface().await.unwrap(),
-//         }
-//     }
-//     async fn create_interface() -> KludgineResult<UserInterface> {
-//         let grid = Component::new(
-//             Grid::new(4, 4)
-//                 .with_cell(
-//                     Point::new(0, 0),
-//                     Component::new(Interface { click_count: 0 }),
-//                 )?
-//                 .with_cell(
-//                     Point::new(1, 0),
-//                     Component::new(Interface { click_count: 0 }),
-//                 )?
-//                 .with_cell(
-//                     Point::new(0, 1),
-//                     Component::new(Interface { click_count: 0 }),
-//                 )?
-//                 .with_cell(
-//                     Point::new(1, 1),
-//                     Component::new(Interface { click_count: 0 }),
-//                 )?,
-//         );
-//         let ui = UserInterface::new(Style::default());
-//         ui.set_root(grid).await;
-//         Ok(ui)
-//     }
-// }
+impl UIExample {
+    async fn new() -> Self {
+        Self {
+            ui: Self::create_interface().await.unwrap(),
+        }
+    }
+    async fn create_interface() -> KludgineResult<UserInterface> {
+        // let grid = Component::new(
+        //     Grid::new(4, 4)
+        //         .with_cell(
+        //             Point::new(0, 0),
+        //             Component::new(Interface { click_count: 0 }),
+        //         )?
+        //         .with_cell(
+        //             Point::new(1, 0),
+        //             Component::new(Interface { click_count: 0 }),
+        //         )?
+        //         .with_cell(
+        //             Point::new(0, 1),
+        //             Component::new(Interface { click_count: 0 }),
+        //         )?
+        //         .with_cell(
+        //             Point::new(1, 1),
+        //             Component::new(Interface { click_count: 0 }),
+        //         )?,
+        // );
+        let ui = UserInterface::new(Style::default());
+        // ui.set_root(grid).await;
+        Ok(ui)
+    }
+}
 
-// impl WindowCreator<UIExample> for UIExample {
-//     fn window_title() -> String {
-//         "User Interface - Kludgine".to_owned()
-//     }
-// }
+impl WindowCreator<UIExample> for UIExample {
+    fn window_title() -> String {
+        "User Interface - Kludgine".to_owned()
+    }
+}
 
-// #[async_trait]
-// impl Window for UIExample {
-//     async fn render<'a>(&mut self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
-//         self.ui.render(scene).await?;
+#[async_trait]
+impl Window for UIExample {
+    async fn update<'a>(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
+        self.ui.update(scene).await
+    }
 
-//         Ok(())
-//     }
+    async fn render<'a>(&self, scene: &SceneTarget) -> KludgineResult<()> {
+        self.ui.render(scene).await?;
 
-//     async fn process_input(&mut self, event: InputEvent) -> KludgineResult<()> {
-//         self.ui.process_input(event).await.map(|_| ())
-//     }
-// }
+        Ok(())
+    }
+
+    async fn process_input(&mut self, event: InputEvent) -> KludgineResult<()> {
+        self.ui.process_input(event).await.map(|_| ())
+    }
+}
 
 // #[derive(Debug)]
 // struct Interface {
@@ -94,7 +98,3 @@
 //         Ok(ComponentEventStatus::rebuild_view_processed())
 //     }
 // }
-
-fn main() {
-    todo!("This example isn't working right now due to the ongoing gui refactor")
-}

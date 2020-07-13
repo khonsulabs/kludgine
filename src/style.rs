@@ -103,13 +103,13 @@ impl Style {
         }
     }
 
-    pub fn effective_style(&self, scene: &mut SceneTarget) -> EffectiveStyle {
+    pub async fn effective_style(&self, scene: &SceneTarget) -> EffectiveStyle {
         EffectiveStyle {
             font_family: self
                 .font_family
                 .clone()
                 .unwrap_or_else(|| "sans-serif".to_owned()),
-            font_size: self.font_size.unwrap_or(14.0) * scene.effective_scale_factor(),
+            font_size: self.font_size.unwrap_or(14.0) * scene.effective_scale_factor().await,
             font_weight: self.font_weight.unwrap_or(Weight::Normal),
             color: self.color.unwrap_or(Color::BLACK),
         }

@@ -31,42 +31,44 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    async fn update<'a>(&mut self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+    async fn update<'a>(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
         let stickguy = self.stickguy.as_ref().unwrap();
         // Our default animation is Idle
         let mut animation = "Idle";
-        if scene.pressed_keys().contains(&VirtualKeyCode::Right) {
+        if scene.pressed_keys().await.contains(&VirtualKeyCode::Right) {
             animation = "WalkRight";
-            self.position.x += 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
-        } else if scene.pressed_keys().contains(&VirtualKeyCode::Left) {
+            self.position.x += 32.0 * scene.elapsed().await.unwrap_or_default().as_secs_f32();
+        } else if scene.pressed_keys().await.contains(&VirtualKeyCode::Left) {
             animation = "WalkLeft";
-            self.position.x -= 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
+            self.position.x -= 32.0 * scene.elapsed().await.unwrap_or_default().as_secs_f32();
         }
 
-        if scene.pressed_keys().contains(&VirtualKeyCode::Up) {
-            self.position.y -= 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
-        } else if scene.pressed_keys().contains(&VirtualKeyCode::Down) {
-            self.position.y += 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
+        if scene.pressed_keys().await.contains(&VirtualKeyCode::Up) {
+            self.position.y -= 32.0 * scene.elapsed().await.unwrap_or_default().as_secs_f32();
+        } else if scene.pressed_keys().await.contains(&VirtualKeyCode::Down) {
+            self.position.y += 32.0 * scene.elapsed().await.unwrap_or_default().as_secs_f32();
         }
         stickguy.set_current_tag(Some(animation)).await?;
 
         Ok(())
     }
 
-    async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
-        let mut camera_scene =
-            scene.set_camera(self.zoom, self.position - scene.size() / 2.0 / self.zoom);
+    async fn render<'a>(&self, scene: &SceneTarget) -> KludgineResult<()> {
+        let camera_scene = scene.set_camera(
+            self.zoom,
+            self.position - scene.size().await / 2.0 / self.zoom,
+        );
         // The map is drawn at a static location of 0,0 (upper-left)
         // It will be offset scene.origin()
         let map = self.map.as_ref().unwrap();
-        map.draw(&mut camera_scene, Point::new(0, 0)).await?;
+        map.draw(&camera_scene, Point::new(0, 0)).await?;
 
         // Draw the stickguy with the current frame of animation
         let stickguy = self.stickguy.as_ref().unwrap();
-        let sprite = stickguy.get_frame(camera_scene.elapsed()).await?;
+        let sprite = stickguy.get_frame(camera_scene.elapsed().await).await?;
         sprite
             .render_at(
-                &mut camera_scene,
+                &camera_scene,
                 Point::new(self.position.x - 16.0, self.position.y - 16.0),
             )
             .await;
