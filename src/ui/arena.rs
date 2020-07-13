@@ -68,6 +68,7 @@ impl HierarchicalArena {
             arena: self,
             queue,
             processed: HashSet::new(),
+            last: None,
         }
     }
 }
@@ -76,19 +77,24 @@ pub struct ArenaIterator<'a> {
     arena: &'a HierarchicalArena,
     queue: VecDeque<Index>,
     processed: HashSet<Index>,
+    last: Option<Index>,
 }
 
 impl<'a> Iterator for ArenaIterator<'a> {
     type Item = Index;
 
     fn next(&mut self) -> Option<Self::Item> {
+        if let Some(last) = std::mem::take(&mut self.last) {
+            self.queue.extend(self.arena.children(&Some(last)));
+        }
+
         if let Some(index) = self.queue.pop_front() {
             if self.processed.contains(&index) {
                 panic!("Cycle detected in hierarchy");
             }
 
             self.processed.insert(index);
-            self.queue.extend(self.arena.children(&Some(index)));
+            self.last = Some(index);
             Some(index)
         } else {
             None
