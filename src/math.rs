@@ -144,7 +144,7 @@ pub struct Size<S = f32> {
 
 impl<S> Size<S> {
     pub const fn new(width: S, height: S) -> Self {
-        Size { width, height }
+        Self { width, height }
     }
 
     pub fn area(&self) -> S
@@ -152,6 +152,24 @@ impl<S> Size<S> {
         S: std::ops::Mul<Output = S> + Copy,
     {
         self.width * self.height
+    }
+}
+
+impl From<Size<u32>> for Size<f32> {
+    fn from(value: Size<u32>) -> Self {
+        Self {
+            width: value.width as f32,
+            height: value.height as f32,
+        }
+    }
+}
+
+impl From<Size<f32>> for Size<u32> {
+    fn from(value: Size<f32>) -> Self {
+        Self {
+            width: value.width as u32,
+            height: value.height as u32,
+        }
     }
 }
 

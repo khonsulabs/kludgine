@@ -58,7 +58,7 @@ impl EventStatus {
 }
 
 /// An Event from a device
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct InputEvent {
     /// The device that triggered this event
     pub device_id: DeviceId,
@@ -67,7 +67,7 @@ pub struct InputEvent {
 }
 
 /// An input Event
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub enum Event {
     /// A keyboard event
     Keyboard {
@@ -284,7 +284,7 @@ impl RuntimeWindow {
                     }
                     WindowEvent::Input(input) => {
                         // Notify the window of the raw event, before updaing our internal state
-                        window.process_input(input.clone()).await?;
+                        window.process_input(input).await?;
 
                         if let Event::Keyboard { key, state } = input.event {
                             if let Some(key) = key {

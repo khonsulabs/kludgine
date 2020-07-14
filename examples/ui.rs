@@ -50,6 +50,12 @@ impl WindowCreator<UIExample> for UIExample {
 
 #[async_trait]
 impl Window for UIExample {
+    async fn initialize(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
+        let sprite = include_aseprite_sprite!("assets/stickguy").await?;
+        self.ui.new_entity(Image::new(sprite)).insert().await?;
+        Ok(())
+    }
+
     async fn update<'a>(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
         self.ui.update(scene).await
     }

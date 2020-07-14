@@ -18,6 +18,8 @@ pub enum KludgineError {
     JsonError(#[from] json::Error),
     #[error("AtlasSpriteId belongs to an Atlas not registered in this collection")]
     InvalidAtlasSpriteId,
+    #[error("An index provided was not found")]
+    InvalidIndex,
     #[error("error parsing sprite data: {0}")]
     SpriteParseError(String),
     #[error("no frames could be found for the current tag")]
@@ -71,6 +73,15 @@ where
         let inner = block_on(self.handle.read());
         inner.fmt(f)?;
         write!(f, ">")
+    }
+}
+
+impl<T> Default for KludgineHandle<T>
+where
+    T: Default,
+{
+    fn default() -> Self {
+        Self::new(T::default())
     }
 }
 
@@ -132,7 +143,7 @@ pub mod prelude {
             PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,
         },
         timing::FrequencyLimiter,
-        ui::UserInterface,
+        ui::*,
         window::{Event, EventStatus, InputEvent, Window},
         KludgineError, KludgineHandle, KludgineResult,
     };

@@ -1,43 +1,68 @@
-use crate::{ui::Context, KludgineResult};
+use crate::{
+    math::{Rect, Size},
+    scene::SceneTarget,
+    ui::Context,
+    window::InputEvent,
+    KludgineResult,
+};
 use async_trait::async_trait;
 
 pub struct LayoutConstraints {}
 
 #[async_trait]
 pub(crate) trait BaseComponent: Send + Sync + std::fmt::Debug {
-    async fn layout(&mut self, context: &mut Context) -> KludgineResult<LayoutConstraints>;
+    async fn content_size(&self, _context: &mut Context, max_size: Size) -> KludgineResult<Size>;
 
-    async fn render(&self, context: &mut Context) -> KludgineResult<()>;
+    async fn render(
+        &self,
+        context: &mut Context,
+        scene: &SceneTarget,
+        location: Rect,
+    ) -> KludgineResult<()>;
 
-    async fn update(&mut self, context: &mut Context) -> KludgineResult<()>;
+    async fn update(&mut self, context: &mut Context, scene: &SceneTarget) -> KludgineResult<()>;
+
+    async fn process_input(
+        &mut self,
+        context: &mut Context,
+        event: InputEvent,
+    ) -> KludgineResult<()>;
 }
 
 #[async_trait]
 pub trait Component: Send + Sync + std::fmt::Debug {
-    type Message;
-    async fn layout(&mut self, context: &mut Context) -> KludgineResult<LayoutConstraints>;
+    type Message: Send + Sync + std::fmt::Debug;
 
-    async fn render(&self, context: &mut Context) -> KludgineResult<()>;
+    async fn receive_message(
+        &mut self,
+        _context: &mut Context,
+        _message: Self::Message,
+    ) -> KludgineResult<()> {
+        unimplemented!(
+            "Component::receive_message() must be implemented if you're receiving messages"
+        )
+    }
 
-    async fn update(&mut self, context: &mut Context) -> KludgineResult<()> {
+    async fn content_size(&self, _context: &mut Context, max_size: Size) -> KludgineResult<Size> {
+        Ok(max_size)
+    }
+
+    async fn render(
+        &self,
+        context: &mut Context,
+        scene: &SceneTarget,
+        location: Rect,
+    ) -> KludgineResult<()>;
+
+    async fn update(&mut self, _context: &mut Context, _scene: &SceneTarget) -> KludgineResult<()> {
         Ok(())
     }
-}
 
-#[async_trait]
-impl<T> BaseComponent for T
-where
-    T: Component,
-{
-    async fn layout(&mut self, context: &mut Context) -> KludgineResult<LayoutConstraints> {
-        self.layout(context).await
-    }
-
-    async fn render(&self, context: &mut Context) -> KludgineResult<()> {
-        self.render(context).await
-    }
-
-    async fn update(&mut self, context: &mut Context) -> KludgineResult<()> {
-        self.update(context).await
+    async fn process_input(
+        &mut self,
+        _context: &mut Context,
+        _event: InputEvent,
+    ) -> KludgineResult<()> {
+        Ok(())
     }
 }

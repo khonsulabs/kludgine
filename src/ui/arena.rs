@@ -36,14 +36,16 @@ impl HierarchicalArena {
                 .remove(&child);
         }
 
-        if let Some(new_parent) = parent {
-            self.children_by_parent
-                .entry(Some(new_parent))
-                .and_modify(|children| {
-                    children.insert(child);
-                })
-                .or_insert_with(|| hash_set!(child));
-        }
+        self.children_by_parent
+            .entry(parent)
+            .and_modify(|children| {
+                children.insert(child);
+            })
+            .or_insert_with(|| hash_set!(child));
+    }
+
+    pub fn parent(&self, child: Index) -> Option<Index> {
+        self.parents.get(&child).copied().flatten()
     }
 
     pub fn children(&self, parent: &Option<Index>) -> HashSet<Index> {
@@ -54,12 +56,12 @@ impl HierarchicalArena {
         }
     }
 
-    pub fn get(&self, index: Index) -> Option<&'_ Node> {
-        self.arena.get(index)
+    pub fn get<I: Into<Index>>(&self, index: I) -> Option<&'_ Node> {
+        self.arena.get(index.into())
     }
 
-    pub fn get_mut(&mut self, index: Index) -> Option<&'_ mut Node> {
-        self.arena.get_mut(index)
+    pub fn get_mut<I: Into<Index>>(&mut self, index: I) -> Option<&'_ mut Node> {
+        self.arena.get_mut(index.into())
     }
 
     pub fn iter(&self) -> ArenaIterator<'_> {
@@ -97,6 +99,7 @@ impl<'a> Iterator for ArenaIterator<'a> {
             self.last = Some(index);
             Some(index)
         } else {
+            println!("Ended iteration");
             None
         }
     }
