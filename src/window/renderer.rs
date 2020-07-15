@@ -112,9 +112,7 @@ impl FrameRenderer {
             // at a consistent rate, we need to create the tick then await it after we do our processing
             // so that it will just wait the remaining time of our target framerate.
             let tick = interval.tick();
-            println!("render_loop executing");
             self.render().await.expect("Error rendering window");
-            println!("render_loop finished");
 
             tick.await;
         }

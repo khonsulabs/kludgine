@@ -1,7 +1,7 @@
 use crate::{
     math::{Rect, Size},
     scene::SceneTarget,
-    ui::{BaseComponent, Component, Context, LayoutConstraints},
+    ui::{BaseComponent, Component, Context},
     window::InputEvent,
     KludgineResult,
 };
@@ -10,13 +10,13 @@ use std::any::Any;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
 #[async_trait]
-pub(crate) trait AnyComponent: Any + BaseComponent {
+pub(crate) trait AnyComponent: BaseComponent {
     fn as_any(&self) -> &dyn Any;
     async fn process_pending_events(&mut self, context: &mut Context) -> KludgineResult<()>;
 }
 
 #[async_trait]
-impl<T: Any + Component> AnyComponent for NodeData<T> {
+impl<T: Component + 'static> AnyComponent for NodeData<T> {
     fn as_any(&self) -> &dyn Any {
         &self.component
     }
@@ -44,6 +44,9 @@ impl<T> BaseComponent for NodeData<T>
 where
     T: Component,
 {
+    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
+        self.component.initialize(context).await
+    }
     async fn content_size(&self, context: &mut Context, max_size: Size) -> KludgineResult<Size> {
         self.component.content_size(context, max_size).await
     }

@@ -1,9 +1,9 @@
 use crate::{
-    math::{Point, Rect, Size},
+    math::{Rect, Size},
     scene::SceneTarget,
     source_sprite::SourceSprite,
     sprite::Sprite,
-    ui::{Component, Context, LayoutConstraints},
+    ui::{Component, Context},
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -25,12 +25,12 @@ impl Component for Image {
 
     async fn render(
         &self,
-        context: &mut Context,
+        _context: &mut Context,
         scene: &SceneTarget,
         location: Rect,
     ) -> KludgineResult<()> {
         if let Some(frame) = &self.current_frame {
-            frame.render_at(scene, Point::new(0., 0.)).await
+            frame.render_at(scene, location.origin).await
         }
         Ok(())
     }

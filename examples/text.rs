@@ -13,9 +13,18 @@ impl WindowCreator<TextExample> for TextExample {
     }
 }
 
+impl Window for TextExample {}
+
 #[async_trait]
-impl Window for TextExample {
-    async fn render<'a>(&self, scene: &SceneTarget) -> KludgineResult<()> {
+impl Component for TextExample {
+    type Message = ();
+
+    async fn render(
+        &self,
+        _context: &mut Context,
+        scene: &SceneTarget,
+        _location: Rect,
+    ) -> KludgineResult<()> {
         let mut spans = Vec::new();
         spans.push(Span::new(
             "Wrapping ",

@@ -99,7 +99,6 @@ impl<'a> Iterator for ArenaIterator<'a> {
             self.last = Some(index);
             Some(index)
         } else {
-            println!("Ended iteration");
             None
         }
     }

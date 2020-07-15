@@ -3,7 +3,7 @@ use super::{
     window::{RuntimeWindow, Window, WindowBuilder},
     KludgineResult,
 };
-use crossbeam::channel::{unbounded, Receiver, Sender, TryRecvError};
+use crossbeam::channel::{bounded, unbounded, Receiver, Sender, TryRecvError};
 use futures::future::Future;
 use platforms::target::{OS, TARGET_OS};
 use std::time::Duration;
@@ -12,7 +12,7 @@ use tokio::runtime::Runtime as TokioRuntime;
 pub(crate) enum RuntimeRequest {
     OpenWindow {
         builder: WindowBuilder,
-        window: Box<dyn Window>,
+        window_sender: Sender<winit::window::Window>,
     },
     Quit,
 }
@@ -140,10 +140,11 @@ impl EventProcessor for Runtime {
     ) {
         while let Ok(request) = self.request_receiver.try_recv() {
             match request {
-                RuntimeRequest::OpenWindow { window, builder } => {
-                    let builder: winit::window::WindowBuilder = builder.into();
-                    let winit_window = builder.build(&event_loop).unwrap();
-                    RuntimeWindow::open(winit_window, window);
+                RuntimeRequest::OpenWindow {
+                    window_sender,
+                    builder,
+                } => {
+                    self.internal_open_window(window_sender, builder, event_loop);
                 }
                 RuntimeRequest::Quit => {
                     std::process::exit(0); // TODO There is a bug in winit when destructing https://github.com/rust-windowing/winit/blob/ad7d4939a8be2e0d9436d43d0351e2f7599a4237/src/platform_impl/macos/app_state.rs#L344
@@ -189,6 +190,19 @@ impl Runtime {
         }
     }
 
+    fn internal_open_window(
+        &self,
+        window_sender: Sender<winit::window::Window>,
+        builder: WindowBuilder,
+        event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
+    ) {
+        let builder: winit::window::WindowBuilder = builder.into();
+        let winit_window = builder.build(&event_loop).unwrap();
+        window_sender
+            .send(winit_window)
+            .expect("Couldn't send winit window");
+    }
+
     fn should_run_in_exclusive_mode() -> bool {
         match TARGET_OS {
             OS::Android | OS::iOS => true,
@@ -231,7 +245,9 @@ impl Runtime {
         }
         let window = Runtime::block_on(window);
         let initial_window = initial_window.build(&event_loop).unwrap();
-        RuntimeWindow::open(initial_window, Box::new(window));
+        let (window_sender, window_receiver) = bounded(1);
+        window_sender.send(initial_window).unwrap();
+        RuntimeWindow::open(window_receiver, window);
         event_loop.run(move |event, event_loop, control_flow| {
             let mut event_handler_guard = GLOBAL_EVENT_HANDLER
                 .lock()
@@ -263,13 +279,16 @@ impl Runtime {
     where
         T: Window + Sized,
     {
+        let (window_sender, window_receiver) = bounded(1);
         RuntimeRequest::OpenWindow {
             builder,
-            window: Box::new(window),
+            window_sender,
         }
         .send()
         .await
         .unwrap_or_default();
+
+        todo!("Implement open_window properly");
     }
 
     pub async fn handle() -> tokio::runtime::Handle {

@@ -10,8 +10,11 @@ use async_trait::async_trait;
 pub struct LayoutConstraints {}
 
 #[async_trait]
-pub(crate) trait BaseComponent: Send + Sync + std::fmt::Debug {
-    async fn content_size(&self, _context: &mut Context, max_size: Size) -> KludgineResult<Size>;
+pub(crate) trait BaseComponent: Send + Sync {
+    async fn content_size(&self, context: &mut Context, max_size: Size) -> KludgineResult<Size>;
+
+    /// Called once the Window is opened
+    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()>;
 
     async fn render(
         &self,
@@ -30,8 +33,13 @@ pub(crate) trait BaseComponent: Send + Sync + std::fmt::Debug {
 }
 
 #[async_trait]
-pub trait Component: Send + Sync + std::fmt::Debug {
+pub trait Component: Send + Sync {
     type Message: Send + Sync + std::fmt::Debug;
+
+    /// Called once the Window is opened
+    async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
+        Ok(())
+    }
 
     async fn receive_message(
         &mut self,

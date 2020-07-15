@@ -13,7 +13,7 @@ use crate::{
     KludgineHandle, KludgineResult,
 };
 use arena::{HierarchicalArena, Index};
-use component::BaseComponent;
+pub(crate) use component::BaseComponent;
 pub use component::{Component, LayoutConstraints};
 pub use context::*;
 pub use layout::Layout;
@@ -21,7 +21,7 @@ pub use node::Node;
 pub(crate) use node::NodeData;
 
 pub struct UserInterface {
-    arena: KludgineHandle<HierarchicalArena>,
+    pub(crate) arena: KludgineHandle<HierarchicalArena>,
     base_style: Style,
 }
 
@@ -45,7 +45,6 @@ impl UserInterface {
                     .await;
             }
         }
-        println!("Done with layout");
 
         let mut arena = self.arena.write().await;
         for index in arena.iter().collect::<Vec<_>>() {
@@ -56,8 +55,6 @@ impl UserInterface {
                 node.component.render(&mut context, scene, location).await?;
             }
         }
-
-        println!("Done with render");
 
         Ok(())
     }
@@ -99,43 +96,38 @@ impl UserInterface {
         Ok(())
     }
 
-    pub fn new_entity<C: Component + 'static>(&mut self, component: C) -> EntityBuilder<C> {
-        EntityBuilder {
-            arena: self.arena.clone(),
-            component,
-            parent: None,
-            style: Style::default(),
-        }
-    }
-}
+    // pub fn new_entity<C: Component + 'static>(&self, component: C) -> EntityBuilder<C> {
+    //     EntityBuilder {
+    //         arena: self.arena.clone(),
+    //         component,
+    //         parent: None,
+    //         style: Style::default(),
+    //     }
+    // }
 
-pub struct EntityBuilder<C> {
-    arena: KludgineHandle<HierarchicalArena>,
-    component: C,
-    parent: Option<Index>,
-    style: Style,
-}
-
-impl<C> EntityBuilder<C>
-where
-    C: Component + 'static,
-{
-    pub fn within<I: Into<Index>>(mut self, parent: I) -> Self {
-        self.parent = Some(parent.into());
-        self
+    async fn initialize(&self, index: Index) -> KludgineResult<()> {
+        let mut arena = self.arena.write().await;
+        arena
+            .get_mut(index)
+            .unwrap()
+            .component
+            .initialize(&mut Context::new(index, self.arena.clone()))
+            .await
     }
 
-    pub async fn styled(mut self, style: Style) -> Self {
-        self.style = style;
-        self
-    }
-
-    pub async fn insert(self) -> KludgineResult<Entity<C>> {
+    pub async fn register_root<C: Component + 'static>(
+        &self,
+        component: C,
+    ) -> KludgineResult<Entity<C>> {
         let index = {
             let mut arena = self.arena.write().await;
-            let node = Node::new(self.component);
-            arena.insert(self.parent, node)
+            let node = Node::new(component);
+
+            arena.insert(None, node)
         };
+
+        self.initialize(index).await?;
+
         Ok(Entity {
             index,
             _phantom: std::marker::PhantomData::default(),
@@ -143,7 +135,42 @@ where
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+// pub struct EntityBuilder<C> {
+//     arena: KludgineHandle<HierarchicalArena>,
+//     component: C,
+//     parent: Option<Index>,
+//     style: Style,
+// }
+
+// impl<C> EntityBuilder<C>
+// where
+//     C: Component + 'static,
+// {
+//     pub fn within<I: Into<Index>>(mut self, parent: I) -> Self {
+//         self.parent = Some(parent.into());
+//         self
+//     }
+
+//     pub async fn styled(mut self, style: Style) -> Self {
+//         self.style = style;
+//         self
+//     }
+
+//     pub async fn insert(self) -> KludgineResult<Entity<C>> {
+//         let index = {
+//             let mut arena = self.arena.write().await;
+//             let node = Node::new(self.component);
+//             arena.insert(self.parent, node)
+//         };
+//         // TODO THIS REQUIRES INITIALIZATION
+//         Ok(Entity {
+//             index,
+//             _phantom: std::marker::PhantomData::default(),
+//         })
+//     }
+// }
+
+#[derive(Debug)]
 pub struct Entity<C> {
     index: Index,
     _phantom: std::marker::PhantomData<C>,
@@ -161,5 +188,11 @@ impl<C> Entity<C> {
             index,
             _phantom: std::marker::PhantomData::default(),
         }
+    }
+}
+
+impl<C> Clone for Entity<C> {
+    fn clone(&self) -> Self {
+        Self::new(self.index)
     }
 }

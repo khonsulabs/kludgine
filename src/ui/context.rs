@@ -15,8 +15,11 @@ impl Context {
 }
 
 impl Context {
-    pub(crate) fn new(index: Index, arena: KludgineHandle<HierarchicalArena>) -> Self {
-        Self { index, arena }
+    pub(crate) fn new<I: Into<Index>>(index: I, arena: KludgineHandle<HierarchicalArena>) -> Self {
+        Self {
+            index: index.into(),
+            arena,
+        }
     }
 
     pub async fn set_parent<I: Into<Index>>(&self, parent: Option<I>) {

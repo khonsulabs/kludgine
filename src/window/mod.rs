@@ -3,6 +3,8 @@ use super::{
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
     scene::{Scene, SceneTarget},
+    style::Style,
+    ui::{Component, Entity, UserInterface},
     KludgineError, KludgineHandle, KludgineResult,
 };
 use async_trait::async_trait;
@@ -90,31 +92,11 @@ pub enum Event {
 
 /// Trait to implement a Window
 #[async_trait]
-pub trait Window: Send + Sync + 'static {
+pub trait Window: Component + Send + Sync + 'static {
     /// The window was requested to be closed, most likely from the Close Button. Override
     /// this implementation if you want logic in place to prevent a window from closing.
     async fn close_requested(&self) -> KludgineResult<CloseResponse> {
         Ok(CloseResponse::Close)
-    }
-
-    /// Called once the Window is opened
-    async fn initialize(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
-        Ok(())
-    }
-
-    /// Called once for each frame, directly before `render`
-    async fn update<'a>(&mut self, _scene: &SceneTarget) -> KludgineResult<()> {
-        Ok(())
-    }
-
-    /// Called once for each frame of rendering
-    async fn render<'a>(&self, _scene: &SceneTarget) -> KludgineResult<()> {
-        Ok(())
-    }
-
-    /// An input event occurred for this window
-    async fn process_input(&mut self, _event: InputEvent) -> KludgineResult<()> {
-        Ok(())
     }
 }
 
@@ -197,10 +179,13 @@ pub(crate) struct RuntimeWindow {
 }
 
 impl RuntimeWindow {
-    pub(crate) fn open<T>(window: WinitWindow, app_window: Box<T>)
+    pub(crate) fn open<T>(window_receiver: Receiver<WinitWindow>, app_window: T)
     where
-        T: Window + ?Sized,
+        T: Window + Sized + 'static,
     {
+        let window = window_receiver
+            .recv()
+            .expect("Error receiving winit::window");
         let window_id = window.id();
         let renderer = Renderer::new(&window).expect("Error creating renderer for window");
 
@@ -216,7 +201,7 @@ impl RuntimeWindow {
         );
         Runtime::spawn(async move {
             frame_synchronizer.relinquish(Frame::default()).await;
-            Self::window_main::<T>(window_id, frame_synchronizer, event_receiver, app_window).await
+            Self::window_main(window_id, frame_synchronizer, event_receiver, app_window).await
         });
 
         {
@@ -239,10 +224,17 @@ impl RuntimeWindow {
         WINDOWS.with(|windows| windows.borrow_mut().insert(window_id, runtime_window));
     }
 
-    async fn request_window_close<T>(id: WindowId, window: &T) -> KludgineResult<bool>
+    async fn request_window_close<T>(
+        id: WindowId,
+        ui: &UserInterface,
+        root: Entity<T>,
+    ) -> KludgineResult<bool>
     where
-        T: Window + ?Sized,
+        T: Window,
     {
+        let arena = ui.arena.read().await;
+        let root_node = arena.get(root).unwrap();
+        let window = root_node.component.as_any().downcast_ref::<T>().unwrap();
         if let CloseResponse::Close = window.close_requested().await? {
             WindowMessage::Close.send_to(id).await?;
             return Ok(true);
@@ -254,15 +246,16 @@ impl RuntimeWindow {
         id: WindowId,
         mut frame_synchronizer: FrameSynchronizer,
         event_receiver: Receiver<WindowEvent>,
-        mut window: Box<T>,
+        window: T,
     ) -> KludgineResult<()>
     where
-        T: Window + ?Sized,
+        T: Window,
     {
         let mut scene = Scene::default();
+        let mut ui = UserInterface::new(Style::default()); // TODO pass in style somehow, probably WindowBuilder
+        let root = ui.register_root(window).await?;
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
-        window.initialize(&mut scene).await?;
         let mut interval = tokio::time::interval(Duration::from_nanos(FRAME_DURATION));
         loop {
             while let Some(event) = match event_receiver.try_recv() {
@@ -278,13 +271,13 @@ impl RuntimeWindow {
                         scene.set_scale_factor(scale_factor).await;
                     }
                     WindowEvent::CloseRequested => {
-                        if Self::request_window_close(id, window.as_ref()).await? {
+                        if Self::request_window_close(id, &ui, root.clone()).await? {
                             return Ok(());
                         }
                     }
                     WindowEvent::Input(input) => {
                         // Notify the window of the raw event, before updaing our internal state
-                        window.process_input(input).await?;
+                        ui.process_input(input).await?;
 
                         if let Event::Keyboard { key, state } = input.event {
                             if let Some(key) = key {
@@ -304,29 +297,27 @@ impl RuntimeWindow {
             }
 
             // CHeck for Cmd + W or Alt + f4 to close the window.
-            let modifiers = scene.modifiers_pressed().await;
-            if modifiers.primary_modifier()
-                && scene.key_pressed(VirtualKeyCode::W).await
-                && Self::request_window_close(id, window.as_ref()).await?
             {
-                return Ok(());
+                let modifiers = scene.modifiers_pressed().await;
+                if modifiers.primary_modifier()
+                    && scene.key_pressed(VirtualKeyCode::W).await
+                    && Self::request_window_close(id, &ui, root.clone()).await?
+                {
+                    return Ok(());
+                }
             }
 
             if scene.size().await.area() > 0.0 {
-                println!("Starting client render");
                 scene.start_frame().await;
                 {
                     let target = SceneTarget::Scene(scene.clone());
-                    window.update(&target).await?;
-                    window.render(&target).await?;
+                    ui.update(&target).await?;
+                    ui.render(&target).await?;
                 }
-                println!("Locking frame");
                 if let Some(mut frame) = frame_synchronizer.try_take() {
                     frame.update(&scene).await;
                     frame_synchronizer.relinquish(frame).await;
-                    println!("Done updating frame");
                 } else {
-                    println!("Frame not available, sleeping");
                 }
             }
             interval.tick().await;
@@ -337,11 +328,11 @@ impl RuntimeWindow {
         id: WindowId,
         frame_synchronizer: FrameSynchronizer,
         event_receiver: Receiver<WindowEvent>,
-        window: Box<T>,
+        window: T,
     ) where
-        T: Window + ?Sized,
+        T: Window,
     {
-        Self::window_loop::<T>(id, frame_synchronizer, event_receiver, window)
+        Self::window_loop(id, frame_synchronizer, event_receiver, window)
             .await
             .expect("Error running window loop.")
     }

@@ -21,9 +21,13 @@ impl WindowCreator<OrthoTiles> for OrthoTiles {
 
 static MAP_SIZE: u32 = 100;
 
+impl Window for OrthoTiles {}
+
 #[async_trait]
-impl Window for OrthoTiles {
-    async fn initialize(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
+impl Component for OrthoTiles {
+    type Message = ();
+
+    async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
         self.load_assets().await?;
         self.zoom = 1.0;
         self.position.x = MAP_SIZE as f32 * 32.0 / 2.0;
@@ -31,7 +35,7 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    async fn update<'a>(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
+    async fn update(&mut self, _context: &mut Context, scene: &SceneTarget) -> KludgineResult<()> {
         let stickguy = self.stickguy.as_ref().unwrap();
         // Our default animation is Idle
         let mut animation = "Idle";
@@ -53,7 +57,12 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    async fn render<'a>(&self, scene: &SceneTarget) -> KludgineResult<()> {
+    async fn render(
+        &self,
+        _context: &mut Context,
+        scene: &SceneTarget,
+        _location: Rect,
+    ) -> KludgineResult<()> {
         let camera_scene = scene.set_camera(
             self.zoom,
             self.position - scene.size().await / 2.0 / self.zoom,
@@ -76,7 +85,11 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    async fn process_input(&mut self, event: InputEvent) -> KludgineResult<()> {
+    async fn process_input(
+        &mut self,
+        _context: &mut Context,
+        event: InputEvent,
+    ) -> KludgineResult<()> {
         if let Event::MouseWheel { delta, .. } = event.event {
             let zoom_amount = match delta {
                 MouseScrollDelta::LineDelta(_x, y) => y,

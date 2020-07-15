@@ -7,6 +7,7 @@ use super::{
 use std::mem;
 
 /// TileMap renders tiles retrieved from a TileProvider
+#[derive(Debug)]
 pub struct TileMap<P> {
     provider: P,
     tile_size: Size<u32>,

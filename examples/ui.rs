@@ -1,46 +1,11 @@
 extern crate kludgine;
-use futures::executor::block_on;
 use kludgine::prelude::*;
 
 fn main() {
-    SingleWindowApplication::run(block_on(UIExample::new()));
+    SingleWindowApplication::run(UIExample {});
 }
 
-struct UIExample {
-    ui: UserInterface,
-}
-
-impl UIExample {
-    async fn new() -> Self {
-        Self {
-            ui: Self::create_interface().await.unwrap(),
-        }
-    }
-    async fn create_interface() -> KludgineResult<UserInterface> {
-        // let grid = Component::new(
-        //     Grid::new(4, 4)
-        //         .with_cell(
-        //             Point::new(0, 0),
-        //             Component::new(Interface { click_count: 0 }),
-        //         )?
-        //         .with_cell(
-        //             Point::new(1, 0),
-        //             Component::new(Interface { click_count: 0 }),
-        //         )?
-        //         .with_cell(
-        //             Point::new(0, 1),
-        //             Component::new(Interface { click_count: 0 }),
-        //         )?
-        //         .with_cell(
-        //             Point::new(1, 1),
-        //             Component::new(Interface { click_count: 0 }),
-        //         )?,
-        // );
-        let ui = UserInterface::new(Style::default());
-        // ui.set_root(grid).await;
-        Ok(ui)
-    }
-}
+struct UIExample {}
 
 impl WindowCreator<UIExample> for UIExample {
     fn window_title() -> String {
@@ -48,27 +13,40 @@ impl WindowCreator<UIExample> for UIExample {
     }
 }
 
+impl Window for UIExample {}
+
 #[async_trait]
-impl Window for UIExample {
-    async fn initialize(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
-        let sprite = include_aseprite_sprite!("assets/stickguy").await?;
-        self.ui.new_entity(Image::new(sprite)).insert().await?;
+impl Component for UIExample {
+    type Message = ();
+
+    // async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
+    //     let sprite = include_aseprite_sprite!("assets/stickguy").await?;
+    //     self.ui.new_entity(Image::new(sprite)).insert().await?;
+    //     Ok(())
+    // }
+
+    // async fn update(&mut self, _context: &mut Context, _scene: &SceneTarget) -> KludgineResult<()> {
+    //     self.ui.update(scene).await
+    // }
+
+    async fn render(
+        &self,
+        _context: &mut Context,
+        _scene: &SceneTarget,
+        _location: Rect,
+    ) -> KludgineResult<()> {
+        // self.ui.render(scene).await?;
+
         Ok(())
     }
 
-    async fn update<'a>(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
-        self.ui.update(scene).await
-    }
-
-    async fn render<'a>(&self, scene: &SceneTarget) -> KludgineResult<()> {
-        self.ui.render(scene).await?;
-
-        Ok(())
-    }
-
-    async fn process_input(&mut self, event: InputEvent) -> KludgineResult<()> {
-        self.ui.process_input(event).await.map(|_| ())
-    }
+    // async fn process_input(
+    //     &mut self,
+    //     _context: &mut Context,
+    //     _event: InputEvent,
+    // ) -> KludgineResult<()> {
+    //     self.ui.process_input(event).await.map(|_| ())
+    // }
 }
 
 // #[derive(Debug)]
