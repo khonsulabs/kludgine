@@ -198,6 +198,7 @@ impl Runtime {
     ) {
         let builder: winit::window::WindowBuilder = builder.into();
         let winit_window = builder.build(&event_loop).unwrap();
+        println!("Created window: {:?}", winit_window.id());
         window_sender
             .send(winit_window)
             .expect("Couldn't send winit window");
@@ -288,7 +289,7 @@ impl Runtime {
         .await
         .unwrap_or_default();
 
-        todo!("Implement open_window properly");
+        RuntimeWindow::open(window_receiver, window);
     }
 
     pub async fn handle() -> tokio::runtime::Handle {

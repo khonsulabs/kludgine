@@ -144,7 +144,7 @@ pub mod prelude {
         },
         timing::FrequencyLimiter,
         ui::*,
-        window::{Event, EventStatus, InputEvent, Window},
+        window::{Event, EventStatus, InputEvent, OpenableWindow, Window},
         KludgineError, KludgineHandle, KludgineResult,
     };
     pub use async_trait::async_trait;

@@ -40,13 +40,16 @@ impl Component for UIExample {
         Ok(())
     }
 
-    // async fn process_input(
-    //     &mut self,
-    //     _context: &mut Context,
-    //     _event: InputEvent,
-    // ) -> KludgineResult<()> {
-    //     self.ui.process_input(event).await.map(|_| ())
-    // }
+    async fn process_input(
+        &mut self,
+        _context: &mut Context,
+        event: InputEvent,
+    ) -> KludgineResult<()> {
+        if let Event::MouseButton { .. } = event.event {
+            UIExample::open(UIExample {}).await;
+        }
+        Ok(())
+    }
 }
 
 // #[derive(Debug)]

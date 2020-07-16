@@ -1,4 +1,5 @@
 use super::{
+    application::WindowCreator,
     frame::Frame,
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
@@ -12,6 +13,7 @@ use async_trait::async_trait;
 use crossbeam::{
     atomic::AtomicCell,
     channel::{unbounded, Receiver, Sender, TryRecvError},
+    sync::ShardedLock,
 };
 use lazy_static::lazy_static;
 use rgx::core::*;
@@ -132,13 +134,29 @@ impl Into<WinitWindowBuilder> for WindowBuilder {
     }
 }
 
+#[async_trait]
+pub trait OpenableWindow {
+    async fn open(window: Self);
+}
+
+#[async_trait]
+impl<T> OpenableWindow for T
+where
+    T: Window + WindowCreator<T>,
+{
+    async fn open(window: Self) {
+        Runtime::open_window(Self::get_window_builder(), window).await
+    }
+}
+
 lazy_static! {
     static ref WINDOW_CHANNELS: KludgineHandle<HashMap<WindowId, Sender<WindowMessage>>> =
         KludgineHandle::new(HashMap::new());
 }
 
-thread_local! {
-    static WINDOWS: RefCell<HashMap<WindowId, RuntimeWindow>> = RefCell::new(HashMap::new());
+lazy_static! {
+    static ref WINDOWS: ShardedLock<HashMap<WindowId, RuntimeWindow>> =
+        ShardedLock::new(HashMap::new());
 }
 
 pub(crate) enum WindowMessage {
@@ -221,7 +239,8 @@ impl RuntimeWindow {
         };
         runtime_window.notify_size_changed();
 
-        WINDOWS.with(|windows| windows.borrow_mut().insert(window_id, runtime_window));
+        let mut windows = WINDOWS.write().unwrap();
+        windows.insert(window_id, runtime_window);
     }
 
     async fn request_window_close<T>(
@@ -343,23 +362,24 @@ impl RuntimeWindow {
     }
 
     pub(crate) fn process_events(event: &WinitEvent<()>) {
-        WINDOWS.with(|windows| {
-            if let WinitEvent::WindowEvent { window_id, event } = event {
-                if let Some(window) = windows.borrow_mut().get_mut(&window_id) {
-                    window.process_event(event);
-                }
-            }
+        let mut windows = WINDOWS.write().unwrap();
 
-            {
-                for window in windows.borrow_mut().values_mut() {
-                    window.receive_messages();
-                }
+        if let WinitEvent::WindowEvent { window_id, event } = event {
+            // println!("Received event {:?} for window {:?}", event, window_id);
+            // println!("Current windows: {:#?}", windows.borrow().keys());
+            if let Some(window) = windows.get_mut(&window_id) {
+                // println!("Sending event to window {:?}", window.window.id());
+                window.process_event(event);
             }
+        }
 
-            {
-                windows.borrow_mut().retain(|_, w| w.keep_running.load());
+        {
+            for window in windows.values_mut() {
+                window.receive_messages();
             }
-        })
+        }
+
+        windows.retain(|_, w| w.keep_running.load());
     }
 
     pub(crate) fn receive_messages(&mut self) {
