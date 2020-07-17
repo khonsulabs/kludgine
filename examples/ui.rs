@@ -33,6 +33,17 @@ impl Component for UIExample {
                 .insert()
                 .await?,
         );
+
+        context
+            .new_entity(Label::new("Test Label"))
+            .style(Style {
+                color: Some(Color::GREEN),
+                font_size: Some(72.),
+                ..Default::default()
+            })
+            .insert()
+            .await?;
+
         Ok(())
     }
 

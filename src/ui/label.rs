@@ -56,8 +56,10 @@ impl Component for Label {
 }
 
 impl Label {
-    pub fn new(value: String) -> Self {
-        Self { value }
+    pub fn new(value: impl ToString) -> Self {
+        Self {
+            value: value.to_string(),
+        }
     }
     fn create_text(&self, effective_style: &EffectiveStyle) -> Text {
         Text::span(&self.value, effective_style)
