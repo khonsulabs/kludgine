@@ -1,8 +1,7 @@
 use crate::{
     math::{Rect, Size},
-    scene::SceneTarget,
-    style::{EffectiveStyle, Layout, Style},
-    ui::{BaseComponent, Component, Context, Placements},
+    style::{Layout, Style},
+    ui::{BaseComponent, Component, Context, Placements, SceneContext, StyledContext},
     window::InputEvent,
     KludgineHandle, KludgineResult,
 };
@@ -67,30 +66,21 @@ where
     }
     async fn layout_within(
         &self,
-        context: &mut Context,
+        context: &mut StyledContext,
         max_size: Size,
-        effective_style: &EffectiveStyle,
         placements: &Placements,
     ) -> KludgineResult<Size> {
         self.component
-            .layout_within(context, max_size, effective_style, placements)
+            .layout_within(context, max_size, placements)
             .await
     }
 
-    async fn render(
-        &self,
-        context: &mut Context,
-        scene: &SceneTarget,
-        location: Rect,
-        effective_style: &EffectiveStyle,
-    ) -> KludgineResult<()> {
-        self.component
-            .render(context, scene, location, effective_style)
-            .await
+    async fn render(&self, context: &mut StyledContext, location: Rect) -> KludgineResult<()> {
+        self.component.render(context, location).await
     }
 
-    async fn update(&mut self, context: &mut Context, scene: &SceneTarget) -> KludgineResult<()> {
-        self.component.update(context, scene).await
+    async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+        self.component.update(context).await
     }
 
     async fn process_input(
@@ -133,15 +123,12 @@ impl Node {
 
     pub async fn layout_within(
         &self,
-        context: &mut Context,
+        context: &mut StyledContext,
         max_size: Size,
-        effective_style: &EffectiveStyle,
         placements: &Placements,
     ) -> KludgineResult<Size> {
         let component = self.component.read().await;
-        component
-            .layout_within(context, max_size, effective_style, placements)
-            .await
+        component.layout_within(context, max_size, placements).await
     }
 
     /// Called once the Window is opened
@@ -150,22 +137,14 @@ impl Node {
         component.initialize(context).await
     }
 
-    pub async fn render(
-        &self,
-        context: &mut Context,
-        scene: &SceneTarget,
-        location: Rect,
-        effective_style: &EffectiveStyle,
-    ) -> KludgineResult<()> {
+    pub async fn render(&self, context: &mut StyledContext, location: Rect) -> KludgineResult<()> {
         let component = self.component.read().await;
-        component
-            .render(context, scene, location, effective_style)
-            .await
+        component.render(context, location).await
     }
 
-    pub async fn update(&self, context: &mut Context, scene: &SceneTarget) -> KludgineResult<()> {
+    pub async fn update(&self, context: &mut SceneContext) -> KludgineResult<()> {
         let mut component = self.component.write().await;
-        component.update(context, scene).await
+        component.update(context).await
     }
 
     pub async fn process_input(

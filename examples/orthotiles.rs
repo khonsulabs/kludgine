@@ -35,38 +35,76 @@ impl Component for OrthoTiles {
         Ok(())
     }
 
-    async fn update(&mut self, _context: &mut Context, scene: &SceneTarget) -> KludgineResult<()> {
+    async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         let stickguy = self.stickguy.as_ref().unwrap();
         // Our default animation is Idle
         let mut animation = "Idle";
-        if scene.pressed_keys().await.contains(&VirtualKeyCode::Right) {
+        if context
+            .scene()
+            .pressed_keys()
+            .await
+            .contains(&VirtualKeyCode::Right)
+        {
             animation = "WalkRight";
-            self.position.x += 32.0 * scene.elapsed().await.unwrap_or_default().as_secs_f32();
-        } else if scene.pressed_keys().await.contains(&VirtualKeyCode::Left) {
+            self.position.x += 32.0
+                * context
+                    .scene()
+                    .elapsed()
+                    .await
+                    .unwrap_or_default()
+                    .as_secs_f32();
+        } else if context
+            .scene()
+            .pressed_keys()
+            .await
+            .contains(&VirtualKeyCode::Left)
+        {
             animation = "WalkLeft";
-            self.position.x -= 32.0 * scene.elapsed().await.unwrap_or_default().as_secs_f32();
+            self.position.x -= 32.0
+                * context
+                    .scene()
+                    .elapsed()
+                    .await
+                    .unwrap_or_default()
+                    .as_secs_f32();
         }
 
-        if scene.pressed_keys().await.contains(&VirtualKeyCode::Up) {
-            self.position.y -= 32.0 * scene.elapsed().await.unwrap_or_default().as_secs_f32();
-        } else if scene.pressed_keys().await.contains(&VirtualKeyCode::Down) {
-            self.position.y += 32.0 * scene.elapsed().await.unwrap_or_default().as_secs_f32();
+        if context
+            .scene()
+            .pressed_keys()
+            .await
+            .contains(&VirtualKeyCode::Up)
+        {
+            self.position.y -= 32.0
+                * context
+                    .scene()
+                    .elapsed()
+                    .await
+                    .unwrap_or_default()
+                    .as_secs_f32();
+        } else if context
+            .scene()
+            .pressed_keys()
+            .await
+            .contains(&VirtualKeyCode::Down)
+        {
+            self.position.y += 32.0
+                * context
+                    .scene()
+                    .elapsed()
+                    .await
+                    .unwrap_or_default()
+                    .as_secs_f32();
         }
         stickguy.set_current_tag(Some(animation)).await?;
 
         Ok(())
     }
 
-    async fn render(
-        &self,
-        _context: &mut Context,
-        scene: &SceneTarget,
-        _location: Rect,
-        _effective_style: &EffectiveStyle,
-    ) -> KludgineResult<()> {
-        let camera_scene = scene.set_camera(
+    async fn render(&self, context: &mut StyledContext, _location: Rect) -> KludgineResult<()> {
+        let camera_scene = context.scene().set_camera(
             self.zoom,
-            self.position - scene.size().await / 2.0 / self.zoom,
+            self.position - context.scene().size().await / 2.0 / self.zoom,
         );
         // The map is drawn at a static location of 0,0 (upper-left)
         // It will be offset scene.origin()

@@ -3,6 +3,9 @@ use crate::{
     ui::{Component, Entity, HierarchicalArena, Index, Node, NodeData},
     KludgineHandle, KludgineResult,
 };
+mod scene_context;
+mod styled_context;
+pub use self::{scene_context::SceneContext, styled_context::StyledContext};
 
 pub struct Context {
     index: Index,
@@ -49,6 +52,11 @@ impl Context {
         }
     }
 
+    pub async fn layout(&self) -> Layout {
+        let arena = self.arena.read().await;
+        arena.get(self.index).unwrap().layout().await
+    }
+
     pub fn new_entity<T: Component + 'static>(&self, component: T) -> EntityBuilder<T> {
         EntityBuilder {
             arena: self.arena.clone(),
@@ -56,6 +64,13 @@ impl Context {
             parent: Some(self.index),
             style: Style::default(),
             layout: Layout::default(),
+        }
+    }
+
+    pub fn clone_for<I: Into<Index>>(&self, index: I) -> Self {
+        Self {
+            index: index.into(),
+            arena: self.arena.clone(),
         }
     }
 }

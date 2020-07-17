@@ -1,7 +1,6 @@
 use crate::{
     math::{Rect, Size},
-    style::EffectiveStyle,
-    ui::{Context, HierarchicalArena, Index},
+    ui::{HierarchicalArena, Index, StyledContext},
     KludgineError, KludgineHandle, KludgineResult,
 };
 use std::collections::HashMap;
@@ -24,15 +23,13 @@ impl Placements {
         &self,
         index: I,
         max_size: Size,
-        effective_style: &EffectiveStyle,
+        context: &mut StyledContext,
     ) -> KludgineResult<Rect> {
         let index = index.into();
         let arena = self.arena.read().await;
         let node = arena.get(index).ok_or(KludgineError::InvalidIndex)?;
-        let mut context = Context::new(index, self.arena.clone());
-        let content_size = node
-            .layout_within(&mut context, max_size, effective_style, &self)
-            .await?;
+        let mut context = context.clone_for(index);
+        let content_size = node.layout_within(&mut context, max_size, &self).await?;
 
         Ok(Rect::sized(node.layout().await.location, content_size))
     }
@@ -41,10 +38,10 @@ impl Placements {
         &self,
         index: I,
         bounds: Rect,
-        effective_style: &EffectiveStyle,
+        context: &mut StyledContext,
     ) -> KludgineResult<Rect> {
         let index = index.into();
-        let relative_bounds = self.measure(index, bounds.size, effective_style).await?;
+        let relative_bounds = self.measure(index, bounds.size, context).await?;
         let parent = {
             let arena = self.arena.read().await;
             arena.parent(index)

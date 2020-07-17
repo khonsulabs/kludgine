@@ -19,13 +19,7 @@ impl Window for TextExample {}
 impl Component for TextExample {
     type Message = ();
 
-    async fn render(
-        &self,
-        _context: &mut Context,
-        scene: &SceneTarget,
-        _location: Rect,
-        _effective_style: &EffectiveStyle,
-    ) -> KludgineResult<()> {
+    async fn render(&self, context: &mut StyledContext, _location: Rect) -> KludgineResult<()> {
         let mut spans = Vec::new();
         spans.push(Span::new(
             "Wrapping ",
@@ -34,7 +28,7 @@ impl Component for TextExample {
                 font_size: Some(120.0),
                 ..Default::default()
             }
-            .effective_style(scene)
+            .effective_style(context.scene())
             .await,
         ));
         spans.push(Span::new(
@@ -44,7 +38,7 @@ impl Component for TextExample {
                 font_size: Some(60.0),
                 ..Default::default()
             }
-            .effective_style(scene)
+            .effective_style(context.scene())
             .await,
         ));
         spans.push(Span::new(
@@ -54,16 +48,16 @@ impl Component for TextExample {
                 font_size: Some(120.0),
                 ..Default::default()
             }
-            .effective_style(scene)
+            .effective_style(context.scene())
             .await,
         ));
 
         Text::new(spans)
             .render_at(
-                scene,
+                context.scene(),
                 Point::new(0.0, 120.0),
                 TextWrap::SingleLine {
-                    max_width: scene.size().await.width,
+                    max_width: context.scene().size().await.width,
                     truncate: false,
                 },
             )

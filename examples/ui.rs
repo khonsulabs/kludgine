@@ -36,17 +36,7 @@ impl Component for UIExample {
         Ok(())
     }
 
-    // async fn update(&mut self, _context: &mut Context, _scene: &SceneTarget) -> KludgineResult<()> {
-    //     self.ui.update(scene).await
-    // }
-
-    async fn render(
-        &self,
-        _context: &mut Context,
-        _scene: &SceneTarget,
-        _location: Rect,
-        _effective_style: &EffectiveStyle,
-    ) -> KludgineResult<()> {
+    async fn render(&self, _context: &mut StyledContext, _location: Rect) -> KludgineResult<()> {
         // self.ui.render(scene).await?;
 
         Ok(())

@@ -1,8 +1,6 @@
 use crate::{
     math::{Rect, Size},
-    scene::SceneTarget,
-    style::EffectiveStyle,
-    ui::{Context, Placements},
+    ui::{Context, Placements, SceneContext, StyledContext},
     window::InputEvent,
     KludgineResult,
 };
@@ -12,32 +10,25 @@ pub struct LayoutConstraints {}
 
 #[async_trait]
 pub(crate) trait BaseComponent: Send + Sync {
-    async fn layout_within(
-        &self,
-        context: &mut Context,
-        max_size: Size,
-        effective_style: &EffectiveStyle,
-        placements: &Placements,
-    ) -> KludgineResult<Size>;
-
     /// Called once the Window is opened
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()>;
 
-    async fn render(
-        &self,
-        context: &mut Context,
-        scene: &SceneTarget,
-        location: Rect,
-        effective_style: &EffectiveStyle,
-    ) -> KludgineResult<()>;
-
-    async fn update(&mut self, context: &mut Context, scene: &SceneTarget) -> KludgineResult<()>;
+    async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()>;
 
     async fn process_input(
         &mut self,
         context: &mut Context,
         event: InputEvent,
     ) -> KludgineResult<()>;
+
+    async fn layout_within(
+        &self,
+        context: &mut StyledContext,
+        max_size: Size,
+        placements: &Placements,
+    ) -> KludgineResult<Size>;
+
+    async fn render(&self, context: &mut StyledContext, location: Rect) -> KludgineResult<()>;
 }
 
 #[async_trait]
@@ -61,23 +52,16 @@ pub trait Component: Send + Sync {
 
     async fn layout_within(
         &self,
-        _context: &mut Context,
+        _context: &mut StyledContext,
         max_size: Size,
-        _effective_style: &EffectiveStyle,
         _placements: &Placements,
     ) -> KludgineResult<Size> {
         Ok(max_size)
     }
 
-    async fn render(
-        &self,
-        context: &mut Context,
-        scene: &SceneTarget,
-        location: Rect,
-        effective_style: &EffectiveStyle,
-    ) -> KludgineResult<()>;
+    async fn render(&self, context: &mut StyledContext, bounds: Rect) -> KludgineResult<()>;
 
-    async fn update(&mut self, _context: &mut Context, _scene: &SceneTarget) -> KludgineResult<()> {
+    async fn update(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
         Ok(())
     }
 

@@ -110,7 +110,7 @@ impl SceneTarget {
         )
     }
 
-    pub async fn lookup_font(&mut self, family: &str, weight: Weight) -> KludgineResult<Font> {
+    pub async fn lookup_font(&self, family: &str, weight: Weight) -> KludgineResult<Font> {
         match &self {
             SceneTarget::Scene(scene) => scene.lookup_font(family, weight).await,
             SceneTarget::Camera { scene, .. } => scene.lookup_font(family, weight).await,

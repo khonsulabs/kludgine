@@ -2,9 +2,18 @@ mod arena;
 mod component;
 mod context;
 mod image;
+mod label;
 mod node;
 mod placements;
-pub use self::image::Image;
+pub(crate) use self::{component::BaseComponent, node::NodeData};
+pub use self::{
+    component::{Component, LayoutConstraints},
+    context::*,
+    image::Image,
+    label::Label,
+    node::Node,
+    placements::Placements,
+};
 use crate::{
     math::{Point, Rect},
     scene::SceneTarget,
@@ -13,12 +22,6 @@ use crate::{
     KludgineHandle, KludgineResult,
 };
 use arena::{HierarchicalArena, Index};
-pub(crate) use component::BaseComponent;
-pub use component::{Component, LayoutConstraints};
-pub use context::*;
-pub use node::Node;
-pub(crate) use node::NodeData;
-pub use placements::Placements;
 use std::collections::HashMap;
 
 #[derive(Default)]
@@ -55,9 +58,13 @@ impl UserInterface {
                     Some(parent) => layout.placement(parent).await.unwrap(),
                     None => Rect::sized(Point::default(), size),
                 };
-                layout
-                    .place(index, parent_bounds, effective_styles.get(&index).unwrap())
-                    .await?;
+                let mut context = StyledContext::new(
+                    index,
+                    self.arena.clone(),
+                    scene.clone(),
+                    effective_styles.get(&index).unwrap().clone(),
+                );
+                layout.place(index, parent_bounds, &mut context).await?;
             }
         }
 
@@ -67,16 +74,15 @@ impl UserInterface {
             .map(|index| (index, arena.get(index).unwrap()))
             .collect::<Vec<_>>()
         {
-            let mut context = Context::new(index, self.arena.clone());
+            let mut context = StyledContext::new(
+                index,
+                self.arena.clone(),
+                scene.clone(),
+                effective_styles.get(&index).unwrap().clone(),
+            );
             let location = layout.placement(index).await.unwrap();
 
-            node.render(
-                &mut context,
-                scene,
-                location,
-                effective_styles.get(&index).unwrap(),
-            )
-            .await?;
+            node.render(&mut context, location).await?;
         }
 
         Ok(())
@@ -97,10 +103,10 @@ impl UserInterface {
         }
 
         for index in arena.iter().collect::<Vec<_>>() {
-            let mut context = Context::new(index, self.arena.clone());
+            let mut context = SceneContext::new(index, self.arena.clone(), scene.clone());
             let node = arena.get(index).unwrap();
 
-            node.update(&mut context, scene).await?;
+            node.update(&mut context).await?;
         }
 
         Ok(())

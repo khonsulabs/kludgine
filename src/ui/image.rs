@@ -1,10 +1,8 @@
 use crate::{
     math::{Rect, Size},
-    scene::SceneTarget,
     source_sprite::SourceSprite,
     sprite::Sprite,
-    style::EffectiveStyle,
-    ui::{Component, Context, Placements},
+    ui::{Component, Placements, SceneContext, StyledContext},
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -19,29 +17,26 @@ pub struct Image {
 impl Component for Image {
     type Message = ();
 
-    async fn update(&mut self, _context: &mut Context, scene: &SceneTarget) -> KludgineResult<()> {
-        self.current_frame = Some(self.sprite.get_frame(scene.elapsed().await).await?);
+    async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+        self.current_frame = Some(
+            self.sprite
+                .get_frame(context.scene().elapsed().await)
+                .await?,
+        );
         Ok(())
     }
 
-    async fn render(
-        &self,
-        _context: &mut Context,
-        scene: &SceneTarget,
-        location: Rect,
-        _effective_style: &EffectiveStyle,
-    ) -> KludgineResult<()> {
+    async fn render(&self, context: &mut StyledContext, location: Rect) -> KludgineResult<()> {
         if let Some(frame) = &self.current_frame {
-            frame.render_at(scene, location.origin).await
+            frame.render_at(context.scene(), location.origin).await
         }
         Ok(())
     }
 
     async fn layout_within(
         &self,
-        _context: &mut Context,
+        _context: &mut StyledContext,
         _max_size: Size,
-        _effective_style: &EffectiveStyle,
         _placements: &Placements,
     ) -> KludgineResult<Size> {
         if let Some(frame) = &self.current_frame {
