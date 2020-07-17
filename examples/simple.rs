@@ -33,6 +33,7 @@ impl Component for Simple {
         _context: &mut Context,
         scene: &SceneTarget,
         _location: Rect,
+        _effective_style: &EffectiveStyle,
     ) -> KludgineResult<()> {
         let sprite = self.source_sprite.as_ref().unwrap();
 

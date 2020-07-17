@@ -133,7 +133,7 @@ impl PersistentTileProvider {
         Self { tiles, size }
     }
 
-    pub fn set(&mut self, location: Point<u32>, sprite: Option<Sprite>) {
+    pub fn set(&mut self, location: Point<u32>, sprite: Option<Sprite>) -> Option<Tile> {
         let index = self.point_to_index(location);
         mem::replace(
             &mut self.tiles[index],
@@ -141,7 +141,7 @@ impl PersistentTileProvider {
                 location: Point::new(location.x as i32, location.y as i32),
                 sprite,
             }),
-        );
+        )
     }
 
     fn point_to_index(&self, location: Point<u32>) -> usize {

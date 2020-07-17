@@ -1,7 +1,8 @@
 use crate::{
     math::{Rect, Size},
     scene::SceneTarget,
-    ui::Context,
+    style::EffectiveStyle,
+    ui::{Context, Placements},
     window::InputEvent,
     KludgineResult,
 };
@@ -11,7 +12,13 @@ pub struct LayoutConstraints {}
 
 #[async_trait]
 pub(crate) trait BaseComponent: Send + Sync {
-    async fn content_size(&self, context: &mut Context, max_size: Size) -> KludgineResult<Size>;
+    async fn layout_within(
+        &self,
+        context: &mut Context,
+        max_size: Size,
+        effective_style: &EffectiveStyle,
+        placements: &Placements,
+    ) -> KludgineResult<Size>;
 
     /// Called once the Window is opened
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()>;
@@ -21,6 +28,7 @@ pub(crate) trait BaseComponent: Send + Sync {
         context: &mut Context,
         scene: &SceneTarget,
         location: Rect,
+        effective_style: &EffectiveStyle,
     ) -> KludgineResult<()>;
 
     async fn update(&mut self, context: &mut Context, scene: &SceneTarget) -> KludgineResult<()>;
@@ -51,7 +59,13 @@ pub trait Component: Send + Sync {
         )
     }
 
-    async fn content_size(&self, _context: &mut Context, max_size: Size) -> KludgineResult<Size> {
+    async fn layout_within(
+        &self,
+        _context: &mut Context,
+        max_size: Size,
+        _effective_style: &EffectiveStyle,
+        _placements: &Placements,
+    ) -> KludgineResult<Size> {
         Ok(max_size)
     }
 
@@ -60,6 +74,7 @@ pub trait Component: Send + Sync {
         context: &mut Context,
         scene: &SceneTarget,
         location: Rect,
+        effective_style: &EffectiveStyle,
     ) -> KludgineResult<()>;
 
     async fn update(&mut self, _context: &mut Context, _scene: &SceneTarget) -> KludgineResult<()> {

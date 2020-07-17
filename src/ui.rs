@@ -2,13 +2,13 @@ mod arena;
 mod component;
 mod context;
 mod image;
-mod layout;
 mod node;
+mod placements;
 pub use self::image::Image;
 use crate::{
     math::{Point, Rect},
     scene::SceneTarget,
-    style::Style,
+    style::{Layout, Style},
     window::InputEvent,
     KludgineHandle, KludgineResult,
 };
@@ -16,51 +16,74 @@ use arena::{HierarchicalArena, Index};
 pub(crate) use component::BaseComponent;
 pub use component::{Component, LayoutConstraints};
 pub use context::*;
-pub use layout::Layout;
 pub use node::Node;
 pub(crate) use node::NodeData;
+pub use placements::Placements;
+use std::collections::HashMap;
 
+#[derive(Default)]
 pub struct UserInterface {
     pub(crate) arena: KludgineHandle<HierarchicalArena>,
-    base_style: Style,
 }
 
 impl UserInterface {
-    pub fn new(base_style: Style) -> Self {
-        let arena = KludgineHandle::new(HierarchicalArena::new());
-        Self { arena, base_style }
-    }
-
     pub async fn render(&self, scene: &SceneTarget) -> KludgineResult<()> {
-        let layout = Layout::new(self.arena.clone());
+        let layout = Placements::new(self.arena.clone());
+        let mut effective_styles = HashMap::new();
 
         {
             let arena = self.arena.read().await;
+            let mut computed_styles = HashMap::new();
+            for index in arena.iter() {
+                let node_style = arena.get(index).as_ref().unwrap().style().await;
+                let computed_style = match arena.parent(index) {
+                    Some(parent_index) => {
+                        node_style.inherit_from(computed_styles.get(&parent_index).unwrap())
+                    }
+                    None => node_style.clone(),
+                };
+                computed_styles.insert(index, computed_style);
+            }
+
+            for (index, style) in computed_styles {
+                effective_styles.insert(index, style.effective_style(scene).await);
+            }
+
             let size = scene.size().await;
-            for index in arena.children(&None) {
-                let desired_size = layout.measure(index, size).await?;
-                // TODO better placement of root nodes
+            for index in arena.iter() {
+                let parent_bounds = match arena.parent(index) {
+                    Some(parent) => layout.placement(parent).await.unwrap(),
+                    None => Rect::sized(Point::default(), size),
+                };
                 layout
-                    .place(index, Rect::sized(Point::default(), desired_size))
-                    .await;
+                    .place(index, parent_bounds, effective_styles.get(&index).unwrap())
+                    .await?;
             }
         }
 
-        let mut arena = self.arena.write().await;
-        for index in arena.iter().collect::<Vec<_>>() {
+        let arena = self.arena.read().await;
+        for (index, node) in arena
+            .iter()
+            .map(|index| (index, arena.get(index).unwrap()))
+            .collect::<Vec<_>>()
+        {
             let mut context = Context::new(index, self.arena.clone());
-            let node = arena.get_mut(index).unwrap();
+            let location = layout.placement(index).await.unwrap();
 
-            if let Some(location) = layout.placement(index).await {
-                node.component.render(&mut context, scene, location).await?;
-            }
+            node.render(
+                &mut context,
+                scene,
+                location,
+                effective_styles.get(&index).unwrap(),
+            )
+            .await?;
         }
 
         Ok(())
     }
 
     pub async fn update(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
-        let mut arena = self.arena.write().await;
+        let arena = self.arena.read().await;
 
         // Loop twice, once to allow all the pending messages to be exhausted across all
         // nodes. Then after all messages have been processed, trigger the update method
@@ -68,60 +91,53 @@ impl UserInterface {
 
         for index in arena.iter().collect::<Vec<_>>() {
             let mut context = Context::new(index, self.arena.clone());
-            let node = arena.get_mut(index).unwrap();
+            let node = arena.get(index).unwrap();
 
-            node.component.process_pending_events(&mut context).await?;
+            node.process_pending_events(&mut context).await?;
         }
 
         for index in arena.iter().collect::<Vec<_>>() {
             let mut context = Context::new(index, self.arena.clone());
-            let node = arena.get_mut(index).unwrap();
+            let node = arena.get(index).unwrap();
 
-            node.component.update(&mut context, scene).await?;
+            node.update(&mut context, scene).await?;
         }
 
         Ok(())
     }
 
     pub async fn process_input(&mut self, event: InputEvent) -> KludgineResult<()> {
-        let mut arena = self.arena.write().await;
+        let arena = self.arena.read().await;
 
         for index in arena.iter().collect::<Vec<_>>() {
             let mut context = Context::new(index, self.arena.clone());
-            let node = arena.get_mut(index).unwrap();
+            let node = arena.get(index).unwrap();
 
-            node.component.process_input(&mut context, event).await?;
+            node.process_input(&mut context, event).await?;
         }
 
         Ok(())
     }
 
-    // pub fn new_entity<C: Component + 'static>(&self, component: C) -> EntityBuilder<C> {
-    //     EntityBuilder {
-    //         arena: self.arena.clone(),
-    //         component,
-    //         parent: None,
-    //         style: Style::default(),
-    //     }
-    // }
-
     async fn initialize(&self, index: Index) -> KludgineResult<()> {
-        let mut arena = self.arena.write().await;
-        arena
-            .get_mut(index)
-            .unwrap()
-            .component
-            .initialize(&mut Context::new(index, self.arena.clone()))
+        let node = {
+            let arena = self.arena.read().await;
+            arena.get(index).unwrap()
+        };
+
+        node.initialize(&mut Context::new(index, self.arena.clone()))
             .await
     }
 
     pub async fn register_root<C: Component + 'static>(
         &self,
         component: C,
+        base_style: Style,
+        base_layout: Layout,
     ) -> KludgineResult<Entity<C>> {
         let index = {
             let mut arena = self.arena.write().await;
-            let node = Node::new(component);
+            let node = Node::new(component, base_style, base_layout);
 
             arena.insert(None, node)
         };
@@ -134,41 +150,6 @@ impl UserInterface {
         })
     }
 }
-
-// pub struct EntityBuilder<C> {
-//     arena: KludgineHandle<HierarchicalArena>,
-//     component: C,
-//     parent: Option<Index>,
-//     style: Style,
-// }
-
-// impl<C> EntityBuilder<C>
-// where
-//     C: Component + 'static,
-// {
-//     pub fn within<I: Into<Index>>(mut self, parent: I) -> Self {
-//         self.parent = Some(parent.into());
-//         self
-//     }
-
-//     pub async fn styled(mut self, style: Style) -> Self {
-//         self.style = style;
-//         self
-//     }
-
-//     pub async fn insert(self) -> KludgineResult<Entity<C>> {
-//         let index = {
-//             let mut arena = self.arena.write().await;
-//             let node = Node::new(self.component);
-//             arena.insert(self.parent, node)
-//         };
-//         // TODO THIS REQUIRES INITIALIZATION
-//         Ok(Entity {
-//             index,
-//             _phantom: std::marker::PhantomData::default(),
-//         })
-//     }
-// }
 
 #[derive(Debug)]
 pub struct Entity<C> {

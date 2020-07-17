@@ -24,6 +24,7 @@ impl Component for TextExample {
         _context: &mut Context,
         scene: &SceneTarget,
         _location: Rect,
+        _effective_style: &EffectiveStyle,
     ) -> KludgineResult<()> {
         let mut spans = Vec::new();
         spans.push(Span::new(

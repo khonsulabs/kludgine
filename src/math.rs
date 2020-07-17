@@ -130,6 +130,34 @@ where
     }
 }
 
+impl<S> std::ops::Add<Point<S>> for Point<S>
+where
+    S: std::ops::Add<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn add(self, s: Self) -> Self {
+        Self {
+            x: self.x + s.x,
+            y: self.y + s.y,
+        }
+    }
+}
+
+impl<S> std::ops::Sub<Point<S>> for Point<S>
+where
+    S: std::ops::Sub<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn sub(self, s: Self) -> Self {
+        Self {
+            x: self.x - s.x,
+            y: self.y - s.y,
+        }
+    }
+}
+
 impl<S> Into<rgx::math::Point2<S>> for Point<S> {
     fn into(self) -> rgx::math::Point2<S> {
         rgx::math::Point2::new(self.x, self.y)

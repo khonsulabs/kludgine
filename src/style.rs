@@ -11,6 +11,7 @@ pub struct Layout {
     pub margin: Surround<Dimension>,
     pub padding: Surround<Dimension>,
     pub border: Surround<Dimension>,
+    // TODO: How do these measurements impact content_size calculations
     pub min_size: Size<Dimension>,
     pub max_size: Size<Dimension>,
 }

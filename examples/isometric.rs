@@ -36,6 +36,7 @@ impl Component for Isometric {
         _context: &mut Context,
         scene: &SceneTarget,
         _location: Rect,
+        _effective_style: &EffectiveStyle,
     ) -> KludgineResult<()> {
         let map = self.map.as_ref().unwrap();
         map.draw(scene, Point::default()).await?;

@@ -11,15 +11,17 @@ pub(crate) struct HierarchicalArena {
     parents: HashMap<Index, Option<Index>>,
 }
 
-impl HierarchicalArena {
-    pub fn new() -> Self {
+impl Default for HierarchicalArena {
+    fn default() -> Self {
         Self {
             arena: Arena::new(),
             children_by_parent: HashMap::new(),
             parents: HashMap::new(),
         }
     }
+}
 
+impl HierarchicalArena {
     pub fn insert(&mut self, parent: Option<Index>, node: Node) -> Index {
         let index = self.arena.insert(node);
 
@@ -56,12 +58,8 @@ impl HierarchicalArena {
         }
     }
 
-    pub fn get<I: Into<Index>>(&self, index: I) -> Option<&'_ Node> {
-        self.arena.get(index.into())
-    }
-
-    pub fn get_mut<I: Into<Index>>(&mut self, index: I) -> Option<&'_ mut Node> {
-        self.arena.get_mut(index.into())
+    pub fn get<I: Into<Index>>(&self, index: I) -> Option<Node> {
+        self.arena.get(index.into()).cloned()
     }
 
     pub fn iter(&self) -> ArenaIterator<'_> {

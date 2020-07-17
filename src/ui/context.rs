@@ -1,6 +1,7 @@
 use crate::{
-    ui::{Component, Entity, HierarchicalArena, Index, NodeData},
-    KludgineHandle,
+    style::{Layout, Style},
+    ui::{Component, Entity, HierarchicalArena, Index, Node, NodeData},
+    KludgineHandle, KludgineResult,
 };
 
 pub struct Context {
@@ -33,22 +34,11 @@ impl Context {
         arena.set_parent(child, Some(self.index))
     }
 
-    pub async fn parent<T: Component + 'static>(&self) -> Option<Entity<T>> {
-        let arena = self.arena.read().await;
-        if let Some(parent) = arena.parent(self.index) {
-            if let Some(node) = arena.get(self.index) {
-                if node.component.as_any().is::<NodeData<T>>() {
-                    return Some(Entity::new(parent));
-                }
-            }
-        }
-        None
-    }
-
     pub async fn send<T: Component + 'static>(&self, target: Entity<T>, message: T::Message) {
-        let mut arena = self.arena.write().await;
-        if let Some(target_node) = arena.get_mut(target) {
-            if let Some(node_data) = target_node.component.as_any().downcast_ref::<NodeData<T>>() {
+        let arena = self.arena.read().await;
+        if let Some(target_node) = arena.get(target) {
+            let component = target_node.component.read().await;
+            if let Some(node_data) = component.as_any().downcast_ref::<NodeData<T>>() {
                 node_data
                     .sender
                     .send(message)
@@ -57,5 +47,55 @@ impl Context {
                 unreachable!("Invalid type in Entity<T> -- Node contained different type than T")
             }
         }
+    }
+
+    pub fn new_entity<T: Component + 'static>(&self, component: T) -> EntityBuilder<T> {
+        EntityBuilder {
+            arena: self.arena.clone(),
+            component,
+            parent: Some(self.index),
+            style: Style::default(),
+            layout: Layout::default(),
+        }
+    }
+}
+
+pub struct EntityBuilder<C> {
+    arena: KludgineHandle<HierarchicalArena>,
+    component: C,
+    parent: Option<Index>,
+    style: Style,
+    layout: Layout,
+}
+
+impl<C> EntityBuilder<C>
+where
+    C: Component + 'static,
+{
+    pub fn style(mut self, style: Style) -> Self {
+        self.style = style;
+        self
+    }
+
+    pub fn layout(mut self, layout: Layout) -> Self {
+        self.layout = layout;
+        self
+    }
+
+    pub async fn insert(self) -> KludgineResult<Entity<C>> {
+        let index = {
+            let mut arena = self.arena.write().await;
+            let node = Node::new(self.component, self.style, self.layout);
+            let index = arena.insert(self.parent, node);
+
+            let mut context = Context::new(index, self.arena.clone());
+            arena.get(index).unwrap().initialize(&mut context).await?;
+
+            index
+        };
+        Ok(Entity {
+            index,
+            _phantom: std::marker::PhantomData::default(),
+        })
     }
 }

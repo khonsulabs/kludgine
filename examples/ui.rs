@@ -2,10 +2,12 @@ extern crate kludgine;
 use kludgine::prelude::*;
 
 fn main() {
-    SingleWindowApplication::run(UIExample {});
+    SingleWindowApplication::run(UIExample { image: None });
 }
 
-struct UIExample {}
+struct UIExample {
+    image: Option<Entity<Image>>,
+}
 
 impl WindowCreator<UIExample> for UIExample {
     fn window_title() -> String {
@@ -19,11 +21,20 @@ impl Window for UIExample {}
 impl Component for UIExample {
     type Message = ();
 
-    // async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
-    //     let sprite = include_aseprite_sprite!("assets/stickguy").await?;
-    //     self.ui.new_entity(Image::new(sprite)).insert().await?;
-    //     Ok(())
-    // }
+    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
+        let sprite = include_aseprite_sprite!("assets/stickguy").await?;
+        self.image = Some(
+            context
+                .new_entity(Image::new(sprite))
+                .layout(Layout {
+                    location: Point::new(32., 32.),
+                    ..Default::default()
+                })
+                .insert()
+                .await?,
+        );
+        Ok(())
+    }
 
     // async fn update(&mut self, _context: &mut Context, _scene: &SceneTarget) -> KludgineResult<()> {
     //     self.ui.update(scene).await
@@ -34,6 +45,7 @@ impl Component for UIExample {
         _context: &mut Context,
         _scene: &SceneTarget,
         _location: Rect,
+        _effective_style: &EffectiveStyle,
     ) -> KludgineResult<()> {
         // self.ui.render(scene).await?;
 
@@ -46,7 +58,7 @@ impl Component for UIExample {
         event: InputEvent,
     ) -> KludgineResult<()> {
         if let Event::MouseButton { .. } = event.event {
-            UIExample::open(UIExample {}).await;
+            UIExample::open(UIExample { image: None }).await;
         }
         Ok(())
     }

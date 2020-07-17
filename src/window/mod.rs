@@ -4,7 +4,7 @@ use super::{
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
     scene::{Scene, SceneTarget},
-    style::Style,
+    style::{Layout, Style},
     ui::{Component, Entity, UserInterface},
     KludgineError, KludgineHandle, KludgineResult,
 };
@@ -19,7 +19,7 @@ use lazy_static::lazy_static;
 use rgx::core::*;
 
 use futures::executor::block_on;
-use std::{cell::RefCell, collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 use winit::{
     event::{
         DeviceId, ElementState, Event as WinitEvent, MouseButton, MouseScrollDelta, TouchPhase,
@@ -253,7 +253,8 @@ impl RuntimeWindow {
     {
         let arena = ui.arena.read().await;
         let root_node = arena.get(root).unwrap();
-        let window = root_node.component.as_any().downcast_ref::<T>().unwrap();
+        let component = root_node.component.read().await;
+        let window = component.as_any().downcast_ref::<T>().unwrap();
         if let CloseResponse::Close = window.close_requested().await? {
             WindowMessage::Close.send_to(id).await?;
             return Ok(true);
@@ -271,8 +272,10 @@ impl RuntimeWindow {
         T: Window,
     {
         let mut scene = Scene::default();
-        let mut ui = UserInterface::new(Style::default()); // TODO pass in style somehow, probably WindowBuilder
-        let root = ui.register_root(window).await?;
+        let mut ui = UserInterface::default();
+        let root = ui
+            .register_root(window, Style::default(), Layout::default())
+            .await?;
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         let mut interval = tokio::time::interval(Duration::from_nanos(FRAME_DURATION));

@@ -62,6 +62,7 @@ impl Component for OrthoTiles {
         _context: &mut Context,
         scene: &SceneTarget,
         _location: Rect,
+        _effective_style: &EffectiveStyle,
     ) -> KludgineResult<()> {
         let camera_scene = scene.set_camera(
             self.zoom,
