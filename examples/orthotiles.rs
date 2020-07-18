@@ -101,7 +101,7 @@ impl Component for OrthoTiles {
         Ok(())
     }
 
-    async fn render(&self, context: &mut StyledContext, _location: Rect) -> KludgineResult<()> {
+    async fn render(&self, context: &mut StyledContext, _location: &Rect) -> KludgineResult<()> {
         let camera_scene = context.scene().set_camera(
             self.zoom,
             self.position - context.scene().size().await / 2.0 / self.zoom,

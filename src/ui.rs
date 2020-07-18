@@ -64,7 +64,7 @@ impl UserInterface {
                     scene.clone(),
                     effective_styles.get(&index).unwrap().clone(),
                 );
-                layout.place(index, parent_bounds, &mut context).await?;
+                layout.place(index, &parent_bounds, &mut context).await?;
             }
         }
 
@@ -82,7 +82,7 @@ impl UserInterface {
             );
             let location = layout.placement(index).await.unwrap();
 
-            node.render(&mut context, location).await?;
+            node.render(&mut context, &location).await?;
         }
 
         Ok(())

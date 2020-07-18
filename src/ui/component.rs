@@ -24,11 +24,11 @@ pub(crate) trait BaseComponent: Send + Sync {
     async fn layout_within(
         &self,
         context: &mut StyledContext,
-        max_size: Size,
+        max_size: &Size,
         placements: &Placements,
     ) -> KludgineResult<Size>;
 
-    async fn render(&self, context: &mut StyledContext, location: Rect) -> KludgineResult<()>;
+    async fn render(&self, context: &mut StyledContext, location: &Rect) -> KludgineResult<()>;
 }
 
 #[async_trait]
@@ -53,13 +53,13 @@ pub trait Component: Send + Sync {
     async fn layout_within(
         &self,
         _context: &mut StyledContext,
-        max_size: Size,
+        max_size: &Size,
         _placements: &Placements,
     ) -> KludgineResult<Size> {
-        Ok(max_size)
+        Ok(*max_size)
     }
 
-    async fn render(&self, context: &mut StyledContext, bounds: Rect) -> KludgineResult<()>;
+    async fn render(&self, context: &mut StyledContext, bounds: &Rect) -> KludgineResult<()>;
 
     async fn update(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
         Ok(())

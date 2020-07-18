@@ -20,7 +20,7 @@ impl Component for Label {
         Ok(())
     }
 
-    async fn render(&self, context: &mut StyledContext, bounds: Rect) -> KludgineResult<()> {
+    async fn render(&self, context: &mut StyledContext, bounds: &Rect) -> KludgineResult<()> {
         let font = context
             .scene()
             .lookup_font(
@@ -44,7 +44,7 @@ impl Component for Label {
     async fn layout_within(
         &self,
         context: &mut StyledContext,
-        max_size: Size,
+        max_size: &Size,
         _placements: &Placements,
     ) -> KludgineResult<Size> {
         let text = self.create_text(context.effective_style());

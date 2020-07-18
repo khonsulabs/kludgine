@@ -19,29 +19,42 @@ impl Placements {
         }
     }
 
-    async fn measure<I: Into<Index>>(
+    pub async fn measure<I: Into<Index>>(
         &self,
         index: I,
-        max_size: Size,
+        max_size: &Size,
         context: &mut StyledContext,
-    ) -> KludgineResult<Rect> {
+    ) -> KludgineResult<Size> {
         let index = index.into();
         let arena = self.arena.read().await;
         let node = arena.get(index).ok_or(KludgineError::InvalidIndex)?;
         let mut context = context.clone_for(index);
-        let content_size = node.layout_within(&mut context, max_size, &self).await?;
+        node.layout_within(&mut context, max_size, &self).await
+    }
 
-        Ok(Rect::sized(node.layout().await.location, content_size))
+    async fn layout<I: Into<Index>>(
+        &self,
+        index: I,
+        bounds: &Rect,
+        context: &mut StyledContext,
+    ) -> KludgineResult<Rect> {
+        let index = index.into();
+        let content_size = self.measure(index, &bounds.size, context).await?;
+
+        let arena = self.arena.read().await;
+        let node = arena.get(index).ok_or(KludgineError::InvalidIndex)?;
+
+        Ok(node.layout().await.compute_bounds(&content_size, bounds))
     }
 
     pub async fn place<I: Into<Index>>(
         &self,
         index: I,
-        bounds: Rect,
+        bounds: &Rect,
         context: &mut StyledContext,
     ) -> KludgineResult<Rect> {
         let index = index.into();
-        let relative_bounds = self.measure(index, bounds.size, context).await?;
+        let relative_bounds = self.layout(index, bounds, context).await?;
         let parent = {
             let arena = self.arena.read().await;
             arena.parent(index)

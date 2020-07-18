@@ -26,7 +26,7 @@ impl Component for Image {
         Ok(())
     }
 
-    async fn render(&self, context: &mut StyledContext, location: Rect) -> KludgineResult<()> {
+    async fn render(&self, context: &mut StyledContext, location: &Rect) -> KludgineResult<()> {
         if let Some(frame) = &self.current_frame {
             frame.render_at(context.scene(), location.origin).await
         }
@@ -36,7 +36,7 @@ impl Component for Image {
     async fn layout_within(
         &self,
         _context: &mut StyledContext,
-        _max_size: Size,
+        _max_size: &Size,
         _placements: &Placements,
     ) -> KludgineResult<Size> {
         if let Some(frame) = &self.current_frame {

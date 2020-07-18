@@ -19,7 +19,7 @@ impl Window for TextExample {}
 impl Component for TextExample {
     type Message = ();
 
-    async fn render(&self, context: &mut StyledContext, _location: Rect) -> KludgineResult<()> {
+    async fn render(&self, context: &mut StyledContext, _location: &Rect) -> KludgineResult<()> {
         let mut spans = Vec::new();
         spans.push(Span::new(
             "Wrapping ",

@@ -67,7 +67,7 @@ where
     async fn layout_within(
         &self,
         context: &mut StyledContext,
-        max_size: Size,
+        max_size: &Size,
         placements: &Placements,
     ) -> KludgineResult<Size> {
         self.component
@@ -75,7 +75,7 @@ where
             .await
     }
 
-    async fn render(&self, context: &mut StyledContext, location: Rect) -> KludgineResult<()> {
+    async fn render(&self, context: &mut StyledContext, location: &Rect) -> KludgineResult<()> {
         self.component.render(context, location).await
     }
 
@@ -124,7 +124,7 @@ impl Node {
     pub async fn layout_within(
         &self,
         context: &mut StyledContext,
-        max_size: Size,
+        max_size: &Size,
         placements: &Placements,
     ) -> KludgineResult<Size> {
         let component = self.component.read().await;
@@ -137,7 +137,7 @@ impl Node {
         component.initialize(context).await
     }
 
-    pub async fn render(&self, context: &mut StyledContext, location: Rect) -> KludgineResult<()> {
+    pub async fn render(&self, context: &mut StyledContext, location: &Rect) -> KludgineResult<()> {
         let component = self.component.read().await;
         component.render(context, location).await
     }

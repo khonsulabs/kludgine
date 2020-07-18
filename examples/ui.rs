@@ -47,7 +47,7 @@ impl Component for UIExample {
         Ok(())
     }
 
-    async fn render(&self, _context: &mut StyledContext, _location: Rect) -> KludgineResult<()> {
+    async fn render(&self, _context: &mut StyledContext, _location: &Rect) -> KludgineResult<()> {
         // self.ui.render(scene).await?;
 
         Ok(())

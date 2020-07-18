@@ -129,7 +129,6 @@ impl Into<WinitWindowBuilder> for WindowBuilder {
         if let Some(size) = self.size {
             builder = builder.with_inner_size(size);
         }
-
         builder
     }
 }

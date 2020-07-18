@@ -24,7 +24,7 @@ impl Layout {
         )
     }
 
-    pub fn compute_bounds(&self, content_size: &Size, bounds: Rect) -> Rect {
+    pub fn compute_bounds(&self, content_size: &Size, bounds: &Rect) -> Rect {
         let (effective_padding_left, effective_padding_right) = Self::compute_padding(
             self.padding.left,
             self.padding.right,
