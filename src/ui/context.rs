@@ -1,7 +1,7 @@
 use crate::{
     style::{Layout, Style},
     ui::{Component, Entity, HierarchicalArena, Index, Node, NodeData},
-    KludgineHandle, KludgineResult,
+    KludgineResult,
 };
 mod scene_context;
 mod styled_context;
@@ -9,7 +9,7 @@ pub use self::{scene_context::SceneContext, styled_context::StyledContext};
 
 pub struct Context {
     index: Index,
-    arena: KludgineHandle<HierarchicalArena>,
+    arena: HierarchicalArena,
 }
 
 impl Context {
@@ -19,7 +19,7 @@ impl Context {
 }
 
 impl Context {
-    pub(crate) fn new<I: Into<Index>>(index: I, arena: KludgineHandle<HierarchicalArena>) -> Self {
+    pub(crate) fn new<I: Into<Index>>(index: I, arena: HierarchicalArena) -> Self {
         Self {
             index: index.into(),
             arena,
@@ -27,19 +27,19 @@ impl Context {
     }
 
     pub async fn set_parent<I: Into<Index>>(&self, parent: Option<I>) {
-        let mut arena = self.arena.write().await;
-        arena.set_parent(self.index, parent.map(|p| p.into()))
+        self.arena
+            .set_parent(self.index, parent.map(|p| p.into()))
+            .await
     }
 
     pub async fn add_child<I: Into<Index>>(&self, child: I) {
         let child = child.into();
-        let mut arena = self.arena.write().await;
-        arena.set_parent(child, Some(self.index))
+
+        self.arena.set_parent(child, Some(self.index)).await
     }
 
     pub async fn send<T: Component + 'static>(&self, target: Entity<T>, message: T::Message) {
-        let arena = self.arena.read().await;
-        if let Some(target_node) = arena.get(target) {
+        if let Some(target_node) = self.arena.get(target).await {
             let component = target_node.component.read().await;
             if let Some(node_data) = component.as_any().downcast_ref::<NodeData<T>>() {
                 node_data
@@ -53,8 +53,7 @@ impl Context {
     }
 
     pub async fn layout(&self) -> Layout {
-        let arena = self.arena.read().await;
-        arena.get(self.index).unwrap().layout().await
+        self.arena.get(self.index).await.unwrap().layout().await
     }
 
     pub fn new_entity<T: Component + 'static>(&self, component: T) -> EntityBuilder<T> {
@@ -76,7 +75,7 @@ impl Context {
 }
 
 pub struct EntityBuilder<C> {
-    arena: KludgineHandle<HierarchicalArena>,
+    arena: HierarchicalArena,
     component: C,
     parent: Option<Index>,
     style: Style,
@@ -99,12 +98,16 @@ where
 
     pub async fn insert(self) -> KludgineResult<Entity<C>> {
         let index = {
-            let mut arena = self.arena.write().await;
             let node = Node::new(self.component, self.style, self.layout);
-            let index = arena.insert(self.parent, node);
+            let index = self.arena.insert(self.parent, node).await;
 
             let mut context = Context::new(index, self.arena.clone());
-            arena.get(index).unwrap().initialize(&mut context).await?;
+            self.arena
+                .get(index)
+                .await
+                .unwrap()
+                .initialize(&mut context)
+                .await?;
 
             index
         };

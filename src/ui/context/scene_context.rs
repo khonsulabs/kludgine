@@ -1,7 +1,6 @@
 use crate::{
     scene::SceneTarget,
     ui::{Context, HierarchicalArena, Index},
-    KludgineHandle,
 };
 
 pub struct SceneContext {
@@ -20,7 +19,7 @@ impl std::ops::Deref for SceneContext {
 impl SceneContext {
     pub(crate) fn new<I: Into<Index>>(
         index: I,
-        arena: KludgineHandle<HierarchicalArena>,
+        arena: HierarchicalArena,
         scene: SceneTarget,
     ) -> Self {
         Self {

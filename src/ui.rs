@@ -19,14 +19,14 @@ use crate::{
     scene::SceneTarget,
     style::{Layout, Style},
     window::InputEvent,
-    KludgineHandle, KludgineResult,
+    KludgineResult,
 };
 use arena::{HierarchicalArena, Index};
 use std::collections::HashMap;
 
 #[derive(Default)]
 pub struct UserInterface {
-    pub(crate) arena: KludgineHandle<HierarchicalArena>,
+    pub(crate) arena: HierarchicalArena,
 }
 
 impl UserInterface {
@@ -35,11 +35,11 @@ impl UserInterface {
         let mut effective_styles = HashMap::new();
 
         {
-            let arena = self.arena.read().await;
             let mut computed_styles = HashMap::new();
-            for index in arena.iter() {
-                let node_style = arena.get(index).as_ref().unwrap().style().await;
-                let computed_style = match arena.parent(index) {
+            let mut traverser = self.arena.traverse().await;
+            while let Some(index) = traverser.next().await {
+                let node_style = self.arena.get(index).await.as_ref().unwrap().style().await;
+                let computed_style = match self.arena.parent(index).await {
                     Some(parent_index) => {
                         node_style.inherit_from(computed_styles.get(&parent_index).unwrap())
                     }
@@ -53,8 +53,9 @@ impl UserInterface {
             }
 
             let size = scene.size().await;
-            for index in arena.iter() {
-                let parent_bounds = match arena.parent(index) {
+            let mut traverser = self.arena.traverse().await;
+            while let Some(index) = traverser.next().await {
+                let parent_bounds = match self.arena.parent(index).await {
                     Some(parent) => layout.placement(parent).await.unwrap(),
                     None => Rect::sized(Point::default(), size),
                 };
@@ -68,12 +69,9 @@ impl UserInterface {
             }
         }
 
-        let arena = self.arena.read().await;
-        for (index, node) in arena
-            .iter()
-            .map(|index| (index, arena.get(index).unwrap()))
-            .collect::<Vec<_>>()
-        {
+        let mut traverser = self.arena.traverse().await;
+        while let Some(index) = traverser.next().await {
+            let node = self.arena.get(index).await.unwrap();
             let mut context = StyledContext::new(
                 index,
                 self.arena.clone(),
@@ -89,22 +87,22 @@ impl UserInterface {
     }
 
     pub async fn update(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
-        let arena = self.arena.read().await;
-
         // Loop twice, once to allow all the pending messages to be exhausted across all
         // nodes. Then after all messages have been processed, trigger the update method
         // for each node.
 
-        for index in arena.iter().collect::<Vec<_>>() {
+        let mut traverser = self.arena.traverse().await;
+        while let Some(index) = traverser.next().await {
             let mut context = Context::new(index, self.arena.clone());
-            let node = arena.get(index).unwrap();
+            let node = self.arena.get(index).await.unwrap();
 
             node.process_pending_events(&mut context).await?;
         }
 
-        for index in arena.iter().collect::<Vec<_>>() {
+        let mut traverser = self.arena.traverse().await;
+        while let Some(index) = traverser.next().await {
             let mut context = SceneContext::new(index, self.arena.clone(), scene.clone());
-            let node = arena.get(index).unwrap();
+            let node = self.arena.get(index).await.unwrap();
 
             node.update(&mut context).await?;
         }
@@ -113,11 +111,10 @@ impl UserInterface {
     }
 
     pub async fn process_input(&mut self, event: InputEvent) -> KludgineResult<()> {
-        let arena = self.arena.read().await;
-
-        for index in arena.iter().collect::<Vec<_>>() {
+        let mut traverser = self.arena.traverse().await;
+        while let Some(index) = traverser.next().await {
             let mut context = Context::new(index, self.arena.clone());
-            let node = arena.get(index).unwrap();
+            let node = self.arena.get(index).await.unwrap();
 
             node.process_input(&mut context, event).await?;
         }
@@ -126,10 +123,7 @@ impl UserInterface {
     }
 
     async fn initialize(&self, index: Index) -> KludgineResult<()> {
-        let node = {
-            let arena = self.arena.read().await;
-            arena.get(index).unwrap()
-        };
+        let node = self.arena.get(index).await.unwrap();
 
         node.initialize(&mut Context::new(index, self.arena.clone()))
             .await
@@ -142,10 +136,9 @@ impl UserInterface {
         base_layout: Layout,
     ) -> KludgineResult<Entity<C>> {
         let index = {
-            let mut arena = self.arena.write().await;
             let node = Node::new(component, base_style, base_layout);
 
-            arena.insert(None, node)
+            self.arena.insert(None, node).await
         };
 
         self.initialize(index).await?;

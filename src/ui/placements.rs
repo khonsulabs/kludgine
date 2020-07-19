@@ -8,11 +8,11 @@ use std::collections::HashMap;
 #[derive(Clone)]
 pub struct Placements {
     measurements: KludgineHandle<HashMap<Index, Rect>>,
-    arena: KludgineHandle<HierarchicalArena>,
+    arena: HierarchicalArena,
 }
 
 impl Placements {
-    pub(crate) fn new(arena: KludgineHandle<HierarchicalArena>) -> Self {
+    pub(crate) fn new(arena: HierarchicalArena) -> Self {
         Self {
             measurements: KludgineHandle::default(),
             arena,
@@ -26,8 +26,11 @@ impl Placements {
         context: &mut StyledContext,
     ) -> KludgineResult<Size> {
         let index = index.into();
-        let arena = self.arena.read().await;
-        let node = arena.get(index).ok_or(KludgineError::InvalidIndex)?;
+        let node = self
+            .arena
+            .get(index)
+            .await
+            .ok_or(KludgineError::InvalidIndex)?;
         let mut context = context.clone_for(index);
         node.layout_within(&mut context, max_size, &self).await
     }
@@ -41,8 +44,11 @@ impl Placements {
         let index = index.into();
         let content_size = self.measure(index, &bounds.size, context).await?;
 
-        let arena = self.arena.read().await;
-        let node = arena.get(index).ok_or(KludgineError::InvalidIndex)?;
+        let node = self
+            .arena
+            .get(index)
+            .await
+            .ok_or(KludgineError::InvalidIndex)?;
 
         Ok(node.layout().await.compute_bounds(&content_size, bounds))
     }
@@ -55,10 +61,7 @@ impl Placements {
     ) -> KludgineResult<Rect> {
         let index = index.into();
         let relative_bounds = self.layout(index, bounds, context).await?;
-        let parent = {
-            let arena = self.arena.read().await;
-            arena.parent(index)
-        };
+        let parent = self.arena.parent(index).await;
         let absolute_bounds = match parent {
             Some(parent) => {
                 let parent_bounds = self.placement(parent).await.unwrap();
