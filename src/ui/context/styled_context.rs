@@ -1,7 +1,7 @@
 use crate::{
     scene::SceneTarget,
     style::EffectiveStyle,
-    ui::{HierarchicalArena, Index, SceneContext},
+    ui::{Index, SceneContext},
 };
 
 pub struct StyledContext {
@@ -20,12 +20,11 @@ impl std::ops::Deref for StyledContext {
 impl StyledContext {
     pub(crate) fn new<I: Into<Index>>(
         index: I,
-        arena: HierarchicalArena,
         scene: SceneTarget,
         effective_style: EffectiveStyle,
     ) -> Self {
         Self {
-            base: SceneContext::new(index, arena, scene),
+            base: SceneContext::new(index, scene),
             effective_style,
         }
     }

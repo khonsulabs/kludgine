@@ -7,7 +7,8 @@ pub use ttf_parser::Weight;
 
 #[derive(Default, Clone, Debug)]
 pub struct Layout {
-    pub location: Point,
+    pub location: Point<Dimension>,
+    pub size: Size<Dimension>,
     pub margin: Surround<Dimension>,
     pub padding: Surround<Dimension>,
     pub border: Surround<Dimension>,

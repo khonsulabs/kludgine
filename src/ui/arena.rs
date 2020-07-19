@@ -36,14 +36,19 @@ impl HierarchicalArena {
         arena.get(index)
     }
 
-    pub async fn traverse(&self) -> ArenaTraverser {
-        let queue = self.children(&None).await.into_iter().collect();
+    pub async fn traverse(&self, start: impl Into<Index>) -> ArenaTraverser {
+        let queue = VecDeque::from(vec![start.into()]);
         ArenaTraverser {
             handle: self.clone(),
             queue,
             processed: HashSet::new(),
             last: None,
         }
+    }
+
+    pub async fn remove<I: Into<Index>>(&self, index: I) -> Option<Node> {
+        let mut arena = self.handle.write().await;
+        arena.remove(index)
     }
 }
 
@@ -103,6 +108,10 @@ impl HierarchicalArenaData {
 
     pub fn get<I: Into<Index>>(&self, index: I) -> Option<Node> {
         self.arena.get(index.into()).cloned()
+    }
+
+    pub fn remove<I: Into<Index>>(&mut self, index: I) -> Option<Node> {
+        self.arena.remove(index.into())
     }
 }
 pub struct ArenaTraverser {

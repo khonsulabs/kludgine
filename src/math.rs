@@ -411,7 +411,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_rect_contains() {
-        let rect = Rect::new(Point::new(1i32, 10), Point::new(3, 12));
+        let rect = Rect::<i32>::new(Point::new(1, 10), Point::new(3, 12));
         // lower x, lower y
         assert!(!rect.contains(Point::new(0, 9)));
         // lower x, equal y

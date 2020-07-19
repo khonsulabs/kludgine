@@ -4,8 +4,7 @@ use super::{
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
     scene::{Scene, SceneTarget},
-    style::{Layout, Style},
-    ui::{Component, Entity, UserInterface},
+    ui::{global_arena, Component,  UserInterface},
     KludgineError, KludgineHandle, KludgineResult,
 };
 use async_trait::async_trait;
@@ -242,15 +241,11 @@ impl RuntimeWindow {
         windows.insert(window_id, runtime_window);
     }
 
-    async fn request_window_close<T>(
-        id: WindowId,
-        ui: &UserInterface,
-        root: Entity<T>,
-    ) -> KludgineResult<bool>
+    async fn request_window_close<T>(id: WindowId, ui: &UserInterface<T>) -> KludgineResult<bool>
     where
         T: Window,
     {
-        let root_node = ui.arena.get(root).await.unwrap();
+        let root_node = global_arena().get(ui.root).await.unwrap();
         let component = root_node.component.read().await;
         let window = component.as_any().downcast_ref::<T>().unwrap();
         if let CloseResponse::Close = window.close_requested().await? {
@@ -270,10 +265,7 @@ impl RuntimeWindow {
         T: Window,
     {
         let mut scene = Scene::default();
-        let mut ui = UserInterface::default();
-        let root = ui
-            .register_root(window, Style::default(), Layout::default())
-            .await?;
+        let mut ui = UserInterface::new(window).await?;
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         let mut interval = tokio::time::interval(Duration::from_nanos(FRAME_DURATION));
@@ -291,7 +283,7 @@ impl RuntimeWindow {
                         scene.set_scale_factor(scale_factor).await;
                     }
                     WindowEvent::CloseRequested => {
-                        if Self::request_window_close(id, &ui, root.clone()).await? {
+                        if Self::request_window_close(id, &ui).await? {
                             return Ok(());
                         }
                     }
@@ -321,7 +313,7 @@ impl RuntimeWindow {
                 let modifiers = scene.modifiers_pressed().await;
                 if modifiers.primary_modifier()
                     && scene.key_pressed(VirtualKeyCode::W).await
-                    && Self::request_window_close(id, &ui, root.clone()).await?
+                    && Self::request_window_close(id, &ui).await?
                 {
                     return Ok(());
                 }

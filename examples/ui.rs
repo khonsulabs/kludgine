@@ -27,7 +27,7 @@ impl Component for UIExample {
             context
                 .new_entity(Image::new(sprite))
                 .layout(Layout {
-                    location: Point::new(32., 32.),
+                    location: Point::new(Dimension::Points(32.), Dimension::Points(32.)),
                     ..Default::default()
                 })
                 .insert()
