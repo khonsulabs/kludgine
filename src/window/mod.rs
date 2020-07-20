@@ -4,7 +4,7 @@ use super::{
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
     scene::{Scene, SceneTarget},
-    ui::{global_arena, Component,  UserInterface},
+    ui::{global_arena, Component, UserInterface},
     KludgineError, KludgineHandle, KludgineResult,
 };
 use async_trait::async_trait;
@@ -29,6 +29,8 @@ use winit::{
 
 mod renderer;
 use renderer::{FrameRenderer, FrameSynchronizer};
+
+pub use winit::window::Icon;
 
 /// How to react to a request to close a window
 pub enum CloseResponse {
@@ -105,6 +107,13 @@ pub trait Window: Component + Send + Sync + 'static {
 pub struct WindowBuilder {
     title: Option<String>,
     size: Option<Size>,
+    resizable: Option<bool>,
+    maximized: Option<bool>,
+    visible: Option<bool>,
+    transparent: Option<bool>,
+    decorations: Option<bool>,
+    always_on_top: Option<bool>,
+    icon: Option<winit::window::Icon>,
 }
 
 impl WindowBuilder {
@@ -115,6 +124,41 @@ impl WindowBuilder {
 
     pub fn with_size(mut self, size: Size) -> Self {
         self.size = Some(size);
+        self
+    }
+
+    pub fn with_resizable(mut self, resizable: bool) -> Self {
+        self.resizable = Some(resizable);
+        self
+    }
+
+    pub fn with_maximized(mut self, maximized: bool) -> Self {
+        self.maximized = Some(maximized);
+        self
+    }
+
+    pub fn with_visible(mut self, visible: bool) -> Self {
+        self.visible = Some(visible);
+        self
+    }
+
+    pub fn with_transparent(mut self, transparent: bool) -> Self {
+        self.transparent = Some(transparent);
+        self
+    }
+
+    pub fn with_decorations(mut self, decorations: bool) -> Self {
+        self.decorations = Some(decorations);
+        self
+    }
+
+    pub fn with_always_on_top(mut self, always_on_top: bool) -> Self {
+        self.always_on_top = Some(always_on_top);
+        self
+    }
+
+    pub fn with_icon(mut self, icon: Icon) -> Self {
+        self.icon = Some(icon);
         self
     }
 }
@@ -128,6 +172,27 @@ impl Into<WinitWindowBuilder> for WindowBuilder {
         if let Some(size) = self.size {
             builder = builder.with_inner_size(size);
         }
+        if let Some(resizable) = self.resizable {
+            builder = builder.with_resizable(resizable);
+        }
+        if let Some(maximized) = self.maximized {
+            builder = builder.with_maximized(maximized);
+        }
+        if let Some(visible) = self.visible {
+            builder = builder.with_visible(visible);
+        }
+        if let Some(transparent) = self.transparent {
+            builder = builder.with_transparent(transparent);
+        }
+        if let Some(decorations) = self.decorations {
+            builder = builder.with_decorations(decorations);
+        }
+        if let Some(always_on_top) = self.always_on_top {
+            builder = builder.with_always_on_top(always_on_top);
+        }
+
+        builder = builder.with_window_icon(self.icon);
+
         builder
     }
 }

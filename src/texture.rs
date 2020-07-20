@@ -1,4 +1,4 @@
-use super::{math::Size, KludgineHandle, KludgineResult};
+use crate::{math::Size, window::Icon, KludgineHandle, KludgineResult};
 use crossbeam::atomic::AtomicCell;
 use image::{DynamicImage, RgbaImage};
 use lazy_static::lazy_static;
@@ -53,6 +53,20 @@ impl Texture {
         let texture = self.handle.read().await;
         let (w, h) = texture.image.dimensions();
         Size::new(w as u32, h as u32)
+    }
+
+    pub async fn rgba_pixels(&self) -> Vec<u8> {
+        let texture = self.handle.read().await;
+        texture.image.clone().into_vec()
+    }
+
+    pub async fn window_icon(&self) -> Result<Icon, winit::window::BadIcon> {
+        let texture = self.handle.read().await;
+        Icon::from_rgba(
+            texture.image.clone().into_vec(),
+            texture.image.width(),
+            texture.image.height(),
+        )
     }
 }
 
