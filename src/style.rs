@@ -90,6 +90,7 @@ pub struct Style {
     pub font_size: Option<f32>,
     pub font_weight: Option<Weight>,
     pub color: Option<Color>,
+    pub background_color: Option<Color>,
 }
 
 impl Style {
@@ -102,6 +103,7 @@ impl Style {
             font_size: self.font_size.or(parent.font_size),
             font_weight: self.font_weight.or(parent.font_weight),
             color: self.color.or(parent.color),
+            background_color: self.background_color.or(parent.background_color),
         }
     }
 
@@ -114,6 +116,7 @@ impl Style {
             font_size: self.font_size.unwrap_or(14.0) * scene.effective_scale_factor().await,
             font_weight: self.font_weight.unwrap_or(Weight::Normal),
             color: self.color.unwrap_or(Color::BLACK),
+            background_color: self.background_color,
         }
     }
 }
@@ -124,4 +127,5 @@ pub struct EffectiveStyle {
     pub font_size: f32,
     pub font_weight: Weight,
     pub color: Color,
+    pub background_color: Option<Color>,
 }

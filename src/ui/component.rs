@@ -1,5 +1,6 @@
 use crate::{
     math::{Rect, Size},
+    shape::{Fill, Shape},
     ui::{Context, Placements, SceneContext, StyledContext},
     window::InputEvent,
     KludgineResult,
@@ -29,6 +30,11 @@ pub(crate) trait BaseComponent: Send + Sync {
     ) -> KludgineResult<Size>;
 
     async fn render(&self, context: &mut StyledContext, location: &Rect) -> KludgineResult<()>;
+    async fn render_background(
+        &self,
+        context: &mut StyledContext,
+        location: &Rect,
+    ) -> KludgineResult<()>;
 }
 
 #[async_trait]
@@ -70,6 +76,22 @@ pub trait Component: Send + Sync {
         _context: &mut Context,
         _event: InputEvent,
     ) -> KludgineResult<()> {
+        Ok(())
+    }
+
+    async fn render_background(
+        &self,
+        context: &mut StyledContext,
+        bounds: &Rect,
+    ) -> KludgineResult<()> {
+        if let Some(background) = context.effective_style().background_color {
+            context
+                .scene()
+                .draw_shape(
+                    Shape::rect(bounds.coord1(), bounds.coord2()).fill(Fill::Solid(background)),
+                )
+                .await;
+        }
         Ok(())
     }
 }

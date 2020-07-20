@@ -1,7 +1,6 @@
 use crate::{
     math::{Point, Rect, Size},
-    shape::{Fill, Shape},
-    style::{Color, EffectiveStyle},
+    style::EffectiveStyle,
     text::{wrap::TextWrap, Text},
     ui::{Component, Placements, SceneContext, StyledContext},
     KludgineResult,
@@ -23,10 +22,6 @@ impl Component for Label {
 
     async fn render(&self, context: &mut StyledContext, bounds: &Rect) -> KludgineResult<()> {
         let text = self.create_text(context.effective_style());
-        context
-            .scene()
-            .draw_shape(Shape::rect(bounds.coord1(), bounds.coord2()).fill(Fill::Solid(Color::RED)))
-            .await;
         text.render_at(
             context.scene(),
             Point::new(bounds.origin.x, bounds.origin.y),

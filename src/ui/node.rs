@@ -79,6 +79,14 @@ where
         self.component.render(context, location).await
     }
 
+    async fn render_background(
+        &self,
+        context: &mut StyledContext,
+        location: &Rect,
+    ) -> KludgineResult<()> {
+        self.component.render_background(context, location).await
+    }
+
     async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         self.component.update(context).await
     }
@@ -140,6 +148,15 @@ impl Node {
     pub async fn render(&self, context: &mut StyledContext, location: &Rect) -> KludgineResult<()> {
         let component = self.component.read().await;
         component.render(context, location).await
+    }
+
+    pub async fn render_background(
+        &self,
+        context: &mut StyledContext,
+        location: &Rect,
+    ) -> KludgineResult<()> {
+        let component = self.component.read().await;
+        component.render_background(context, location).await
     }
 
     pub async fn update(&self, context: &mut SceneContext) -> KludgineResult<()> {

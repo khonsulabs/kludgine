@@ -109,6 +109,7 @@ where
             );
             let location = layout.placement(index).await.unwrap();
 
+            node.render_background(&mut context, &location).await?;
             node.render(&mut context, &location).await?;
         }
 

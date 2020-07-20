@@ -6,7 +6,6 @@ use super::{
     text::{font::LoadedFont, prepared::PreparedSpan},
     texture::LoadedTexture,
     timing::Moment,
-    KludgineHandle,
 };
 use std::collections::{HashMap, HashSet};
 #[derive(Default)]
@@ -165,10 +164,13 @@ impl Frame {
             Some(RenderKind::Shape) => batch.as_ref().map(|b| !b.is_shape()).unwrap_or_default(),
             Some(RenderKind::Sprite) => batch.as_ref().map(|b| !b.is_sprite()).unwrap_or_default(),
         };
-        if let Some(batch) = batch {
-            match batch {
-                FrameBatch::Sprite(batch) => self.commands.push(FrameCommand::DrawBatch(batch)),
-                FrameBatch::Shape(batch) => self.commands.push(FrameCommand::DrawShapes(batch)),
+
+        if commit {
+            if let Some(batch) = batch {
+                match batch {
+                    FrameBatch::Sprite(batch) => self.commands.push(FrameCommand::DrawBatch(batch)),
+                    FrameBatch::Shape(batch) => self.commands.push(FrameCommand::DrawShapes(batch)),
+                }
             }
         }
 

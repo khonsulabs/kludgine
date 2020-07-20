@@ -38,7 +38,12 @@ impl Component for UIExample {
             .new_entity(Label::new("Test Label"))
             .style(Style {
                 color: Some(Color::GREEN),
+                background_color: Some(Color::new(1.0, 0.0, 1.0, 0.5)),
                 font_size: Some(72.),
+                ..Default::default()
+            })
+            .layout(Layout {
+                padding: Surround::uniform(Dimension::Points(10.)),
                 ..Default::default()
             })
             .insert()
