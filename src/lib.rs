@@ -126,6 +126,8 @@ pub mod timing;
 pub mod ui;
 pub mod window;
 
+pub use rgx::kit::shape2d as shape;
+
 /// Convenience module that exports the public interface of Kludgine
 pub mod prelude {
     pub use super::{
@@ -134,6 +136,7 @@ pub mod prelude {
         math::{Dimension, Point, Rect, Size, Surround},
         runtime::Runtime,
         scene::{Scene, SceneTarget},
+        shape::*,
         source_sprite::SourceSprite,
         sprite::Sprite,
         style::*,

@@ -1,5 +1,6 @@
 use crate::{
     math::{Point, Size},
+    shape::Shape,
     sprite::RenderedSprite,
     style::Weight,
     text::{font::Font, prepared::PreparedSpan},
@@ -17,6 +18,7 @@ use winit::event::VirtualKeyCode;
 pub(crate) enum Element {
     Sprite(RenderedSprite),
     Text(PreparedSpan),
+    Shape(Shape),
 }
 
 #[derive(Clone)]
@@ -66,6 +68,10 @@ impl SceneTarget {
 
     pub(crate) async fn push_element(&self, element: Element) {
         self.scene_mut().await.elements.push(element);
+    }
+
+    pub async fn draw_shape(&self, shape: Shape) {
+        self.scene_mut().await.elements.push(Element::Shape(shape));
     }
 
     pub fn set_camera(&self, zoom: f32, look_at: Point<f32>) -> SceneTarget {

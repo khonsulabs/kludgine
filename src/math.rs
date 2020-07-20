@@ -35,6 +35,14 @@ where
         self.origin.y + self.size.height
     }
 
+    pub fn coord1(&self) -> Point<S> {
+        Point::new(self.x1(), self.y1())
+    }
+
+    pub fn coord2(&self) -> Point<S> {
+        Point::new(self.x2(), self.y2())
+    }
+
     pub fn union(&self, other: &Self) -> Self {
         let min_x = if self.x1() < other.x1() {
             self.x1()
