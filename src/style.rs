@@ -1,19 +1,37 @@
 use crate::{
-    math::{Dimension, Point, Rect, Size, Surround},
+    math::{Dimension, Size, Surround},
     scene::SceneTarget,
 };
 pub use rgx::color::Rgba as Color;
+pub use stretch::style::{
+    AlignContent, AlignItems, AlignSelf, Direction, Display, FlexDirection, FlexWrap,
+    JustifyContent, Overflow, PositionType,
+};
 pub use ttf_parser::Weight;
 
 #[derive(Default, Clone, Debug)]
 pub struct Layout {
+    pub display: Display,
+    pub position_type: PositionType,
+    pub direction: Direction,
+    pub flex_direction: FlexDirection,
+    pub flex_wrap: FlexWrap,
+    pub overflow: Overflow,
+    pub align_items: AlignItems,
+    pub align_self: AlignSelf,
+    pub align_content: AlignContent,
+    pub justify_content: JustifyContent,
     pub position: Surround<Dimension>,
     pub margin: Surround<Dimension>,
     pub padding: Surround<Dimension>,
     pub border: Surround<Dimension>,
-    // TODO: How do these measurements impact content_size calculations
+    pub flex_grow: f32,
+    pub flex_shrink: f32,
+    pub flex_basis: Dimension,
+    pub size: Size<Dimension>,
     pub min_size: Size<Dimension>,
     pub max_size: Size<Dimension>,
+    pub aspect_ratio: Option<f32>,
 }
 
 impl Layout {
@@ -89,7 +107,30 @@ impl Into<stretch::style::Style> for Layout {
     fn into(self) -> stretch::style::Style {
         stretch::style::Style {
             position: self.position.into(),
-            ..Default::default()
+            padding: self.padding.into(),
+            display: self.display,
+            position_type: self.position_type,
+            direction: self.direction,
+            flex_direction: self.flex_direction,
+            flex_wrap: self.flex_wrap,
+            overflow: self.overflow,
+            align_items: self.align_items,
+            align_self: self.align_self,
+            align_content: self.align_content,
+            justify_content: self.justify_content,
+
+            margin: self.margin.into(),
+
+            border: self.border.into(),
+            flex_grow: self.flex_grow,
+            flex_shrink: self.flex_shrink,
+            flex_basis: self.flex_basis.into(),
+            size: self.size.into(),
+            min_size: self.min_size.into(),
+            max_size: self.max_size.into(),
+            aspect_ratio: self
+                .aspect_ratio
+                .map(stretch::number::Number::Defined).unwrap_or_default(),
         }
     }
 }

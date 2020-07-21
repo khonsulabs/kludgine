@@ -35,7 +35,7 @@ impl Component for Image {
 
     async fn content_size(
         &self,
-        context: &mut StyledContext,
+        _context: &mut StyledContext,
         _constraints: &Size<Option<f32>>,
     ) -> KludgineResult<Size> {
         if let Some(frame) = &self.current_frame {

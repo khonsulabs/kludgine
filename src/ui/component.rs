@@ -37,18 +37,19 @@ pub(crate) trait BaseComponent: Send + Sync {
 }
 
 #[async_trait]
+#[allow(unused_variables)]
 pub trait Component: Send + Sync {
     type Message: Send + Sync + std::fmt::Debug;
 
     /// Called once the Window is opened
-    async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
+    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         Ok(())
     }
 
     async fn receive_message(
         &mut self,
-        _context: &mut Context,
-        _message: Self::Message,
+        context: &mut Context,
+        message: Self::Message,
     ) -> KludgineResult<()> {
         unimplemented!(
             "Component::receive_message() must be implemented if you're receiving messages"
@@ -65,14 +66,14 @@ pub trait Component: Send + Sync {
 
     async fn render(&self, context: &mut StyledContext, bounds: &Rect) -> KludgineResult<()>;
 
-    async fn update(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
+    async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         Ok(())
     }
 
     async fn process_input(
         &mut self,
-        _context: &mut Context,
-        _event: InputEvent,
+        context: &mut Context,
+        event: InputEvent,
     ) -> KludgineResult<()> {
         Ok(())
     }

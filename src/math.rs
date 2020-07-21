@@ -183,9 +183,27 @@ impl<S> Into<rgx::math::Point2<S>> for Point<S> {
     }
 }
 
+impl<S> From<rgx::math::Point2<S>> for Point<S> {
+    fn from(pt: rgx::math::Point2<S>) -> Self {
+        Self::new(pt.x, pt.y)
+    }
+}
+
 impl<S> From<stretch::geometry::Point<S>> for Point<S> {
     fn from(pt: stretch::geometry::Point<S>) -> Self {
         Point { x: pt.x, y: pt.y }
+    }
+}
+
+impl<S, T> Into<stretch::geometry::Point<T>> for Point<S>
+where
+    S: Into<T>,
+{
+    fn into(self) -> stretch::geometry::Point<T> {
+        stretch::geometry::Point {
+            x: self.x.into(),
+            y: self.y.into(),
+        }
     }
 }
 
@@ -250,20 +268,20 @@ impl From<stretch::geometry::Size<stretch::number::Number>> for Size<Option<f32>
     }
 }
 
-impl Into<stretch::geometry::Size<stretch::number::Number>> for Size<Option<f32>> {
-    fn into(self) -> stretch::geometry::Size<stretch::number::Number> {
-        stretch::geometry::Size {
-            width: match self.width {
-                Some(value) => stretch::number::Number::Defined(value),
-                None => stretch::number::Number::Undefined,
-            },
-            height: match self.height {
-                Some(value) => stretch::number::Number::Defined(value),
-                None => stretch::number::Number::Undefined,
-            },
-        }
-    }
-}
+// impl Into<stretch::geometry::Size<stretch::number::Number>> for Size<Option<f32>> {
+//     fn into(self) -> stretch::geometry::Size<stretch::number::Number> {
+//         stretch::geometry::Size {
+//             width: match self.width {
+//                 Some(value) => stretch::number::Number::Defined(value),
+//                 None => stretch::number::Number::Undefined,
+//             },
+//             height: match self.height {
+//                 Some(value) => stretch::number::Number::Defined(value),
+//                 None => stretch::number::Number::Undefined,
+//             },
+//         }
+//     }
+// }
 
 impl<S> From<stretch::geometry::Size<S>> for Size<S> {
     fn from(pt: stretch::geometry::Size<S>) -> Self {
@@ -274,11 +292,14 @@ impl<S> From<stretch::geometry::Size<S>> for Size<S> {
     }
 }
 
-impl<S> Into<stretch::geometry::Size<S>> for Size<S> {
-    fn into(self) -> stretch::geometry::Size<S> {
+impl<S, T> Into<stretch::geometry::Size<T>> for Size<S>
+where
+    S: Into<T>,
+{
+    fn into(self) -> stretch::geometry::Size<T> {
         stretch::geometry::Size {
-            width: self.width,
-            height: self.height,
+            width: self.width.into(),
+            height: self.height.into(),
         }
     }
 }

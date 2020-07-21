@@ -1,4 +1,4 @@
-use crate::{math::Size, runtime::Runtime, ui::Index, KludgineError, KludgineResult};
+use crate::{math::Size, ui::Index, KludgineError, KludgineResult};
 use crossbeam::channel::{unbounded, Receiver, Sender};
 use std::{any::Any, collections::HashMap};
 use stretch::{
@@ -178,7 +178,19 @@ impl AsyncStretchThread {
                 }
                 StretchCommand::Compute { root, size } => {
                     self.stretch
-                        .compute_layout(*self.nodes.get(&root).unwrap(), size.into())
+                        .compute_layout(
+                            *self.nodes.get(&root).unwrap(),
+                            stretch::geometry::Size {
+                                width: size
+                                    .width
+                                    .map(stretch::number::Number::Defined)
+                                    .unwrap_or_default(),
+                                height: size
+                                    .height
+                                    .map(stretch::number::Number::Defined)
+                                    .unwrap_or_default(),
+                            },
+                        )
                         .unwrap();
 
                     let mut results = HashMap::new();

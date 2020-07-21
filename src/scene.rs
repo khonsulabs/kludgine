@@ -71,6 +71,45 @@ impl SceneTarget {
     }
 
     pub async fn draw_shape(&self, shape: Shape) {
+        let shape = match shape {
+            Shape::Rectangle(rectangle, zdepth, rotation, stroke, fill) => {
+                let p1 = self
+                    .user_to_device_point(Point::new(rectangle.x1, rectangle.y1))
+                    .await;
+                let p2 = self
+                    .user_to_device_point(Point::new(rectangle.x2, rectangle.y2))
+                    .await;
+                Shape::Rectangle(
+                    rgx::rect::Rect::new(p1.x, p1.y, p2.x, p2.y),
+                    zdepth,
+                    rotation,
+                    stroke,
+                    fill,
+                )
+            }
+            Shape::Line(line, zdepth, rotation, stroke) => {
+                let p1 = self.user_to_device_point(line.p1.into()).await.into();
+                let p2 = self.user_to_device_point(line.p2.into()).await.into();
+                Shape::Line(rgx::kit::shape2d::Line { p1, p2 }, zdepth, rotation, stroke)
+            }
+            Shape::Circle(..) => {
+                todo!("rgx needs to expose the fields on shape2d::Circle to be pub, can't make this code work otherwise https://github.com/cloudhead/rgx/issues/25")
+                // let position = self
+                //     .user_to_device_point(circle.position.into())
+                //     .await
+                //     .into();
+                // Shape::Circle(
+                //     rgx::kit::shape2d::Circle {
+                //         position,
+                //         radius: circle.radius,
+                //         sides: circle.sides,
+                //     },
+                //     zdepth,
+                //     stroke,
+                //     fill,
+                // )
+            }
+        };
         self.scene_mut().await.elements.push(Element::Shape(shape));
     }
 

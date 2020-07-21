@@ -14,7 +14,7 @@ pub use self::{
     node::Node,
 };
 use crate::{
-    math::{Point, Rect, Size},
+    math::{Rect, Size},
     runtime::Runtime,
     scene::SceneTarget,
     style::{Layout, Style},
