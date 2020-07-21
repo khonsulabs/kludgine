@@ -31,26 +31,17 @@ impl Placements {
             .get(index)
             .await
             .ok_or(KludgineError::InvalidIndex)?;
+        let layout = node.layout().await;
+
         let mut context = context.clone_for(index);
-        node.layout_within(&mut context, max_size, &self).await
-    }
-
-    async fn layout<I: Into<Index>>(
-        &self,
-        index: I,
-        bounds: &Rect,
-        context: &mut StyledContext,
-    ) -> KludgineResult<Rect> {
-        let index = index.into();
-        let content_size = self.measure(index, &bounds.size, context).await?;
-
-        let node = self
-            .arena
-            .get(index)
-            .await
-            .ok_or(KludgineError::InvalidIndex)?;
-
-        Ok(node.layout().await.compute_bounds(&content_size, bounds))
+        let desired_size = node
+            .layout_within(
+                &mut context,
+                &layout.interior_size_with_padding(max_size),
+                &self,
+            )
+            .await?;
+        Ok(desired_size + layout.padding.minimum_size())
     }
 
     pub async fn place<I: Into<Index>>(
@@ -60,7 +51,8 @@ impl Placements {
         context: &mut StyledContext,
     ) -> KludgineResult<Rect> {
         let index = index.into();
-        let relative_bounds = self.layout(index, bounds, context).await?;
+        // let padding = self.layout(index, bounds, context).await?;
+        let relative_bounds = bounds; // TODO take measurements from layout for x/y
         let parent = self.arena.parent(index).await;
         let absolute_bounds = match parent {
             Some(parent) => {
@@ -70,13 +62,13 @@ impl Placements {
                     relative_bounds.size,
                 )
             }
-            None => relative_bounds,
+            None => *relative_bounds,
         };
 
         let mut measurements = self.measurements.write().await;
         measurements.insert(index, absolute_bounds);
 
-        Ok(relative_bounds)
+        Ok(*relative_bounds)
     }
 
     pub async fn placement<I: Into<Index>>(&self, index: I) -> Option<Rect> {

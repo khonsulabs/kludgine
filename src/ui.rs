@@ -56,7 +56,7 @@ where
     }
 
     pub async fn render(&self, scene: &SceneTarget) -> KludgineResult<()> {
-        let layout = Placements::new(global_arena().clone());
+        let placements = Placements::new(global_arena().clone());
         let mut effective_styles = HashMap::new();
 
         {
@@ -87,7 +87,7 @@ where
             let mut traverser = global_arena().traverse(self.root).await;
             while let Some(index) = traverser.next().await {
                 let parent_bounds = match global_arena().parent(index).await {
-                    Some(parent) => layout.placement(parent).await.unwrap(),
+                    Some(parent) => placements.placement(parent).await.unwrap(),
                     None => Rect::sized(Point::default(), size),
                 };
                 let mut context = StyledContext::new(
@@ -95,7 +95,9 @@ where
                     scene.clone(),
                     effective_styles.get(&index).unwrap().clone(),
                 );
-                layout.place(index, &parent_bounds, &mut context).await?;
+                placements
+                    .place(index, &parent_bounds, &mut context)
+                    .await?;
             }
         }
 
@@ -107,9 +109,14 @@ where
                 scene.clone(),
                 effective_styles.get(&index).unwrap().clone(),
             );
-            let location = layout.placement(index).await.unwrap();
+            let location = placements.placement(index).await.unwrap();
+            let padding = node
+                .layout()
+                .await
+                .compute_padding(&location.size, &location);
 
             node.render_background(&mut context, &location).await?;
+            let location = location.inset(padding);
             node.render(&mut context, &location).await?;
         }
 

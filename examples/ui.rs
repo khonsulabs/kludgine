@@ -43,7 +43,7 @@ impl Component for UIExample {
                 ..Default::default()
             })
             .layout(Layout {
-                padding: Surround::uniform(Dimension::Points(10.)),
+                padding: Surround::uniform(Dimension::Points(0.)),
                 ..Default::default()
             })
             .insert()

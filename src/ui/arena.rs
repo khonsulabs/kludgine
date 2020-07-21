@@ -26,7 +26,7 @@ impl HierarchicalArena {
         arena.parent(child)
     }
 
-    pub async fn children(&self, parent: &Option<Index>) -> HashSet<Index> {
+    pub async fn children(&self, parent: &Option<Index>) -> Vec<Index> {
         let arena = self.handle.read().await;
         arena.children(parent)
     }
@@ -55,7 +55,7 @@ impl HierarchicalArena {
 #[derive(Clone)]
 struct HierarchicalArenaData {
     arena: Arena<Node>,
-    children_by_parent: HashMap<Option<Index>, HashSet<Index>>,
+    children_by_parent: HashMap<Option<Index>, Vec<Index>>,
     parents: HashMap<Index, Option<Index>>,
 }
 
@@ -83,26 +83,26 @@ impl HierarchicalArenaData {
             self.children_by_parent
                 .get_mut(old_parent)
                 .unwrap()
-                .remove(&child);
+                .retain(|i| i != &child);
         }
 
         self.children_by_parent
             .entry(parent)
             .and_modify(|children| {
-                children.insert(child);
+                children.push(child);
             })
-            .or_insert_with(|| hash_set!(child));
+            .or_insert_with(|| vec![child]);
     }
 
     pub fn parent(&self, child: Index) -> Option<Index> {
         self.parents.get(&child).copied().flatten()
     }
 
-    pub fn children(&self, parent: &Option<Index>) -> HashSet<Index> {
+    pub fn children(&self, parent: &Option<Index>) -> Vec<Index> {
         if let Some(children) = self.children_by_parent.get(parent) {
             children.clone()
         } else {
-            HashSet::default()
+            Vec::default()
         }
     }
 

@@ -37,7 +37,7 @@ impl Component for Label {
         _placements: &Placements,
     ) -> KludgineResult<Size> {
         let text = self.create_text(context.effective_style());
-        let wrapping = self.wrapping(&context.layout().await.size_with_minimal_padding(&max_size));
+        let wrapping = self.wrapping(max_size);
         let wrapped_size = text.wrap(context.scene(), wrapping).await?.size().await;
         let size = wrapped_size / context.scene().effective_scale_factor().await;
         Ok(size)

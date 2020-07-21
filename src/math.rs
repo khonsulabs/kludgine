@@ -317,7 +317,7 @@ where
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
-pub struct Surround<S> {
+pub struct Surround<S = f32> {
     pub left: S,
     pub top: S,
     pub right: S,
@@ -348,6 +348,13 @@ where
 
     pub fn minimum_height(&self) -> f32 {
         self.top.into().points().unwrap_or(0.0) + self.bottom.into().points().unwrap_or(0.0)
+    }
+
+    pub fn minimum_size(&self) -> Size<f32> {
+        Size {
+            width: self.minimum_width(),
+            height: self.minimum_height(),
+        }
     }
 }
 

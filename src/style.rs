@@ -18,39 +18,41 @@ pub struct Layout {
 }
 
 impl Layout {
-    pub fn size_with_minimal_padding(&self, size: &Size) -> Size {
+    pub fn interior_size_with_padding(&self, size: &Size) -> Size {
         Size::new(
             size.width - self.padding.minimum_width(),
             size.height - self.padding.minimum_height(),
         )
     }
+    pub fn size_with_padding(&self, size: &Size) -> Size {
+        Size::new(
+            size.width + self.padding.minimum_width(),
+            size.height + self.padding.minimum_height(),
+        )
+    }
 
-    pub fn compute_bounds(&self, content_size: &Size, bounds: &Rect) -> Rect {
-        let (effective_padding_left, effective_padding_right) = Self::compute_padding(
+    pub fn compute_padding(&self, content_size: &Size, bounds: &Rect) -> Surround {
+        let (left, right) = Self::compute_padding_for_length(
             self.padding.left,
             self.padding.right,
             content_size.width,
             bounds.size.width,
         );
-        let (effective_padding_top, effective_padding_bottom) = Self::compute_padding(
+        let (top, bottom) = Self::compute_padding_for_length(
             self.padding.top,
             self.padding.bottom,
             content_size.height,
             bounds.size.height,
         );
-        Rect::new(
-            Point::new(
-                bounds.x1() + effective_padding_left,
-                bounds.y1() + effective_padding_top,
-            ),
-            Point::new(
-                bounds.x2() - effective_padding_right,
-                bounds.y2() - effective_padding_bottom,
-            ),
-        )
+        Surround {
+            left,
+            right,
+            top,
+            bottom,
+        }
     }
 
-    pub fn compute_padding(
+    fn compute_padding_for_length(
         side1: Dimension,
         side2: Dimension,
         content_measurement: f32,
