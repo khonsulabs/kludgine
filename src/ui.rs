@@ -4,7 +4,7 @@ mod context;
 mod image;
 mod label;
 mod node;
-mod placements;
+mod stretch;
 pub(crate) use self::{component::BaseComponent, node::NodeData};
 pub use self::{
     component::{Component, LayoutConstraints},
@@ -12,19 +12,19 @@ pub use self::{
     image::Image,
     label::Label,
     node::Node,
-    placements::Placements,
 };
 use crate::{
-    math::{Point, Rect},
+    math::{Point, Rect, Size},
     runtime::Runtime,
     scene::SceneTarget,
     style::{Layout, Style},
+    ui::stretch::AsyncStretch,
     window::InputEvent,
     KludgineResult,
 };
 use arena::{HierarchicalArena, Index};
 use once_cell::sync::OnceCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 static UI: OnceCell<HierarchicalArena> = OnceCell::new();
 
@@ -37,6 +37,7 @@ where
     C: Component + 'static,
 {
     pub(crate) root: Entity<C>,
+    stretch: AsyncStretch,
 }
 
 impl<C> UserInterface<C>
@@ -50,18 +51,21 @@ where
             global_arena().insert(None, node).await
         });
 
-        let ui = Self { root };
+        let ui = Self {
+            root,
+            stretch: AsyncStretch::default(),
+        };
         ui.initialize(root).await?;
         Ok(ui)
     }
 
-    pub async fn render(&self, scene: &SceneTarget) -> KludgineResult<()> {
-        let placements = Placements::new(global_arena().clone());
+    pub async fn render(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
         let mut effective_styles = HashMap::new();
 
-        {
+        let layouts = {
             let mut computed_styles = HashMap::new();
             let mut traverser = global_arena().traverse(self.root).await;
+            let mut found_nodes = VecDeque::new();
             while let Some(index) = traverser.next().await {
                 let node_style = global_arena()
                     .get(index)
@@ -77,30 +81,50 @@ where
                     None => node_style.clone(),
                 };
                 computed_styles.insert(index, computed_style);
+                found_nodes.push_back(index);
             }
 
             for (index, style) in computed_styles {
                 effective_styles.insert(index, style.effective_style(scene).await);
             }
 
-            let size = scene.size().await;
-            let mut traverser = global_arena().traverse(self.root).await;
-            while let Some(index) = traverser.next().await {
-                let parent_bounds = match global_arena().parent(index).await {
-                    Some(parent) => placements.placement(parent).await.unwrap(),
-                    None => Rect::sized(Point::default(), size),
-                };
-                let mut context = StyledContext::new(
-                    index,
-                    scene.clone(),
-                    effective_styles.get(&index).unwrap().clone(),
-                );
-                placements
-                    .place(index, &parent_bounds, &mut context)
-                    .await?;
-            }
-        }
+            // Traverse the found nodes starting at the back (leaf nodes) and iterate upwards to update stretch
+            while let Some(index) = found_nodes.pop_back() {
+                let node = global_arena().get(index).await.unwrap();
+                let layout = node.layout().await;
+                let stretch_style = layout.into();
+                let children = global_arena().children(&Some(index)).await;
 
+                let scene_for_context = scene.clone();
+                let effective_style = effective_styles.get(&index).unwrap().clone();
+                if children.is_empty() {
+                    self.stretch.update_leaf(
+                        index,
+                        stretch_style,
+                        Box::new(move |size: Size<Option<f32>>| {
+                            Runtime::block_on(async {
+                                let mut context = StyledContext::new(
+                                    index,
+                                    scene_for_context.clone(),
+                                    effective_style.clone(),
+                                );
+                                let node = global_arena().get(index).await.unwrap();
+                                node.content_size(&mut context, &size).await
+                            })
+                        }),
+                    )?;
+                } else {
+                    self.stretch.update_node(index, stretch_style, children)?;
+                }
+            }
+
+            let size = scene.size().await;
+            println!("Computing");
+            self.stretch.compute(self.root.index, size).await?
+        };
+        println!("Done Computing");
+
+        // TODO for rendering we need to iterate starting at Root but use the layout to order the children indexes before queuing them up
         let mut traverser = global_arena().traverse(self.root).await;
         while let Some(index) = traverser.next().await {
             let node = global_arena().get(index).await.unwrap();
@@ -109,16 +133,13 @@ where
                 scene.clone(),
                 effective_styles.get(&index).unwrap().clone(),
             );
-            let location = placements.placement(index).await.unwrap();
-            let padding = node
-                .layout()
-                .await
-                .compute_padding(&location.size, &location);
+            let layout = layouts.get(&index).unwrap();
+            let location = Rect::sized(layout.location.into(), layout.size.into());
 
             node.render_background(&mut context, &location).await?;
-            let location = location.inset(padding);
             node.render(&mut context, &location).await?;
         }
+        println!("Done Rendering");
 
         Ok(())
     }

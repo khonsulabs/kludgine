@@ -1,7 +1,7 @@
 use crate::{
     math::{Rect, Size},
     shape::{Fill, Shape},
-    ui::{Context, Placements, SceneContext, StyledContext},
+    ui::{Context, SceneContext, StyledContext},
     window::InputEvent,
     KludgineResult,
 };
@@ -22,11 +22,10 @@ pub(crate) trait BaseComponent: Send + Sync {
         event: InputEvent,
     ) -> KludgineResult<()>;
 
-    async fn layout_within(
+    async fn content_size(
         &self,
         context: &mut StyledContext,
-        max_size: &Size,
-        placements: &Placements,
+        constraints: &Size<Option<f32>>,
     ) -> KludgineResult<Size>;
 
     async fn render(&self, context: &mut StyledContext, location: &Rect) -> KludgineResult<()>;
@@ -56,13 +55,12 @@ pub trait Component: Send + Sync {
         )
     }
 
-    async fn layout_within(
+    async fn content_size(
         &self,
-        _context: &mut StyledContext,
-        max_size: &Size,
-        _placements: &Placements,
+        context: &mut StyledContext,
+        constraints: &Size<Option<f32>>,
     ) -> KludgineResult<Size> {
-        Ok(*max_size)
+        Ok(Size::default())
     }
 
     async fn render(&self, context: &mut StyledContext, bounds: &Rect) -> KludgineResult<()>;

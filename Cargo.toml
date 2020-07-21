@@ -34,6 +34,7 @@ dashmap = "3"
 ttf-parser = "0.6"
 tokio = { version = "0.2", features = ["full"] }
 once_cell = "1"
+stretch = "0.3"
 
 [dev-dependencies]
 rand = "0.7"

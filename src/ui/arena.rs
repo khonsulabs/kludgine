@@ -52,7 +52,6 @@ impl HierarchicalArena {
     }
 }
 
-#[derive(Clone)]
 struct HierarchicalArenaData {
     arena: Arena<Node>,
     children_by_parent: HashMap<Option<Index>, Vec<Index>>,

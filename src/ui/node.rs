@@ -1,7 +1,7 @@
 use crate::{
     math::{Rect, Size},
     style::{Layout, Style},
-    ui::{BaseComponent, Component, Context, Placements, SceneContext, StyledContext},
+    ui::{BaseComponent, Component, Context, SceneContext, StyledContext},
     window::InputEvent,
     KludgineHandle, KludgineResult,
 };
@@ -64,15 +64,12 @@ where
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         self.component.initialize(context).await
     }
-    async fn layout_within(
+    async fn content_size(
         &self,
         context: &mut StyledContext,
-        max_size: &Size,
-        placements: &Placements,
+        constraints: &Size<Option<f32>>,
     ) -> KludgineResult<Size> {
-        self.component
-            .layout_within(context, max_size, placements)
-            .await
+        self.component.content_size(context, constraints).await
     }
 
     async fn render(&self, context: &mut StyledContext, location: &Rect) -> KludgineResult<()> {
@@ -129,14 +126,13 @@ impl Node {
         component.layout().clone()
     }
 
-    pub async fn layout_within(
+    pub async fn content_size(
         &self,
         context: &mut StyledContext,
-        max_size: &Size,
-        placements: &Placements,
+        constraints: &Size<Option<f32>>,
     ) -> KludgineResult<Size> {
         let component = self.component.read().await;
-        component.layout_within(context, max_size, placements).await
+        component.content_size(context, constraints).await
     }
 
     /// Called once the Window is opened

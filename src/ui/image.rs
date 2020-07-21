@@ -2,7 +2,7 @@ use crate::{
     math::{Rect, Size},
     source_sprite::SourceSprite,
     sprite::Sprite,
-    ui::{Component, Placements, SceneContext, StyledContext},
+    ui::{Component, SceneContext, StyledContext},
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -33,11 +33,10 @@ impl Component for Image {
         Ok(())
     }
 
-    async fn layout_within(
+    async fn content_size(
         &self,
-        _context: &mut StyledContext,
-        _max_size: &Size,
-        _placements: &Placements,
+        context: &mut StyledContext,
+        _constraints: &Size<Option<f32>>,
     ) -> KludgineResult<Size> {
         if let Some(frame) = &self.current_frame {
             Ok(frame.size().await.into())

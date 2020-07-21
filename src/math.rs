@@ -98,6 +98,17 @@ where
     }
 }
 
+// impl<S> Into<stretch::geometry::Rect<S>> for Rect<S> {
+//     fn into(self) -> stretch::geometry::Rect<S> {
+//         stretch::geometry::Rect {
+//             start: self.x1(),
+//             end: self.x2(),
+//             top: self.y1(),
+//             bottom: self.y2(),
+//         }
+//     }
+// }
+
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
 pub struct Point<S = f32> {
     pub x: S,
@@ -172,6 +183,12 @@ impl<S> Into<rgx::math::Point2<S>> for Point<S> {
     }
 }
 
+impl<S> From<stretch::geometry::Point<S>> for Point<S> {
+    fn from(pt: stretch::geometry::Point<S>) -> Self {
+        Point { x: pt.x, y: pt.y }
+    }
+}
+
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
 pub struct Size<S = f32> {
     pub width: S,
@@ -215,6 +232,54 @@ impl Into<winit::dpi::Size> for Size {
             self.width as u32,
             self.height as u32,
         ))
+    }
+}
+
+impl From<stretch::geometry::Size<stretch::number::Number>> for Size<Option<f32>> {
+    fn from(size: stretch::geometry::Size<stretch::number::Number>) -> Self {
+        Self {
+            width: match size.width {
+                stretch::number::Number::Defined(value) => Some(value),
+                stretch::number::Number::Undefined => None,
+            },
+            height: match size.height {
+                stretch::number::Number::Defined(value) => Some(value),
+                stretch::number::Number::Undefined => None,
+            },
+        }
+    }
+}
+
+impl Into<stretch::geometry::Size<stretch::number::Number>> for Size<Option<f32>> {
+    fn into(self) -> stretch::geometry::Size<stretch::number::Number> {
+        stretch::geometry::Size {
+            width: match self.width {
+                Some(value) => stretch::number::Number::Defined(value),
+                None => stretch::number::Number::Undefined,
+            },
+            height: match self.height {
+                Some(value) => stretch::number::Number::Defined(value),
+                None => stretch::number::Number::Undefined,
+            },
+        }
+    }
+}
+
+impl<S> From<stretch::geometry::Size<S>> for Size<S> {
+    fn from(pt: stretch::geometry::Size<S>) -> Self {
+        Self {
+            width: pt.width,
+            height: pt.height,
+        }
+    }
+}
+
+impl<S> Into<stretch::geometry::Size<S>> for Size<S> {
+    fn into(self) -> stretch::geometry::Size<S> {
+        stretch::geometry::Size {
+            width: self.width,
+            height: self.height,
+        }
     }
 }
 
@@ -372,8 +437,23 @@ where
     }
 }
 
+impl<S, T> Into<stretch::geometry::Rect<T>> for Surround<S>
+where
+    S: Into<T>,
+{
+    fn into(self) -> stretch::geometry::Rect<T> {
+        stretch::geometry::Rect {
+            start: self.left.into(),
+            end: self.right.into(),
+            top: self.top.into(),
+            bottom: self.bottom.into(),
+        }
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Dimension {
+    Undefined,
     Auto,
     /// Scale-corrected to the users preference of DPI
     Points(f32),
@@ -395,13 +475,23 @@ impl Dimension {
 
 impl Default for Dimension {
     fn default() -> Self {
-        Dimension::Auto
+        Dimension::Undefined
     }
 }
 
 impl From<f32> for Dimension {
     fn from(value: f32) -> Self {
         Dimension::Points(value)
+    }
+}
+
+impl Into<stretch::style::Dimension> for Dimension {
+    fn into(self) -> stretch::style::Dimension {
+        match self {
+            Dimension::Undefined => stretch::style::Dimension::Undefined,
+            Dimension::Auto => stretch::style::Dimension::Auto,
+            Dimension::Points(pts) => stretch::style::Dimension::Points(pts),
+        }
     }
 }
 

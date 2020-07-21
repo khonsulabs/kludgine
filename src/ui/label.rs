@@ -2,7 +2,7 @@ use crate::{
     math::{Point, Rect, Size},
     style::EffectiveStyle,
     text::{wrap::TextWrap, Text},
-    ui::{Component, Placements, SceneContext, StyledContext},
+    ui::{Component, SceneContext, StyledContext},
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -30,14 +30,16 @@ impl Component for Label {
         .await
     }
 
-    async fn layout_within(
+    async fn content_size(
         &self,
         context: &mut StyledContext,
-        max_size: &Size,
-        _placements: &Placements,
+        constraints: &Size<Option<f32>>,
     ) -> KludgineResult<Size> {
         let text = self.create_text(context.effective_style());
-        let wrapping = self.wrapping(max_size);
+        let wrapping = self.wrapping(&Size {
+            width: constraints.width.unwrap_or(f32::MAX),
+            height: constraints.height.unwrap_or(f32::MAX),
+        });
         let wrapped_size = text.wrap(context.scene(), wrapping).await?.size().await;
         let size = wrapped_size / context.scene().effective_scale_factor().await;
         Ok(size)
