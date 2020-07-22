@@ -35,6 +35,7 @@ impl Component for Label {
         context: &mut StyledContext,
         constraints: &Size<Option<f32>>,
     ) -> KludgineResult<Size> {
+        println!("content_size: {:?}", constraints);
         let text = self.create_text(context.effective_style());
         let wrapping = self.wrapping(&Size {
             width: constraints.width.unwrap_or(f32::MAX),

@@ -9,7 +9,7 @@ pub use stretch::style::{
 };
 pub use ttf_parser::Weight;
 
-#[derive(Default, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Layout {
     pub display: Display,
     pub position_type: PositionType,
@@ -32,6 +32,34 @@ pub struct Layout {
     pub min_size: Size<Dimension>,
     pub max_size: Size<Dimension>,
     pub aspect_ratio: Option<f32>,
+}
+
+impl Default for Layout {
+    fn default() -> Layout {
+        Layout {
+            display: Default::default(),
+            position_type: Default::default(),
+            direction: Default::default(),
+            flex_direction: Default::default(),
+            flex_wrap: Default::default(),
+            overflow: Default::default(),
+            align_items: Default::default(),
+            align_self: Default::default(),
+            align_content: Default::default(),
+            justify_content: Default::default(),
+            position: Default::default(),
+            margin: Default::default(),
+            padding: Default::default(),
+            border: Default::default(),
+            flex_grow: 0.0,
+            flex_shrink: 1.0,
+            flex_basis: Dimension::Auto,
+            size: Default::default(),
+            min_size: Default::default(),
+            max_size: Default::default(),
+            aspect_ratio: Default::default(),
+        }
+    }
 }
 
 impl Layout {
@@ -130,7 +158,8 @@ impl Into<stretch::style::Style> for Layout {
             max_size: self.max_size.into(),
             aspect_ratio: self
                 .aspect_ratio
-                .map(stretch::number::Number::Defined).unwrap_or_default(),
+                .map(stretch::number::Number::Defined)
+                .unwrap_or_default(),
         }
     }
 }

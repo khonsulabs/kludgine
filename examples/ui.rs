@@ -23,20 +23,20 @@ impl Component for UIExample {
 
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         let sprite = include_aseprite_sprite!("assets/stickguy").await?;
-        self.image = Some(
-            context
-                .new_entity(Image::new(sprite))
-                .layout(Layout {
-                    position: Surround {
-                        top: Dimension::Points(32.),
-                        left: Dimension::Points(32.),
-                        ..Default::default()
-                    },
-                    ..Default::default()
-                })
-                .insert()
-                .await?,
-        );
+        // self.image = Some(
+        //     context
+        //         .new_entity(Image::new(sprite))
+        //         .layout(Layout {
+        //             position: Surround {
+        //                 top: Dimension::Points(32.),
+        //                 left: Dimension::Points(32.),
+        //                 ..Default::default()
+        //             },
+        //             ..Default::default()
+        //         })
+        //         .insert()
+        //         .await?,
+        // );
 
         context
             .new_entity(Label::new("Test Label"))
@@ -47,7 +47,10 @@ impl Component for UIExample {
                 ..Default::default()
             })
             .layout(Layout {
-                padding: Surround::uniform(Dimension::Points(0.)),
+                position: Surround::uniform(Dimension::Points(10.0)),
+                align_content: AlignContent::Center,
+                justify_content: JustifyContent::Center,
+                align_self: AlignSelf::Center,
                 ..Default::default()
             })
             .insert()

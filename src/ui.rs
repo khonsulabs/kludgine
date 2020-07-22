@@ -14,10 +14,10 @@ pub use self::{
     node::Node,
 };
 use crate::{
-    math::{Rect, Size},
+    math::{Dimension, Rect, Size, Surround},
     runtime::Runtime,
     scene::SceneTarget,
-    style::{Layout, Style},
+    style::{AlignContent, JustifyContent, Layout, Style},
     ui::stretch::AsyncStretch,
     window::InputEvent,
     KludgineResult,
@@ -46,7 +46,17 @@ where
 {
     pub async fn new(root: C) -> KludgineResult<Self> {
         let root = Entity::new({
-            let node = Node::new(root, Style::default(), Layout::default());
+            let node = Node::new(
+                root,
+                Style::default(),
+                Layout {
+                    margin: Surround::uniform(Dimension::Points(0.)),
+                    size: Size::new(Dimension::Auto, Dimension::Auto),
+                    align_content: AlignContent::Center,
+                    justify_content: JustifyContent::Center,
+                    ..Default::default()
+                },
+            );
 
             global_arena().insert(None, node).await
         });
@@ -119,10 +129,8 @@ where
             }
 
             let size = scene.size().await;
-            println!("Computing");
             self.stretch.compute(self.root.index, size).await?
         };
-        println!("Done Computing");
 
         // TODO for rendering we need to iterate starting at Root but use the layout to order the children indexes before queuing them up
         let mut traverser = global_arena().traverse(self.root).await;
@@ -139,7 +147,6 @@ where
             node.render_background(&mut context, &location).await?;
             node.render(&mut context, &location).await?;
         }
-        println!("Done Rendering");
 
         Ok(())
     }

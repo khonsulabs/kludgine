@@ -177,9 +177,11 @@ impl AsyncStretchThread {
                     }
                 }
                 StretchCommand::Compute { root, size } => {
+                    let root_node = *self.nodes.get(&root).unwrap();
+                    self.stretch.mark_dirty(root_node).unwrap();
                     self.stretch
                         .compute_layout(
-                            *self.nodes.get(&root).unwrap(),
+                            root_node,
                             stretch::geometry::Size {
                                 width: size
                                     .width
