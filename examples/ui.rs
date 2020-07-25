@@ -67,10 +67,10 @@ impl Component for UIExample {
             .child(
                 self.label.unwrap(),
                 AbsoluteBounds {
-                    left: Dimension::Points(0.),
-                    right: Dimension::Points(0.),
-                    top: Dimension::Points(0.),
-                    bottom: Dimension::Points(0.),
+                    left: Dimension::Points(32.),
+                    right: Dimension::Points(32.),
+                    top: Dimension::Points(32.),
+                    bottom: Dimension::Points(32.),
                     ..Default::default()
                 },
             )?

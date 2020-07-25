@@ -24,8 +24,11 @@ impl Component for Label {
         let text = self.create_text(context.effective_style());
         text.render_at(
             context.scene(),
-            Point::new(layout.bounds().origin.x, layout.bounds().origin.y),
-            self.wrapping(&layout.bounds().size),
+            Point::new(
+                layout.inner_bounds().origin.x,
+                layout.inner_bounds().origin.y,
+            ),
+            self.wrapping(&layout.inner_bounds().size),
         )
         .await
     }
