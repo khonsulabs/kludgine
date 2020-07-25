@@ -73,12 +73,16 @@ impl SceneTarget {
     pub async fn draw_shape(&self, shape: Shape) {
         let shape = match shape {
             Shape::Rectangle(rectangle, zdepth, rotation, stroke, fill) => {
+                let effective_scale = self.effective_scale_factor().await;
                 let p1 = self
                     .user_to_device_point(Point::new(rectangle.x1, rectangle.y1))
-                    .await;
+                    .await
+                    * effective_scale;
                 let p2 = self
                     .user_to_device_point(Point::new(rectangle.x2, rectangle.y2))
-                    .await;
+                    .await
+                    * effective_scale;
+
                 Shape::Rectangle(
                     rgx::rect::Rect::new(p1.x, p1.y, p2.x, p2.y),
                     zdepth,

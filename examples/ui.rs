@@ -68,8 +68,8 @@ impl Component for UIExample {
                 self.label.unwrap(),
                 AbsoluteBounds {
                     left: Dimension::Points(32.),
-                    right: Dimension::Points(32.),
-                    top: Dimension::Points(32.),
+                    right: Dimension::Points(64.),
+                    top: Dimension::Points(64.),
                     bottom: Dimension::Points(32.),
                     ..Default::default()
                 },
