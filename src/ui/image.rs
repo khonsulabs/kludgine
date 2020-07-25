@@ -29,7 +29,7 @@ impl Component for Image {
     async fn render(&self, context: &mut StyledContext, location: &Layout) -> KludgineResult<()> {
         if let Some(frame) = &self.current_frame {
             frame
-                .render_at(context.scene(), location.bounds().origin)
+                .render_at(context.scene(), location.inner_bounds().origin)
                 .await
         }
         Ok(())

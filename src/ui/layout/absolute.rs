@@ -33,13 +33,13 @@ impl AbsoluteLayout {
         length: &Dimension,
         available_length: f32,
         content_length: f32,
-    ) -> (f32, f32, f32) {
+    ) -> (f32, f32) {
         let content_length = length.points().unwrap_or(content_length);
 
         let mut remaining_length = available_length - content_length;
 
         if remaining_length < 0. {
-            return (0., available_length, 0.);
+            return (0., 0.);
         }
 
         let mut auto_measurements = 0;
@@ -75,22 +75,17 @@ impl AbsoluteLayout {
             if content_length < 0. {
                 // Ok, we really really are in a pickle. At this point, it almost doesn't matter what we do, because the rendered
                 // content size is already 0, so we'll just return 0 for the width and divide the sides evenly *shrug*
-                (available_length / 2., 0., available_length / 2.)
+                (available_length / 2., available_length / 2.)
             } else {
-                (effective_side1, content_length, effective_side2)
+                (effective_side1, effective_side2)
             }
         } else {
             // If the dimension is auto, increase the width of the content.
             // If the dimension isn't auto, increase the padding
             match length {
-                Dimension::Auto => (
-                    effective_side1,
-                    content_length + remaining_length,
-                    effective_side2,
-                ),
+                Dimension::Auto => (effective_side1, effective_side2),
                 Dimension::Points(_) => (
                     effective_side1 + remaining_length / 2.,
-                    content_length,
                     effective_side2 + remaining_length / 2.,
                 ),
             }
@@ -143,14 +138,14 @@ impl LayoutSolver for AbsoluteLayout {
                     &Size::new(Some(content_size.width), Some(content_size.height)),
                 )
                 .await?;
-            let (left, width, right) = Self::solve_dimension(
+            let (left, right) = Self::solve_dimension(
                 &child_bounds.left,
                 &child_bounds.right,
                 &child_bounds.width,
                 bounds.size.width,
                 child_content_size.width,
             );
-            let (top, height, bottom) = Self::solve_dimension(
+            let (top, bottom) = Self::solve_dimension(
                 &child_bounds.top,
                 &child_bounds.bottom,
                 &child_bounds.height,
