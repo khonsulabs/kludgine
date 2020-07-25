@@ -89,6 +89,8 @@ impl Frame {
 
                     if current_texture_id.is_none()
                         || current_texture_id.as_ref().unwrap() != &texture.id
+                        || current_batch.is_none()
+                        || !current_batch.as_ref().unwrap().is_sprite()
                     {
                         self.commit_batch(current_batch, Some(RenderKind::Sprite));
                         current_texture_id = Some(texture.id);
