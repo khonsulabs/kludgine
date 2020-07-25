@@ -58,60 +58,6 @@ impl AbsoluteLayout {
 
         (effective_side1, content_length, effective_side2)
     }
-
-    // pub fn compute_padding(&self, content_size: &Size, bounds: &Rect) -> Surround {
-    //     let (left, right) = Self::compute_padding_for_length(
-    //         self.padding.left,
-    //         self.padding.right,
-    //         content_size.width,
-    //         bounds.size.width,
-    //     );
-    //     let (top, bottom) = Self::compute_padding_for_length(
-    //         self.padding.top,
-    //         self.padding.bottom,
-    //         content_size.height,
-    //         bounds.size.height,
-    //     );
-    //     Surround {
-    //         left,
-    //         right,
-    //         top,
-    //         bottom,
-    //     }
-    // }
-
-    // fn compute_padding_for_length(
-    //     side1: Dimension,
-    //     side2: Dimension,
-    //     content_measurement: f32,
-    //     bounding_measurement: f32,
-    // ) -> (f32, f32) {
-    //     let mut remaining_width = bounding_measurement - content_measurement;
-    //     let mut auto_width_measurements = 0;
-    //     if let Some(points) = side1.points() {
-    //         remaining_width -= points;
-    //     } else {
-    //         auto_width_measurements += 1;
-    //     }
-
-    //     if let Some(points) = side2.points() {
-    //         remaining_width -= points;
-    //     } else {
-    //         auto_width_measurements += 1;
-    //     }
-
-    //     let effective_side1 = match side1 {
-    //         Dimension::Auto => remaining_width / auto_width_measurements as f32,
-    //         Dimension::Points(points) => points,
-    //     };
-
-    //     let effective_side2 = match side2 {
-    //         Dimension::Auto => remaining_width / auto_width_measurements as f32,
-    //         Dimension::Points(points) => points,
-    //     };
-
-    //     (effective_side1, effective_side2)
-    // }
 }
 
 #[derive(Default, Debug)]
