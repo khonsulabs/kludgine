@@ -1,11 +1,14 @@
 use crate::{
-    style::{Layout, Style},
+    style::Style,
     ui::{global_arena, Component, Entity, Index, Node, NodeData},
     KludgineResult,
 };
+mod layout_context;
 mod scene_context;
 mod styled_context;
-pub use self::{scene_context::SceneContext, styled_context::StyledContext};
+pub use self::{
+    layout_context::{LayoutContext, SharedLayoutData}, scene_context::SceneContext, styled_context::StyledContext,
+};
 
 pub struct Context {
     index: Index,
@@ -50,16 +53,11 @@ impl Context {
         }
     }
 
-    pub async fn layout(&self) -> Layout {
-        global_arena().get(self.index).await.unwrap().layout().await
-    }
-
     pub fn new_entity<T: Component + 'static>(&self, component: T) -> EntityBuilder<T> {
         EntityBuilder {
             component,
             parent: Some(self.index),
             style: Style::default(),
-            layout: Layout::default(),
         }
     }
 
@@ -74,7 +72,6 @@ pub struct EntityBuilder<C> {
     component: C,
     parent: Option<Index>,
     style: Style,
-    layout: Layout,
 }
 
 impl<C> EntityBuilder<C>
@@ -86,14 +83,9 @@ where
         self
     }
 
-    pub fn layout(mut self, layout: Layout) -> Self {
-        self.layout = layout;
-        self
-    }
-
     pub async fn insert(self) -> KludgineResult<Entity<C>> {
         let index = {
-            let node = Node::new(self.component, self.style, self.layout);
+            let node = Node::new(self.component, self.style);
             let index = global_arena().insert(self.parent, node).await;
 
             let mut context = Context::new(index);

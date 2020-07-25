@@ -58,8 +58,8 @@ impl SourceSprite {
             .await;
     }
 
-    pub async fn size(&self) -> Size<u32> {
+    pub async fn location(&self) -> Rect<u32> {
         let sprite = self.handle.read().await;
-        sprite.texture.size().await
+        sprite.location
     }
 }

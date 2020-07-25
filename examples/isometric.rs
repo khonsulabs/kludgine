@@ -31,7 +31,7 @@ impl Component for Isometric {
         Ok(())
     }
 
-    async fn render(&self, context: &mut StyledContext, _location: &Rect) -> KludgineResult<()> {
+    async fn render(&self, context: &mut StyledContext, _layout: &Layout) -> KludgineResult<()> {
         let map = self.map.as_ref().unwrap();
         map.draw(context.scene(), Point::default()).await?;
 

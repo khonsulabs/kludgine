@@ -1,8 +1,8 @@
 use crate::{
-    math::{Point, Rect, Size},
+    math::{Point, Size},
     style::EffectiveStyle,
     text::{wrap::TextWrap, Text},
-    ui::{Component, SceneContext, StyledContext},
+    ui::{Component, Layout, SceneContext, StyledContext},
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -20,12 +20,12 @@ impl Component for Label {
         Ok(())
     }
 
-    async fn render(&self, context: &mut StyledContext, bounds: &Rect) -> KludgineResult<()> {
+    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         let text = self.create_text(context.effective_style());
         text.render_at(
             context.scene(),
-            Point::new(bounds.origin.x, bounds.origin.y),
-            self.wrapping(&bounds.size),
+            Point::new(layout.bounds().origin.x, layout.bounds().origin.y),
+            self.wrapping(&layout.bounds().size),
         )
         .await
     }

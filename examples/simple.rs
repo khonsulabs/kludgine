@@ -28,7 +28,7 @@ impl Component for Simple {
         Ok(())
     }
 
-    async fn render(&self, context: &mut StyledContext, _location: &Rect) -> KludgineResult<()> {
+    async fn render(&self, context: &mut StyledContext, _layout: &Layout) -> KludgineResult<()> {
         let sprite = self.source_sprite.as_ref().unwrap();
 
         sprite.render_at(context.scene(), Point::default()).await;

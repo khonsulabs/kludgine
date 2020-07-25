@@ -2,11 +2,15 @@ extern crate kludgine;
 use kludgine::prelude::*;
 
 fn main() {
-    SingleWindowApplication::run(UIExample { image: None });
+    SingleWindowApplication::run(UIExample {
+        image: None,
+        label: None,
+    });
 }
 
 struct UIExample {
     image: Option<Entity<Image>>,
+    label: Option<Entity<Label>>,
 }
 
 impl WindowCreator<UIExample> for UIExample {
@@ -23,46 +27,54 @@ impl Component for UIExample {
 
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         let sprite = include_aseprite_sprite!("assets/stickguy").await?;
-        // self.image = Some(
-        //     context
-        //         .new_entity(Image::new(sprite))
-        //         .layout(Layout {
-        //             position: Surround {
-        //                 top: Dimension::Points(32.),
-        //                 left: Dimension::Points(32.),
-        //                 ..Default::default()
-        //             },
-        //             ..Default::default()
-        //         })
-        //         .insert()
-        //         .await?,
-        // );
+        self.image = Some(context.new_entity(Image::new(sprite)).insert().await?);
 
-        context
-            .new_entity(Label::new("Test Label"))
-            .style(Style {
-                color: Some(Color::GREEN),
-                background_color: Some(Color::new(1.0, 0.0, 1.0, 0.5)),
-                font_size: Some(72.),
-                ..Default::default()
-            })
-            .layout(Layout {
-                position: Surround::uniform(Dimension::Points(10.0)),
-                align_content: AlignContent::Center,
-                justify_content: JustifyContent::Center,
-                align_self: AlignSelf::Center,
-                ..Default::default()
-            })
-            .insert()
-            .await?;
+        self.label = Some(
+            context
+                .new_entity(Label::new("Test Label"))
+                .style(Style {
+                    color: Some(Color::GREEN),
+                    background_color: Some(Color::new(1.0, 0.0, 1.0, 0.5)),
+                    font_size: Some(72.),
+                    ..Default::default()
+                })
+                .insert()
+                .await?,
+        );
 
         Ok(())
     }
 
-    async fn render(&self, _context: &mut StyledContext, _location: &Rect) -> KludgineResult<()> {
+    async fn render(&self, _context: &mut StyledContext, _layout: &Layout) -> KludgineResult<()> {
         // self.ui.render(scene).await?;
 
         Ok(())
+    }
+
+    async fn layout(
+        &mut self,
+        _context: &mut StyledContext,
+    ) -> KludgineResult<Box<dyn LayoutSolver>> {
+        Layout::absolute()
+            .child(
+                self.image.unwrap(),
+                AbsoluteBounds {
+                    right: Dimension::Points(10.),
+                    bottom: Dimension::Points(10.),
+                    ..Default::default()
+                },
+            )?
+            .child(
+                self.label.unwrap(),
+                AbsoluteBounds {
+                    left: Dimension::Points(0.),
+                    right: Dimension::Points(0.),
+                    top: Dimension::Points(0.),
+                    bottom: Dimension::Points(0.),
+                    ..Default::default()
+                },
+            )?
+            .layout()
     }
 
     async fn process_input(
@@ -71,7 +83,11 @@ impl Component for UIExample {
         event: InputEvent,
     ) -> KludgineResult<()> {
         if let Event::MouseButton { .. } = event.event {
-            UIExample::open(UIExample { image: None }).await;
+            UIExample::open(UIExample {
+                image: None,
+                label: None,
+            })
+            .await;
         }
         Ok(())
     }

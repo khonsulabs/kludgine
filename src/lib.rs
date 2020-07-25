@@ -28,6 +28,14 @@ pub enum KludgineError {
     FontFamilyNotFound(String),
     #[error("argument is out of bounds")]
     OutOfBounds,
+
+    #[error("specify at most 2 of the dimensions top, bottom, and height. (e.g., top and bottom, but not height")]
+    AbsoluteBoundsInvalidVertical,
+    #[error("specify at most 2 of the dimensions left, right, and width. (e.g., left and right, but not width)")]
+    AbsoluteBoundsInvalidHorizontal,
+
+    #[error("other error: {0}")]
+    Other(#[from] anyhow::Error),
 }
 /// Alias for [`Result<T,E>`] where `E` is [`KludgineError`]
 ///

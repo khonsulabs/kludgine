@@ -1,7 +1,7 @@
 use crate::{
-    math::{Rect, Size},
+    math::Size,
     shape::{Fill, Shape},
-    ui::{Context, SceneContext, StyledContext},
+    ui::{Context, Layout, LayoutSolver, LayoutSolverExt, SceneContext, StyledContext},
     window::InputEvent,
     KludgineResult,
 };
@@ -28,11 +28,16 @@ pub(crate) trait BaseComponent: Send + Sync {
         constraints: &Size<Option<f32>>,
     ) -> KludgineResult<Size>;
 
-    async fn render(&self, context: &mut StyledContext, location: &Rect) -> KludgineResult<()>;
+    async fn layout(
+        &mut self,
+        context: &mut StyledContext,
+    ) -> KludgineResult<Box<dyn LayoutSolver>>;
+
+    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()>;
     async fn render_background(
         &self,
         context: &mut StyledContext,
-        location: &Rect,
+        layout: &Layout,
     ) -> KludgineResult<()>;
 }
 
@@ -61,13 +66,23 @@ pub trait Component: Send + Sync {
         context: &mut StyledContext,
         constraints: &Size<Option<f32>>,
     ) -> KludgineResult<Size> {
-        Ok(Size::default())
+        Ok(Size {
+            width: constraints.width.unwrap_or_default(),
+            height: constraints.height.unwrap_or_default(),
+        })
     }
 
-    async fn render(&self, context: &mut StyledContext, bounds: &Rect) -> KludgineResult<()>;
+    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()>;
 
     async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         Ok(())
+    }
+
+    async fn layout(
+        &mut self,
+        context: &mut StyledContext,
+    ) -> KludgineResult<Box<dyn LayoutSolver>> {
+        Layout::none().layout()
     }
 
     async fn process_input(
@@ -81,13 +96,14 @@ pub trait Component: Send + Sync {
     async fn render_background(
         &self,
         context: &mut StyledContext,
-        bounds: &Rect,
+        layout: &Layout,
     ) -> KludgineResult<()> {
         if let Some(background) = context.effective_style().background_color {
             context
                 .scene()
                 .draw_shape(
-                    Shape::rect(bounds.coord1(), bounds.coord2()).fill(Fill::Solid(background)),
+                    Shape::rect(layout.bounds().coord1(), layout.bounds().coord2())
+                        .fill(Fill::Solid(background)),
                 )
                 .await;
         }

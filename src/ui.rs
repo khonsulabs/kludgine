@@ -3,24 +3,25 @@ mod component;
 mod context;
 mod image;
 mod label;
+mod layout;
 mod node;
-mod stretch;
+
 pub(crate) use self::{component::BaseComponent, node::NodeData};
 pub use self::{
     component::{Component, LayoutConstraints},
     context::*,
     image::Image,
     label::Label,
+    layout::*,
     node::Node,
 };
 use crate::{
-    math::{Dimension, Rect, Size, Surround},
+    math::{Point, Rect, Surround},
     runtime::Runtime,
     scene::SceneTarget,
-    style::{AlignContent, JustifyContent, Layout, Style},
-    ui::stretch::AsyncStretch,
+    style::Style,
     window::InputEvent,
-    KludgineResult,
+    KludgineHandle, KludgineResult,
 };
 use arena::{HierarchicalArena, Index};
 use once_cell::sync::OnceCell;
@@ -37,7 +38,6 @@ where
     C: Component + 'static,
 {
     pub(crate) root: Entity<C>,
-    stretch: AsyncStretch,
 }
 
 impl<C> UserInterface<C>
@@ -46,25 +46,12 @@ where
 {
     pub async fn new(root: C) -> KludgineResult<Self> {
         let root = Entity::new({
-            let node = Node::new(
-                root,
-                Style::default(),
-                Layout {
-                    margin: Surround::uniform(Dimension::Points(0.)),
-                    size: Size::new(Dimension::Auto, Dimension::Auto),
-                    align_content: AlignContent::Center,
-                    justify_content: JustifyContent::Center,
-                    ..Default::default()
-                },
-            );
+            let node = Node::new(root, Style::default());
 
             global_arena().insert(None, node).await
         });
 
-        let ui = Self {
-            root,
-            stretch: AsyncStretch::default(),
-        };
+        let ui = Self { root };
         ui.initialize(root).await?;
         Ok(ui)
     }
@@ -99,53 +86,68 @@ where
             }
 
             // Traverse the found nodes starting at the back (leaf nodes) and iterate upwards to update stretch
+            let mut layout_solvers = HashMap::new();
             while let Some(index) = found_nodes.pop_back() {
                 let node = global_arena().get(index).await.unwrap();
-                let layout = node.layout().await;
-                let stretch_style = layout.into();
-                let children = global_arena().children(&Some(index)).await;
-
-                let scene_for_context = scene.clone();
                 let effective_style = effective_styles.get(&index).unwrap().clone();
-                if children.is_empty() {
-                    self.stretch.update_leaf(
-                        index,
-                        stretch_style,
-                        Box::new(move |size: Size<Option<f32>>| {
-                            Runtime::block_on(async {
-                                let mut context = StyledContext::new(
-                                    index,
-                                    scene_for_context.clone(),
-                                    effective_style.clone(),
-                                );
-                                let node = global_arena().get(index).await.unwrap();
-                                node.content_size(&mut context, &size).await
-                            })
-                        }),
-                    )?;
+                let mut context = StyledContext::new(index, scene.clone(), effective_style.clone());
+                let solver = node.layout(&mut context).await?;
+                layout_solvers.insert(index, solver);
+            }
+
+            let layout_data = KludgineHandle::new(SharedLayoutData::new(
+                layout_solvers,
+                effective_styles.clone(),
+            )); // TODO don't really want to clone here
+
+            let mut indicies_to_process: VecDeque<Index> = vec![self.root.index].into();
+            while let Some(index) = indicies_to_process.pop_front() {
+                let effective_style = effective_styles.get(&self.root.index).unwrap().clone();
+                let mut context = LayoutContext::new(
+                    self.root.index,
+                    scene.clone(),
+                    effective_style.clone(),
+                    layout_data.clone(),
+                );
+                let computed_layout = match context.layout_for(index).await {
+                    Some(layout) => layout,
+                    None => Layout {
+                        bounds: Rect::sized(Point::default(), scene.size().await),
+                        padding: Surround::default(),
+                    },
+                };
+                println!("Laying {:?} within {:?}", index, computed_layout);
+                let new_layouts = context
+                    .layout_within(index, &computed_layout.inner_bounds())
+                    .await?;
+                if new_layouts.len() == 0 {
+                    // For leaf nodes, we need to manually create the Layout
+                    context.insert_layout(index, computed_layout).await;
                 } else {
-                    self.stretch.update_node(index, stretch_style, children)?;
+                    for (index, layout) in new_layouts {
+                        context.insert_layout(index, layout).await;
+                        indicies_to_process.push_back(index);
+                    }
                 }
             }
 
-            let size = scene.size().await;
-            self.stretch.compute(self.root.index, size).await?
+            let data = layout_data.read().await;
+            data.layouts.clone()
         };
 
         // TODO for rendering we need to iterate starting at Root but use the layout to order the children indexes before queuing them up
         let mut traverser = global_arena().traverse(self.root).await;
         while let Some(index) = traverser.next().await {
-            let node = global_arena().get(index).await.unwrap();
-            let mut context = StyledContext::new(
-                index,
-                scene.clone(),
-                effective_styles.get(&index).unwrap().clone(),
-            );
-            let layout = layouts.get(&index).unwrap();
-            let location = Rect::sized(layout.location.into(), layout.size.into());
-
-            node.render_background(&mut context, &location).await?;
-            node.render(&mut context, &location).await?;
+            if let Some(layout) = layouts.get(&index) {
+                let node = global_arena().get(index).await.unwrap();
+                let mut context = StyledContext::new(
+                    index,
+                    scene.clone(),
+                    effective_styles.get(&index).unwrap().clone(),
+                );
+                node.render_background(&mut context, &layout).await?;
+                node.render(&mut context, &layout).await?;
+            }
         }
 
         Ok(())
