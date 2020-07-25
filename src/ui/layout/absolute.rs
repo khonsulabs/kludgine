@@ -1,5 +1,5 @@
 use crate::{
-    math::{Dimension, Point, Rect, Size, Surround},
+    math::{Dimension, Rect, Size, Surround},
     ui::{
         global_arena,
         layout::{Layout, LayoutSolver},
@@ -12,6 +12,7 @@ use std::collections::HashMap;
 #[derive(Default, Debug)]
 pub struct AbsoluteLayout {
     children: HashMap<Index, AbsoluteBounds>,
+    order: Vec<Index>,
 }
 
 impl AbsoluteLayout {
@@ -20,7 +21,9 @@ impl AbsoluteLayout {
         index: impl Into<Index>,
         bounds: AbsoluteBounds,
     ) -> KludgineResult<Self> {
-        self.children.insert(index.into(), bounds.validate()?);
+        let index = index.into();
+        self.children.insert(index, bounds.validate()?);
+        self.order.push(index);
         Ok(self)
     }
 
@@ -124,10 +127,12 @@ impl LayoutSolver for AbsoluteLayout {
         bounds: &Rect,
         content_size: &Size,
         context: &mut LayoutContext,
-    ) -> KludgineResult<HashMap<Index, Layout>> {
-        println!("Absolute Layout solving for {:?}", content_size);
-        let mut computed_layouts = HashMap::new();
-        for (&index, child_bounds) in self.children.iter() {
+    ) -> KludgineResult<()> {
+        for (index, child_bounds) in self
+            .order
+            .iter()
+            .map(|&index| (index, self.children.get(&index).unwrap()))
+        {
             let mut child_context = context.clone_for(index).await;
             let child_content_size = global_arena()
                 .get(index)
@@ -138,7 +143,6 @@ impl LayoutSolver for AbsoluteLayout {
                     &Size::new(Some(content_size.width), Some(content_size.height)),
                 )
                 .await?;
-            println!("Child content size: {:?}", child_content_size);
             let (left, width, right) = Self::solve_dimension(
                 &child_bounds.left,
                 &child_bounds.right,
@@ -154,23 +158,22 @@ impl LayoutSolver for AbsoluteLayout {
                 child_content_size.height,
             );
 
-            computed_layouts.insert(
-                index,
-                Layout {
-                    bounds: Rect::sized(
-                        bounds.origin + Point::new(left, top),
-                        Size::new(width, height),
-                    ),
-                    padding: Surround {
-                        left,
-                        top,
-                        right,
-                        bottom,
+            context
+                .insert_layout(
+                    index,
+                    Layout {
+                        bounds: *bounds,
+                        padding: Surround {
+                            left,
+                            top,
+                            right,
+                            bottom,
+                        },
                     },
-                },
-            );
+                )
+                .await;
         }
 
-        Ok(computed_layouts)
+        Ok(())
     }
 }

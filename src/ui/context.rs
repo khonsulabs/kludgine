@@ -7,7 +7,9 @@ mod layout_context;
 mod scene_context;
 mod styled_context;
 pub use self::{
-    layout_context::{LayoutContext, SharedLayoutData}, scene_context::SceneContext, styled_context::StyledContext,
+    layout_context::{LayoutContext, LayoutEngine},
+    scene_context::SceneContext,
+    styled_context::StyledContext,
 };
 
 pub struct Context {

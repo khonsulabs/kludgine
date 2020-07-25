@@ -198,7 +198,6 @@ impl Runtime {
     ) {
         let builder: winit::window::WindowBuilder = builder.into();
         let winit_window = builder.build(&event_loop).unwrap();
-        println!("Created window: {:?}", winit_window.id());
         window_sender
             .send(winit_window)
             .expect("Couldn't send winit window");

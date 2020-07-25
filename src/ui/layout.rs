@@ -2,11 +2,10 @@ mod absolute;
 pub use self::absolute::*;
 use crate::{
     math::{Rect, Size, Surround},
-    ui::{Index, LayoutContext},
+    ui::LayoutContext,
     KludgineResult,
 };
 use async_trait::async_trait;
-use std::collections::HashMap;
 
 #[async_trait]
 pub trait LayoutSolver: Send + Sync + std::fmt::Debug {
@@ -15,7 +14,7 @@ pub trait LayoutSolver: Send + Sync + std::fmt::Debug {
         bounds: &Rect,
         content_size: &Size,
         context: &mut LayoutContext,
-    ) -> KludgineResult<HashMap<Index, Layout>>;
+    ) -> KludgineResult<()>;
 }
 
 #[derive(Debug, Clone)]
@@ -64,7 +63,7 @@ impl LayoutSolver for NoLayout {
         _bounds: &Rect,
         _content_size: &Size,
         _context: &mut LayoutContext,
-    ) -> KludgineResult<HashMap<Index, Layout>> {
-        Ok(HashMap::default())
+    ) -> KludgineResult<()> {
+        Ok(())
     }
 }

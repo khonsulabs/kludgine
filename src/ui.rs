@@ -92,16 +92,16 @@ where
                 let effective_style = effective_styles.get(&index).unwrap().clone();
                 let mut context = StyledContext::new(index, scene.clone(), effective_style.clone());
                 let solver = node.layout(&mut context).await?;
-                layout_solvers.insert(index, solver);
+                layout_solvers.insert(index, KludgineHandle::new(solver));
             }
 
-            let layout_data = KludgineHandle::new(SharedLayoutData::new(
+            let layout_data = LayoutEngine::new(
                 layout_solvers,
-                effective_styles.clone(),
-            )); // TODO don't really want to clone here
+                effective_styles.clone(), // TODO don't really want to clone here
+                self.root.index,
+            );
 
-            let mut indicies_to_process: VecDeque<Index> = vec![self.root.index].into();
-            while let Some(index) = indicies_to_process.pop_front() {
+            while let Some(index) = layout_data.next_to_layout().await {
                 let effective_style = effective_styles.get(&self.root.index).unwrap().clone();
                 let mut context = LayoutContext::new(
                     self.root.index,
@@ -116,29 +116,16 @@ where
                         padding: Surround::default(),
                     },
                 };
-                println!("Laying {:?} within {:?}", index, computed_layout);
-                let new_layouts = context
+                context
                     .layout_within(index, &computed_layout.inner_bounds())
                     .await?;
-                if new_layouts.len() == 0 {
-                    // For leaf nodes, we need to manually create the Layout
-                    context.insert_layout(index, computed_layout).await;
-                } else {
-                    for (index, layout) in new_layouts {
-                        context.insert_layout(index, layout).await;
-                        indicies_to_process.push_back(index);
-                    }
-                }
             }
 
-            let data = layout_data.read().await;
-            data.layouts.clone()
+            layout_data
         };
 
-        // TODO for rendering we need to iterate starting at Root but use the layout to order the children indexes before queuing them up
-        let mut traverser = global_arena().traverse(self.root).await;
-        while let Some(index) = traverser.next().await {
-            if let Some(layout) = layouts.get(&index) {
+        while let Some(index) = layouts.next_to_render().await {
+            if let Some(layout) = layouts.get_layout(&index).await {
                 let node = global_arena().get(index).await.unwrap();
                 let mut context = StyledContext::new(
                     index,

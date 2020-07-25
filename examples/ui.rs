@@ -57,20 +57,20 @@ impl Component for UIExample {
     ) -> KludgineResult<Box<dyn LayoutSolver>> {
         Layout::absolute()
             .child(
-                self.image.unwrap(),
-                AbsoluteBounds {
-                    right: Dimension::Points(10.),
-                    bottom: Dimension::Points(10.),
-                    ..Default::default()
-                },
-            )?
-            .child(
                 self.label.unwrap(),
                 AbsoluteBounds {
                     left: Dimension::Points(32.),
                     right: Dimension::Points(64.),
                     top: Dimension::Points(64.),
                     bottom: Dimension::Points(32.),
+                    ..Default::default()
+                },
+            )?
+            .child(
+                self.image.unwrap(),
+                AbsoluteBounds {
+                    right: Dimension::Points(10.),
+                    bottom: Dimension::Points(10.),
                     ..Default::default()
                 },
             )?
