@@ -102,9 +102,9 @@ where
             );
 
             while let Some(index) = layout_data.next_to_layout().await {
-                let effective_style = effective_styles.get(&self.root.index).unwrap().clone();
+                let effective_style = effective_styles.get(&index).unwrap().clone();
                 let mut context = LayoutContext::new(
-                    self.root.index,
+                    index,
                     scene.clone(),
                     effective_style.clone(),
                     layout_data.clone(),
@@ -114,6 +114,7 @@ where
                     None => Layout {
                         bounds: Rect::sized(Point::default(), scene.size().await),
                         padding: Surround::default(),
+                        margin: Surround::default(),
                     },
                 };
                 context

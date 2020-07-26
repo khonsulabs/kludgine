@@ -102,8 +102,11 @@ pub trait Component: Send + Sync {
             context
                 .scene()
                 .draw_shape(
-                    Shape::rect(layout.bounds().coord1(), layout.bounds().coord2())
-                        .fill(Fill::Solid(background)),
+                    Shape::rect(
+                        layout.bounds_without_margin().coord1(),
+                        layout.bounds_without_margin().coord2(),
+                    )
+                    .fill(Fill::Solid(background)),
                 )
                 .await;
         }

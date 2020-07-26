@@ -21,6 +21,7 @@ pub trait LayoutSolver: Send + Sync + std::fmt::Debug {
 pub struct Layout {
     pub bounds: Rect,
     pub padding: Surround,
+    pub margin: Surround,
 }
 
 impl Layout {
@@ -35,8 +36,12 @@ impl Layout {
         &self.bounds
     }
 
+    pub fn bounds_without_margin(&self) -> Rect {
+        self.bounds.inset(self.margin)
+    }
+
     pub fn inner_bounds(&self) -> Rect {
-        self.bounds.inset(self.padding)
+        self.bounds_without_margin().inset(self.padding)
     }
 }
 

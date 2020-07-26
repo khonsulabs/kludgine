@@ -27,7 +27,16 @@ impl Component for UIExample {
 
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         let sprite = include_aseprite_sprite!("assets/stickguy").await?;
-        self.image = Some(context.new_entity(Image::new(sprite)).insert().await?);
+        self.image = Some(
+            context
+                .new_entity(Image::new(sprite))
+                .style(Style {
+                    background_color: Some(Color::new(0.0, 1.0, 1.0, 1.0)),
+                    ..Default::default()
+                })
+                .insert()
+                .await?,
+        );
 
         self.label = Some(
             context
@@ -61,8 +70,8 @@ impl Component for UIExample {
                 AbsoluteBounds {
                     left: Dimension::Points(32.),
                     right: Dimension::Points(64.),
-                    top: Dimension::Points(64.),
-                    bottom: Dimension::Points(32.),
+                    top: Dimension::Points(32.),
+                    bottom: Dimension::Points(64.),
                     ..Default::default()
                 },
             )?

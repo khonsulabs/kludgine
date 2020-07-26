@@ -158,7 +158,8 @@ impl LayoutSolver for AbsoluteLayout {
                     index,
                     Layout {
                         bounds: *bounds,
-                        padding: Surround {
+                        padding: Default::default(),
+                        margin: Surround {
                             left,
                             top,
                             right,
