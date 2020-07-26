@@ -115,7 +115,7 @@ impl LayoutContext {
         let index = index.into();
         let effective_style = self.layout.effective_style(&index).await.unwrap();
         Self {
-            base: StyledContext::new(index, self.scene().clone(), effective_style.clone()),
+            base: StyledContext::new(index, self.scene().clone(), effective_style),
             layout: self.layout.clone(),
         }
     }
