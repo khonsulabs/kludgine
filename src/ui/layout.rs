@@ -17,7 +17,7 @@ pub trait LayoutSolver: Send + Sync + std::fmt::Debug {
     ) -> KludgineResult<()>;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Layout {
     pub bounds: Rect,
     pub padding: Surround,

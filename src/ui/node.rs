@@ -15,6 +15,7 @@ use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 pub(crate) trait AnyNode: PendingEventProcessor + Component {
     fn as_any(&self) -> &dyn Any;
     fn style(&self) -> &'_ Style;
+    fn set_layout(&mut self, layout: Layout);
     fn receive_message(&self, message: Box<dyn Any>);
 }
 
@@ -31,6 +32,10 @@ impl<T: InteractiveComponent + 'static, O: Send + 'static> AnyNode for NodeData<
 
     fn style(&self) -> &'_ Style {
         &self.style
+    }
+
+    fn set_layout(&mut self, layout: Layout) {
+        self.layout = layout;
     }
 
     fn receive_message(&self, message: Box<dyn Any>) {
@@ -72,6 +77,7 @@ where
     pub(crate) message_sender: UnboundedSender<T::Message>,
     input_receiver: UnboundedReceiver<T::Input>,
     message_receiver: UnboundedReceiver<T::Message>,
+    pub(crate) layout: Layout,
 }
 
 #[async_trait]
@@ -144,6 +150,7 @@ impl Node {
                 message_sender,
                 message_receiver,
                 callback,
+                layout: Default::default(),
             })),
         }
     }
@@ -212,5 +219,10 @@ impl Node {
     pub async fn callback<Input: Send + Sync + 'static>(&self, message: Input) {
         let mut component = self.component.write().await;
         component.send_callback(Box::new(message)).await
+    }
+
+    pub(crate) async fn set_layout(&self, layout: Layout) {
+        let mut component = self.component.write().await;
+        component.set_layout(layout);
     }
 }

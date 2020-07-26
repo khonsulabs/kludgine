@@ -123,6 +123,8 @@ where
                 context
                     .layout_within(index, &computed_layout.inner_bounds())
                     .await?;
+                let node = global_arena().get(index).await.unwrap();
+                node.set_layout(computed_layout).await;
             }
 
             layout_data
