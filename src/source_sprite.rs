@@ -6,11 +6,12 @@ use super::{
     texture::Texture,
     KludgineHandle,
 };
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct SourceSprite {
     pub(crate) handle: KludgineHandle<SourceSpriteData>,
 }
 
+#[derive(Debug)]
 pub(crate) struct SourceSpriteData {
     pub location: Rect<u32>,
     pub texture: Texture,
@@ -28,10 +29,10 @@ impl SourceSprite {
             let texture = texture.handle.read().await;
             (texture.image.width(), texture.image.height())
         };
-        Self::new(Rect::sized(Point::new(0, 0), Size::new(w, h)), texture)
+        Self::new(Rect::sized(Point::new(0u32, 0), Size::new(w, h)), texture)
     }
 
-    pub async fn render_at(&self, scene: &mut SceneTarget<'_>, location: Point) {
+    pub async fn render_at(&self, scene: &SceneTarget, location: Point) {
         let (w, h) = {
             let source = self.handle.read().await;
             (
@@ -39,22 +40,26 @@ impl SourceSprite {
                 source.location.size.height as f32,
             )
         };
-        let location = scene.user_to_device_point(Point::new(location.x, location.y + h));
-        let effective_scale_factor = scene.effective_scale_factor();
-        scene.push_element(Element::Sprite(RenderedSprite::new(
-            Rect::sized(
-                Point::new(
-                    location.x * effective_scale_factor,
-                    location.y * effective_scale_factor,
+        let location = scene
+            .user_to_device_point(Point::new(location.x, location.y + h))
+            .await;
+        let effective_scale_factor = scene.effective_scale_factor().await;
+        scene
+            .push_element(Element::Sprite(RenderedSprite::new(
+                Rect::sized(
+                    Point::new(
+                        location.x * effective_scale_factor,
+                        location.y * effective_scale_factor,
+                    ),
+                    Size::new(w * effective_scale_factor, h * effective_scale_factor),
                 ),
-                Size::new(w * effective_scale_factor, h * effective_scale_factor),
-            ),
-            self.clone(),
-        )));
+                self.clone(),
+            )))
+            .await;
     }
 
-    pub async fn size(&self) -> Size<u32> {
+    pub async fn location(&self) -> Rect<u32> {
         let sprite = self.handle.read().await;
-        sprite.texture.size().await
+        sprite.location
     }
 }

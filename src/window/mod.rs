@@ -1,8 +1,10 @@
 use super::{
+    application::WindowCreator,
     frame::Frame,
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
     scene::{Scene, SceneTarget},
+    ui::{global_arena, Component, UserInterface},
     KludgineError, KludgineHandle, KludgineResult,
 };
 use async_trait::async_trait;
@@ -10,12 +12,13 @@ use async_trait::async_trait;
 use crossbeam::{
     atomic::AtomicCell,
     channel::{unbounded, Receiver, Sender, TryRecvError},
+    sync::ShardedLock,
 };
 use lazy_static::lazy_static;
 use rgx::core::*;
 
 use futures::executor::block_on;
-use std::{cell::RefCell, collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 use winit::{
     event::{
         DeviceId, ElementState, Event as WinitEvent, MouseButton, MouseScrollDelta, TouchPhase,
@@ -26,6 +29,8 @@ use winit::{
 
 mod renderer;
 use renderer::{FrameRenderer, FrameSynchronizer};
+
+pub use winit::window::Icon;
 
 /// How to react to a request to close a window
 pub enum CloseResponse {
@@ -58,7 +63,7 @@ impl EventStatus {
 }
 
 /// An Event from a device
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct InputEvent {
     /// The device that triggered this event
     pub device_id: DeviceId,
@@ -67,7 +72,7 @@ pub struct InputEvent {
 }
 
 /// An input Event
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub enum Event {
     /// A keyboard event
     Keyboard {
@@ -90,31 +95,11 @@ pub enum Event {
 
 /// Trait to implement a Window
 #[async_trait]
-pub trait Window: Send + Sync + 'static {
+pub trait Window: Component + Send + Sync + 'static {
     /// The window was requested to be closed, most likely from the Close Button. Override
     /// this implementation if you want logic in place to prevent a window from closing.
     async fn close_requested(&self) -> KludgineResult<CloseResponse> {
         Ok(CloseResponse::Close)
-    }
-
-    /// Called once the Window is opened
-    async fn initialize(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
-        Ok(())
-    }
-
-    /// Called once for each frame, directly before `render`
-    async fn update<'a>(&mut self, _scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
-        Ok(())
-    }
-
-    /// Called once for each frame of rendering
-    async fn render<'a>(&self, _scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
-        Ok(())
-    }
-
-    /// An input event occurred for this window
-    async fn process_input(&mut self, _event: InputEvent) -> KludgineResult<()> {
-        Ok(())
     }
 }
 
@@ -122,6 +107,13 @@ pub trait Window: Send + Sync + 'static {
 pub struct WindowBuilder {
     title: Option<String>,
     size: Option<Size>,
+    resizable: Option<bool>,
+    maximized: Option<bool>,
+    visible: Option<bool>,
+    transparent: Option<bool>,
+    decorations: Option<bool>,
+    always_on_top: Option<bool>,
+    icon: Option<winit::window::Icon>,
 }
 
 impl WindowBuilder {
@@ -132,6 +124,41 @@ impl WindowBuilder {
 
     pub fn with_size(mut self, size: Size) -> Self {
         self.size = Some(size);
+        self
+    }
+
+    pub fn with_resizable(mut self, resizable: bool) -> Self {
+        self.resizable = Some(resizable);
+        self
+    }
+
+    pub fn with_maximized(mut self, maximized: bool) -> Self {
+        self.maximized = Some(maximized);
+        self
+    }
+
+    pub fn with_visible(mut self, visible: bool) -> Self {
+        self.visible = Some(visible);
+        self
+    }
+
+    pub fn with_transparent(mut self, transparent: bool) -> Self {
+        self.transparent = Some(transparent);
+        self
+    }
+
+    pub fn with_decorations(mut self, decorations: bool) -> Self {
+        self.decorations = Some(decorations);
+        self
+    }
+
+    pub fn with_always_on_top(mut self, always_on_top: bool) -> Self {
+        self.always_on_top = Some(always_on_top);
+        self
+    }
+
+    pub fn with_icon(mut self, icon: Icon) -> Self {
+        self.icon = Some(icon);
         self
     }
 }
@@ -145,8 +172,43 @@ impl Into<WinitWindowBuilder> for WindowBuilder {
         if let Some(size) = self.size {
             builder = builder.with_inner_size(size);
         }
+        if let Some(resizable) = self.resizable {
+            builder = builder.with_resizable(resizable);
+        }
+        if let Some(maximized) = self.maximized {
+            builder = builder.with_maximized(maximized);
+        }
+        if let Some(visible) = self.visible {
+            builder = builder.with_visible(visible);
+        }
+        if let Some(transparent) = self.transparent {
+            builder = builder.with_transparent(transparent);
+        }
+        if let Some(decorations) = self.decorations {
+            builder = builder.with_decorations(decorations);
+        }
+        if let Some(always_on_top) = self.always_on_top {
+            builder = builder.with_always_on_top(always_on_top);
+        }
+
+        builder = builder.with_window_icon(self.icon);
 
         builder
+    }
+}
+
+#[async_trait]
+pub trait OpenableWindow {
+    async fn open(window: Self);
+}
+
+#[async_trait]
+impl<T> OpenableWindow for T
+where
+    T: Window + WindowCreator<T>,
+{
+    async fn open(window: Self) {
+        Runtime::open_window(Self::get_window_builder(), window).await
     }
 }
 
@@ -155,8 +217,9 @@ lazy_static! {
         KludgineHandle::new(HashMap::new());
 }
 
-thread_local! {
-    static WINDOWS: RefCell<HashMap<WindowId, RuntimeWindow>> = RefCell::new(HashMap::new());
+lazy_static! {
+    static ref WINDOWS: ShardedLock<HashMap<WindowId, RuntimeWindow>> =
+        ShardedLock::new(HashMap::new());
 }
 
 pub(crate) enum WindowMessage {
@@ -197,10 +260,13 @@ pub(crate) struct RuntimeWindow {
 }
 
 impl RuntimeWindow {
-    pub(crate) fn open<T>(window: WinitWindow, app_window: Box<T>)
+    pub(crate) fn open<T>(window_receiver: Receiver<WinitWindow>, app_window: T)
     where
-        T: Window + ?Sized,
+        T: Window + Sized + 'static,
     {
+        let window = window_receiver
+            .recv()
+            .expect("Error receiving winit::window");
         let window_id = window.id();
         let renderer = Renderer::new(&window).expect("Error creating renderer for window");
 
@@ -216,7 +282,7 @@ impl RuntimeWindow {
         );
         Runtime::spawn(async move {
             frame_synchronizer.relinquish(Frame::default()).await;
-            Self::window_main::<T>(window_id, frame_synchronizer, event_receiver, app_window).await
+            Self::window_main(window_id, frame_synchronizer, event_receiver, app_window).await
         });
 
         {
@@ -236,13 +302,17 @@ impl RuntimeWindow {
         };
         runtime_window.notify_size_changed();
 
-        WINDOWS.with(|windows| windows.borrow_mut().insert(window_id, runtime_window));
+        let mut windows = WINDOWS.write().unwrap();
+        windows.insert(window_id, runtime_window);
     }
 
-    async fn request_window_close<T>(id: WindowId, window: &T) -> KludgineResult<bool>
+    async fn request_window_close<T>(id: WindowId, ui: &UserInterface<T>) -> KludgineResult<bool>
     where
-        T: Window + ?Sized,
+        T: Window,
     {
+        let root_node = global_arena().get(ui.root).await.unwrap();
+        let component = root_node.component.read().await;
+        let window = component.as_any().downcast_ref::<T>().unwrap();
         if let CloseResponse::Close = window.close_requested().await? {
             WindowMessage::Close.send_to(id).await?;
             return Ok(true);
@@ -254,15 +324,15 @@ impl RuntimeWindow {
         id: WindowId,
         mut frame_synchronizer: FrameSynchronizer,
         event_receiver: Receiver<WindowEvent>,
-        mut window: Box<T>,
+        window: T,
     ) -> KludgineResult<()>
     where
-        T: Window + ?Sized,
+        T: Window,
     {
         let mut scene = Scene::default();
+        let mut ui = UserInterface::new(window).await?;
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
-        window.initialize(&mut scene).await?;
         let mut interval = tokio::time::interval(Duration::from_nanos(FRAME_DURATION));
         loop {
             while let Some(event) = match event_receiver.try_recv() {
@@ -274,20 +344,21 @@ impl RuntimeWindow {
             } {
                 match event {
                     WindowEvent::Resize { size, scale_factor } => {
-                        scene.set_internal_size(size);
-                        scene.set_scale_factor(scale_factor);
+                        scene.set_internal_size(size).await;
+                        scene.set_scale_factor(scale_factor).await;
                     }
                     WindowEvent::CloseRequested => {
-                        if Self::request_window_close(id, window.as_ref()).await? {
+                        if Self::request_window_close(id, &ui).await? {
                             return Ok(());
                         }
                     }
                     WindowEvent::Input(input) => {
                         // Notify the window of the raw event, before updaing our internal state
-                        window.process_input(input.clone()).await?;
+                        ui.process_input(input).await?;
 
                         if let Event::Keyboard { key, state } = input.event {
                             if let Some(key) = key {
+                                let mut scene = scene.data.write().await;
                                 match state {
                                     ElementState::Pressed => {
                                         scene.pressed_keys.insert(key);
@@ -303,29 +374,27 @@ impl RuntimeWindow {
             }
 
             // CHeck for Cmd + W or Alt + f4 to close the window.
-            let modifiers = scene.modifiers_pressed();
-            if modifiers.primary_modifier()
-                && scene.key_pressed(VirtualKeyCode::W)
-                && Self::request_window_close(id, window.as_ref()).await?
             {
-                return Ok(());
+                let modifiers = scene.modifiers_pressed().await;
+                if modifiers.primary_modifier()
+                    && scene.key_pressed(VirtualKeyCode::W).await
+                    && Self::request_window_close(id, &ui).await?
+                {
+                    return Ok(());
+                }
             }
 
-            if scene.size().width > 0.0 && scene.size().height > 0.0 {
-                println!("Starting client render");
-                scene.start_frame();
+            if scene.size().await.area() > 0.0 {
+                scene.start_frame().await;
                 {
-                    let mut target = SceneTarget::Scene(&mut scene);
-                    window.update(&mut target).await?;
-                    window.render(&mut target).await?;
+                    let target = SceneTarget::Scene(scene.clone());
+                    ui.update(&target).await?;
+                    ui.render(&target).await?;
                 }
-                println!("Locking frame");
                 if let Some(mut frame) = frame_synchronizer.try_take() {
                     frame.update(&scene).await;
                     frame_synchronizer.relinquish(frame).await;
-                    println!("Done updating frame");
                 } else {
-                    println!("Frame not available, sleeping");
                 }
             }
             interval.tick().await;
@@ -336,11 +405,11 @@ impl RuntimeWindow {
         id: WindowId,
         frame_synchronizer: FrameSynchronizer,
         event_receiver: Receiver<WindowEvent>,
-        window: Box<T>,
+        window: T,
     ) where
-        T: Window + ?Sized,
+        T: Window,
     {
-        Self::window_loop::<T>(id, frame_synchronizer, event_receiver, window)
+        Self::window_loop(id, frame_synchronizer, event_receiver, window)
             .await
             .expect("Error running window loop.")
     }
@@ -351,23 +420,24 @@ impl RuntimeWindow {
     }
 
     pub(crate) fn process_events(event: &WinitEvent<()>) {
-        WINDOWS.with(|windows| {
-            if let WinitEvent::WindowEvent { window_id, event } = event {
-                if let Some(window) = windows.borrow_mut().get_mut(&window_id) {
-                    window.process_event(event);
-                }
-            }
+        let mut windows = WINDOWS.write().unwrap();
 
-            {
-                for window in windows.borrow_mut().values_mut() {
-                    window.receive_messages();
-                }
+        if let WinitEvent::WindowEvent { window_id, event } = event {
+            // println!("Received event {:?} for window {:?}", event, window_id);
+            // println!("Current windows: {:#?}", windows.borrow().keys());
+            if let Some(window) = windows.get_mut(&window_id) {
+                // println!("Sending event to window {:?}", window.window.id());
+                window.process_event(event);
             }
+        }
 
-            {
-                windows.borrow_mut().retain(|_, w| w.keep_running.load());
+        {
+            for window in windows.values_mut() {
+                window.receive_messages();
             }
-        })
+        }
+
+        windows.retain(|_, w| w.keep_running.load());
     }
 
     pub(crate) fn receive_messages(&mut self) {

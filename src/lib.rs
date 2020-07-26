@@ -18,6 +18,8 @@ pub enum KludgineError {
     JsonError(#[from] json::Error),
     #[error("AtlasSpriteId belongs to an Atlas not registered in this collection")]
     InvalidAtlasSpriteId,
+    #[error("An index provided was not found")]
+    InvalidIndex,
     #[error("error parsing sprite data: {0}")]
     SpriteParseError(String),
     #[error("no frames could be found for the current tag")]
@@ -26,6 +28,14 @@ pub enum KludgineError {
     FontFamilyNotFound(String),
     #[error("argument is out of bounds")]
     OutOfBounds,
+
+    #[error("specify at most 2 of the dimensions top, bottom, and height. (e.g., top and bottom, but not height")]
+    AbsoluteBoundsInvalidVertical,
+    #[error("specify at most 2 of the dimensions left, right, and width. (e.g., left and right, but not width)")]
+    AbsoluteBoundsInvalidHorizontal,
+
+    #[error("other error: {0}")]
+    Other(#[from] anyhow::Error),
 }
 /// Alias for [`Result<T,E>`] where `E` is [`KludgineError`]
 ///
@@ -74,6 +84,41 @@ where
     }
 }
 
+impl<T> Default for KludgineHandle<T>
+where
+    T: Default,
+{
+    fn default() -> Self {
+        Self::new(T::default())
+    }
+}
+
+#[macro_use]
+mod internal_macros {
+
+    #[macro_export]
+    macro_rules! hash_map {
+        ($($key:expr => $value:expr),+) => {{
+            let mut map = std::collections::HashMap::new();
+            $(
+                map.insert($key, $value);
+            )+
+            map
+        }};
+    }
+
+    #[macro_export]
+    macro_rules! hash_set {
+        ($($value:expr),+) => {{
+            let mut set = std::collections::HashSet::new();
+            $(
+                set.insert($value);
+            )+
+            set
+        }};
+    }
+}
+
 pub mod application;
 pub mod frame;
 pub mod math;
@@ -89,6 +134,8 @@ pub mod timing;
 pub mod ui;
 pub mod window;
 
+pub use rgx::kit::shape2d as shape;
+
 /// Convenience module that exports the public interface of Kludgine
 pub mod prelude {
     pub use super::{
@@ -97,6 +144,7 @@ pub mod prelude {
         math::{Dimension, Point, Rect, Size, Surround},
         runtime::Runtime,
         scene::{Scene, SceneTarget},
+        shape::*,
         source_sprite::SourceSprite,
         sprite::Sprite,
         style::*,
@@ -106,10 +154,8 @@ pub mod prelude {
             PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,
         },
         timing::FrequencyLimiter,
-        ui::{
-            grid::Grid, label::Label, Component, ComponentEventStatus, Controller, UserInterface,
-        },
-        window::{Event, EventStatus, InputEvent, Window},
+        ui::*,
+        window::{Event, EventStatus, InputEvent, OpenableWindow, Window},
         KludgineError, KludgineHandle, KludgineResult,
     };
     pub use async_trait::async_trait;

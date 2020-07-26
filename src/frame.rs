@@ -1,11 +1,11 @@
 use super::{
     math::Size,
     scene::{Element, Scene},
+    shape::{self},
     sprite::SpriteBatch,
     text::{font::LoadedFont, prepared::PreparedSpan},
     texture::LoadedTexture,
     timing::Moment,
-    KludgineHandle,
 };
 use std::collections::{HashMap, HashSet};
 #[derive(Default)]
@@ -25,19 +25,61 @@ pub(crate) struct FontUpdate {
     pub data: Vec<u8>,
 }
 
+enum FrameBatch {
+    Sprite(SpriteBatch),
+    Shape(shape::Batch),
+}
+
+impl FrameBatch {
+    fn is_shape(&self) -> bool {
+        if let Self::Shape(_) = self {
+            true
+        } else {
+            false
+        }
+    }
+
+    fn is_sprite(&self) -> bool {
+        !self.is_shape()
+    }
+
+    fn sprite_batch(&mut self) -> Option<&'_ mut SpriteBatch> {
+        if let FrameBatch::Sprite(batch) = self {
+            Some(batch)
+        } else {
+            None
+        }
+    }
+
+    fn shape_batch(&mut self) -> Option<&'_ mut shape::Batch> {
+        if let FrameBatch::Shape(batch) = self {
+            Some(batch)
+        } else {
+            None
+        }
+    }
+}
+
+enum RenderKind {
+    Text,
+    Sprite,
+    Shape,
+}
+
 impl Frame {
     pub async fn update(&mut self, scene: &Scene) {
-        self.started_at = Some(scene.now());
+        self.started_at = Some(scene.now().await);
         self.commands.clear();
 
         self.cache_glyphs(scene).await;
 
-        self.size = scene.internal_size();
+        self.size = scene.internal_size().await;
 
         let mut referenced_texture_ids = HashSet::new();
 
         let mut current_texture_id: Option<u64> = None;
-        let mut current_batch: Option<SpriteBatch> = None;
+        let mut current_batch: Option<FrameBatch> = None;
+        let scene = scene.data.read().await;
         for element in scene.elements.iter() {
             match element {
                 Element::Sprite(sprite_handle) => {
@@ -47,8 +89,10 @@ impl Frame {
 
                     if current_texture_id.is_none()
                         || current_texture_id.as_ref().unwrap() != &texture.id
+                        || current_batch.is_none()
+                        || !current_batch.as_ref().unwrap().is_sprite()
                     {
-                        self.commit_batch(current_batch);
+                        self.commit_batch(current_batch, Some(RenderKind::Sprite));
                         current_texture_id = Some(texture.id);
                         referenced_texture_ids.insert(texture.id);
 
@@ -63,14 +107,16 @@ impl Frame {
                                 .push(FrameCommand::LoadTexture(loaded_texture_handle.clone()));
                         }
 
-                        current_batch = Some(SpriteBatch::new(loaded_texture_handle.clone()));
+                        current_batch = Some(FrameBatch::Sprite(SpriteBatch::new(
+                            loaded_texture_handle.clone(),
+                        )));
                     }
 
-                    let current_batch = current_batch.as_mut().unwrap();
+                    let current_batch = current_batch.as_mut().unwrap().sprite_batch().unwrap();
                     current_batch.sprites.push(sprite_handle.clone());
                 }
                 Element::Text(text) => {
-                    current_batch = self.commit_batch(current_batch);
+                    current_batch = self.commit_batch(current_batch, Some(RenderKind::Text));
                     let text_data = text.handle.read().await;
                     let font = text_data.font.handle.read().await;
                     let loaded_font = self
@@ -82,10 +128,20 @@ impl Frame {
                         loaded_font: loaded_font.clone(),
                     });
                 }
+                Element::Shape(shape) => {
+                    current_batch = self.commit_batch(current_batch, Some(RenderKind::Shape));
+
+                    if current_batch.is_none() {
+                        current_batch = Some(FrameBatch::Shape(shape::Batch::new()));
+                    }
+
+                    let current_batch = current_batch.as_mut().unwrap().shape_batch().unwrap();
+                    current_batch.add(shape.clone()); // TODO clone? Can't we own the scene elements at this point?
+                }
             }
         }
 
-        self.commit_batch(current_batch);
+        self.commit_batch(current_batch, None);
 
         let dead_texture_ids = self
             .textures
@@ -100,10 +156,24 @@ impl Frame {
         self.updated_at = Some(Moment::now());
     }
 
-    fn commit_batch(&mut self, batch: Option<SpriteBatch>) -> Option<SpriteBatch> {
-        if let Some(batch) = batch {
-            self.commands
-                .push(FrameCommand::DrawBatch(KludgineHandle::new(batch)));
+    fn commit_batch(
+        &mut self,
+        batch: Option<FrameBatch>,
+        render_type: Option<RenderKind>,
+    ) -> Option<FrameBatch> {
+        let commit = match render_type {
+            None | Some(RenderKind::Text) => true,
+            Some(RenderKind::Shape) => batch.as_ref().map(|b| !b.is_shape()).unwrap_or_default(),
+            Some(RenderKind::Sprite) => batch.as_ref().map(|b| !b.is_sprite()).unwrap_or_default(),
+        };
+
+        if commit {
+            if let Some(batch) = batch {
+                match batch {
+                    FrameBatch::Sprite(batch) => self.commands.push(FrameCommand::DrawBatch(batch)),
+                    FrameBatch::Shape(batch) => self.commands.push(FrameCommand::DrawShapes(batch)),
+                }
+            }
         }
 
         None
@@ -111,6 +181,7 @@ impl Frame {
 
     async fn cache_glyphs(&mut self, scene: &Scene) {
         let mut referenced_fonts = HashSet::new();
+        let scene = scene.data.read().await;
         for text in scene
             .elements
             .iter()
@@ -164,7 +235,8 @@ impl Frame {
 
 pub(crate) enum FrameCommand {
     LoadTexture(LoadedTexture),
-    DrawBatch(KludgineHandle<SpriteBatch>),
+    DrawBatch(SpriteBatch),
+    DrawShapes(shape::Batch),
     DrawText {
         text: PreparedSpan,
         loaded_font: LoadedFont,

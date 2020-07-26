@@ -21,7 +21,7 @@ macro_rules! include_aseprite_sprite {
     };
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum AnimationMode {
     Forward,
     Reverse,
@@ -37,18 +37,18 @@ impl AnimationMode {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 enum AnimationDirection {
     Forward,
     Reverse,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Sprite {
     pub(crate) handle: KludgineHandle<SpriteData>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct SpriteData {
     title: Option<String>,
     elapsed_since_frame_change: Duration,
@@ -359,7 +359,7 @@ impl SpriteData {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct SpriteAnimation {
     frames: Vec<SpriteFrame>,
     mode: AnimationMode,
@@ -371,7 +371,7 @@ impl SpriteAnimation {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct SpriteFrame {
     source: SourceSprite,
     duration: Option<Duration>,

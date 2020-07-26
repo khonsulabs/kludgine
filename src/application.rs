@@ -19,7 +19,7 @@ pub struct SingleWindowApplication<T> {
     phantom: PhantomData<T>,
 }
 
-pub trait WindowCreator<T> {
+pub trait WindowCreator<T>: Window {
     fn get_window_builder() -> WindowBuilder {
         WindowBuilder::default().with_title(Self::window_title())
     }

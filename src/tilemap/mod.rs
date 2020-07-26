@@ -7,6 +7,7 @@ use super::{
 use std::mem;
 
 /// TileMap renders tiles retrieved from a TileProvider
+#[derive(Debug)]
 pub struct TileMap<P> {
     provider: P,
     tile_size: Size<u32>,
@@ -29,11 +30,7 @@ where
         self.stagger = Some(stagger);
     }
 
-    pub async fn draw<'a>(
-        &self,
-        scene: &mut SceneTarget<'a>,
-        location: Point<i32>,
-    ) -> KludgineResult<()> {
+    pub async fn draw<'a>(&self, scene: &SceneTarget, location: Point<i32>) -> KludgineResult<()> {
         // Normally we don't need to worry about the origin, but in the case of TileMap
         // it will fill the screen with whatever the provider returns for each tile coordinate
         let location = Point::new(
@@ -52,16 +49,19 @@ where
         let min_y = (-location.y / self.tile_size.height as f32).floor() as i32;
         let extra_x = (self.tile_size.width - 1) as f32;
         let extra_y = (self.tile_size.height - 1) as f32;
-        let total_width = scene.size().width as f32 + extra_x;
-        let total_height = scene.size().height as f32 + extra_y;
+        let scene_size = scene.size().await;
+        let total_width = scene_size.width as f32 + extra_x;
+        let total_height = scene_size.height as f32 + extra_y;
         let tiles_wide = (total_width / self.tile_size.width as f32).ceil() as i32;
         let tiles_high = (total_height / tile_height as f32).ceil() as i32;
+
+        let elapsed = scene.elapsed().await;
 
         for y in min_y..(min_y + tiles_high) {
             for x in min_x..(min_x + tiles_wide) {
                 let location = Point::new(x, y);
                 if let Some(tile) = self.provider.get_tile(location) {
-                    let sprite = tile.sprite.get_frame(scene.elapsed()).await?;
+                    let sprite = tile.sprite.get_frame(elapsed).await?;
                     sprite
                         .render_at(scene, self.coordinate_for_tile(location))
                         .await;
@@ -133,7 +133,7 @@ impl PersistentTileProvider {
         Self { tiles, size }
     }
 
-    pub fn set(&mut self, location: Point<u32>, sprite: Option<Sprite>) {
+    pub fn set(&mut self, location: Point<u32>, sprite: Option<Sprite>) -> Option<Tile> {
         let index = self.point_to_index(location);
         mem::replace(
             &mut self.tiles[index],
@@ -141,7 +141,7 @@ impl PersistentTileProvider {
                 location: Point::new(location.x as i32, location.y as i32),
                 sprite,
             }),
-        );
+        )
     }
 
     fn point_to_index(&self, location: Point<u32>) -> usize {

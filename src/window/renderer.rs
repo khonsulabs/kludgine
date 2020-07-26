@@ -112,9 +112,7 @@ impl FrameRenderer {
             // at a consistent rate, we need to create the tick then await it after we do our processing
             // so that it will just wait the remaining time of our target framerate.
             let tick = interval.tick();
-            println!("render_loop executing");
             self.render().await.expect("Error rendering window");
-            println!("render_loop finished");
 
             tick.await;
         }
@@ -141,7 +139,7 @@ impl FrameRenderer {
         for FontUpdate { font, rect, data } in engine_frame.pending_font_updates.iter() {
             let mut loaded_font = font.handle.write().await;
             if loaded_font.texture.is_none() {
-                let texture = self.renderer.texture(512, 512);
+                let texture = self.renderer.texture(512, 512); // TODO font texture should be configurable
                 let sampler = self.renderer.sampler(Filter::Nearest, Filter::Nearest);
 
                 let binding = self
@@ -202,7 +200,7 @@ impl FrameRenderer {
 
         {
             let mut pass = frame.pass(PassOp::Clear(Rgba::TRANSPARENT), &output);
-            for command in engine_frame.commands.iter() {
+            for command in std::mem::take(&mut engine_frame.commands) {
                 match command {
                     FrameCommand::LoadTexture(texture_handle) => {
                         let mut loaded_texture = texture_handle.handle.write().await;
@@ -228,8 +226,7 @@ impl FrameRenderer {
                             ));
                         }
                     }
-                    FrameCommand::DrawBatch(batch_handle) => {
-                        let batch = batch_handle.read().await;
+                    FrameCommand::DrawBatch(batch) => {
                         let loaded_texture = batch.loaded_texture.handle.read().await;
                         let texture = loaded_texture.texture.handle.read().await;
 
@@ -262,6 +259,11 @@ impl FrameRenderer {
                                 .as_ref()
                                 .expect("Empty binding on texture"),
                         );
+                    }
+                    FrameCommand::DrawShapes(batch) => {
+                        let buffer = batch.finish(&self.renderer);
+                        pass.set_pipeline(&self.shape_pipeline);
+                        pass.draw_buffer(&buffer);
                     }
                     FrameCommand::DrawText { text, loaded_font } => {
                         let text_data = text.handle.read().await;
@@ -314,9 +316,6 @@ impl FrameRenderer {
                     }
                 }
             }
-
-            // pass.set_pipeline(&self.shape_pipeline);
-            // pass.draw_buffer(&buffer);
         }
 
         self.renderer.present(frame);

@@ -16,17 +16,22 @@ impl WindowCreator<Simple> for Simple {
     }
 }
 
+impl Window for Simple {}
+
 #[async_trait]
-impl Window for Simple {
-    async fn initialize(&mut self, _scene: &mut Scene) -> KludgineResult<()> {
+impl Component for Simple {
+    type Message = ();
+
+    async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
         let texture = Texture::load("examples/assets/k.png")?;
         self.source_sprite = Some(SourceSprite::entire_texture(texture).await);
         Ok(())
     }
-    async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
+
+    async fn render(&self, context: &mut StyledContext, _layout: &Layout) -> KludgineResult<()> {
         let sprite = self.source_sprite.as_ref().unwrap();
 
-        sprite.render_at(scene, Point::default()).await;
+        sprite.render_at(context.scene(), Point::default()).await;
 
         Ok(())
     }

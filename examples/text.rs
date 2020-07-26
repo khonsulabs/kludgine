@@ -13,46 +13,54 @@ impl WindowCreator<TextExample> for TextExample {
     }
 }
 
+impl Window for TextExample {}
+
 #[async_trait]
-impl Window for TextExample {
-    async fn render<'a>(&self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
-        Text::new(vec![
-            Span::new(
-                "Wrapping ",
-                Style {
-                    color: Some(Color::RED),
-                    font_size: Some(120.0),
-                    ..Default::default()
-                }
-                .effective_style(scene),
-            ),
-            Span::new(
-                "rapped ",
-                Style {
-                    color: Some(Color::WHITE),
-                    font_size: Some(60.0),
-                    ..Default::default()
-                }
-                .effective_style(scene),
-            ),
-            Span::new(
-                "Words to live by",
-                Style {
-                    color: Some(Color::BLUE),
-                    font_size: Some(120.0),
-                    ..Default::default()
-                }
-                .effective_style(scene),
-            ),
-        ])
-        .render_at(
-            scene,
-            Point::new(0.0, 120.0),
-            TextWrap::SingleLine {
-                max_width: scene.size().width,
-                truncate: false,
-            },
-        )
-        .await
+impl Component for TextExample {
+    type Message = ();
+
+    async fn render(&self, context: &mut StyledContext, _layout: &Layout) -> KludgineResult<()> {
+        let mut spans = Vec::new();
+        spans.push(Span::new(
+            "Wrapping ",
+            Style {
+                color: Some(Color::RED),
+                font_size: Some(120.0),
+                ..Default::default()
+            }
+            .effective_style(context.scene())
+            .await,
+        ));
+        spans.push(Span::new(
+            "rapped ",
+            Style {
+                color: Some(Color::WHITE),
+                font_size: Some(60.0),
+                ..Default::default()
+            }
+            .effective_style(context.scene())
+            .await,
+        ));
+        spans.push(Span::new(
+            "Words to live by",
+            Style {
+                color: Some(Color::BLUE),
+                font_size: Some(120.0),
+                ..Default::default()
+            }
+            .effective_style(context.scene())
+            .await,
+        ));
+
+        Text::new(spans)
+            .render_at(
+                context.scene(),
+                Point::new(0.0, 120.0),
+                TextWrap::SingleLine {
+                    max_width: context.scene().size().await.width,
+                    truncate: false,
+                },
+            )
+            .await
     }
 }

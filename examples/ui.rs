@@ -1,65 +1,106 @@
-// extern crate kludgine;
-// use futures::executor::block_on;
-// use kludgine::prelude::*;
+extern crate kludgine;
+use kludgine::prelude::*;
 
-// fn main() {
-//     SingleWindowApplication::run(block_on(UIExample::new()));
-// }
+fn main() {
+    SingleWindowApplication::run(UIExample {
+        image: None,
+        label: None,
+    });
+}
 
-// struct UIExample {
-//     ui: UserInterface,
-// }
+struct UIExample {
+    image: Option<Entity<Image>>,
+    label: Option<Entity<Label>>,
+}
 
-// impl UIExample {
-//     async fn new() -> Self {
-//         Self {
-//             ui: Self::create_interface().await.unwrap(),
-//         }
-//     }
-//     async fn create_interface() -> KludgineResult<UserInterface> {
-//         let grid = Component::new(
-//             Grid::new(4, 4)
-//                 .with_cell(
-//                     Point::new(0, 0),
-//                     Component::new(Interface { click_count: 0 }),
-//                 )?
-//                 .with_cell(
-//                     Point::new(1, 0),
-//                     Component::new(Interface { click_count: 0 }),
-//                 )?
-//                 .with_cell(
-//                     Point::new(0, 1),
-//                     Component::new(Interface { click_count: 0 }),
-//                 )?
-//                 .with_cell(
-//                     Point::new(1, 1),
-//                     Component::new(Interface { click_count: 0 }),
-//                 )?,
-//         );
-//         let ui = UserInterface::new(Style::default());
-//         ui.set_root(grid).await;
-//         Ok(ui)
-//     }
-// }
+impl WindowCreator<UIExample> for UIExample {
+    fn window_title() -> String {
+        "User Interface - Kludgine".to_owned()
+    }
+}
 
-// impl WindowCreator<UIExample> for UIExample {
-//     fn window_title() -> String {
-//         "User Interface - Kludgine".to_owned()
-//     }
-// }
+impl Window for UIExample {}
 
-// #[async_trait]
-// impl Window for UIExample {
-//     async fn render<'a>(&mut self, scene: &mut SceneTarget<'a>) -> KludgineResult<()> {
-//         self.ui.render(scene).await?;
+#[async_trait]
+impl Component for UIExample {
+    type Message = ();
 
-//         Ok(())
-//     }
+    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
+        let sprite = include_aseprite_sprite!("assets/stickguy").await?;
+        self.image = Some(
+            context
+                .new_entity(Image::new(sprite))
+                .style(Style {
+                    background_color: Some(Color::new(0.0, 1.0, 1.0, 1.0)),
+                    ..Default::default()
+                })
+                .insert()
+                .await?,
+        );
 
-//     async fn process_input(&mut self, event: InputEvent) -> KludgineResult<()> {
-//         self.ui.process_input(event).await.map(|_| ())
-//     }
-// }
+        self.label = Some(
+            context
+                .new_entity(Label::new("Test Label"))
+                .style(Style {
+                    color: Some(Color::GREEN),
+                    background_color: Some(Color::new(1.0, 0.0, 1.0, 0.5)),
+                    font_size: Some(72.),
+                    ..Default::default()
+                })
+                .insert()
+                .await?,
+        );
+
+        Ok(())
+    }
+
+    async fn render(&self, _context: &mut StyledContext, _layout: &Layout) -> KludgineResult<()> {
+        // self.ui.render(scene).await?;
+
+        Ok(())
+    }
+
+    async fn layout(
+        &mut self,
+        _context: &mut StyledContext,
+    ) -> KludgineResult<Box<dyn LayoutSolver>> {
+        Layout::absolute()
+            .child(
+                self.label.unwrap(),
+                AbsoluteBounds {
+                    left: Dimension::Points(32.),
+                    right: Dimension::Points(64.),
+                    top: Dimension::Points(32.),
+                    bottom: Dimension::Points(64.),
+                    ..Default::default()
+                },
+            )?
+            .child(
+                self.image.unwrap(),
+                AbsoluteBounds {
+                    right: Dimension::Points(10.),
+                    bottom: Dimension::Points(10.),
+                    ..Default::default()
+                },
+            )?
+            .layout()
+    }
+
+    async fn process_input(
+        &mut self,
+        _context: &mut Context,
+        event: InputEvent,
+    ) -> KludgineResult<()> {
+        if let Event::MouseButton { .. } = event.event {
+            UIExample::open(UIExample {
+                image: None,
+                label: None,
+            })
+            .await;
+        }
+        Ok(())
+    }
+}
 
 // #[derive(Debug)]
 // struct Interface {
@@ -94,7 +135,3 @@
 //         Ok(ComponentEventStatus::rebuild_view_processed())
 //     }
 // }
-
-fn main() {
-    todo!("This example isn't working right now due to the ongoing gui refactor")
-}

@@ -35,6 +35,14 @@ where
         self.origin.y + self.size.height
     }
 
+    pub fn coord1(&self) -> Point<S> {
+        Point::new(self.x1(), self.y1())
+    }
+
+    pub fn coord2(&self) -> Point<S> {
+        Point::new(self.x2(), self.y2())
+    }
+
     pub fn union(&self, other: &Self) -> Self {
         let min_x = if self.x1() < other.x1() {
             self.x1()
@@ -72,6 +80,13 @@ where
             && self.origin.y <= point.y
             && self.y2() >= point.y
     }
+
+    pub fn area(&self) -> S
+    where
+        S: std::ops::Mul<Output = S> + Copy,
+    {
+        self.size.area()
+    }
 }
 
 impl<S> Into<rgx::rect::Rect<S>> for Rect<S>
@@ -82,6 +97,17 @@ where
         rgx::rect::Rect::new(self.x1(), self.y1(), self.x2(), self.y2())
     }
 }
+
+// impl<S> Into<stretch::geometry::Rect<S>> for Rect<S> {
+//     fn into(self) -> stretch::geometry::Rect<S> {
+//         stretch::geometry::Rect {
+//             start: self.x1(),
+//             end: self.x2(),
+//             top: self.y1(),
+//             bottom: self.y2(),
+//         }
+//     }
+// }
 
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
 pub struct Point<S = f32> {
@@ -123,9 +149,43 @@ where
     }
 }
 
+impl<S> std::ops::Add<Point<S>> for Point<S>
+where
+    S: std::ops::Add<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn add(self, s: Self) -> Self {
+        Self {
+            x: self.x + s.x,
+            y: self.y + s.y,
+        }
+    }
+}
+
+impl<S> std::ops::Sub<Point<S>> for Point<S>
+where
+    S: std::ops::Sub<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn sub(self, s: Self) -> Self {
+        Self {
+            x: self.x - s.x,
+            y: self.y - s.y,
+        }
+    }
+}
+
 impl<S> Into<rgx::math::Point2<S>> for Point<S> {
     fn into(self) -> rgx::math::Point2<S> {
         rgx::math::Point2::new(self.x, self.y)
+    }
+}
+
+impl<S> From<rgx::math::Point2<S>> for Point<S> {
+    fn from(pt: rgx::math::Point2<S>) -> Self {
+        Self::new(pt.x, pt.y)
     }
 }
 
@@ -137,7 +197,32 @@ pub struct Size<S = f32> {
 
 impl<S> Size<S> {
     pub const fn new(width: S, height: S) -> Self {
-        Size { width, height }
+        Self { width, height }
+    }
+
+    pub fn area(&self) -> S
+    where
+        S: std::ops::Mul<Output = S> + Copy,
+    {
+        self.width * self.height
+    }
+}
+
+impl From<Size<u32>> for Size<f32> {
+    fn from(value: Size<u32>) -> Self {
+        Self {
+            width: value.width as f32,
+            height: value.height as f32,
+        }
+    }
+}
+
+impl From<Size<f32>> for Size<u32> {
+    fn from(value: Size<f32>) -> Self {
+        Self {
+            width: value.width as u32,
+            height: value.height as u32,
+        }
     }
 }
 
@@ -249,7 +334,7 @@ where
 }
 
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
-pub struct Surround<S> {
+pub struct Surround<S = f32> {
     pub left: S,
     pub top: S,
     pub right: S,
@@ -281,6 +366,13 @@ where
     pub fn minimum_height(&self) -> f32 {
         self.top.into().points().unwrap_or(0.0) + self.bottom.into().points().unwrap_or(0.0)
     }
+
+    pub fn minimum_size(&self) -> Size<f32> {
+        Size {
+            width: self.minimum_width(),
+            height: self.minimum_height(),
+        }
+    }
 }
 
 impl<S> Surround<S>
@@ -307,6 +399,9 @@ pub enum Dimension {
 impl Dimension {
     pub fn is_auto(&self) -> bool {
         self == &Dimension::Auto
+    }
+    pub fn is_points(&self) -> bool {
+        !self.is_auto()
     }
 
     pub fn points(&self) -> Option<f32> {
@@ -351,7 +446,7 @@ mod tests {
     use super::*;
     #[test]
     fn test_rect_contains() {
-        let rect = Rect::new(Point::new(1i32, 10), Point::new(3, 12));
+        let rect = Rect::<i32>::new(Point::new(1, 10), Point::new(3, 12));
         // lower x, lower y
         assert!(!rect.contains(Point::new(0, 9)));
         // lower x, equal y
