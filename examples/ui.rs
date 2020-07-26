@@ -45,15 +45,13 @@ impl Component for UIExample {
                     font_size: Some(72.),
                     ..Default::default()
                 })
+                .hover(Style {
+                    background_color: Some(Color::new(1.0, 1.0, 1.0, 0.5)),
+                    ..Default::default()
+                })
                 .insert()
                 .await?,
         );
-
-        Ok(())
-    }
-
-    async fn render(&self, _context: &mut StyledContext, _layout: &Layout) -> KludgineResult<()> {
-        // self.ui.render(scene).await?;
 
         Ok(())
     }

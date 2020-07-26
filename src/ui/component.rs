@@ -32,7 +32,9 @@ pub trait Component: Send + Sync {
         })
     }
 
-    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()>;
+    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
+        Ok(())
+    }
 
     async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         Ok(())
@@ -109,7 +111,10 @@ pub trait InteractiveComponent: Component {
         EntityBuilder {
             component,
             parent: Some(context.index()),
-            style: Style::default(),
+            style: Default::default(),
+            hover_style: Default::default(),
+            active_style: Default::default(),
+            focus_style: Default::default(),
             callback: None,
         }
     }
@@ -174,6 +179,9 @@ where
     component: C,
     parent: Option<Index>,
     style: Style,
+    hover_style: Style,
+    active_style: Style,
+    focus_style: Style,
     callback: Option<Callback<C::Output, O>>,
 }
 
@@ -184,6 +192,18 @@ where
 {
     pub fn style(mut self, style: Style) -> Self {
         self.style = style;
+        self
+    }
+    pub fn hover(mut self, style: Style) -> Self {
+        self.hover_style = style;
+        self
+    }
+    pub fn active(mut self, style: Style) -> Self {
+        self.active_style = style;
+        self
+    }
+    pub fn focus(mut self, style: Style) -> Self {
+        self.focus_style = style;
         self
     }
 
@@ -197,7 +217,14 @@ where
 
     pub async fn insert(self) -> KludgineResult<Entity<C, O>> {
         let index = {
-            let node = Node::new(self.component, self.style, self.callback);
+            let node = Node::new(
+                self.component,
+                self.style,
+                self.hover_style,
+                self.active_style,
+                self.focus_style,
+                self.callback,
+            );
             let index = global_arena().insert(self.parent, node).await;
 
             let mut context = Context::new(index);

@@ -15,7 +15,11 @@ use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 pub(crate) trait AnyNode: PendingEventProcessor + Component {
     fn as_any(&self) -> &dyn Any;
     fn style(&self) -> &'_ Style;
+    fn hover_style(&self) -> &'_ Style;
+    fn focus_style(&self) -> &'_ Style;
+    fn active_style(&self) -> &'_ Style;
     fn set_layout(&mut self, layout: Layout);
+    fn get_layout(&self) -> &'_ Layout;
     fn receive_message(&self, message: Box<dyn Any>);
 }
 
@@ -34,8 +38,24 @@ impl<T: InteractiveComponent + 'static, O: Send + 'static> AnyNode for NodeData<
         &self.style
     }
 
+    fn hover_style(&self) -> &'_ Style {
+        &self.hover_style
+    }
+
+    fn focus_style(&self) -> &'_ Style {
+        &self.focus_style
+    }
+
+    fn active_style(&self) -> &'_ Style {
+        &self.active_style
+    }
+
     fn set_layout(&mut self, layout: Layout) {
         self.layout = layout;
+    }
+
+    fn get_layout(&self) -> &'_ Layout {
+        &self.layout
     }
 
     fn receive_message(&self, message: Box<dyn Any>) {
@@ -73,6 +93,9 @@ where
     component: T,
     callback: Option<Callback<T::Output, O>>,
     pub(crate) style: Style,
+    pub(crate) hover_style: Style,
+    pub(crate) active_style: Style,
+    pub(crate) focus_style: Style,
     pub(crate) input_sender: UnboundedSender<T::Input>,
     pub(crate) message_sender: UnboundedSender<T::Message>,
     input_receiver: UnboundedReceiver<T::Input>,
@@ -137,6 +160,9 @@ impl Node {
     pub fn new<T: InteractiveComponent + 'static, O: Send + 'static>(
         component: T,
         style: Style,
+        hover_style: Style,
+        active_style: Style,
+        focus_style: Style,
         callback: Option<Callback<T::Output, O>>,
     ) -> Self {
         let (input_sender, input_receiver) = unbounded_channel();
@@ -144,6 +170,9 @@ impl Node {
         Self {
             component: KludgineHandle::new(Box::new(NodeData {
                 style,
+                hover_style,
+                focus_style,
+                active_style,
                 component,
                 input_sender,
                 input_receiver,
@@ -158,6 +187,21 @@ impl Node {
     pub async fn style(&self) -> Style {
         let component = self.component.read().await;
         component.style().clone()
+    }
+
+    pub async fn hover_style(&self) -> Style {
+        let component = self.component.read().await;
+        component.hover_style().clone()
+    }
+
+    pub async fn active_style(&self) -> Style {
+        let component = self.component.read().await;
+        component.active_style().clone()
+    }
+
+    pub async fn focus_style(&self) -> Style {
+        let component = self.component.read().await;
+        component.focus_style().clone()
     }
 
     pub async fn content_size(
@@ -224,5 +268,10 @@ impl Node {
     pub(crate) async fn set_layout(&self, layout: Layout) {
         let mut component = self.component.write().await;
         component.set_layout(layout);
+    }
+
+    pub async fn last_layout(&self) -> Layout {
+        let component = self.component.read().await;
+        component.get_layout().clone()
     }
 }
