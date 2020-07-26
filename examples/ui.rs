@@ -21,10 +21,10 @@ impl WindowCreator<UIExample> for UIExample {
 
 impl Window for UIExample {}
 
+impl StandaloneComponent for UIExample {}
+
 #[async_trait]
 impl Component for UIExample {
-    type Message = ();
-
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         let sprite = include_aseprite_sprite!("assets/stickguy").await?;
         self.image = Some(

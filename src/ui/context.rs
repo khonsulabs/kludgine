@@ -1,6 +1,6 @@
 use crate::{
     style::Style,
-    ui::{global_arena, Component, Entity, Index, Node, NodeData},
+    ui::{global_arena, Entity, Index, InteractiveComponent, Node, NodeData},
     KludgineResult,
 };
 mod layout_context;
@@ -41,7 +41,11 @@ impl Context {
         global_arena().set_parent(child, Some(self.index)).await
     }
 
-    pub async fn send<T: Component + 'static>(&self, target: Entity<T>, message: T::Message) {
+    pub async fn send<T: InteractiveComponent + 'static>(
+        &self,
+        target: Entity<T>,
+        message: T::Input,
+    ) {
         if let Some(target_node) = global_arena().get(target).await {
             let component = target_node.component.read().await;
             if let Some(node_data) = component.as_any().downcast_ref::<NodeData<T>>() {
@@ -55,7 +59,7 @@ impl Context {
         }
     }
 
-    pub fn new_entity<T: Component + 'static>(&self, component: T) -> EntityBuilder<T> {
+    pub fn new_entity<T: InteractiveComponent + 'static>(&self, component: T) -> EntityBuilder<T> {
         EntityBuilder {
             component,
             parent: Some(self.index),
@@ -78,7 +82,7 @@ pub struct EntityBuilder<C> {
 
 impl<C> EntityBuilder<C>
 where
-    C: Component + 'static,
+    C: InteractiveComponent + 'static,
 {
     pub fn style(mut self, style: Style) -> Self {
         self.style = style;

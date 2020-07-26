@@ -4,7 +4,7 @@ use super::{
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
     scene::{Scene, SceneTarget},
-    ui::{global_arena, Component, UserInterface},
+    ui::{global_arena, InteractiveComponent, UserInterface},
     KludgineError, KludgineHandle, KludgineResult,
 };
 use async_trait::async_trait;
@@ -95,7 +95,7 @@ pub enum Event {
 
 /// Trait to implement a Window
 #[async_trait]
-pub trait Window: Component + Send + Sync + 'static {
+pub trait Window: InteractiveComponent + Send + Sync + 'static {
     /// The window was requested to be closed, most likely from the Close Button. Override
     /// this implementation if you want logic in place to prevent a window from closing.
     async fn close_requested(&self) -> KludgineResult<CloseResponse> {

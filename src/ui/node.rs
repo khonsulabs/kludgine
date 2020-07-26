@@ -1,7 +1,9 @@
 use crate::{
     math::Size,
     style::Style,
-    ui::{BaseComponent, Component, Context, Layout, LayoutSolver, SceneContext, StyledContext},
+    ui::{
+        Component, Context, InteractiveComponent, Layout, LayoutSolver, SceneContext, StyledContext,
+    },
     window::InputEvent,
     KludgineHandle, KludgineResult,
 };
@@ -9,7 +11,7 @@ use async_trait::async_trait;
 use std::any::Any;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
-pub(crate) trait AnyNode: PendingEventProcessor + BaseComponent {
+pub(crate) trait AnyNode: PendingEventProcessor + Component {
     fn as_any(&self) -> &dyn Any;
     fn style(&self) -> &'_ Style;
 }
@@ -19,7 +21,7 @@ pub(crate) trait PendingEventProcessor {
     async fn process_pending_events(&mut self, context: &mut Context) -> KludgineResult<()>;
 }
 
-impl<T: Component + 'static> AnyNode for NodeData<T> {
+impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     fn as_any(&self) -> &dyn Any {
         &self.component
     }
@@ -30,7 +32,7 @@ impl<T: Component + 'static> AnyNode for NodeData<T> {
 }
 
 #[async_trait]
-impl<T: Component + 'static> PendingEventProcessor for NodeData<T> {
+impl<T: InteractiveComponent + 'static> PendingEventProcessor for NodeData<T> {
     async fn process_pending_events(&mut self, context: &mut Context) -> KludgineResult<()> {
         while let Ok(message) = self.receiver.try_recv() {
             self.component.receive_message(context, message).await?
@@ -42,18 +44,18 @@ impl<T: Component + 'static> PendingEventProcessor for NodeData<T> {
 #[derive(Debug)]
 pub struct NodeData<T>
 where
-    T: Component,
+    T: InteractiveComponent,
 {
     component: T,
     pub(crate) style: Style,
-    pub(crate) sender: UnboundedSender<T::Message>,
-    receiver: UnboundedReceiver<T::Message>,
+    pub(crate) sender: UnboundedSender<T::Input>,
+    receiver: UnboundedReceiver<T::Input>,
 }
 
 #[async_trait]
-impl<T> BaseComponent for NodeData<T>
+impl<T> Component for NodeData<T>
 where
-    T: Component,
+    T: InteractiveComponent,
 {
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         self.component.initialize(context).await
@@ -104,7 +106,7 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new<T: Component + 'static>(component: T, style: Style) -> Self {
+    pub fn new<T: InteractiveComponent + 'static>(component: T, style: Style) -> Self {
         let (sender, receiver) = unbounded_channel();
         Self {
             component: KludgineHandle::new(Box::new(NodeData {

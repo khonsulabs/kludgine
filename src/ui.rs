@@ -6,9 +6,9 @@ mod label;
 mod layout;
 mod node;
 
-pub(crate) use self::{component::BaseComponent, node::NodeData};
+pub(crate) use self::node::NodeData;
 pub use self::{
-    component::{Component, LayoutConstraints},
+    component::{Component, InteractiveComponent, LayoutConstraints, StandaloneComponent},
     context::*,
     image::Image,
     label::Label,
@@ -35,14 +35,14 @@ pub(crate) fn global_arena() -> &'static HierarchicalArena {
 
 pub struct UserInterface<C>
 where
-    C: Component + 'static,
+    C: InteractiveComponent + 'static,
 {
     pub(crate) root: Entity<C>,
 }
 
 impl<C> UserInterface<C>
 where
-    C: Component + 'static,
+    C: InteractiveComponent + 'static,
 {
     pub async fn new(root: C) -> KludgineResult<Self> {
         let root = Entity::new({
@@ -187,7 +187,7 @@ where
 
 impl<C> Drop for UserInterface<C>
 where
-    C: Component + 'static,
+    C: InteractiveComponent + 'static,
 {
     fn drop(&mut self) {
         let root = self.root;

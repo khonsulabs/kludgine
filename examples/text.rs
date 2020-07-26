@@ -15,10 +15,10 @@ impl WindowCreator<TextExample> for TextExample {
 
 impl Window for TextExample {}
 
+impl StandaloneComponent for TextExample {}
+
 #[async_trait]
 impl Component for TextExample {
-    type Message = ();
-
     async fn render(&self, context: &mut StyledContext, _layout: &Layout) -> KludgineResult<()> {
         let mut spans = Vec::new();
         spans.push(Span::new(

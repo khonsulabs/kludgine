@@ -2,7 +2,7 @@ use crate::{
     math::{Point, Size},
     style::EffectiveStyle,
     text::{wrap::TextWrap, Text},
-    ui::{Component, Layout, SceneContext, StyledContext},
+    ui::{Component, Layout, SceneContext, StandaloneComponent, StyledContext},
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -12,10 +12,10 @@ pub struct Label {
     value: String,
 }
 
+impl StandaloneComponent for Label {}
+
 #[async_trait]
 impl Component for Label {
-    type Message = ();
-
     async fn update(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
         Ok(())
     }
