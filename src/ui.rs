@@ -8,7 +8,10 @@ mod node;
 
 pub(crate) use self::node::NodeData;
 pub use self::{
-    component::{Component, InteractiveComponent, LayoutConstraints, StandaloneComponent},
+    component::{
+        Callback, Component, EntityBuilder, InteractiveComponent, LayoutConstraints,
+        StandaloneComponent,
+    },
     context::*,
     image::Image,
     label::Label,
@@ -46,7 +49,7 @@ where
 {
     pub async fn new(root: C) -> KludgineResult<Self> {
         let root = Entity::new({
-            let node = Node::new(root, Style::default());
+            let node = Node::new::<_, ()>(root, Style::default(), None);
 
             global_arena().insert(None, node).await
         });
@@ -198,30 +201,30 @@ where
 }
 
 #[derive(Debug)]
-pub struct Entity<C> {
+pub struct Entity<C, O = ()> {
     index: Index,
-    _phantom: std::marker::PhantomData<C>,
+    _phantom: std::marker::PhantomData<(C, O)>,
 }
 
-impl<C> Into<Index> for Entity<C> {
+impl<C, O> Into<Index> for Entity<C, O> {
     fn into(self) -> Index {
         self.index
     }
 }
 
-impl<C> Entity<C> {
+impl<C, O> Entity<C, O> {
     pub fn new(index: Index) -> Self {
         Self {
             index,
-            _phantom: std::marker::PhantomData::default(),
+            _phantom: Default::default(),
         }
     }
 }
 
-impl<C> Clone for Entity<C> {
+impl<C, O> Clone for Entity<C, O> {
     fn clone(&self) -> Self {
         Self::new(self.index)
     }
 }
 
-impl<C> Copy for Entity<C> {}
+impl<C, O> Copy for Entity<C, O> {}

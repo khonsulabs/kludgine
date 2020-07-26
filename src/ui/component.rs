@@ -1,7 +1,11 @@
 use crate::{
     math::Size,
     shape::{Fill, Shape},
-    ui::{Context, Layout, LayoutSolver, LayoutSolverExt, SceneContext, StyledContext},
+    style::Style,
+    ui::{
+        global_arena, Context, Entity, Index, Layout, LayoutSolver, LayoutSolverExt, Node,
+        NodeData, SceneContext, StyledContext,
+    },
     window::InputEvent,
     KludgineResult,
 };
@@ -73,11 +77,21 @@ pub trait Component: Send + Sync {
 #[async_trait]
 #[allow(unused_variables)]
 pub trait InteractiveComponent: Component {
-    type Message: Send + Sync + std::fmt::Debug;
-    type Input: Send + Sync + std::fmt::Debug;
-    type Output: Send + Sync + std::fmt::Debug;
+    type Message: Clone + Send + Sync + std::fmt::Debug + 'static;
+    type Input: Clone + Send + Sync + std::fmt::Debug + 'static;
+    type Output: Clone + Send + Sync + std::fmt::Debug + 'static;
 
     async fn receive_message(
+        &mut self,
+        context: &mut Context,
+        message: Self::Message,
+    ) -> KludgineResult<()> {
+        unimplemented!(
+            "Component::receive_message() must be implemented if you're receiving messages"
+        )
+    }
+
+    async fn receive_input(
         &mut self,
         context: &mut Context,
         message: Self::Input,
@@ -85,6 +99,42 @@ pub trait InteractiveComponent: Component {
         unimplemented!(
             "Component::receive_message() must be implemented if you're receiving messages"
         )
+    }
+
+    fn new_entity<T: InteractiveComponent + 'static>(
+        &self,
+        context: &mut Context,
+        component: T,
+    ) -> EntityBuilder<T, Self::Message> {
+        EntityBuilder {
+            component,
+            parent: Some(context.index()),
+            style: Style::default(),
+            callback: None,
+        }
+    }
+
+    async fn send<T: InteractiveComponent + 'static, O: 'static>(
+        &self,
+        target: Entity<T, Self::Message>,
+        message: T::Input,
+    ) {
+        if let Some(target_node) = global_arena().get(target).await {
+            let component = target_node.component.read().await;
+            if let Some(node_data) = component.as_any().downcast_ref::<NodeData<T, O>>() {
+                node_data
+                    .input_sender
+                    .send(message)
+                    .expect("Error sending to component");
+            } else {
+                unreachable!("Invalid type in Entity<T> -- Node contained different type than T")
+            }
+        }
+    }
+
+    async fn callback(&self, context: &mut Context, message: Self::Output) {
+        let node = global_arena().get(context.index()).await.unwrap();
+        node.callback(message).await
     }
 }
 
@@ -97,4 +147,69 @@ where
     type Message = ();
     type Input = ();
     type Output = ();
+}
+
+pub struct Callback<Input, Output> {
+    translator: Box<dyn Fn(Input) -> Output + Send + Sync>,
+    target: Index,
+}
+
+impl<Input, Output> Callback<Input, Output>
+where
+    Output: Send + 'static,
+{
+    pub async fn invoke(&self, input: Input) {
+        if let Some(node) = global_arena().get(self.target).await {
+            let translated = self.translator.as_ref()(input);
+            let component = node.component.write().await;
+            component.receive_message(Box::new(translated))
+        }
+    }
+}
+
+pub struct EntityBuilder<C, O>
+where
+    C: InteractiveComponent + 'static,
+{
+    component: C,
+    parent: Option<Index>,
+    style: Style,
+    callback: Option<Callback<C::Output, O>>,
+}
+
+impl<C, O> EntityBuilder<C, O>
+where
+    C: InteractiveComponent + 'static,
+    O: Send + 'static,
+{
+    pub fn style(mut self, style: Style) -> Self {
+        self.style = style;
+        self
+    }
+
+    pub fn callback<F: Fn(C::Output) -> O + Send + Sync + 'static>(mut self, callback: F) -> Self {
+        self.callback = Some(Callback {
+            translator: Box::new(callback),
+            target: self.parent.unwrap(),
+        });
+        self
+    }
+
+    pub async fn insert(self) -> KludgineResult<Entity<C, O>> {
+        let index = {
+            let node = Node::new(self.component, self.style, self.callback);
+            let index = global_arena().insert(self.parent, node).await;
+
+            let mut context = Context::new(index);
+            global_arena()
+                .get(index)
+                .await
+                .unwrap()
+                .initialize(&mut context)
+                .await?;
+
+            index
+        };
+        Ok(Entity::new(index))
+    }
 }

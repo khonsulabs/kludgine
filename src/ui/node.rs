@@ -2,7 +2,8 @@ use crate::{
     math::Size,
     style::Style,
     ui::{
-        Component, Context, InteractiveComponent, Layout, LayoutSolver, SceneContext, StyledContext,
+        Callback, Component, Context, InteractiveComponent, Layout, LayoutSolver, SceneContext,
+        StyledContext,
     },
     window::InputEvent,
     KludgineHandle, KludgineResult,
@@ -14,14 +15,16 @@ use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 pub(crate) trait AnyNode: PendingEventProcessor + Component {
     fn as_any(&self) -> &dyn Any;
     fn style(&self) -> &'_ Style;
+    fn receive_message(&self, message: Box<dyn Any>);
 }
 
 #[async_trait]
 pub(crate) trait PendingEventProcessor {
     async fn process_pending_events(&mut self, context: &mut Context) -> KludgineResult<()>;
+    async fn send_callback(&mut self, input: Box<dyn Any + Send + Sync>);
 }
 
-impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
+impl<T: InteractiveComponent + 'static, O: Send + 'static> AnyNode for NodeData<T, O> {
     fn as_any(&self) -> &dyn Any {
         &self.component
     }
@@ -29,31 +32,50 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     fn style(&self) -> &'_ Style {
         &self.style
     }
+
+    fn receive_message(&self, message: Box<dyn Any>) {
+        let message = message.downcast_ref::<T::Message>().unwrap().clone();
+        let _ = self.message_sender.send(message);
+    }
 }
 
 #[async_trait]
-impl<T: InteractiveComponent + 'static> PendingEventProcessor for NodeData<T> {
+impl<T: InteractiveComponent + 'static, O: Send + 'static> PendingEventProcessor
+    for NodeData<T, O>
+{
     async fn process_pending_events(&mut self, context: &mut Context) -> KludgineResult<()> {
-        while let Ok(message) = self.receiver.try_recv() {
+        while let Ok(message) = self.input_receiver.try_recv() {
+            self.component.receive_input(context, message).await?
+        }
+        while let Ok(message) = self.message_receiver.try_recv() {
             self.component.receive_message(context, message).await?
         }
         Ok(())
     }
+
+    async fn send_callback(&mut self, output: Box<dyn Any + Send + Sync>) {
+        let output = output.downcast_ref::<T::Output>().unwrap().clone();
+        if let Some(callback) = self.callback.as_ref() {
+            callback.invoke(output).await;
+        }
+    }
 }
 
-#[derive(Debug)]
-pub struct NodeData<T>
+pub struct NodeData<T, O>
 where
     T: InteractiveComponent,
 {
     component: T,
+    callback: Option<Callback<T::Output, O>>,
     pub(crate) style: Style,
-    pub(crate) sender: UnboundedSender<T::Input>,
-    receiver: UnboundedReceiver<T::Input>,
+    pub(crate) input_sender: UnboundedSender<T::Input>,
+    pub(crate) message_sender: UnboundedSender<T::Message>,
+    input_receiver: UnboundedReceiver<T::Input>,
+    message_receiver: UnboundedReceiver<T::Message>,
 }
 
 #[async_trait]
-impl<T> Component for NodeData<T>
+impl<T, O> Component for NodeData<T, O>
 where
     T: InteractiveComponent,
 {
@@ -106,14 +128,22 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new<T: InteractiveComponent + 'static>(component: T, style: Style) -> Self {
-        let (sender, receiver) = unbounded_channel();
+    pub fn new<T: InteractiveComponent + 'static, O: Send + 'static>(
+        component: T,
+        style: Style,
+        callback: Option<Callback<T::Output, O>>,
+    ) -> Self {
+        let (input_sender, input_receiver) = unbounded_channel();
+        let (message_sender, message_receiver) = unbounded_channel();
         Self {
             component: KludgineHandle::new(Box::new(NodeData {
                 style,
                 component,
-                sender,
-                receiver,
+                input_sender,
+                input_receiver,
+                message_sender,
+                message_receiver,
+                callback,
             })),
         }
     }
@@ -177,5 +207,10 @@ impl Node {
     pub async fn process_pending_events(&self, context: &mut Context) -> KludgineResult<()> {
         let mut component = self.component.write().await;
         component.process_pending_events(context).await
+    }
+
+    pub async fn callback<Input: Send + Sync + 'static>(&self, message: Input) {
+        let mut component = self.component.write().await;
+        component.send_callback(Box::new(message)).await
     }
 }

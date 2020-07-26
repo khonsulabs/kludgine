@@ -28,8 +28,7 @@ impl Component for UIExample {
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         let sprite = include_aseprite_sprite!("assets/stickguy").await?;
         self.image = Some(
-            context
-                .new_entity(Image::new(sprite))
+            self.new_entity(context, Image::new(sprite))
                 .style(Style {
                     background_color: Some(Color::new(0.0, 1.0, 1.0, 1.0)),
                     ..Default::default()
@@ -39,8 +38,7 @@ impl Component for UIExample {
         );
 
         self.label = Some(
-            context
-                .new_entity(Label::new("Test Label"))
+            self.new_entity(context, Label::new("Test Label"))
                 .style(Style {
                     color: Some(Color::GREEN),
                     background_color: Some(Color::new(1.0, 0.0, 1.0, 0.5)),

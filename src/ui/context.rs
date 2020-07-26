@@ -1,8 +1,4 @@
-use crate::{
-    style::Style,
-    ui::{global_arena, Entity, Index, InteractiveComponent, Node, NodeData},
-    KludgineResult,
-};
+use crate::ui::{global_arena, Index};
 mod layout_context;
 mod scene_context;
 mod styled_context;
@@ -41,72 +37,9 @@ impl Context {
         global_arena().set_parent(child, Some(self.index)).await
     }
 
-    pub async fn send<T: InteractiveComponent + 'static>(
-        &self,
-        target: Entity<T>,
-        message: T::Input,
-    ) {
-        if let Some(target_node) = global_arena().get(target).await {
-            let component = target_node.component.read().await;
-            if let Some(node_data) = component.as_any().downcast_ref::<NodeData<T>>() {
-                node_data
-                    .sender
-                    .send(message)
-                    .expect("Error sending to component");
-            } else {
-                unreachable!("Invalid type in Entity<T> -- Node contained different type than T")
-            }
-        }
-    }
-
-    pub fn new_entity<T: InteractiveComponent + 'static>(&self, component: T) -> EntityBuilder<T> {
-        EntityBuilder {
-            component,
-            parent: Some(self.index),
-            style: Style::default(),
-        }
-    }
-
     pub fn clone_for<I: Into<Index>>(&self, index: I) -> Self {
         Self {
             index: index.into(),
         }
-    }
-}
-
-pub struct EntityBuilder<C> {
-    component: C,
-    parent: Option<Index>,
-    style: Style,
-}
-
-impl<C> EntityBuilder<C>
-where
-    C: InteractiveComponent + 'static,
-{
-    pub fn style(mut self, style: Style) -> Self {
-        self.style = style;
-        self
-    }
-
-    pub async fn insert(self) -> KludgineResult<Entity<C>> {
-        let index = {
-            let node = Node::new(self.component, self.style);
-            let index = global_arena().insert(self.parent, node).await;
-
-            let mut context = Context::new(index);
-            global_arena()
-                .get(index)
-                .await
-                .unwrap()
-                .initialize(&mut context)
-                .await?;
-
-            index
-        };
-        Ok(Entity {
-            index,
-            _phantom: std::marker::PhantomData::default(),
-        })
     }
 }
