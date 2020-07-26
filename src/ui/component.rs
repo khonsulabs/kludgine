@@ -1,5 +1,5 @@
 use crate::{
-    math::Size,
+    math::{Point, Size},
     shape::{Fill, Shape},
     style::Style,
     ui::{
@@ -10,6 +10,7 @@ use crate::{
     KludgineResult,
 };
 use async_trait::async_trait;
+use winit::event::MouseButton;
 
 pub struct LayoutConstraints {}
 
@@ -74,6 +75,29 @@ pub trait Component: Send + Sync {
         }
         Ok(())
     }
+
+    async fn mouse_down(
+        &mut self,
+        context: &mut Context,
+        position: Point,
+        button: MouseButton,
+    ) -> KludgineResult<EventStatus> {
+        Ok(EventStatus::Ignored)
+    }
+
+    async fn mouse_up(
+        &mut self,
+        context: &mut Context,
+        position: Option<Point>,
+        button: MouseButton,
+    ) -> KludgineResult<()> {
+        Ok(())
+    }
+}
+
+pub enum EventStatus {
+    Ignored,
+    Handled,
 }
 
 #[async_trait]

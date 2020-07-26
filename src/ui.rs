@@ -9,7 +9,7 @@ mod node;
 pub(crate) use self::node::NodeData;
 pub use self::{
     component::{
-        Callback, Component, EntityBuilder, InteractiveComponent, LayoutConstraints,
+        Callback, Component, EntityBuilder, EventStatus, InteractiveComponent, LayoutConstraints,
         StandaloneComponent,
     },
     context::*,
@@ -19,6 +19,7 @@ pub use self::{
     node::Node,
 };
 use crate::{
+    event::{ElementState, MouseButton},
     math::{Point, Rect, Surround},
     runtime::Runtime,
     scene::SceneTarget,
@@ -43,8 +44,10 @@ where
     pub(crate) root: Entity<C>,
     focus: Option<Index>,
     active: Option<Index>,
+    mouse_button_handlers: HashMap<MouseButton, Index>,
     hover: Option<Index>,
     last_render_order: Vec<Index>,
+    last_mouse_position: Option<Point>,
 }
 
 impl<C> UserInterface<C>
@@ -71,6 +74,8 @@ where
             active: None,
             hover: None,
             last_render_order: Default::default(),
+            last_mouse_position: None,
+            mouse_button_handlers: Default::default(),
         };
         ui.initialize(root).await?;
         Ok(ui)
@@ -205,7 +210,8 @@ where
         while let Some(index) = traverser.next().await {
             match event.event {
                 Event::MouseMoved { position } => {
-                    // Loop in order of top render to bottom render to find where this position is hovering over.
+                    self.last_mouse_position = position;
+
                     self.hover = None;
                     if let Some(position) = position {
                         for &index in self.last_render_order.iter() {
@@ -219,8 +225,46 @@ where
                         }
                     }
                 }
-                Event::MouseWheel { delta, touch_phase } => {}
-                Event::MouseButton { button, state } => {}
+                Event::MouseWheel { .. } => todo!("Hook up mouse scroll to hovered nodes"),
+                Event::MouseButton { button, state } => match state {
+                    ElementState::Released => {
+                        if let Some(&index) = self.mouse_button_handlers.get(&button) {
+                            if let Some(node) = global_arena().get(index).await {
+                                let layout = node.last_layout().await;
+                                let relative_position = self
+                                    .last_mouse_position
+                                    .map(|pos| layout.window_to_local(pos));
+                                let mut context = Context::new(index);
+                                node.mouse_up(&mut context, relative_position, button)
+                                    .await?;
+                            }
+                        }
+                    }
+                    ElementState::Pressed => {
+                        self.active = None;
+                        self.mouse_button_handlers.remove(&button);
+
+                        if let Some(last_mouse_position) = self.last_mouse_position {
+                            let mut next_to_process = self.hover;
+                            while let Some(index) = next_to_process {
+                                if let Some(node) = global_arena().get(index).await {
+                                    let layout = node.last_layout().await;
+                                    let relative_position =
+                                        layout.window_to_local(last_mouse_position);
+                                    let mut context = Context::new(index);
+                                    if let EventStatus::Handled = node
+                                        .mouse_down(&mut context, relative_position, button)
+                                        .await?
+                                    {
+                                        self.mouse_button_handlers.insert(button, index);
+                                        break;
+                                    }
+                                }
+                                next_to_process = global_arena().parent(index).await;
+                            }
+                        }
+                    }
+                },
                 _ => {}
             }
 

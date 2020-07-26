@@ -1,5 +1,6 @@
 use super::{
     application::WindowCreator,
+    event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode},
     frame::Frame,
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
@@ -20,10 +21,7 @@ use rgx::core::*;
 use futures::executor::block_on;
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use winit::{
-    event::{
-        DeviceId, ElementState, Event as WinitEvent, MouseButton, MouseScrollDelta, TouchPhase,
-        VirtualKeyCode, WindowEvent as WinitWindowEvent,
-    },
+    event::{Event as WinitEvent, WindowEvent as WinitWindowEvent},
     window::{Window as WinitWindow, WindowBuilder as WinitWindowBuilder, WindowId},
 };
 

@@ -120,6 +120,7 @@ mod internal_macros {
 }
 
 pub mod application;
+pub mod event;
 pub mod frame;
 pub mod math;
 pub mod runtime;
@@ -140,6 +141,7 @@ pub use rgx::kit::shape2d as shape;
 pub mod prelude {
     pub use super::{
         application::{Application, SingleWindowApplication, WindowCreator},
+        event::*,
         include_aseprite_sprite, include_font, include_texture,
         math::{Dimension, Point, Rect, Size, Surround},
         runtime::Runtime,

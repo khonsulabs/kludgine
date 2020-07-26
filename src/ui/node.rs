@@ -1,9 +1,10 @@
 use crate::{
-    math::Size,
+    event::MouseButton,
+    math::{Point, Size},
     style::Style,
     ui::{
-        Callback, Component, Context, InteractiveComponent, Layout, LayoutSolver, SceneContext,
-        StyledContext,
+        Callback, Component, Context, EventStatus, InteractiveComponent, Layout, LayoutSolver,
+        SceneContext, StyledContext,
     },
     window::InputEvent,
     KludgineHandle, KludgineResult,
@@ -253,6 +254,26 @@ impl Node {
     ) -> KludgineResult<()> {
         let mut component = self.component.write().await;
         component.process_input(context, event).await
+    }
+
+    pub async fn mouse_down(
+        &self,
+        context: &mut Context,
+        position: Point,
+        button: MouseButton,
+    ) -> KludgineResult<EventStatus> {
+        let mut component = self.component.write().await;
+        component.mouse_down(context, position, button).await
+    }
+
+    pub async fn mouse_up(
+        &self,
+        context: &mut Context,
+        position: Option<Point>,
+        button: MouseButton,
+    ) -> KludgineResult<()> {
+        let mut component = self.component.write().await;
+        component.mouse_up(context, position, button).await
     }
 
     pub async fn process_pending_events(&self, context: &mut Context) -> KludgineResult<()> {
