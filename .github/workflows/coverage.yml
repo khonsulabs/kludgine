@@ -1,4 +1,7 @@
-name: Tests
+name: Coverage
+defaults:
+  run:
+    shell: bash
 
 on: [push]
 
