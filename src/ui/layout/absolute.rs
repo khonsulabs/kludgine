@@ -173,3 +173,105 @@ impl LayoutSolver for AbsoluteLayout {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_relative_eq;
+
+    macro_rules! assert_dimension_eq {
+        ($left:expr, $right:expr) => {
+            assert_relative_eq!($left.0, $right.0);
+            assert_relative_eq!($left.1, $right.1)
+        };
+    }
+
+    #[test]
+    fn solve_dimension_tests() -> KludgineResult<()> {
+        // start.auto end.auto length.auto
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Auto,
+                &Dimension::Auto,
+                &Dimension::Auto,
+                90.,
+                30.,
+            ),
+            (30., 30.)
+        );
+
+        // start.pts  end.auto length.auto
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Points(50.),
+                &Dimension::Auto,
+                &Dimension::Auto,
+                90.,
+                30.,
+            ),
+            (50., 10.)
+        );
+
+        // start.pts end.pts length.auto
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Points(50.),
+                &Dimension::Points(0.),
+                &Dimension::Auto,
+                90.,
+                30.,
+            ),
+            (50., 0.)
+        );
+
+        // start.pts end.auto length.pts
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Points(10.),
+                &Dimension::Auto,
+                &Dimension::Points(10.),
+                90.,
+                30.,
+            ),
+            (10., 70.)
+        );
+
+        // start.pts end.pts length.pts
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Points(10.),
+                &Dimension::Points(75.),
+                &Dimension::Points(5.),
+                90.,
+                30.,
+            ),
+            (10., 75.)
+        );
+
+        // start.auto end.pts length.auto
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Auto,
+                &Dimension::Points(50.),
+                &Dimension::Auto,
+                90.,
+                30.,
+            ),
+            (10., 50.)
+        );
+
+        // start.auto end.pts length.pts
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Auto,
+                &Dimension::Points(50.),
+                &Dimension::Points(20.),
+                90.,
+                30.,
+            ),
+            (20., 50.)
+        );
+
+        Ok(())
+    }
+}

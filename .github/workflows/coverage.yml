@@ -16,10 +16,7 @@ jobs:
       - uses: actions/checkout@v1
       - name: Run code coverage
         run: |
-          apt-get update && apt-get install zip -y
-          cargo +nightly install grcov
           cargo +nightly test --all-features
-
 
           zip -0 ccov.zip `find . \( -name "kludgine*.gc*" \) -print`;
           rm -rf target
