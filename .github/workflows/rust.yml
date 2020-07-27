@@ -18,20 +18,18 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.GAC_SECRET_KEY }}
           SCCACHE_BUCKET: khonsulabs-gac
       - name: Run tests on stable
-        run: cargo test --all-features
+        run: |
+          cargo test --all-features
+          cargo tarpaulin --out Xml
+          bash <(curl -s https://codecov.io/bash)
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.GAC_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.GAC_SECRET_KEY }}
           SCCACHE_BUCKET: khonsulabs-gac
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Run tests on nightly
         run: cargo test +nightly --all-features
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.GAC_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.GAC_SECRET_KEY }}
           SCCACHE_BUCKET: khonsulabs-gac
-      - name: Run code coverage
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        run: |
-          cargo tarpaulin --out Xml
-          bash <(curl -s https://codecov.io/bash)
