@@ -19,14 +19,21 @@ jobs:
           SCCACHE_BUCKET: khonsulabs-gac
       - name: Run tests on stable
         run: |
+          cargo install grcov
           cargo test --all-features
-          cargo tarpaulin --out Xml
-          bash <(curl -s https://codecov.io/bash)
+
+
+          zip -0 ccov.zip `find . \( -name "kludgine*.gc*" \) -print`;
+          ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o lcov.info;
+          bash <(curl -s https://codecov.io/bash) -f lcov.info;
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.GAC_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.GAC_SECRET_KEY }}
           SCCACHE_BUCKET: khonsulabs-gac
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          CARGO_INCREMENTAL: 0
+          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
+          RUSTDOCFLAGS: "-Cpanic=abort"
       - name: Run tests on nightly
         run: cargo test +nightly --all-features
         env:
