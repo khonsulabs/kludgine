@@ -22,7 +22,7 @@ jobs:
 
 
           zip -0 ccov.zip `find . \( -name "kludgine*.gc*" \) -print`;
-          grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" -o lcov.info;
+          grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" --ignore "/target" -o lcov.info;
           bash <(curl -s https://codecov.io/bash) -f lcov.info;
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
