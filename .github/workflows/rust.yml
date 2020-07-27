@@ -19,6 +19,7 @@ jobs:
       #     SCCACHE_BUCKET: khonsulabs-gac
       - name: Run tests on stable
         run: |
+          apt-get update && apt-get install libwayland-dev
           cargo +nightly install grcov
           cargo +nightly test --all-features
 
