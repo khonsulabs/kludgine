@@ -19,10 +19,10 @@ static MAP_SIZE: u32 = 100;
 
 impl Window for Isometric {}
 
+impl StandaloneComponent for Isometric {}
+
 #[async_trait]
 impl Component for Isometric {
-    type Message = ();
-
     async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
         self.load_assets().await?;
         // self.zoom = 1.0;

@@ -2,7 +2,7 @@ use crate::{
     math::{Point, Size},
     style::EffectiveStyle,
     text::{wrap::TextWrap, Text},
-    ui::{Component, Layout, SceneContext, StyledContext},
+    ui::{Component, Context, InteractiveComponent, Layout, SceneContext, StyledContext},
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -12,10 +12,33 @@ pub struct Label {
     value: String,
 }
 
+#[derive(Clone, Debug)]
+pub enum LabelCommand {
+    SetValue(String),
+}
+
+#[async_trait]
+impl InteractiveComponent for Label {
+    type Input = LabelCommand;
+    type Message = ();
+    type Output = ();
+
+    async fn receive_input(
+        &mut self,
+        _context: &mut Context,
+        message: Self::Input,
+    ) -> KludgineResult<()> {
+        match message {
+            LabelCommand::SetValue(new_value) => {
+                self.value = new_value;
+            }
+        }
+        Ok(())
+    }
+}
+
 #[async_trait]
 impl Component for Label {
-    type Message = ();
-
     async fn update(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
         Ok(())
     }

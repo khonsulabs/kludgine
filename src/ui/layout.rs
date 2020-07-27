@@ -1,7 +1,7 @@
 mod absolute;
 pub use self::absolute::*;
 use crate::{
-    math::{Rect, Size, Surround},
+    math::{Point, Rect, Size, Surround},
     ui::LayoutContext,
     KludgineResult,
 };
@@ -17,7 +17,7 @@ pub trait LayoutSolver: Send + Sync + std::fmt::Debug {
     ) -> KludgineResult<()>;
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Layout {
     pub bounds: Rect,
     pub padding: Surround,
@@ -42,6 +42,14 @@ impl Layout {
 
     pub fn inner_bounds(&self) -> Rect {
         self.bounds_without_margin().inset(self.padding)
+    }
+
+    pub fn window_to_local(&self, location: Point) -> Point {
+        location - self.bounds.origin
+    }
+
+    pub fn local_to_window(&self, location: Point) -> Point {
+        location + self.bounds.origin
     }
 }
 

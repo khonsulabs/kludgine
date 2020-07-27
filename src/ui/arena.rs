@@ -1,7 +1,6 @@
 use crate::{ui::Node, KludgineHandle};
 use generational_arena::Arena;
-use std::collections::VecDeque;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 pub use generational_arena::Index;
 
@@ -91,6 +90,7 @@ impl HierarchicalArenaData {
                 children.push(child);
             })
             .or_insert_with(|| vec![child]);
+        self.parents.insert(child, parent);
     }
 
     pub fn parent(&self, child: Index) -> Option<Index> {

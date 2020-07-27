@@ -5,7 +5,10 @@ use crate::{
     ui::{global_arena, Index, Layout, LayoutSolver, SceneContext, StyledContext},
     KludgineHandle, KludgineResult,
 };
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    sync::Arc,
+};
 
 #[derive(Clone, Debug)]
 pub struct LayoutEngine {
@@ -18,17 +21,17 @@ struct LayoutEngineData {
     pub(crate) layouts: HashMap<Index, Layout>,
     indicies_to_process: VecDeque<Index>,
     render_queue: VecDeque<Index>,
-    effective_styles: HashMap<Index, EffectiveStyle>,
+    effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
 }
 
 impl LayoutEngine {
     pub fn new(
         layout_solvers: HashMap<Index, KludgineHandle<Box<dyn LayoutSolver>>>,
-        effective_styles: HashMap<Index, EffectiveStyle>,
-        root: Index,
+        effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
+        root: impl Into<Index>,
     ) -> Self {
         let mut indicies_to_process = VecDeque::default();
-        indicies_to_process.push_back(root);
+        indicies_to_process.push_back(root.into());
         Self {
             data: KludgineHandle::new(LayoutEngineData {
                 layout_solvers,

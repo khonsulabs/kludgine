@@ -23,10 +23,10 @@ static MAP_SIZE: u32 = 100;
 
 impl Window for OrthoTiles {}
 
+impl StandaloneComponent for OrthoTiles {}
+
 #[async_trait]
 impl Component for OrthoTiles {
-    type Message = ();
-
     async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
         self.load_assets().await?;
         self.zoom = 1.0;

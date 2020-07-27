@@ -18,10 +18,10 @@ impl WindowCreator<Simple> for Simple {
 
 impl Window for Simple {}
 
+impl StandaloneComponent for Simple {}
+
 #[async_trait]
 impl Component for Simple {
-    type Message = ();
-
     async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
         let texture = Texture::load("examples/assets/k.png")?;
         self.source_sprite = Some(SourceSprite::entire_texture(texture).await);

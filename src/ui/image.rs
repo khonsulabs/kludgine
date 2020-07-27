@@ -2,7 +2,7 @@ use crate::{
     math::Size,
     source_sprite::SourceSprite,
     sprite::Sprite,
-    ui::{Component, Layout, SceneContext, StyledContext},
+    ui::{Component, Layout, SceneContext, StandaloneComponent, StyledContext},
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -13,10 +13,10 @@ pub struct Image {
     current_frame: Option<SourceSprite>,
 }
 
+impl StandaloneComponent for Image {}
+
 #[async_trait]
 impl Component for Image {
-    type Message = ();
-
     async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         self.current_frame = Some(
             self.sprite

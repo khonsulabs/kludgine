@@ -1,10 +1,11 @@
 use super::{
     application::WindowCreator,
+    event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode},
     frame::Frame,
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
     scene::{Scene, SceneTarget},
-    ui::{global_arena, Component, UserInterface},
+    ui::{global_arena, InteractiveComponent, NodeData, NodeDataWindowExt, UserInterface},
     KludgineError, KludgineHandle, KludgineResult,
 };
 use async_trait::async_trait;
@@ -20,10 +21,7 @@ use rgx::core::*;
 use futures::executor::block_on;
 use std::{collections::HashMap, sync::Arc, time::Duration};
 use winit::{
-    event::{
-        DeviceId, ElementState, Event as WinitEvent, MouseButton, MouseScrollDelta, TouchPhase,
-        VirtualKeyCode, WindowEvent as WinitWindowEvent,
-    },
+    event::{Event as WinitEvent, WindowEvent as WinitWindowEvent},
     window::{Window as WinitWindow, WindowBuilder as WinitWindowBuilder, WindowId},
 };
 
@@ -95,7 +93,7 @@ pub enum Event {
 
 /// Trait to implement a Window
 #[async_trait]
-pub trait Window: Component + Send + Sync + 'static {
+pub trait Window: InteractiveComponent + Send + Sync + 'static {
     /// The window was requested to be closed, most likely from the Close Button. Override
     /// this implementation if you want logic in place to prevent a window from closing.
     async fn close_requested(&self) -> KludgineResult<CloseResponse> {
@@ -312,7 +310,7 @@ impl RuntimeWindow {
     {
         let root_node = global_arena().get(ui.root).await.unwrap();
         let component = root_node.component.read().await;
-        let window = component.as_any().downcast_ref::<T>().unwrap();
+        let window = component.as_any().downcast_ref::<NodeData<T>>().unwrap();
         if let CloseResponse::Close = window.close_requested().await? {
             WindowMessage::Close.send_to(id).await?;
             return Ok(true);
