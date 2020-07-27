@@ -38,10 +38,6 @@ impl AbsoluteLayout {
 
         let mut remaining_length = available_length - content_length;
 
-        if remaining_length < 0. {
-            return (0., 0.);
-        }
-
         let mut auto_measurements = 0;
         if let Some(points) = start.points() {
             remaining_length -= points;
@@ -271,6 +267,54 @@ mod tests {
             ),
             (20., 50.)
         );
+
+        // Running out of room: Not enough space to honor both width and padding
+        // This engine's decision is to honor making the "whitespace" layout look laid out correctly
+        // for as long as possible, and start clipping the content.
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Points(40.),
+                &Dimension::Points(40.),
+                &Dimension::Points(30.),
+                90.,
+                30.,
+            ),
+            (40., 40.)
+        );
+
+        // Running out of room: Not even enough room for padding
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Points(50.),
+                &Dimension::Points(50.),
+                &Dimension::Points(30.),
+                90.,
+                30.,
+            ),
+            (45., 45.)
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn validate_tests() -> KludgineResult<()> {
+        AbsoluteBounds {
+            bottom: Dimension::Points(1.),
+            height: Dimension::Points(1.),
+            top: Dimension::Points(1.),
+            ..Default::default()
+        }
+        .validate()
+        .expect_err("Invalid Vertical Bounds");
+        AbsoluteBounds {
+            left: Dimension::Points(1.),
+            width: Dimension::Points(1.),
+            right: Dimension::Points(1.),
+            ..Default::default()
+        }
+        .validate()
+        .expect_err("Invalid Horizontal Bounds");
 
         Ok(())
     }
