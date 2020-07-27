@@ -51,12 +51,12 @@ impl AbsoluteLayout {
         }
 
         let effective_side1 = match start {
-            Dimension::Auto => remaining_length / auto_measurements as f32,
+            Dimension::Auto => remaining_length.max(0.) / auto_measurements as f32,
             Dimension::Points(points) => *points,
         };
 
         let effective_side2 = match end {
-            Dimension::Auto => remaining_length / auto_measurements as f32,
+            Dimension::Auto => remaining_length.max(0.) / auto_measurements as f32,
             Dimension::Points(points) => *points,
         };
 
@@ -255,6 +255,16 @@ mod tests {
             ),
             (10., 50.)
         );
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Auto,
+                &Dimension::Points(50.),
+                &Dimension::Auto,
+                90.,
+                90.,
+            ),
+            (0., 50.)
+        );
 
         // start.auto end.pts length.pts
         assert_dimension_eq!(
@@ -315,6 +325,133 @@ mod tests {
         }
         .validate()
         .expect_err("Invalid Horizontal Bounds");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn layout_test() -> KludgineResult<()> {
+        use crate::{
+            scene::{Scene, SceneTarget},
+            style::Style,
+            ui::{
+                Component, HierarchicalArena, Layout, LayoutEngine, LayoutSolver, LayoutSolverExt,
+                Node, StandaloneComponent, StyledContext,
+            },
+        };
+        use async_trait::async_trait;
+        use std::collections::HashSet;
+        struct TestRoot {
+            child: Index,
+        }
+        #[async_trait]
+        impl Component for TestRoot {
+            async fn layout(
+                &mut self,
+                _context: &mut StyledContext,
+            ) -> KludgineResult<Box<dyn LayoutSolver>> {
+                AbsoluteLayout::default()
+                    .child(
+                        self.child,
+                        AbsoluteBounds {
+                            right: Dimension::Points(30.),
+                            bottom: Dimension::Points(30.),
+                            width: Dimension::Points(90.),
+                            height: Dimension::Points(90.),
+                            ..Default::default()
+                        },
+                    )?
+                    .layout()
+            }
+        }
+        impl StandaloneComponent for TestRoot {}
+
+        struct TestChild {
+            other_child: Option<Index>,
+        }
+        #[async_trait]
+        impl Component for TestChild {
+            async fn layout(
+                &mut self,
+                _context: &mut StyledContext,
+            ) -> KludgineResult<Box<dyn LayoutSolver>> {
+                if let Some(child) = self.other_child {
+                    AbsoluteLayout::default()
+                        .child(
+                            child,
+                            AbsoluteBounds {
+                                left: Dimension::Points(10.),
+                                top: Dimension::Points(10.),
+                                right: Dimension::Points(10.),
+                                bottom: Dimension::Points(10.),
+                                ..Default::default()
+                            },
+                        )?
+                        .layout()
+                } else {
+                    Layout::none().layout()
+                }
+            }
+        }
+        impl StandaloneComponent for TestChild {}
+
+        let arena = HierarchicalArena::default();
+        let node = Node::new(
+            TestChild { other_child: None },
+            Style::default(),
+            Style::default(),
+            Style::default(),
+            Style::default(),
+            None,
+        );
+        let leaf = arena.insert(None, node).await;
+        let node = Node::new(
+            TestChild {
+                other_child: Some(leaf),
+            },
+            Style::default(),
+            Style::default(),
+            Style::default(),
+            Style::default(),
+            None,
+        );
+        let child = arena.insert(None, node).await;
+
+        let node = Node::new(
+            TestRoot { child },
+            Style::default(),
+            Style::default(),
+            Style::default(),
+            Style::default(),
+            None,
+        );
+        let root = arena.insert(None, node).await;
+        arena.set_parent(leaf, Some(child)).await;
+        arena.set_parent(child, Some(root)).await;
+
+        let scene = Scene::default();
+        scene.set_internal_size(Size::new(200., 200.)).await;
+        let scene_target = SceneTarget::Scene(scene);
+        let engine = LayoutEngine::layout(&arena, root, &scene_target, HashSet::new()).await?;
+
+        let root_layout = engine.get_layout(&root).await.unwrap();
+        let child_layout = engine.get_layout(&child).await.unwrap();
+        let leaf_layout = engine.get_layout(&leaf).await.unwrap();
+
+        assert_relative_eq!(root_layout.inner_bounds().origin.x, 0.);
+        assert_relative_eq!(root_layout.inner_bounds().origin.y, 0.);
+        assert_relative_eq!(root_layout.inner_bounds().size.width, 200.);
+        assert_relative_eq!(root_layout.inner_bounds().size.height, 200.);
+
+        assert_relative_eq!(child_layout.inner_bounds().origin.x, 80.);
+        assert_relative_eq!(child_layout.inner_bounds().origin.y, 80.);
+        assert_relative_eq!(child_layout.inner_bounds().size.width, 90.);
+        assert_relative_eq!(child_layout.inner_bounds().size.height, 90.);
+
+        assert_relative_eq!(leaf_layout.inner_bounds().origin.x, 90.);
+        assert_relative_eq!(leaf_layout.inner_bounds().origin.y, 90.);
+        assert_relative_eq!(leaf_layout.inner_bounds().size.width, 70.);
+        assert_relative_eq!(leaf_layout.inner_bounds().size.height, 70.);
 
         Ok(())
     }

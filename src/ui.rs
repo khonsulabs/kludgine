@@ -22,19 +22,16 @@ pub use self::{
 };
 use crate::{
     event::{ElementState, MouseButton},
-    math::{Point, Rect, Surround},
+    math::Point,
     runtime::Runtime,
     scene::SceneTarget,
     style::Style,
     window::{Event, InputEvent},
-    KludgineHandle, KludgineResult,
+    KludgineResult,
 };
 use arena::{HierarchicalArena, Index};
 use once_cell::sync::OnceCell;
-use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    sync::Arc,
-};
+use std::collections::{HashMap, HashSet};
 
 static UI: OnceCell<HierarchicalArena> = OnceCell::new();
 
@@ -87,79 +84,13 @@ where
     }
 
     pub async fn render(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
-        let (layouts, effective_styles) = {
-            let mut effective_styles = HashMap::new();
-            let mut computed_styles = HashMap::new();
-            let hovered_indicies = self.hovered_indicies().await;
-            let mut traverser = global_arena().traverse(self.root).await;
-            let mut found_nodes = VecDeque::new();
-            while let Some(index) = traverser.next().await {
-                let node = global_arena().get(index).await.unwrap();
-                let mut node_style = node.style().await;
-
-                if hovered_indicies.contains(&index) {
-                    node_style = node.hover_style().await.inherit_from(&node_style);
-                }
-
-                let computed_style = match global_arena().parent(index).await {
-                    Some(parent_index) => {
-                        node_style.inherit_from(computed_styles.get(&parent_index).unwrap())
-                    }
-                    None => node_style.clone(),
-                };
-                computed_styles.insert(index, computed_style);
-                found_nodes.push_back(index);
-            }
-
-            for (index, style) in computed_styles {
-                effective_styles.insert(index, style.effective_style(scene).await);
-            }
-            let effective_styles = Arc::new(effective_styles);
-
-            // Traverse the found nodes starting at the back (leaf nodes) and iterate upwards to update stretch
-            let mut layout_solvers = HashMap::new();
-            while let Some(index) = found_nodes.pop_back() {
-                let node = global_arena().get(index).await.unwrap();
-                let effective_style = effective_styles.get(&index).unwrap().clone();
-                let mut context = StyledContext::new(
-                    index,
-                    scene.clone(),
-                    effective_style.clone(),
-                    global_arena().clone(),
-                );
-                let solver = node.layout(&mut context).await?;
-                layout_solvers.insert(index, KludgineHandle::new(solver));
-            }
-
-            let layout_data =
-                LayoutEngine::new(layout_solvers, effective_styles.clone(), self.root);
-
-            while let Some(index) = layout_data.next_to_layout().await {
-                let effective_style = effective_styles.get(&index).unwrap().clone();
-                let mut context = LayoutContext::new(
-                    index,
-                    scene.clone(),
-                    effective_style.clone(),
-                    layout_data.clone(),
-                    global_arena().clone(),
-                );
-                let computed_layout = match context.layout_for(index).await {
-                    Some(layout) => layout,
-                    None => Layout {
-                        bounds: Rect::sized(Point::default(), scene.size().await),
-                        padding: Surround::default(),
-                        margin: Surround::default(),
-                    },
-                };
-                context
-                    .layout_within(index, &computed_layout.inner_bounds())
-                    .await?;
-                let node = global_arena().get(index).await.unwrap();
-                node.set_layout(computed_layout).await;
-            }
-
-            (layout_data, effective_styles)
-        };
+        let layouts = LayoutEngine::layout(
+            global_arena(),
+            self.root.into(),
+            scene,
+            self.hovered_indicies().await,
+        )
+        .await?;
 
         self.last_render_order.clear();
         while let Some(index) = layouts.next_to_render().await {
@@ -169,7 +100,12 @@ where
                 let mut context = StyledContext::new(
                     index,
                     scene.clone(),
-                    effective_styles.get(&index).unwrap().clone(),
+                    layouts
+                        .effective_styles()
+                        .await
+                        .get(&index)
+                        .unwrap()
+                        .clone(),
                     global_arena().clone(),
                 );
                 node.render_background(&mut context, &layout).await?;
