@@ -11,16 +11,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-      - name: Run clippy
-        run: cargo clippy
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.GAC_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.GAC_SECRET_KEY }}
-          SCCACHE_BUCKET: khonsulabs-gac
+      # - name: Run clippy
+      #   run: cargo clippy
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.GAC_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.GAC_SECRET_KEY }}
+      #     SCCACHE_BUCKET: khonsulabs-gac
       - name: Run tests on stable
         run: |
-          cargo install grcov
-          cargo test --all-features
+          cargo +nightly install grcov
+          cargo +nightly test --all-features
 
 
           zip -0 ccov.zip `find . \( -name "kludgine*.gc*" \) -print`;
