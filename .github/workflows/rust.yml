@@ -19,7 +19,6 @@ jobs:
       #     SCCACHE_BUCKET: khonsulabs-gac
       - name: Run tests on stable
         run: |
-          apt-get update && apt-get install libwayland-dev -y
           cargo +nightly install grcov
           cargo +nightly test --all-features
 
@@ -33,7 +32,7 @@ jobs:
           SCCACHE_BUCKET: khonsulabs-gac
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           CARGO_INCREMENTAL: 0
-          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort"
+          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests" # TODO: https://github.com/alexcrichton/proc-macro2/issues/218
           RUSTDOCFLAGS: "-Cpanic=abort"
       - name: Run tests on nightly
         run: cargo test +nightly --all-features
