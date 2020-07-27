@@ -1,0 +1,32 @@
+name: Coverage
+defaults:
+  run:
+    shell: bash
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: khonsulabs/build-rust:latest
+      options: "--security-opt seccomp=unconfined"
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Run code coverage
+        run: |
+          apt-get update && apt-get install zip -y
+          cargo +nightly install grcov
+          cargo +nightly test --all-features
+
+
+          zip -0 ccov.zip `find . \( -name "kludgine*.gc*" \) -print`;
+          rm -rf target
+          grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" --ignore "/target" -o lcov.info;
+          bash <(curl -s https://codecov.io/bash) -f lcov.info;
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          CARGO_INCREMENTAL: 0
+          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests" # TODO: https://github.com/alexcrichton/proc-macro2/issues/218
+          RUSTDOCFLAGS: "-Cpanic=abort"

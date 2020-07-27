@@ -1,6 +1,6 @@
 # Kludgine
 
-![Rust](https://github.com/khonsulabs/kludgine/workflows/Tests/badge.svg)
+![Rust](https://github.com/khonsulabs/kludgine/workflows/Tests/badge.svg) [![codecov](https://codecov.io/gh/khonsulabs/kludgine/branch/main/graph/badge.svg)](https://codecov.io/gh/khonsulabs/kludgine)
 
 Kludgine is named in a way to hopefully be ironic in nature, but it's being designed and written by a developer that is fairly new to modern graphics programming and rust. Thus, it is probably a [kludge](https://en.wikipedia.org/wiki/Kludge).
 
