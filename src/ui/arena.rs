@@ -1,7 +1,6 @@
 use crate::{ui::Node, KludgineHandle};
 use generational_arena::Arena;
-use std::collections::VecDeque;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 pub use generational_arena::Index;
 

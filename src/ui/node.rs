@@ -4,8 +4,8 @@ use crate::{
     runtime::Runtime,
     style::Style,
     ui::{
-        Callback, Component, Context, EventStatus, InteractiveComponent, Layout, LayoutSolver,
-        SceneContext, StyledContext,
+        Callback, Context, EventStatus, InteractiveComponent, Layout, LayoutSolver, SceneContext,
+        StyledContext,
     },
     window::{CloseResponse, InputEvent, Window},
     KludgineHandle, KludgineResult,

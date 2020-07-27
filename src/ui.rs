@@ -31,7 +31,10 @@ use crate::{
 };
 use arena::{HierarchicalArena, Index};
 use once_cell::sync::OnceCell;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+    sync::Arc,
+};
 
 static UI: OnceCell<HierarchicalArena> = OnceCell::new();
 
@@ -84,9 +87,8 @@ where
     }
 
     pub async fn render(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
-        let mut effective_styles = HashMap::new();
-
-        let layouts = {
+        let (layouts, effective_styles) = {
+            let mut effective_styles = HashMap::new();
             let mut computed_styles = HashMap::new();
             let hovered_indicies = self.hovered_indicies().await;
             let mut traverser = global_arena().traverse(self.root).await;
@@ -112,6 +114,7 @@ where
             for (index, style) in computed_styles {
                 effective_styles.insert(index, style.effective_style(scene).await);
             }
+            let effective_styles = Arc::new(effective_styles);
 
             // Traverse the found nodes starting at the back (leaf nodes) and iterate upwards to update stretch
             let mut layout_solvers = HashMap::new();
@@ -123,11 +126,8 @@ where
                 layout_solvers.insert(index, KludgineHandle::new(solver));
             }
 
-            let layout_data = LayoutEngine::new(
-                layout_solvers,
-                effective_styles.clone(), // TODO don't really want to clone here
-                self.root,
-            );
+            let layout_data =
+                LayoutEngine::new(layout_solvers, effective_styles.clone(), self.root);
 
             while let Some(index) = layout_data.next_to_layout().await {
                 let effective_style = effective_styles.get(&index).unwrap().clone();
@@ -152,7 +152,7 @@ where
                 node.set_layout(computed_layout).await;
             }
 
-            layout_data
+            (layout_data, effective_styles)
         };
 
         self.last_render_order.clear();
