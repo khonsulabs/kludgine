@@ -232,9 +232,17 @@ where
                     if let Some(&index) = self.mouse_button_handlers.get(&button) {
                         if let Some(node) = global_arena().get(index).await {
                             let layout = node.last_layout().await;
-                            let relative_position = self
-                                .last_mouse_position
-                                .map(|pos| layout.window_to_local(pos));
+                            let relative_position = match self.last_mouse_position {
+                                Some(position) => {
+                                    if layout.bounds_without_margin().contains(position) {
+                                        Some(layout.window_to_local(position))
+                                    } else {
+                                        None
+                                    }
+                                }
+                                None => None,
+                            };
+
                             let mut context = Context::new(index);
                             node.mouse_up(&mut context, relative_position, button)
                                 .await?;

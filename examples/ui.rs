@@ -34,7 +34,7 @@ impl InteractiveComponent for UIExample {
 
     async fn receive_message(
         &mut self,
-        context: &mut Context,
+        _context: &mut Context,
         message: Self::Message,
     ) -> KludgineResult<()> {
         match message {

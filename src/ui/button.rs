@@ -52,7 +52,7 @@ impl Component for Button {
 
     async fn layout(
         &mut self,
-        context: &mut StyledContext,
+        _context: &mut StyledContext,
     ) -> KludgineResult<Box<dyn LayoutSolver>> {
         Layout::absolute()
             .child(
