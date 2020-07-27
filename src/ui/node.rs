@@ -1,6 +1,7 @@
 use crate::{
     event::MouseButton,
     math::{Point, Size},
+    runtime::Runtime,
     style::Style,
     ui::{
         Callback, Component, Context, EventStatus, InteractiveComponent, Layout, LayoutSolver,
@@ -27,12 +28,12 @@ pub(crate) trait AnyNode: PendingEventProcessor + Component {
 #[async_trait]
 pub(crate) trait PendingEventProcessor {
     async fn process_pending_events(&mut self, context: &mut Context) -> KludgineResult<()>;
-    async fn send_callback(&mut self, input: Box<dyn Any + Send + Sync>);
+    async fn send_callback(&self, input: Box<dyn Any + Send + Sync>);
 }
 
-impl<T: InteractiveComponent + 'static, O: Send + 'static> AnyNode for NodeData<T, O> {
+impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     fn as_any(&self) -> &dyn Any {
-        &self.component
+        self
     }
 
     fn style(&self) -> &'_ Style {
@@ -66,9 +67,7 @@ impl<T: InteractiveComponent + 'static, O: Send + 'static> AnyNode for NodeData<
 }
 
 #[async_trait]
-impl<T: InteractiveComponent + 'static, O: Send + 'static> PendingEventProcessor
-    for NodeData<T, O>
-{
+impl<T: InteractiveComponent + 'static> PendingEventProcessor for NodeData<T> {
     async fn process_pending_events(&mut self, context: &mut Context) -> KludgineResult<()> {
         while let Ok(message) = self.input_receiver.try_recv() {
             self.component.receive_input(context, message).await?
@@ -79,7 +78,7 @@ impl<T: InteractiveComponent + 'static, O: Send + 'static> PendingEventProcessor
         Ok(())
     }
 
-    async fn send_callback(&mut self, output: Box<dyn Any + Send + Sync>) {
+    async fn send_callback(&self, output: Box<dyn Any + Send + Sync>) {
         let output = output.downcast_ref::<T::Output>().unwrap().clone();
         if let Some(callback) = self.callback.as_ref() {
             callback.invoke(output).await;
@@ -87,12 +86,12 @@ impl<T: InteractiveComponent + 'static, O: Send + 'static> PendingEventProcessor
     }
 }
 
-pub struct NodeData<T, O>
+pub struct NodeData<T>
 where
     T: InteractiveComponent,
 {
-    component: T,
-    callback: Option<Callback<T::Output, O>>,
+    pub(crate) component: T,
+    callback: Option<Callback<T::Output>>,
     pub(crate) style: Style,
     pub(crate) hover_style: Style,
     pub(crate) active_style: Style,
@@ -105,7 +104,7 @@ where
 }
 
 #[async_trait]
-impl<T, O> Component for NodeData<T, O>
+impl<T> Component for NodeData<T>
 where
     T: InteractiveComponent,
 {
@@ -150,6 +149,24 @@ where
     ) -> KludgineResult<()> {
         self.component.process_input(context, event).await
     }
+
+    async fn mouse_down(
+        &mut self,
+        context: &mut Context,
+        position: Point,
+        button: MouseButton,
+    ) -> KludgineResult<EventStatus> {
+        self.component.mouse_down(context, position, button).await
+    }
+
+    async fn mouse_up(
+        &mut self,
+        context: &mut Context,
+        position: Option<Point>,
+        button: MouseButton,
+    ) -> KludgineResult<()> {
+        self.component.mouse_up(context, position, button).await
+    }
 }
 
 #[derive(Clone)]
@@ -158,13 +175,13 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new<T: InteractiveComponent + 'static, O: Send + 'static>(
+    pub fn new<T: InteractiveComponent + 'static>(
         component: T,
         style: Style,
         hover_style: Style,
         active_style: Style,
         focus_style: Style,
-        callback: Option<Callback<T::Output, O>>,
+        callback: Option<Callback<T::Output>>,
     ) -> Self {
         let (input_sender, input_receiver) = unbounded_channel();
         let (message_sender, message_receiver) = unbounded_channel();
@@ -282,8 +299,11 @@ impl Node {
     }
 
     pub async fn callback<Input: Send + Sync + 'static>(&self, message: Input) {
-        let mut component = self.component.write().await;
-        component.send_callback(Box::new(message)).await
+        let component = self.component.clone();
+        Runtime::spawn(async move {
+            let component = component.read().await;
+            component.send_callback(Box::new(message)).await
+        });
     }
 
     pub(crate) async fn set_layout(&self, layout: Layout) {

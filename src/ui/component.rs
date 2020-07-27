@@ -131,7 +131,7 @@ pub trait InteractiveComponent: Component {
         &self,
         context: &mut Context,
         component: T,
-    ) -> EntityBuilder<T, Self::Message> {
+    ) -> EntityBuilder<T> {
         EntityBuilder {
             component,
             parent: Some(context.index()),
@@ -143,14 +143,10 @@ pub trait InteractiveComponent: Component {
         }
     }
 
-    async fn send<T: InteractiveComponent + 'static, O: 'static>(
-        &self,
-        target: Entity<T, Self::Message>,
-        message: T::Input,
-    ) {
+    async fn send<T: InteractiveComponent + 'static>(&self, target: Entity<T>, message: T::Input) {
         if let Some(target_node) = global_arena().get(target).await {
             let component = target_node.component.read().await;
-            if let Some(node_data) = component.as_any().downcast_ref::<NodeData<T, O>>() {
+            if let Some(node_data) = component.as_any().downcast_ref::<NodeData<T>>() {
                 node_data
                     .input_sender
                     .send(message)
@@ -163,7 +159,7 @@ pub trait InteractiveComponent: Component {
 
     async fn callback(&self, context: &mut Context, message: Self::Output) {
         let node = global_arena().get(context.index()).await.unwrap();
-        node.callback(message).await
+        node.callback(message).await;
     }
 }
 
@@ -178,16 +174,21 @@ where
     type Output = ();
 }
 
-pub struct Callback<Input, Output> {
+struct FullyTypedCallback<Input, Output> {
     translator: Box<dyn Fn(Input) -> Output + Send + Sync>,
     target: Index,
 }
 
-impl<Input, Output> Callback<Input, Output>
-where
-    Output: Send + 'static,
+#[async_trait]
+trait TypeErasedCallback<Input>: Send + Sync {
+    async fn callback(&self, input: Input);
+}
+
+#[async_trait]
+impl<Input: Send + 'static, Output: Send + Sync + 'static> TypeErasedCallback<Input>
+    for FullyTypedCallback<Input, Output>
 {
-    pub async fn invoke(&self, input: Input) {
+    async fn callback(&self, input: Input) {
         if let Some(node) = global_arena().get(self.target).await {
             let translated = self.translator.as_ref()(input);
             let component = node.component.write().await;
@@ -196,7 +197,32 @@ where
     }
 }
 
-pub struct EntityBuilder<C, O>
+pub struct Callback<Input> {
+    wrapped: Box<dyn TypeErasedCallback<Input>>,
+}
+
+impl<Input> Callback<Input>
+where
+    Input: Send + 'static,
+{
+    pub fn new<Output: Send + Sync + 'static, F: Fn(Input) -> Output + Send + Sync + 'static>(
+        target: Index,
+        callback: F,
+    ) -> Self {
+        Self {
+            wrapped: Box::new(FullyTypedCallback {
+                translator: Box::new(callback),
+                target,
+            }),
+        }
+    }
+
+    pub async fn invoke(&self, input: Input) {
+        self.wrapped.callback(input).await
+    }
+}
+
+pub struct EntityBuilder<C>
 where
     C: InteractiveComponent + 'static,
 {
@@ -206,13 +232,12 @@ where
     hover_style: Style,
     active_style: Style,
     focus_style: Style,
-    callback: Option<Callback<C::Output, O>>,
+    callback: Option<Callback<C::Output>>,
 }
 
-impl<C, O> EntityBuilder<C, O>
+impl<C> EntityBuilder<C>
 where
     C: InteractiveComponent + 'static,
-    O: Send + 'static,
 {
     pub fn style(mut self, style: Style) -> Self {
         self.style = style;
@@ -231,15 +256,15 @@ where
         self
     }
 
-    pub fn callback<F: Fn(C::Output) -> O + Send + Sync + 'static>(mut self, callback: F) -> Self {
-        self.callback = Some(Callback {
-            translator: Box::new(callback),
-            target: self.parent.unwrap(),
-        });
+    pub fn callback<F: Fn(C::Output) -> O + Send + Sync + 'static, O: Send + Sync + 'static>(
+        mut self,
+        callback: F,
+    ) -> Self {
+        self.callback = Some(Callback::new(self.parent.unwrap(), callback));
         self
     }
 
-    pub async fn insert(self) -> KludgineResult<Entity<C, O>> {
+    pub async fn insert(self) -> KludgineResult<Entity<C>> {
         let index = {
             let node = Node::new(
                 self.component,

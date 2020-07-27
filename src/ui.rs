@@ -1,4 +1,5 @@
 mod arena;
+mod button;
 mod component;
 mod context;
 mod image;
@@ -8,13 +9,14 @@ mod node;
 
 pub(crate) use self::node::NodeData;
 pub use self::{
+    button::{Button, ButtonEvent},
     component::{
         Callback, Component, EntityBuilder, EventStatus, InteractiveComponent, LayoutConstraints,
         StandaloneComponent,
     },
     context::*,
     image::Image,
-    label::Label,
+    label::{Label, LabelCommand},
     layout::*,
     node::Node,
 };
@@ -56,7 +58,7 @@ where
 {
     pub async fn new(root: C) -> KludgineResult<Self> {
         let root = Entity::new({
-            let node = Node::new::<_, ()>(
+            let node = Node::new(
                 root,
                 Style::default(),
                 Style::default(),
@@ -124,7 +126,7 @@ where
             let layout_data = LayoutEngine::new(
                 layout_solvers,
                 effective_styles.clone(), // TODO don't really want to clone here
-                self.root.index,
+                self.root,
             );
 
             while let Some(index) = layout_data.next_to_layout().await {
@@ -167,6 +169,7 @@ where
                 node.render(&mut context, &layout).await?;
             }
         }
+        self.last_render_order.reverse();
 
         Ok(())
     }
@@ -206,73 +209,64 @@ where
     }
 
     pub async fn process_input(&mut self, event: InputEvent) -> KludgineResult<()> {
-        let mut traverser = global_arena().traverse(self.root).await;
-        while let Some(index) = traverser.next().await {
-            match event.event {
-                Event::MouseMoved { position } => {
-                    self.last_mouse_position = position;
+        match event.event {
+            Event::MouseMoved { position } => {
+                self.last_mouse_position = position;
 
-                    self.hover = None;
-                    if let Some(position) = position {
-                        for &index in self.last_render_order.iter() {
-                            if let Some(node) = global_arena().get(index).await {
-                                let layout = node.last_layout().await;
-                                if layout.bounds_without_margin().contains(position) {
-                                    self.hover = Some(index);
-                                    break;
-                                }
+                self.hover = None;
+                if let Some(position) = position {
+                    for &index in self.last_render_order.iter() {
+                        if let Some(node) = global_arena().get(index).await {
+                            let layout = node.last_layout().await;
+                            if layout.bounds_without_margin().contains(position) {
+                                self.hover = Some(index);
+                                break;
                             }
                         }
                     }
                 }
-                Event::MouseWheel { .. } => todo!("Hook up mouse scroll to hovered nodes"),
-                Event::MouseButton { button, state } => match state {
-                    ElementState::Released => {
-                        if let Some(&index) = self.mouse_button_handlers.get(&button) {
+            }
+            Event::MouseWheel { .. } => todo!("Hook up mouse scroll to hovered nodes"),
+            Event::MouseButton { button, state } => match state {
+                ElementState::Released => {
+                    if let Some(&index) = self.mouse_button_handlers.get(&button) {
+                        if let Some(node) = global_arena().get(index).await {
+                            let layout = node.last_layout().await;
+                            let relative_position = self
+                                .last_mouse_position
+                                .map(|pos| layout.window_to_local(pos));
+                            let mut context = Context::new(index);
+                            node.mouse_up(&mut context, relative_position, button)
+                                .await?;
+                        }
+                    }
+                }
+                ElementState::Pressed => {
+                    self.active = None;
+                    self.mouse_button_handlers.remove(&button);
+
+                    if let Some(last_mouse_position) = self.last_mouse_position {
+                        let mut next_to_process = self.hover;
+                        while let Some(index) = next_to_process {
                             if let Some(node) = global_arena().get(index).await {
                                 let layout = node.last_layout().await;
-                                let relative_position = self
-                                    .last_mouse_position
-                                    .map(|pos| layout.window_to_local(pos));
+                                let relative_position = layout.window_to_local(last_mouse_position);
                                 let mut context = Context::new(index);
-                                node.mouse_up(&mut context, relative_position, button)
-                                    .await?;
-                            }
-                        }
-                    }
-                    ElementState::Pressed => {
-                        self.active = None;
-                        self.mouse_button_handlers.remove(&button);
-
-                        if let Some(last_mouse_position) = self.last_mouse_position {
-                            let mut next_to_process = self.hover;
-                            while let Some(index) = next_to_process {
-                                if let Some(node) = global_arena().get(index).await {
-                                    let layout = node.last_layout().await;
-                                    let relative_position =
-                                        layout.window_to_local(last_mouse_position);
-                                    let mut context = Context::new(index);
-                                    if let EventStatus::Handled = node
-                                        .mouse_down(&mut context, relative_position, button)
-                                        .await?
-                                    {
-                                        self.mouse_button_handlers.insert(button, index);
-                                        break;
-                                    }
+                                if let EventStatus::Handled = node
+                                    .mouse_down(&mut context, relative_position, button)
+                                    .await?
+                                {
+                                    self.mouse_button_handlers.insert(button, index);
+                                    break;
                                 }
-                                next_to_process = global_arena().parent(index).await;
                             }
+                            next_to_process = global_arena().parent(index).await;
                         }
                     }
-                },
-                _ => {}
-            }
-
-            let node = global_arena().get(index).await.unwrap();
-            let mut context = Context::new(index);
-            node.process_input(&mut context, event).await?;
+                }
+            },
+            _ => {}
         }
-
         Ok(())
     }
 
@@ -297,30 +291,42 @@ where
 }
 
 #[derive(Debug)]
-pub struct Entity<C, O = ()> {
-    index: Index,
-    _phantom: std::marker::PhantomData<(C, O)>,
+pub struct Entity<C> {
+    index: Option<Index>,
+    _phantom: std::marker::PhantomData<C>,
 }
 
-impl<C, O> Into<Index> for Entity<C, O> {
-    fn into(self) -> Index {
-        self.index
-    }
-}
-
-impl<C, O> Entity<C, O> {
-    pub fn new(index: Index) -> Self {
+impl<C> Default for Entity<C> {
+    fn default() -> Self {
         Self {
-            index,
+            index: None,
             _phantom: Default::default(),
         }
     }
 }
 
-impl<C, O> Clone for Entity<C, O> {
-    fn clone(&self) -> Self {
-        Self::new(self.index)
+impl<C> Into<Index> for Entity<C> {
+    fn into(self) -> Index {
+        self.index.expect("Using uninitialized Entity")
     }
 }
 
-impl<C, O> Copy for Entity<C, O> {}
+impl<C> Entity<C> {
+    pub fn new(index: Index) -> Self {
+        Self {
+            index: Some(index),
+            _phantom: Default::default(),
+        }
+    }
+}
+
+impl<C> Clone for Entity<C> {
+    fn clone(&self) -> Self {
+        Self {
+            index: self.index,
+            _phantom: Default::default(),
+        }
+    }
+}
+
+impl<C> Copy for Entity<C> {}

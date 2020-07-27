@@ -91,6 +91,7 @@ impl HierarchicalArenaData {
                 children.push(child);
             })
             .or_insert_with(|| vec![child]);
+        self.parents.insert(child, parent);
     }
 
     pub fn parent(&self, child: Index) -> Option<Index> {

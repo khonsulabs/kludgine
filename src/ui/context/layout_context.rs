@@ -25,10 +25,10 @@ impl LayoutEngine {
     pub fn new(
         layout_solvers: HashMap<Index, KludgineHandle<Box<dyn LayoutSolver>>>,
         effective_styles: HashMap<Index, EffectiveStyle>,
-        root: Index,
+        root: impl Into<Index>,
     ) -> Self {
         let mut indicies_to_process = VecDeque::default();
-        indicies_to_process.push_back(root);
+        indicies_to_process.push_back(root.into());
         Self {
             data: KludgineHandle::new(LayoutEngineData {
                 layout_solvers,

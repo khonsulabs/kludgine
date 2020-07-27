@@ -2,15 +2,15 @@ extern crate kludgine;
 use kludgine::prelude::*;
 
 fn main() {
-    SingleWindowApplication::run(UIExample {
-        image: None,
-        label: None,
-    });
+    SingleWindowApplication::run(UIExample::default());
 }
 
+#[derive(Default)]
 struct UIExample {
-    image: Option<Entity<Image>>,
-    label: Option<Entity<Label>>,
+    image: Entity<Image>,
+    label: Entity<Label>,
+    button: Entity<Button>,
+    current_count: usize,
 }
 
 impl WindowCreator<UIExample> for UIExample {
@@ -21,37 +21,84 @@ impl WindowCreator<UIExample> for UIExample {
 
 impl Window for UIExample {}
 
-impl StandaloneComponent for UIExample {}
+#[derive(Debug, Clone)]
+pub enum Message {
+    ButtonClicked,
+}
+
+#[async_trait]
+impl InteractiveComponent for UIExample {
+    type Message = Message;
+    type Input = ();
+    type Output = ();
+
+    async fn receive_message(
+        &mut self,
+        context: &mut Context,
+        message: Self::Message,
+    ) -> KludgineResult<()> {
+        match message {
+            Message::ButtonClicked => {
+                self.current_count += 1;
+                self.send(
+                    self.label,
+                    LabelCommand::SetValue(self.current_count.to_string()),
+                )
+                .await;
+            }
+        }
+        Ok(())
+    }
+}
 
 #[async_trait]
 impl Component for UIExample {
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         let sprite = include_aseprite_sprite!("assets/stickguy").await?;
-        self.image = Some(
-            self.new_entity(context, Image::new(sprite))
-                .style(Style {
-                    background_color: Some(Color::new(0.0, 1.0, 1.0, 1.0)),
-                    ..Default::default()
-                })
-                .insert()
-                .await?,
-        );
+        self.image = self
+            .new_entity(context, Image::new(sprite))
+            .style(Style {
+                background_color: Some(Color::new(0.0, 1.0, 1.0, 1.0)),
+                ..Default::default()
+            })
+            .insert()
+            .await?;
 
-        self.label = Some(
-            self.new_entity(context, Label::new("Test Label"))
-                .style(Style {
-                    color: Some(Color::GREEN),
-                    background_color: Some(Color::new(1.0, 0.0, 1.0, 0.5)),
-                    font_size: Some(72.),
-                    ..Default::default()
-                })
-                .hover(Style {
-                    background_color: Some(Color::new(1.0, 1.0, 1.0, 0.5)),
-                    ..Default::default()
-                })
-                .insert()
-                .await?,
-        );
+        self.label = self
+            .new_entity(context, Label::new("Test Label"))
+            .style(Style {
+                color: Some(Color::GREEN),
+                background_color: Some(Color::new(1.0, 0.0, 1.0, 0.5)),
+                font_size: Some(72.),
+                ..Default::default()
+            })
+            .hover(Style {
+                background_color: Some(Color::new(1.0, 1.0, 1.0, 0.5)),
+                ..Default::default()
+            })
+            .insert()
+            .await?;
+
+        self.button = self
+            .new_entity(context, Button::new("Press Me"))
+            .style(Style {
+                font_size: Some(16.),
+                color: Some(Color::BLACK),
+                background_color: Some(Color::new(0.7, 0.7, 0.7, 1.0)),
+                ..Default::default()
+            })
+            .hover(Style {
+                background_color: Some(Color::new(0.8, 0.8, 0.8, 1.0)),
+                ..Default::default()
+            })
+            .active(Style {
+                color: Some(Color::WHITE),
+                background_color: Some(Color::new(0.4, 0.4, 0.4, 1.0)),
+                ..Default::default()
+            })
+            .callback(|_| Message::ButtonClicked)
+            .insert()
+            .await?;
 
         Ok(())
     }
@@ -62,7 +109,7 @@ impl Component for UIExample {
     ) -> KludgineResult<Box<dyn LayoutSolver>> {
         Layout::absolute()
             .child(
-                self.label.unwrap(),
+                self.label,
                 AbsoluteBounds {
                     left: Dimension::Points(32.),
                     right: Dimension::Points(64.),
@@ -72,29 +119,24 @@ impl Component for UIExample {
                 },
             )?
             .child(
-                self.image.unwrap(),
+                self.image,
                 AbsoluteBounds {
                     right: Dimension::Points(10.),
                     bottom: Dimension::Points(10.),
                     ..Default::default()
                 },
             )?
-            .layout()
-    }
+            .child(
+                self.button,
+                AbsoluteBounds {
+                    bottom: Dimension::Points(0.),
+                    right: Dimension::Points(32.),
+                    height: Dimension::Points(32.),
 
-    async fn process_input(
-        &mut self,
-        _context: &mut Context,
-        event: InputEvent,
-    ) -> KludgineResult<()> {
-        if let Event::MouseButton { .. } = event.event {
-            UIExample::open(UIExample {
-                image: None,
-                label: None,
-            })
-            .await;
-        }
-        Ok(())
+                    ..Default::default()
+                },
+            )?
+            .layout()
     }
 }
 
