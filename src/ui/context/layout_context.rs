@@ -1,12 +1,12 @@
 use crate::{
-    math::{Rect, Size},
+    math::{Point, Rect, Size, Surround},
     scene::SceneTarget,
     style::EffectiveStyle,
-    ui::{global_arena, Index, Layout, LayoutSolver, SceneContext, StyledContext},
+    ui::{HierarchicalArena, Index, Layout, LayoutSolver, SceneContext, StyledContext},
     KludgineHandle, KludgineResult,
 };
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::{HashMap, HashSet, VecDeque},
     sync::Arc,
 };
 
@@ -41,6 +41,83 @@ impl LayoutEngine {
                 layouts: Default::default(),
             }),
         }
+    }
+
+    pub(crate) async fn layout(
+        arena: &HierarchicalArena,
+        root: Index,
+        scene: &SceneTarget,
+        hovered_indicies: HashSet<Index>,
+    ) -> KludgineResult<Self> {
+        let mut effective_styles = HashMap::new();
+        let mut computed_styles = HashMap::new();
+        let mut traverser = arena.traverse(root).await;
+        let mut found_nodes = VecDeque::new();
+        while let Some(index) = traverser.next().await {
+            let node = arena.get(index).await.unwrap();
+            let mut node_style = node.style().await;
+
+            if hovered_indicies.contains(&index) {
+                node_style = node.hover_style().await.inherit_from(&node_style);
+            }
+
+            let computed_style = match arena.parent(index).await {
+                Some(parent_index) => {
+                    node_style.inherit_from(computed_styles.get(&parent_index).unwrap())
+                }
+                None => node_style.clone(),
+            };
+            computed_styles.insert(index, computed_style);
+            found_nodes.push_back(index);
+        }
+
+        for (index, style) in computed_styles {
+            effective_styles.insert(index, style.effective_style(scene).await);
+        }
+        let effective_styles = Arc::new(effective_styles);
+
+        // Traverse the found nodes starting at the back (leaf nodes) and iterate upwards to update stretch
+        let mut layout_solvers = HashMap::new();
+        while let Some(index) = found_nodes.pop_back() {
+            let node = arena.get(index).await.unwrap();
+            let effective_style = effective_styles.get(&index).unwrap().clone();
+            let mut context =
+                StyledContext::new(index, scene.clone(), effective_style.clone(), arena.clone());
+            let solver = node.layout(&mut context).await?;
+            layout_solvers.insert(index, KludgineHandle::new(solver));
+        }
+
+        let layout_data = LayoutEngine::new(layout_solvers, effective_styles.clone(), root);
+
+        while let Some(index) = layout_data.next_to_layout().await {
+            let effective_style = effective_styles.get(&index).unwrap().clone();
+            let mut context = LayoutContext::new(
+                index,
+                scene.clone(),
+                effective_style.clone(),
+                layout_data.clone(),
+                arena.clone(),
+            );
+            let computed_layout = match context.layout_for(index).await {
+                Some(layout) => layout,
+                None => Layout {
+                    bounds: Rect::sized(Point::default(), scene.size().await),
+                    padding: Surround::default(),
+                    margin: Surround::default(),
+                },
+            };
+            context
+                .layout_within(index, &computed_layout.inner_bounds())
+                .await?;
+            let node = arena.get(index).await.unwrap();
+            node.set_layout(computed_layout).await;
+        }
+
+        let node = arena.get(root).await.unwrap();
+        let root_layout = node.last_layout().await;
+        layout_data.insert_layout(root, root_layout, false).await;
+
+        Ok(layout_data)
     }
 
     pub async fn insert_layout(&self, index: Index, layout: Layout, add_to_process_queue: bool) {
@@ -86,6 +163,11 @@ impl LayoutEngine {
         let solver = solver_handle.read().await;
         solver.layout_within(bounds, content_size, context).await
     }
+
+    pub async fn effective_styles(&self) -> Arc<HashMap<Index, EffectiveStyle>> {
+        let data = self.data.read().await;
+        data.effective_styles.clone()
+    }
 }
 
 pub struct LayoutContext {
@@ -107,9 +189,10 @@ impl LayoutContext {
         scene: SceneTarget,
         effective_style: EffectiveStyle,
         layout: LayoutEngine,
+        arena: HierarchicalArena,
     ) -> Self {
         Self {
-            base: StyledContext::new(index, scene, effective_style),
+            base: StyledContext::new(index, scene, effective_style, arena),
             layout,
         }
     }
@@ -118,7 +201,12 @@ impl LayoutContext {
         let index = index.into();
         let effective_style = self.layout.effective_style(&index).await.unwrap();
         Self {
-            base: StyledContext::new(index, self.scene().clone(), effective_style),
+            base: StyledContext::new(
+                index,
+                self.scene().clone(),
+                effective_style,
+                self.arena().clone(),
+            ),
             layout: self.layout.clone(),
         }
     }
@@ -133,7 +221,7 @@ impl LayoutContext {
         bounds: &Rect,
     ) -> KludgineResult<()> {
         let index = index.into();
-        let node = global_arena().get(index).await.unwrap();
+        let node = self.arena().get(index).await.unwrap();
         let content_size = node
             .content_size(
                 self.styled_context(),

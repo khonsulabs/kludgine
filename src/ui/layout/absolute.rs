@@ -1,7 +1,6 @@
 use crate::{
     math::{Dimension, Rect, Size, Surround},
     ui::{
-        global_arena,
         layout::{Layout, LayoutSolver},
         Index, LayoutContext,
     },
@@ -38,10 +37,6 @@ impl AbsoluteLayout {
 
         let mut remaining_length = available_length - content_length;
 
-        if remaining_length < 0. {
-            return (0., 0.);
-        }
-
         let mut auto_measurements = 0;
         if let Some(points) = start.points() {
             remaining_length -= points;
@@ -56,12 +51,12 @@ impl AbsoluteLayout {
         }
 
         let effective_side1 = match start {
-            Dimension::Auto => remaining_length / auto_measurements as f32,
+            Dimension::Auto => remaining_length.max(0.) / auto_measurements as f32,
             Dimension::Points(points) => *points,
         };
 
         let effective_side2 = match end {
-            Dimension::Auto => remaining_length / auto_measurements as f32,
+            Dimension::Auto => remaining_length.max(0.) / auto_measurements as f32,
             Dimension::Points(points) => *points,
         };
 
@@ -129,7 +124,8 @@ impl LayoutSolver for AbsoluteLayout {
             .map(|&index| (index, self.children.get(&index).unwrap()))
         {
             let mut child_context = context.clone_for(index).await;
-            let child_content_size = global_arena()
+            let child_content_size = context
+                .arena()
                 .get(index)
                 .await
                 .unwrap()
@@ -169,6 +165,293 @@ impl LayoutSolver for AbsoluteLayout {
                 )
                 .await;
         }
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_relative_eq;
+
+    macro_rules! assert_dimension_eq {
+        ($left:expr, $right:expr) => {
+            assert_relative_eq!($left.0, $right.0);
+            assert_relative_eq!($left.1, $right.1)
+        };
+    }
+
+    #[test]
+    fn solve_dimension_tests() -> KludgineResult<()> {
+        // start.auto end.auto length.auto
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Auto,
+                &Dimension::Auto,
+                &Dimension::Auto,
+                90.,
+                30.,
+            ),
+            (30., 30.)
+        );
+
+        // start.pts  end.auto length.auto
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Points(50.),
+                &Dimension::Auto,
+                &Dimension::Auto,
+                90.,
+                30.,
+            ),
+            (50., 10.)
+        );
+
+        // start.pts end.pts length.auto
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Points(50.),
+                &Dimension::Points(0.),
+                &Dimension::Auto,
+                90.,
+                30.,
+            ),
+            (50., 0.)
+        );
+
+        // start.pts end.auto length.pts
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Points(10.),
+                &Dimension::Auto,
+                &Dimension::Points(10.),
+                90.,
+                30.,
+            ),
+            (10., 70.)
+        );
+
+        // start.pts end.pts length.pts
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Points(10.),
+                &Dimension::Points(75.),
+                &Dimension::Points(5.),
+                90.,
+                30.,
+            ),
+            (10., 75.)
+        );
+
+        // start.auto end.pts length.auto
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Auto,
+                &Dimension::Points(50.),
+                &Dimension::Auto,
+                90.,
+                30.,
+            ),
+            (10., 50.)
+        );
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Auto,
+                &Dimension::Points(50.),
+                &Dimension::Auto,
+                90.,
+                90.,
+            ),
+            (0., 50.)
+        );
+
+        // start.auto end.pts length.pts
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Auto,
+                &Dimension::Points(50.),
+                &Dimension::Points(20.),
+                90.,
+                30.,
+            ),
+            (20., 50.)
+        );
+
+        // Running out of room: Not enough space to honor both width and padding
+        // This engine's decision is to honor making the "whitespace" layout look laid out correctly
+        // for as long as possible, and start clipping the content.
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Points(40.),
+                &Dimension::Points(40.),
+                &Dimension::Points(30.),
+                90.,
+                30.,
+            ),
+            (40., 40.)
+        );
+
+        // Running out of room: Not even enough room for padding
+        assert_dimension_eq!(
+            AbsoluteLayout::solve_dimension(
+                &Dimension::Points(50.),
+                &Dimension::Points(50.),
+                &Dimension::Points(30.),
+                90.,
+                30.,
+            ),
+            (45., 45.)
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn validate_tests() -> KludgineResult<()> {
+        AbsoluteBounds {
+            bottom: Dimension::Points(1.),
+            height: Dimension::Points(1.),
+            top: Dimension::Points(1.),
+            ..Default::default()
+        }
+        .validate()
+        .expect_err("Invalid Vertical Bounds");
+        AbsoluteBounds {
+            left: Dimension::Points(1.),
+            width: Dimension::Points(1.),
+            right: Dimension::Points(1.),
+            ..Default::default()
+        }
+        .validate()
+        .expect_err("Invalid Horizontal Bounds");
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn layout_test() -> KludgineResult<()> {
+        use crate::{
+            scene::{Scene, SceneTarget},
+            style::Style,
+            ui::{
+                Component, HierarchicalArena, Layout, LayoutEngine, LayoutSolver, LayoutSolverExt,
+                Node, StandaloneComponent, StyledContext,
+            },
+        };
+        use async_trait::async_trait;
+        use std::collections::HashSet;
+        struct TestRoot {
+            child: Index,
+        }
+        #[async_trait]
+        impl Component for TestRoot {
+            async fn layout(
+                &mut self,
+                _context: &mut StyledContext,
+            ) -> KludgineResult<Box<dyn LayoutSolver>> {
+                AbsoluteLayout::default()
+                    .child(
+                        self.child,
+                        AbsoluteBounds {
+                            right: Dimension::Points(30.),
+                            bottom: Dimension::Points(30.),
+                            width: Dimension::Points(90.),
+                            height: Dimension::Points(90.),
+                            ..Default::default()
+                        },
+                    )?
+                    .layout()
+            }
+        }
+        impl StandaloneComponent for TestRoot {}
+
+        struct TestChild {
+            other_child: Option<Index>,
+        }
+        #[async_trait]
+        impl Component for TestChild {
+            async fn layout(
+                &mut self,
+                _context: &mut StyledContext,
+            ) -> KludgineResult<Box<dyn LayoutSolver>> {
+                if let Some(child) = self.other_child {
+                    AbsoluteLayout::default()
+                        .child(
+                            child,
+                            AbsoluteBounds {
+                                left: Dimension::Points(10.),
+                                top: Dimension::Points(10.),
+                                right: Dimension::Points(10.),
+                                bottom: Dimension::Points(10.),
+                                ..Default::default()
+                            },
+                        )?
+                        .layout()
+                } else {
+                    Layout::none().layout()
+                }
+            }
+        }
+        impl StandaloneComponent for TestChild {}
+
+        let arena = HierarchicalArena::default();
+        let node = Node::new(
+            TestChild { other_child: None },
+            Style::default(),
+            Style::default(),
+            Style::default(),
+            Style::default(),
+            None,
+        );
+        let leaf = arena.insert(None, node).await;
+        let node = Node::new(
+            TestChild {
+                other_child: Some(leaf),
+            },
+            Style::default(),
+            Style::default(),
+            Style::default(),
+            Style::default(),
+            None,
+        );
+        let child = arena.insert(None, node).await;
+
+        let node = Node::new(
+            TestRoot { child },
+            Style::default(),
+            Style::default(),
+            Style::default(),
+            Style::default(),
+            None,
+        );
+        let root = arena.insert(None, node).await;
+        arena.set_parent(leaf, Some(child)).await;
+        arena.set_parent(child, Some(root)).await;
+
+        let scene = Scene::default();
+        scene.set_internal_size(Size::new(200., 200.)).await;
+        let scene_target = SceneTarget::Scene(scene);
+        let engine = LayoutEngine::layout(&arena, root, &scene_target, HashSet::new()).await?;
+
+        let root_layout = engine.get_layout(&root).await.unwrap();
+        let child_layout = engine.get_layout(&child).await.unwrap();
+        let leaf_layout = engine.get_layout(&leaf).await.unwrap();
+
+        assert_relative_eq!(root_layout.inner_bounds().origin.x, 0.);
+        assert_relative_eq!(root_layout.inner_bounds().origin.y, 0.);
+        assert_relative_eq!(root_layout.inner_bounds().size.width, 200.);
+        assert_relative_eq!(root_layout.inner_bounds().size.height, 200.);
+
+        assert_relative_eq!(child_layout.inner_bounds().origin.x, 80.);
+        assert_relative_eq!(child_layout.inner_bounds().origin.y, 80.);
+        assert_relative_eq!(child_layout.inner_bounds().size.width, 90.);
+        assert_relative_eq!(child_layout.inner_bounds().size.height, 90.);
+
+        assert_relative_eq!(leaf_layout.inner_bounds().origin.x, 90.);
+        assert_relative_eq!(leaf_layout.inner_bounds().origin.y, 90.);
+        assert_relative_eq!(leaf_layout.inner_bounds().size.width, 70.);
+        assert_relative_eq!(leaf_layout.inner_bounds().size.height, 70.);
 
         Ok(())
     }
