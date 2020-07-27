@@ -18,7 +18,7 @@ pub use self::{
     image::Image,
     label::{Label, LabelCommand},
     layout::*,
-    node::Node,
+    node::{Node, NodeDataWindowExt},
 };
 use crate::{
     event::{ElementState, MouseButton},
@@ -217,8 +217,8 @@ where
                 if let Some(position) = position {
                     for &index in self.last_render_order.iter() {
                         if let Some(node) = global_arena().get(index).await {
-                            let layout = node.last_layout().await;
-                            if layout.bounds_without_margin().contains(position) {
+                            let mut context = Context::new(index);
+                            if node.hit_test(&mut context, position).await? {
                                 self.hover = Some(index);
                                 break;
                             }
@@ -231,20 +231,8 @@ where
                 ElementState::Released => {
                     if let Some(&index) = self.mouse_button_handlers.get(&button) {
                         if let Some(node) = global_arena().get(index).await {
-                            let layout = node.last_layout().await;
-                            let relative_position = match self.last_mouse_position {
-                                Some(position) => {
-                                    if layout.bounds_without_margin().contains(position) {
-                                        Some(layout.window_to_local(position))
-                                    } else {
-                                        None
-                                    }
-                                }
-                                None => None,
-                            };
-
                             let mut context = Context::new(index);
-                            node.mouse_up(&mut context, relative_position, button)
+                            node.mouse_up(&mut context, self.last_mouse_position, button)
                                 .await?;
                         }
                     }
@@ -257,11 +245,9 @@ where
                         let mut next_to_process = self.hover;
                         while let Some(index) = next_to_process {
                             if let Some(node) = global_arena().get(index).await {
-                                let layout = node.last_layout().await;
-                                let relative_position = layout.window_to_local(last_mouse_position);
                                 let mut context = Context::new(index);
                                 if let EventStatus::Handled = node
-                                    .mouse_down(&mut context, relative_position, button)
+                                    .mouse_down(&mut context, last_mouse_position, button)
                                     .await?
                                 {
                                     self.mouse_button_handlers.insert(button, index);

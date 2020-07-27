@@ -5,7 +5,7 @@ use super::{
     math::{Point, Size},
     runtime::{Runtime, FRAME_DURATION},
     scene::{Scene, SceneTarget},
-    ui::{global_arena, InteractiveComponent, NodeData, UserInterface},
+    ui::{global_arena, InteractiveComponent, NodeData, NodeDataWindowExt, UserInterface},
     KludgineError, KludgineHandle, KludgineResult,
 };
 use async_trait::async_trait;
@@ -311,7 +311,7 @@ impl RuntimeWindow {
         let root_node = global_arena().get(ui.root).await.unwrap();
         let component = root_node.component.read().await;
         let window = component.as_any().downcast_ref::<NodeData<T>>().unwrap();
-        if let CloseResponse::Close = window.component.close_requested().await? {
+        if let CloseResponse::Close = window.close_requested().await? {
             WindowMessage::Close.send_to(id).await?;
             return Ok(true);
         }

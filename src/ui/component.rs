@@ -79,7 +79,7 @@ pub trait Component: Send + Sync {
     async fn mouse_down(
         &mut self,
         context: &mut Context,
-        position: Point,
+        window_position: Point,
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         Ok(EventStatus::Ignored)
@@ -88,10 +88,22 @@ pub trait Component: Send + Sync {
     async fn mouse_up(
         &mut self,
         context: &mut Context,
-        position: Option<Point>,
+        window_position: Option<Point>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         Ok(())
+    }
+
+    async fn hit_test(
+        &self,
+        context: &mut Context,
+        window_position: Point,
+    ) -> KludgineResult<bool> {
+        Ok(context
+            .last_layout()
+            .await
+            .bounds_without_margin()
+            .contains(window_position))
     }
 }
 

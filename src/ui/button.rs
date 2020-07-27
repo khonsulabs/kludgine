@@ -43,8 +43,14 @@ impl Component for Button {
         position: Option<Point>,
         button: MouseButton,
     ) -> KludgineResult<()> {
-        if MouseButton::Left == button && position.is_some() {
-            self.callback(context, ButtonEvent::Clicked).await;
+        if MouseButton::Left == button {
+            let hit = match position {
+                Some(position) => self.hit_test(context, position).await?,
+                None => false,
+            };
+            if hit {
+                self.callback(context, ButtonEvent::Clicked).await;
+            }
         }
 
         Ok(())

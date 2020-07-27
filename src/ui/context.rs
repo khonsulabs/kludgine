@@ -1,4 +1,4 @@
-use crate::ui::{global_arena, Index};
+use crate::ui::{global_arena, Index, Layout};
 mod layout_context;
 mod scene_context;
 mod styled_context;
@@ -41,5 +41,10 @@ impl Context {
         Self {
             index: index.into(),
         }
+    }
+
+    pub async fn last_layout(&self) -> Layout {
+        let node = global_arena().get(self.index).await.unwrap();
+        node.last_layout().await
     }
 }
