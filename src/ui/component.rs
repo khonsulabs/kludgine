@@ -170,7 +170,7 @@ pub trait InteractiveComponent: Component {
     }
 
     async fn callback(&self, context: &mut Context, message: Self::Output) {
-        let node = global_arena().get(context.index()).await.unwrap();
+        let node = context.arena().get(context.index()).await.unwrap();
         node.callback(message).await;
     }
 }
@@ -288,7 +288,7 @@ where
             );
             let index = global_arena().insert(self.parent, node).await;
 
-            let mut context = Context::new(index);
+            let mut context = Context::new(index, global_arena().clone());
             global_arena()
                 .get(index)
                 .await

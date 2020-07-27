@@ -2,7 +2,9 @@ use crate::{
     math::{Rect, Size},
     scene::SceneTarget,
     style::EffectiveStyle,
-    ui::{global_arena, Index, Layout, LayoutSolver, SceneContext, StyledContext},
+    ui::{
+        global_arena, HierarchicalArena, Index, Layout, LayoutSolver, SceneContext, StyledContext,
+    },
     KludgineHandle, KludgineResult,
 };
 use std::{
@@ -107,9 +109,10 @@ impl LayoutContext {
         scene: SceneTarget,
         effective_style: EffectiveStyle,
         layout: LayoutEngine,
+        arena: HierarchicalArena,
     ) -> Self {
         Self {
-            base: StyledContext::new(index, scene, effective_style),
+            base: StyledContext::new(index, scene, effective_style, arena),
             layout,
         }
     }
@@ -118,7 +121,12 @@ impl LayoutContext {
         let index = index.into();
         let effective_style = self.layout.effective_style(&index).await.unwrap();
         Self {
-            base: StyledContext::new(index, self.scene().clone(), effective_style),
+            base: StyledContext::new(
+                index,
+                self.scene().clone(),
+                effective_style,
+                global_arena().clone(),
+            ),
             layout: self.layout.clone(),
         }
     }
@@ -133,7 +141,7 @@ impl LayoutContext {
         bounds: &Rect,
     ) -> KludgineResult<()> {
         let index = index.into();
-        let node = global_arena().get(index).await.unwrap();
+        let node = self.arena().get(index).await.unwrap();
         let content_size = node
             .content_size(
                 self.styled_context(),

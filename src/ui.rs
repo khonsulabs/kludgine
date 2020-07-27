@@ -121,7 +121,12 @@ where
             while let Some(index) = found_nodes.pop_back() {
                 let node = global_arena().get(index).await.unwrap();
                 let effective_style = effective_styles.get(&index).unwrap().clone();
-                let mut context = StyledContext::new(index, scene.clone(), effective_style.clone());
+                let mut context = StyledContext::new(
+                    index,
+                    scene.clone(),
+                    effective_style.clone(),
+                    global_arena().clone(),
+                );
                 let solver = node.layout(&mut context).await?;
                 layout_solvers.insert(index, KludgineHandle::new(solver));
             }
@@ -136,6 +141,7 @@ where
                     scene.clone(),
                     effective_style.clone(),
                     layout_data.clone(),
+                    global_arena().clone(),
                 );
                 let computed_layout = match context.layout_for(index).await {
                     Some(layout) => layout,
@@ -164,6 +170,7 @@ where
                     index,
                     scene.clone(),
                     effective_styles.get(&index).unwrap().clone(),
+                    global_arena().clone(),
                 );
                 node.render_background(&mut context, &layout).await?;
                 node.render(&mut context, &layout).await?;
@@ -191,7 +198,7 @@ where
 
         let mut traverser = global_arena().traverse(self.root).await;
         while let Some(index) = traverser.next().await {
-            let mut context = Context::new(index);
+            let mut context = Context::new(index, global_arena().clone());
             let node = global_arena().get(index).await.unwrap();
 
             node.process_pending_events(&mut context).await?;
@@ -199,7 +206,7 @@ where
 
         let mut traverser = global_arena().traverse(self.root).await;
         while let Some(index) = traverser.next().await {
-            let mut context = SceneContext::new(index, scene.clone());
+            let mut context = SceneContext::new(index, scene.clone(), global_arena().clone());
             let node = global_arena().get(index).await.unwrap();
 
             node.update(&mut context).await?;
@@ -217,7 +224,7 @@ where
                 if let Some(position) = position {
                     for &index in self.last_render_order.iter() {
                         if let Some(node) = global_arena().get(index).await {
-                            let mut context = Context::new(index);
+                            let mut context = Context::new(index, global_arena().clone());
                             if node.hit_test(&mut context, position).await? {
                                 self.hover = Some(index);
                                 break;
@@ -231,7 +238,7 @@ where
                 ElementState::Released => {
                     if let Some(&index) = self.mouse_button_handlers.get(&button) {
                         if let Some(node) = global_arena().get(index).await {
-                            let mut context = Context::new(index);
+                            let mut context = Context::new(index, global_arena().clone());
                             node.mouse_up(&mut context, self.last_mouse_position, button)
                                 .await?;
                         }
@@ -245,7 +252,7 @@ where
                         let mut next_to_process = self.hover;
                         while let Some(index) = next_to_process {
                             if let Some(node) = global_arena().get(index).await {
-                                let mut context = Context::new(index);
+                                let mut context = Context::new(index, global_arena().clone());
                                 if let EventStatus::Handled = node
                                     .mouse_down(&mut context, last_mouse_position, button)
                                     .await?
@@ -268,7 +275,8 @@ where
         let index = index.into();
         let node = global_arena().get(index).await.unwrap();
 
-        node.initialize(&mut Context::new(index)).await
+        node.initialize(&mut Context::new(index, global_arena().clone()))
+            .await
     }
 }
 

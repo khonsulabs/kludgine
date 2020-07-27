@@ -1,7 +1,6 @@
 use crate::{
     math::{Dimension, Rect, Size, Surround},
     ui::{
-        global_arena,
         layout::{Layout, LayoutSolver},
         Index, LayoutContext,
     },
@@ -125,7 +124,8 @@ impl LayoutSolver for AbsoluteLayout {
             .map(|&index| (index, self.children.get(&index).unwrap()))
         {
             let mut child_context = context.clone_for(index).await;
-            let child_content_size = global_arena()
+            let child_content_size = context
+                .arena()
                 .get(index)
                 .await
                 .unwrap()
