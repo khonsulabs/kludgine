@@ -123,7 +123,9 @@ impl Frame {
                     });
                 }
                 Element::Shape(shape) => {
-                    current_batch = self.commit_batch(current_batch);
+                    if current_batch.is_some() && !current_batch.as_ref().unwrap().is_shape() {
+                        current_batch = self.commit_batch(current_batch);
+                    }
 
                     if current_batch.is_none() {
                         current_batch = Some(FrameBatch::Shape(shape::Batch::new()));
