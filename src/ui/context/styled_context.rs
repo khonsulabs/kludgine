@@ -1,7 +1,9 @@
 use crate::{
+    math::Size,
     scene::SceneTarget,
     style::EffectiveStyle,
     ui::{HierarchicalArena, Index, SceneContext},
+    KludgineError, KludgineResult,
 };
 
 pub struct StyledContext {
@@ -33,7 +35,7 @@ impl StyledContext {
     pub fn clone_for<I: Into<Index>>(&self, index: I) -> Self {
         Self {
             base: self.base.clone_for(index),
-            effective_style: self.effective_style.clone(),
+            effective_style: self.effective_style.clone(), // TODO this isn't right
         }
     }
 
@@ -46,5 +48,21 @@ impl StyledContext {
 
     pub fn effective_style(&self) -> &'_ EffectiveStyle {
         &self.effective_style
+    }
+
+    pub async fn content_size(
+        &self,
+        index: impl Into<Index>,
+        constraints: &Size<Option<f32>>,
+    ) -> KludgineResult<Size> {
+        let index = index.into();
+        let node = self
+            .arena
+            .get(index)
+            .await
+            .ok_or(KludgineError::InvalidIndex)?;
+
+        let mut context = self.clone_for(index);
+        node.content_size(&mut context, constraints).await
     }
 }

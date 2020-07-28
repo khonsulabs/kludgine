@@ -291,6 +291,20 @@ where
     }
 }
 
+impl<S> std::ops::Sub<Size<S>> for Size<Option<S>>
+where
+    S: std::ops::Sub<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn sub(self, s: Size<S>) -> Self {
+        Self {
+            width: self.width.map(|w| w - s.width),
+            height: self.height.map(|h| h - s.height),
+        }
+    }
+}
+
 impl<S> std::ops::Add<Size<S>> for Size<S>
 where
     S: std::ops::Add<Output = S> + Copy,
