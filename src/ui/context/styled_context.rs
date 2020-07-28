@@ -2,7 +2,7 @@ use crate::{
     math::Size,
     scene::SceneTarget,
     style::EffectiveStyle,
-    ui::{HierarchicalArena, Index, SceneContext},
+    ui::{HierarchicalArena, Index, SceneContext, UIState},
     KludgineError, KludgineResult,
 };
 
@@ -25,9 +25,10 @@ impl StyledContext {
         scene: SceneTarget,
         effective_style: EffectiveStyle,
         arena: HierarchicalArena,
+        ui_state: UIState,
     ) -> Self {
         Self {
-            base: SceneContext::new(index, scene, arena),
+            base: SceneContext::new(index, scene, arena, ui_state),
             effective_style,
         }
     }

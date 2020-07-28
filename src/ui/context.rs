@@ -1,4 +1,4 @@
-use crate::ui::{HierarchicalArena, Index, Layout};
+use crate::ui::{HierarchicalArena, Index, Layout, UIState};
 mod layout_context;
 mod scene_context;
 mod styled_context;
@@ -11,6 +11,7 @@ pub use self::{
 pub struct Context {
     index: Index,
     arena: HierarchicalArena,
+    ui_state: UIState,
 }
 
 impl Context {
@@ -20,10 +21,15 @@ impl Context {
 }
 
 impl Context {
-    pub(crate) fn new<I: Into<Index>>(index: I, arena: HierarchicalArena) -> Self {
+    pub(crate) fn new<I: Into<Index>>(
+        index: I,
+        arena: HierarchicalArena,
+        ui_state: UIState,
+    ) -> Self {
         Self {
             index: index.into(),
             arena,
+            ui_state,
         }
     }
 
@@ -43,6 +49,7 @@ impl Context {
         Self {
             index: index.into(),
             arena: self.arena.clone(),
+            ui_state: self.ui_state.clone(),
         }
     }
 
@@ -53,5 +60,17 @@ impl Context {
 
     pub(crate) fn arena(&self) -> &'_ HierarchicalArena {
         &self.arena
+    }
+
+    pub(crate) fn ui_state(&self) -> &'_ UIState {
+        &self.ui_state
+    }
+
+    pub async fn activate(&self) {
+        self.ui_state.activate(self.index).await
+    }
+
+    pub async fn deactivate(&self) {
+        self.ui_state.deactivate().await
     }
 }

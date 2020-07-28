@@ -4,7 +4,7 @@ use crate::{
     style::Style,
     ui::{
         global_arena, Context, Entity, Index, Layout, LayoutSolver, LayoutSolverExt, Node,
-        NodeData, SceneContext, StyledContext,
+        NodeData, SceneContext, StyledContext, UIState,
     },
     window::InputEvent,
     KludgineResult,
@@ -82,13 +82,54 @@ pub trait Component: Send + Sync {
         window_position: Point,
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
-        Ok(EventStatus::Ignored)
+        if self.hit_test(context, window_position).await? {
+            context.activate().await;
+
+            Ok(EventStatus::Handled)
+        } else {
+            Ok(EventStatus::Ignored)
+        }
+    }
+
+    async fn mouse_drag(
+        &mut self,
+        context: &mut Context,
+        window_position: Option<Point>,
+        button: MouseButton,
+    ) -> KludgineResult<()> {
+        let activate = if let Some(window_position) = window_position {
+            self.hit_test(context, window_position).await?
+        } else {
+            false
+        };
+
+        if activate {
+            context.activate().await;
+        } else {
+            context.deactivate().await;
+        }
+
+        Ok(())
     }
 
     async fn mouse_up(
         &mut self,
         context: &mut Context,
         window_position: Option<Point>,
+        button: MouseButton,
+    ) -> KludgineResult<()> {
+        if let Some(window_position) = window_position {
+            if self.hit_test(context, window_position).await? {
+                self.clicked(context, window_position, button).await?
+            }
+        }
+        Ok(())
+    }
+
+    async fn clicked(
+        &mut self,
+        context: &mut Context,
+        window_position: Point,
         button: MouseButton,
     ) -> KludgineResult<()> {
         Ok(())
@@ -151,6 +192,7 @@ pub trait InteractiveComponent: Component {
             hover_style: Default::default(),
             active_style: Default::default(),
             focus_style: Default::default(),
+            ui_state: context.ui_state().clone(),
             callback: None,
         }
     }
@@ -245,6 +287,7 @@ where
     active_style: Style,
     focus_style: Style,
     callback: Option<Callback<C::Output>>,
+    ui_state: UIState,
 }
 
 impl<C> EntityBuilder<C>
@@ -288,7 +331,7 @@ where
             );
             let index = global_arena().insert(self.parent, node).await;
 
-            let mut context = Context::new(index, global_arena().clone());
+            let mut context = Context::new(index, global_arena().clone(), self.ui_state.clone());
             global_arena()
                 .get(index)
                 .await
