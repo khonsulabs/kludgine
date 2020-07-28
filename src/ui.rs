@@ -55,15 +55,15 @@ impl UIState {
         data.active = Some(index);
     }
 
-    async fn focus(&self, index: Index) {
-        let mut data = self.data.write().await;
-        data.focus = Some(index);
-    }
+    // async fn focus(&self, index: Index) {
+    //     let mut data = self.data.write().await;
+    //     data.focus = Some(index);
+    // }
 
-    async fn blur(&self) {
-        let mut data = self.data.write().await;
-        data.focus = None;
-    }
+    // async fn blur(&self) {
+    //     let mut data = self.data.write().await;
+    //     data.focus = None;
+    // }
 
     async fn focused(&self) -> Option<Index> {
         let data = self.data.read().await;

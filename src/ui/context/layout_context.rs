@@ -62,6 +62,14 @@ impl LayoutEngine {
                 node_style = node.hover_style().await.inherit_from(&node_style);
             }
 
+            if ui_state.focused().await == Some(index) {
+                node_style = node.focus_style().await.inherit_from(&node_style);
+            }
+
+            if ui_state.active().await == Some(index) {
+                node_style = node.active_style().await.inherit_from(&node_style);
+            }
+
             let computed_style = match arena.parent(index).await {
                 Some(parent_index) => {
                     node_style.inherit_from(computed_styles.get(&parent_index).unwrap())

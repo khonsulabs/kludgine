@@ -25,11 +25,6 @@ impl HierarchicalArena {
         arena.parent(child)
     }
 
-    pub async fn children(&self, parent: &Option<Index>) -> Vec<Index> {
-        let arena = self.handle.read().await;
-        arena.children(parent)
-    }
-
     pub async fn get<I: Into<Index>>(&self, index: I) -> Option<Node> {
         let arena = self.handle.read().await;
         arena.get(index)

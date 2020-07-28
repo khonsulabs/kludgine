@@ -123,6 +123,7 @@ pub trait Component: Send + Sync {
                 self.clicked(context, window_position, button).await?
             }
         }
+        context.deactivate().await;
         Ok(())
     }
 
