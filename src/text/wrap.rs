@@ -1,7 +1,7 @@
 use crate::{
     math::{max_f, min_f},
     scene::SceneTarget,
-    style::EffectiveStyle,
+    style::{Alignment, EffectiveStyle},
     text::{font::Font, PreparedLine, PreparedSpan, PreparedText, Span, Text},
     KludgineResult,
 };
@@ -21,6 +21,7 @@ enum LexerState {
 
 pub struct TextWrapper {
     caret: f32,
+    committed_caret: f32,
     current_vmetrics: Option<rusttype::VMetrics>,
     last_glyph_id: Option<rusttype::GlyphId>,
     options: TextWrap,
@@ -43,6 +44,7 @@ impl TextWrapper {
     ) -> KludgineResult<PreparedText> {
         TextWrapper {
             caret: 0.0,
+            committed_caret: 0.0,
             current_span_offset: 0.0,
             current_vmetrics: None,
             last_glyph_id: None,
@@ -114,6 +116,15 @@ impl TextWrapper {
 
         self.commit_current_glyphs(None).await;
         self.new_line().await;
+
+        if let Some(alignment) = self.options.alignment() {
+            if let Some(max_width) = self
+                .options
+                .max_width(self.scene.effective_scale_factor().await)
+            {
+                self.prepared_text.align(alignment, max_width).await;
+            }
+        }
 
         Ok(self.prepared_text)
     }
@@ -225,6 +236,7 @@ impl TextWrapper {
             let mut current_glyphs = Vec::new();
             std::mem::swap(&mut self.current_glyphs, &mut current_glyphs);
             self.current_committed_glyphs.extend(current_glyphs);
+            self.committed_caret = self.caret;
         }
         if let Some(transition_to_state) = transition_to_state {
             self.lexer_state = transition_to_state;
@@ -249,11 +261,12 @@ impl TextWrapper {
                 current_style.font_size,
                 current_style.color,
                 self.current_span_offset,
-                self.caret - self.current_span_offset,
+                self.committed_caret - self.current_span_offset,
                 current_committed_glyphs,
                 metrics,
             ));
             self.current_span_offset += self.caret;
+            self.committed_caret += self.caret;
             self.caret = 0.0;
         }
     }
@@ -264,6 +277,7 @@ impl TextWrapper {
 
         self.lexer_state = LexerState::AtLineStart;
         self.caret = 0.0;
+        self.committed_caret = 0.0;
         self.current_span_offset = 0.0;
         self.last_glyph_id = None;
 
@@ -291,6 +305,7 @@ impl TextWrapper {
         let current_line = PreparedLine {
             spans: current_line_spans,
             metrics,
+            alignment_offset: 0.,
         };
         self.current_vmetrics = None;
 
@@ -301,8 +316,16 @@ impl TextWrapper {
 #[derive(Debug)]
 pub enum TextWrap {
     NoWrap,
-    SingleLine { max_width: f32, truncate: bool },
-    MultiLine { width: f32, height: f32 },
+    SingleLine {
+        max_width: f32,
+        truncate: bool,
+        alignment: Alignment,
+    },
+    MultiLine {
+        width: f32,
+        height: f32,
+        alignment: Alignment,
+    },
 }
 
 impl TextWrap {
@@ -338,6 +361,14 @@ impl TextWrap {
             _ => false,
         }
     }
+
+    pub fn alignment(&self) -> Option<Alignment> {
+        match self {
+            Self::NoWrap => None,
+            Self::MultiLine { alignment, .. } => Some(*alignment),
+            Self::SingleLine { alignment, .. } => Some(*alignment),
+        }
+    }
 }
 
 #[cfg(all(test, feature = "bundled-fonts"))]
@@ -365,6 +396,7 @@ mod tests {
             TextWrap::MultiLine {
                 width: 80.0,
                 height: f32::MAX,
+                alignment: Alignment::Left,
             },
         )
         .await
@@ -422,6 +454,7 @@ mod tests {
             TextWrap::MultiLine {
                 width: 80.0,
                 height: f32::MAX,
+                alignment: Alignment::Left,
             },
         )
         .await

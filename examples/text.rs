@@ -59,6 +59,7 @@ impl Component for TextExample {
                 TextWrap::SingleLine {
                     max_width: context.scene().size().await.width,
                     truncate: false,
+                    alignment: Alignment::Left,
                 },
             )
             .await

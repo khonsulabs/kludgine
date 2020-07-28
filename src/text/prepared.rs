@@ -1,9 +1,10 @@
 use crate::{
     math::{max_f, Point, Size},
-    style::Color,
+    style::{Alignment, Color},
     text::Font,
     KludgineHandle,
 };
+use approx::relative_eq;
 use futures::future::join_all;
 
 #[derive(Default, Debug)]
@@ -21,12 +22,31 @@ impl PreparedText {
             });
         Size::new(width, height)
     }
+
+    pub(crate) async fn align(&mut self, alignment: Alignment, width: f32) {
+        let line_sizes = join_all(self.lines.iter().map(|line| line.size())).await;
+
+        for (i, size) in line_sizes.into_iter().enumerate() {
+            match alignment {
+                Alignment::Left => {
+                    self.lines[i].alignment_offset = 0.;
+                }
+                Alignment::Center => {
+                    self.lines[i].alignment_offset = (width - size.width) / 2.;
+                }
+                Alignment::Right => {
+                    self.lines[i].alignment_offset = width - size.width;
+                }
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct PreparedLine {
     pub spans: Vec<PreparedSpan>,
     pub metrics: rusttype::VMetrics,
+    pub alignment_offset: f32,
 }
 
 impl PreparedLine {
