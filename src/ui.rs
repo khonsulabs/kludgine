@@ -112,7 +112,6 @@ where
                 node.render(&mut context, &layout).await?;
             }
         }
-        //self.last_render_order.reverse();
 
         Ok(())
     }

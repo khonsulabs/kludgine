@@ -9,9 +9,23 @@ use crate::{
 };
 use async_trait::async_trait;
 
+#[derive(Debug, Clone)]
+pub struct ButtonStyle {
+    padding: Surround,
+}
+
+impl Default for ButtonStyle {
+    fn default() -> Self {
+        Self {
+            padding: Surround::uniform(10.),
+        }
+    }
+}
+
 pub struct Button {
     caption: String,
     label: Entity<Label>,
+    style: ButtonStyle,
 }
 
 #[async_trait]
@@ -79,14 +93,11 @@ impl Component for Button {
         context: &mut StyledContext,
         constraints: &Size<Option<f32>>,
     ) -> KludgineResult<Size> {
-        let contraints_minus_padding = Size {
-            width: constraints.width.map(|w| w - 20.),
-            height: constraints.height.map(|h| h - 20.),
-        };
+        let contraints_minus_padding = *constraints - self.style.padding.minimum_size();
         Ok(context
             .content_size(self.label, &contraints_minus_padding)
             .await?
-            + Surround::uniform(10.).minimum_size())
+            + self.style.padding.minimum_size())
     }
 }
 
@@ -96,7 +107,13 @@ impl Button {
         Self {
             caption,
             label: Default::default(),
+            style: Default::default(),
         }
+    }
+
+    pub fn button_style(mut self, style: ButtonStyle) -> Self {
+        self.style = style;
+        self
     }
 }
 
@@ -105,8 +122,31 @@ pub enum ButtonEvent {
     Clicked,
 }
 
+#[derive(Clone, Debug)]
+pub enum ButtonCommand {
+    SetCaption(String),
+    SetButtonStyle(ButtonStyle),
+}
+
+#[async_trait]
 impl InteractiveComponent for Button {
     type Output = ButtonEvent;
     type Message = ();
-    type Input = ();
+    type Input = ButtonCommand;
+
+    async fn receive_input(
+        &mut self,
+        _context: &mut Context,
+        message: Self::Input,
+    ) -> KludgineResult<()> {
+        match message {
+            ButtonCommand::SetCaption(caption) => {
+                self.caption = caption;
+            }
+            ButtonCommand::SetButtonStyle(style) => {
+                self.style = style;
+            }
+        }
+        Ok(())
+    }
 }
