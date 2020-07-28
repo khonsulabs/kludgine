@@ -60,12 +60,6 @@ impl FrameBatch {
     }
 }
 
-enum RenderKind {
-    Text,
-    Sprite,
-    Shape,
-}
-
 impl Frame {
     pub async fn update(&mut self, scene: &Scene) {
         self.started_at = Some(scene.now().await);
@@ -92,7 +86,7 @@ impl Frame {
                         || current_batch.is_none()
                         || !current_batch.as_ref().unwrap().is_sprite()
                     {
-                        self.commit_batch(current_batch, Some(RenderKind::Sprite));
+                        self.commit_batch(current_batch);
                         current_texture_id = Some(texture.id);
                         referenced_texture_ids.insert(texture.id);
 
@@ -116,7 +110,7 @@ impl Frame {
                     current_batch.sprites.push(sprite_handle.clone());
                 }
                 Element::Text(text) => {
-                    current_batch = self.commit_batch(current_batch, Some(RenderKind::Text));
+                    current_batch = self.commit_batch(current_batch);
                     let text_data = text.handle.read().await;
                     let font = text_data.font.handle.read().await;
                     let loaded_font = self
@@ -129,7 +123,7 @@ impl Frame {
                     });
                 }
                 Element::Shape(shape) => {
-                    current_batch = self.commit_batch(current_batch, Some(RenderKind::Shape));
+                    current_batch = self.commit_batch(current_batch);
 
                     if current_batch.is_none() {
                         current_batch = Some(FrameBatch::Shape(shape::Batch::new()));
@@ -141,7 +135,7 @@ impl Frame {
             }
         }
 
-        self.commit_batch(current_batch, None);
+        self.commit_batch(current_batch);
 
         let dead_texture_ids = self
             .textures
@@ -156,23 +150,11 @@ impl Frame {
         self.updated_at = Some(Moment::now());
     }
 
-    fn commit_batch(
-        &mut self,
-        batch: Option<FrameBatch>,
-        render_type: Option<RenderKind>,
-    ) -> Option<FrameBatch> {
-        let commit = match render_type {
-            None | Some(RenderKind::Text) => true,
-            Some(RenderKind::Shape) => batch.as_ref().map(|b| !b.is_shape()).unwrap_or_default(),
-            Some(RenderKind::Sprite) => batch.as_ref().map(|b| !b.is_sprite()).unwrap_or_default(),
-        };
-
-        if commit {
-            if let Some(batch) = batch {
-                match batch {
-                    FrameBatch::Sprite(batch) => self.commands.push(FrameCommand::DrawBatch(batch)),
-                    FrameBatch::Shape(batch) => self.commands.push(FrameCommand::DrawShapes(batch)),
-                }
+    fn commit_batch(&mut self, batch: Option<FrameBatch>) -> Option<FrameBatch> {
+        if let Some(batch) = batch {
+            match batch {
+                FrameBatch::Sprite(batch) => self.commands.push(FrameCommand::DrawBatch(batch)),
+                FrameBatch::Shape(batch) => self.commands.push(FrameCommand::DrawShapes(batch)),
             }
         }
 

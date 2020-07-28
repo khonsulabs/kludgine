@@ -131,7 +131,6 @@ impl Component for UIExample {
                 AbsoluteBounds {
                     bottom: Dimension::Points(0.),
                     right: Dimension::Points(32.),
-                    height: Dimension::Points(32.),
 
                     ..Default::default()
                 },

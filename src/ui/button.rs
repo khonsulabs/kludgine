@@ -1,6 +1,6 @@
 use crate::{
     event::MouseButton,
-    math::Point,
+    math::{Point, Size, Surround},
     ui::{
         AbsoluteBounds, Component, Context, Entity, EventStatus, InteractiveComponent, Label,
         Layout, LayoutSolver, LayoutSolverExt, StyledContext,
@@ -72,6 +72,21 @@ impl Component for Button {
                 },
             )?
             .layout()
+    }
+
+    async fn content_size(
+        &self,
+        context: &mut StyledContext,
+        constraints: &Size<Option<f32>>,
+    ) -> KludgineResult<Size> {
+        let contraints_minus_padding = Size {
+            width: constraints.width.map(|w| w - 20.),
+            height: constraints.height.map(|h| h - 20.),
+        };
+        Ok(context
+            .content_size(self.label, &contraints_minus_padding)
+            .await?
+            + Surround::uniform(10.).minimum_size())
     }
 }
 

@@ -19,8 +19,6 @@ jobs:
           SCCACHE_BUCKET: khonsulabs-gac
       - name: Run tests on stable
         run: |
-          apt-get update && apt-get install zip -y
-          cargo install grcov
           cargo test --all-features
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.GAC_ACCESS_KEY_ID }}
