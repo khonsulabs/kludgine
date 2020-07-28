@@ -112,7 +112,7 @@ impl Component for UIExample {
                 self.label,
                 AbsoluteBounds {
                     left: Dimension::Points(32.),
-                    right: Dimension::Points(64.),
+                    right: Dimension::Points(32.),
                     top: Dimension::Points(32.),
                     bottom: Dimension::Points(64.),
                     ..Default::default()
@@ -129,8 +129,7 @@ impl Component for UIExample {
             .child(
                 self.button,
                 AbsoluteBounds {
-                    bottom: Dimension::Points(0.),
-                    right: Dimension::Points(32.),
+                    bottom: Dimension::Points(10.),
 
                     ..Default::default()
                 },

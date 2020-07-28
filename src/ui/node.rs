@@ -55,6 +55,13 @@ pub(crate) trait AnyNode: PendingEventProcessor + Send + Sync {
         button: MouseButton,
     ) -> KludgineResult<EventStatus>;
 
+    async fn mouse_drag(
+        &self,
+        context: &mut Context,
+        position: Option<Point>,
+        button: MouseButton,
+    ) -> KludgineResult<()>;
+
     async fn mouse_up(
         &self,
         context: &mut Context,
@@ -157,6 +164,16 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     ) -> KludgineResult<EventStatus> {
         let mut component = self.component.write().await;
         component.mouse_down(context, position, button).await
+    }
+
+    async fn mouse_drag(
+        &self,
+        context: &mut Context,
+        position: Option<Point>,
+        button: MouseButton,
+    ) -> KludgineResult<()> {
+        let mut component = self.component.write().await;
+        component.mouse_drag(context, position, button).await
     }
 
     async fn mouse_up(
@@ -351,6 +368,16 @@ impl Node {
     ) -> KludgineResult<EventStatus> {
         let component = self.component.read().await;
         component.mouse_down(context, position, button).await
+    }
+
+    pub async fn mouse_drag(
+        &self,
+        context: &mut Context,
+        position: Option<Point>,
+        button: MouseButton,
+    ) -> KludgineResult<()> {
+        let component = self.component.read().await;
+        component.mouse_drag(context, position, button).await
     }
 
     pub async fn mouse_up(

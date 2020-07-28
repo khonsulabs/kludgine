@@ -1,6 +1,6 @@
 use crate::{
     scene::SceneTarget,
-    ui::{Context, HierarchicalArena, Index},
+    ui::{Context, HierarchicalArena, Index, UIState},
 };
 
 pub struct SceneContext {
@@ -21,9 +21,10 @@ impl SceneContext {
         index: I,
         scene: SceneTarget,
         arena: HierarchicalArena,
+        state: UIState,
     ) -> Self {
         Self {
-            base: Context::new(index, arena),
+            base: Context::new(index, arena, state),
             scene,
         }
     }

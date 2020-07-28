@@ -336,7 +336,7 @@ mod tests {
             style::Style,
             ui::{
                 Component, HierarchicalArena, Layout, LayoutEngine, LayoutSolver, LayoutSolverExt,
-                Node, StandaloneComponent, StyledContext,
+                Node, StandaloneComponent, StyledContext, UIState,
             },
         };
         use async_trait::async_trait;
@@ -432,7 +432,14 @@ mod tests {
         let scene = Scene::default();
         scene.set_internal_size(Size::new(200., 200.)).await;
         let scene_target = SceneTarget::Scene(scene);
-        let engine = LayoutEngine::layout(&arena, root, &scene_target, HashSet::new()).await?;
+        let engine = LayoutEngine::layout(
+            &arena,
+            &UIState::default(),
+            root,
+            &scene_target,
+            HashSet::new(),
+        )
+        .await?;
 
         let root_layout = engine.get_layout(&root).await.unwrap();
         let child_layout = engine.get_layout(&child).await.unwrap();

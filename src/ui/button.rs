@@ -2,8 +2,8 @@ use crate::{
     event::MouseButton,
     math::{Point, Size, Surround},
     ui::{
-        AbsoluteBounds, Component, Context, Entity, EventStatus, InteractiveComponent, Label,
-        Layout, LayoutSolver, LayoutSolverExt, StyledContext,
+        AbsoluteBounds, Component, Context, Entity, InteractiveComponent, Label, Layout,
+        LayoutSolver, LayoutSolverExt, StyledContext,
     },
     KludgineResult,
 };
@@ -38,35 +38,13 @@ impl Component for Button {
         Ok(())
     }
 
-    async fn mouse_down(
-        &mut self,
-        _context: &mut Context,
-        _position: Point,
-        button: MouseButton,
-    ) -> KludgineResult<EventStatus> {
-        if button == MouseButton::Left {
-            Ok(EventStatus::Handled)
-        } else {
-            Ok(EventStatus::Ignored)
-        }
-    }
-
-    async fn mouse_up(
+    async fn clicked(
         &mut self,
         context: &mut Context,
-        position: Option<Point>,
+        _window_position: Point,
         button: MouseButton,
     ) -> KludgineResult<()> {
-        if MouseButton::Left == button {
-            let hit = match position {
-                Some(position) => self.hit_test(context, position).await?,
-                None => false,
-            };
-            if hit {
-                self.callback(context, ButtonEvent::Clicked).await;
-            }
-        }
-
+        self.callback(context, ButtonEvent::Clicked(button)).await;
         Ok(())
     }
 
@@ -119,7 +97,7 @@ impl Button {
 
 #[derive(Clone, Debug)]
 pub enum ButtonEvent {
-    Clicked,
+    Clicked(MouseButton),
 }
 
 #[derive(Clone, Debug)]

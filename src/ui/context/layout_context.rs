@@ -2,7 +2,7 @@ use crate::{
     math::{Point, Rect, Size, Surround},
     scene::SceneTarget,
     style::EffectiveStyle,
-    ui::{HierarchicalArena, Index, Layout, LayoutSolver, SceneContext, StyledContext},
+    ui::{HierarchicalArena, Index, Layout, LayoutSolver, SceneContext, StyledContext, UIState},
     KludgineHandle, KludgineResult,
 };
 use std::{
@@ -45,6 +45,7 @@ impl LayoutEngine {
 
     pub(crate) async fn layout(
         arena: &HierarchicalArena,
+        ui_state: &UIState,
         root: Index,
         scene: &SceneTarget,
         hovered_indicies: HashSet<Index>,
@@ -59,6 +60,14 @@ impl LayoutEngine {
 
             if hovered_indicies.contains(&index) {
                 node_style = node.hover_style().await.inherit_from(&node_style);
+            }
+
+            if ui_state.focused().await == Some(index) {
+                node_style = node.focus_style().await.inherit_from(&node_style);
+            }
+
+            if ui_state.active().await == Some(index) {
+                node_style = node.active_style().await.inherit_from(&node_style);
             }
 
             let computed_style = match arena.parent(index).await {
@@ -81,8 +90,13 @@ impl LayoutEngine {
         while let Some(index) = found_nodes.pop_back() {
             let node = arena.get(index).await.unwrap();
             let effective_style = effective_styles.get(&index).unwrap().clone();
-            let mut context =
-                StyledContext::new(index, scene.clone(), effective_style.clone(), arena.clone());
+            let mut context = StyledContext::new(
+                index,
+                scene.clone(),
+                effective_style.clone(),
+                arena.clone(),
+                ui_state.clone(),
+            );
             let solver = node.layout(&mut context).await?;
             layout_solvers.insert(index, KludgineHandle::new(solver));
         }
@@ -97,6 +111,7 @@ impl LayoutEngine {
                 effective_style.clone(),
                 layout_data.clone(),
                 arena.clone(),
+                ui_state.clone(),
             );
             let computed_layout = match context.layout_for(index).await {
                 Some(layout) => layout,
@@ -190,9 +205,10 @@ impl LayoutContext {
         effective_style: EffectiveStyle,
         layout: LayoutEngine,
         arena: HierarchicalArena,
+        ui_state: UIState,
     ) -> Self {
         Self {
-            base: StyledContext::new(index, scene, effective_style, arena),
+            base: StyledContext::new(index, scene, effective_style, arena, ui_state),
             layout,
         }
     }
@@ -202,10 +218,12 @@ impl LayoutContext {
         let effective_style = self.layout.effective_style(&index).await.unwrap();
         Self {
             base: StyledContext::new(
+                // TODO use clone_for once it's fixed
                 index,
                 self.scene().clone(),
                 effective_style,
                 self.arena().clone(),
+                self.ui_state.clone(),
             ),
             layout: self.layout.clone(),
         }
