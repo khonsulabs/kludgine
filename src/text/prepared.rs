@@ -4,7 +4,6 @@ use crate::{
     text::Font,
     KludgineHandle,
 };
-use approx::relative_eq;
 use futures::future::join_all;
 
 #[derive(Default, Debug)]
