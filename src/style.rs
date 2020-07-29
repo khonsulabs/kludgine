@@ -9,6 +9,19 @@ pub struct Style {
     pub font_weight: Option<Weight>,
     pub color: Option<Color>,
     pub background_color: Option<Color>,
+    pub alignment: Option<Alignment>,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Alignment {
+    Left,
+    Center,
+    Right,
+}
+
+impl Default for Alignment {
+    fn default() -> Self {
+        Self::Left
+    }
 }
 
 impl Style {
@@ -22,6 +35,7 @@ impl Style {
             font_weight: self.font_weight.or(parent.font_weight),
             color: self.color.or(parent.color),
             background_color: self.background_color.or(parent.background_color),
+            alignment: self.alignment.or(parent.alignment),
         }
     }
 
@@ -35,6 +49,7 @@ impl Style {
             font_weight: self.font_weight.unwrap_or(Weight::Normal),
             color: self.color.unwrap_or(Color::BLACK),
             background_color: self.background_color,
+            alignment: self.alignment.unwrap_or_default(),
         }
     }
 }
@@ -46,4 +61,5 @@ pub struct EffectiveStyle {
     pub font_weight: Weight,
     pub color: Color,
     pub background_color: Option<Color>,
+    pub alignment: Alignment,
 }

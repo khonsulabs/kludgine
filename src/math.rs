@@ -98,17 +98,6 @@ where
     }
 }
 
-// impl<S> Into<stretch::geometry::Rect<S>> for Rect<S> {
-//     fn into(self) -> stretch::geometry::Rect<S> {
-//         stretch::geometry::Rect {
-//             start: self.x1(),
-//             end: self.x2(),
-//             top: self.y1(),
-//             bottom: self.y2(),
-//         }
-//     }
-// }
-
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
 pub struct Point<S = f32> {
     pub x: S,

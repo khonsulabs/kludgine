@@ -1,6 +1,6 @@
 use crate::{
     math::{Point, Size},
-    style::EffectiveStyle,
+    style::{Alignment, EffectiveStyle},
     text::{wrap::TextWrap, Text},
     ui::{Component, Context, InteractiveComponent, Layout, SceneContext, StyledContext},
     KludgineResult,
@@ -51,7 +51,10 @@ impl Component for Label {
                 layout.inner_bounds().origin.x,
                 layout.inner_bounds().origin.y,
             ),
-            self.wrapping(&layout.inner_bounds().size),
+            self.wrapping(
+                &layout.inner_bounds().size,
+                context.effective_style().alignment,
+            ),
         )
         .await
     }
@@ -62,10 +65,13 @@ impl Component for Label {
         constraints: &Size<Option<f32>>,
     ) -> KludgineResult<Size> {
         let text = self.create_text(context.effective_style());
-        let wrapping = self.wrapping(&Size {
-            width: constraints.width.unwrap_or(f32::MAX),
-            height: constraints.height.unwrap_or(f32::MAX),
-        });
+        let wrapping = self.wrapping(
+            &Size {
+                width: constraints.width.unwrap_or(f32::MAX),
+                height: constraints.height.unwrap_or(f32::MAX),
+            },
+            context.effective_style().alignment,
+        );
         let wrapped_size = text.wrap(context.scene(), wrapping).await?.size().await;
         let size = wrapped_size / context.scene().effective_scale_factor().await;
         Ok(size)
@@ -82,10 +88,11 @@ impl Label {
         Text::span(&self.value, effective_style)
     }
 
-    fn wrapping(&self, size: &Size) -> TextWrap {
+    fn wrapping(&self, size: &Size, alignment: Alignment) -> TextWrap {
         TextWrap::SingleLine {
             max_width: size.width,
             truncate: true,
+            alignment,
         }
     }
 }

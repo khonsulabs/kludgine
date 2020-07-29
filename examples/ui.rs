@@ -70,6 +70,7 @@ impl Component for UIExample {
                 color: Some(Color::GREEN),
                 background_color: Some(Color::new(1.0, 0.0, 1.0, 0.5)),
                 font_size: Some(72.),
+                alignment: Some(Alignment::Right),
                 ..Default::default()
             })
             .hover(Style {
