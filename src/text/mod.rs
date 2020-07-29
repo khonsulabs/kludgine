@@ -93,11 +93,12 @@ impl Text {
                 location.y + current_line_baseline,
             );
             for span in line.spans.iter() {
-                let mut location = scene
-                    .user_to_device_point(Point::new(cursor_position.x, cursor_position.y))
+                let location = scene
+                    .user_to_device_point(
+                        Point::new(cursor_position.x, cursor_position.y) + span.location,
+                    )
                     .await
                     * effective_scale_factor;
-                location.x += span.x().await;
                 scene
                     .push_element(Element::Text(span.translate(location)))
                     .await;

@@ -2,38 +2,385 @@ use crate::{
     math::{max_f, min_f},
     scene::SceneTarget,
     style::{Alignment, EffectiveStyle},
-    text::{font::Font, PreparedLine, PreparedSpan, PreparedText, Span, Text},
+    text::{font::Font, PreparedLine, PreparedSpan, PreparedText, Text},
     KludgineResult,
 };
-use rusttype::{PositionedGlyph, Scale};
+use approx::relative_eq;
+use futures::future::join_all;
+use rusttype::{GlyphId, PositionedGlyph, Scale};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-enum LexerState {
+enum LexerStatus {
     /// We have wrapped to a new line
-    AtLineStart,
+    AtSpanStart,
     /// We have received at least one glyph for this word
     InWord,
     /// We have encountered a punctuation mark after a word.
     TrailingPunctuation,
     /// We have encountered a whitespace or punctuation character
-    AfterWord,
+    Whitespace,
+}
+
+#[derive(Debug)]
+enum Token {
+    EndOfLine(rusttype::VMetrics),
+    Characters(PreparedSpan),
+    Punctuation(PreparedSpan),
+    Whitespace(PreparedSpan),
+}
+
+#[derive(Debug)]
+enum SpanGroup {
+    Spans(Vec<PreparedSpan>),
+    Whitespace(Vec<PreparedSpan>),
+    EndOfLine(rusttype::VMetrics),
+}
+
+impl SpanGroup {
+    fn spans(&self) -> Vec<PreparedSpan> {
+        match self {
+            SpanGroup::Spans(spans) => spans.clone(),
+            SpanGroup::Whitespace(spans) => spans.clone(),
+            SpanGroup::EndOfLine(_) => Vec::default(),
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct Lexer {
+    tokens: Vec<Token>,
+}
+
+struct LexerState<'a> {
+    style: &'a EffectiveStyle,
+    font: &'a Font,
+    glyphs: Vec<PositionedGlyph<'static>>,
+    lexer_state: LexerStatus,
+    last_glyph_id: Option<GlyphId>,
+    caret: f32,
+}
+
+impl<'a> LexerState<'a> {
+    fn new(font: &'a Font, style: &'a EffectiveStyle) -> Self {
+        Self {
+            font,
+            style,
+            lexer_state: LexerStatus::AtSpanStart,
+            glyphs: Default::default(),
+            last_glyph_id: None,
+            caret: 0.,
+        }
+    }
+
+    async fn emit_token_if_needed(&mut self) -> Option<Token> {
+        if self.glyphs.is_empty() {
+            None
+        } else {
+            let current_committed_glyphs = std::mem::take(&mut self.glyphs);
+
+            let metrics = self.font.metrics(self.style.font_size).await;
+            let span = PreparedSpan::new(
+                self.font.clone(),
+                self.style.font_size,
+                self.style.color,
+                self.caret,
+                current_committed_glyphs,
+                metrics,
+            );
+            self.caret = 0.0;
+
+            let token = match self.lexer_state {
+                LexerStatus::AtSpanStart => unreachable!(),
+                LexerStatus::InWord => Token::Characters(span),
+                LexerStatus::TrailingPunctuation => Token::Punctuation(span),
+                LexerStatus::Whitespace => Token::Whitespace(span),
+            };
+            Some(token)
+        }
+    }
+}
+
+impl Lexer {
+    // Text (Vec<Span>) -> Vec<Token{ PreparedSpan, TokenKind }>
+    async fn prepare_spans(
+        mut self,
+        text: &Text,
+        scene: &SceneTarget,
+    ) -> KludgineResult<Vec<Token>> {
+        for span in text.spans.iter() {
+            let font = scene
+                .lookup_font(&span.style.font_family, span.style.font_weight)
+                .await?;
+            let vmetrics = font.metrics(span.style.font_size).await;
+
+            let mut state = LexerState::new(&font, &span.style);
+
+            for c in span.text.chars() {
+                if c.is_control() {
+                    if c == '\n' {
+                        self.tokens.push(Token::EndOfLine(vmetrics));
+                    }
+                } else {
+                    let new_lexer_state = if c.is_whitespace() {
+                        LexerStatus::Whitespace
+                    } else if c.is_ascii_punctuation() {
+                        LexerStatus::TrailingPunctuation
+                    } else {
+                        LexerStatus::InWord
+                    };
+
+                    if new_lexer_state != state.lexer_state {
+                        if let Some(token) = state.emit_token_if_needed().await {
+                            self.tokens.push(token);
+                        }
+                    }
+
+                    state.lexer_state = new_lexer_state;
+
+                    let base_glyph = font.glyph(c).await;
+                    if let Some(id) = state.last_glyph_id.take() {
+                        state.caret += font
+                            .pair_kerning(span.style.font_size, id, base_glyph.id())
+                            .await;
+                    }
+                    state.last_glyph_id = Some(base_glyph.id());
+                    let glyph = base_glyph
+                        .scaled(Scale::uniform(span.style.font_size))
+                        .positioned(rusttype::point(state.caret, 0.0));
+
+                    state.caret += glyph.unpositioned().h_metrics().advance_width;
+                    state.glyphs.push(glyph);
+                }
+            }
+
+            if let Some(token) = state.emit_token_if_needed().await {
+                self.tokens.push(token);
+            }
+        }
+
+        Ok(self.tokens)
+    }
+}
+
+pub struct MeasuredText {
+    groups: Vec<SpanGroup>,
+}
+
+struct TextMeasureState {
+    current_group: Option<SpanGroup>,
+    status: ParserStatus,
+    groups: Vec<SpanGroup>,
+}
+
+impl TextMeasureState {
+    fn push_token(&mut self, token: Token) {
+        match token {
+            Token::EndOfLine(vmetrics) => {
+                self.commit_current_group();
+                self.groups.push(SpanGroup::EndOfLine(vmetrics));
+                self.status = ParserStatus::LineStart;
+            }
+            Token::Characters(span) => {
+                match self.status {
+                    ParserStatus::LineStart | ParserStatus::InWord => {
+                        self.push_visual_span(span);
+                        self.status = ParserStatus::InWord;
+                    }
+
+                    ParserStatus::Whitespace | ParserStatus::TrailingPunctuation => {
+                        self.commit_current_group();
+                        self.push_visual_span(span);
+                        self.status = ParserStatus::TrailingPunctuation;
+                    }
+                };
+            }
+            Token::Punctuation(span) => match self.status {
+                ParserStatus::TrailingPunctuation => {
+                    self.push_visual_span(span);
+                }
+                ParserStatus::LineStart | ParserStatus::InWord => {
+                    self.push_visual_span(span);
+                    self.status = ParserStatus::TrailingPunctuation;
+                }
+                ParserStatus::Whitespace => {
+                    self.commit_current_group();
+                    self.push_visual_span(span);
+                    self.status = ParserStatus::TrailingPunctuation;
+                }
+            },
+            Token::Whitespace(span) => match self.status {
+                ParserStatus::Whitespace => {
+                    self.push_whitespace_span(span);
+                }
+                _ => {
+                    self.commit_current_group();
+                    self.push_whitespace_span(span);
+                    self.status = ParserStatus::Whitespace;
+                }
+            },
+        }
+    }
+
+    fn push_visual_span(&mut self, span: PreparedSpan) {
+        if let Some(SpanGroup::Spans(group)) = &mut self.current_group {
+            group.push(span);
+        } else {
+            self.commit_current_group();
+            self.current_group = Some(SpanGroup::Spans(vec![span]));
+        }
+    }
+
+    fn push_whitespace_span(&mut self, span: PreparedSpan) {
+        if let Some(SpanGroup::Whitespace(group)) = &mut self.current_group {
+            group.push(span);
+        } else {
+            self.commit_current_group();
+            self.current_group = Some(SpanGroup::Whitespace(vec![span]));
+        }
+    }
+
+    fn commit_current_group(&mut self) {
+        if let Some(group) = self.current_group.take() {
+            self.groups.push(group);
+        }
+    }
+
+    fn finish(mut self) -> Vec<SpanGroup> {
+        self.commit_current_group();
+        self.groups
+    }
+}
+
+impl MeasuredText {
+    pub async fn new(text: &Text, scene: &SceneTarget) -> KludgineResult<Self> {
+        let mut measured = Self { groups: Vec::new() };
+
+        measured.measure_text(text, scene).await?;
+
+        //println!("{:#?}", measured.groups);
+        Ok(measured)
+    }
+
+    async fn measure_text(&mut self, text: &Text, scene: &SceneTarget) -> KludgineResult<()> {
+        let mut state = TextMeasureState {
+            current_group: None,
+            status: ParserStatus::LineStart,
+            groups: Vec::new(),
+        };
+
+        // Tokens -> "Words" (groups of characters, and where the breaks would happen)
+        for token in Lexer::default().prepare_spans(text, scene).await? {
+            state.push_token(token);
+        }
+
+        self.groups = state.finish();
+
+        Ok(())
+    }
 }
 
 pub struct TextWrapper {
-    caret: f32,
-    committed_caret: f32,
-    current_vmetrics: Option<rusttype::VMetrics>,
-    last_glyph_id: Option<rusttype::GlyphId>,
     options: TextWrap,
     scene: SceneTarget,
     prepared_text: PreparedText,
-    lexer_state: LexerState,
-    current_line_spans: Vec<PreparedSpan>,
-    current_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
-    current_committed_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
-    current_font: Option<Font>,
-    current_style: Option<EffectiveStyle>,
+}
+
+enum ParserStatus {
+    LineStart,
+    InWord,
+    TrailingPunctuation,
+    Whitespace,
+}
+
+struct TextWrapState {
+    width: Option<f32>,
+    status: ParserStatus,
+    current_vmetrics: Option<rusttype::VMetrics>,
     current_span_offset: f32,
+    current_groups: Vec<SpanGroup>,
+    lines: Vec<PreparedLine>,
+}
+
+impl TextWrapState {
+    async fn push_group(&mut self, group: SpanGroup) {
+        if let SpanGroup::EndOfLine(metrics) = &group {
+            self.update_vmetrics(*metrics);
+            self.new_line().await;
+        } else {
+            let total_width = join_all(group.spans().iter().map(|s| s.width()))
+                .await
+                .into_iter()
+                .sum::<f32>();
+            if let Some(width) = self.width {
+                if self.current_span_offset + total_width > width {
+                    if relative_eq!(self.current_span_offset, 0.) {
+                        // TODO Split the group if it can't fit on a single line
+                        // For now, just render it anyways.
+                    } else {
+                        self.new_line().await;
+                    }
+                }
+            }
+            self.current_span_offset += total_width;
+            self.current_groups.push(group);
+        }
+    }
+
+    fn update_vmetrics(&mut self, new_metrics: rusttype::VMetrics) {
+        self.current_vmetrics = match self.current_vmetrics {
+            Some(metrics) => Some(rusttype::VMetrics {
+                ascent: max_f(metrics.ascent, new_metrics.ascent),
+                descent: min_f(metrics.descent, new_metrics.descent),
+                line_gap: max_f(metrics.line_gap, new_metrics.line_gap),
+            }),
+            None => Some(new_metrics),
+        }
+    }
+
+    async fn position_span(&mut self, span: &mut PreparedSpan) {
+        let width = span.width().await;
+        span.location.x = self.current_span_offset;
+        self.current_span_offset += width;
+    }
+
+    async fn new_line(&mut self) {
+        // Remove any whitespace from the end of the line
+        while matches!(self.current_groups.last(), Some(SpanGroup::Whitespace(_))) {
+            self.current_groups.pop();
+        }
+
+        let mut spans = Vec::new();
+        for group in self.current_groups.iter() {
+            for span in group.spans() {
+                spans.push(span);
+            }
+        }
+
+        self.current_span_offset = 0.;
+        for span in spans.iter_mut() {
+            self.update_vmetrics(span.metrics().await);
+            self.position_span(span).await
+        }
+
+        if let Some(metrics) = self.current_vmetrics.take() {
+            self.lines.push(PreparedLine {
+                spans,
+                metrics,
+                alignment_offset: 0.,
+            });
+        }
+        self.current_span_offset = 0.;
+        self.current_groups.clear();
+        self.status = ParserStatus::LineStart;
+    }
+
+    async fn finish(mut self) -> Vec<PreparedLine> {
+        if !self.current_groups.is_empty() {
+            self.new_line().await;
+        }
+
+        self.lines
+    }
 }
 
 impl TextWrapper {
@@ -43,79 +390,34 @@ impl TextWrapper {
         options: TextWrap,
     ) -> KludgineResult<PreparedText> {
         TextWrapper {
-            caret: 0.0,
-            committed_caret: 0.0,
-            current_span_offset: 0.0,
-            current_vmetrics: None,
-            last_glyph_id: None,
             options,
             scene: scene.clone(),
             prepared_text: PreparedText::default(),
-            current_line_spans: Vec::new(),
-            current_glyphs: Vec::new(),
-            current_committed_glyphs: Vec::new(),
-            current_font: None,
-            current_style: None,
-            lexer_state: LexerState::AtLineStart,
         }
         .wrap_text(text)
         .await
     }
 
     async fn wrap_text(mut self, text: &Text) -> KludgineResult<PreparedText> {
-        for span in text.spans.iter() {
-            if self.current_style.is_none() {
-                self.current_style = Some(span.style.clone());
-            } else if self.current_style.as_ref() != Some(&span.style) {
-                self.new_span().await;
-                self.current_style = Some(span.style.clone());
-            }
+        let effective_scale_factor = self.scene.effective_scale_factor().await;
+        let width = self.options.max_width(effective_scale_factor);
 
-            let primary_font = self
-                .scene
-                .lookup_font(&span.style.font_family, span.style.font_weight)
-                .await?;
+        let measured = MeasuredText::new(text, &self.scene).await?;
 
-            for c in span.text.chars() {
-                if let Some(glyph) = self.process_character(c, span, &primary_font).await {
-                    if self.lexer_state == LexerState::AtLineStart && c.is_whitespace() {
-                        continue;
-                    }
+        let mut state = TextWrapState {
+            width,
+            current_span_offset: 0.,
+            current_vmetrics: None,
+            current_groups: Vec::new(),
+            lines: Vec::new(),
+            status: ParserStatus::LineStart,
+        };
 
-                    let metrics = primary_font.metrics(span.style.font_size).await;
-                    if let Some(current_vmetrics) = &self.current_vmetrics {
-                        self.current_vmetrics = Some(rusttype::VMetrics {
-                            ascent: max_f(current_vmetrics.ascent, metrics.ascent),
-                            descent: min_f(current_vmetrics.descent, metrics.descent),
-                            line_gap: max_f(current_vmetrics.line_gap, metrics.line_gap),
-                        });
-                    } else {
-                        self.current_vmetrics = Some(metrics);
-                    }
-
-                    self.caret += glyph.unpositioned().h_metrics().advance_width;
-
-                    if (self.current_style.is_none()
-                        || self.current_style.as_ref() != Some(&span.style))
-                        || (self.current_font.is_none()
-                            || self.current_font.as_ref().unwrap().id != primary_font.id)
-                    {
-                        self.new_span().await;
-                        self.current_font = Some(primary_font.clone());
-                        self.current_style = Some(span.style.clone());
-                    }
-
-                    self.current_glyphs.push(glyph);
-                }
-            }
-
-            // Commit the current glyphs to the existing span, since we're getting a new span and styles
-            // probably will change.
-            self.commit_current_glyphs(None).await;
+        for group in measured.groups {
+            state.push_group(group).await;
         }
 
-        self.commit_current_glyphs(None).await;
-        self.new_line().await;
+        self.prepared_text.lines = state.finish().await;
 
         if let Some(alignment) = self.options.alignment() {
             if let Some(max_width) = self
@@ -127,189 +429,6 @@ impl TextWrapper {
         }
 
         Ok(self.prepared_text)
-    }
-
-    async fn process_character(
-        &mut self,
-        c: char,
-        span: &Span,
-        primary_font: &Font,
-    ) -> Option<PositionedGlyph<'static>> {
-        if c.is_control() {
-            if c == '\n' {
-                // If there's no current line height, we should initialize it with the primary font's height
-                if self.current_vmetrics.is_none() {
-                    self.current_vmetrics = Some(primary_font.metrics(span.style.font_size).await);
-                }
-
-                self.new_line().await;
-            }
-            return None;
-        } else {
-            match self.lexer_state {
-                LexerState::AtLineStart => {
-                    if c.is_whitespace() {
-                        return None;
-                    } else if c.is_ascii_punctuation() {
-                        self.lexer_state = LexerState::AfterWord;
-                    } else {
-                        self.lexer_state = LexerState::InWord;
-                    }
-                }
-                LexerState::InWord => {
-                    if c.is_ascii_punctuation() {
-                        self.lexer_state = LexerState::TrailingPunctuation;
-                    } else if c.is_whitespace() {
-                        self.lexer_state = LexerState::AfterWord;
-                    }
-                }
-                LexerState::TrailingPunctuation => {
-                    if c.is_ascii_punctuation() {
-                        // This line has been left intentionally blank
-                    } else if c.is_whitespace() {
-                        self.lexer_state = LexerState::AfterWord;
-                    } else {
-                        self.commit_current_glyphs(Some(LexerState::InWord)).await;
-                    }
-                }
-                LexerState::AfterWord => {
-                    if c.is_ascii_punctuation() {
-                        self.lexer_state = LexerState::TrailingPunctuation;
-                    } else if !c.is_whitespace() {
-                        self.commit_current_glyphs(Some(LexerState::InWord)).await;
-                    }
-                }
-            }
-        }
-
-        let base_glyph = primary_font.glyph(c).await;
-        if let Some(id) = self.last_glyph_id.take() {
-            self.caret += primary_font
-                .pair_kerning(span.style.font_size, id, base_glyph.id())
-                .await;
-        }
-        self.last_glyph_id = Some(base_glyph.id());
-        let mut glyph = base_glyph
-            .scaled(Scale::uniform(span.style.font_size))
-            .positioned(rusttype::point(self.caret, 0.0));
-
-        if let Some(max_width) = self
-            .options
-            .max_width(self.scene.effective_scale_factor().await)
-        {
-            if let Some(bb) = glyph.pixel_bounding_box() {
-                if self.current_span_offset + bb.max.x as f32 > max_width {
-                    // If the character that is causing us to need to wrap to the next line is whitespace,
-                    // the current word should be committed to the current line. If it's punctuation, it belongs to the
-                    // word. <-- case in point
-                    match self.lexer_state {
-                        LexerState::InWord | LexerState::TrailingPunctuation => {
-                            // Wrap without committing.
-                            // Except, if a single glyph is too wide to draw without being wrapped, return it so that it's
-                            // rendered anyways.
-                            if self.current_committed_glyphs.len() + self.current_glyphs.len() == 0
-                            {
-                                return Some(glyph);
-                            }
-                        }
-                        LexerState::AfterWord => {
-                            // Commit then wrap.
-                            self.commit_current_glyphs(Some(LexerState::AfterWord))
-                                .await;
-                        }
-                        LexerState::AtLineStart => unreachable!(),
-                    }
-
-                    self.new_line().await;
-                    self.current_font = Some(primary_font.clone());
-                    self.current_style = Some(span.style.clone());
-                    glyph.set_position(rusttype::point(self.caret, 0.0));
-                    self.last_glyph_id = None;
-                }
-            }
-        }
-        Some(glyph)
-    }
-
-    async fn commit_current_glyphs(&mut self, transition_to_state: Option<LexerState>) {
-        if !self.current_glyphs.is_empty() {
-            let mut current_glyphs = Vec::new();
-            std::mem::swap(&mut self.current_glyphs, &mut current_glyphs);
-            self.current_committed_glyphs.extend(current_glyphs);
-            self.committed_caret = self.caret;
-        }
-        if let Some(transition_to_state) = transition_to_state {
-            self.lexer_state = transition_to_state;
-        }
-    }
-
-    async fn new_span(&mut self) {
-        if !self.current_committed_glyphs.is_empty() {
-            let mut current_style = None;
-            std::mem::swap(&mut current_style, &mut self.current_style);
-            let current_style = current_style.unwrap();
-            let mut current_committed_glyphs = Vec::new();
-            std::mem::swap(
-                &mut self.current_committed_glyphs,
-                &mut current_committed_glyphs,
-            );
-
-            let font = self.current_font.as_ref().unwrap().clone();
-            let metrics = font.metrics(current_style.font_size).await;
-            self.current_line_spans.push(PreparedSpan::new(
-                font,
-                current_style.font_size,
-                current_style.color,
-                self.current_span_offset,
-                self.committed_caret - self.current_span_offset,
-                current_committed_glyphs,
-                metrics,
-            ));
-            self.current_span_offset += self.caret;
-            self.committed_caret += self.caret;
-            self.caret = 0.0;
-        }
-    }
-
-    async fn new_line(&mut self) {
-        let previous_lexer_state = self.lexer_state;
-        self.new_span().await;
-
-        self.lexer_state = LexerState::AtLineStart;
-        self.caret = 0.0;
-        self.committed_caret = 0.0;
-        self.current_span_offset = 0.0;
-        self.last_glyph_id = None;
-
-        if !self.current_glyphs.is_empty() {
-            // !is_empty()ation for the current glyphs
-            let first_offset = self.current_glyphs[0].position().x;
-            let mut max_x = 0i32;
-            for glyph in self.current_glyphs.iter_mut() {
-                let mut positon = glyph.position();
-                positon.x -= first_offset;
-                glyph.set_position(positon);
-                if let Some(bb) = glyph.pixel_bounding_box() {
-                    max_x = max_x.max(bb.max.x);
-                }
-            }
-            self.last_glyph_id = Some(self.current_glyphs[self.current_glyphs.len() - 1].id());
-            self.caret = max_x as f32;
-            self.lexer_state = previous_lexer_state;
-        }
-
-        let mut current_line_spans = Vec::new();
-        std::mem::swap(&mut current_line_spans, &mut self.current_line_spans);
-
-        let metrics = self.current_vmetrics.unwrap();
-        let current_line = PreparedLine {
-            spans: current_line_spans,
-            metrics,
-            alignment_offset: 0.,
-        };
-        self.current_vmetrics = None;
-
-        self.prepared_text.lines.push(current_line);
     }
 }
 
@@ -402,17 +521,8 @@ mod tests {
         .await
         .expect("Error wrapping text");
         assert_eq!(wrap.lines.len(), 2);
-        assert_eq!(wrap.lines[0].spans.len(), 1);
-        assert_eq!(
-            wrap.lines[0].spans[0]
-                .handle
-                .read()
-                .await
-                .positioned_glyphs
-                .len(),
-            17
-        );
-        assert_eq!(wrap.lines[1].spans.len(), 1);
+        assert_eq!(wrap.lines[0].spans.len(), 5); // "this"," ","line"," ","should"
+        assert_eq!(wrap.lines[1].spans.len(), 1); // "wrap"
         assert_eq!(
             wrap.lines[1].spans[0]
                 .handle
@@ -460,16 +570,7 @@ mod tests {
         .await
         .expect("Error wrapping text");
         assert_eq!(wrap.lines.len(), 2);
-        assert_eq!(wrap.lines[0].spans.len(), 1);
-        assert_eq!(
-            wrap.lines[0].spans[0]
-                .handle
-                .read()
-                .await
-                .positioned_glyphs
-                .len(),
-            17
-        );
+        assert_eq!(wrap.lines[0].spans.len(), 5);
         assert_eq!(wrap.lines[1].spans.len(), 1);
         assert_eq!(
             wrap.lines[1].spans[0]

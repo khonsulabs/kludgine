@@ -53,13 +53,12 @@ impl PreparedLine {
         if self.spans.is_empty() {
             return Size::new(0.0, self.height());
         }
-        let first = self.spans.get(0).unwrap();
-        let last = self.spans.last().unwrap();
 
-        let last_x = last.x().await;
-        let last_width = last.width().await;
-        let first_x = first.x().await;
-        Size::new(last_x + last_width - first_x, self.height())
+        let width = join_all(self.spans.iter().map(|s| s.width()))
+            .await
+            .into_iter()
+            .sum::<f32>();
+        Size::new(width, self.height())
     }
 
     pub fn height(&self) -> f32 {
@@ -78,7 +77,6 @@ impl PreparedSpan {
         font: Font,
         size: f32,
         color: Color,
-        x: f32,
         width: f32,
         positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
         metrics: rusttype::VMetrics,
@@ -89,7 +87,6 @@ impl PreparedSpan {
                 font,
                 size,
                 color,
-                x,
                 width,
                 positioned_glyphs,
                 metrics,
@@ -104,14 +101,14 @@ impl PreparedSpan {
         }
     }
 
-    pub async fn x(&self) -> f32 {
-        let handle = self.handle.read().await;
-        handle.x
-    }
-
     pub async fn width(&self) -> f32 {
         let handle = self.handle.read().await;
         handle.width
+    }
+
+    pub(crate) async fn metrics(&self) -> rusttype::VMetrics {
+        let handle = self.handle.read().await;
+        handle.font.metrics(handle.size).await
     }
 }
 
@@ -120,7 +117,6 @@ pub struct PreparedSpanData {
     pub font: Font,
     pub size: f32,
     pub color: Color,
-    pub x: f32,
     pub width: f32,
     pub positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
     pub metrics: rusttype::VMetrics,
