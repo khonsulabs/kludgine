@@ -10,6 +10,7 @@ struct UIExample {
     image: Entity<Image>,
     label: Entity<Label>,
     button: Entity<Button>,
+    new_window_button: Entity<Button>,
     current_count: usize,
 }
 
@@ -24,6 +25,7 @@ impl Window for UIExample {}
 #[derive(Debug, Clone)]
 pub enum Message {
     ButtonClicked,
+    NewWindowClicked,
 }
 
 #[async_trait]
@@ -45,6 +47,9 @@ impl InteractiveComponent for UIExample {
                     LabelCommand::SetValue(self.current_count.to_string()),
                 )
                 .await;
+            }
+            Message::NewWindowClicked => {
+                Runtime::open_window(Self::get_window_builder(), UIExample::default()).await;
             }
         }
         Ok(())
@@ -73,10 +78,6 @@ impl Component for UIExample {
                 alignment: Some(Alignment::Right),
                 ..Default::default()
             })
-            .hover(Style {
-                background_color: Some(Color::new(1.0, 1.0, 1.0, 0.5)),
-                ..Default::default()
-            })
             .insert()
             .await?;
 
@@ -98,6 +99,27 @@ impl Component for UIExample {
                 ..Default::default()
             })
             .callback(|_| Message::ButtonClicked)
+            .insert()
+            .await?;
+
+        self.new_window_button = self
+            .new_entity(context, Button::new("New Window"))
+            .style(Style {
+                font_size: Some(16.),
+                color: Some(Color::BLACK),
+                background_color: Some(Color::new(0.7, 0.7, 0.7, 1.0)),
+                ..Default::default()
+            })
+            .hover(Style {
+                background_color: Some(Color::new(0.8, 0.8, 0.8, 1.0)),
+                ..Default::default()
+            })
+            .active(Style {
+                color: Some(Color::WHITE),
+                background_color: Some(Color::new(0.4, 0.4, 0.4, 1.0)),
+                ..Default::default()
+            })
+            .callback(|_| Message::NewWindowClicked)
             .insert()
             .await?;
 
@@ -135,40 +157,14 @@ impl Component for UIExample {
                     ..Default::default()
                 },
             )?
+            .child(
+                self.new_window_button,
+                AbsoluteBounds {
+                    bottom: Dimension::Points(10.),
+                    left: Dimension::Points(10.),
+                    ..Default::default()
+                },
+            )?
             .layout()
     }
 }
-
-// #[derive(Debug)]
-// struct Interface {
-//     click_count: i32,
-// }
-
-// #[async_trait]
-// impl Controller for Interface {
-//     async fn view(&self) -> KludgineResult<KludgineHandle<Box<dyn View>>> {
-//         Label::default()
-//             .with_value(self.click_count.to_string())
-//             .with_style(Style {
-//                 font_size: Some(60.0),
-//                 color: Some(Color::new(0.0, 0.5, 0.5, 1.0)),
-//                 ..Default::default()
-//             })
-//             .with_hover_style(Style {
-//                 color: Some(Color::new(1.0, 1.0, 1.0, 1.0)),
-//                 ..Default::default()
-//             })
-//             .with_padding(Surround::uniform(Dimension::Auto))
-//             .build()
-//     }
-
-//     async fn mouse_button_down(
-//         &mut self,
-//         _component: &Component,
-//         _button: MouseButton,
-//         __window_position: Point,
-//     ) -> KludgineResult<ComponentEventStatus> {
-//         self.click_count += 1;
-//         Ok(ComponentEventStatus::rebuild_view_processed())
-//     }
-// }
