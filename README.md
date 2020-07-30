@@ -24,7 +24,7 @@ Apps and games written in Kludgine should have no problem running with reasonabl
 
 ## Multi-window support
 
-Kludgine is one of the only engines that has multi-window support. Because a `Window` is a special type of Component, the long-term goal is to allow embedded "Windows" inside of another window, and allow them to be popped out easily on platforms that allow multiple windows. Multi-window support is available today, but the rest is a long-term goal.
+Kludgine is one of the only engines that has multi-window support. Because a `Window` is a special type of Component, the long-term goal is to allow embedded "Windows" inside of another window, and allow them to be popped out easily on platforms that allow multiple windows. Multi-window support is available today, but [the rest is a long-term goal](https://github.com/khonsulabs/kludgine/issues/29).
 
 ## Ease of use
 
@@ -32,11 +32,11 @@ This is a bit nebulous but examples include:
 
 - Ergonomical and consistent API: This is a work in progress, but the goal is a consistent design that is easy to read and write. The primary goal of v0.1 is to stabilize a reasonable API that fits this vision. Right now there is still a lot of work on the foundation, and the API is under constant revision.
 - Easily include animated spritesheets from [Aseprite](https://www.aseprite.org)
-- Font fallback system (with more support for Unicode-driven fallback choices eventually coming)
-- Batteries-included input mapping system (to be developed) -- Easily respond to intent-based inputs intead of hard-coding key mappings, and a flexible system for providing UI hints for the user based on those intents.
+- Font fallback system (with more support for Unicode-driven fallback choices [eventually coming](https://github.com/khonsulabs/kludgine/issues/28))
+- Batteries-included input mapping system ([to be developed](https://github.com/khonsulabs/kludgine/issues/27)) -- Easily respond to intent-based inputs intead of hard-coding key mappings, and a flexible system for providing UI hints for the user based on those intents.
 
 # About
 
 This is being developed by and for [Khonsu Labs](https://khonsulabs.com/) partially as a learning experience. I hope it will be useful to others eventually.
 
-This code is [licensed](./README.md) under the [MIT](https://opensource.org/licenses/MIT) license. This code will eventually be dual-licensed under the Apache License v2.0. If this is an issue for you please contact [me](https://github.com/ecton), and I will prioritize it.
+This code is [licensed](./LICENSE.txt) under the [MIT](https://opensource.org/licenses/MIT) license. This code will eventually be dual-licensed under the Apache License v2.0. If this is an issue for you comment [on this issue](https://github.com/khonsulabs/kludgine/issues/30), and I will prioritize it.
