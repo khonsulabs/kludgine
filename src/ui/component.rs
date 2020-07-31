@@ -1,7 +1,8 @@
 use crate::{
     math::{Point, Size},
+    scene::SceneTarget,
     shape::{Fill, Shape},
-    style::Style,
+    style::{Style, StyleSheet},
     ui::{
         global_arena, Context, Entity, Index, Layout, LayoutSolver, LayoutSolverExt, Node,
         NodeData, SceneContext, StyledContext, UIState,
@@ -18,7 +19,7 @@ pub struct LayoutConstraints {}
 #[allow(unused_variables)]
 pub trait Component: Send + Sync {
     /// Called once the Window is opened
-    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
+    async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         Ok(())
     }
 
@@ -69,7 +70,7 @@ pub trait Component: Send + Sync {
                         layout.bounds_without_margin().coord1(),
                         layout.bounds_without_margin().coord2(),
                     )
-                    .fill(Fill::Solid(background)),
+                    .fill(Fill::Solid(background.into())),
                 )
                 .await;
         }
@@ -183,16 +184,14 @@ pub trait InteractiveComponent: Component {
 
     fn new_entity<T: InteractiveComponent + 'static>(
         &self,
-        context: &mut Context,
+        context: &mut SceneContext,
         component: T,
     ) -> EntityBuilder<T> {
         EntityBuilder {
             component,
+            scene: context.scene().clone(),
             parent: Some(context.index()),
-            style: Default::default(),
-            hover_style: Default::default(),
-            active_style: Default::default(),
-            focus_style: Default::default(),
+            style_sheet: Default::default(),
             ui_state: context.ui_state().clone(),
             callback: None,
         }
@@ -282,11 +281,9 @@ where
     C: InteractiveComponent + 'static,
 {
     component: C,
+    scene: SceneTarget,
     parent: Option<Index>,
-    style: Style,
-    hover_style: Style,
-    active_style: Style,
-    focus_style: Style,
+    style_sheet: StyleSheet,
     callback: Option<Callback<C::Output>>,
     ui_state: UIState,
 }
@@ -295,20 +292,28 @@ impl<C> EntityBuilder<C>
 where
     C: InteractiveComponent + 'static,
 {
+    pub fn style_sheet(mut self, sheet: StyleSheet) -> Self {
+        self.style_sheet = sheet;
+        self
+    }
+
     pub fn style(mut self, style: Style) -> Self {
-        self.style = style;
+        self.style_sheet.normal = style;
         self
     }
+
     pub fn hover(mut self, style: Style) -> Self {
-        self.hover_style = style;
+        self.style_sheet.hover = style;
         self
     }
+
     pub fn active(mut self, style: Style) -> Self {
-        self.active_style = style;
+        self.style_sheet.active = style;
         self
     }
+
     pub fn focus(mut self, style: Style) -> Self {
-        self.focus_style = style;
+        self.style_sheet.focus = style;
         self
     }
 
@@ -322,17 +327,15 @@ where
 
     pub async fn insert(self) -> KludgineResult<Entity<C>> {
         let index = {
-            let node = Node::new(
-                self.component,
-                self.style,
-                self.hover_style,
-                self.active_style,
-                self.focus_style,
-                self.callback,
-            );
+            let node = Node::new(self.component, self.style_sheet, self.callback);
             let index = global_arena().insert(self.parent, node).await;
 
-            let mut context = Context::new(index, global_arena().clone(), self.ui_state.clone());
+            let mut context = SceneContext::new(
+                index,
+                self.scene,
+                global_arena().clone(),
+                self.ui_state.clone(),
+            );
             global_arena()
                 .get(index)
                 .await

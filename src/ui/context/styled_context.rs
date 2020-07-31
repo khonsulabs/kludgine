@@ -19,6 +19,12 @@ impl std::ops::Deref for StyledContext {
     }
 }
 
+impl std::ops::DerefMut for StyledContext {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.base
+    }
+}
+
 impl StyledContext {
     pub(crate) fn new<I: Into<Index>>(
         index: I,

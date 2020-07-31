@@ -9,7 +9,7 @@ mod node;
 
 pub(crate) use self::node::NodeData;
 pub use self::{
-    button::{Button, ButtonEvent},
+    button::{Button, ButtonEvent, ButtonStyle},
     component::{
         Callback, Component, EntityBuilder, EventStatus, InteractiveComponent, LayoutConstraints,
         StandaloneComponent,
@@ -25,7 +25,7 @@ use crate::{
     math::Point,
     runtime::Runtime,
     scene::SceneTarget,
-    style::Style,
+    style::StyleSheet,
     window::{Event, InputEvent},
     KludgineHandle, KludgineResult,
 };
@@ -98,16 +98,9 @@ impl<C> UserInterface<C>
 where
     C: InteractiveComponent + 'static,
 {
-    pub async fn new(root: C) -> KludgineResult<Self> {
+    pub async fn new(root: C, scene: SceneTarget) -> KludgineResult<Self> {
         let root = Entity::new({
-            let node = Node::new(
-                root,
-                Style::default(),
-                Style::default(),
-                Style::default(),
-                Style::default(),
-                None,
-            );
+            let node = Node::new(root, StyleSheet::default(), None);
 
             global_arena().insert(None, node).await
         });
@@ -120,7 +113,7 @@ where
             last_mouse_position: None,
             mouse_button_handlers: Default::default(),
         };
-        ui.initialize(root).await?;
+        ui.initialize(root, scene).await?;
         Ok(ui)
     }
 
@@ -271,12 +264,13 @@ where
         Ok(())
     }
 
-    async fn initialize(&self, index: impl Into<Index>) -> KludgineResult<()> {
+    async fn initialize(&self, index: impl Into<Index>, scene: SceneTarget) -> KludgineResult<()> {
         let index = index.into();
         let node = global_arena().get(index).await.unwrap();
 
-        node.initialize(&mut Context::new(
+        node.initialize(&mut SceneContext::new(
             index,
+            scene,
             global_arena().clone(),
             self.ui_state.clone(),
         ))

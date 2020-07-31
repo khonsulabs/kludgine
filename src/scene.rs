@@ -4,6 +4,7 @@ use crate::{
     sprite::RenderedSprite,
     style::Weight,
     text::{font::Font, prepared::PreparedSpan},
+    theme::{Minimal, Theme},
     timing::Moment,
     KludgineError, KludgineHandle, KludgineResult,
 };
@@ -11,6 +12,7 @@ use async_std::sync::{RwLockReadGuard, RwLockWriteGuard};
 use platforms::target::{OS, TARGET_OS};
 use std::{
     collections::{HashMap, HashSet},
+    sync::Arc,
     time::Duration,
 };
 use winit::event::VirtualKeyCode;
@@ -166,6 +168,10 @@ impl SceneTarget {
         }
     }
 
+    pub async fn theme(&self) -> Arc<Box<dyn Theme>> {
+        self.scene().await.theme.clone()
+    }
+
     pub fn origin(&self) -> Point {
         match &self {
             SceneTarget::Scene(_) => Point::default(),
@@ -206,6 +212,7 @@ pub(crate) struct SceneData {
     now: Option<Moment>,
     elapsed: Option<Duration>,
     fonts: HashMap<String, Vec<Font>>,
+    theme: Arc<Box<dyn Theme>>,
 }
 
 pub struct Modifiers {
@@ -235,6 +242,7 @@ impl Default for Scene {
                 elapsed: None,
                 elements: Vec::new(),
                 fonts: HashMap::new(),
+                theme: Arc::new(Box::new(Minimal::default())),
             }),
         }
     }
@@ -364,7 +372,7 @@ impl Scene {
 
     pub async fn lookup_font(&self, family: &str, weight: Weight) -> KludgineResult<Font> {
         let family = if family.eq_ignore_ascii_case("sans-serif") {
-            "Roboto"
+            "Roboto" // TODO Themes should resolve the font family name
         } else {
             family
         };
@@ -392,5 +400,10 @@ impl Scene {
             }
             None => Err(KludgineError::FontFamilyNotFound(family.to_owned())),
         }
+    }
+
+    pub async fn theme(&self) -> Arc<Box<dyn Theme>> {
+        let scene = self.data.read().await;
+        scene.theme.clone()
     }
 }

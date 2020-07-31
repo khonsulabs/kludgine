@@ -1,4 +1,7 @@
-use crate::ui::{HierarchicalArena, Index, Layout, UIState};
+use crate::{
+    style::StyleSheet,
+    ui::{HierarchicalArena, Index, Layout, UIState},
+};
 mod layout_context;
 mod scene_context;
 mod styled_context;
@@ -72,5 +75,15 @@ impl Context {
 
     pub async fn deactivate(&self) {
         self.ui_state.deactivate().await
+    }
+
+    pub async fn style_sheet(&self) -> StyleSheet {
+        let node = self.arena.get(self.index).await.unwrap();
+        node.style_sheet().await
+    }
+
+    pub async fn set_style_sheet(&self, sheet: StyleSheet) {
+        let node = self.arena.get(self.index).await.unwrap();
+        node.set_style_sheet(sheet).await
     }
 }

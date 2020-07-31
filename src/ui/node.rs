@@ -2,7 +2,7 @@ use crate::{
     event::MouseButton,
     math::{Point, Size},
     runtime::Runtime,
-    style::Style,
+    style::StyleSheet,
     ui::{
         Callback, Context, EventStatus, InteractiveComponent, Layout, LayoutSolver, SceneContext,
         StyledContext,
@@ -17,17 +17,15 @@ use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 #[async_trait]
 pub(crate) trait AnyNode: PendingEventProcessor + Send + Sync {
     fn as_any(&self) -> &dyn Any;
-    fn style(&self) -> &'_ Style;
-    fn hover_style(&self) -> &'_ Style;
-    fn focus_style(&self) -> &'_ Style;
-    fn active_style(&self) -> &'_ Style;
-    fn set_layout(&mut self, layout: Layout);
-    fn get_layout(&self) -> &'_ Layout;
+    async fn style_sheet(&self) -> StyleSheet;
+    async fn set_style_sheet(&self, sheet: StyleSheet);
+    async fn set_layout(&self, layout: Layout);
+    async fn get_layout(&self) -> Layout;
     fn receive_message(&self, message: Box<dyn Any>);
 
     // Component methods without mutable self
 
-    async fn initialize(&self, context: &mut Context) -> KludgineResult<()>;
+    async fn initialize(&self, context: &mut SceneContext) -> KludgineResult<()>;
     async fn content_size(
         &self,
         context: &mut StyledContext,
@@ -85,28 +83,24 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         self
     }
 
-    fn style(&self) -> &'_ Style {
-        &self.style
+    async fn style_sheet(&self) -> StyleSheet {
+        let style_sheet = self.style_sheet.read().await;
+        style_sheet.clone()
     }
 
-    fn hover_style(&self) -> &'_ Style {
-        &self.hover_style
+    async fn set_style_sheet(&self, sheet: StyleSheet) {
+        let mut style_sheet = self.style_sheet.write().await;
+        *style_sheet = sheet;
     }
 
-    fn focus_style(&self) -> &'_ Style {
-        &self.focus_style
+    async fn set_layout(&self, layout: Layout) {
+        let mut handle = self.layout.write().await;
+        *handle = layout;
     }
 
-    fn active_style(&self) -> &'_ Style {
-        &self.active_style
-    }
-
-    fn set_layout(&mut self, layout: Layout) {
-        self.layout = layout;
-    }
-
-    fn get_layout(&self) -> &'_ Layout {
-        &self.layout
+    async fn get_layout(&self) -> Layout {
+        let layout = self.layout.read().await;
+        layout.clone()
     }
 
     fn receive_message(&self, message: Box<dyn Any>) {
@@ -114,10 +108,11 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         let _ = self.message_sender.send(message);
     }
 
-    async fn initialize(&self, context: &mut Context) -> KludgineResult<()> {
+    async fn initialize(&self, context: &mut SceneContext) -> KludgineResult<()> {
         let mut component = self.component.write().await;
         component.initialize(context).await
     }
+
     async fn content_size(
         &self,
         context: &mut StyledContext,
@@ -223,15 +218,12 @@ where
 {
     component: KludgineHandle<T>,
     callback: Option<Callback<T::Output>>,
-    pub(crate) style: Style,
-    pub(crate) hover_style: Style,
-    pub(crate) active_style: Style,
-    pub(crate) focus_style: Style,
     pub(crate) input_sender: UnboundedSender<T::Input>,
     pub(crate) message_sender: UnboundedSender<T::Message>,
     input_receiver: UnboundedReceiver<T::Input>,
     message_receiver: UnboundedReceiver<T::Message>,
-    pub(crate) layout: Layout,
+    pub(crate) layout: KludgineHandle<Layout>,
+    pub(crate) style_sheet: KludgineHandle<StyleSheet>,
 }
 
 #[async_trait]
@@ -258,21 +250,16 @@ pub struct Node {
 impl Node {
     pub fn new<T: InteractiveComponent + 'static>(
         component: T,
-        style: Style,
-        hover_style: Style,
-        active_style: Style,
-        focus_style: Style,
+        style_sheet: StyleSheet,
         callback: Option<Callback<T::Output>>,
     ) -> Self {
         let component = KludgineHandle::new(component);
+        let style_sheet = KludgineHandle::new(style_sheet);
         let (input_sender, input_receiver) = unbounded_channel();
         let (message_sender, message_receiver) = unbounded_channel();
         Self {
             component: KludgineHandle::new(Box::new(NodeData {
-                style,
-                hover_style,
-                focus_style,
-                active_style,
+                style_sheet,
                 component,
                 input_sender,
                 input_receiver,
@@ -284,24 +271,14 @@ impl Node {
         }
     }
 
-    pub async fn style(&self) -> Style {
+    pub async fn style_sheet(&self) -> StyleSheet {
         let component = self.component.read().await;
-        component.style().clone()
+        component.style_sheet().await
     }
 
-    pub async fn hover_style(&self) -> Style {
+    pub async fn set_style_sheet(&self, sheet: StyleSheet) {
         let component = self.component.read().await;
-        component.hover_style().clone()
-    }
-
-    pub async fn active_style(&self) -> Style {
-        let component = self.component.read().await;
-        component.active_style().clone()
-    }
-
-    pub async fn focus_style(&self) -> Style {
-        let component = self.component.read().await;
-        component.focus_style().clone()
+        component.set_style_sheet(sheet).await
     }
 
     pub async fn content_size(
@@ -322,7 +299,7 @@ impl Node {
     }
 
     /// Called once the Window is opened
-    pub async fn initialize(&self, context: &mut Context) -> KludgineResult<()> {
+    pub async fn initialize(&self, context: &mut SceneContext) -> KludgineResult<()> {
         let component = self.component.read().await;
         component.initialize(context).await
     }
@@ -404,12 +381,12 @@ impl Node {
     }
 
     pub(crate) async fn set_layout(&self, layout: Layout) {
-        let mut component = self.component.write().await;
-        component.set_layout(layout);
+        let component = self.component.read().await;
+        component.set_layout(layout).await
     }
 
     pub async fn last_layout(&self) -> Layout {
         let component = self.component.read().await;
-        component.get_layout().clone()
+        component.get_layout().await
     }
 }

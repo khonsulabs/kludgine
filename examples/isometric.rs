@@ -23,7 +23,7 @@ impl StandaloneComponent for Isometric {}
 
 #[async_trait]
 impl Component for Isometric {
-    async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
+    async fn initialize(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
         self.load_assets().await?;
         // self.zoom = 1.0;
         // self.x = MAP_SIZE as f32 * 32.0 / 2.0;

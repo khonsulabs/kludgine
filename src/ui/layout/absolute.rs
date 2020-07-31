@@ -333,7 +333,7 @@ mod tests {
     async fn layout_test() -> KludgineResult<()> {
         use crate::{
             scene::{Scene, SceneTarget},
-            style::Style,
+            style::StyleSheet,
             ui::{
                 Component, HierarchicalArena, Layout, LayoutEngine, LayoutSolver, LayoutSolverExt,
                 Node, StandaloneComponent, StyledContext, UIState,
@@ -396,35 +396,18 @@ mod tests {
         impl StandaloneComponent for TestChild {}
 
         let arena = HierarchicalArena::default();
-        let node = Node::new(
-            TestChild { other_child: None },
-            Style::default(),
-            Style::default(),
-            Style::default(),
-            Style::default(),
-            None,
-        );
+        let node = Node::new(TestChild { other_child: None }, StyleSheet::default(), None);
         let leaf = arena.insert(None, node).await;
         let node = Node::new(
             TestChild {
                 other_child: Some(leaf),
             },
-            Style::default(),
-            Style::default(),
-            Style::default(),
-            Style::default(),
+            StyleSheet::default(),
             None,
         );
         let child = arena.insert(None, node).await;
 
-        let node = Node::new(
-            TestRoot { child },
-            Style::default(),
-            Style::default(),
-            Style::default(),
-            Style::default(),
-            None,
-        );
+        let node = Node::new(TestRoot { child }, StyleSheet::default(), None);
         let root = arena.insert(None, node).await;
         arena.set_parent(leaf, Some(child)).await;
         arena.set_parent(child, Some(root)).await;

@@ -16,6 +16,12 @@ impl std::ops::Deref for SceneContext {
     }
 }
 
+impl std::ops::DerefMut for SceneContext {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.base
+    }
+}
+
 impl SceneContext {
     pub(crate) fn new<I: Into<Index>>(
         index: I,

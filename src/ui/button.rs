@@ -1,9 +1,10 @@
 use crate::{
     event::MouseButton,
     math::{Point, Size, Surround},
+    style::{Style, StyleSheet},
     ui::{
         AbsoluteBounds, Component, Context, Entity, InteractiveComponent, Label, Layout,
-        LayoutSolver, LayoutSolverExt, StyledContext,
+        LayoutSolver, LayoutSolverExt, SceneContext, StyledContext,
     },
     KludgineResult,
 };
@@ -30,11 +31,37 @@ pub struct Button {
 
 #[async_trait]
 impl Component for Button {
-    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
+    async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+        let theme = context.scene().theme().await;
+        let control_colors = theme.light_control();
+        let mut style_sheet = context.style_sheet().await;
+
         self.label = self
             .new_entity(context, Label::new(&self.caption))
+            .style_sheet(StyleSheet::from(Style {
+                color: Some(control_colors.text.normal()),
+                ..Default::default()
+            }))
             .insert()
             .await?;
+
+        style_sheet.normal.background_color = style_sheet
+            .normal
+            .background_color
+            .or_else(|| Some(control_colors.background.normal()));
+
+        style_sheet.hover.background_color = style_sheet
+            .hover
+            .background_color
+            .or_else(|| Some(control_colors.background.lighter()));
+
+        style_sheet.active.background_color = style_sheet
+            .active
+            .background_color
+            .or_else(|| Some(control_colors.background.darker()));
+
+        context.set_style_sheet(style_sheet).await;
+
         Ok(())
     }
 

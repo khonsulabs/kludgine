@@ -58,7 +58,7 @@ impl InteractiveComponent for UIExample {
 
 #[async_trait]
 impl Component for UIExample {
-    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
+    async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         let sprite = include_aseprite_sprite!("assets/stickguy").await?;
         self.image = self
             .new_entity(context, Image::new(sprite))
@@ -84,18 +84,7 @@ impl Component for UIExample {
         self.button = self
             .new_entity(context, Button::new("Press Me"))
             .style(Style {
-                font_size: Some(16.),
-                color: Some(Color::BLACK),
-                background_color: Some(Color::new(0.7, 0.7, 0.7, 1.0)),
-                ..Default::default()
-            })
-            .hover(Style {
-                background_color: Some(Color::new(0.8, 0.8, 0.8, 1.0)),
-                ..Default::default()
-            })
-            .active(Style {
-                color: Some(Color::WHITE),
-                background_color: Some(Color::new(0.4, 0.4, 0.4, 1.0)),
+                color: Some(Color::ROYALBLUE),
                 ..Default::default()
             })
             .callback(|_| Message::ButtonClicked)
@@ -104,21 +93,6 @@ impl Component for UIExample {
 
         self.new_window_button = self
             .new_entity(context, Button::new("New Window"))
-            .style(Style {
-                font_size: Some(16.),
-                color: Some(Color::BLACK),
-                background_color: Some(Color::new(0.7, 0.7, 0.7, 1.0)),
-                ..Default::default()
-            })
-            .hover(Style {
-                background_color: Some(Color::new(0.8, 0.8, 0.8, 1.0)),
-                ..Default::default()
-            })
-            .active(Style {
-                color: Some(Color::WHITE),
-                background_color: Some(Color::new(0.4, 0.4, 0.4, 1.0)),
-                ..Default::default()
-            })
             .callback(|_| Message::NewWindowClicked)
             .insert()
             .await?;

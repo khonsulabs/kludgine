@@ -56,18 +56,19 @@ impl LayoutEngine {
         let mut found_nodes = VecDeque::new();
         while let Some(index) = traverser.next().await {
             let node = arena.get(index).await.unwrap();
-            let mut node_style = node.style().await;
+            let style_sheet = node.style_sheet().await;
+            let mut node_style = style_sheet.normal;
 
             if hovered_indicies.contains(&index) {
-                node_style = node.hover_style().await.inherit_from(&node_style);
+                node_style = style_sheet.hover.inherit_from(&node_style);
             }
 
             if ui_state.focused().await == Some(index) {
-                node_style = node.focus_style().await.inherit_from(&node_style);
+                node_style = style_sheet.focus.inherit_from(&node_style);
             }
 
             if ui_state.active().await == Some(index) {
-                node_style = node.active_style().await.inherit_from(&node_style);
+                node_style = style_sheet.active.inherit_from(&node_style);
             }
 
             let computed_style = match arena.parent(index).await {
@@ -195,6 +196,12 @@ impl std::ops::Deref for LayoutContext {
 
     fn deref(&self) -> &Self::Target {
         &self.base
+    }
+}
+
+impl std::ops::DerefMut for LayoutContext {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.base
     }
 }
 

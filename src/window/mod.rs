@@ -328,7 +328,7 @@ impl RuntimeWindow {
         T: Window,
     {
         let mut scene = Scene::default();
-        let mut ui = UserInterface::new(window).await?;
+        let mut ui = UserInterface::new(window, SceneTarget::Scene(scene.clone())).await?;
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         let mut interval = tokio::time::interval(Duration::from_nanos(FRAME_DURATION));

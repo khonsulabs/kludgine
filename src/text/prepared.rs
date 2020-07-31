@@ -1,6 +1,7 @@
 use crate::{
+    color::Color,
     math::{max_f, Point, Size},
-    style::{Alignment, Color},
+    style::Alignment,
     text::Font,
     KludgineHandle,
 };

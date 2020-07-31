@@ -1,5 +1,4 @@
-use crate::scene::SceneTarget;
-pub use rgx::color::Rgba as Color;
+use crate::{color::Color, scene::SceneTarget};
 pub use ttf_parser::Weight;
 
 #[derive(Default, Clone, Debug)]
@@ -50,6 +49,25 @@ impl Style {
             color: self.color.unwrap_or(Color::BLACK),
             background_color: self.background_color,
             alignment: self.alignment.unwrap_or_default(),
+        }
+    }
+}
+
+#[derive(Default, Clone, Debug)]
+pub struct StyleSheet {
+    pub normal: Style,
+    pub hover: Style,
+    pub focus: Style,
+    pub active: Style,
+}
+
+impl From<Style> for StyleSheet {
+    fn from(style: Style) -> Self {
+        Self {
+            normal: style.clone(),
+            active: style.clone(),
+            hover: style.clone(),
+            focus: style,
         }
     }
 }

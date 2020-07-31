@@ -120,6 +120,7 @@ mod internal_macros {
 }
 
 pub mod application;
+pub mod color;
 pub mod event;
 pub mod frame;
 pub mod math;
@@ -130,6 +131,7 @@ pub mod sprite;
 pub mod style;
 pub mod text;
 pub mod texture;
+pub mod theme;
 pub mod tilemap;
 pub mod timing;
 pub mod ui;
@@ -141,6 +143,7 @@ pub use rgx::kit::shape2d as shape;
 pub mod prelude {
     pub use super::{
         application::{Application, SingleWindowApplication, WindowCreator},
+        color::Color,
         event::*,
         include_aseprite_sprite, include_font, include_texture,
         math::{Dimension, Point, Rect, Size, Surround},
