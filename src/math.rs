@@ -517,7 +517,7 @@ mod tests {
     fn test_rect_approx_contains() {
         let rect = Rect::<f32>::new(Point::new(1., 10.), Point::new(3., 12.));
         // lower x, lower y
-        assert!(!rect.approximately_contains(&Point::new(f32::NAN, 9.)));
+        assert!(!rect.approximately_contains(&Point::new(1., 9.)));
         // lower x, equal y
         assert!(!rect.approximately_contains(&Point::new(0., 10.)));
         // equal x, lower y
