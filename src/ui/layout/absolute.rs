@@ -110,6 +110,18 @@ impl AbsoluteBounds {
     }
 }
 
+impl From<Surround<Dimension>> for AbsoluteBounds {
+    fn from(surround: Surround<Dimension>) -> Self {
+        Self {
+            left: surround.left,
+            right: surround.right,
+            top: surround.top,
+            bottom: surround.bottom,
+            ..Default::default()
+        }
+    }
+}
+
 #[async_trait]
 impl LayoutSolver for AbsoluteLayout {
     async fn layout_within(
