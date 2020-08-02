@@ -245,7 +245,7 @@ impl FrameRenderer {
                                 sprite.render_at.into(),
                                 ZDepth::default(),
                                 Rgba::new(1.0, 1.0, 1.0, 0.0),
-                                1.0,
+                                sprite.alpha,
                                 Repeat::default(),
                             );
                         }
