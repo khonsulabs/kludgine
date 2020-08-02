@@ -37,11 +37,11 @@ impl Layout {
     }
 
     pub fn bounds_without_margin(&self) -> Rect {
-        self.bounds.inset(self.margin)
+        self.bounds.inset(&self.margin)
     }
 
     pub fn inner_bounds(&self) -> Rect {
-        self.bounds_without_margin().inset(self.padding)
+        self.bounds_without_margin().inset(&self.padding)
     }
 
     pub fn window_to_local(&self, location: Point) -> Point {

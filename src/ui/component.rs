@@ -80,7 +80,7 @@ pub trait Component: Send + Sync {
     async fn mouse_down(
         &mut self,
         context: &mut Context,
-        window_position: Point,
+        window_position: &Point,
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         if self.hit_test(context, window_position).await? {
@@ -95,7 +95,7 @@ pub trait Component: Send + Sync {
     async fn mouse_drag(
         &mut self,
         context: &mut Context,
-        window_position: Option<Point>,
+        window_position: &Option<Point>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         let activate = if let Some(window_position) = window_position {
@@ -116,7 +116,7 @@ pub trait Component: Send + Sync {
     async fn mouse_up(
         &mut self,
         context: &mut Context,
-        window_position: Option<Point>,
+        window_position: &Option<Point>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         if let Some(window_position) = window_position {
@@ -131,7 +131,7 @@ pub trait Component: Send + Sync {
     async fn clicked(
         &mut self,
         context: &mut Context,
-        window_position: Point,
+        window_position: &Point,
         button: MouseButton,
     ) -> KludgineResult<()> {
         Ok(())
@@ -140,13 +140,13 @@ pub trait Component: Send + Sync {
     async fn hit_test(
         &self,
         context: &mut Context,
-        window_position: Point,
+        window_position: &Point,
     ) -> KludgineResult<bool> {
         Ok(context
             .last_layout()
             .await
             .bounds_without_margin()
-            .contains(window_position))
+            .contains(&window_position))
     }
 }
 
@@ -175,7 +175,7 @@ pub trait InteractiveComponent: Component {
     async fn receive_input(
         &mut self,
         context: &mut Context,
-        message: Self::Input,
+        command: Self::Input,
     ) -> KludgineResult<()> {
         unimplemented!(
             "Component::receive_message() must be implemented if you're receiving messages"

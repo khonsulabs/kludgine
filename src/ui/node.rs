@@ -49,26 +49,29 @@ pub(crate) trait AnyNode: PendingEventProcessor + Send + Sync {
     async fn mouse_down(
         &self,
         context: &mut Context,
-        position: Point,
+        position: &Point,
         button: MouseButton,
     ) -> KludgineResult<EventStatus>;
 
     async fn mouse_drag(
         &self,
         context: &mut Context,
-        position: Option<Point>,
+        position: &Option<Point>,
         button: MouseButton,
     ) -> KludgineResult<()>;
 
     async fn mouse_up(
         &self,
         context: &mut Context,
-        position: Option<Point>,
+        position: &Option<Point>,
         button: MouseButton,
     ) -> KludgineResult<()>;
 
-    async fn hit_test(&self, context: &mut Context, window_position: Point)
-        -> KludgineResult<bool>;
+    async fn hit_test(
+        &self,
+        context: &mut Context,
+        window_position: &Point,
+    ) -> KludgineResult<bool>;
 }
 
 #[async_trait]
@@ -154,7 +157,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     async fn mouse_down(
         &self,
         context: &mut Context,
-        position: Point,
+        position: &Point,
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         let mut component = self.component.write().await;
@@ -164,7 +167,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     async fn mouse_drag(
         &self,
         context: &mut Context,
-        position: Option<Point>,
+        position: &Option<Point>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         let mut component = self.component.write().await;
@@ -174,7 +177,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     async fn mouse_up(
         &self,
         context: &mut Context,
-        position: Option<Point>,
+        position: &Option<Point>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         let mut component = self.component.write().await;
@@ -184,7 +187,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     async fn hit_test(
         &self,
         context: &mut Context,
-        window_position: Point,
+        window_position: &Point,
     ) -> KludgineResult<bool> {
         let component = self.component.read().await;
         component.hit_test(context, window_position).await
@@ -332,7 +335,7 @@ impl Node {
         component.process_input(context, event).await
     }
 
-    pub async fn hit_test(&self, context: &mut Context, position: Point) -> KludgineResult<bool> {
+    pub async fn hit_test(&self, context: &mut Context, position: &Point) -> KludgineResult<bool> {
         let component = self.component.read().await;
         component.hit_test(context, position).await
     }
@@ -340,7 +343,7 @@ impl Node {
     pub async fn mouse_down(
         &self,
         context: &mut Context,
-        position: Point,
+        position: &Point,
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         let component = self.component.read().await;
@@ -350,7 +353,7 @@ impl Node {
     pub async fn mouse_drag(
         &self,
         context: &mut Context,
-        position: Option<Point>,
+        position: &Option<Point>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         let component = self.component.read().await;
@@ -360,7 +363,7 @@ impl Node {
     pub async fn mouse_up(
         &self,
         context: &mut Context,
-        position: Option<Point>,
+        position: &Option<Point>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         let component = self.component.read().await;

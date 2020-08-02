@@ -68,7 +68,7 @@ impl Component for Button {
     async fn clicked(
         &mut self,
         context: &mut Context,
-        _window_position: Point,
+        _window_position: &Point,
         button: MouseButton,
     ) -> KludgineResult<()> {
         self.callback(context, ButtonEvent::Clicked(button)).await;

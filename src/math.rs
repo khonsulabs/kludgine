@@ -1,7 +1,29 @@
+use approx::relative_eq;
+
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Rect<S = f32> {
     pub origin: Point<S>,
     pub size: Size<S>,
+}
+
+fn float_approximately_ge(a: f32, b: f32) -> bool {
+    assert!(!a.is_nan());
+    assert!(!b.is_nan());
+    if a > b {
+        true
+    } else {
+        relative_eq!(a, b)
+    }
+}
+
+fn float_approximately_le(a: f32, b: f32) -> bool {
+    assert!(!a.is_nan());
+    assert!(!b.is_nan());
+    if a < b {
+        true
+    } else {
+        relative_eq!(a, b)
+    }
 }
 
 impl<S> Rect<S>
@@ -36,7 +58,7 @@ where
     }
 
     pub fn coord1(&self) -> Point<S> {
-        Point::new(self.x1(), self.y1())
+        self.origin
     }
 
     pub fn coord2(&self) -> Point<S> {
@@ -67,18 +89,39 @@ where
         Self::new(Point::new(min_x, min_y), Point::new(max_x, max_y))
     }
 
-    pub fn inset(&self, surround: Surround<S>) -> Self {
+    pub fn inset(&self, surround: &Surround<S>) -> Self {
         Self::new(
             Point::new(self.x1() + surround.left, self.y1() + surround.top),
             Point::new(self.x2() - surround.right, self.y2() - surround.bottom),
         )
     }
 
-    pub fn contains(&self, point: Point<S>) -> bool {
+    pub fn contains(&self, point: &Point<S>) -> bool {
         self.origin.x <= point.x
             && self.x2() >= point.x
             && self.origin.y <= point.y
             && self.y2() >= point.y
+    }
+
+    pub fn approximately_contains(&self, point: &Point<S>) -> bool
+    where
+        S: Into<f32>,
+    {
+        float_approximately_le(self.origin.x.into(), point.x.into())
+            && float_approximately_ge(self.x2().into(), point.x.into())
+            && float_approximately_le(self.origin.y.into(), point.y.into())
+            && float_approximately_ge(self.y2().into(), point.y.into())
+    }
+
+    pub fn contains_rect(&self, rect: &Rect<S>) -> bool {
+        self.contains(&rect.coord1()) && self.contains(&rect.coord2())
+    }
+
+    pub fn approximately_contains_rect(&self, rect: &Rect<S>) -> bool
+    where
+        S: Into<f32>,
+    {
+        self.approximately_contains(&rect.coord1()) && self.approximately_contains(&rect.coord2())
     }
 
     pub fn area(&self) -> S
@@ -451,22 +494,45 @@ mod tests {
     fn test_rect_contains() {
         let rect = Rect::<i32>::new(Point::new(1, 10), Point::new(3, 12));
         // lower x, lower y
-        assert!(!rect.contains(Point::new(0, 9)));
+        assert!(!rect.contains(&Point::new(0, 9)));
         // lower x, equal y
-        assert!(!rect.contains(Point::new(0, 10)));
+        assert!(!rect.contains(&Point::new(0, 10)));
         // equal x, lower y
-        assert!(!rect.contains(Point::new(1, 9)));
+        assert!(!rect.contains(&Point::new(1, 9)));
         // equal x1, equal y1
-        assert!(rect.contains(Point::new(1, 10)));
+        assert!(rect.contains(&Point::new(1, 10)));
         // inside
-        assert!(rect.contains(Point::new(2, 11)));
+        assert!(rect.contains(&Point::new(2, 11)));
         // equal x2, equal y2
-        assert!(rect.contains(Point::new(3, 12)));
+        assert!(rect.contains(&Point::new(3, 12)));
         // greater x2, equal y2
-        assert!(!rect.contains(Point::new(4, 12)));
+        assert!(!rect.contains(&Point::new(4, 12)));
         // equal x2, greater y2
-        assert!(!rect.contains(Point::new(3, 13)));
+        assert!(!rect.contains(&Point::new(3, 13)));
         // greater x2, greater y2
-        assert!(!rect.contains(Point::new(4, 13)));
+        assert!(!rect.contains(&Point::new(4, 13)));
+    }
+
+    #[test]
+    fn test_rect_approx_contains() {
+        let rect = Rect::<f32>::new(Point::new(1., 10.), Point::new(3., 12.));
+        // lower x, lower y
+        assert!(!rect.approximately_contains(&Point::new(f32::NAN, 9.)));
+        // lower x, equal y
+        assert!(!rect.approximately_contains(&Point::new(0., 10.)));
+        // equal x, lower y
+        assert!(!rect.approximately_contains(&Point::new(1., 9.)));
+        // equal x1, equal y1
+        assert!(rect.approximately_contains(&Point::new(1., 10.)));
+        // inside
+        assert!(rect.approximately_contains(&Point::new(2., 11.)));
+        // equal x2, equal y2
+        assert!(rect.approximately_contains(&Point::new(3., 12.)));
+        // greater x2, equal y2
+        assert!(!rect.approximately_contains(&Point::new(4., 12.)));
+        // equal x2, greater y2
+        assert!(!rect.approximately_contains(&Point::new(3., 13.)));
+        // greater x2, greater y2
+        assert!(!rect.approximately_contains(&Point::new(4., 13.)));
     }
 }

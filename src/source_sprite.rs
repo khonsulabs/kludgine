@@ -36,27 +36,27 @@ impl SourceSprite {
         self.render_at_with_alpha(scene, location, 1.).await
     }
 
+    pub async fn render_within(&self, scene: &SceneTarget, bounds: Rect) {
+        self.render_with_alpha(scene, bounds, 1.).await
+    }
+
     pub async fn render_at_with_alpha(&self, scene: &SceneTarget, location: Point, alpha: f32) {
-        let (w, h) = {
-            let source = self.handle.read().await;
-            (
-                source.location.size.width as f32,
-                source.location.size.height as f32,
-            )
-        };
-        let location = scene
-            .user_to_device_point(Point::new(location.x, location.y + h))
-            .await;
-        let effective_scale_factor = scene.effective_scale_factor().await;
+        let sprite_location = self.location().await;
+        self.render_with_alpha(
+            scene,
+            Rect::sized(location, sprite_location.size.into()),
+            alpha,
+        )
+        .await
+    }
+
+    pub async fn render_with_alpha(&self, scene: &SceneTarget, bounds: Rect, alpha: f32) {
+        let translated_origin = scene.user_to_device_point(Point::new(bounds.origin.x, bounds.origin.y + bounds.size.height)).await;
+        let scaled_bounds = bounds.size * scene.effective_scale_factor().await;
+        let destination = Rect::sized(translated_origin, scaled_bounds);
         scene
             .push_element(Element::Sprite(RenderedSprite::new(
-                Rect::sized(
-                    Point::new(
-                        location.x * effective_scale_factor,
-                        location.y * effective_scale_factor,
-                    ),
-                    Size::new(w * effective_scale_factor, h * effective_scale_factor),
-                ),
+                destination,
                 alpha,
                 self.clone(),
             )))

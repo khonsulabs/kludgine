@@ -15,7 +15,7 @@ pub use self::{
         StandaloneComponent,
     },
     context::*,
-    image::Image,
+    image::{Image, ImageCommand, ImageOptions, ImageScaling},
     label::{Label, LabelCommand},
     layout::*,
     node::{Node, NodeDataWindowExt},
@@ -201,7 +201,7 @@ where
                     if let Some(node) = global_arena().get(index).await {
                         let mut context =
                             Context::new(index, global_arena().clone(), self.ui_state.clone());
-                        node.mouse_drag(&mut context, position, button).await?;
+                        node.mouse_drag(&mut context, &position, button).await?;
                     }
                 }
 
@@ -211,7 +211,7 @@ where
                         if let Some(node) = global_arena().get(index).await {
                             let mut context =
                                 Context::new(index, global_arena().clone(), self.ui_state.clone());
-                            if node.hit_test(&mut context, position).await? {
+                            if node.hit_test(&mut context, &position).await? {
                                 self.hover = Some(index);
                                 break;
                             }
@@ -226,7 +226,7 @@ where
                         if let Some(node) = global_arena().get(index).await {
                             let mut context =
                                 Context::new(index, global_arena().clone(), self.ui_state.clone());
-                            node.mouse_up(&mut context, self.last_mouse_position, button)
+                            node.mouse_up(&mut context, &self.last_mouse_position, button)
                                 .await?;
                         }
                     }
@@ -247,7 +247,7 @@ where
                                     self.ui_state.clone(),
                                 );
                                 if let EventStatus::Handled = node
-                                    .mouse_down(&mut context, last_mouse_position, button)
+                                    .mouse_down(&mut context, &last_mouse_position, button)
                                     .await?
                                 {
                                     self.mouse_button_handlers.insert(button, index);
