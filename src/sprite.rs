@@ -423,15 +423,20 @@ pub(crate) struct RenderedSprite {
 }
 
 impl RenderedSprite {
-    pub fn new(render_at: Rect, source: SourceSprite) -> Self {
+    pub fn new(render_at: Rect, alpha: f32, source: SourceSprite) -> Self {
         Self {
-            handle: KludgineHandle::new(RenderedSpriteData { render_at, source }),
+            handle: KludgineHandle::new(RenderedSpriteData {
+                render_at,
+                alpha,
+                source,
+            }),
         }
     }
 }
 
 pub(crate) struct RenderedSpriteData {
     pub render_at: Rect,
+    pub alpha: f32,
     pub source: SourceSprite,
 }
 

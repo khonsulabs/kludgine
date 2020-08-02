@@ -33,6 +33,10 @@ impl SourceSprite {
     }
 
     pub async fn render_at(&self, scene: &SceneTarget, location: Point) {
+        self.render_at_with_alpha(scene, location, 1.).await
+    }
+
+    pub async fn render_at_with_alpha(&self, scene: &SceneTarget, location: Point, alpha: f32) {
         let (w, h) = {
             let source = self.handle.read().await;
             (
@@ -53,6 +57,7 @@ impl SourceSprite {
                     ),
                     Size::new(w * effective_scale_factor, h * effective_scale_factor),
                 ),
+                alpha,
                 self.clone(),
             )))
             .await;
