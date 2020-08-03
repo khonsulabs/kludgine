@@ -141,6 +141,20 @@ where
     }
 }
 
+impl<S> std::ops::Mul<S> for Rect<S>
+where
+    S: std::ops::Mul<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn mul(self, s: S) -> Self {
+        Self {
+            origin: self.origin * s,
+            size: self.size * s,
+        }
+    }
+}
+
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
 pub struct Point<S = f32> {
     pub x: S,
