@@ -142,6 +142,7 @@ pub trait Component: Send + Sync {
         context: &mut Context,
         window_position: &Point,
     ) -> KludgineResult<bool> {
+        // TODO Should all components actually respond to hit test generically like this?
         Ok(context
             .last_layout()
             .await

@@ -26,6 +26,7 @@ impl Window for UIExample {}
 pub enum Message {
     ButtonClicked,
     NewWindowClicked,
+    LabelClicked,
 }
 
 #[async_trait]
@@ -40,6 +41,14 @@ impl InteractiveComponent for UIExample {
         message: Self::Message,
     ) -> KludgineResult<()> {
         match message {
+            Message::LabelClicked => {
+                self.current_count += 0;
+                self.send(
+                    self.label,
+                    LabelCommand::SetValue("You clicked me".to_string()),
+                )
+                .await;
+            }
             Message::ButtonClicked => {
                 self.current_count += 1;
                 self.send(
@@ -78,6 +87,7 @@ impl Component for UIExample {
                 alignment: Some(Alignment::Right),
                 ..Default::default()
             })
+            .callback(|_| Message::LabelClicked)
             .insert()
             .await?;
 

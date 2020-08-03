@@ -2,6 +2,7 @@ mod arena;
 mod button;
 mod component;
 mod context;
+mod control;
 mod image;
 mod label;
 mod layout;
@@ -9,12 +10,13 @@ mod node;
 
 pub(crate) use self::node::NodeData;
 pub use self::{
-    button::{Button, ButtonEvent, ButtonStyle},
+    button::{Button, ButtonStyle},
     component::{
         Callback, Component, EntityBuilder, EventStatus, InteractiveComponent, LayoutConstraints,
         StandaloneComponent,
     },
     context::*,
+    control::ControlEvent,
     image::{Image, ImageCommand, ImageOptions, ImageScaling},
     label::{Label, LabelCommand},
     layout::*,
@@ -219,7 +221,7 @@ where
                     }
                 }
             }
-            Event::MouseWheel { .. } => todo!("Hook up mouse scroll to hovered nodes"),
+            Event::MouseWheel { .. } => {} //{todo!("Hook up mouse scroll to hovered nodes"),
             Event::MouseButton { button, state } => match state {
                 ElementState::Released => {
                     if let Some(&index) = self.mouse_button_handlers.get(&button) {

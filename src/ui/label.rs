@@ -1,8 +1,11 @@
 use crate::{
+    event::MouseButton,
     math::{Point, Size},
     style::{Alignment, EffectiveStyle},
     text::{wrap::TextWrap, Text},
-    ui::{Component, Context, InteractiveComponent, Layout, SceneContext, StyledContext},
+    ui::{
+        Component, Context, ControlEvent, InteractiveComponent, Layout, SceneContext, StyledContext,
+    },
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -21,7 +24,7 @@ pub enum LabelCommand {
 impl InteractiveComponent for Label {
     type Input = LabelCommand;
     type Message = ();
-    type Output = ();
+    type Output = ControlEvent;
 
     async fn receive_input(
         &mut self,
@@ -75,6 +78,16 @@ impl Component for Label {
         let wrapped_size = text.wrap(context.scene(), wrapping).await?.size().await;
         let size = wrapped_size / context.scene().effective_scale_factor().await;
         Ok(size)
+    }
+
+    async fn clicked(
+        &mut self,
+        context: &mut Context,
+        _window_position: &Point,
+        button: MouseButton,
+    ) -> KludgineResult<()> {
+        self.callback(context, ControlEvent::Clicked(button)).await;
+        Ok(())
     }
 }
 

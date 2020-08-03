@@ -3,8 +3,8 @@ use crate::{
     math::{Point, Size, Surround},
     style::{Style, StyleSheet},
     ui::{
-        AbsoluteBounds, Component, Context, Entity, InteractiveComponent, Label, Layout,
-        LayoutSolver, LayoutSolverExt, SceneContext, StyledContext,
+        AbsoluteBounds, Component, Context, ControlEvent, Entity, InteractiveComponent, Label,
+        Layout, LayoutSolver, LayoutSolverExt, SceneContext, StyledContext,
     },
     KludgineResult,
 };
@@ -71,7 +71,7 @@ impl Component for Button {
         _window_position: &Point,
         button: MouseButton,
     ) -> KludgineResult<()> {
-        self.callback(context, ButtonEvent::Clicked(button)).await;
+        self.callback(context, ControlEvent::Clicked(button)).await;
         Ok(())
     }
 
@@ -123,11 +123,6 @@ impl Button {
 }
 
 #[derive(Clone, Debug)]
-pub enum ButtonEvent {
-    Clicked(MouseButton),
-}
-
-#[derive(Clone, Debug)]
 pub enum ButtonCommand {
     SetCaption(String),
     SetButtonStyle(ButtonStyle),
@@ -135,7 +130,7 @@ pub enum ButtonCommand {
 
 #[async_trait]
 impl InteractiveComponent for Button {
-    type Output = ButtonEvent;
+    type Output = ControlEvent;
     type Message = ();
     type Input = ButtonCommand;
 
