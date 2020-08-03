@@ -1,4 +1,5 @@
 use crate::{
+    math::Pixels,
     scene::SceneTarget,
     style::EffectiveStyle,
     text::{font::Font, PreparedSpan, Text},
@@ -53,7 +54,7 @@ struct TokenizerState<'a> {
     glyphs: Vec<PositionedGlyph<'static>>,
     lexer_state: TokenizerStatus,
     last_glyph_id: Option<GlyphId>,
-    caret: f32,
+    caret: Pixels,
 }
 
 impl<'a> TokenizerState<'a> {
@@ -64,7 +65,7 @@ impl<'a> TokenizerState<'a> {
             lexer_state: TokenizerStatus::AtSpanStart,
             glyphs: Default::default(),
             last_glyph_id: None,
-            caret: 0.,
+            caret: Pixels::default(),
         }
     }
 
@@ -83,7 +84,7 @@ impl<'a> TokenizerState<'a> {
                 current_committed_glyphs,
                 metrics,
             );
-            self.caret = 0.0;
+            self.caret = Pixels::default();
 
             let token = match self.lexer_state {
                 TokenizerStatus::AtSpanStart => unreachable!(),
@@ -142,7 +143,7 @@ impl Tokenizer {
                     state.last_glyph_id = Some(base_glyph.id());
                     let glyph = base_glyph
                         .scaled(Scale::uniform(span.style.font_size))
-                        .positioned(rusttype::point(state.caret, 0.0));
+                        .positioned(rusttype::point(state.caret.to_f32(), 0.0));
 
                     state.caret += glyph.unpositioned().h_metrics().advance_width;
                     state.glyphs.push(glyph);

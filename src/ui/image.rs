@@ -1,5 +1,5 @@
 use crate::{
-    math::{Rect, Size},
+    math::{Points, Rect, Size},
     source_sprite::SourceSprite,
     sprite::Sprite,
     ui::{Component, Context, InteractiveComponent, Layout, SceneContext, StyledContext},
@@ -69,19 +69,22 @@ impl Component for Image {
     async fn render(&self, context: &mut StyledContext, location: &Layout) -> KludgineResult<()> {
         if let Some(frame) = &self.current_frame {
             let render_bounds = location.inner_bounds();
+            let frame_location = frame.location().await;
+            let size_as_points = Size::new(
+                Points(frame_location.size.width as f32),
+                Points(frame_location.size.height as f32),
+            );
             let target_bounds = match &self.options.scaling {
-                None => Rect::sized(
-                    render_bounds.origin,
-                    frame.location().await.size.into(),
-                ),
+                None => Rect::sized(render_bounds.origin, size_as_points),
                 Some(scaling) => match scaling {
                     ImageScaling::Fill => location.inner_bounds(),
                     _ => {
-                        let frame_size: Size<f32> = frame.location().await.size.into();
-                        let horizontal_scale = render_bounds.size.width / frame_size.width;
-                        let horizontal_fit = Rect::sized(render_bounds.origin, frame_size * horizontal_scale);
-                        let vertical_scale = render_bounds.size.height / frame_size.height;
-                        let vertical_fit = Rect::sized(render_bounds.origin ,frame_size * vertical_scale);
+                        let horizontal_scale = render_bounds.size.width / size_as_points.width;
+                        let horizontal_fit =
+                            Rect::sized(render_bounds.origin, size_as_points * horizontal_scale);
+                        let vertical_scale = render_bounds.size.height / size_as_points.height;
+                        let vertical_fit =
+                            Rect::sized(render_bounds.origin, size_as_points * vertical_scale);
 
                         match scaling {
                             ImageScaling::AspectFit => {
@@ -90,17 +93,17 @@ impl Component for Image {
                                 } else {
                                     vertical_fit
                                 }
-                            },
-                            
+                            }
+
                             ImageScaling::AspectFill => {
                                 if horizontal_fit.approximately_contains_rect(&render_bounds) {
                                     horizontal_fit
                                 } else {
                                     vertical_fit
                                 }
-                            },
+                            }
                             ImageScaling::Fill => unreachable!(),
-                      }
+                        }
                     }
                 },
             };
@@ -113,10 +116,16 @@ impl Component for Image {
     async fn content_size(
         &self,
         _context: &mut StyledContext,
-        _constraints: &Size<Option<f32>>,
-    ) -> KludgineResult<Size> {
+        _constraints: &Size<Option<Points>>,
+    ) -> KludgineResult<Size<Points>> {
+        // TODO update size desires based on fill settings
         if let Some(frame) = &self.current_frame {
-            Ok(frame.location().await.size.into())
+            let frame_location = frame.location().await;
+            let size_as_points = Size::new(
+                Points(frame_location.size.width as f32),
+                Points(frame_location.size.height as f32),
+            );
+            Ok(size_as_points)
         } else {
             Ok(Size::default())
         }

@@ -1,5 +1,5 @@
 use crate::{
-    math::{Point, Size},
+    math::{Point, Points, Size},
     scene::SceneTarget,
     shape::{Fill, Shape},
     style::{Style, StyleSheet},
@@ -26,8 +26,8 @@ pub trait Component: Send + Sync {
     async fn content_size(
         &self,
         context: &mut StyledContext,
-        constraints: &Size<Option<f32>>,
-    ) -> KludgineResult<Size> {
+        constraints: &Size<Option<Points>>,
+    ) -> KludgineResult<Size<Points>> {
         Ok(Size {
             width: constraints.width.unwrap_or_default(),
             height: constraints.height.unwrap_or_default(),
@@ -67,8 +67,8 @@ pub trait Component: Send + Sync {
                 .scene()
                 .draw_shape(
                     Shape::rect(
-                        layout.bounds_without_margin().coord1(),
-                        layout.bounds_without_margin().coord2(),
+                        layout.bounds_without_margin().coord1().to_f32(),
+                        layout.bounds_without_margin().coord2().to_f32(),
                     )
                     .fill(Fill::Solid(background.into())),
                 )
@@ -80,7 +80,7 @@ pub trait Component: Send + Sync {
     async fn mouse_down(
         &mut self,
         context: &mut Context,
-        window_position: &Point,
+        window_position: &Point<Points>,
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         if self.hit_test(context, window_position).await? {
@@ -95,7 +95,7 @@ pub trait Component: Send + Sync {
     async fn mouse_drag(
         &mut self,
         context: &mut Context,
-        window_position: &Option<Point>,
+        window_position: &Option<Point<Points>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         let activate = if let Some(window_position) = window_position {
@@ -116,7 +116,7 @@ pub trait Component: Send + Sync {
     async fn mouse_up(
         &mut self,
         context: &mut Context,
-        window_position: &Option<Point>,
+        window_position: &Option<Point<Points>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         if let Some(window_position) = window_position {
@@ -131,7 +131,7 @@ pub trait Component: Send + Sync {
     async fn clicked(
         &mut self,
         context: &mut Context,
-        window_position: &Point,
+        window_position: &Point<Points>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         Ok(())
@@ -140,7 +140,7 @@ pub trait Component: Send + Sync {
     async fn hit_test(
         &self,
         context: &mut Context,
-        window_position: &Point,
+        window_position: &Point<Points>,
     ) -> KludgineResult<bool> {
         // TODO Should all components actually respond to hit test generically like this?
         Ok(context

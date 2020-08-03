@@ -24,7 +24,7 @@ pub use self::{
 };
 use crate::{
     event::{ElementState, MouseButton},
-    math::Point,
+    math::{Point, Points},
     runtime::Runtime,
     scene::SceneTarget,
     style::StyleSheet,
@@ -93,7 +93,7 @@ where
     mouse_button_handlers: HashMap<MouseButton, Index>,
     hover: Option<Index>,
     last_render_order: Vec<Index>,
-    last_mouse_position: Option<Point>,
+    last_mouse_position: Option<Point<Points>>,
 }
 
 impl<C> UserInterface<C>

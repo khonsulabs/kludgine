@@ -1,5 +1,5 @@
 use crate::{
-    math::{Point, Rect, Size, Surround},
+    math::{Point, Points, Rect, Size, Surround},
     scene::SceneTarget,
     style::EffectiveStyle,
     ui::{HierarchicalArena, Index, Layout, LayoutSolver, SceneContext, StyledContext, UIState},
@@ -169,8 +169,8 @@ impl LayoutEngine {
         &self,
         index: &Index,
         context: &mut LayoutContext,
-        bounds: &Rect,
-        content_size: &Size,
+        bounds: &Rect<Points>,
+        content_size: &Size<Points>,
     ) -> KludgineResult<()> {
         let solver_handle = {
             let data = self.data.read().await;
@@ -243,7 +243,7 @@ impl LayoutContext {
     pub async fn layout_within(
         &mut self,
         index: impl Into<Index>,
-        bounds: &Rect,
+        bounds: &Rect<Points>,
     ) -> KludgineResult<()> {
         let index = index.into();
         let node = self.arena().get(index).await.unwrap();

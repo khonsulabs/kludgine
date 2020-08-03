@@ -1,4 +1,41 @@
+mod pixels;
+mod points;
+pub use self::{pixels::*, points::*};
 use approx::relative_eq;
+
+pub trait ScreenMeasurement {
+    fn to_pixels(&self, effective_scale: f32) -> Pixels;
+    fn to_points(&self, effective_scale: f32) -> Points;
+    fn to_f32(&self) -> f32;
+}
+
+impl ScreenMeasurement for Points {
+    fn to_pixels(&self, effective_scale: f32) -> Pixels {
+        Pixels(self.0 * effective_scale)
+    }
+
+    fn to_points(&self, _effective_scale: f32) -> Points {
+        *self
+    }
+
+    fn to_f32(&self) -> f32 {
+        self.0
+    }
+}
+
+impl ScreenMeasurement for Pixels {
+    fn to_pixels(&self, _effective_scale: f32) -> Pixels {
+        *self
+    }
+
+    fn to_points(&self, effective_scale: f32) -> Points {
+        Points::from(self.0 as f32 / effective_scale)
+    }
+
+    fn to_f32(&self) -> f32 {
+        self.0 as f32
+    }
+}
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Rect<S = f32> {
@@ -28,13 +65,43 @@ fn float_approximately_le(a: f32, b: f32) -> bool {
 
 impl<S> Rect<S>
 where
+    S: ScreenMeasurement,
+{
+    pub fn to_points(&self, effective_scale: f32) -> Rect<Points> {
+        Rect {
+            origin: self.origin.to_points(effective_scale),
+            size: self.size.to_points(effective_scale),
+        }
+    }
+
+    pub fn to_pixels(&self, effective_scale: f32) -> Rect<Pixels> {
+        Rect {
+            origin: self.origin.to_pixels(effective_scale),
+            size: self.size.to_pixels(effective_scale),
+        }
+    }
+
+    pub fn to_f32(&self) -> Rect<f32> {
+        Rect {
+            origin: self.origin.to_f32(),
+            size: self.size.to_f32(),
+        }
+    }
+}
+
+impl<S> Rect<S>
+where
     S: std::ops::Sub<Output = S> + std::ops::Add<Output = S> + Copy + PartialOrd,
 {
-    pub fn sized(origin: Point<S>, size: Size<S>) -> Self {
+    pub fn sized(origin: impl Into<Point<S>>, size: impl Into<Size<S>>) -> Self {
+        let origin = origin.into();
+        let size = size.into();
         Self { origin, size }
     }
 
-    pub fn new(min: Point<S>, max: Point<S>) -> Self {
+    pub fn new(min: impl Into<Point<S>>, max: impl Into<Point<S>>) -> Self {
+        let min = min.into();
+        let max = max.into();
         Self {
             origin: min,
             size: Size::new(max.x - min.x, max.y - min.y),
@@ -165,6 +232,36 @@ impl<S> Point<S> {
     pub fn new(x: S, y: S) -> Self {
         Self { x, y }
     }
+
+    pub fn to_points(&self, effective_scale: f32) -> Point<Points>
+    where
+        S: ScreenMeasurement,
+    {
+        Point {
+            x: self.x.to_points(effective_scale),
+            y: self.y.to_points(effective_scale),
+        }
+    }
+
+    pub fn to_pixels(&self, effective_scale: f32) -> Point<Pixels>
+    where
+        S: ScreenMeasurement,
+    {
+        Point {
+            x: self.x.to_pixels(effective_scale),
+            y: self.y.to_pixels(effective_scale),
+        }
+    }
+
+    pub fn to_f32(&self) -> Point<f32>
+    where
+        S: ScreenMeasurement,
+    {
+        Point {
+            x: self.x.to_f32(),
+            y: self.y.to_f32(),
+        }
+    }
 }
 
 impl<S> std::ops::Div<S> for Point<S>
@@ -252,6 +349,36 @@ impl<S> Size<S> {
     {
         self.width * self.height
     }
+
+    pub fn to_points(&self, effective_scale: f32) -> Size<Points>
+    where
+        S: ScreenMeasurement,
+    {
+        Size {
+            width: self.width.to_points(effective_scale),
+            height: self.height.to_points(effective_scale),
+        }
+    }
+
+    pub fn to_pixels(&self, effective_scale: f32) -> Size<Pixels>
+    where
+        S: ScreenMeasurement,
+    {
+        Size {
+            width: self.width.to_pixels(effective_scale),
+            height: self.height.to_pixels(effective_scale),
+        }
+    }
+
+    pub fn to_f32(&self) -> Size<f32>
+    where
+        S: ScreenMeasurement,
+    {
+        Size {
+            width: self.width.to_f32(),
+            height: self.height.to_f32(),
+        }
+    }
 }
 
 impl From<Size<u32>> for Size<f32> {
@@ -281,47 +408,48 @@ impl Into<winit::dpi::Size> for Size {
     }
 }
 
-impl<S> std::ops::Div<S> for Size<S>
+impl<S, T> std::ops::Div<T> for Size<S>
 where
-    S: std::ops::Div<Output = S> + Copy,
+    S: std::ops::Div<T, Output = S> + Copy,
+    T: Copy,
 {
     type Output = Self;
 
-    fn div(self, s: S) -> Self {
-        Self {
-            width: self.width / s,
-            height: self.height / s,
+    fn div(self, t: T) -> Self {
+        Size {
+            width: self.width / t,
+            height: self.height / t,
         }
     }
 }
 
-impl<S> std::ops::Mul<S> for Size<S>
+impl<S, T> std::ops::Mul<S> for Size<S>
 where
-    S: std::ops::Mul<Output = S> + Copy,
+    S: std::ops::Mul<Output = T> + Copy,
 {
-    type Output = Self;
+    type Output = Size<T>;
 
-    fn mul(self, s: S) -> Self {
-        Self {
+    fn mul(self, s: S) -> Size<T> {
+        Size {
             width: self.width * s,
             height: self.height * s,
         }
     }
 }
 
-impl<S> std::ops::Div<Size<S>> for Size<S>
-where
-    S: std::ops::Div<Output = S> + Copy,
-{
-    type Output = Self;
+// impl<S> std::ops::Div<Size<S>> for Size<S>
+// where
+//     S: std::ops::Div<S, Output = S> + Copy,
+// {
+//     type Output = Self;
 
-    fn div(self, s: Size<S>) -> Self {
-        Self {
-            width: self.width / s.width,
-            height: self.height / s.height,
-        }
-    }
-}
+//     fn div(self, s: Size<S>) -> Self {
+//         Self {
+//             width: self.width / s.width,
+//             height: self.height / s.height,
+//         }
+//     }
+// }
 
 impl<S> std::ops::Sub<Size<S>> for Size<S>
 where
@@ -417,17 +545,17 @@ where
 
 impl<S> Surround<S>
 where
-    S: Into<Dimension> + Copy,
+    S: std::ops::Add<Output = S> + Copy,
 {
-    pub fn minimum_width(&self) -> f32 {
-        self.left.into().points().unwrap_or(0.0) + self.right.into().points().unwrap_or(0.0)
+    pub fn minimum_width(&self) -> S {
+        self.left + self.right
     }
 
-    pub fn minimum_height(&self) -> f32 {
-        self.top.into().points().unwrap_or(0.0) + self.bottom.into().points().unwrap_or(0.0)
+    pub fn minimum_height(&self) -> S {
+        self.top + self.bottom
     }
 
-    pub fn minimum_size(&self) -> Size<f32> {
+    pub fn minimum_size(&self) -> Size<S> {
         Size {
             width: self.minimum_width(),
             height: self.minimum_height(),
@@ -453,10 +581,14 @@ where
 pub enum Dimension {
     Auto,
     /// Scale-corrected to the users preference of DPI
-    Points(f32),
+    Points(Points),
 }
 
 impl Dimension {
+    pub fn from_points(value: impl Into<Points>) -> Self {
+        Self::Points(value.into())
+    }
+
     pub fn is_auto(&self) -> bool {
         self == &Dimension::Auto
     }
@@ -464,7 +596,7 @@ impl Dimension {
         !self.is_auto()
     }
 
-    pub fn points(&self) -> Option<f32> {
+    pub fn points(&self) -> Option<Points> {
         if let Dimension::Points(points) = &self {
             Some(*points)
         } else {
@@ -479,9 +611,9 @@ impl Default for Dimension {
     }
 }
 
-impl From<f32> for Dimension {
-    fn from(value: f32) -> Self {
-        Dimension::Points(value)
+impl From<Points> for Dimension {
+    fn from(value: Points) -> Self {
+        Dimension::from_points(value)
     }
 }
 

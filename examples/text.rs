@@ -55,7 +55,7 @@ impl Component for TextExample {
         Text::new(spans)
             .render_at(
                 context.scene(),
-                Point::new(0.0, 120.0),
+                Point::new(Points(0.0), Points(120.0)),
                 TextWrap::SingleLine {
                     max_width: context.scene().size().await.width,
                     truncate: false,

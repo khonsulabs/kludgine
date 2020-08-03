@@ -1,6 +1,6 @@
 use crate::{
     event::MouseButton,
-    math::{Point, Size},
+    math::{Point, Points, Size},
     style::{Alignment, EffectiveStyle},
     text::{wrap::TextWrap, Text},
     ui::{
@@ -65,25 +65,24 @@ impl Component for Label {
     async fn content_size(
         &self,
         context: &mut StyledContext,
-        constraints: &Size<Option<f32>>,
-    ) -> KludgineResult<Size> {
+        constraints: &Size<Option<Points>>,
+    ) -> KludgineResult<Size<Points>> {
         let text = self.create_text(context.effective_style());
         let wrapping = self.wrapping(
             &Size {
-                width: constraints.width.unwrap_or(f32::MAX),
-                height: constraints.height.unwrap_or(f32::MAX),
+                width: constraints.width.unwrap_or(Points(f32::MAX)),
+                height: constraints.height.unwrap_or(Points(f32::MAX)),
             },
             context.effective_style().alignment,
         );
         let wrapped_size = text.wrap(context.scene(), wrapping).await?.size().await;
-        let size = wrapped_size / context.scene().effective_scale_factor().await;
-        Ok(size)
+        Ok(wrapped_size.to_points(context.scene().effective_scale_factor().await))
     }
 
     async fn clicked(
         &mut self,
         context: &mut Context,
-        _window_position: &Point,
+        _window_position: &Point<Points>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         self.callback(context, ControlEvent::Clicked(button)).await;
@@ -101,7 +100,7 @@ impl Label {
         Text::span(&self.value, effective_style)
     }
 
-    fn wrapping(&self, size: &Size, alignment: Alignment) -> TextWrap {
+    fn wrapping(&self, size: &Size<Points>, alignment: Alignment) -> TextWrap {
         TextWrap::SingleLine {
             max_width: size.width,
             truncate: true,

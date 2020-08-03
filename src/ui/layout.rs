@@ -1,7 +1,7 @@
 mod absolute;
 pub use self::absolute::*;
 use crate::{
-    math::{Point, Rect, Size, Surround},
+    math::{Point, Points, Rect, Size, Surround},
     ui::LayoutContext,
     KludgineResult,
 };
@@ -11,17 +11,17 @@ use async_trait::async_trait;
 pub trait LayoutSolver: Send + Sync + std::fmt::Debug {
     async fn layout_within(
         &self,
-        bounds: &Rect,
-        content_size: &Size,
+        bounds: &Rect<Points>,
+        content_size: &Size<Points>,
         context: &mut LayoutContext,
     ) -> KludgineResult<()>;
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct Layout {
-    pub bounds: Rect,
-    pub padding: Surround,
-    pub margin: Surround,
+    pub bounds: Rect<Points>,
+    pub padding: Surround<Points>,
+    pub margin: Surround<Points>,
 }
 
 impl Layout {
@@ -32,23 +32,23 @@ impl Layout {
         AbsoluteLayout::default()
     }
 
-    pub fn bounds(&self) -> &'_ Rect {
+    pub fn bounds(&self) -> &'_ Rect<Points> {
         &self.bounds
     }
 
-    pub fn bounds_without_margin(&self) -> Rect {
+    pub fn bounds_without_margin(&self) -> Rect<Points> {
         self.bounds.inset(&self.margin)
     }
 
-    pub fn inner_bounds(&self) -> Rect {
+    pub fn inner_bounds(&self) -> Rect<Points> {
         self.bounds_without_margin().inset(&self.padding)
     }
 
-    pub fn window_to_local(&self, location: Point) -> Point {
+    pub fn window_to_local(&self, location: Point<Points>) -> Point<Points> {
         location - self.bounds.origin
     }
 
-    pub fn local_to_window(&self, location: Point) -> Point {
+    pub fn local_to_window(&self, location: Point<Points>) -> Point<Points> {
         location + self.bounds.origin
     }
 }
@@ -73,8 +73,8 @@ pub struct NoLayout {}
 impl LayoutSolver for NoLayout {
     async fn layout_within(
         &self,
-        _bounds: &Rect,
-        _content_size: &Size,
+        _bounds: &Rect<Points>,
+        _content_size: &Size<Points>,
         _context: &mut LayoutContext,
     ) -> KludgineResult<()> {
         Ok(())

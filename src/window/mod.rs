@@ -2,7 +2,7 @@ use super::{
     application::WindowCreator,
     event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode},
     frame::Frame,
-    math::{Point, Size},
+    math::{Pixels, Point, Points, Size},
     runtime::{Runtime, FRAME_DURATION},
     scene::{Scene, SceneTarget},
     ui::{global_arena, InteractiveComponent, NodeData, NodeDataWindowExt, UserInterface},
@@ -83,7 +83,7 @@ pub enum Event {
         state: ElementState,
     },
     /// Mouse cursor event
-    MouseMoved { position: Option<Point> },
+    MouseMoved { position: Option<Point<Points>> },
     /// Mouse wheel event
     MouseWheel {
         delta: MouseScrollDelta,
@@ -342,7 +342,12 @@ impl RuntimeWindow {
             } {
                 match event {
                     WindowEvent::Resize { size, scale_factor } => {
-                        scene.set_internal_size(size).await;
+                        scene
+                            .set_internal_size(Size {
+                                width: Pixels(size.width as f32),
+                                height: Pixels(size.height as f32),
+                            })
+                            .await;
                         scene.set_scale_factor(scale_factor).await;
                     }
                     WindowEvent::CloseRequested => {
@@ -382,7 +387,7 @@ impl RuntimeWindow {
                 }
             }
 
-            if scene.size().await.area() > 0.0 {
+            if scene.size().await.area().to_f32() > 0.0 {
                 scene.start_frame().await;
                 {
                     let target = SceneTarget::Scene(scene.clone());
@@ -521,10 +526,10 @@ impl RuntimeWindow {
                 .send(WindowEvent::Input(InputEvent {
                     device_id: *device_id,
                     event: Event::MouseMoved {
-                        position: Some(Point::new(
-                            position.x as f32 / self.last_known_scale_factor,
-                            position.y as f32 / self.last_known_scale_factor,
-                        )),
+                        position: Some(
+                            Point::new(Pixels(position.x as f32), Pixels(position.y as f32))
+                                .to_points(self.last_known_scale_factor),
+                        ),
                     },
                 }))
                 .unwrap_or_default(),

@@ -1,6 +1,6 @@
 use crate::{
     event::MouseButton,
-    math::{Point, Size, Surround},
+    math::{Point, Points, Size, Surround},
     style::{Style, StyleSheet},
     ui::{
         AbsoluteBounds, Component, Context, ControlEvent, Entity, InteractiveComponent, Label,
@@ -12,13 +12,13 @@ use async_trait::async_trait;
 
 #[derive(Debug, Clone)]
 pub struct ButtonStyle {
-    padding: Surround,
+    padding: Surround<Points>,
 }
 
 impl Default for ButtonStyle {
     fn default() -> Self {
         Self {
-            padding: Surround::uniform(10.),
+            padding: Surround::uniform(Points(10.)),
         }
     }
 }
@@ -68,7 +68,7 @@ impl Component for Button {
     async fn clicked(
         &mut self,
         context: &mut Context,
-        _window_position: &Point,
+        _window_position: &Point<Points>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         self.callback(context, ControlEvent::Clicked(button)).await;
@@ -83,10 +83,10 @@ impl Component for Button {
             .child(
                 self.label,
                 AbsoluteBounds {
-                    left: crate::math::Dimension::Points(10.),
-                    top: crate::math::Dimension::Points(10.),
-                    right: crate::math::Dimension::Points(10.),
-                    bottom: crate::math::Dimension::Points(10.),
+                    left: crate::math::Dimension::from_points(10.),
+                    top: crate::math::Dimension::from_points(10.),
+                    right: crate::math::Dimension::from_points(10.),
+                    bottom: crate::math::Dimension::from_points(10.),
                     ..Default::default()
                 },
             )?
@@ -96,8 +96,8 @@ impl Component for Button {
     async fn content_size(
         &self,
         context: &mut StyledContext,
-        constraints: &Size<Option<f32>>,
-    ) -> KludgineResult<Size> {
+        constraints: &Size<Option<Points>>,
+    ) -> KludgineResult<Size<Points>> {
         let contraints_minus_padding = *constraints - self.style.padding.minimum_size();
         Ok(context
             .content_size(self.label, &contraints_minus_padding)

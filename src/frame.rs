@@ -67,7 +67,7 @@ impl Frame {
 
         self.cache_glyphs(scene).await;
 
-        self.size = scene.internal_size().await;
+        self.size = scene.internal_size().await.to_f32();
 
         let mut referenced_texture_ids = HashSet::new();
 

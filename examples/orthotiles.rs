@@ -10,7 +10,7 @@ struct OrthoTiles {
     map: Option<PersistentTileMap>,
     stickguy: Option<Sprite>,
     zoom: f32,
-    position: Point,
+    position: Point<Points>,
 }
 
 impl WindowCreator<OrthoTiles> for OrthoTiles {
@@ -30,7 +30,7 @@ impl Component for OrthoTiles {
     async fn initialize(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
         self.load_assets().await?;
         self.zoom = 1.0;
-        self.position.x = MAP_SIZE as f32 * 32.0 / 2.0;
+        self.position.x = Points(MAP_SIZE as f32 * 32.0 / 2.0);
         self.position.y = self.position.x;
         Ok(())
     }
@@ -109,7 +109,7 @@ impl Component for OrthoTiles {
         // The map is drawn at a static location of 0,0 (upper-left)
         // It will be offset scene.origin()
         let map = self.map.as_ref().unwrap();
-        map.draw(&camera_scene, Point::new(0, 0)).await?;
+        map.draw(&camera_scene, Point::default()).await?;
 
         // Draw the stickguy with the current frame of animation
         let stickguy = self.stickguy.as_ref().unwrap();

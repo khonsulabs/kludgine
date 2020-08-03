@@ -118,25 +118,25 @@ impl Component for UIExample {
             .child(
                 self.label,
                 AbsoluteBounds {
-                    left: Dimension::Points(32.),
-                    right: Dimension::Points(32.),
-                    top: Dimension::Points(32.),
-                    bottom: Dimension::Points(64.),
+                    left: Dimension::from_points(32.),
+                    right: Dimension::from_points(32.),
+                    top: Dimension::from_points(32.),
+                    bottom: Dimension::from_points(64.),
                     ..Default::default()
                 },
             )?
             .child(
                 self.image,
                 AbsoluteBounds {
-                    right: Dimension::Points(10.),
-                    bottom: Dimension::Points(10.),
+                    right: Dimension::from_points(10.),
+                    bottom: Dimension::from_points(10.),
                     ..Default::default()
                 },
             )?
             .child(
                 self.button,
                 AbsoluteBounds {
-                    bottom: Dimension::Points(10.),
+                    bottom: Dimension::from_points(10.),
 
                     ..Default::default()
                 },
@@ -144,8 +144,8 @@ impl Component for UIExample {
             .child(
                 self.new_window_button,
                 AbsoluteBounds {
-                    bottom: Dimension::Points(10.),
-                    left: Dimension::Points(10.),
+                    bottom: Dimension::from_points(10.),
+                    left: Dimension::from_points(10.),
                     ..Default::default()
                 },
             )?

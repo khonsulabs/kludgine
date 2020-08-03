@@ -1,5 +1,5 @@
 use crate::{
-    math::{max_f, min_f},
+    math::{max_f, min_f, Pixels, Points, ScreenMeasurement},
     scene::SceneTarget,
     style::Alignment,
     text::{PreparedLine, PreparedSpan, PreparedText, Text},
@@ -26,10 +26,9 @@ pub(crate) enum ParserStatus {
 }
 
 struct TextWrapState {
-    width: Option<f32>,
-    status: ParserStatus,
+    width: Option<Pixels>,
     current_vmetrics: Option<rusttype::VMetrics>,
-    current_span_offset: f32,
+    current_span_offset: Pixels,
     current_groups: Vec<SpanGroup>,
     lines: Vec<PreparedLine>,
 }
@@ -44,16 +43,16 @@ impl TextWrapState {
             let total_width = join_all(spans.iter().map(|s| s.width()))
                 .await
                 .into_iter()
-                .sum::<f32>();
+                .sum::<Pixels>();
 
             if let Some(width) = self.width {
-                let new_width = self.current_span_offset + total_width;
+                let new_width = total_width + self.current_span_offset;
                 let remaining_width = width - new_width;
 
-                if !relative_eq!(remaining_width, 0., epsilon = 0.001)
-                    && remaining_width.is_sign_negative()
+                if !relative_eq!(remaining_width.to_f32(), 0., epsilon = 0.001)
+                    && remaining_width.to_f32().is_sign_negative()
                 {
-                    if relative_eq!(self.current_span_offset, 0.) {
+                    if relative_eq!(self.current_span_offset.to_f32(), 0.) {
                         // TODO Split the group if it can't fit on a single line
                         // For now, just render it anyways.
                     } else {
@@ -96,22 +95,22 @@ impl TextWrapState {
             }
         }
 
-        self.current_span_offset = 0.;
+        self.current_span_offset = Pixels::default();
         for span in spans.iter_mut() {
             self.update_vmetrics(span.metrics().await);
             self.position_span(span).await
         }
 
         if let Some(metrics) = self.current_vmetrics.take() {
+            let metrics = metrics.into();
             self.lines.push(PreparedLine {
                 spans,
                 metrics,
-                alignment_offset: 0.,
+                alignment_offset: Points::default(),
             });
         }
-        self.current_span_offset = 0.;
+        self.current_span_offset = Pixels::default();
         self.current_groups.clear();
-        self.status = ParserStatus::LineStart;
     }
 
     async fn finish(mut self) -> Vec<PreparedLine> {
@@ -140,17 +139,16 @@ impl TextWrapper {
 
     async fn wrap_text(mut self, text: &Text) -> KludgineResult<PreparedText> {
         let effective_scale_factor = self.scene.effective_scale_factor().await;
-        let width = self.options.max_width(effective_scale_factor);
+        let width = self.options.max_width();
 
         let measured = MeasuredText::new(text, &self.scene).await?;
 
         let mut state = TextWrapState {
-            width,
-            current_span_offset: 0.,
+            width: width.map(|w| w.to_pixels(effective_scale_factor)),
+            current_span_offset: Pixels::default(),
             current_vmetrics: None,
             current_groups: Vec::new(),
             lines: Vec::new(),
-            status: ParserStatus::LineStart,
         };
 
         for group in measured.groups {
@@ -160,11 +158,10 @@ impl TextWrapper {
         self.prepared_text.lines = state.finish().await;
 
         if let Some(alignment) = self.options.alignment() {
-            if let Some(max_width) = self
-                .options
-                .max_width(self.scene.effective_scale_factor().await)
-            {
-                self.prepared_text.align(alignment, max_width).await;
+            if let Some(max_width) = self.options.max_width() {
+                self.prepared_text
+                    .align(alignment, max_width, effective_scale_factor)
+                    .await;
             }
         }
 
@@ -176,13 +173,13 @@ impl TextWrapper {
 pub enum TextWrap {
     NoWrap,
     SingleLine {
-        max_width: f32,
+        max_width: Points,
         truncate: bool,
         alignment: Alignment,
     },
     MultiLine {
-        width: f32,
-        height: f32,
+        width: Points,
+        height: Points,
         alignment: Alignment,
     },
 }
@@ -199,17 +196,17 @@ impl TextWrap {
         !self.is_multiline()
     }
 
-    pub fn max_width(&self, scale_factor: f32) -> Option<f32> {
+    pub fn max_width(&self) -> Option<Points> {
         match self {
-            Self::MultiLine { width, .. } => Some(*width * scale_factor),
-            Self::SingleLine { max_width, .. } => Some(*max_width * scale_factor),
+            Self::MultiLine { width, .. } => Some(*width),
+            Self::SingleLine { max_width, .. } => Some(*max_width),
             Self::NoWrap => None,
         }
     }
 
-    pub fn height(&self, scale_factor: f32) -> Option<f32> {
+    pub fn height(&self) -> Option<Points> {
         match self {
-            Self::MultiLine { height, .. } => Some(*height * scale_factor),
+            Self::MultiLine { height, .. } => Some(*height),
             _ => None,
         }
     }
@@ -255,8 +252,8 @@ mod tests {
             .wrap(
                 &scene_target,
                 TextWrap::MultiLine {
-                    width: 80.0,
-                    height: f32::MAX,
+                    width: Points(80.0),
+                    height: Points(f32::MAX),
                     alignment: Alignment::Left,
                 },
             )
@@ -305,8 +302,8 @@ mod tests {
         .wrap(
             &scene_target,
             TextWrap::MultiLine {
-                width: 80.0,
-                height: f32::MAX,
+                width: Points(80.0),
+                height: Points(f32::MAX),
                 alignment: Alignment::Left,
             },
         )

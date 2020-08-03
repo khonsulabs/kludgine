@@ -1,5 +1,5 @@
 use crate::{
-    math::{Point, Size},
+    math::{Pixels, Point, Points, Size},
     shape::Shape,
     sprite::RenderedSprite,
     style::Weight,
@@ -27,24 +27,21 @@ pub(crate) enum Element {
 pub enum SceneTarget {
     Scene(Scene),
     Camera {
-        origin: Point,
+        origin: Point<Points>,
         zoom: f32,
         scene: Scene,
     },
 }
 
 impl SceneTarget {
-    pub async fn size(&self) -> Size {
+    pub async fn size(&self) -> Size<Points> {
         let size = match &self {
             SceneTarget::Scene(scene) => scene.size(),
             SceneTarget::Camera { scene, .. } => scene.size(),
         }
         .await;
         let effective_scale_factor = self.effective_scale_factor().await;
-        Size::new(
-            size.width / effective_scale_factor,
-            size.height / effective_scale_factor,
-        )
+        size.to_points(effective_scale_factor)
     }
 
     pub async fn effective_scale_factor(&self) -> f32 {
@@ -77,16 +74,21 @@ impl SceneTarget {
             Shape::Rectangle(rectangle, zdepth, rotation, stroke, fill) => {
                 let effective_scale = self.effective_scale_factor().await;
                 let p1 = self
-                    .user_to_device_point(Point::new(rectangle.x1, rectangle.y1))
+                    .user_to_device_point(Point::new(rectangle.x1.into(), rectangle.y1.into()))
                     .await
-                    * effective_scale;
+                    .to_pixels(effective_scale);
                 let p2 = self
-                    .user_to_device_point(Point::new(rectangle.x2, rectangle.y2))
+                    .user_to_device_point(Point::new(rectangle.x2.into(), rectangle.y2.into()))
                     .await
-                    * effective_scale;
+                    .to_pixels(effective_scale);
 
                 Shape::Rectangle(
-                    rgx::rect::Rect::new(p1.x, p1.y, p2.x, p2.y),
+                    rgx::rect::Rect::new(
+                        p1.x.to_f32(),
+                        p1.y.to_f32(),
+                        p2.x.to_f32(),
+                        p2.y.to_f32(),
+                    ),
                     zdepth,
                     rotation,
                     stroke,
@@ -94,9 +96,24 @@ impl SceneTarget {
                 )
             }
             Shape::Line(line, zdepth, rotation, stroke) => {
-                let p1 = self.user_to_device_point(line.p1.into()).await.into();
-                let p2 = self.user_to_device_point(line.p2.into()).await.into();
-                Shape::Line(rgx::kit::shape2d::Line { p1, p2 }, zdepth, rotation, stroke)
+                let effective_scale = self.effective_scale_factor().await;
+                let p1 = self
+                    .user_to_device_point(Point::new(line.p1.x.into(), line.p1.y.into()))
+                    .await
+                    .to_pixels(effective_scale);
+                let p2 = self
+                    .user_to_device_point(Point::new(line.p2.x.into(), line.p2.y.into()))
+                    .await
+                    .to_pixels(effective_scale);
+                Shape::Line(
+                    rgx::kit::shape2d::Line {
+                        p1: rgx::math::Point2::new(p1.x.to_f32(), p1.y.to_f32()),
+                        p2: rgx::math::Point2::new(p2.x.to_f32(), p2.y.to_f32()),
+                    },
+                    zdepth,
+                    rotation,
+                    stroke,
+                )
             }
             Shape::Circle(..) => {
                 todo!("rgx needs to expose the fields on shape2d::Circle to be pub, can't make this code work otherwise https://github.com/cloudhead/rgx/issues/25")
@@ -119,7 +136,7 @@ impl SceneTarget {
         self.scene_mut().await.elements.push(Element::Shape(shape));
     }
 
-    pub fn set_camera(&self, zoom: f32, look_at: Point<f32>) -> SceneTarget {
+    pub fn set_camera(&self, zoom: f32, look_at: Point<Points>) -> SceneTarget {
         let origin = Point::new(-look_at.x, -look_at.y);
         match self {
             SceneTarget::Scene(scene) => SceneTarget::Camera {
@@ -140,7 +157,7 @@ impl SceneTarget {
             SceneTarget::Scene(scene) => SceneTarget::Camera {
                 scene: scene.clone(),
                 zoom,
-                origin: Point::new(0.0, 0.0),
+                origin: Point::default(),
             },
             SceneTarget::Camera { scene, origin, .. } => SceneTarget::Camera {
                 scene: scene.clone(),
@@ -150,14 +167,10 @@ impl SceneTarget {
         }
     }
 
-    pub(crate) async fn user_to_device_point<S>(&self, point: Point<S>) -> Point<S>
-    where
-        S: From<f32> + std::ops::Sub<Output = S> + std::ops::Add<Output = S>,
-    {
+    pub(crate) async fn user_to_device_point(&self, point: Point<Points>) -> Point<Points> {
         Point::new(
-            point.x + Into::<S>::into(self.origin().x),
-            Into::<S>::into(self.size().await.height)
-                - (point.y + Into::<S>::into(self.origin().y)),
+            point.x + self.origin().x,
+            self.size().await.height - (point.y + self.origin().y),
         )
     }
 
@@ -172,7 +185,7 @@ impl SceneTarget {
         self.scene().await.theme.clone()
     }
 
-    pub fn origin(&self) -> Point {
+    pub fn origin(&self) -> Point<Points> {
         match &self {
             SceneTarget::Scene(_) => Point::default(),
             SceneTarget::Camera { origin, .. } => *origin,
@@ -207,7 +220,7 @@ pub struct Scene {
 pub(crate) struct SceneData {
     pub pressed_keys: HashSet<VirtualKeyCode>,
     scale_factor: f32,
-    size: Size,
+    size: Size<Pixels>,
     pub(crate) elements: Vec<Element>,
     now: Option<Moment>,
     elapsed: Option<Duration>,
@@ -249,12 +262,12 @@ impl Default for Scene {
 }
 
 impl Scene {
-    pub(crate) async fn set_internal_size(&self, size: Size) {
+    pub(crate) async fn set_internal_size(&self, size: Size<Pixels>) {
         let mut scene = self.data.write().await;
         scene.size = size;
     }
 
-    pub(crate) async fn internal_size(&self) -> Size {
+    pub(crate) async fn internal_size(&self) -> Size<Pixels> {
         let scene = self.data.read().await;
         scene.size
     }
@@ -310,7 +323,7 @@ impl Scene {
         scene.elements.clear();
     }
 
-    pub async fn size(&self) -> Size {
+    pub async fn size(&self) -> Size<Pixels> {
         let scene = self.data.read().await;
         scene.size
     }

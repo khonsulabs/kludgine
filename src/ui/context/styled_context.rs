@@ -1,5 +1,5 @@
 use crate::{
-    math::Size,
+    math::{Points, Size},
     scene::SceneTarget,
     style::EffectiveStyle,
     ui::{HierarchicalArena, Index, SceneContext, UIState},
@@ -60,8 +60,8 @@ impl StyledContext {
     pub async fn content_size(
         &self,
         index: impl Into<Index>,
-        constraints: &Size<Option<f32>>,
-    ) -> KludgineResult<Size> {
+        constraints: &Size<Option<Points>>,
+    ) -> KludgineResult<Size<Points>> {
         let index = index.into();
         let node = self
             .arena

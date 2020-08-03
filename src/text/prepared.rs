@@ -1,6 +1,6 @@
 use crate::{
     color::Color,
-    math::{max_f, Point, Size},
+    math::{max_f, Pixels, Point, Points, ScreenMeasurement, Size},
     style::Alignment,
     text::Font,
     KludgineHandle,
@@ -13,31 +13,53 @@ pub struct PreparedText {
 }
 
 impl PreparedText {
-    pub async fn size(&self) -> Size {
+    pub async fn size(&self) -> Size<Pixels> {
         let line_sizes = join_all(self.lines.iter().map(|line| line.size())).await;
-        let (width, height) = line_sizes
-            .into_iter()
-            .fold((0f32, 0f32), |(width, height), line_size| {
-                (max_f(width, line_size.width), height + line_size.height)
-            });
+        let (width, height) = line_sizes.into_iter().fold(
+            (Pixels::default(), Pixels::default()),
+            |(width, height), line_size| (width.max(line_size.width), height + line_size.height),
+        );
         Size::new(width, height)
     }
 
-    pub(crate) async fn align(&mut self, alignment: Alignment, width: f32) {
+    pub(crate) async fn align(
+        &mut self,
+        alignment: Alignment,
+        width: Points,
+        effective_scale: f32,
+    ) {
         let line_sizes = join_all(self.lines.iter().map(|line| line.size())).await;
 
         for (i, size) in line_sizes.into_iter().enumerate() {
             match alignment {
                 Alignment::Left => {
-                    self.lines[i].alignment_offset = 0.;
+                    self.lines[i].alignment_offset = Points::default();
                 }
                 Alignment::Center => {
-                    self.lines[i].alignment_offset = (width - size.width) / 2.;
+                    self.lines[i].alignment_offset =
+                        (width - size.width.to_points(effective_scale)) / 2.;
                 }
                 Alignment::Right => {
-                    self.lines[i].alignment_offset = width - size.width;
+                    self.lines[i].alignment_offset = width - size.width.to_points(effective_scale);
                 }
             }
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct VMetrics {
+    pub ascent: Pixels,
+    pub descent: Pixels,
+    pub line_gap: Pixels,
+}
+
+impl From<rusttype::VMetrics> for VMetrics {
+    fn from(value: rusttype::VMetrics) -> Self {
+        Self {
+            ascent: Pixels(value.ascent),
+            descent: Pixels(value.descent),
+            line_gap: Pixels(value.line_gap),
         }
     }
 }
@@ -45,31 +67,31 @@ impl PreparedText {
 #[derive(Debug)]
 pub struct PreparedLine {
     pub spans: Vec<PreparedSpan>,
-    pub metrics: rusttype::VMetrics,
-    pub alignment_offset: f32,
+    pub metrics: VMetrics,
+    pub alignment_offset: Points,
 }
 
 impl PreparedLine {
-    pub async fn size(&self) -> Size {
+    pub async fn size(&self) -> Size<Pixels> {
         if self.spans.is_empty() {
-            return Size::new(0.0, self.height());
+            return Size::new(Pixels::default(), self.height());
         }
 
         let width = join_all(self.spans.iter().map(|s| s.width()))
             .await
             .into_iter()
-            .sum::<f32>();
+            .sum::<Pixels>();
         Size::new(width, self.height())
     }
 
-    pub fn height(&self) -> f32 {
+    pub fn height(&self) -> Pixels {
         self.metrics.ascent - self.metrics.descent + self.metrics.line_gap
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct PreparedSpan {
-    pub location: Point,
+    pub location: Point<Pixels>,
     pub handle: KludgineHandle<PreparedSpanData>,
 }
 
@@ -78,12 +100,12 @@ impl PreparedSpan {
         font: Font,
         size: f32,
         color: Color,
-        width: f32,
+        width: Pixels,
         positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
         metrics: rusttype::VMetrics,
     ) -> Self {
         Self {
-            location: Point::new(0.0, 0.0),
+            location: Point::default(),
             handle: KludgineHandle::new(PreparedSpanData {
                 font,
                 size,
@@ -95,14 +117,14 @@ impl PreparedSpan {
         }
     }
 
-    pub fn translate(&self, location: Point) -> Self {
+    pub fn translate(&self, location: Point<Pixels>) -> Self {
         Self {
             location,
             handle: self.handle.clone(),
         }
     }
 
-    pub async fn width(&self) -> f32 {
+    pub async fn width(&self) -> Pixels {
         let handle = self.handle.read().await;
         handle.width
     }
@@ -118,7 +140,7 @@ pub struct PreparedSpanData {
     pub font: Font,
     pub size: f32,
     pub color: Color,
-    pub width: f32,
+    pub width: Pixels,
     pub positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
     pub metrics: rusttype::VMetrics,
 }
