@@ -40,12 +40,19 @@ impl TextWrapState {
             self.update_vmetrics(*metrics);
             self.new_line().await;
         } else {
-            let total_width = join_all(group.spans().iter().map(|s| s.width()))
+            let spans = group.spans();
+            let total_width = join_all(spans.iter().map(|s| s.width()))
                 .await
                 .into_iter()
                 .sum::<f32>();
+
             if let Some(width) = self.width {
-                if self.current_span_offset + total_width > width {
+                let new_width = self.current_span_offset + total_width;
+                let remaining_width = width - new_width;
+
+                if !relative_eq!(remaining_width, 0., epsilon = 0.001)
+                    && remaining_width.is_sign_negative()
+                {
                     if relative_eq!(self.current_span_offset, 0.) {
                         // TODO Split the group if it can't fit on a single line
                         // For now, just render it anyways.
@@ -231,40 +238,43 @@ mod tests {
     #[async_test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word() {
-        let mut scene = Scene::default();
-        scene.register_bundled_fonts().await;
-        let scene_target = SceneTarget::Scene(scene);
-        let wrap = Text::new(vec![Span::new(
-            "This line should wrap",
-            Style {
-                font_size: Some(12.0),
-                ..Default::default()
-            }
-            .effective_style(&scene_target)
-            .await,
-        )])
-        .wrap(
-            &scene_target,
-            TextWrap::MultiLine {
-                width: 80.0,
-                height: f32::MAX,
-                alignment: Alignment::Left,
-            },
-        )
-        .await
-        .expect("Error wrapping text");
-        assert_eq!(wrap.lines.len(), 2);
-        assert_eq!(wrap.lines[0].spans.len(), 5); // "this"," ","line"," ","should"
-        assert_eq!(wrap.lines[1].spans.len(), 1); // "wrap"
-        assert_eq!(
-            wrap.lines[1].spans[0]
-                .handle
-                .read()
-                .await
-                .positioned_glyphs
-                .len(),
-            4
-        );
+        for &scale in &[1f32, 2.] {
+            let mut scene = Scene::default();
+            scene.set_scale_factor(scale).await;
+            scene.register_bundled_fonts().await;
+            let scene_target = SceneTarget::Scene(scene);
+            let wrap = Text::new(vec![Span::new(
+                "This line should wrap",
+                Style {
+                    font_size: Some(12.0),
+                    ..Default::default()
+                }
+                .effective_style(&scene_target)
+                .await,
+            )])
+            .wrap(
+                &scene_target,
+                TextWrap::MultiLine {
+                    width: 80.0,
+                    height: f32::MAX,
+                    alignment: Alignment::Left,
+                },
+            )
+            .await
+            .expect("Error wrapping text");
+            assert_eq!(wrap.lines.len(), 2);
+            assert_eq!(wrap.lines[0].spans.len(), 5); // "this"," ","line"," ","should"
+            assert_eq!(wrap.lines[1].spans.len(), 1); // "wrap"
+            assert_eq!(
+                wrap.lines[1].spans[0]
+                    .handle
+                    .read()
+                    .await
+                    .positioned_glyphs
+                    .len(),
+                4
+            );
+        }
     }
 
     #[async_test]

@@ -89,14 +89,12 @@ impl Text {
         for line in prepared_text.lines.iter() {
             let metrics = line.metrics;
             let cursor_position = Point::new(
-                location.x + line.alignment_offset,
+                location.x + line.alignment_offset / effective_scale_factor,
                 location.y + current_line_baseline,
             );
             for span in line.spans.iter() {
                 let location = scene
-                    .user_to_device_point(
-                        Point::new(cursor_position.x, cursor_position.y) + span.location,
-                    )
+                    .user_to_device_point(cursor_position + span.location / effective_scale_factor)
                     .await
                     * effective_scale_factor;
                 scene
