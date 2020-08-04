@@ -353,3 +353,71 @@ where
         out
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_relative_eq;
+
+    #[test]
+    fn test_measurement() {
+        const SCALE: f32 = 2.;
+        let pixels = Pixels::from_f32(2.);
+        assert_relative_eq!(pixels.to_f32(), 2.);
+        let pixels = pixels.to_pixels(SCALE);
+        assert_relative_eq!(pixels.to_f32(), 2.);
+        let points = pixels.to_points(SCALE);
+        assert_relative_eq!(points.to_f32(), 1.);
+        let points = points.to_points(SCALE);
+        assert_relative_eq!(points.to_f32(), 1.);
+        let pixels = points.to_pixels(SCALE);
+        assert_relative_eq!(pixels.to_f32(), 2.);
+    }
+
+    #[test]
+    fn test_math() {
+        assert_relative_eq!((Pixels::from_f32(2.) * 3.).to_f32(), 6.);
+        assert_relative_eq!((Pixels::from_f32(2.) * Pixels::from_f32(3.)).to_f32(), 6.);
+        assert_relative_eq!((Pixels::from_f32(6.) / 3.).to_f32(), 2.);
+        assert_relative_eq!((Pixels::from_f32(6.) / Pixels::from_f32(3.)).to_f32(), 2.);
+        assert_relative_eq!((Pixels::from_f32(6.) + 3.).to_f32(), 9.);
+        assert_relative_eq!((Pixels::from_f32(6.) + Pixels::from_f32(3.)).to_f32(), 9.);
+        assert_relative_eq!((Pixels::from_f32(6.) - 3.).to_f32(), 3.);
+        assert_relative_eq!((Pixels::from_f32(6.) - Pixels::from_f32(3.)).to_f32(), 3.);
+        assert_relative_eq!((Pixels::from_f32(6.) - 3.).to_f32(), 3.);
+        assert_relative_eq!((-Pixels::from_f32(6.)).to_f32(), -6.);
+
+        let mut pixels = Pixels::from_f32(2.);
+        pixels *= 3.;
+        assert_relative_eq!(pixels.to_f32(), 6.);
+        let mut pixels = Pixels::from_f32(2.);
+        pixels *= Pixels::from_f32(3.);
+        assert_relative_eq!(pixels.to_f32(), 6.);
+
+        let mut pixels = Pixels::from_f32(6.);
+        pixels /= 3.;
+        assert_relative_eq!(pixels.to_f32(), 2.);
+        let mut pixels = Pixels::from_f32(6.);
+        pixels /= Pixels::from_f32(3.);
+        assert_relative_eq!(pixels.to_f32(), 2.);
+
+        let mut pixels = Pixels::from_f32(6.);
+        pixels -= 3.;
+        assert_relative_eq!(pixels.to_f32(), 3.);
+        let mut pixels = Pixels::from_f32(6.);
+        pixels -= Pixels::from_f32(3.);
+        assert_relative_eq!(pixels.to_f32(), 3.);
+
+        let mut pixels = Pixels::from_f32(6.);
+        pixels += 3.;
+        assert_relative_eq!(pixels.to_f32(), 9.);
+        let mut pixels = Pixels::from_f32(6.);
+        pixels += Pixels::from_f32(3.);
+        assert_relative_eq!(pixels.to_f32(), 9.);
+
+        let sum: Pixels = vec![Pixels::from_f32(1.), Pixels::from_f32(2.)]
+            .into_iter()
+            .sum();
+        assert_relative_eq!(sum.to_f32(), 3.);
+    }
+}
