@@ -375,6 +375,16 @@ mod tests {
     }
 
     #[test]
+    fn test_min_max() {
+        assert_relative_eq!(Pixels::from_f32(3.).max(Pixels::from_f32(3.)).to_f32(), 3.);
+        assert_relative_eq!(Pixels::from_f32(3.).max(Pixels::from_f32(2.)).to_f32(), 3.);
+        assert_relative_eq!(Pixels::from_f32(2.).max(Pixels::from_f32(3.)).to_f32(), 3.);
+        assert_relative_eq!(Pixels::from_f32(3.).min(Pixels::from_f32(3.)).to_f32(), 3.);
+        assert_relative_eq!(Pixels::from_f32(3.).min(Pixels::from_f32(2.)).to_f32(), 2.);
+        assert_relative_eq!(Pixels::from_f32(2.).min(Pixels::from_f32(3.)).to_f32(), 2.);
+    }
+
+    #[test]
     fn test_math() {
         assert_relative_eq!((Pixels::from_f32(2.) * 3.).to_f32(), 6.);
         assert_relative_eq!((Pixels::from_f32(2.) * Pixels::from_f32(3.)).to_f32(), 6.);
