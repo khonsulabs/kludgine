@@ -298,7 +298,7 @@ impl FrameRenderer {
                                     dest,
                                     ZDepth::default(),
                                     text_data.color.into(),
-                                    1.0,
+                                    text_data.color.alpha(),
                                     Repeat::default(),
                                 );
                             }

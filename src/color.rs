@@ -49,6 +49,22 @@ impl Color {
         let linear = color.into_linear();
         Srgba::from_linear(linear.darken(amount)).into()
     }
+
+    pub fn red(&self) -> f32 {
+        self.0.r
+    }
+
+    pub fn green(&self) -> f32 {
+        self.0.g
+    }
+
+    pub fn blue(&self) -> f32 {
+        self.0.b
+    }
+
+    pub fn alpha(&self) -> f32 {
+        self.0.a
+    }
 }
 
 impl Color {
