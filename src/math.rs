@@ -1,6 +1,7 @@
 mod measurement;
 // mod points;
 use approx::relative_eq;
+use measurement::ScreenMeasurement;
 pub use measurement::*;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]

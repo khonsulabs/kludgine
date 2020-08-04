@@ -1,5 +1,5 @@
 use crate::{
-    math::{Points, Rect, ScreenMeasurement, Size},
+    math::{Points, Rect, Size},
     source_sprite::SourceSprite,
     sprite::Sprite,
     ui::{Component, Context, InteractiveComponent, Layout, SceneContext, StyledContext},

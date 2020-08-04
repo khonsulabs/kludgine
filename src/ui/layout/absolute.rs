@@ -185,7 +185,6 @@ impl LayoutSolver for AbsoluteLayout {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::math::ScreenMeasurement;
     use approx::assert_relative_eq;
 
     macro_rules! assert_dimension_eq {

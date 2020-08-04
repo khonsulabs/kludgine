@@ -15,6 +15,29 @@ pub struct Measurement<T> {
 
 impl<T> Measurement<T>
 where
+    T: ScreenMeasurement,
+{
+    pub fn from_f32(value: f32) -> Self {
+        Self {
+            value: T::from_f32(value),
+        }
+    }
+
+    pub fn to_f32(&self) -> f32 {
+        self.value.to_f32()
+    }
+
+    pub fn to_pixels(&self, effective_scale: f32) -> Pixels {
+        self.value.to_pixels(effective_scale)
+    }
+
+    pub fn to_points(&self, effective_scale: f32) -> Points {
+        self.value.to_points(effective_scale)
+    }
+}
+
+impl<T> Measurement<T>
+where
     T: ScreenMeasurement + PartialOrd + Copy,
 {
     pub fn max(&self, other: Self) -> Self {

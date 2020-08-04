@@ -1,5 +1,5 @@
 use super::{
-    math::{Point, Points, ScreenMeasurement},
+    math::{Point, Points},
     scene::{Element, SceneTarget},
     style::EffectiveStyle,
     KludgineResult,

@@ -1,5 +1,5 @@
 use crate::{
-    math::{max_f, min_f, Pixels, Points, ScreenMeasurement},
+    math::{max_f, min_f, Pixels, Points},
     scene::SceneTarget,
     style::Alignment,
     text::{PreparedLine, PreparedSpan, PreparedText, Text},

@@ -2,7 +2,7 @@ use super::{
     application::WindowCreator,
     event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode},
     frame::Frame,
-    math::{Pixels, Point, Points, ScreenMeasurement, Size},
+    math::{Pixels, Point, Points, Size},
     runtime::{Runtime, FRAME_DURATION},
     scene::{Scene, SceneTarget},
     ui::{global_arena, InteractiveComponent, NodeData, NodeDataWindowExt, UserInterface},

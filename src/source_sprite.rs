@@ -1,5 +1,5 @@
 use super::{
-    math::{Pixels, Point, Points, Rect, ScreenMeasurement, Size},
+    math::{Point, Points, Rect, Size},
     scene::{Element, SceneTarget},
     sprite::RenderedSprite,
     texture::Texture,

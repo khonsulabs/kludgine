@@ -1,6 +1,6 @@
 use crate::{
     event::MouseButton,
-    math::{Point, Points, ScreenMeasurement, Size},
+    math::{Point, Points, Size},
     style::{Alignment, EffectiveStyle},
     text::{wrap::TextWrap, Text},
     ui::{

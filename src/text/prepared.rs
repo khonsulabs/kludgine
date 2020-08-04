@@ -1,6 +1,6 @@
 use crate::{
     color::Color,
-    math::{max_f, Pixels, Point, Points, ScreenMeasurement, Size},
+    math::{Pixels, Point, Points, Size},
     style::Alignment,
     text::Font,
     KludgineHandle,

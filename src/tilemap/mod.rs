@@ -1,5 +1,5 @@
 use super::{
-    math::{Point, Points, ScreenMeasurement, Size},
+    math::{Point, Points, Size},
     scene::SceneTarget,
     sprite::Sprite,
     KludgineResult,

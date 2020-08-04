@@ -1,5 +1,5 @@
 use crate::{
-    math::{Pixels, ScreenMeasurement},
+    math::Pixels,
     scene::SceneTarget,
     style::EffectiveStyle,
     text::{font::Font, PreparedSpan, Text},
