@@ -1,10 +1,11 @@
+mod dimension;
 mod measurement;
 mod point;
 mod rect;
 mod size;
 mod surround;
 
-pub use self::{measurement::*, point::*, rect::*, size::*, surround::*};
+pub use self::{dimension::*, measurement::*, point::*, rect::*, size::*, surround::*};
 
 pub(crate) fn max_f(a: f32, b: f32) -> f32 {
     if a > b {
