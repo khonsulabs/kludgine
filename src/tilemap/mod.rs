@@ -1,5 +1,5 @@
 use super::{
-    math::{Point, Points, Size},
+    math::{Point, Points, ScreenMeasurement, Size},
     scene::SceneTarget,
     sprite::Sprite,
     KludgineResult,
@@ -77,13 +77,13 @@ where
                 0
             };
             Point::new(
-                Points((location.x * self.tile_size.width as i32 - x_stagger) as f32),
-                Points((location.y * stagger.height as i32) as f32),
+                Points::from_f32((location.x * self.tile_size.width as i32 - x_stagger) as f32),
+                Points::from_f32((location.y * stagger.height as i32) as f32),
             )
         } else {
             Point::new(
-                Points((location.x * self.tile_size.width as i32) as f32),
-                Points((location.y * self.tile_size.height as i32) as f32),
+                Points::from_f32((location.x * self.tile_size.width as i32) as f32),
+                Points::from_f32((location.y * self.tile_size.height as i32) as f32),
             )
         }
     }

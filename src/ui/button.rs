@@ -1,6 +1,6 @@
 use crate::{
     event::MouseButton,
-    math::{Point, Points, Size, Surround},
+    math::{Point, Points, ScreenMeasurement, Size, Surround},
     style::{Style, StyleSheet},
     ui::{
         AbsoluteBounds, Component, Context, ControlEvent, Entity, InteractiveComponent, Label,
@@ -18,7 +18,7 @@ pub struct ButtonStyle {
 impl Default for ButtonStyle {
     fn default() -> Self {
         Self {
-            padding: Surround::uniform(Points(10.)),
+            padding: Surround::uniform(Points::from_f32(10.)),
         }
     }
 }

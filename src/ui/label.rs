@@ -1,6 +1,6 @@
 use crate::{
     event::MouseButton,
-    math::{Point, Points, Size},
+    math::{Point, Points, ScreenMeasurement, Size},
     style::{Alignment, EffectiveStyle},
     text::{wrap::TextWrap, Text},
     ui::{
@@ -70,8 +70,12 @@ impl Component for Label {
         let text = self.create_text(context.effective_style());
         let wrapping = self.wrapping(
             &Size {
-                width: constraints.width.unwrap_or(Points(f32::MAX)),
-                height: constraints.height.unwrap_or(Points(f32::MAX)),
+                width: constraints
+                    .width
+                    .unwrap_or_else(|| Points::from_f32(f32::MAX)),
+                height: constraints
+                    .height
+                    .unwrap_or_else(|| Points::from_f32(f32::MAX)),
             },
             context.effective_style().alignment,
         );

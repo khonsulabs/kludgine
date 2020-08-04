@@ -1,5 +1,6 @@
 use crate::{
     frame::{FontUpdate, Frame, FrameCommand},
+    math::ScreenMeasurement,
     runtime::{Runtime, FRAME_DURATION},
     KludgineResult,
 };

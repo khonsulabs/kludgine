@@ -252,8 +252,8 @@ mod tests {
             .wrap(
                 &scene_target,
                 TextWrap::MultiLine {
-                    width: Points(80.0),
-                    height: Points(f32::MAX),
+                    width: Points::from_f32(80.0),
+                    height: Points::from_f32(f32::MAX),
                     alignment: Alignment::Left,
                 },
             )
@@ -302,8 +302,8 @@ mod tests {
         .wrap(
             &scene_target,
             TextWrap::MultiLine {
-                width: Points(80.0),
-                height: Points(f32::MAX),
+                width: Points::from_f32(80.0),
+                height: Points::from_f32(f32::MAX),
                 alignment: Alignment::Left,
             },
         )

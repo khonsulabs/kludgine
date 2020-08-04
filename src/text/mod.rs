@@ -79,7 +79,7 @@ impl Text {
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
         let prepared_text = self.wrap(scene, wrapping).await?;
-        let mut current_line_baseline = Points(0.);
+        let mut current_line_baseline = Points::from_f32(0.);
         let effective_scale_factor = scene.effective_scale_factor().await;
 
         if offset_baseline && !prepared_text.lines.is_empty() {

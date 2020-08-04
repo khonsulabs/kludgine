@@ -1,5 +1,5 @@
 use super::{
-    math::{Pixels, Point, Points, Rect, Size},
+    math::{Pixels, Point, Points, Rect, ScreenMeasurement, Size},
     scene::{Element, SceneTarget},
     sprite::RenderedSprite,
     texture::Texture,
@@ -51,8 +51,8 @@ impl SourceSprite {
             Rect::sized(
                 location,
                 Size::new(
-                    Points(sprite_location.size.width as f32),
-                    Points(sprite_location.size.height as f32),
+                    Points::from_f32(sprite_location.size.width as f32),
+                    Points::from_f32(sprite_location.size.height as f32),
                 ),
             ),
             alpha,

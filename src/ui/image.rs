@@ -1,5 +1,5 @@
 use crate::{
-    math::{Points, Rect, Size},
+    math::{Points, Rect, ScreenMeasurement, Size},
     source_sprite::SourceSprite,
     sprite::Sprite,
     ui::{Component, Context, InteractiveComponent, Layout, SceneContext, StyledContext},
@@ -71,8 +71,8 @@ impl Component for Image {
             let render_bounds = location.inner_bounds();
             let frame_location = frame.location().await;
             let size_as_points = Size::new(
-                Points(frame_location.size.width as f32),
-                Points(frame_location.size.height as f32),
+                Points::from_f32(frame_location.size.width as f32),
+                Points::from_f32(frame_location.size.height as f32),
             );
             let target_bounds = match &self.options.scaling {
                 None => Rect::sized(render_bounds.origin, size_as_points),
@@ -122,8 +122,8 @@ impl Component for Image {
         if let Some(frame) = &self.current_frame {
             let frame_location = frame.location().await;
             let size_as_points = Size::new(
-                Points(frame_location.size.width as f32),
-                Points(frame_location.size.height as f32),
+                Points::from_f32(frame_location.size.width as f32),
+                Points::from_f32(frame_location.size.height as f32),
             );
             Ok(size_as_points)
         } else {

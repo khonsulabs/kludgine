@@ -1,41 +1,7 @@
-mod pixels;
-mod points;
-pub use self::{pixels::*, points::*};
+mod measurement;
+// mod points;
 use approx::relative_eq;
-
-pub trait ScreenMeasurement {
-    fn to_pixels(&self, effective_scale: f32) -> Pixels;
-    fn to_points(&self, effective_scale: f32) -> Points;
-    fn to_f32(&self) -> f32;
-}
-
-impl ScreenMeasurement for Points {
-    fn to_pixels(&self, effective_scale: f32) -> Pixels {
-        Pixels(self.0 * effective_scale)
-    }
-
-    fn to_points(&self, _effective_scale: f32) -> Points {
-        *self
-    }
-
-    fn to_f32(&self) -> f32 {
-        self.0
-    }
-}
-
-impl ScreenMeasurement for Pixels {
-    fn to_pixels(&self, _effective_scale: f32) -> Pixels {
-        *self
-    }
-
-    fn to_points(&self, effective_scale: f32) -> Points {
-        Points::from(self.0 as f32 / effective_scale)
-    }
-
-    fn to_f32(&self) -> f32 {
-        self.0 as f32
-    }
-}
+pub use measurement::*;
 
 #[derive(Default, Debug, Clone, Copy, PartialEq)]
 pub struct Rect<S = f32> {

@@ -57,9 +57,9 @@ pub struct VMetrics {
 impl From<rusttype::VMetrics> for VMetrics {
     fn from(value: rusttype::VMetrics) -> Self {
         Self {
-            ascent: Pixels(value.ascent),
-            descent: Pixels(value.descent),
-            line_gap: Pixels(value.line_gap),
+            ascent: Pixels::from_f32(value.ascent),
+            descent: Pixels::from_f32(value.descent),
+            line_gap: Pixels::from_f32(value.line_gap),
         }
     }
 }

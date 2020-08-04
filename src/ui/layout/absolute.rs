@@ -185,6 +185,7 @@ impl LayoutSolver for AbsoluteLayout {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::ScreenMeasurement;
     use approx::assert_relative_eq;
 
     macro_rules! assert_dimension_eq {
@@ -202,8 +203,8 @@ mod tests {
                 &Dimension::Auto,
                 &Dimension::Auto,
                 &Dimension::Auto,
-                Points(90.),
-                Points(30.),
+                Points::from_f32(90.),
+                Points::from_f32(30.),
             ),
             (30., 30.)
         );
@@ -214,8 +215,8 @@ mod tests {
                 &Dimension::from_points(50.),
                 &Dimension::Auto,
                 &Dimension::Auto,
-                Points(90.),
-                Points(30.),
+                Points::from_f32(90.),
+                Points::from_f32(30.),
             ),
             (50., 10.)
         );
@@ -226,8 +227,8 @@ mod tests {
                 &Dimension::from_points(50.),
                 &Dimension::from_points(0.),
                 &Dimension::Auto,
-                Points(90.),
-                Points(30.),
+                Points::from_f32(90.),
+                Points::from_f32(30.),
             ),
             (50., 0.)
         );
@@ -238,8 +239,8 @@ mod tests {
                 &Dimension::from_points(10.),
                 &Dimension::Auto,
                 &Dimension::from_points(10.),
-                Points(90.),
-                Points(30.),
+                Points::from_f32(90.),
+                Points::from_f32(30.),
             ),
             (10., 70.)
         );
@@ -250,8 +251,8 @@ mod tests {
                 &Dimension::from_points(10.),
                 &Dimension::from_points(75.),
                 &Dimension::from_points(5.),
-                Points(90.),
-                Points(30.),
+                Points::from_f32(90.),
+                Points::from_f32(30.),
             ),
             (10., 75.)
         );
@@ -262,8 +263,8 @@ mod tests {
                 &Dimension::Auto,
                 &Dimension::from_points(50.),
                 &Dimension::Auto,
-                Points(90.),
-                Points(30.),
+                Points::from_f32(90.),
+                Points::from_f32(30.),
             ),
             (10., 50.)
         );
@@ -272,8 +273,8 @@ mod tests {
                 &Dimension::Auto,
                 &Dimension::from_points(50.),
                 &Dimension::Auto,
-                Points(90.),
-                Points(90.),
+                Points::from_f32(90.),
+                Points::from_f32(90.),
             ),
             (0., 50.)
         );
@@ -284,8 +285,8 @@ mod tests {
                 &Dimension::Auto,
                 &Dimension::from_points(50.),
                 &Dimension::from_points(20.),
-                Points(90.),
-                Points(30.),
+                Points::from_f32(90.),
+                Points::from_f32(30.),
             ),
             (20., 50.)
         );
@@ -298,8 +299,8 @@ mod tests {
                 &Dimension::from_points(40.),
                 &Dimension::from_points(40.),
                 &Dimension::from_points(30.),
-                Points(90.),
-                Points(30.),
+                Points::from_f32(90.),
+                Points::from_f32(30.),
             ),
             (40., 40.)
         );
@@ -310,8 +311,8 @@ mod tests {
                 &Dimension::from_points(50.),
                 &Dimension::from_points(50.),
                 &Dimension::from_points(30.),
-                Points(90.),
-                Points(30.),
+                Points::from_f32(90.),
+                Points::from_f32(30.),
             ),
             (45., 45.)
         );
@@ -427,7 +428,7 @@ mod tests {
 
         let scene = Scene::default();
         scene
-            .set_internal_size(Size::new(Pixels(200.), Pixels(200.)))
+            .set_internal_size(Size::new(Pixels::from_f32(200.), Pixels::from_f32(200.)))
             .await;
         let scene_target = SceneTarget::Scene(scene);
         let engine = LayoutEngine::layout(
@@ -443,20 +444,20 @@ mod tests {
         let child_layout = engine.get_layout(&child).await.unwrap();
         let leaf_layout = engine.get_layout(&leaf).await.unwrap();
 
-        assert_relative_eq!(root_layout.inner_bounds().origin.x.0, 0.);
-        assert_relative_eq!(root_layout.inner_bounds().origin.y.0, 0.);
-        assert_relative_eq!(root_layout.inner_bounds().size.width.0, 200.);
-        assert_relative_eq!(root_layout.inner_bounds().size.height.0, 200.);
+        assert_relative_eq!(root_layout.inner_bounds().origin.x.to_f32(), 0.);
+        assert_relative_eq!(root_layout.inner_bounds().origin.y.to_f32(), 0.);
+        assert_relative_eq!(root_layout.inner_bounds().size.width.to_f32(), 200.);
+        assert_relative_eq!(root_layout.inner_bounds().size.height.to_f32(), 200.);
 
-        assert_relative_eq!(child_layout.inner_bounds().origin.x.0, 80.);
-        assert_relative_eq!(child_layout.inner_bounds().origin.y.0, 80.);
-        assert_relative_eq!(child_layout.inner_bounds().size.width.0, 90.);
-        assert_relative_eq!(child_layout.inner_bounds().size.height.0, 90.);
+        assert_relative_eq!(child_layout.inner_bounds().origin.x.to_f32(), 80.);
+        assert_relative_eq!(child_layout.inner_bounds().origin.y.to_f32(), 80.);
+        assert_relative_eq!(child_layout.inner_bounds().size.width.to_f32(), 90.);
+        assert_relative_eq!(child_layout.inner_bounds().size.height.to_f32(), 90.);
 
-        assert_relative_eq!(leaf_layout.inner_bounds().origin.x.0, 90.);
-        assert_relative_eq!(leaf_layout.inner_bounds().origin.y.0, 90.);
-        assert_relative_eq!(leaf_layout.inner_bounds().size.width.0, 70.);
-        assert_relative_eq!(leaf_layout.inner_bounds().size.height.0, 70.);
+        assert_relative_eq!(leaf_layout.inner_bounds().origin.x.to_f32(), 90.);
+        assert_relative_eq!(leaf_layout.inner_bounds().origin.y.to_f32(), 90.);
+        assert_relative_eq!(leaf_layout.inner_bounds().size.width.to_f32(), 70.);
+        assert_relative_eq!(leaf_layout.inner_bounds().size.height.to_f32(), 70.);
 
         Ok(())
     }

@@ -2,7 +2,7 @@ use super::{
     application::WindowCreator,
     event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode},
     frame::Frame,
-    math::{Pixels, Point, Points, Size},
+    math::{Pixels, Point, Points, ScreenMeasurement, Size},
     runtime::{Runtime, FRAME_DURATION},
     scene::{Scene, SceneTarget},
     ui::{global_arena, InteractiveComponent, NodeData, NodeDataWindowExt, UserInterface},
@@ -344,8 +344,8 @@ impl RuntimeWindow {
                     WindowEvent::Resize { size, scale_factor } => {
                         scene
                             .set_internal_size(Size {
-                                width: Pixels(size.width as f32),
-                                height: Pixels(size.height as f32),
+                                width: Pixels::from_f32(size.width as f32),
+                                height: Pixels::from_f32(size.height as f32),
                             })
                             .await;
                         scene.set_scale_factor(scale_factor).await;
@@ -527,8 +527,11 @@ impl RuntimeWindow {
                     device_id: *device_id,
                     event: Event::MouseMoved {
                         position: Some(
-                            Point::new(Pixels(position.x as f32), Pixels(position.y as f32))
-                                .to_points(self.last_known_scale_factor),
+                            Point::new(
+                                Pixels::from_f32(position.x as f32),
+                                Pixels::from_f32(position.y as f32),
+                            )
+                            .to_points(self.last_known_scale_factor),
                         ),
                     },
                 }))
