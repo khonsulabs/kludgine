@@ -5,8 +5,8 @@ use crate::{
     ui::{
         animation::Transition,
         animation::{FloatChange, PropertyFrameManager, PropertyMutator},
-        global_arena, AnimatableComponent, Component, Context, Entity, InteractiveComponent,
-        Layout, NodeData, SceneContext, StyledContext,
+        AnimatableComponent, Component, Context, Entity, InteractiveComponent, Layout,
+        SceneContext, StyledContext,
     },
     KludgineResult,
 };
@@ -291,7 +291,7 @@ impl ImageAnimationFactory {
         }
     }
 
-    pub async fn frame<T: Transition + 'static>(
+    pub fn frame<T: Transition + 'static>(
         self,
         tag: Option<impl ToString>,
         target: f32,

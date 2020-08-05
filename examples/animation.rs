@@ -52,12 +52,12 @@ impl Component for Animation {
             self.image.animate().alpha(0.3, LinearTransition),
         ));
 
-        self.frame_manager.initialize_with(AnimationManager::new(
-            self.image
-                .animate()
-                .frame(Some("WalkRight"), 0.0, LinearTransition)
-                .await,
-        ));
+        self.frame_manager
+            .initialize_with(AnimationManager::new(self.image.animate().frame(
+                Some("WalkRight"),
+                0.0,
+                LinearTransition,
+            )));
 
         self.fade().await;
 
@@ -99,17 +99,11 @@ impl Animation {
         };
 
         self.frame_manager.push_frame(
-            self.image
-                .animate()
-                .frame(direction, 0.0, LinearTransition)
-                .await,
+            self.image.animate().frame(direction, 0.0, LinearTransition),
             now,
         );
         self.frame_manager.push_frame(
-            self.image
-                .animate()
-                .frame(direction, 1.0, LinearTransition)
-                .await,
+            self.image.animate().frame(direction, 1.0, LinearTransition),
             completion_time,
         );
     }

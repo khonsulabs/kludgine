@@ -111,11 +111,11 @@ pub struct PropertyFrameManager<T, P> {
 #[async_trait]
 pub trait FrameTransitioner: Clone + Send + Sync {
     type Value: Clone + Send + Sync + std::fmt::Debug;
+
     fn initialize_from(&mut self, last: &Self::Value);
+    fn target(&self) -> Self::Value;
 
     async fn transition_between(&mut self, next: &Self::Value, elapsed_percent: f32);
-
-    fn target(&self) -> Self::Value;
 }
 
 #[async_trait]
