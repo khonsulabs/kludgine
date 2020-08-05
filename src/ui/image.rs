@@ -3,12 +3,13 @@ use crate::{
     source_sprite::SourceSprite,
     sprite::Sprite,
     ui::{
-        animation::PropertyMutator, Component, Context, Entity, InteractiveComponent, Layout,
-        SceneContext, StyledContext,
+        animation::PropertyMutator, animation::Transition, AnimatableComponent, Component, Context,
+        Entity, InteractiveComponent, Layout, SceneContext, StyledContext,
     },
     KludgineResult,
 };
 use async_trait::async_trait;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct Image {
@@ -205,7 +206,30 @@ impl PropertyMutator<f32> for ImageAlphaMutator {
 //     }
 // }
 
-pub type ImageAlphaAnimation<T> = crate::ui::animation::PropertyFrameManager<
+pub type ImageAlphaAnimation = crate::ui::animation::PropertyFrameManager<
     f32,
-    crate::ui::animation::FloatChange<T, ImageAlphaMutator>,
+    crate::ui::animation::FloatChange<ImageAlphaMutator>,
 >;
+
+impl AnimatableComponent for Image {
+    type AnimationFactory = ImageAnimationFactory;
+
+    fn new_animation_factory(index: Entity<Self>) -> Self::AnimationFactory {
+        ImageAnimationFactory(index)
+    }
+}
+
+pub struct ImageAnimationFactory(Entity<Image>);
+
+impl ImageAnimationFactory {
+    pub fn alpha<T: Transition + 'static>(self, target: f32, transition: T) -> ImageAlphaAnimation {
+        crate::ui::animation::PropertyFrameManager {
+            last_value: None,
+            target,
+            property_change: crate::ui::animation::FloatChange {
+                mutator: ImageAlphaMutator { image: self.0 },
+                transition: Arc::new(Box::new(transition)),
+            },
+        }
+    }
+}

@@ -1,14 +1,7 @@
-use crate::{
-    math::{Point, Points},
-    ui::{
-        Component, Context, Entity, InteractiveComponent, LayoutSolver, SceneContext, StyledContext,
-    },
-    KludgineResult,
-};
 use async_trait::async_trait;
-use std::{collections::VecDeque, time::Instant};
+use std::{collections::VecDeque, sync::Arc, time::Instant};
 
-pub trait Transition: Clone + Send + Sync {
+pub trait Transition: Send + Sync + std::fmt::Debug {
     fn current_percent(&self, elapsed_percent: f32) -> f32;
 }
 
@@ -50,15 +43,14 @@ pub trait PropertyChange<T>: Clone + Send + Sync {
 //     }
 // }
 #[derive(Clone, Debug)]
-pub struct FloatChange<T, M> {
-    pub transition: T,
+pub struct FloatChange<M> {
+    pub transition: Arc<Box<dyn Transition>>,
     pub mutator: M,
 }
 
 #[async_trait]
-impl<T, M> PropertyChange<f32> for FloatChange<T, M>
+impl<M> PropertyChange<f32> for FloatChange<M>
 where
-    T: Transition,
     M: PropertyMutator<f32>,
 {
     async fn update(&self, existing: &f32, target: &f32, elapsed_percent: f32) {
@@ -192,7 +184,7 @@ where
     }
 }
 
-pub struct AnimationCanvas<T>
+pub struct AnimationManager<T>
 where
     T: FrameTransitioner,
 {
@@ -201,7 +193,7 @@ where
     pending_frames: VecDeque<AnimationFrame<T>>,
 }
 
-impl<T> AnimationCanvas<T>
+impl<T> AnimationManager<T>
 where
     T: FrameTransitioner,
 {
@@ -213,7 +205,12 @@ where
         }
     }
 
-    pub fn update_current_frame(&mut self, now: Instant) {
+    pub fn push_frame(&mut self, frame: T, target: Instant) {
+        self.pending_frames
+            .push_back(AnimationFrame::new(frame, target));
+    }
+
+    fn update_current_frame(&mut self, now: Instant) {
         if let Some(current_frame) = &self.current_frame {
             if current_frame.instant > now {
                 return;
@@ -230,22 +227,8 @@ where
             }
         }
     }
-}
 
-#[derive(Debug, Clone)]
-pub enum AnimationCommand<T>
-where
-    T: FrameTransitioner,
-{
-    PushFrame(AnimationFrame<T>),
-}
-
-#[async_trait]
-impl<T> Component for AnimationCanvas<T>
-where
-    T: FrameTransitioner,
-{
-    async fn update(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
+    pub async fn update(&mut self) {
         let now = Instant::now();
         self.update_current_frame(now);
         if let Some(current_frame) = &mut self.current_frame {
@@ -262,39 +245,5 @@ where
                 }
             }
         }
-
-        Ok(())
-    }
-
-    async fn layout(
-        &mut self,
-        context: &mut StyledContext,
-    ) -> KludgineResult<Box<dyn LayoutSolver>> {
-        todo!()
-        // Layout::absolute().child()
-    }
-}
-
-#[async_trait]
-impl<T> InteractiveComponent for AnimationCanvas<T>
-where
-    T: FrameTransitioner + Clone + Send + Sync + std::fmt::Debug + 'static,
-{
-    type Message = ();
-    type Output = ();
-    type Input = AnimationCommand<T>;
-
-    async fn receive_input(
-        &mut self,
-        context: &mut Context,
-        command: Self::Input,
-    ) -> KludgineResult<()> {
-        match command {
-            AnimationCommand::PushFrame(frame) => {
-                // TODO: Check to see if the Instant in the frame should cause any other frames to be culled
-                self.pending_frames.push_back(frame);
-            }
-        }
-        Ok(())
     }
 }

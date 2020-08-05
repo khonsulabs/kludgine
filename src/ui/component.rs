@@ -353,8 +353,8 @@ where
     }
 }
 
-pub trait AnimatableComponent: InteractiveComponent {
+pub trait AnimatableComponent: InteractiveComponent + Sized {
     type AnimationFactory;
 
-    fn new_animation_factory(target: Index) -> Self::AnimationFactory;
+    fn new_animation_factory(target: Entity<Self>) -> Self::AnimationFactory;
 }

@@ -116,11 +116,17 @@ impl LayoutEngine {
             );
             let computed_layout = match context.layout_for(index).await {
                 Some(layout) => layout,
-                None => Layout {
-                    bounds: Rect::sized(Point::default(), scene.size().await),
-                    padding: Surround::default(),
-                    margin: Surround::default(),
-                },
+                None => {
+                    let layout = Layout {
+                        bounds: Rect::sized(Point::default(), scene.size().await),
+                        padding: Surround::default(),
+                        margin: Surround::default(),
+                    };
+                    layout_data
+                        .insert_layout(index, layout.clone(), false)
+                        .await;
+                    layout
+                }
             };
             context
                 .layout_within(index, &computed_layout.inner_bounds())
@@ -128,10 +134,6 @@ impl LayoutEngine {
             let node = arena.get(index).await.unwrap();
             node.set_layout(computed_layout).await;
         }
-
-        let node = arena.get(root).await.unwrap();
-        let root_layout = node.last_layout().await;
-        layout_data.insert_layout(root, root_layout, false).await;
 
         Ok(layout_data)
     }

@@ -11,7 +11,7 @@ mod node;
 
 pub(crate) use self::node::NodeData;
 pub use self::{
-    animation::AnimationCanvas,
+    animation::{AnimationManager, LinearTransition},
     button::{Button, ButtonStyle},
     component::{
         AnimatableComponent, Callback, Component, EntityBuilder, EventStatus, InteractiveComponent,
@@ -19,7 +19,7 @@ pub use self::{
     },
     context::*,
     control::ControlEvent,
-    image::{Image, ImageCommand, ImageOptions, ImageScaling},
+    image::{Image, ImageAlphaAnimation, ImageCommand, ImageOptions, ImageScaling},
     label::{Label, LabelCommand},
     layout::*,
     node::{Node, NodeDataWindowExt},
@@ -350,8 +350,8 @@ impl<C> Entity<C>
 where
     C: AnimatableComponent + 'static,
 {
-    pub async fn animate(&self) -> C::AnimationFactory {
-        C::new_animation_factory(self.index.expect("Using uninitialized Entity"))
+    pub fn animate(&self) -> C::AnimationFactory {
+        C::new_animation_factory(*self)
     }
 }
 

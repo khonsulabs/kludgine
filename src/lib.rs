@@ -161,7 +161,7 @@ pub mod prelude {
         timing::FrequencyLimiter,
         ui::*,
         window::{Event, EventStatus, InputEvent, OpenableWindow, Window},
-        KludgineError, KludgineHandle, KludgineResult,
+        KludgineError, KludgineHandle, KludgineResult, RequiresInitialization,
     };
     pub use async_trait::async_trait;
     pub use winit::event::*;
@@ -170,4 +170,38 @@ pub mod prelude {
     pub use super::text::bundled_fonts;
 
     pub use lazy_static::lazy_static;
+}
+
+pub struct RequiresInitialization<T>(Option<T>);
+
+impl<T> RequiresInitialization<T> {
+    pub fn initialize_with(&mut self, value: T) {
+        assert!(self.0.is_none());
+        self.0 = Some(value);
+    }
+}
+
+impl<T> Default for RequiresInitialization<T> {
+    fn default() -> Self {
+        Self(None)
+    }
+}
+
+impl<T> RequiresInitialization<T> {
+    pub fn new(initialized: T) -> Self {
+        Self(Some(initialized))
+    }
+}
+
+impl<T> std::ops::Deref for RequiresInitialization<T> {
+    type Target = T;
+    fn deref(&self) -> &Self::Target {
+        self.0.as_ref().expect("used without initializing")
+    }
+}
+
+impl<T> std::ops::DerefMut for RequiresInitialization<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.0.as_mut().expect("used without initializing")
+    }
 }
