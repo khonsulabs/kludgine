@@ -229,10 +229,12 @@ where
         }
 
         while let Some(mut pending_frame) = self.pending_frames.pop_front() {
+            pending_frame.initialize(&self.last_frame);
             if pending_frame.instant > now {
-                pending_frame.initialize(&self.last_frame);
                 self.current_frame = Some(pending_frame);
                 return;
+            } else {
+                self.last_frame = pending_frame;
             }
         }
     }
