@@ -10,6 +10,7 @@ fn main() {
 struct Animation {
     image: Entity<Image>,
     manager: RequiresInitialization<AnimationManager<ImageAlphaAnimation>>,
+    fade_in: bool,
 }
 
 impl WindowCreator<Animation> for Animation {
@@ -49,10 +50,8 @@ impl Component for Animation {
         self.manager.initialize_with(AnimationManager::new(
             self.image.animate().alpha(0.3, LinearTransition),
         ));
-        self.manager.push_frame(
-            self.image.animate().alpha(1.0, LinearTransition),
-            Instant::now().checked_add(Duration::from_secs(5)).unwrap(),
-        );
+
+        self.fade();
 
         Ok(())
     }
@@ -60,5 +59,27 @@ impl Component for Animation {
     async fn update(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
         self.manager.update().await;
         Ok(())
+    }
+
+    async fn clicked(
+        &mut self,
+        _context: &mut Context,
+        _window_position: &Point<Points>,
+        _button: MouseButton,
+    ) -> KludgineResult<()> {
+        self.fade();
+        Ok(())
+    }
+}
+
+impl Animation {
+    fn fade(&mut self) {
+        self.fade_in = !self.fade_in;
+        let target_opacity = if self.fade_in { 1.0 } else { 0.1 };
+        let completion_time = Instant::now().checked_add(Duration::from_secs(1)).unwrap();
+        self.manager.push_frame(
+            self.image.animate().alpha(target_opacity, LinearTransition),
+            completion_time,
+        );
     }
 }

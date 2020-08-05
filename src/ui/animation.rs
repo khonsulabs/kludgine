@@ -14,9 +14,6 @@ impl Transition for LinearTransition {
     }
 }
 
-//  self.image.animate().opacity(0.3, LinearTransition).and(..)
-// OpacityFrame::new(0.3, LinearTransition{}).and(..)
-
 #[async_trait]
 pub trait PropertyMutator<T>: Clone + Send + Sync {
     async fn update_property(&self, value: T);
@@ -206,6 +203,18 @@ where
     }
 
     pub fn push_frame(&mut self, frame: T, target: Instant) {
+        // Cull any frames that take place after this new frame
+        while let Some(peek) = self.pending_frames.back() {
+            if peek.instant > target {
+                self.pending_frames.pop_back();
+            } else {
+                break;
+            }
+        }
+
+        // If this is the first new frame, the animation should start from now, not
+        // the last frame's ending
+        self.last_frame.instant = Instant::now();
         self.pending_frames
             .push_back(AnimationFrame::new(frame, target));
     }
