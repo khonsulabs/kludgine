@@ -1,3 +1,4 @@
+mod animation;
 mod arena;
 mod button;
 mod component;
@@ -10,10 +11,11 @@ mod node;
 
 pub(crate) use self::node::NodeData;
 pub use self::{
+    animation::AnimationCanvas,
     button::{Button, ButtonStyle},
     component::{
-        Callback, Component, EntityBuilder, EventStatus, InteractiveComponent, LayoutConstraints,
-        StandaloneComponent,
+        AnimatableComponent, Callback, Component, EntityBuilder, EventStatus, InteractiveComponent,
+        LayoutConstraints, StandaloneComponent,
     },
     context::*,
     control::ControlEvent,
@@ -29,7 +31,7 @@ use crate::{
     scene::SceneTarget,
     style::StyleSheet,
     window::{Event, InputEvent},
-    KludgineHandle, KludgineResult,
+    KludgineError, KludgineHandle, KludgineResult,
 };
 use arena::{HierarchicalArena, Index};
 use once_cell::sync::OnceCell;
@@ -102,7 +104,7 @@ where
 {
     pub async fn new(root: C, scene: SceneTarget) -> KludgineResult<Self> {
         let root = Entity::new({
-            let node = Node::new(root, StyleSheet::default(), None);
+            let node = Node::new(root, StyleSheet::default(), AbsoluteBounds::default(), None);
 
             global_arena().insert(None, node).await
         });
@@ -319,6 +321,37 @@ impl<C> Entity<C> {
             index: Some(index),
             _phantom: Default::default(),
         }
+    }
+}
+
+impl<C> Entity<C>
+where
+    C: InteractiveComponent + 'static,
+{
+    pub async fn send(&self, message: C::Input) -> KludgineResult<()> {
+        if let Some(target_node) = global_arena()
+            .get(self.index.expect("Using uninitialized Entity"))
+            .await
+        {
+            let component = target_node.component.read().await;
+            if let Some(node_data) = component.as_any().downcast_ref::<NodeData<C>>() {
+                let _ = node_data.input_sender.send(message);
+                Ok(())
+            } else {
+                unreachable!("Invalid type in Entity<T> -- Node contained different type than T")
+            }
+        } else {
+            Err(KludgineError::InvalidIndex)
+        }
+    }
+}
+
+impl<C> Entity<C>
+where
+    C: AnimatableComponent + 'static,
+{
+    pub async fn animate(&self) -> C::AnimationFactory {
+        C::new_animation_factory(self.index.expect("Using uninitialized Entity"))
     }
 }
 

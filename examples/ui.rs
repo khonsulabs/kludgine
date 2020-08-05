@@ -43,19 +43,15 @@ impl InteractiveComponent for UIExample {
         match message {
             Message::LabelClicked => {
                 self.current_count += 0;
-                self.send(
-                    self.label,
-                    LabelCommand::SetValue("You clicked me".to_string()),
-                )
-                .await;
+                self.label
+                    .send(LabelCommand::SetValue("You clicked me".to_string()))
+                    .await?;
             }
             Message::ButtonClicked => {
                 self.current_count += 1;
-                self.send(
-                    self.label,
-                    LabelCommand::SetValue(self.current_count.to_string()),
-                )
-                .await;
+                self.label
+                    .send(LabelCommand::SetValue(self.current_count.to_string()))
+                    .await?;
             }
             Message::NewWindowClicked => {
                 Runtime::open_window(Self::get_window_builder(), UIExample::default()).await;
@@ -75,16 +71,28 @@ impl Component for UIExample {
                 background_color: Some(Color::new(0.0, 1.0, 1.0, 1.0)),
                 ..Default::default()
             })
+            .bounds(AbsoluteBounds {
+                right: Dimension::from_points(10.),
+                bottom: Dimension::from_points(10.),
+                ..Default::default()
+            })
             .insert()
             .await?;
 
         self.label = self
             .new_entity(context, Label::new("Test Label"))
             .style(Style {
-                color: Some(Color::GREEN),
+                color: Some(Color::new(1.0, 1.0, 1.0, 0.1)),
                 background_color: Some(Color::new(1.0, 0.0, 1.0, 0.5)),
                 font_size: Some(72.),
                 alignment: Some(Alignment::Right),
+                ..Default::default()
+            })
+            .bounds(AbsoluteBounds {
+                left: Dimension::from_points(32.),
+                right: Dimension::from_points(32.),
+                top: Dimension::from_points(32.),
+                bottom: Dimension::from_points(64.),
                 ..Default::default()
             })
             .callback(|_| Message::LabelClicked)
@@ -97,58 +105,26 @@ impl Component for UIExample {
                 color: Some(Color::ROYALBLUE),
                 ..Default::default()
             })
+            .bounds(AbsoluteBounds {
+                bottom: Dimension::from_points(10.),
+
+                ..Default::default()
+            })
             .callback(|_| Message::ButtonClicked)
             .insert()
             .await?;
 
         self.new_window_button = self
             .new_entity(context, Button::new("New Window"))
+            .bounds(AbsoluteBounds {
+                bottom: Dimension::from_points(10.),
+                left: Dimension::from_points(10.),
+                ..Default::default()
+            })
             .callback(|_| Message::NewWindowClicked)
             .insert()
             .await?;
 
         Ok(())
-    }
-
-    async fn layout(
-        &mut self,
-        _context: &mut StyledContext,
-    ) -> KludgineResult<Box<dyn LayoutSolver>> {
-        Layout::absolute()
-            .child(
-                self.label,
-                AbsoluteBounds {
-                    left: Dimension::from_points(32.),
-                    right: Dimension::from_points(32.),
-                    top: Dimension::from_points(32.),
-                    bottom: Dimension::from_points(64.),
-                    ..Default::default()
-                },
-            )?
-            .child(
-                self.image,
-                AbsoluteBounds {
-                    right: Dimension::from_points(10.),
-                    bottom: Dimension::from_points(10.),
-                    ..Default::default()
-                },
-            )?
-            .child(
-                self.button,
-                AbsoluteBounds {
-                    bottom: Dimension::from_points(10.),
-
-                    ..Default::default()
-                },
-            )?
-            .child(
-                self.new_window_button,
-                AbsoluteBounds {
-                    bottom: Dimension::from_points(10.),
-                    left: Dimension::from_points(10.),
-                    ..Default::default()
-                },
-            )?
-            .layout()
     }
 }

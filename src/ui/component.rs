@@ -4,8 +4,8 @@ use crate::{
     shape::{Fill, Shape},
     style::{Style, StyleSheet},
     ui::{
-        global_arena, Context, Entity, Index, Layout, LayoutSolver, LayoutSolverExt, Node,
-        NodeData, SceneContext, StyledContext, UIState,
+        global_arena, AbsoluteBounds, Context, Entity, Index, Layout, LayoutSolver,
+        LayoutSolverExt, Node, SceneContext, StyledContext, UIState,
     },
     window::InputEvent,
     KludgineResult,
@@ -46,7 +46,17 @@ pub trait Component: Send + Sync {
         &mut self,
         context: &mut StyledContext,
     ) -> KludgineResult<Box<dyn LayoutSolver>> {
-        Layout::none().layout()
+        let children = context.children().await;
+        if children.is_empty() {
+            Layout::none().layout()
+        } else {
+            let mut layout = Layout::absolute();
+            for child in children {
+                let node = context.arena().get(child).await.unwrap();
+                layout = layout.child(child, node.bounds().await)?;
+            }
+            layout.layout()
+        }
     }
 
     async fn process_input(
@@ -192,23 +202,10 @@ pub trait InteractiveComponent: Component {
             component,
             scene: context.scene().clone(),
             parent: Some(context.index()),
-            style_sheet: Default::default(),
             ui_state: context.ui_state().clone(),
+            style_sheet: Default::default(),
+            bounds: Default::default(),
             callback: None,
-        }
-    }
-
-    async fn send<T: InteractiveComponent + 'static>(&self, target: Entity<T>, message: T::Input) {
-        if let Some(target_node) = global_arena().get(target).await {
-            let component = target_node.component.read().await;
-            if let Some(node_data) = component.as_any().downcast_ref::<NodeData<T>>() {
-                node_data
-                    .input_sender
-                    .send(message)
-                    .expect("Error sending to component");
-            } else {
-                unreachable!("Invalid type in Entity<T> -- Node contained different type than T")
-            }
         }
     }
 
@@ -285,6 +282,7 @@ where
     scene: SceneTarget,
     parent: Option<Index>,
     style_sheet: StyleSheet,
+    bounds: AbsoluteBounds,
     callback: Option<Callback<C::Output>>,
     ui_state: UIState,
 }
@@ -318,6 +316,11 @@ where
         self
     }
 
+    pub fn bounds(mut self, bounds: AbsoluteBounds) -> Self {
+        self.bounds = bounds;
+        self
+    }
+
     pub fn callback<F: Fn(C::Output) -> O + Send + Sync + 'static, O: Send + Sync + 'static>(
         mut self,
         callback: F,
@@ -328,7 +331,7 @@ where
 
     pub async fn insert(self) -> KludgineResult<Entity<C>> {
         let index = {
-            let node = Node::new(self.component, self.style_sheet, self.callback);
+            let node = Node::new(self.component, self.style_sheet, self.bounds, self.callback);
             let index = global_arena().insert(self.parent, node).await;
 
             let mut context = SceneContext::new(
@@ -348,4 +351,10 @@ where
         };
         Ok(Entity::new(index))
     }
+}
+
+pub trait AnimatableComponent: InteractiveComponent {
+    type AnimationFactory;
+
+    fn new_animation_factory(target: Index) -> Self::AnimationFactory;
 }

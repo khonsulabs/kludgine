@@ -2,7 +2,10 @@ use crate::{
     math::{Points, Rect, Size},
     source_sprite::SourceSprite,
     sprite::Sprite,
-    ui::{Component, Context, InteractiveComponent, Layout, SceneContext, StyledContext},
+    ui::{
+        animation::PropertyMutator, Component, Context, Entity, InteractiveComponent, Layout,
+        SceneContext, StyledContext,
+    },
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -21,15 +24,38 @@ pub enum ImageScaling {
     Fill,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct ImageOptions {
     pub scaling: Option<ImageScaling>,
+    pub alpha: f32,
+}
+
+impl Default for ImageOptions {
+    fn default() -> Self {
+        Self {
+            scaling: None,
+            alpha: 1.,
+        }
+    }
+}
+
+impl ImageOptions {
+    pub fn scaling(mut self, scaling: ImageScaling) -> Self {
+        self.scaling = Some(scaling);
+        self
+    }
+
+    pub fn alpha(mut self, alpha: f32) -> Self {
+        self.alpha = alpha;
+        self
+    }
 }
 
 #[derive(Debug, Clone)]
 pub enum ImageCommand {
     SetSprite(Sprite),
     SetTag(Option<String>),
+    SetAlpha(f32),
 }
 
 #[async_trait]
@@ -49,6 +75,9 @@ impl InteractiveComponent for Image {
             }
             ImageCommand::SetTag(tag) => {
                 self.sprite.set_current_tag(tag).await?;
+            }
+            ImageCommand::SetAlpha(alpha) => {
+                self.options.alpha = alpha;
             }
         }
         Ok(())
@@ -108,7 +137,9 @@ impl Component for Image {
                 },
             };
 
-            frame.render_within(context.scene(), target_bounds).await
+            frame
+                .render_with_alpha(context.scene(), target_bounds, self.options.alpha)
+                .await
         }
         Ok(())
     }
@@ -146,3 +177,35 @@ impl Image {
         self
     }
 }
+
+#[derive(Clone, Debug)]
+pub struct ImageAlphaMutator {
+    image: Entity<Image>,
+}
+
+#[async_trait]
+impl PropertyMutator<f32> for ImageAlphaMutator {
+    async fn update_property(&self, value: f32) {
+        let _ = self.image.send(ImageCommand::SetAlpha(value)).await;
+    }
+}
+
+// fn image_alpha_mutator<T>(
+//     target: f32,
+//     image: Entity<Image>,
+//     transition: T,
+// ) -> PropertyFrameManager<f32, FloatChange<T, ImageAlphaMutator>> {
+//     crate::ui::animation::PropertyFrameManager {
+//         last_value: None,
+//         target,
+//         property_change: crate::ui::animation::FloatChange {
+//             mutator: ImageAlphaMutator { image },
+//             transition,
+//         },
+//     }
+// }
+
+pub type ImageAlphaAnimation<T> = crate::ui::animation::PropertyFrameManager<
+    f32,
+    crate::ui::animation::FloatChange<T, ImageAlphaMutator>,
+>;

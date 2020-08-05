@@ -48,6 +48,10 @@ impl Context {
         self.arena.set_parent(child, Some(self.index)).await
     }
 
+    pub async fn children(&self) -> Vec<Index> {
+        self.arena.children(&Some(self.index)).await
+    }
+
     pub fn clone_for<I: Into<Index>>(&self, index: I) -> Self {
         Self {
             index: index.into(),

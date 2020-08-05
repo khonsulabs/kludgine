@@ -4,8 +4,8 @@ use crate::{
     runtime::Runtime,
     style::StyleSheet,
     ui::{
-        Callback, Context, EventStatus, InteractiveComponent, Layout, LayoutSolver, SceneContext,
-        StyledContext,
+        AbsoluteBounds, Callback, Context, EventStatus, InteractiveComponent, Layout, LayoutSolver,
+        SceneContext, StyledContext,
     },
     window::{CloseResponse, InputEvent, Window},
     KludgineHandle, KludgineResult,
@@ -19,6 +19,8 @@ pub(crate) trait AnyNode: PendingEventProcessor + Send + Sync {
     fn as_any(&self) -> &dyn Any;
     async fn style_sheet(&self) -> StyleSheet;
     async fn set_style_sheet(&self, sheet: StyleSheet);
+    async fn bounds(&self) -> AbsoluteBounds;
+    async fn set_bounds(&self, bounds: AbsoluteBounds);
     async fn set_layout(&self, layout: Layout);
     async fn get_layout(&self) -> Layout;
     fn receive_message(&self, message: Box<dyn Any>);
@@ -94,6 +96,16 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     async fn set_style_sheet(&self, sheet: StyleSheet) {
         let mut style_sheet = self.style_sheet.write().await;
         *style_sheet = sheet;
+    }
+
+    async fn bounds(&self) -> AbsoluteBounds {
+        let bounds = self.bounds.read().await;
+        bounds.clone()
+    }
+
+    async fn set_bounds(&self, new_bounds: AbsoluteBounds) {
+        let mut bounds = self.bounds.write().await;
+        *bounds = new_bounds;
     }
 
     async fn set_layout(&self, layout: Layout) {
@@ -227,6 +239,7 @@ where
     message_receiver: UnboundedReceiver<T::Message>,
     pub(crate) layout: KludgineHandle<Layout>,
     pub(crate) style_sheet: KludgineHandle<StyleSheet>,
+    pub(crate) bounds: KludgineHandle<AbsoluteBounds>,
 }
 
 #[async_trait]
@@ -254,10 +267,12 @@ impl Node {
     pub fn new<T: InteractiveComponent + 'static>(
         component: T,
         style_sheet: StyleSheet,
+        bounds: AbsoluteBounds,
         callback: Option<Callback<T::Output>>,
     ) -> Self {
         let component = KludgineHandle::new(component);
         let style_sheet = KludgineHandle::new(style_sheet);
+        let bounds = KludgineHandle::new(bounds);
         let (input_sender, input_receiver) = unbounded_channel();
         let (message_sender, message_receiver) = unbounded_channel();
         Self {
@@ -269,6 +284,7 @@ impl Node {
                 message_sender,
                 message_receiver,
                 callback,
+                bounds,
                 layout: Default::default(),
             })),
         }
@@ -277,6 +293,11 @@ impl Node {
     pub async fn style_sheet(&self) -> StyleSheet {
         let component = self.component.read().await;
         component.style_sheet().await
+    }
+
+    pub async fn bounds(&self) -> AbsoluteBounds {
+        let component = self.component.read().await;
+        component.bounds().await
     }
 
     pub async fn set_style_sheet(&self, sheet: StyleSheet) {

@@ -4,7 +4,7 @@ use crate::{
     style::{Style, StyleSheet},
     ui::{
         AbsoluteBounds, Component, Context, ControlEvent, Entity, InteractiveComponent, Label,
-        Layout, LayoutSolver, LayoutSolverExt, SceneContext, StyledContext,
+        SceneContext, StyledContext,
     },
     KludgineResult,
 };
@@ -42,6 +42,13 @@ impl Component for Button {
                 color: Some(control_colors.text.normal()),
                 ..Default::default()
             }))
+            .bounds(AbsoluteBounds {
+                left: crate::math::Dimension::from_points(10.),
+                top: crate::math::Dimension::from_points(10.),
+                right: crate::math::Dimension::from_points(10.),
+                bottom: crate::math::Dimension::from_points(10.),
+                ..Default::default()
+            })
             .insert()
             .await?;
 
@@ -73,24 +80,6 @@ impl Component for Button {
     ) -> KludgineResult<()> {
         self.callback(context, ControlEvent::Clicked(button)).await;
         Ok(())
-    }
-
-    async fn layout(
-        &mut self,
-        _context: &mut StyledContext,
-    ) -> KludgineResult<Box<dyn LayoutSolver>> {
-        Layout::absolute()
-            .child(
-                self.label,
-                AbsoluteBounds {
-                    left: crate::math::Dimension::from_points(10.),
-                    top: crate::math::Dimension::from_points(10.),
-                    right: crate::math::Dimension::from_points(10.),
-                    bottom: crate::math::Dimension::from_points(10.),
-                    ..Default::default()
-                },
-            )?
-            .layout()
     }
 
     async fn content_size(

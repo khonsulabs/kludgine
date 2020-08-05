@@ -88,7 +88,7 @@ impl AbsoluteLayout {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct AbsoluteBounds {
     pub left: Dimension,
     pub right: Dimension,
@@ -409,18 +409,29 @@ mod tests {
         impl StandaloneComponent for TestChild {}
 
         let arena = HierarchicalArena::default();
-        let node = Node::new(TestChild { other_child: None }, StyleSheet::default(), None);
+        let node = Node::new(
+            TestChild { other_child: None },
+            StyleSheet::default(),
+            AbsoluteBounds::default(),
+            None,
+        );
         let leaf = arena.insert(None, node).await;
         let node = Node::new(
             TestChild {
                 other_child: Some(leaf),
             },
             StyleSheet::default(),
+            Default::default(),
             None,
         );
         let child = arena.insert(None, node).await;
 
-        let node = Node::new(TestRoot { child }, StyleSheet::default(), None);
+        let node = Node::new(
+            TestRoot { child },
+            StyleSheet::default(),
+            Default::default(),
+            None,
+        );
         let root = arena.insert(None, node).await;
         arena.set_parent(leaf, Some(child)).await;
         arena.set_parent(child, Some(root)).await;
