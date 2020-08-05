@@ -10,6 +10,7 @@ fn main() {
 struct Animation {
     image: Entity<Image>,
     manager: RequiresInitialization<AnimationManager<ImageAlphaAnimation>>,
+    frame_manager: RequiresInitialization<AnimationManager<ImageFrameAnimation>>,
     fade_in: bool,
 }
 
@@ -51,13 +52,21 @@ impl Component for Animation {
             self.image.animate().alpha(0.3, LinearTransition),
         ));
 
-        self.fade();
+        self.frame_manager.initialize_with(AnimationManager::new(
+            self.image
+                .animate()
+                .frame(Some("WalkRight"), 0.0, LinearTransition)
+                .await,
+        ));
+
+        self.fade().await;
 
         Ok(())
     }
 
     async fn update(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
         self.manager.update().await;
+        self.frame_manager.update().await;
         Ok(())
     }
 
@@ -67,18 +76,40 @@ impl Component for Animation {
         _window_position: &Point<Points>,
         _button: MouseButton,
     ) -> KludgineResult<()> {
-        self.fade();
+        self.fade().await;
         Ok(())
     }
 }
 
 impl Animation {
-    fn fade(&mut self) {
+    async fn fade(&mut self) {
         self.fade_in = !self.fade_in;
         let target_opacity = if self.fade_in { 1.0 } else { 0.1 };
-        let completion_time = Instant::now().checked_add(Duration::from_secs(1)).unwrap();
+        let now = Instant::now();
+        let completion_time = now.checked_add(Duration::from_secs(1)).unwrap();
         self.manager.push_frame(
             self.image.animate().alpha(target_opacity, LinearTransition),
+            completion_time,
+        );
+
+        let direction = if self.fade_in {
+            Some("WalkLeft")
+        } else {
+            Some("WalkRight")
+        };
+
+        self.frame_manager.push_frame(
+            self.image
+                .animate()
+                .frame(direction, 0.0, LinearTransition)
+                .await,
+            now,
+        );
+        self.frame_manager.push_frame(
+            self.image
+                .animate()
+                .frame(direction, 1.0, LinearTransition)
+                .await,
             completion_time,
         );
     }

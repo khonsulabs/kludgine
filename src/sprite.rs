@@ -55,14 +55,11 @@ pub(crate) struct SpriteData {
     current_tag: Option<String>,
     current_frame: usize,
     current_animation_direction: AnimationDirection,
-    animations: KludgineHandle<HashMap<Option<String>, SpriteAnimation>>,
+    animations: SpriteAnimations,
 }
 
 impl Sprite {
-    pub(crate) fn new(
-        title: Option<String>,
-        animations: KludgineHandle<HashMap<Option<String>, SpriteAnimation>>,
-    ) -> Self {
+    pub(crate) fn new(title: Option<String>, animations: SpriteAnimations) -> Self {
         Self {
             handle: KludgineHandle::new(SpriteData {
                 title,
@@ -81,11 +78,11 @@ impl Sprite {
         let mut title = None;
         for (name, sprite) in source {
             let handle = sprite.handle.read().await;
-            let animations = handle.animations.read().await;
+            let animations = handle.animations.handle.read().await;
             combined.insert(Some(name.into()), animations[&None].clone());
             title = title.or_else(|| handle.title.clone());
         }
-        Self::new(title, KludgineHandle::new(combined))
+        Self::new(title, SpriteAnimations::new(combined))
     }
 
     pub async fn new_instance(&self) -> Self {
@@ -112,7 +109,7 @@ impl Sprite {
                 AnimationMode::Forward,
             ),
         );
-        let frames = KludgineHandle::new(frames);
+        let frames = SpriteAnimations::new(frames);
 
         Self::new(None, frames)
     }
@@ -259,7 +256,7 @@ impl Sprite {
             ),
         );
 
-        Ok(Sprite::new(title, KludgineHandle::new(animations)))
+        Ok(Sprite::new(title, SpriteAnimations::new(animations)))
     }
 
     pub async fn set_current_tag<S: Into<String>>(&self, tag: Option<S>) -> KludgineResult<()> {
@@ -267,7 +264,7 @@ impl Sprite {
         let mut sprite = self.handle.write().await;
         if sprite.current_tag != new_tag {
             sprite.current_animation_direction = {
-                let animations = sprite.animations.read().await;
+                let animations = sprite.animations.handle.read().await;
                 let animation = animations
                     .get(&new_tag)
                     .ok_or_else(|| KludgineError::InvalidSpriteTag)?;
@@ -278,6 +275,11 @@ impl Sprite {
         }
 
         Ok(())
+    }
+
+    pub async fn current_tag(&self) -> Option<String> {
+        let sprite = self.handle.read().await;
+        sprite.current_tag.clone()
     }
 
     pub async fn get_frame(&self, elapsed: Option<Duration>) -> KludgineResult<SourceSprite> {
@@ -301,6 +303,11 @@ impl Sprite {
             .with_current_frame(|frame| frame.source.clone())
             .await?)
     }
+
+    pub async fn animations(&self) -> SpriteAnimations {
+        let handle = self.handle.read().await;
+        handle.animations.clone()
+    }
 }
 
 impl SpriteData {
@@ -310,7 +317,7 @@ impl SpriteData {
     }
     async fn next_frame(&mut self) -> KludgineResult<usize> {
         let starting_frame = self.current_frame as i32;
-        let frames = self.animations.read().await;
+        let frames = self.animations.handle.read().await;
         let animation = frames
             .get(&self.current_tag)
             .ok_or(KludgineError::InvalidSpriteTag)?;
@@ -350,7 +357,7 @@ impl SpriteData {
     where
         F: Fn(&SpriteFrame) -> R,
     {
-        let frames = self.animations.read().await;
+        let frames = self.animations.handle.read().await;
         let animation = frames
             .get(&self.current_tag)
             .ok_or(KludgineError::InvalidSpriteTag)?;
@@ -359,10 +366,28 @@ impl SpriteData {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct SpriteAnimations {
+    handle: KludgineHandle<HashMap<Option<String>, SpriteAnimation>>,
+}
+
+impl SpriteAnimations {
+    pub fn new(animations: HashMap<Option<String>, SpriteAnimation>) -> Self {
+        Self {
+            handle: KludgineHandle::new(animations),
+        }
+    }
+
+    pub async fn frames_for(&self, tag: &Option<impl ToString>) -> Option<SpriteAnimation> {
+        let handle = self.handle.read().await;
+        handle.get(&tag.as_ref().map(|s| s.to_string())).cloned()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct SpriteAnimation {
-    frames: Vec<SpriteFrame>,
-    mode: AnimationMode,
+    pub frames: Vec<SpriteFrame>,
+    pub mode: AnimationMode,
 }
 
 impl SpriteAnimation {
@@ -373,8 +398,8 @@ impl SpriteAnimation {
 
 #[derive(Debug, Clone)]
 pub struct SpriteFrame {
-    source: SourceSprite,
-    duration: Option<Duration>,
+    pub source: SourceSprite,
+    pub duration: Option<Duration>,
 }
 
 pub struct SpriteFrameBuilder {

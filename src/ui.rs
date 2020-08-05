@@ -19,7 +19,9 @@ pub use self::{
     },
     context::*,
     control::ControlEvent,
-    image::{Image, ImageAlphaAnimation, ImageCommand, ImageOptions, ImageScaling},
+    image::{
+        Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
+    },
     label::{Label, LabelCommand},
     layout::*,
     node::{Node, NodeDataWindowExt},
@@ -153,6 +155,8 @@ where
                 node.render(&mut context, &layout).await?;
             }
         }
+
+        self.last_render_order.reverse();
 
         Ok(())
     }

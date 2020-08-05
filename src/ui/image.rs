@@ -3,8 +3,10 @@ use crate::{
     source_sprite::SourceSprite,
     sprite::Sprite,
     ui::{
-        animation::PropertyMutator, animation::Transition, AnimatableComponent, Component, Context,
-        Entity, InteractiveComponent, Layout, SceneContext, StyledContext,
+        animation::Transition,
+        animation::{FloatChange, PropertyFrameManager, PropertyMutator},
+        global_arena, AnimatableComponent, Component, Context, Entity, InteractiveComponent,
+        Layout, NodeData, SceneContext, StyledContext,
     },
     KludgineResult,
 };
@@ -28,7 +30,14 @@ pub enum ImageScaling {
 #[derive(Debug)]
 pub struct ImageOptions {
     pub scaling: Option<ImageScaling>,
+    pub override_frame: Option<OverrideFrame>,
     pub alpha: f32,
+}
+
+#[derive(Debug, Clone)]
+pub enum OverrideFrame {
+    Index(usize),
+    Percent(f32),
 }
 
 impl Default for ImageOptions {
@@ -36,6 +45,7 @@ impl Default for ImageOptions {
         Self {
             scaling: None,
             alpha: 1.,
+            override_frame: None,
         }
     }
 }
@@ -57,6 +67,10 @@ pub enum ImageCommand {
     SetSprite(Sprite),
     SetTag(Option<String>),
     SetAlpha(f32),
+    SetOverrideFrame {
+        tag: Option<String>,
+        frame: OverrideFrame,
+    },
 }
 
 #[async_trait]
@@ -76,9 +90,14 @@ impl InteractiveComponent for Image {
             }
             ImageCommand::SetTag(tag) => {
                 self.sprite.set_current_tag(tag).await?;
+                self.options.override_frame = None;
             }
             ImageCommand::SetAlpha(alpha) => {
                 self.options.alpha = alpha;
+            }
+            ImageCommand::SetOverrideFrame { tag, frame } => {
+                self.sprite.set_current_tag(tag).await?;
+                self.options.override_frame = Some(frame);
             }
         }
         Ok(())
@@ -88,11 +107,32 @@ impl InteractiveComponent for Image {
 #[async_trait]
 impl Component for Image {
     async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
-        self.current_frame = Some(
-            self.sprite
-                .get_frame(context.scene().elapsed().await)
-                .await?,
-        );
+        self.current_frame = match &self.options.override_frame {
+            Some(override_frame) => {
+                let current_tag = self.sprite.current_tag().await;
+                let frames = self
+                    .sprite
+                    .animations()
+                    .await
+                    .frames_for(&current_tag)
+                    .await
+                    .unwrap();
+
+                let frame_index = match override_frame {
+                    OverrideFrame::Index(index) => *index,
+                    OverrideFrame::Percent(percent) => {
+                        (frames.frames.len() as f32 * *percent) as usize
+                    }
+                };
+
+                Some(frames.frames[frame_index].source.clone())
+            }
+            None => Some(
+                self.sprite
+                    .get_frame(context.scene().elapsed().await)
+                    .await?,
+            ),
+        };
         Ok(())
     }
 
@@ -190,25 +230,37 @@ impl PropertyMutator<f32> for ImageAlphaMutator {
         let _ = self.image.send(ImageCommand::SetAlpha(value)).await;
     }
 }
+#[derive(Clone, Debug)]
+pub struct ImageFrameMutator {
+    image: Entity<Image>,
+    tag: Option<String>,
+}
 
-// fn image_alpha_mutator<T>(
-//     target: f32,
-//     image: Entity<Image>,
-//     transition: T,
-// ) -> PropertyFrameManager<f32, FloatChange<T, ImageAlphaMutator>> {
-//     crate::ui::animation::PropertyFrameManager {
-//         last_value: None,
-//         target,
-//         property_change: crate::ui::animation::FloatChange {
-//             mutator: ImageAlphaMutator { image },
-//             transition,
-//         },
-//     }
-// }
+#[async_trait]
+impl PropertyMutator<f32> for ImageFrameMutator {
+    async fn update_property(&self, value: f32) {
+        // TODO: Figure out how to get the frames for the image.
+        // We can cheat but it seems like it should be something
+        // other people could write without being internal to the
+        // crate
+        let _ = self
+            .image
+            .send(ImageCommand::SetOverrideFrame {
+                tag: self.tag.clone(),
+                frame: OverrideFrame::Percent(value),
+            })
+            .await;
+    }
+}
 
 pub type ImageAlphaAnimation = crate::ui::animation::PropertyFrameManager<
     f32,
     crate::ui::animation::FloatChange<ImageAlphaMutator>,
+>;
+
+pub type ImageFrameAnimation = crate::ui::animation::PropertyFrameManager<
+    f32,
+    crate::ui::animation::FloatChange<ImageFrameMutator>,
 >;
 
 impl AnimatableComponent for Image {
@@ -219,15 +271,39 @@ impl AnimatableComponent for Image {
     }
 }
 
+// I need to take an array of AnimationFrames, which have durations within them
+// And offer a way to switch frames ignoring those durations
+// Perhaps the approach is that the Image component can have an explicit "Use this frame"
+// setting, and that's what the animation can automate
+// 0.0 = frame 0, 1.0 = last frame -- so it'll be a float property, mapped to an integer index.
+
 pub struct ImageAnimationFactory(Entity<Image>);
 
 impl ImageAnimationFactory {
     pub fn alpha<T: Transition + 'static>(self, target: f32, transition: T) -> ImageAlphaAnimation {
-        crate::ui::animation::PropertyFrameManager {
+        PropertyFrameManager {
             last_value: None,
             target,
-            property_change: crate::ui::animation::FloatChange {
+            property_change: FloatChange {
                 mutator: ImageAlphaMutator { image: self.0 },
+                transition: Arc::new(Box::new(transition)),
+            },
+        }
+    }
+
+    pub async fn frame<T: Transition + 'static>(
+        self,
+        tag: Option<impl ToString>,
+        target: f32,
+        transition: T,
+    ) -> ImageFrameAnimation {
+        let tag = tag.map(|s| s.to_string());
+
+        PropertyFrameManager {
+            last_value: None,
+            target,
+            property_change: FloatChange {
+                mutator: ImageFrameMutator { image: self.0, tag },
                 transition: Arc::new(Box::new(transition)),
             },
         }
