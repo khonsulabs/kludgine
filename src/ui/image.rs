@@ -1,12 +1,13 @@
 use crate::{
-    math::{Points, Rect, Size},
+    event::MouseButton,
+    math::{Point, Points, Rect, Size},
     source_sprite::SourceSprite,
     sprite::Sprite,
     ui::{
         animation::Transition,
         animation::{FloatChange, PropertyFrameManager, PropertyMutator},
-        AnimatableComponent, Component, Context, Entity, InteractiveComponent, Layout,
-        SceneContext, StyledContext,
+        AnimatableComponent, Component, Context, ControlEvent, Entity, InteractiveComponent,
+        Layout, SceneContext, StyledContext,
     },
     KludgineResult,
 };
@@ -77,7 +78,7 @@ pub enum ImageCommand {
 impl InteractiveComponent for Image {
     type Message = ();
     type Input = ImageCommand;
-    type Output = ();
+    type Output = ControlEvent;
 
     async fn receive_input(
         &mut self,
@@ -201,6 +202,16 @@ impl Component for Image {
         } else {
             Ok(Size::default())
         }
+    }
+
+    async fn clicked(
+        &mut self,
+        context: &mut Context,
+        _window_position: &Point<Points>,
+        button: MouseButton,
+    ) -> KludgineResult<()> {
+        self.callback(context, ControlEvent::Clicked(button)).await;
+        Ok(())
     }
 }
 

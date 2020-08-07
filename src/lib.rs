@@ -187,6 +187,26 @@ impl<T> Default for RequiresInitialization<T> {
     }
 }
 
+impl<T: Clone> Clone for RequiresInitialization<T> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<T: Copy> Copy for RequiresInitialization<T> {}
+
+impl<T> From<T> for RequiresInitialization<T> {
+    fn from(value: T) -> Self {
+        Self(Some(value))
+    }
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for RequiresInitialization<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
 impl<T> RequiresInitialization<T> {
     pub fn new(initialized: T) -> Self {
         Self(Some(initialized))

@@ -413,6 +413,7 @@ mod tests {
             TestChild { other_child: None },
             StyleSheet::default(),
             AbsoluteBounds::default(),
+            true,
             None,
         );
         let leaf = arena.insert(None, node).await;
@@ -422,6 +423,7 @@ mod tests {
             },
             StyleSheet::default(),
             Default::default(),
+            true,
             None,
         );
         let child = arena.insert(None, node).await;
@@ -430,6 +432,7 @@ mod tests {
             TestRoot { child },
             StyleSheet::default(),
             Default::default(),
+            true,
             None,
         );
         let root = arena.insert(None, node).await;

@@ -141,8 +141,8 @@ impl LayoutEngine {
     pub async fn insert_layout(&self, index: Index, layout: Layout, add_to_process_queue: bool) {
         let mut data = self.data.write().await;
         data.layouts.insert(index, layout);
-        data.render_queue.push_back(index);
         if add_to_process_queue {
+            data.render_queue.push_back(index);
             data.indicies_to_process.push_back(index);
         }
     }

@@ -33,7 +33,7 @@ use crate::{
     scene::SceneTarget,
     style::StyleSheet,
     window::{Event, InputEvent},
-    KludgineError, KludgineHandle, KludgineResult,
+    KludgineError, KludgineHandle, KludgineResult, RequiresInitialization,
 };
 use arena::{HierarchicalArena, Index};
 use once_cell::sync::OnceCell;
@@ -106,7 +106,13 @@ where
 {
     pub async fn new(root: C, scene: SceneTarget) -> KludgineResult<Self> {
         let root = Entity::new({
-            let node = Node::new(root, StyleSheet::default(), AbsoluteBounds::default(), None);
+            let node = Node::new(
+                root,
+                StyleSheet::default(),
+                AbsoluteBounds::default(),
+                true,
+                None,
+            );
 
             global_arena().insert(None, node).await
         });
@@ -254,12 +260,14 @@ where
                                     global_arena().clone(),
                                     self.ui_state.clone(),
                                 );
-                                if let EventStatus::Handled = node
-                                    .mouse_down(&mut context, &last_mouse_position, button)
-                                    .await?
-                                {
-                                    self.mouse_button_handlers.insert(button, index);
-                                    break;
+                                if node.interactive().await {
+                                    if let EventStatus::Handled = node
+                                        .mouse_down(&mut context, &last_mouse_position, button)
+                                        .await?
+                                    {
+                                        self.mouse_button_handlers.insert(button, index);
+                                        break;
+                                    }
                                 }
                             }
                             next_to_process = global_arena().parent(index).await;
@@ -300,14 +308,14 @@ where
 
 #[derive(Debug)]
 pub struct Entity<C> {
-    index: Option<Index>,
+    index: RequiresInitialization<Index>,
     _phantom: std::marker::PhantomData<C>,
 }
 
 impl<C> Default for Entity<C> {
     fn default() -> Self {
         Self {
-            index: None,
+            index: Default::default(),
             _phantom: Default::default(),
         }
     }
@@ -315,14 +323,14 @@ impl<C> Default for Entity<C> {
 
 impl<C> Into<Index> for Entity<C> {
     fn into(self) -> Index {
-        self.index.expect("Using uninitialized Entity")
+        *self.index
     }
 }
 
 impl<C> Entity<C> {
     pub fn new(index: Index) -> Self {
         Self {
-            index: Some(index),
+            index: index.into(),
             _phantom: Default::default(),
         }
     }
@@ -333,10 +341,7 @@ where
     C: InteractiveComponent + 'static,
 {
     pub async fn send(&self, message: C::Input) -> KludgineResult<()> {
-        if let Some(target_node) = global_arena()
-            .get(self.index.expect("Using uninitialized Entity"))
-            .await
-        {
+        if let Some(target_node) = global_arena().get(*self.index).await {
             let component = target_node.component.read().await;
             if let Some(node_data) = component.as_any().downcast_ref::<NodeData<C>>() {
                 let _ = node_data.input_sender.send(message);

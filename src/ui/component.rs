@@ -197,15 +197,17 @@ pub trait InteractiveComponent: Component {
         &self,
         context: &mut SceneContext,
         component: T,
-    ) -> EntityBuilder<T> {
+    ) -> EntityBuilder<T, Self::Message> {
         EntityBuilder {
             component,
             scene: context.scene().clone(),
             parent: Some(context.index()),
+            interactive: true,
             ui_state: context.ui_state().clone(),
             style_sheet: Default::default(),
             bounds: Default::default(),
             callback: None,
+            _marker: Default::default(),
         }
     }
 
@@ -274,7 +276,7 @@ where
     }
 }
 
-pub struct EntityBuilder<C>
+pub struct EntityBuilder<C, P>
 where
     C: InteractiveComponent + 'static,
 {
@@ -283,13 +285,16 @@ where
     parent: Option<Index>,
     style_sheet: StyleSheet,
     bounds: AbsoluteBounds,
+    interactive: bool,
     callback: Option<Callback<C::Output>>,
     ui_state: UIState,
+    _marker: std::marker::PhantomData<P>,
 }
 
-impl<C> EntityBuilder<C>
+impl<C, P> EntityBuilder<C, P>
 where
     C: InteractiveComponent + 'static,
+    P: Send + Sync + 'static,
 {
     pub fn style_sheet(mut self, sheet: StyleSheet) -> Self {
         self.style_sheet = sheet;
@@ -321,17 +326,25 @@ where
         self
     }
 
-    pub fn callback<F: Fn(C::Output) -> O + Send + Sync + 'static, O: Send + Sync + 'static>(
-        mut self,
-        callback: F,
-    ) -> Self {
+    pub fn interactive(mut self, interactive: bool) -> Self {
+        self.interactive = interactive;
+        self
+    }
+
+    pub fn callback<F: Fn(C::Output) -> P + Send + Sync + 'static>(mut self, callback: F) -> Self {
         self.callback = Some(Callback::new(self.parent.unwrap(), callback));
         self
     }
 
     pub async fn insert(self) -> KludgineResult<Entity<C>> {
         let index = {
-            let node = Node::new(self.component, self.style_sheet, self.bounds, self.callback);
+            let node = Node::new(
+                self.component,
+                self.style_sheet,
+                self.bounds,
+                self.interactive,
+                self.callback,
+            );
             let index = global_arena().insert(self.parent, node).await;
 
             let mut context = SceneContext::new(

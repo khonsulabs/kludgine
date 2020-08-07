@@ -17,6 +17,7 @@ use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 #[async_trait]
 pub(crate) trait AnyNode: PendingEventProcessor + Send + Sync {
     fn as_any(&self) -> &dyn Any;
+    fn interactive(&self) -> bool;
     async fn style_sheet(&self) -> StyleSheet;
     async fn set_style_sheet(&self, sheet: StyleSheet);
     async fn bounds(&self) -> AbsoluteBounds;
@@ -86,6 +87,10 @@ pub(crate) trait PendingEventProcessor {
 impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     fn as_any(&self) -> &dyn Any {
         self
+    }
+
+    fn interactive(&self) -> bool {
+        self.interactive
     }
 
     async fn style_sheet(&self) -> StyleSheet {
@@ -237,6 +242,7 @@ where
     pub(crate) message_sender: UnboundedSender<T::Message>,
     input_receiver: UnboundedReceiver<T::Input>,
     message_receiver: UnboundedReceiver<T::Message>,
+    interactive: bool,
     pub(crate) layout: KludgineHandle<Layout>,
     pub(crate) style_sheet: KludgineHandle<StyleSheet>,
     pub(crate) bounds: KludgineHandle<AbsoluteBounds>,
@@ -268,6 +274,7 @@ impl Node {
         component: T,
         style_sheet: StyleSheet,
         bounds: AbsoluteBounds,
+        interactive: bool,
         callback: Option<Callback<T::Output>>,
     ) -> Self {
         let component = KludgineHandle::new(component);
@@ -285,6 +292,7 @@ impl Node {
                 message_receiver,
                 callback,
                 bounds,
+                interactive,
                 layout: Default::default(),
             })),
         }
@@ -293,6 +301,11 @@ impl Node {
     pub async fn style_sheet(&self) -> StyleSheet {
         let component = self.component.read().await;
         component.style_sheet().await
+    }
+
+    pub async fn interactive(&self) -> bool {
+        let component = self.component.read().await;
+        component.interactive()
     }
 
     pub async fn bounds(&self) -> AbsoluteBounds {

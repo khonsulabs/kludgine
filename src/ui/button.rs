@@ -49,6 +49,7 @@ impl Component for Button {
                 bottom: crate::math::Dimension::from_points(10.),
                 ..Default::default()
             })
+            .interactive(false)
             .insert()
             .await?;
 
