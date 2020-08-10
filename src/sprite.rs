@@ -308,6 +308,17 @@ impl Sprite {
         let handle = self.handle.read().await;
         handle.animations.clone()
     }
+
+    pub async fn size(&self) -> Option<Size<u32>> {
+        let handle = self.handle.read().await;
+        let animations = handle.animations.handle.read().await;
+        if let Some(animation) = animations.values().next() {
+            if let Some(frame) = animation.frames.first() {
+                return Some(frame.source.location().await.size);
+            }
+        }
+        None
+    }
 }
 
 impl SpriteData {
