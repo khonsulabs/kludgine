@@ -220,21 +220,18 @@ where
     }
 
     fn update_current_frame(&mut self, now: Instant) {
-        if let Some(current_frame) = &self.current_frame {
-            if current_frame.instant > now {
-                return;
-            } else {
-                self.last_frame = self.current_frame.take().unwrap();
+        while !self.pending_frames.is_empty() {
+            if let Some(current_frame) = &self.current_frame {
+                if current_frame.instant > now {
+                    return;
+                } else {
+                    self.last_frame = self.current_frame.take().unwrap();
+                }
             }
-        }
 
-        while let Some(mut pending_frame) = self.pending_frames.pop_front() {
-            pending_frame.initialize(&self.last_frame);
-            if pending_frame.instant > now {
+            if let Some(mut pending_frame) = self.pending_frames.pop_front() {
+                pending_frame.initialize(&self.last_frame);
                 self.current_frame = Some(pending_frame);
-                return;
-            } else {
-                self.last_frame = pending_frame;
             }
         }
     }
