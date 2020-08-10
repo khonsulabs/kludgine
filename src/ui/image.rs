@@ -302,19 +302,36 @@ impl ImageAnimationFactory {
         }
     }
 
-    pub fn frame<T: Transition + 'static>(
+    pub fn tagged_frame<T: Transition + 'static>(
         self,
-        tag: Option<impl ToString>,
+        tag: impl ToString,
         target: f32,
         transition: T,
     ) -> ImageFrameAnimation {
-        let tag = tag.map(|s| s.to_string());
+        let tag = tag.to_string();
 
         PropertyFrameManager {
             last_value: None,
             target,
             property_change: FloatChange {
-                mutator: ImageFrameMutator { image: self.0, tag },
+                mutator: ImageFrameMutator {
+                    image: self.0,
+                    tag: Some(tag),
+                },
+                transition: Arc::new(Box::new(transition)),
+            },
+        }
+    }
+
+    pub fn frame<T: Transition + 'static>(self, target: f32, transition: T) -> ImageFrameAnimation {
+        PropertyFrameManager {
+            last_value: None,
+            target,
+            property_change: FloatChange {
+                mutator: ImageFrameMutator {
+                    image: self.0,
+                    tag: None,
+                },
                 transition: Arc::new(Box::new(transition)),
             },
         }
