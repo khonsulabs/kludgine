@@ -120,6 +120,15 @@ where
         Self::new(Point::new(min_x, min_y), Point::new(max_x, max_y))
     }
 
+    pub fn intersects_with(&self, other: &Rect<S>) -> bool {
+        let has_no_overlap = self.origin.x + self.size.width < other.origin.x
+            || other.origin.x + other.size.width < self.origin.x
+            || self.origin.y + self.size.height < other.origin.y
+            || self.origin.y + other.size.height < self.origin.y;
+
+        !has_no_overlap
+    }
+
     pub fn inset(&self, surround: &Surround<S>) -> Self {
         Self::new(
             Point::new(self.x1() + surround.left, self.y1() + surround.top),
