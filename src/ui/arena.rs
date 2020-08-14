@@ -110,7 +110,14 @@ impl HierarchicalArenaData {
     }
 
     pub fn remove<I: Into<Index>>(&mut self, index: I) -> Option<Node> {
-        self.arena.remove(index.into())
+        let index = index.into();
+        let parent = self.parents.get(&index).unwrap();
+        self.children_by_parent
+            .get_mut(&parent)
+            .unwrap()
+            .retain(|i| i != &index);
+        self.parents.remove(&index);
+        self.arena.remove(index)
     }
 }
 pub struct ArenaTraverser {

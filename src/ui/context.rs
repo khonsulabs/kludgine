@@ -48,6 +48,10 @@ impl Context {
         self.arena.set_parent(child, Some(self.index)).await
     }
 
+    pub async fn remove<I: Into<Index>>(&self, element: I) {
+        self.arena.remove(element).await;
+    }
+
     pub async fn children(&self) -> Vec<Index> {
         self.arena.children(&Some(self.index)).await
     }
