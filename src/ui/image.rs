@@ -207,10 +207,17 @@ impl Component for Image {
     async fn clicked(
         &mut self,
         context: &mut Context,
-        _window_position: &Point<Points>,
+        window_position: &Point<Points>,
         button: MouseButton,
     ) -> KludgineResult<()> {
-        self.callback(context, ControlEvent::Clicked(button)).await;
+        self.callback(
+            context,
+            ControlEvent::Clicked {
+                button,
+                window_position: *window_position,
+            },
+        )
+        .await;
         Ok(())
     }
 }
