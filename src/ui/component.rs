@@ -102,6 +102,14 @@ pub trait Component: Send + Sync {
         }
     }
 
+    async fn hovered(&mut self, context: &mut Context) -> KludgineResult<()> {
+        Ok(())
+    }
+
+    async fn unhovered(&mut self, context: &mut Context) -> KludgineResult<()> {
+        Ok(())
+    }
+
     async fn mouse_drag(
         &mut self,
         context: &mut Context,

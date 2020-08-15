@@ -210,6 +210,15 @@ impl SceneTarget {
     pub async fn key_pressed(&self, key: VirtualKeyCode) -> bool {
         self.scene().await.pressed_keys.contains(&key)
     }
+
+    pub async fn register_font(&mut self, font: &Font) {
+        let scene = match self {
+            SceneTarget::Scene(scene) => scene,
+            SceneTarget::Camera { scene, .. } => scene,
+        };
+
+        scene.register_font(font).await;
+    }
 }
 
 #[derive(Clone)]

@@ -124,7 +124,7 @@ where
         let has_no_overlap = self.origin.x + self.size.width < other.origin.x
             || other.origin.x + other.size.width < self.origin.x
             || self.origin.y + self.size.height < other.origin.y
-            || self.origin.y + other.size.height < self.origin.y;
+            || other.origin.y + other.size.height < self.origin.y;
 
         !has_no_overlap
     }

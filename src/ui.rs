@@ -35,7 +35,7 @@ use crate::{
     window::{Event, InputEvent},
     KludgineError, KludgineHandle, KludgineResult, RequiresInitialization,
 };
-use arena::{HierarchicalArena, Index};
+pub use arena::{HierarchicalArena, Index};
 use once_cell::sync::OnceCell;
 use std::collections::{HashMap, HashSet};
 
@@ -219,6 +219,7 @@ where
                     }
                 }
 
+                let starting_hovered_indicies = self.hovered_indicies().await;
                 self.hover = None;
                 if let Some(position) = position {
                     for &index in self.last_render_order.iter() {
@@ -230,6 +231,23 @@ where
                                 break;
                             }
                         }
+                    }
+                }
+                let current_hovered_indicies = self.hovered_indicies().await;
+
+                for &new_hover in current_hovered_indicies.difference(&starting_hovered_indicies) {
+                    if let Some(node) = global_arena().get(new_hover).await {
+                        let mut context =
+                            Context::new(new_hover, global_arena().clone(), self.ui_state.clone());
+                        node.hovered(&mut context).await?;
+                    }
+                }
+
+                for &new_hover in starting_hovered_indicies.difference(&current_hovered_indicies) {
+                    if let Some(node) = global_arena().get(new_hover).await {
+                        let mut context =
+                            Context::new(new_hover, global_arena().clone(), self.ui_state.clone());
+                        node.unhovered(&mut context).await?;
                     }
                 }
             }
@@ -333,6 +351,10 @@ impl<C> Entity<C> {
             index: index.into(),
             _phantom: Default::default(),
         }
+    }
+
+    pub fn index(&self) -> Index {
+        *self.index
     }
 }
 

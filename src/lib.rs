@@ -215,6 +215,7 @@ impl<T> RequiresInitialization<T> {
 
 impl<T> std::ops::Deref for RequiresInitialization<T> {
     type Target = T;
+
     fn deref(&self) -> &Self::Target {
         self.0.as_ref().expect("used without initializing")
     }

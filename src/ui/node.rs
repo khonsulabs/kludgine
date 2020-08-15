@@ -70,6 +70,10 @@ pub(crate) trait AnyNode: PendingEventProcessor + Send + Sync {
         button: MouseButton,
     ) -> KludgineResult<()>;
 
+    async fn hovered(&self, context: &mut Context) -> KludgineResult<()>;
+
+    async fn unhovered(&self, context: &mut Context) -> KludgineResult<()>;
+
     async fn hit_test(
         &self,
         context: &mut Context,
@@ -208,6 +212,16 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     ) -> KludgineResult<bool> {
         let component = self.component.read().await;
         component.hit_test(context, window_position).await
+    }
+
+    async fn hovered(&self, context: &mut Context) -> KludgineResult<()> {
+        let mut component = self.component.write().await;
+        component.hovered(context).await
+    }
+
+    async fn unhovered(&self, context: &mut Context) -> KludgineResult<()> {
+        let mut component = self.component.write().await;
+        component.unhovered(context).await
     }
 }
 
@@ -406,6 +420,16 @@ impl Node {
     ) -> KludgineResult<()> {
         let component = self.component.read().await;
         component.mouse_up(context, position, button).await
+    }
+
+    pub async fn hovered(&self, context: &mut Context) -> KludgineResult<()> {
+        let component = self.component.read().await;
+        component.hovered(context).await
+    }
+
+    pub async fn unhovered(&self, context: &mut Context) -> KludgineResult<()> {
+        let component = self.component.read().await;
+        component.unhovered(context).await
     }
 
     pub async fn process_pending_events(&self, context: &mut Context) -> KludgineResult<()> {

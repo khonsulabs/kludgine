@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 pub use generational_arena::Index;
 
 #[derive(Default, Clone)]
-pub(crate) struct HierarchicalArena {
+pub struct HierarchicalArena {
     handle: KludgineHandle<HierarchicalArenaData>,
 }
 
@@ -111,12 +111,18 @@ impl HierarchicalArenaData {
 
     pub fn remove<I: Into<Index>>(&mut self, index: I) -> Option<Node> {
         let index = index.into();
+        if let Some(children) = self.children_by_parent.remove(&Some(index)) {
+            for child in children.iter() {
+                self.remove(*child);
+            }
+        }
+
         let parent = self.parents.get(&index).unwrap();
-        self.children_by_parent
-            .get_mut(&parent)
-            .unwrap()
-            .retain(|i| i != &index);
+        if let Some(parent_children) = self.children_by_parent.get_mut(&parent) {
+            parent_children.retain(|i| i != &index);
+        }
         self.parents.remove(&index);
+
         self.arena.remove(index)
     }
 }

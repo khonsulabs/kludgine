@@ -131,8 +131,7 @@ where
     }
 
     async fn transition_between(&mut self, next: &Self::Value, elapsed_percent: f32) {
-        let last_value = self.last_value.as_ref().unwrap();
-
+        let last_value = self.last_value.as_ref().unwrap_or(next);
         self.property_change
             .update(last_value, next, elapsed_percent)
             .await
@@ -194,9 +193,11 @@ impl<T> AnimationManager<T>
 where
     T: FrameTransitioner,
 {
-    pub fn new(initial_frame: T) -> Self {
+    pub async fn new(initial_frame: T) -> Self {
+        let mut last_frame = AnimationFrame::new(initial_frame, Instant::now());
+        last_frame.transition(1.).await;
         Self {
-            last_frame: AnimationFrame::new(initial_frame, Instant::now()),
+            last_frame,
             current_frame: None,
             pending_frames: VecDeque::default(),
         }

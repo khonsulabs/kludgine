@@ -45,4 +45,8 @@ impl SceneContext {
     pub fn scene(&self) -> &'_ SceneTarget {
         &self.scene
     }
+
+    pub fn scene_mut(&mut self) -> &'_ mut SceneTarget {
+        &mut self.scene
+    }
 }

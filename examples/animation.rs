@@ -48,15 +48,18 @@ impl Component for Animation {
             .insert()
             .await?;
 
-        self.manager.initialize_with(AnimationManager::new(
-            self.image.animate().alpha(0.3, LinearTransition),
-        ));
+        self.manager.initialize_with(
+            AnimationManager::new(self.image.animate().alpha(0.3, LinearTransition)).await,
+        );
 
-        self.frame_manager.initialize_with(AnimationManager::new(
-            self.image
-                .animate()
-                .tagged_frame("WalkRight", 0.0, LinearTransition),
-        ));
+        self.frame_manager.initialize_with(
+            AnimationManager::new(self.image.animate().tagged_frame(
+                "WalkRight",
+                0.0,
+                LinearTransition,
+            ))
+            .await,
+        );
 
         self.fade().await;
 
