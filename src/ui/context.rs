@@ -1,6 +1,6 @@
 use crate::{
     style::StyleSheet,
-    ui::{HierarchicalArena, Index, Layout, UIState},
+    ui::{Entity, HierarchicalArena, Index, InteractiveComponent, Layout, UIState},
 };
 mod layout_context;
 mod scene_context;
@@ -20,6 +20,10 @@ pub struct Context {
 impl Context {
     pub fn index(&self) -> Index {
         self.index
+    }
+
+    pub fn entity<T: InteractiveComponent>(&self) -> Entity<T> {
+        Entity::new(self.index)
     }
 }
 
