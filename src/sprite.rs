@@ -150,10 +150,14 @@ impl Sprite {
             let name_parts = name.split(|c| c == '_' || c == ' ').collect::<Vec<_>>();
             let frame_number = name_parts[name_parts.len() - 1]
                 .parse::<usize>()
-                .map_err(|_| {
-                    KludgineError::SpriteParseError(
+                .or_else(|_| {
+                    if json["frames"].len() == 1 {
+                        Ok(0)
+                    } else {
+                    Err(KludgineError::SpriteParseError(
                         "invalid aseprite json: frame was not numeric.".to_owned(),
-                    )
+                    ))
+                }
                 })?;
 
             let duration = match frame["duration"].as_u64() {
