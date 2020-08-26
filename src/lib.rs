@@ -156,7 +156,7 @@ pub mod prelude {
         text::{font::Font, wrap::TextWrap, Span, Text},
         texture::Texture,
         tilemap::{
-            PersistentMap, PersistentTileMap, PersistentTileProvider, TileMap, TileProvider,
+            PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,
         },
         timing::FrequencyLimiter,
         ui::*,

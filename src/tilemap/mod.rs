@@ -4,7 +4,8 @@ use super::{
     sprite::Sprite,
     KludgineResult,
 };
-use std::mem;
+use async_trait::async_trait;
+use std::{mem, time::Duration};
 
 /// TileMap renders tiles retrieved from a TileProvider
 #[derive(Debug)]
@@ -54,18 +55,35 @@ where
 
         let elapsed = scene.elapsed().await;
 
+        let mut render_calls = Vec::new();
         for y in min_y..(min_y + tiles_high) {
             for x in min_x..(min_x + tiles_wide) {
-                let location = Point::new(x, y);
-                if let Some(tile) = self.provider.get_tile(location) {
-                    let sprite = tile.sprite.get_frame(elapsed).await?;
-                    sprite
-                        .render_at(scene, self.coordinate_for_tile(location))
-                        .await;
-                }
+                render_calls.push(self.draw_one_tile(x, y, scene, elapsed));
             }
         }
 
+        let _ = futures::future::join_all(render_calls)
+            .await
+            .into_iter()
+            .collect::<Result<_, _>>()?;
+
+        Ok(())
+    }
+
+    async fn draw_one_tile(
+        &self,
+        x: i32,
+        y: i32,
+        scene: &SceneTarget,
+        elapsed: Option<Duration>,
+    ) -> KludgineResult<()> {
+        let location = Point::new(x, y);
+        if let Some(tile) = self.provider.get_tile(location).await {
+            let sprite = tile.sprite.get_frame(elapsed).await?;
+            sprite
+                .render_at(scene, self.coordinate_for_tile(location))
+                .await;
+        }
         Ok(())
     }
 
@@ -90,15 +108,16 @@ where
 }
 
 /// TileProvider is how a TileMap retrieves tiles to render
+#[async_trait]
 pub trait TileProvider {
-    fn get_tile(&self, location: Point<i32>) -> Option<Tile>;
+    async fn get_tile(&self, location: Point<i32>) -> Option<Tile>;
 }
 
 /// A Tile represents a sprite at an integer offset on the map
 #[derive(Clone)]
 pub struct Tile {
-    location: Point<i32>,
-    sprite: Sprite,
+    pub location: Point<i32>,
+    pub sprite: Sprite,
 }
 
 /// Provides a simple interface for tile maps that have specific bounds
@@ -107,8 +126,9 @@ pub struct PersistentTileProvider {
     size: Size<u32>,
 }
 
+#[async_trait]
 impl TileProvider for PersistentTileProvider {
-    fn get_tile(&self, location: Point<i32>) -> Option<Tile> {
+    async fn get_tile(&self, location: Point<i32>) -> Option<Tile> {
         if location.x < 0
             || location.y < 0
             || location.x >= self.size.width as i32

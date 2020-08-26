@@ -1,5 +1,5 @@
 use crate::math::{measurement::ScreenMeasurement, Pixels, Points};
-#[derive(Copy, Clone, Default, Debug, PartialEq)]
+#[derive(Copy, Clone, Default, Debug, PartialEq, Hash, Eq)]
 pub struct Point<S = f32> {
     pub x: S,
     pub y: S,
