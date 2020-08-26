@@ -321,7 +321,7 @@ impl Scene {
         }
     }
 
-    pub(crate) async fn start_frame(&mut self) {
+    pub(crate) async fn start_frame(&mut self) -> Moment {
         let mut scene = self.data.write().await;
         let last_start = scene.now;
         scene.now = Some(Moment::now());
@@ -330,6 +330,7 @@ impl Scene {
             None => None,
         };
         scene.elements.clear();
+        scene.now.unwrap()
     }
 
     pub async fn size(&self) -> Size<Pixels> {

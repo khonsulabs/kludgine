@@ -10,21 +10,12 @@ pub use self::{
     scene_context::SceneContext,
     styled_context::StyledContext,
 };
+use std::time::{Duration, Instant};
 
 pub struct Context {
     index: Index,
     arena: HierarchicalArena,
     ui_state: UIState,
-}
-
-impl Context {
-    pub fn index(&self) -> Index {
-        self.index
-    }
-
-    pub fn entity<T: InteractiveComponent>(&self) -> Entity<T> {
-        Entity::new(self.index)
-    }
 }
 
 impl Context {
@@ -38,6 +29,14 @@ impl Context {
             arena,
             ui_state,
         }
+    }
+
+    pub fn index(&self) -> Index {
+        self.index
+    }
+
+    pub fn entity<T: InteractiveComponent>(&self) -> Entity<T> {
+        Entity::new(self.index)
     }
 
     pub async fn set_parent<I: Into<Index>>(&self, parent: Option<I>) {
@@ -97,5 +96,17 @@ impl Context {
     pub async fn set_style_sheet(&self, sheet: StyleSheet) {
         let node = self.arena.get(self.index).await.unwrap();
         node.set_style_sheet(sheet).await
+    }
+
+    pub async fn set_needs_redraw(&self) {
+        self.ui_state.set_needs_redraw().await;
+    }
+
+    pub async fn estimate_next_frame(&self, duration: Duration) {
+        self.ui_state.estimate_next_frame(duration).await;
+    }
+
+    pub async fn estimate_next_frame_instant(&self, instant: Instant) {
+        self.ui_state.estimate_next_frame_instant(instant).await;
     }
 }

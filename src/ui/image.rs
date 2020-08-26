@@ -128,11 +128,17 @@ impl Component for Image {
 
                 Some(frames.frames[frame_index].source.clone())
             }
-            None => Some(
-                self.sprite
+            None => Some({
+                let frame = self
+                    .sprite
                     .get_frame(context.scene().elapsed().await)
-                    .await?,
-            ),
+                    .await?;
+                if let Some(remaining_duration) = self.sprite.remaining_frame_duration().await? {
+                    context.estimate_next_frame(remaining_duration).await;
+                }
+
+                frame
+            }),
         };
         Ok(())
     }
