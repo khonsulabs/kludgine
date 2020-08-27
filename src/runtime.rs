@@ -159,7 +159,7 @@ impl EventProcessor for Runtime {
                 .unwrap_or_default();
         }
 
-        *control_flow = winit::event_loop::ControlFlow::Poll;
+        *control_flow = winit::event_loop::ControlFlow::Wait;
     }
 }
 
