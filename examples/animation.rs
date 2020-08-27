@@ -66,9 +66,9 @@ impl Component for Animation {
         Ok(())
     }
 
-    async fn update(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
-        self.manager.update().await;
-        self.frame_manager.update().await;
+    async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+        self.manager.update(context).await;
+        self.frame_manager.update(context).await;
         Ok(())
     }
 

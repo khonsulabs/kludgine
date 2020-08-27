@@ -1,15 +1,17 @@
 use chrono::{DateTime, Utc};
 use std::time::{Duration, Instant};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Moment {
     datetime: DateTime<Utc>,
+    instant: Instant,
 }
 
 impl Moment {
     pub fn now() -> Self {
         Self {
             datetime: Utc::now(),
+            instant: Instant::now(),
         }
     }
 
@@ -24,6 +26,18 @@ impl Moment {
         } else {
             None
         }
+    }
+}
+
+impl PartialOrd<Instant> for Moment {
+    fn partial_cmp(&self, other: &Instant) -> Option<std::cmp::Ordering> {
+        self.instant.partial_cmp(other)
+    }
+}
+
+impl PartialEq<Instant> for Moment {
+    fn eq(&self, other: &Instant) -> bool {
+        self.instant.eq(other)
     }
 }
 

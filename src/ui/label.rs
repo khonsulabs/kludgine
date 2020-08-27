@@ -28,12 +28,13 @@ impl InteractiveComponent for Label {
 
     async fn receive_input(
         &mut self,
-        _context: &mut Context,
+        context: &mut Context,
         message: Self::Input,
     ) -> KludgineResult<()> {
         match message {
             LabelCommand::SetValue(new_value) => {
                 self.value = new_value;
+                context.set_needs_redraw().await;
             }
         }
         Ok(())

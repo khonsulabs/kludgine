@@ -21,7 +21,11 @@ impl WindowCreator<OrthoTiles> for OrthoTiles {
 
 static MAP_SIZE: u32 = 100;
 
-impl Window for OrthoTiles {}
+impl Window for OrthoTiles {
+    fn target_fps(&self) -> Option<u16> {
+        Some(60)
+    }
+}
 
 impl StandaloneComponent for OrthoTiles {}
 

@@ -3,23 +3,20 @@ use super::{
     event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode},
     frame::Frame,
     math::{Pixels, Point, Points, Size},
-    runtime::{Runtime, FRAME_DURATION},
+    runtime::Runtime,
     scene::{Scene, SceneTarget},
     ui::{global_arena, InteractiveComponent, NodeData, NodeDataWindowExt, UserInterface},
     KludgineError, KludgineHandle, KludgineResult,
 };
 use async_trait::async_trait;
 
-use crossbeam::{
-    atomic::AtomicCell,
-    channel::{unbounded, Receiver, Sender, TryRecvError},
-    sync::ShardedLock,
-};
+use crossbeam::{atomic::AtomicCell, sync::ShardedLock};
 use lazy_static::lazy_static;
 use rgx::core::*;
+use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
 use futures::executor::block_on;
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc};
 use winit::{
     event::{Event as WinitEvent, WindowEvent as WinitWindowEvent},
     window::{Window as WinitWindow, WindowBuilder as WinitWindowBuilder, WindowId},
@@ -61,7 +58,7 @@ impl EventStatus {
 }
 
 /// An Event from a device
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct InputEvent {
     /// The device that triggered this event
     pub device_id: DeviceId,
@@ -70,7 +67,7 @@ pub struct InputEvent {
 }
 
 /// An input Event
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Event {
     /// A keyboard event
     Keyboard {
@@ -98,6 +95,13 @@ pub trait Window: InteractiveComponent + Send + Sync + 'static {
     /// this implementation if you want logic in place to prevent a window from closing.
     async fn close_requested(&self) -> KludgineResult<CloseResponse> {
         Ok(CloseResponse::Close)
+    }
+
+    /// Specify a target frames per second, which will force your window
+    /// to redraw at this rate. If None is returned, the Window will only
+    /// redraw when requested via methods on Context.
+    fn target_fps(&self) -> Option<u16> {
+        None
     }
 }
 
@@ -211,7 +215,7 @@ where
 }
 
 lazy_static! {
-    static ref WINDOW_CHANNELS: KludgineHandle<HashMap<WindowId, Sender<WindowMessage>>> =
+    static ref WINDOW_CHANNELS: KludgineHandle<HashMap<WindowId, UnboundedSender<WindowMessage>>> =
         KludgineHandle::new(HashMap::new());
 }
 
@@ -242,34 +246,39 @@ impl WindowMessage {
     }
 }
 
+#[derive(Debug)]
 pub(crate) enum WindowEvent {
     CloseRequested,
     Resize { size: Size, scale_factor: f32 },
     Input(InputEvent),
+    RedrawRequested,
 }
 
 pub(crate) struct RuntimeWindow {
     window: winit::window::Window,
-    receiver: Receiver<WindowMessage>,
-    event_sender: Sender<WindowEvent>,
+    receiver: UnboundedReceiver<WindowMessage>,
+    event_sender: UnboundedSender<WindowEvent>,
     last_known_size: Size,
     last_known_scale_factor: f32,
     keep_running: Arc<AtomicCell<bool>>,
 }
 
 impl RuntimeWindow {
-    pub(crate) fn open<T>(window_receiver: Receiver<WinitWindow>, app_window: T)
-    where
+    pub(crate) async fn open<T>(
+        mut window_receiver: tokio::sync::mpsc::Receiver<WinitWindow>,
+        app_window: T,
+    ) where
         T: Window + Sized + 'static,
     {
         let window = window_receiver
             .recv()
+            .await
             .expect("Error receiving winit::window");
         let window_id = window.id();
         let renderer = Renderer::new(&window).expect("Error creating renderer for window");
 
-        let (message_sender, message_receiver) = unbounded();
-        let (event_sender, event_receiver) = unbounded();
+        let (message_sender, message_receiver) = unbounded_channel();
+        let (event_sender, event_receiver) = unbounded_channel();
 
         let keep_running = Arc::new(AtomicCell::new(true));
         let mut frame_synchronizer = FrameRenderer::run(
@@ -284,7 +293,7 @@ impl RuntimeWindow {
         });
 
         {
-            let mut channels = block_on(WINDOW_CHANNELS.write());
+            let mut channels = WINDOW_CHANNELS.write().await;
             channels.insert(window_id, message_sender);
         }
 
@@ -318,27 +327,78 @@ impl RuntimeWindow {
         Ok(false)
     }
 
+    fn next_window_event_non_blocking(
+        event_receiver: &mut UnboundedReceiver<WindowEvent>,
+    ) -> KludgineResult<Option<WindowEvent>> {
+        match event_receiver.try_recv() {
+            Ok(event) => Ok(Some(event)),
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) => Ok(None),
+            Err(tokio::sync::mpsc::error::TryRecvError::Closed) => Err(
+                KludgineError::InternalWindowMessageSendError("Window channel closed".to_owned()),
+            ),
+        }
+    }
+
+    async fn next_window_event_blocking(
+        event_receiver: &mut UnboundedReceiver<WindowEvent>,
+    ) -> KludgineResult<Option<WindowEvent>> {
+        match event_receiver.recv().await {
+            Some(event) => Ok(Some(event)),
+            None => Err(KludgineError::InternalWindowMessageSendError(
+                "Window channel closed".to_owned(),
+            )),
+        }
+    }
+
+    async fn next_window_event<T>(
+        event_receiver: &mut UnboundedReceiver<WindowEvent>,
+        ui: &UserInterface<T>,
+    ) -> KludgineResult<Option<WindowEvent>>
+    where
+        T: Window,
+    {
+        let needs_render = ui.needs_render().await;
+        let next_redraw_target = ui.next_redraw_target().await;
+        if needs_render {
+            Self::next_window_event_non_blocking(event_receiver)
+        } else if let Some(redraw_at) = next_redraw_target.next_update_instant() {
+            let timeout_target = redraw_at.timeout_target();
+            if let Some(timeout_target) = timeout_target {
+                match tokio::time::timeout_at(
+                    tokio::time::Instant::from_std(timeout_target),
+                    Self::next_window_event_blocking(event_receiver),
+                )
+                .await
+                {
+                    Ok(event) => event,
+                    Err(_) => Ok(None),
+                }
+            } else {
+                Self::next_window_event_non_blocking(event_receiver)
+            }
+        } else {
+            Self::next_window_event_blocking(event_receiver).await
+        }
+    }
+
     async fn window_loop<T>(
         id: WindowId,
         mut frame_synchronizer: FrameSynchronizer,
-        event_receiver: Receiver<WindowEvent>,
+        mut event_receiver: UnboundedReceiver<WindowEvent>,
         window: T,
     ) -> KludgineResult<()>
     where
         T: Window,
     {
         let mut scene = Scene::default();
+        let target_fps = window.target_fps();
         let mut ui = UserInterface::new(window, SceneTarget::Scene(scene.clone())).await?;
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
-        let mut interval = tokio::time::interval(Duration::from_nanos(FRAME_DURATION));
         loop {
-            while let Some(event) = match event_receiver.try_recv() {
-                Ok(event) => Some(event),
-                Err(err) => match err {
-                    TryRecvError::Empty => None,
-                    TryRecvError::Disconnected => return Ok(()),
-                },
+            while let Some(event) = match Self::next_window_event(&mut event_receiver, &ui).await {
+                Ok(event) => event,
+                Err(_) => return Ok(()),
             } {
                 match event {
                     WindowEvent::Resize { size, scale_factor } => {
@@ -373,6 +433,9 @@ impl RuntimeWindow {
                             }
                         }
                     }
+                    WindowEvent::RedrawRequested => {
+                        ui.request_redraw().await;
+                    }
                 }
             }
 
@@ -389,25 +452,25 @@ impl RuntimeWindow {
 
             if scene.size().await.area().to_f32() > 0.0 {
                 scene.start_frame().await;
-                {
-                    let target = SceneTarget::Scene(scene.clone());
-                    ui.update(&target).await?;
+
+                let target = SceneTarget::Scene(scene.clone());
+                ui.update(&target, target_fps).await?;
+
+                if ui.needs_render().await {
                     ui.render(&target).await?;
-                }
-                if let Some(mut frame) = frame_synchronizer.try_take() {
+
+                    let mut frame = frame_synchronizer.take().await;
                     frame.update(&scene).await;
                     frame_synchronizer.relinquish(frame).await;
-                } else {
                 }
             }
-            interval.tick().await;
         }
     }
 
     async fn window_main<T>(
         id: WindowId,
         frame_synchronizer: FrameSynchronizer,
-        event_receiver: Receiver<WindowEvent>,
+        event_receiver: UnboundedReceiver<WindowEvent>,
         window: T,
     ) where
         T: Window,
@@ -426,11 +489,12 @@ impl RuntimeWindow {
         let mut windows = WINDOWS.write().unwrap();
 
         if let WinitEvent::WindowEvent { window_id, event } = event {
-            // println!("Received event {:?} for window {:?}", event, window_id);
-            // println!("Current windows: {:#?}", windows.borrow().keys());
             if let Some(window) = windows.get_mut(&window_id) {
-                // println!("Sending event to window {:?}", window.window.id());
                 window.process_event(event);
+            }
+        } else if let WinitEvent::RedrawRequested(window_id) = event {
+            if let Some(window) = windows.get_mut(&window_id) {
+                window.request_redraw();
             }
         }
 
@@ -453,6 +517,12 @@ impl RuntimeWindow {
                 }
             }
         }
+    }
+
+    pub(crate) fn request_redraw(&self) {
+        self.event_sender
+            .send(WindowEvent::RedrawRequested)
+            .unwrap_or_default();
     }
 
     pub(crate) fn process_event(&mut self, event: &WinitWindowEvent) {

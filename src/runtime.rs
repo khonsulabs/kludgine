@@ -3,7 +3,7 @@ use super::{
     window::{RuntimeWindow, Window, WindowBuilder},
     KludgineResult,
 };
-use crossbeam::channel::{bounded, unbounded, Receiver, Sender, TryRecvError};
+use crossbeam::channel::{unbounded, Receiver, Sender, TryRecvError};
 use futures::future::Future;
 use platforms::target::{OS, TARGET_OS};
 use std::time::Duration;
@@ -12,7 +12,7 @@ use tokio::runtime::Runtime as TokioRuntime;
 pub(crate) enum RuntimeRequest {
     OpenWindow {
         builder: WindowBuilder,
-        window_sender: Sender<winit::window::Window>,
+        window_sender: tokio::sync::mpsc::Sender<winit::window::Window>,
     },
     Quit,
 }
@@ -159,7 +159,7 @@ impl EventProcessor for Runtime {
                 .unwrap_or_default();
         }
 
-        *control_flow = winit::event_loop::ControlFlow::Poll;
+        *control_flow = winit::event_loop::ControlFlow::Wait;
     }
 }
 
@@ -192,14 +192,14 @@ impl Runtime {
 
     fn internal_open_window(
         &self,
-        window_sender: Sender<winit::window::Window>,
+        mut window_sender: tokio::sync::mpsc::Sender<winit::window::Window>,
         builder: WindowBuilder,
         event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
     ) {
         let builder: winit::window::WindowBuilder = builder.into();
         let winit_window = builder.build(&event_loop).unwrap();
         window_sender
-            .send(winit_window)
+            .try_send(winit_window)
             .expect("Couldn't send winit window");
     }
 
@@ -245,9 +245,9 @@ impl Runtime {
         }
         let window = Runtime::block_on(window);
         let initial_window = initial_window.build(&event_loop).unwrap();
-        let (window_sender, window_receiver) = bounded(1);
-        window_sender.send(initial_window).unwrap();
-        RuntimeWindow::open(window_receiver, window);
+        let (mut window_sender, window_receiver) = tokio::sync::mpsc::channel(1);
+        window_sender.try_send(initial_window).unwrap();
+        Runtime::block_on(RuntimeWindow::open(window_receiver, window));
         event_loop.run(move |event, event_loop, control_flow| {
             let mut event_handler_guard = GLOBAL_EVENT_HANDLER
                 .lock()
@@ -264,22 +264,20 @@ impl Runtime {
     pub fn spawn<Fut: Future<Output = T> + Send + 'static, T: Send + 'static>(
         future: Fut,
     ) -> tokio::task::JoinHandle<T> {
-        let pool = GLOBAL_THREAD_POOL.lock().expect("Error getting runtime");
-        pool.as_ref().unwrap().spawn(future)
+        Self::handle().spawn(future)
     }
 
     pub fn block_on<'a, Fut: Future<Output = R> + Send + 'a, R: Send + Sync + 'a>(
         future: Fut,
     ) -> R {
-        let mut pool = GLOBAL_THREAD_POOL.lock().expect("Error getting runtime");
-        pool.as_mut().unwrap().block_on(future)
+        Self::handle().block_on(future)
     }
 
     pub async fn open_window<T>(builder: WindowBuilder, window: T)
     where
         T: Window + Sized,
     {
-        let (window_sender, window_receiver) = bounded(1);
+        let (window_sender, window_receiver) = tokio::sync::mpsc::channel(1);
         RuntimeRequest::OpenWindow {
             builder,
             window_sender,
@@ -288,10 +286,10 @@ impl Runtime {
         .await
         .unwrap_or_default();
 
-        RuntimeWindow::open(window_receiver, window);
+        RuntimeWindow::open(window_receiver, window).await;
     }
 
-    pub async fn handle() -> tokio::runtime::Handle {
+    pub fn handle() -> tokio::runtime::Handle {
         let pool = GLOBAL_THREAD_POOL.lock().expect("Error getting runtime");
         pool.as_ref().unwrap().handle().clone()
     }

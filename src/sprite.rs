@@ -154,10 +154,10 @@ impl Sprite {
                     if json["frames"].len() == 1 {
                         Ok(0)
                     } else {
-                    Err(KludgineError::SpriteParseError(
-                        "invalid aseprite json: frame was not numeric.".to_owned(),
-                    ))
-                }
+                        Err(KludgineError::SpriteParseError(
+                            "invalid aseprite json: frame was not numeric.".to_owned(),
+                        ))
+                    }
                 })?;
 
             let duration = match frame["duration"].as_u64() {
@@ -306,6 +306,21 @@ impl Sprite {
         Ok(sprite
             .with_current_frame(|frame| frame.source.clone())
             .await?)
+    }
+
+    pub async fn remaining_frame_duration(&self) -> KludgineResult<Option<Duration>> {
+        let sprite = self.handle.read().await;
+
+        let duration = match sprite.with_current_frame(|frame| frame.duration).await? {
+            Some(frame_duration) => Some(
+                frame_duration
+                    .checked_sub(sprite.elapsed_since_frame_change)
+                    .unwrap_or_default(),
+            ),
+            None => None,
+        };
+
+        Ok(duration)
     }
 
     pub async fn animations(&self) -> SpriteAnimations {

@@ -41,7 +41,7 @@ impl Component for Isometric {
 
 impl Isometric {
     async fn load_assets(&mut self) -> KludgineResult<()> {
-        let texture = Texture::load("kludgine/examples/assets/isometric_tile.png")?;
+        let texture = Texture::load("examples/assets/isometric_tile.png")?;
         let sprite = Sprite::single_frame(texture).await;
 
         let mut map = PersistentTileMap::persistent_with_size(

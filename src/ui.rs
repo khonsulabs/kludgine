@@ -37,7 +37,10 @@ use crate::{
 };
 pub use arena::{HierarchicalArena, Index};
 use once_cell::sync::OnceCell;
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    time::{Duration, Instant},
+};
 
 static UI: OnceCell<HierarchicalArena> = OnceCell::new();
 
@@ -53,12 +56,18 @@ pub(crate) struct UIState {
 impl UIState {
     async fn deactivate(&self) {
         let mut data = self.data.write().await;
-        data.active = None;
+        if data.active != None {
+            data.needs_render = true;
+            data.active = None;
+        }
     }
 
     async fn activate(&self, index: Index) {
         let mut data = self.data.write().await;
-        data.active = Some(index);
+        if data.active != Some(index) {
+            data.needs_render = true;
+            data.active = Some(index);
+        }
     }
 
     // async fn focus(&self, index: Index) {
@@ -80,12 +89,131 @@ impl UIState {
         let data = self.data.read().await;
         data.active
     }
+
+    async fn set_needs_redraw(&self) {
+        let mut data = self.data.write().await;
+        data.needs_render = true;
+    }
+
+    async fn clear_redraw_target(&self) {
+        let mut data = self.data.write().await;
+        data.needs_render = false;
+        data.next_redraw_target = RedrawTarget::None;
+    }
+
+    async fn initialize_redraw_target(&self, target_fps: Option<u16>) {
+        let mut data = self.data.write().await;
+        if let RedrawTarget::None = data.next_redraw_target {
+            match target_fps {
+                Some(fps) => {
+                    data.next_redraw_target = RedrawTarget::Scheduled(
+                        Instant::now()
+                            .checked_add(Duration::from_secs_f32(1. / fps as f32))
+                            .unwrap(),
+                    );
+                }
+                None => {
+                    data.next_redraw_target = RedrawTarget::Never;
+                }
+            }
+        }
+    }
+
+    async fn estimate_next_frame(&self, duration: Duration) {
+        self.estimate_next_frame_instant(Instant::now().checked_add(duration).unwrap())
+            .await;
+    }
+
+    async fn estimate_next_frame_instant(&self, instant: Instant) {
+        let mut data = self.data.write().await;
+        match data.next_redraw_target {
+            RedrawTarget::Never | RedrawTarget::None => {
+                data.next_redraw_target = RedrawTarget::Scheduled(instant);
+            }
+            RedrawTarget::Scheduled(existing_instant) => {
+                if instant < existing_instant {
+                    data.next_redraw_target = RedrawTarget::Scheduled(instant);
+                }
+            }
+        }
+    }
+
+    async fn next_redraw_target(&self) -> RedrawTarget {
+        let data = self.data.read().await;
+        data.next_redraw_target
+    }
+
+    async fn needs_render(&self) -> bool {
+        let data = self.data.read().await;
+        data.needs_render
+            || match data.next_redraw_target {
+                RedrawTarget::Never => false,
+                RedrawTarget::None => false,
+                RedrawTarget::Scheduled(scheduled_for) => scheduled_for < Instant::now(),
+            }
+    }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum RedrawTarget {
+    None,
+    Never,
+    Scheduled(Instant),
+}
+
+impl Default for RedrawTarget {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
+pub(crate) enum UpdateSchedule {
+    Now,
+    Scheduled(Instant),
+}
+
+impl RedrawTarget {
+    pub fn next_update_instant(&self) -> Option<UpdateSchedule> {
+        match self {
+            RedrawTarget::Never => None,
+            Self::None => Some(UpdateSchedule::Now),
+            Self::Scheduled(scheduled_for) => Some(UpdateSchedule::Scheduled(*scheduled_for)),
+        }
+    }
+}
+
+impl UpdateSchedule {
+    pub fn timeout_target(&self) -> Option<Instant> {
+        match self {
+            UpdateSchedule::Now => None,
+            UpdateSchedule::Scheduled(scheduled_for) => {
+                if &Instant::now() > scheduled_for {
+                    None
+                } else {
+                    Some(*scheduled_for)
+                }
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
 struct UIStateData {
     focus: Option<Index>,
     active: Option<Index>,
+    next_redraw_target: RedrawTarget,
+    needs_render: bool,
+}
+
+impl Default for UIStateData {
+    fn default() -> Self {
+        Self {
+            needs_render: true,
+            focus: None,
+            active: None,
+            next_redraw_target: RedrawTarget::default(),
+        }
+    }
 }
 
 pub struct UserInterface<C>
@@ -164,6 +292,8 @@ where
 
         self.last_render_order.reverse();
 
+        self.ui_state.clear_redraw_target().await;
+
         Ok(())
     }
 
@@ -177,10 +307,15 @@ where
         indicies
     }
 
-    pub async fn update(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
+    pub async fn update(
+        &mut self,
+        scene: &SceneTarget,
+        target_fps: Option<u16>,
+    ) -> KludgineResult<()> {
         // Loop twice, once to allow all the pending messages to be exhausted across all
         // nodes. Then after all messages have been processed, trigger the update method
         // for each node.
+        self.ui_state.initialize_redraw_target(target_fps).await;
 
         let mut traverser = global_arena().traverse(self.root).await;
         while let Some(index) = traverser.next().await {
@@ -250,6 +385,10 @@ where
                         node.unhovered(&mut context).await?;
                     }
                 }
+
+                if current_hovered_indicies != starting_hovered_indicies {
+                    self.ui_state.set_needs_redraw().await;
+                }
             }
             Event::MouseWheel { .. } => {} //{todo!("Hook up mouse scroll to hovered nodes"),
             Event::MouseButton { button, state } => match state {
@@ -296,6 +435,18 @@ where
             _ => {}
         }
         Ok(())
+    }
+
+    pub async fn request_redraw(&self) {
+        self.ui_state.set_needs_redraw().await;
+    }
+
+    pub(crate) async fn next_redraw_target(&self) -> RedrawTarget {
+        self.ui_state.next_redraw_target().await
+    }
+
+    pub(crate) async fn needs_render(&self) -> bool {
+        self.ui_state.needs_render().await
     }
 
     async fn initialize(&self, index: impl Into<Index>, scene: SceneTarget) -> KludgineResult<()> {
