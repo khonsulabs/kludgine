@@ -100,10 +100,21 @@ impl UIState {
         data.next_redraw_target = RedrawTarget::None;
     }
 
-    async fn initialize_redraw_target(&self) {
+    async fn initialize_redraw_target(&self, target_fps: Option<u16>) {
         let mut data = self.data.write().await;
         if let RedrawTarget::None = data.next_redraw_target {
-            data.next_redraw_target = RedrawTarget::Never;
+            match target_fps {
+                Some(fps) => {
+                    data.next_redraw_target = RedrawTarget::Scheduled(
+                        Instant::now()
+                            .checked_add(Duration::from_secs_f32(1. / fps as f32))
+                            .unwrap(),
+                    );
+                }
+                None => {
+                    data.next_redraw_target = RedrawTarget::Never;
+                }
+            }
         }
     }
 
@@ -287,11 +298,15 @@ where
         indicies
     }
 
-    pub async fn update(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
+    pub async fn update(
+        &mut self,
+        scene: &SceneTarget,
+        target_fps: Option<u16>,
+    ) -> KludgineResult<()> {
         // Loop twice, once to allow all the pending messages to be exhausted across all
         // nodes. Then after all messages have been processed, trigger the update method
         // for each node.
-        self.ui_state.initialize_redraw_target().await;
+        self.ui_state.initialize_redraw_target(target_fps).await;
 
         let mut traverser = global_arena().traverse(self.root).await;
         while let Some(index) = traverser.next().await {

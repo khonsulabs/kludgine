@@ -99,6 +99,13 @@ pub trait Window: InteractiveComponent + Send + Sync + 'static {
     async fn close_requested(&self) -> KludgineResult<CloseResponse> {
         Ok(CloseResponse::Close)
     }
+
+    /// Specify a target frames per second, which will force your window
+    /// to redraw at this rate. If None is returned, the Window will only
+    /// redraw when requested via methods on Context.
+    fn target_fps(&self) -> Option<u16> {
+        None
+    }
 }
 
 #[derive(Default)]
@@ -375,6 +382,7 @@ impl RuntimeWindow {
         T: Window,
     {
         let mut scene = Scene::default();
+        let target_fps = window.target_fps();
         let mut ui = UserInterface::new(window, SceneTarget::Scene(scene.clone())).await?;
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
@@ -443,7 +451,7 @@ impl RuntimeWindow {
                 let now = scene.start_frame().await;
 
                 let target = SceneTarget::Scene(scene.clone());
-                ui.update(&target).await?;
+                ui.update(&target, target_fps).await?;
 
                 let render = match ui.next_redraw_target().await.next_redraw_instant() {
                     Some(schedule) => schedule.should_redraw(),
