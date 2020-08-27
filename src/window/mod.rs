@@ -330,43 +330,53 @@ impl RuntimeWindow {
         Ok(false)
     }
 
+    fn next_window_event_non_blocking(
+        event_receiver: &mut UnboundedReceiver<WindowEvent>,
+    ) -> KludgineResult<Option<WindowEvent>> {
+        match event_receiver.try_recv() {
+            Ok(event) => Ok(Some(event)),
+            Err(tokio::sync::mpsc::error::TryRecvError::Empty) => Ok(None),
+            Err(tokio::sync::mpsc::error::TryRecvError::Closed) => Err(
+                KludgineError::InternalWindowMessageSendError("Window channel closed".to_owned()),
+            ),
+        }
+    }
+
+    async fn next_window_event_blocking(
+        event_receiver: &mut UnboundedReceiver<WindowEvent>,
+    ) -> KludgineResult<Option<WindowEvent>> {
+        match event_receiver.recv().await {
+            Some(event) => Ok(Some(event)),
+            None => Err(KludgineError::InternalWindowMessageSendError(
+                "Window channel closed".to_owned(),
+            )),
+        }
+    }
+
     async fn next_window_event(
         event_receiver: &mut UnboundedReceiver<WindowEvent>,
         next_redraw_target: RedrawTarget,
+        needs_render: bool,
     ) -> KludgineResult<Option<WindowEvent>> {
-        if let Some(redraw_at) = next_redraw_target.next_update_instant() {
+        if needs_render {
+            Self::next_window_event_non_blocking(event_receiver)
+        } else if let Some(redraw_at) = next_redraw_target.next_update_instant() {
             let timeout_target = redraw_at.timeout_target();
             if let Some(timeout_target) = timeout_target {
                 match tokio::time::timeout_at(
                     tokio::time::Instant::from_std(timeout_target),
-                    event_receiver.recv(),
+                    Self::next_window_event_blocking(event_receiver),
                 )
                 .await
                 {
-                    Ok(Some(event)) => Ok(Some(event)),
-                    Ok(None) => Err(KludgineError::InternalWindowMessageSendError(
-                        "Window channel closed".to_owned(),
-                    )),
+                    Ok(event) => event,
                     Err(_) => Ok(None),
                 }
             } else {
-                match event_receiver.try_recv() {
-                    Ok(event) => Ok(Some(event)),
-                    Err(tokio::sync::mpsc::error::TryRecvError::Empty) => Ok(None),
-                    Err(tokio::sync::mpsc::error::TryRecvError::Closed) => {
-                        Err(KludgineError::InternalWindowMessageSendError(
-                            "Window channel closed".to_owned(),
-                        ))
-                    }
-                }
+                Self::next_window_event_non_blocking(event_receiver)
             }
         } else {
-            match event_receiver.recv().await {
-                Some(event) => Ok(Some(event)),
-                None => Err(KludgineError::InternalWindowMessageSendError(
-                    "Window channel closed".to_owned(),
-                )),
-            }
+            Self::next_window_event_blocking(event_receiver).await
         }
     }
 
@@ -385,8 +395,10 @@ impl RuntimeWindow {
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         loop {
+            let needs_render = ui.needs_render().await;
+            let next_redraw_target = ui.next_redraw_target().await;
             while let Some(event) =
-                match Self::next_window_event(&mut event_receiver, ui.next_redraw_target().await)
+                match Self::next_window_event(&mut event_receiver, next_redraw_target, needs_render)
                     .await
                 {
                     Ok(event) => event,

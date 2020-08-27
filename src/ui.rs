@@ -146,6 +146,11 @@ impl UIState {
     async fn needs_render(&self) -> bool {
         let data = self.data.read().await;
         data.needs_render
+            || match data.next_redraw_target {
+                RedrawTarget::Never => false,
+                RedrawTarget::None => false,
+                RedrawTarget::Scheduled(scheduled_for) => scheduled_for < Instant::now(),
+            }
     }
 }
 
@@ -192,12 +197,23 @@ impl UpdateSchedule {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 struct UIStateData {
     focus: Option<Index>,
     active: Option<Index>,
     next_redraw_target: RedrawTarget,
     needs_render: bool,
+}
+
+impl Default for UIStateData {
+    fn default() -> Self {
+        Self {
+            needs_render: true,
+            focus: None,
+            active: None,
+            next_redraw_target: RedrawTarget::default(),
+        }
+    }
 }
 
 pub struct UserInterface<C>
