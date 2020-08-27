@@ -128,7 +128,7 @@ where
                 RuntimeRequest::Quit.send().await?;
                 return Ok(());
             }
-            async_std::task::sleep(Duration::from_millis(100)).await;
+            futures_timer::Delay::new(Duration::from_millis(100)).await;
         }
     }
 }

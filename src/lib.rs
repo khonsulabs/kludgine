@@ -1,5 +1,4 @@
 #![deny(clippy::all)]
-use async_std::sync::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 use futures::executor::block_on;
 use std::{fmt::Display, sync::Arc};
 use thiserror::Error;
@@ -45,21 +44,21 @@ pub type KludgineResult<T> = Result<T, KludgineError>;
 
 #[derive(Debug)]
 pub struct KludgineHandle<T> {
-    handle: Arc<RwLock<T>>,
+    handle: Arc<async_rwlock::RwLock<T>>,
 }
 
 impl<T> KludgineHandle<T> {
     pub fn new(wrapped: T) -> Self {
         Self {
-            handle: Arc::new(RwLock::new(wrapped)),
+            handle: Arc::new(async_rwlock::RwLock::new(wrapped)),
         }
     }
 
-    pub async fn read(&self) -> RwLockReadGuard<'_, T> {
+    pub async fn read(&self) -> async_rwlock::RwLockReadGuard<'_, T> {
         self.handle.read().await
     }
 
-    pub async fn write(&self) -> RwLockWriteGuard<'_, T> {
+    pub async fn write(&self) -> async_rwlock::RwLockWriteGuard<'_, T> {
         self.handle.write().await
     }
 }

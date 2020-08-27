@@ -8,7 +8,6 @@ use crate::{
     timing::Moment,
     KludgineError, KludgineHandle, KludgineResult,
 };
-use async_std::sync::{RwLockReadGuard, RwLockWriteGuard};
 use platforms::target::{OS, TARGET_OS};
 use std::{
     collections::{HashMap, HashSet},
@@ -51,14 +50,14 @@ impl SceneTarget {
         }
     }
 
-    async fn scene(&self) -> RwLockReadGuard<'_, SceneData> {
+    async fn scene(&self) -> async_rwlock::RwLockReadGuard<'_, SceneData> {
         match self {
             SceneTarget::Scene(scene) => scene.data.read().await,
             SceneTarget::Camera { scene, .. } => scene.data.read().await,
         }
     }
 
-    async fn scene_mut(&self) -> RwLockWriteGuard<'_, SceneData> {
+    async fn scene_mut(&self) -> async_rwlock::RwLockWriteGuard<'_, SceneData> {
         match self {
             SceneTarget::Scene(scene) => scene.data.write().await,
             SceneTarget::Camera { scene, .. } => scene.data.write().await,
