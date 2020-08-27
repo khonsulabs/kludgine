@@ -8,17 +8,16 @@ use rgx::core::*;
 use rgx::kit;
 use rgx::kit::{shape2d, sprite2d, Repeat, ZDepth};
 use std::{sync::Arc, time::Duration};
-use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 pub(crate) struct FrameSynchronizer {
-    receiver: Receiver<Frame>,
-    sender: Sender<Frame>,
+    receiver: async_channel::Receiver<Frame>,
+    sender: async_channel::Sender<Frame>,
 }
 
 impl FrameSynchronizer {
     pub fn pair() -> (FrameSynchronizer, FrameSynchronizer) {
-        let (a_sender, a_receiver) = channel(1);
-        let (b_sender, b_receiver) = channel(1);
+        let (a_sender, a_receiver) = async_channel::bounded(1);
+        let (b_sender, b_receiver) = async_channel::bounded(1);
 
         let a_synchronizer = FrameSynchronizer {
             sender: b_sender,

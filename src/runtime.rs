@@ -12,7 +12,7 @@ use tokio::runtime::Runtime as TokioRuntime;
 pub(crate) enum RuntimeRequest {
     OpenWindow {
         builder: WindowBuilder,
-        window_sender: tokio::sync::mpsc::Sender<winit::window::Window>,
+        window_sender: async_channel::Sender<winit::window::Window>,
     },
     Quit,
 }
@@ -192,7 +192,7 @@ impl Runtime {
 
     fn internal_open_window(
         &self,
-        mut window_sender: tokio::sync::mpsc::Sender<winit::window::Window>,
+        window_sender: async_channel::Sender<winit::window::Window>,
         builder: WindowBuilder,
         event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
     ) {
@@ -245,7 +245,7 @@ impl Runtime {
         }
         let window = Runtime::block_on(window);
         let initial_window = initial_window.build(&event_loop).unwrap();
-        let (mut window_sender, window_receiver) = tokio::sync::mpsc::channel(1);
+        let (window_sender, window_receiver) = async_channel::bounded(1);
         window_sender.try_send(initial_window).unwrap();
         Runtime::block_on(RuntimeWindow::open(window_receiver, window));
         event_loop.run(move |event, event_loop, control_flow| {
@@ -277,7 +277,7 @@ impl Runtime {
     where
         T: Window + Sized,
     {
-        let (window_sender, window_receiver) = tokio::sync::mpsc::channel(1);
+        let (window_sender, window_receiver) = async_channel::bounded(1);
         RuntimeRequest::OpenWindow {
             builder,
             window_sender,
