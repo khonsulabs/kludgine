@@ -5,10 +5,7 @@ use super::{
     math::{Pixels, Point, Points, Size},
     runtime::Runtime,
     scene::{Scene, SceneTarget},
-    ui::{
-        global_arena, InteractiveComponent, NodeData, NodeDataWindowExt, RedrawTarget,
-        UserInterface,
-    },
+    ui::{global_arena, InteractiveComponent, NodeData, NodeDataWindowExt, UserInterface},
     KludgineError, KludgineHandle, KludgineResult,
 };
 use async_trait::async_trait;
