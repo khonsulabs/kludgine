@@ -353,11 +353,15 @@ impl RuntimeWindow {
         }
     }
 
-    async fn next_window_event(
+    async fn next_window_event<T>(
         event_receiver: &mut UnboundedReceiver<WindowEvent>,
-        next_redraw_target: RedrawTarget,
-        needs_render: bool,
-    ) -> KludgineResult<Option<WindowEvent>> {
+        ui: &UserInterface<T>,
+    ) -> KludgineResult<Option<WindowEvent>>
+    where
+        T: Window,
+    {
+        let needs_render = ui.needs_render().await;
+        let next_redraw_target = ui.next_redraw_target().await;
         if needs_render {
             Self::next_window_event_non_blocking(event_receiver)
         } else if let Some(redraw_at) = next_redraw_target.next_update_instant() {
@@ -395,16 +399,10 @@ impl RuntimeWindow {
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         loop {
-            let needs_render = ui.needs_render().await;
-            let next_redraw_target = ui.next_redraw_target().await;
-            while let Some(event) =
-                match Self::next_window_event(&mut event_receiver, next_redraw_target, needs_render)
-                    .await
-                {
-                    Ok(event) => event,
-                    Err(_) => return Ok(()),
-                }
-            {
+            while let Some(event) = match Self::next_window_event(&mut event_receiver, &ui).await {
+                Ok(event) => event,
+                Err(_) => return Ok(()),
+            } {
                 match event {
                     WindowEvent::Resize { size, scale_factor } => {
                         scene
