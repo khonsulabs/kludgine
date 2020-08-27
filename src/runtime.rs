@@ -3,11 +3,13 @@ use super::{
     window::{RuntimeWindow, Window, WindowBuilder},
     KludgineResult,
 };
-use crossbeam::channel::{unbounded, Receiver, Sender, TryRecvError};
+use crossbeam::{
+    channel::{unbounded, Receiver, Sender, TryRecvError},
+    sync::ShardedLock,
+};
 use futures::future::Future;
 use platforms::target::{OS, TARGET_OS};
 use std::time::Duration;
-use tokio::runtime::Runtime as TokioRuntime;
 
 pub(crate) enum RuntimeRequest {
     OpenWindow {
@@ -53,10 +55,9 @@ lazy_static! {
         Mutex::new(None);
     pub(crate) static ref GLOBAL_EVENT_HANDLER: Mutex<Option<Box<dyn EventProcessor>>> =
         Mutex::new(None);
-    pub(crate) static ref GLOBAL_THREAD_POOL: Mutex<Option<TokioRuntime>> = Mutex::new(None);
+    pub(crate) static ref GLOBAL_THREAD_POOL: ShardedLock<Option<smol::Executor>> =
+        ShardedLock::new(None);
 }
-
-pub(crate) const FRAME_DURATION: u64 = 6_944_444;
 
 pub struct ApplicationRuntime<App> {
     app: App,
@@ -81,7 +82,8 @@ where
             assert!(global_receiver.is_none());
             *global_receiver = Some(event_receiver);
         }
-        Runtime::spawn(self.async_main());
+        Runtime::spawn(self.async_main()).detach();
+
         (request_receiver, event_sender)
     }
 
@@ -175,11 +177,33 @@ impl Runtime {
         App: Application + 'static,
     {
         {
-            let mut pool_guard = GLOBAL_THREAD_POOL
-                .lock()
-                .expect("Error locking global thread pool");
-            assert!(pool_guard.is_none());
-            *pool_guard = Some(TokioRuntime::new().expect("Error creating ThreadPool"));
+            {
+                let mut pool_guard = GLOBAL_THREAD_POOL
+                    .write()
+                    .expect("Error locking global thread pool");
+                assert!(pool_guard.is_none());
+                let executor = smol::Executor::new();
+                *pool_guard = Some(executor);
+            }
+
+            // Launch a thread pool
+            std::thread::spawn(|| {
+                let (signal, shutdown) = async_channel::unbounded::<()>();
+
+                easy_parallel::Parallel::new()
+                    // Run four executor threads.
+                    .each(0..4, |_| {
+                        futures::executor::block_on(async {
+                            let guard = GLOBAL_THREAD_POOL.read().unwrap();
+                            let executor = guard.as_ref().unwrap();
+                            executor.run(shutdown.recv()).await
+                        })
+                    })
+                    // Run the main future on the current thread.
+                    .finish(|| {});
+
+                signal.close();
+            });
         }
         let app_runtime = ApplicationRuntime { app };
         let (request_receiver, event_sender) = app_runtime.launch();
@@ -263,14 +287,16 @@ impl Runtime {
 
     pub fn spawn<Fut: Future<Output = T> + Send + 'static, T: Send + 'static>(
         future: Fut,
-    ) -> tokio::task::JoinHandle<T> {
-        Self::handle().spawn(future)
+    ) -> smol::Task<T> {
+        let guard = GLOBAL_THREAD_POOL.read().expect("Error getting runtime");
+        let executor = guard.as_ref().unwrap();
+        executor.spawn(future)
     }
 
     pub fn block_on<'a, Fut: Future<Output = R> + Send + 'a, R: Send + Sync + 'a>(
         future: Fut,
     ) -> R {
-        Self::handle().block_on(future)
+        futures::executor::block_on(future)
     }
 
     pub async fn open_window<T>(builder: WindowBuilder, window: T)
@@ -287,10 +313,5 @@ impl Runtime {
         .unwrap_or_default();
 
         RuntimeWindow::open(window_receiver, window).await;
-    }
-
-    pub fn handle() -> tokio::runtime::Handle {
-        let pool = GLOBAL_THREAD_POOL.lock().expect("Error getting runtime");
-        pool.as_ref().unwrap().handle().clone()
     }
 }

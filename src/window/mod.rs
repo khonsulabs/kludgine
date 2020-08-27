@@ -15,7 +15,8 @@ use lazy_static::lazy_static;
 use rgx::core::*;
 
 use futures::executor::block_on;
-use std::{collections::HashMap, sync::Arc};
+use smol_timeout::TimeoutExt;
+use std::{collections::HashMap, sync::Arc, time::Instant};
 use winit::{
     event::{Event as WinitEvent, WindowEvent as WinitWindowEvent},
     window::{Window as WinitWindow, WindowBuilder as WinitWindowBuilder, WindowId},
@@ -289,7 +290,8 @@ impl RuntimeWindow {
         Runtime::spawn(async move {
             frame_synchronizer.relinquish(Frame::default()).await;
             Self::window_main(window_id, frame_synchronizer, event_receiver, app_window).await
-        });
+        })
+        .detach();
 
         {
             let mut channels = WINDOW_CHANNELS.write().await;
@@ -362,15 +364,16 @@ impl RuntimeWindow {
             Self::next_window_event_non_blocking(event_receiver)
         } else if let Some(redraw_at) = next_redraw_target.next_update_instant() {
             let timeout_target = redraw_at.timeout_target();
-            if let Some(timeout_target) = timeout_target {
-                match tokio::time::timeout_at(
-                    tokio::time::Instant::from_std(timeout_target),
-                    Self::next_window_event_blocking(event_receiver),
-                )
-                .await
+            let remaining_time = timeout_target
+                .map(|t| t.checked_duration_since(Instant::now()))
+                .flatten();
+            if let Some(remaining_time) = remaining_time {
+                match Self::next_window_event_blocking(event_receiver)
+                    .timeout(remaining_time)
+                    .await
                 {
-                    Ok(event) => event,
-                    Err(_) => Ok(None),
+                    Some(event) => event,
+                    None => Ok(None),
                 }
             } else {
                 Self::next_window_event_non_blocking(event_receiver)

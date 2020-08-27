@@ -1,13 +1,13 @@
 use crate::{
     frame::{FontUpdate, Frame, FrameCommand},
-    runtime::{Runtime, FRAME_DURATION},
+    runtime::Runtime,
     KludgineResult,
 };
 use crossbeam::atomic::AtomicCell;
 use rgx::core::*;
 use rgx::kit;
 use rgx::kit::{shape2d, sprite2d, Repeat, ZDepth};
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 pub(crate) struct FrameSynchronizer {
     receiver: async_channel::Receiver<Frame>,
@@ -90,26 +90,17 @@ impl FrameRenderer {
             initial_width,
             initial_height,
         );
-        Runtime::spawn(frame_renderer.render_loop());
+        Runtime::spawn(frame_renderer.render_loop()).detach();
 
         client_synchronizer
     }
 
     async fn render_loop(mut self) {
-        let mut interval = tokio::time::interval(Duration::from_nanos(FRAME_DURATION));
         loop {
             if !self.keep_running.load() {
                 return;
             }
-
-            // The way tick works is it initializes the future with now, and then when you await it
-            // it elapses the full period from when it was initialized. Since we want our frames to run
-            // at a consistent rate, we need to create the tick then await it after we do our processing
-            // so that it will just wait the remaining time of our target framerate.
-            let tick = interval.tick();
             self.render().await.expect("Error rendering window");
-
-            tick.await;
         }
     }
 

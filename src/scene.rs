@@ -307,7 +307,7 @@ impl Scene {
     }
 
     pub async fn modifiers_pressed(&self) -> Modifiers {
-        let (control, alt, shift, os) = tokio::join!(
+        let (control, alt, shift, os) = futures::join!(
             self.any_key_pressed(&[VirtualKeyCode::RControl, VirtualKeyCode::LControl]),
             self.any_key_pressed(&[VirtualKeyCode::RAlt, VirtualKeyCode::LAlt]),
             self.any_key_pressed(&[VirtualKeyCode::LShift, VirtualKeyCode::RShift]),

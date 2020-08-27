@@ -441,7 +441,8 @@ impl Node {
         Runtime::spawn(async move {
             let component = component.read().await;
             component.send_callback(Box::new(message)).await
-        });
+        })
+        .detach();
     }
 
     pub(crate) async fn set_layout(&self, layout: Layout) {
