@@ -100,6 +100,13 @@ impl UIState {
         data.next_redraw_target = RedrawTarget::None;
     }
 
+    async fn initialize_redraw_target(&self) {
+        let mut data = self.data.write().await;
+        if let RedrawTarget::None = data.next_redraw_target {
+            data.next_redraw_target = RedrawTarget::Never;
+        }
+    }
+
     async fn estimate_next_frame(&self, duration: Duration) {
         self.estimate_next_frame_instant(Instant::now().checked_add(duration).unwrap())
             .await;
@@ -108,7 +115,7 @@ impl UIState {
     async fn estimate_next_frame_instant(&self, instant: Instant) {
         let mut data = self.data.write().await;
         match data.next_redraw_target {
-            RedrawTarget::None => {
+            RedrawTarget::Never | RedrawTarget::None => {
                 data.next_redraw_target = RedrawTarget::Scheduled(instant);
             }
             RedrawTarget::Now => {} // don't schedule, we are already drawing
@@ -129,6 +136,7 @@ impl UIState {
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum RedrawTarget {
     None,
+    Never,
     Now,
     Scheduled(Instant),
 }
@@ -147,7 +155,7 @@ pub(crate) enum RedrawSchedule {
 impl RedrawTarget {
     pub fn next_redraw_instant(&self) -> Option<RedrawSchedule> {
         match self {
-            Self::None => None,
+            RedrawTarget::Never | Self::None => None,
             Self::Now => Some(RedrawSchedule::Now),
             Self::Scheduled(scheduled_for) => Some(RedrawSchedule::Scheduled(*scheduled_for)),
         }
@@ -155,6 +163,7 @@ impl RedrawTarget {
 
     pub fn next_update_instant(&self) -> Option<RedrawSchedule> {
         match self {
+            RedrawTarget::Never => None,
             Self::None | Self::Now => Some(RedrawSchedule::Now),
             Self::Scheduled(scheduled_for) => Some(RedrawSchedule::Scheduled(*scheduled_for)),
         }
@@ -282,6 +291,7 @@ where
         // Loop twice, once to allow all the pending messages to be exhausted across all
         // nodes. Then after all messages have been processed, trigger the update method
         // for each node.
+        self.ui_state.initialize_redraw_target().await;
 
         let mut traverser = global_arena().traverse(self.root).await;
         while let Some(index) = traverser.next().await {
