@@ -1,5 +1,10 @@
+use crate::ui::Context;
 use async_trait::async_trait;
-use std::{collections::VecDeque, sync::Arc, time::Instant};
+use std::{
+    collections::VecDeque,
+    sync::Arc,
+    time::{Duration, Instant},
+};
 
 pub trait Transition: Send + Sync + std::fmt::Debug {
     fn current_percent(&self, elapsed_percent: f32) -> f32;
@@ -237,9 +242,12 @@ where
         }
     }
 
-    pub async fn update(&mut self) {
+    pub async fn update(&mut self, context: &mut Context) {
         let now = Instant::now();
         self.update_current_frame(now);
+        context
+            .estimate_next_frame(Duration::from_secs_f32(1. / 144.))
+            .await;
         if let Some(current_frame) = &mut self.current_frame {
             if let Some(elapsed_since_last_frame) =
                 now.checked_duration_since(self.last_frame.instant)
@@ -250,7 +258,8 @@ where
                 {
                     let elapsed_percent =
                         elapsed_since_last_frame.as_secs_f32() / animation_duration.as_secs_f32();
-                    current_frame.transition(elapsed_percent).await
+                    let elapsed_percent = elapsed_percent.min(1.).max(0.);
+                    current_frame.transition(elapsed_percent).await;
                 }
             }
         }

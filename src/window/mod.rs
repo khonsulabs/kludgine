@@ -350,7 +350,6 @@ impl RuntimeWindow {
                     Err(_) => Ok(None),
                 }
             } else {
-                println!("No sleep receiving events");
                 match event_receiver.try_recv() {
                     Ok(event) => Ok(Some(event)),
                     Err(tokio::sync::mpsc::error::TryRecvError::Empty) => Ok(None),
@@ -362,7 +361,6 @@ impl RuntimeWindow {
                 }
             }
         } else {
-            println!("Sleeping forever for events");
             match event_receiver.recv().await {
                 Some(event) => Ok(Some(event)),
                 None => Err(KludgineError::InternalWindowMessageSendError(
@@ -395,7 +393,6 @@ impl RuntimeWindow {
                     Err(_) => return Ok(()),
                 }
             {
-                println!("Got event {:?}", event);
                 match event {
                     WindowEvent::Resize { size, scale_factor } => {
                         scene
@@ -447,26 +444,17 @@ impl RuntimeWindow {
             }
 
             if scene.size().await.area().to_f32() > 0.0 {
-                println!("Calling application updates");
-                let now = scene.start_frame().await;
+                scene.start_frame().await;
 
                 let target = SceneTarget::Scene(scene.clone());
                 ui.update(&target, target_fps).await?;
 
-                let render = match ui.next_redraw_target().await.next_redraw_instant() {
-                    Some(schedule) => schedule.should_redraw(),
-                    None => false,
-                };
-
-                if render {
-                    println!("Rendering {:?}", now);
+                if ui.needs_render().await {
                     ui.render(&target).await?;
 
-                    if let Some(mut frame) = frame_synchronizer.try_take() {
-                        frame.update(&scene).await;
-                        frame_synchronizer.relinquish(frame).await;
-                    } else {
-                    }
+                    let mut frame = frame_synchronizer.take().await;
+                    frame.update(&scene).await;
+                    frame_synchronizer.relinquish(frame).await;
                 }
             }
         }

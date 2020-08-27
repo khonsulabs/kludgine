@@ -99,7 +99,6 @@ impl MeasuredText {
 
         measured.measure_text(text, scene).await?;
 
-        //println!("{:#?}", measured.groups);
         Ok(measured)
     }
 

@@ -82,21 +82,25 @@ impl InteractiveComponent for Image {
 
     async fn receive_input(
         &mut self,
-        _context: &mut Context,
+        context: &mut Context,
         command: Self::Input,
     ) -> KludgineResult<()> {
         match command {
             ImageCommand::SetSprite(sprite) => {
+                context.set_needs_redraw().await;
                 self.sprite = sprite;
             }
             ImageCommand::SetTag(tag) => {
+                context.set_needs_redraw().await;
                 self.sprite.set_current_tag(tag).await?;
                 self.options.override_frame = None;
             }
             ImageCommand::SetAlpha(alpha) => {
+                context.set_needs_redraw().await;
                 self.options.alpha = alpha;
             }
             ImageCommand::SetOverrideFrame { tag, frame } => {
+                context.set_needs_redraw().await;
                 self.sprite.set_current_tag(tag).await?;
                 self.options.override_frame = Some(frame);
             }
@@ -121,9 +125,9 @@ impl Component for Image {
 
                 let frame_index = match override_frame {
                     OverrideFrame::Index(index) => *index,
-                    OverrideFrame::Percent(percent) => {
-                        (frames.frames.len() as f32 * *percent) as usize
-                    }
+                    OverrideFrame::Percent(percent) => ((frames.frames.len() as f32 * percent)
+                        .round() as usize)
+                        .min(frames.frames.len() - 1),
                 };
 
                 Some(frames.frames[frame_index].source.clone())

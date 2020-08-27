@@ -39,10 +39,6 @@ impl FrameSynchronizer {
         self.receiver.recv().await.unwrap_or_default()
     }
 
-    pub fn try_take(&mut self) -> Option<Frame> {
-        self.receiver.try_recv().ok()
-    }
-
     pub async fn relinquish(&mut self, frame: Frame) {
         // Ignoring the error because if the sender/receiver is disconnected
         // the window is closing and we should just ignore the error and let

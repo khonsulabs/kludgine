@@ -57,7 +57,7 @@ impl UIState {
     async fn deactivate(&self) {
         let mut data = self.data.write().await;
         if data.active != None {
-            data.next_redraw_target = RedrawTarget::Now;
+            data.needs_render = true;
             data.active = None;
         }
     }
@@ -65,7 +65,7 @@ impl UIState {
     async fn activate(&self, index: Index) {
         let mut data = self.data.write().await;
         if data.active != Some(index) {
-            data.next_redraw_target = RedrawTarget::Now;
+            data.needs_render = true;
             data.active = Some(index);
         }
     }
@@ -92,11 +92,12 @@ impl UIState {
 
     async fn set_needs_redraw(&self) {
         let mut data = self.data.write().await;
-        data.next_redraw_target = RedrawTarget::Now;
+        data.needs_render = true;
     }
 
     async fn clear_redraw_target(&self) {
         let mut data = self.data.write().await;
+        data.needs_render = false;
         data.next_redraw_target = RedrawTarget::None;
     }
 
@@ -129,7 +130,6 @@ impl UIState {
             RedrawTarget::Never | RedrawTarget::None => {
                 data.next_redraw_target = RedrawTarget::Scheduled(instant);
             }
-            RedrawTarget::Now => {} // don't schedule, we are already drawing
             RedrawTarget::Scheduled(existing_instant) => {
                 if instant < existing_instant {
                     data.next_redraw_target = RedrawTarget::Scheduled(instant);
@@ -142,13 +142,17 @@ impl UIState {
         let data = self.data.read().await;
         data.next_redraw_target
     }
+
+    async fn needs_render(&self) -> bool {
+        let data = self.data.read().await;
+        data.needs_render
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum RedrawTarget {
     None,
     Never,
-    Now,
     Scheduled(Instant),
 }
 
@@ -158,38 +162,26 @@ impl Default for RedrawTarget {
     }
 }
 
-pub(crate) enum RedrawSchedule {
+pub(crate) enum UpdateSchedule {
     Now,
     Scheduled(Instant),
 }
 
 impl RedrawTarget {
-    pub fn next_redraw_instant(&self) -> Option<RedrawSchedule> {
-        match self {
-            RedrawTarget::Never | Self::None => None,
-            Self::Now => Some(RedrawSchedule::Now),
-            Self::Scheduled(scheduled_for) => Some(RedrawSchedule::Scheduled(*scheduled_for)),
-        }
-    }
-
-    pub fn next_update_instant(&self) -> Option<RedrawSchedule> {
+    pub fn next_update_instant(&self) -> Option<UpdateSchedule> {
         match self {
             RedrawTarget::Never => None,
-            Self::None | Self::Now => Some(RedrawSchedule::Now),
-            Self::Scheduled(scheduled_for) => Some(RedrawSchedule::Scheduled(*scheduled_for)),
+            Self::None => Some(UpdateSchedule::Now),
+            Self::Scheduled(scheduled_for) => Some(UpdateSchedule::Scheduled(*scheduled_for)),
         }
     }
 }
 
-impl RedrawSchedule {
-    pub fn should_redraw(&self) -> bool {
-        self.timeout_target().is_none()
-    }
-
+impl UpdateSchedule {
     pub fn timeout_target(&self) -> Option<Instant> {
         match self {
-            RedrawSchedule::Now => None,
-            RedrawSchedule::Scheduled(scheduled_for) => {
+            UpdateSchedule::Now => None,
+            UpdateSchedule::Scheduled(scheduled_for) => {
                 if &Instant::now() > scheduled_for {
                     None
                 } else {
@@ -205,6 +197,7 @@ struct UIStateData {
     focus: Option<Index>,
     active: Option<Index>,
     next_redraw_target: RedrawTarget,
+    needs_render: bool,
 }
 
 pub struct UserInterface<C>
@@ -434,6 +427,10 @@ where
 
     pub(crate) async fn next_redraw_target(&self) -> RedrawTarget {
         self.ui_state.next_redraw_target().await
+    }
+
+    pub(crate) async fn needs_render(&self) -> bool {
+        self.ui_state.needs_render().await
     }
 
     async fn initialize(&self, index: impl Into<Index>, scene: SceneTarget) -> KludgineResult<()> {
