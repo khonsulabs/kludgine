@@ -1,9 +1,10 @@
 use super::{
     math::{Point, Rect, Size},
-    source_sprite::SourceSprite,
     texture::{LoadedTexture, Texture},
     KludgineError, KludgineHandle, KludgineResult,
 };
+mod source;
+pub use source::*;
 use std::{collections::HashMap, iter::IntoIterator, time::Duration};
 
 #[macro_export]
@@ -94,7 +95,7 @@ impl Sprite {
 
     pub async fn single_frame(texture: Texture) -> Self {
         let size = texture.size().await;
-        let source = SourceSprite::new(
+        let source = SpriteSource::new(
             Rect::sized(Point::default(), Size::new(size.width, size.height)),
             texture,
         );
@@ -196,7 +197,7 @@ impl Sprite {
                 ),
             );
 
-            let source = SourceSprite::new(frame, texture.clone());
+            let source = SpriteSource::new(frame, texture.clone());
 
             frames.insert(
                 frame_number,
@@ -286,7 +287,7 @@ impl Sprite {
         sprite.current_tag.clone()
     }
 
-    pub async fn get_frame(&self, elapsed: Option<Duration>) -> KludgineResult<SourceSprite> {
+    pub async fn get_frame(&self, elapsed: Option<Duration>) -> KludgineResult<SpriteSource> {
         let mut sprite = self.handle.write().await;
         if let Some(elapsed) = elapsed {
             sprite.elapsed_since_frame_change += elapsed;
@@ -428,19 +429,19 @@ impl SpriteAnimation {
 
 #[derive(Debug, Clone)]
 pub struct SpriteFrame {
-    pub source: SourceSprite,
+    pub source: SpriteSource,
     pub duration: Option<Duration>,
 }
 
 pub struct SpriteFrameBuilder {
-    source: SourceSprite,
+    source: SpriteSource,
     tag: Option<String>,
     tag_frame: Option<usize>,
     duration: Option<Duration>,
 }
 
 impl SpriteFrameBuilder {
-    pub fn new(source: SourceSprite) -> Self {
+    pub fn new(source: SpriteSource) -> Self {
         Self {
             source,
             tag: None,
@@ -478,7 +479,7 @@ pub(crate) struct RenderedSprite {
 }
 
 impl RenderedSprite {
-    pub fn new(render_at: Rect, alpha: f32, source: SourceSprite) -> Self {
+    pub fn new(render_at: Rect, alpha: f32, source: SpriteSource) -> Self {
         Self {
             handle: KludgineHandle::new(RenderedSpriteData {
                 render_at,
@@ -492,7 +493,7 @@ impl RenderedSprite {
 pub(crate) struct RenderedSpriteData {
     pub render_at: Rect,
     pub alpha: f32,
-    pub source: SourceSprite,
+    pub source: SpriteSource,
 }
 
 pub(crate) struct SpriteBatch {

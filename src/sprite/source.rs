@@ -1,4 +1,4 @@
-use super::{
+use crate::{
     math::{Point, Points, Rect, Size},
     scene::{Element, SceneTarget},
     sprite::RenderedSprite,
@@ -6,20 +6,20 @@ use super::{
     KludgineHandle,
 };
 #[derive(Debug, Clone)]
-pub struct SourceSprite {
-    pub(crate) handle: KludgineHandle<SourceSpriteData>,
+pub struct SpriteSource {
+    pub(crate) handle: KludgineHandle<SpriteSourceData>,
 }
 
 #[derive(Debug)]
-pub(crate) struct SourceSpriteData {
+pub(crate) struct SpriteSourceData {
     pub location: Rect<u32>,
     pub texture: Texture,
 }
 
-impl SourceSprite {
+impl SpriteSource {
     pub fn new(location: Rect<u32>, texture: Texture) -> Self {
-        SourceSprite {
-            handle: KludgineHandle::new(SourceSpriteData { location, texture }),
+        SpriteSource {
+            handle: KludgineHandle::new(SpriteSourceData { location, texture }),
         }
     }
 

@@ -7,7 +7,7 @@ fn main() {
 
 #[derive(Default)]
 struct Simple {
-    source_sprite: Option<SourceSprite>,
+    source_sprite: Option<SpriteSource>,
 }
 
 impl WindowCreator<Simple> for Simple {
@@ -24,7 +24,7 @@ impl StandaloneComponent for Simple {}
 impl Component for Simple {
     async fn initialize(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
         let texture = Texture::load("examples/assets/k.png")?;
-        self.source_sprite = Some(SourceSprite::entire_texture(texture).await);
+        self.source_sprite = Some(SpriteSource::entire_texture(texture).await);
         Ok(())
     }
 

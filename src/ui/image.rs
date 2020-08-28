@@ -1,8 +1,7 @@
 use crate::{
     event::MouseButton,
     math::{Point, Points, Rect, Size},
-    source_sprite::SourceSprite,
-    sprite::Sprite,
+    sprite::{Sprite, SpriteSource},
     ui::{
         animation::Transition,
         animation::{FloatChange, PropertyFrameManager, PropertyMutator},
@@ -17,7 +16,7 @@ use std::sync::Arc;
 #[derive(Debug)]
 pub struct Image {
     sprite: Sprite,
-    current_frame: Option<SourceSprite>,
+    current_frame: Option<SpriteSource>,
     options: ImageOptions,
 }
 

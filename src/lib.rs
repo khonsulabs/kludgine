@@ -125,7 +125,6 @@ pub mod frame;
 pub mod math;
 pub mod runtime;
 pub mod scene;
-pub mod source_sprite;
 pub mod sprite;
 pub mod style;
 pub mod text;
@@ -149,8 +148,7 @@ pub mod prelude {
         runtime::Runtime,
         scene::{Scene, SceneTarget},
         shape::*,
-        source_sprite::SourceSprite,
-        sprite::Sprite,
+        sprite::{Sprite, SpriteSource},
         style::*,
         text::{font::Font, wrap::TextWrap, Span, Text},
         texture::Texture,
