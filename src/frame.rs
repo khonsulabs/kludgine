@@ -5,13 +5,13 @@ use super::{
     sprite::SpriteBatch,
     text::{font::LoadedFont, prepared::PreparedSpan},
     texture::LoadedTexture,
-    timing::Moment,
 };
 use std::collections::{HashMap, HashSet};
+use std::time::Instant;
 #[derive(Default)]
 pub(crate) struct Frame {
-    pub started_at: Option<Moment>,
-    pub updated_at: Option<Moment>,
+    pub started_at: Option<Instant>,
+    pub updated_at: Option<Instant>,
     pub size: Size,
     pub commands: Vec<FrameCommand>,
     pub(crate) textures: HashMap<u64, LoadedTexture>,
@@ -149,7 +149,7 @@ impl Frame {
             self.textures.remove(&id);
         }
 
-        self.updated_at = Some(Moment::now());
+        self.updated_at = Some(Instant::now());
     }
 
     fn commit_batch(&mut self, batch: Option<FrameBatch>) -> Option<FrameBatch> {

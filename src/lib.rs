@@ -131,7 +131,6 @@ pub mod text;
 pub mod texture;
 pub mod theme;
 pub mod tilemap;
-pub mod timing;
 pub mod ui;
 pub mod window;
 
@@ -155,7 +154,6 @@ pub mod prelude {
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,
         },
-        timing::FrequencyLimiter,
         ui::*,
         window::{Event, EventStatus, InputEvent, OpenableWindow, Window, WindowCreator},
         KludgineError, KludgineHandle, KludgineResult, RequiresInitialization,

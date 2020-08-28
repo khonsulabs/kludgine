@@ -5,14 +5,13 @@ use crate::{
     style::Weight,
     text::{font::Font, prepared::PreparedSpan},
     theme::{Minimal, Theme},
-    timing::Moment,
     KludgineError, KludgineHandle, KludgineResult,
 };
 use platforms::target::{OS, TARGET_OS};
 use std::{
     collections::{HashMap, HashSet},
     sync::Arc,
-    time::Duration,
+    time::{Duration, Instant},
 };
 use winit::event::VirtualKeyCode;
 
@@ -230,7 +229,7 @@ pub(crate) struct SceneData {
     scale_factor: f32,
     size: Size<Pixels>,
     pub(crate) elements: Vec<Element>,
-    now: Option<Moment>,
+    now: Option<Instant>,
     elapsed: Option<Duration>,
     fonts: HashMap<String, Vec<Font>>,
     theme: Arc<Box<dyn Theme>>,
@@ -323,9 +322,9 @@ impl Scene {
     pub(crate) async fn start_frame(&mut self) {
         let mut scene = self.data.write().await;
         let last_start = scene.now;
-        scene.now = Some(Moment::now());
+        scene.now = Some(Instant::now());
         scene.elapsed = match last_start {
-            Some(last_start) => scene.now.unwrap().checked_duration_since(&last_start),
+            Some(last_start) => scene.now.unwrap().checked_duration_since(last_start),
             None => None,
         };
         scene.elements.clear();
@@ -336,7 +335,7 @@ impl Scene {
         scene.size
     }
 
-    pub async fn now(&self) -> Moment {
+    pub async fn now(&self) -> Instant {
         let scene = self.data.read().await;
         scene.now.expect("now() called without starting a frame")
     }
