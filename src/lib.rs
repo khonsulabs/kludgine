@@ -141,7 +141,7 @@ pub use rgx::kit::shape2d as shape;
 /// Convenience module that exports the public interface of Kludgine
 pub mod prelude {
     pub use super::{
-        application::{Application, SingleWindowApplication, WindowCreator},
+        application::{Application, SingleWindowApplication},
         color::Color,
         event::*,
         include_aseprite_sprite, include_font, include_texture,
@@ -159,7 +159,7 @@ pub mod prelude {
         },
         timing::FrequencyLimiter,
         ui::*,
-        window::{Event, EventStatus, InputEvent, OpenableWindow, Window},
+        window::{Event, EventStatus, InputEvent, OpenableWindow, Window, WindowCreator},
         KludgineError, KludgineHandle, KludgineResult, RequiresInitialization,
     };
     pub use async_trait::async_trait;

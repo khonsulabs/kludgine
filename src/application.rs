@@ -1,6 +1,6 @@
 use super::{
     runtime::Runtime,
-    window::{RuntimeWindow, Window, WindowBuilder},
+    window::{RuntimeWindow, Window, WindowCreator},
 };
 use async_trait::async_trait;
 use futures::Future;
@@ -19,17 +19,6 @@ pub struct SingleWindowApplication<T> {
     phantom: PhantomData<T>,
 }
 
-pub trait WindowCreator<T>: Window {
-    fn get_window_builder() -> WindowBuilder {
-        WindowBuilder::default().with_title(Self::window_title())
-    }
-
-    fn window_title() -> String {
-        "Kludgine".to_owned()
-    }
-}
-
-#[async_trait]
 impl<T> Application for SingleWindowApplication<T> where T: Window + WindowCreator<T> + 'static {}
 
 impl<T> SingleWindowApplication<T>

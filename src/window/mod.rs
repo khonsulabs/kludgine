@@ -1,5 +1,4 @@
 use super::{
-    application::WindowCreator,
     event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode},
     frame::Frame,
     math::{Pixels, Point, Points, Size},
@@ -102,6 +101,16 @@ pub trait Window: InteractiveComponent + Send + Sync + 'static {
     /// redraw when requested via methods on Context.
     fn target_fps(&self) -> Option<u16> {
         None
+    }
+}
+
+pub trait WindowCreator<T>: Window {
+    fn get_window_builder() -> WindowBuilder {
+        WindowBuilder::default().with_title(Self::window_title())
+    }
+
+    fn window_title() -> String {
+        "Kludgine".to_owned()
     }
 }
 
