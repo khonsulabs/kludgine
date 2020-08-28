@@ -8,7 +8,6 @@ use crate::{
     timing::Moment,
     KludgineError, KludgineHandle, KludgineResult,
 };
-use async_std::sync::{RwLockReadGuard, RwLockWriteGuard};
 use platforms::target::{OS, TARGET_OS};
 use std::{
     collections::{HashMap, HashSet},
@@ -51,14 +50,14 @@ impl SceneTarget {
         }
     }
 
-    async fn scene(&self) -> RwLockReadGuard<'_, SceneData> {
+    async fn scene(&self) -> async_rwlock::RwLockReadGuard<'_, SceneData> {
         match self {
             SceneTarget::Scene(scene) => scene.data.read().await,
             SceneTarget::Camera { scene, .. } => scene.data.read().await,
         }
     }
 
-    async fn scene_mut(&self) -> RwLockWriteGuard<'_, SceneData> {
+    async fn scene_mut(&self) -> async_rwlock::RwLockWriteGuard<'_, SceneData> {
         match self {
             SceneTarget::Scene(scene) => scene.data.write().await,
             SceneTarget::Camera { scene, .. } => scene.data.write().await,
@@ -307,7 +306,7 @@ impl Scene {
     }
 
     pub async fn modifiers_pressed(&self) -> Modifiers {
-        let (control, alt, shift, os) = tokio::join!(
+        let (control, alt, shift, os) = futures::join!(
             self.any_key_pressed(&[VirtualKeyCode::RControl, VirtualKeyCode::LControl]),
             self.any_key_pressed(&[VirtualKeyCode::RAlt, VirtualKeyCode::LAlt]),
             self.any_key_pressed(&[VirtualKeyCode::LShift, VirtualKeyCode::RShift]),

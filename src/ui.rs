@@ -471,7 +471,8 @@ where
         let root = self.root;
         Runtime::spawn(async move {
             global_arena().remove(root).await;
-        });
+        })
+        .detach();
     }
 }
 

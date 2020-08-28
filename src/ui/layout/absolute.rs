@@ -341,7 +341,7 @@ mod tests {
         Ok(())
     }
 
-    #[tokio::test]
+    #[async_test]
     async fn layout_test() -> KludgineResult<()> {
         use crate::{
             math::Pixels,

@@ -16,26 +16,28 @@ bundled-fonts-enabled = []
 [dependencies]
 rgx = { version = "0.8", features = ["renderer"] }
 winit = "0.22"
+image = "0.23"
+crossbeam = "0.7"
+lazy_static = "1"
+chrono = "0.4"
 thiserror = "1.0"
 anyhow = "1.0"
-crossbeam = "0.7"
-image = "0.23"
-async-trait = "0.1"
-futures = { version = "0.3", features = ["thread-pool"] }
-lazy_static = "1"
-async-std = "1"
-chrono = "0.4"
-educe = "0.4"
 rusttype = { version = "0.9", features = ["gpu_cache"] }
 json = "0.12"
 platforms = "0.2"
 generational-arena = "*"
-dashmap = "3"
 ttf-parser = "0.6"
-tokio = { version = "0.2", features = ["full"] }
 once_cell = "1"
 approx = "0.3"
 palette = "0.5"
+async-channel = "1"
+async-rwlock = "1"
+smol = "0.4"
+smol-timeout = "0.4"
+easy-parallel = "3"
+async-trait = "0.1"
+futures = { version = "0.3", features = ["thread-pool"] }
+futures-timer = "3"
 
 [dev-dependencies]
 rand = "0.7"

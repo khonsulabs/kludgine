@@ -12,7 +12,6 @@ use crate::{
 };
 use async_trait::async_trait;
 use std::any::Any;
-use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
 #[async_trait]
 pub(crate) trait AnyNode: PendingEventProcessor + Send + Sync {
@@ -252,10 +251,10 @@ where
 {
     component: KludgineHandle<T>,
     callback: Option<Callback<T::Output>>,
-    pub(crate) input_sender: UnboundedSender<T::Input>,
-    pub(crate) message_sender: UnboundedSender<T::Message>,
-    input_receiver: UnboundedReceiver<T::Input>,
-    message_receiver: UnboundedReceiver<T::Message>,
+    pub(crate) input_sender: async_channel::Sender<T::Input>,
+    pub(crate) message_sender: async_channel::Sender<T::Message>,
+    input_receiver: async_channel::Receiver<T::Input>,
+    message_receiver: async_channel::Receiver<T::Message>,
     interactive: bool,
     pub(crate) layout: KludgineHandle<Layout>,
     pub(crate) style_sheet: KludgineHandle<StyleSheet>,
@@ -294,8 +293,8 @@ impl Node {
         let component = KludgineHandle::new(component);
         let style_sheet = KludgineHandle::new(style_sheet);
         let bounds = KludgineHandle::new(bounds);
-        let (input_sender, input_receiver) = unbounded_channel();
-        let (message_sender, message_receiver) = unbounded_channel();
+        let (input_sender, input_receiver) = async_channel::unbounded();
+        let (message_sender, message_receiver) = async_channel::unbounded();
         Self {
             component: KludgineHandle::new(Box::new(NodeData {
                 style_sheet,
@@ -442,7 +441,8 @@ impl Node {
         Runtime::spawn(async move {
             let component = component.read().await;
             component.send_callback(Box::new(message)).await
-        });
+        })
+        .detach();
     }
 
     pub(crate) async fn set_layout(&self, layout: Layout) {

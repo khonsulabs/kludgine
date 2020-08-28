@@ -13,10 +13,10 @@ use async_trait::async_trait;
 use crossbeam::{atomic::AtomicCell, sync::ShardedLock};
 use lazy_static::lazy_static;
 use rgx::core::*;
-use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
 
 use futures::executor::block_on;
-use std::{collections::HashMap, sync::Arc};
+use smol_timeout::TimeoutExt;
+use std::{collections::HashMap, sync::Arc, time::Instant};
 use winit::{
     event::{Event as WinitEvent, WindowEvent as WinitWindowEvent},
     window::{Window as WinitWindow, WindowBuilder as WinitWindowBuilder, WindowId},
@@ -215,7 +215,7 @@ where
 }
 
 lazy_static! {
-    static ref WINDOW_CHANNELS: KludgineHandle<HashMap<WindowId, UnboundedSender<WindowMessage>>> =
+    static ref WINDOW_CHANNELS: KludgineHandle<HashMap<WindowId, async_channel::Sender<WindowMessage>>> =
         KludgineHandle::new(HashMap::new());
 }
 
@@ -241,7 +241,7 @@ impl WindowMessage {
             }
         };
 
-        sender.send(self).unwrap_or_default();
+        sender.send(self).await.unwrap_or_default();
         Ok(())
     }
 }
@@ -256,8 +256,8 @@ pub(crate) enum WindowEvent {
 
 pub(crate) struct RuntimeWindow {
     window: winit::window::Window,
-    receiver: UnboundedReceiver<WindowMessage>,
-    event_sender: UnboundedSender<WindowEvent>,
+    receiver: async_channel::Receiver<WindowMessage>,
+    event_sender: async_channel::Sender<WindowEvent>,
     last_known_size: Size,
     last_known_scale_factor: f32,
     keep_running: Arc<AtomicCell<bool>>,
@@ -265,7 +265,7 @@ pub(crate) struct RuntimeWindow {
 
 impl RuntimeWindow {
     pub(crate) async fn open<T>(
-        mut window_receiver: tokio::sync::mpsc::Receiver<WinitWindow>,
+        window_receiver: async_channel::Receiver<WinitWindow>,
         app_window: T,
     ) where
         T: Window + Sized + 'static,
@@ -277,8 +277,8 @@ impl RuntimeWindow {
         let window_id = window.id();
         let renderer = Renderer::new(&window).expect("Error creating renderer for window");
 
-        let (message_sender, message_receiver) = unbounded_channel();
-        let (event_sender, event_receiver) = unbounded_channel();
+        let (message_sender, message_receiver) = async_channel::unbounded();
+        let (event_sender, event_receiver) = async_channel::unbounded();
 
         let keep_running = Arc::new(AtomicCell::new(true));
         let mut frame_synchronizer = FrameRenderer::run(
@@ -290,7 +290,8 @@ impl RuntimeWindow {
         Runtime::spawn(async move {
             frame_synchronizer.relinquish(Frame::default()).await;
             Self::window_main(window_id, frame_synchronizer, event_receiver, app_window).await
-        });
+        })
+        .detach();
 
         {
             let mut channels = WINDOW_CHANNELS.write().await;
@@ -328,30 +329,30 @@ impl RuntimeWindow {
     }
 
     fn next_window_event_non_blocking(
-        event_receiver: &mut UnboundedReceiver<WindowEvent>,
+        event_receiver: &mut async_channel::Receiver<WindowEvent>,
     ) -> KludgineResult<Option<WindowEvent>> {
         match event_receiver.try_recv() {
             Ok(event) => Ok(Some(event)),
-            Err(tokio::sync::mpsc::error::TryRecvError::Empty) => Ok(None),
-            Err(tokio::sync::mpsc::error::TryRecvError::Closed) => Err(
+            Err(async_channel::TryRecvError::Empty) => Ok(None),
+            Err(async_channel::TryRecvError::Closed) => Err(
                 KludgineError::InternalWindowMessageSendError("Window channel closed".to_owned()),
             ),
         }
     }
 
     async fn next_window_event_blocking(
-        event_receiver: &mut UnboundedReceiver<WindowEvent>,
+        event_receiver: &mut async_channel::Receiver<WindowEvent>,
     ) -> KludgineResult<Option<WindowEvent>> {
         match event_receiver.recv().await {
-            Some(event) => Ok(Some(event)),
-            None => Err(KludgineError::InternalWindowMessageSendError(
+            Ok(event) => Ok(Some(event)),
+            Err(_) => Err(KludgineError::InternalWindowMessageSendError(
                 "Window channel closed".to_owned(),
             )),
         }
     }
 
     async fn next_window_event<T>(
-        event_receiver: &mut UnboundedReceiver<WindowEvent>,
+        event_receiver: &mut async_channel::Receiver<WindowEvent>,
         ui: &UserInterface<T>,
     ) -> KludgineResult<Option<WindowEvent>>
     where
@@ -363,15 +364,16 @@ impl RuntimeWindow {
             Self::next_window_event_non_blocking(event_receiver)
         } else if let Some(redraw_at) = next_redraw_target.next_update_instant() {
             let timeout_target = redraw_at.timeout_target();
-            if let Some(timeout_target) = timeout_target {
-                match tokio::time::timeout_at(
-                    tokio::time::Instant::from_std(timeout_target),
-                    Self::next_window_event_blocking(event_receiver),
-                )
-                .await
+            let remaining_time = timeout_target
+                .map(|t| t.checked_duration_since(Instant::now()))
+                .flatten();
+            if let Some(remaining_time) = remaining_time {
+                match Self::next_window_event_blocking(event_receiver)
+                    .timeout(remaining_time)
+                    .await
                 {
-                    Ok(event) => event,
-                    Err(_) => Ok(None),
+                    Some(event) => event,
+                    None => Ok(None),
                 }
             } else {
                 Self::next_window_event_non_blocking(event_receiver)
@@ -384,7 +386,7 @@ impl RuntimeWindow {
     async fn window_loop<T>(
         id: WindowId,
         mut frame_synchronizer: FrameSynchronizer,
-        mut event_receiver: UnboundedReceiver<WindowEvent>,
+        mut event_receiver: async_channel::Receiver<WindowEvent>,
         window: T,
     ) -> KludgineResult<()>
     where
@@ -470,7 +472,7 @@ impl RuntimeWindow {
     async fn window_main<T>(
         id: WindowId,
         frame_synchronizer: FrameSynchronizer,
-        event_receiver: UnboundedReceiver<WindowEvent>,
+        event_receiver: async_channel::Receiver<WindowEvent>,
         window: T,
     ) where
         T: Window,
@@ -521,7 +523,7 @@ impl RuntimeWindow {
 
     pub(crate) fn request_redraw(&self) {
         self.event_sender
-            .send(WindowEvent::RedrawRequested)
+            .try_send(WindowEvent::RedrawRequested)
             .unwrap_or_default();
     }
 
@@ -529,7 +531,7 @@ impl RuntimeWindow {
         match event {
             WinitWindowEvent::CloseRequested => {
                 self.event_sender
-                    .send(WindowEvent::CloseRequested)
+                    .try_send(WindowEvent::CloseRequested)
                     .unwrap_or_default();
             }
             WinitWindowEvent::Resized(size) => {
@@ -549,7 +551,7 @@ impl RuntimeWindow {
                 device_id, input, ..
             } => self
                 .event_sender
-                .send(WindowEvent::Input(InputEvent {
+                .try_send(WindowEvent::Input(InputEvent {
                     device_id: *device_id,
                     event: Event::Keyboard {
                         key: input.virtual_keycode,
@@ -564,7 +566,7 @@ impl RuntimeWindow {
                 ..
             } => self
                 .event_sender
-                .send(WindowEvent::Input(InputEvent {
+                .try_send(WindowEvent::Input(InputEvent {
                     device_id: *device_id,
                     event: Event::MouseButton {
                         button: *button,
@@ -579,7 +581,7 @@ impl RuntimeWindow {
                 ..
             } => self
                 .event_sender
-                .send(WindowEvent::Input(InputEvent {
+                .try_send(WindowEvent::Input(InputEvent {
                     device_id: *device_id,
                     event: Event::MouseWheel {
                         delta: *delta,
@@ -593,7 +595,7 @@ impl RuntimeWindow {
                 ..
             } => self
                 .event_sender
-                .send(WindowEvent::Input(InputEvent {
+                .try_send(WindowEvent::Input(InputEvent {
                     device_id: *device_id,
                     event: Event::MouseMoved {
                         position: Some(
@@ -608,7 +610,7 @@ impl RuntimeWindow {
                 .unwrap_or_default(),
             WinitWindowEvent::CursorLeft { device_id } => self
                 .event_sender
-                .send(WindowEvent::Input(InputEvent {
+                .try_send(WindowEvent::Input(InputEvent {
                     device_id: *device_id,
                     event: Event::MouseMoved { position: None },
                 }))
@@ -619,7 +621,7 @@ impl RuntimeWindow {
 
     fn notify_size_changed(&mut self) {
         self.event_sender
-            .send(WindowEvent::Resize {
+            .try_send(WindowEvent::Resize {
                 size: self.last_known_size,
                 scale_factor: self.last_known_scale_factor,
             })
