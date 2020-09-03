@@ -162,7 +162,7 @@ impl RuntimeWindow {
     {
         let mut scene = Scene::default();
         let target_fps = window.target_fps();
-        let mut ui = UserInterface::new(window, SceneTarget::Scene(scene.clone())).await?;
+        let mut ui = UserInterface::new(window, SceneTarget::Scene(scene.clone()), global_arena().clone()).await?;
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         loop {

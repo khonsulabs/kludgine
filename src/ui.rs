@@ -221,6 +221,7 @@ where
     C: InteractiveComponent + 'static,
 {
     pub(crate) root: Entity<C>,
+    arena: HierarchicalArena,
     ui_state: UIState,
     mouse_button_handlers: HashMap<MouseButton, Index>,
     hover: Option<Index>,
@@ -232,7 +233,8 @@ impl<C> UserInterface<C>
 where
     C: InteractiveComponent + 'static,
 {
-    pub async fn new(root: C, scene: SceneTarget) -> KludgineResult<Self> {
+    pub async fn new(root: C, scene: SceneTarget,
+        arena: HierarchicalArena,) -> KludgineResult<Self> {
         let ui_state = UIState::default();
         let root = Entity::new(Context::new(
             {
@@ -244,14 +246,15 @@ where
                     None,
                 );
 
-                global_arena().insert(None, node).await
+                arena.insert(None, node).await
             },
-            global_arena().clone(),
+            arena.clone(),
             ui_state.clone(),
         ));
 
         let ui = Self {
             root: root.clone(),
+            arena,
             hover: None,
             last_render_order: Default::default(),
             ui_state,
@@ -265,7 +268,7 @@ where
     pub async fn render(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
         let hovered_indicies = self.hovered_indicies().await;
         let layouts = LayoutEngine::layout(
-            global_arena(),
+            &self.arena,
             &self.ui_state,
             self.root.index(),
             scene,
@@ -277,7 +280,7 @@ where
         while let Some(index) = layouts.next_to_render().await {
             if let Some(layout) = layouts.get_layout(&index).await {
                 self.last_render_order.push(index);
-                let node = global_arena().get(&index).await.unwrap();
+                let node = self.arena.get(&index).await.unwrap();
                 let mut context = StyledContext::new(
                     index,
                     scene.clone(),
@@ -287,7 +290,7 @@ where
                         .get(&index)
                         .unwrap()
                         .clone(),
-                    global_arena().clone(),
+                    self.arena.clone(),
                     self.ui_state.clone(),
                 );
                 node.render_background(&mut context, &layout).await?;
@@ -307,7 +310,7 @@ where
         let mut hovered_index = self.hover;
         while let Some(index) = hovered_index {
             indicies.insert(index);
-            hovered_index = global_arena().parent(index).await;
+            hovered_index = self.arena.parent(index).await;
         }
         indicies
     }
@@ -322,16 +325,16 @@ where
         // for each node.
         self.ui_state.initialize_redraw_target(target_fps).await;
 
-        let mut traverser = global_arena().traverse(&self.root).await;
+        let mut traverser = self.arena.traverse(&self.root).await;
         while let Some(index) = traverser.next().await {
             let mut context = SceneContext::new(
                 index,
                 scene.clone(),
-                global_arena().clone(),
+                self.arena.clone(),
                 self.ui_state.clone(),
             );
 
-            if let Some(node) = global_arena().get(&index).await {
+            if let Some(node) = self.arena.get(&index).await {
                 node.update(&mut context).await?;
             }
         }
@@ -345,9 +348,9 @@ where
                 self.last_mouse_position = position;
 
                 for (&button, &index) in self.mouse_button_handlers.iter() {
-                    if let Some(node) = global_arena().get(&index).await {
+                    if let Some(node) = self.arena.get(&index).await {
                         let mut context =
-                            Context::new(index, global_arena().clone(), self.ui_state.clone());
+                            Context::new(index, self.arena.clone(), self.ui_state.clone());
                         node.mouse_drag(&mut context, &position, button).await?;
                     }
                 }
@@ -356,9 +359,9 @@ where
                 self.hover = None;
                 if let Some(position) = position {
                     for &index in self.last_render_order.iter() {
-                        if let Some(node) = global_arena().get(&index).await {
+                        if let Some(node) = self.arena.get(&index).await {
                             let mut context =
-                                Context::new(index, global_arena().clone(), self.ui_state.clone());
+                                Context::new(index, self.arena.clone(), self.ui_state.clone());
                             if node.hit_test(&mut context, &position).await? {
                                 self.hover = Some(index);
                                 break;
@@ -369,17 +372,17 @@ where
                 let current_hovered_indicies = self.hovered_indicies().await;
 
                 for &new_hover in current_hovered_indicies.difference(&starting_hovered_indicies) {
-                    if let Some(node) = global_arena().get(&new_hover).await {
+                    if let Some(node) = self.arena.get(&new_hover).await {
                         let mut context =
-                            Context::new(new_hover, global_arena().clone(), self.ui_state.clone());
+                            Context::new(new_hover, self.arena.clone(), self.ui_state.clone());
                         node.hovered(&mut context).await?;
                     }
                 }
 
                 for &new_hover in starting_hovered_indicies.difference(&current_hovered_indicies) {
-                    if let Some(node) = global_arena().get(&new_hover).await {
+                    if let Some(node) = self.arena.get(&new_hover).await {
                         let mut context =
-                            Context::new(new_hover, global_arena().clone(), self.ui_state.clone());
+                            Context::new(new_hover, self.arena.clone(), self.ui_state.clone());
                         node.unhovered(&mut context).await?;
                     }
                 }
@@ -392,9 +395,9 @@ where
             Event::MouseButton { button, state } => match state {
                 ElementState::Released => {
                     if let Some(&index) = self.mouse_button_handlers.get(&button) {
-                        if let Some(node) = global_arena().get(&index).await {
+                        if let Some(node) = self.arena.get(&index).await {
                             let mut context =
-                                Context::new(index, global_arena().clone(), self.ui_state.clone());
+                                Context::new(index, self.arena.clone(), self.ui_state.clone());
                             node.mouse_up(&mut context, &self.last_mouse_position, button)
                                 .await?;
                         }
@@ -409,10 +412,10 @@ where
                     if let Some(last_mouse_position) = self.last_mouse_position {
                         let mut next_to_process = self.hover;
                         while let Some(index) = next_to_process {
-                            if let Some(node) = global_arena().get(&index).await {
+                            if let Some(node) = self.arena.get(&index).await {
                                 let mut context = Context::new(
                                     index,
-                                    global_arena().clone(),
+                                    self.arena.clone(),
                                     self.ui_state.clone(),
                                 );
                                 if node.interactive().await {
@@ -425,7 +428,7 @@ where
                                     }
                                 }
                             }
-                            next_to_process = global_arena().parent(index).await;
+                            next_to_process = self.arena.parent(index).await;
                         }
                     }
                 }
@@ -449,12 +452,12 @@ where
 
     async fn initialize(&self, index: &impl Indexable, scene: SceneTarget) -> KludgineResult<()> {
         let index = index.index();
-        let node = global_arena().get(&index).await.unwrap();
+        let node = self.arena.get(&index).await.unwrap();
 
         node.initialize(&mut SceneContext::new(
             index,
             scene,
-            global_arena().clone(),
+            self.arena.clone(),
             self.ui_state.clone(),
         ))
         .await
@@ -467,8 +470,9 @@ where
 {
     fn drop(&mut self) {
         let root = std::mem::take(&mut self.root);
+        let arena = self.arena.clone();
         Runtime::spawn(async move {
-            global_arena().remove(&root).await;
+            arena.remove(&root).await;
         })
         .detach();
     }
