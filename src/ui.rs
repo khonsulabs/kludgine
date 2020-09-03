@@ -330,9 +330,10 @@ where
                 global_arena().clone(),
                 self.ui_state.clone(),
             );
-            let node = global_arena().get(&index).await.unwrap();
 
-            node.update(&mut context).await?;
+            if let Some(node) = global_arena().get(&index).await {
+                node.update(&mut context).await?;
+            }
         }
 
         Ok(())
@@ -467,7 +468,7 @@ where
     fn drop(&mut self) {
         let root = std::mem::take(&mut self.root);
         Runtime::spawn(async move {
-            global_arena().remove(root).await;
+            global_arena().remove(&root).await;
         })
         .detach();
     }

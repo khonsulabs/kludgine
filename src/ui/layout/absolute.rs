@@ -15,7 +15,7 @@ pub struct AbsoluteLayout {
 }
 
 impl AbsoluteLayout {
-    pub fn child(mut self, index: impl Indexable, bounds: AbsoluteBounds) -> KludgineResult<Self> {
+    pub fn child(mut self, index: &impl Indexable, bounds: AbsoluteBounds) -> KludgineResult<Self> {
         let index = index.index();
         self.children.insert(index, bounds.validate()?);
         self.order.push(index);

@@ -44,7 +44,7 @@ impl Context {
         self.arena.set_parent(child, Some(self.index)).await
     }
 
-    pub async fn remove<I: Indexable>(&self, element: I) {
+    pub async fn remove<I: Indexable>(&self, element: &I) {
         self.arena.remove(element).await;
     }
 

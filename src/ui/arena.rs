@@ -48,7 +48,7 @@ impl HierarchicalArena {
         }
     }
 
-    pub async fn remove<I: Indexable>(&self, index: I) -> Option<Node> {
+    pub async fn remove<I: Indexable>(&self, index: &I) -> Option<Node> {
         let mut arena = self.handle.write().await;
         arena.remove(index.index())
     }

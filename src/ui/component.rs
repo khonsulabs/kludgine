@@ -53,7 +53,7 @@ pub trait Component: Send + Sync {
             let mut layout = Layout::absolute();
             for child in children {
                 let node = context.arena().get(&child).await.unwrap();
-                layout = layout.child(child, node.bounds().await)?;
+                layout = layout.child(&child, node.bounds().await)?;
             }
             layout.layout()
         }
