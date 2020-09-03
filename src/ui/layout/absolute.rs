@@ -363,7 +363,7 @@ mod tests {
             ) -> KludgineResult<Box<dyn LayoutSolver>> {
                 AbsoluteLayout::default()
                     .child(
-                        self.child,
+                        &self.child,
                         AbsoluteBounds {
                             right: Dimension::from_points(30.),
                             bottom: Dimension::from_points(30.),
@@ -390,7 +390,7 @@ mod tests {
                 if let Some(child) = self.other_child {
                     AbsoluteLayout::default()
                         .child(
-                            child,
+                            &child,
                             AbsoluteBounds {
                                 left: Dimension::from_points(10.),
                                 top: Dimension::from_points(10.),
