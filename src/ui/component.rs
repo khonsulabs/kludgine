@@ -4,7 +4,7 @@ use crate::{
     shape::{Fill, Shape},
     style::{Style, StyleSheet},
     ui::{
-        global_arena, AbsoluteBounds, Context, Entity, Index, Layout, LayoutSolver,
+        AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout, LayoutSolver,
         LayoutSolverExt, Node, SceneContext, StyledContext, UIState,
     },
     window::InputEvent,
@@ -52,7 +52,7 @@ pub trait Component: Send + Sync {
         } else {
             let mut layout = Layout::absolute();
             for child in children {
-                let node = context.arena().get(child).await.unwrap();
+                let node = context.arena().get(&child).await.unwrap();
                 layout = layout.child(child, node.bounds().await)?;
             }
             layout.layout()
@@ -212,6 +212,7 @@ pub trait InteractiveComponent: Component {
             parent: Some(context.index()),
             interactive: true,
             ui_state: context.ui_state().clone(),
+            arena: context.arena().clone(),
             style_sheet: Default::default(),
             bounds: Default::default(),
             callback: None,
@@ -220,7 +221,7 @@ pub trait InteractiveComponent: Component {
     }
 
     async fn callback(&self, context: &mut Context, message: Self::Output) {
-        let node = context.arena().get(context.index()).await.unwrap();
+        let node = context.arena().get(&context.index()).await.unwrap();
         node.callback(message).await;
     }
 }
@@ -238,7 +239,7 @@ where
 
 struct FullyTypedCallback<Input, Output> {
     translator: Box<dyn Fn(Input) -> Output + Send + Sync>,
-    target: Index,
+    target: Context,
 }
 
 #[async_trait]
@@ -251,10 +252,10 @@ impl<Input: Send + 'static, Output: Send + Sync + 'static> TypeErasedCallback<In
     for FullyTypedCallback<Input, Output>
 {
     async fn callback(&self, input: Input) {
-        if let Some(node) = global_arena().get(self.target).await {
+        if let Some(node) = self.target.arena().get(&self.target.index()).await {
             let translated = self.translator.as_ref()(input);
             let component = node.component.write().await;
-            component.receive_message(Box::new(translated))
+            component.receive_message(&self.target, Box::new(translated))
         }
     }
 }
@@ -268,7 +269,7 @@ where
     Input: Send + 'static,
 {
     pub fn new<Output: Send + Sync + 'static, F: Fn(Input) -> Output + Send + Sync + 'static>(
-        target: Index,
+        target: Context,
         callback: F,
     ) -> Self {
         Self {
@@ -296,6 +297,7 @@ where
     interactive: bool,
     callback: Option<Callback<C::Output>>,
     ui_state: UIState,
+    arena: HierarchicalArena,
     _marker: std::marker::PhantomData<P>,
 }
 
@@ -340,7 +342,12 @@ where
     }
 
     pub fn callback<F: Fn(C::Output) -> P + Send + Sync + 'static>(mut self, callback: F) -> Self {
-        self.callback = Some(Callback::new(self.parent.unwrap(), callback));
+        let target = Context::new(
+            self.parent.unwrap(),
+            self.arena.clone(),
+            self.ui_state.clone(),
+        );
+        self.callback = Some(Callback::new(target, callback));
         self
     }
 
@@ -353,16 +360,12 @@ where
                 self.interactive,
                 self.callback,
             );
-            let index = global_arena().insert(self.parent, node).await;
+            let index = self.arena.insert(self.parent, node).await;
 
-            let mut context = SceneContext::new(
-                index,
-                self.scene,
-                global_arena().clone(),
-                self.ui_state.clone(),
-            );
-            global_arena()
-                .get(index)
+            let mut context =
+                SceneContext::new(index, self.scene, self.arena.clone(), self.ui_state.clone());
+            self.arena
+                .get(&index)
                 .await
                 .unwrap()
                 .initialize(&mut context)
@@ -370,7 +373,11 @@ where
 
             index
         };
-        Ok(Entity::new(index))
+        Ok(Entity::new(Context::new(
+            index,
+            self.arena.clone(),
+            self.ui_state,
+        )))
     }
 }
 

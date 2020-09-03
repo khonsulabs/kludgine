@@ -1,10 +1,13 @@
-use crate::{ui::Node, KludgineHandle};
+use crate::{
+    ui::{Indexable, Node},
+    KludgineHandle,
+};
 use generational_arena::Arena;
 use std::collections::{HashMap, HashSet, VecDeque};
 
 pub use generational_arena::Index;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct HierarchicalArena {
     handle: KludgineHandle<HierarchicalArenaData>,
 }
@@ -15,28 +18,28 @@ impl HierarchicalArena {
         arena.insert(parent, node)
     }
 
-    pub async fn set_parent(&self, child: Index, parent: Option<Index>) {
+    pub async fn set_parent<I: Indexable, P: Indexable>(&self, child: I, parent: Option<P>) {
         let mut arena = self.handle.write().await;
-        arena.set_parent(child, parent)
+        arena.set_parent(child.index(), parent.map(|i| i.index()))
     }
 
-    pub async fn parent(&self, child: Index) -> Option<Index> {
+    pub async fn parent<I: Indexable>(&self, child: I) -> Option<Index> {
         let arena = self.handle.read().await;
-        arena.parent(child)
+        arena.parent(child.index())
     }
 
-    pub async fn children(&self, parent: &Option<Index>) -> Vec<Index> {
+    pub async fn children<I: Indexable>(&self, parent: &Option<I>) -> Vec<Index> {
         let arena = self.handle.read().await;
-        arena.children(&parent)
+        arena.children(&parent.as_ref().map(|p| p.index()))
     }
 
-    pub async fn get<I: Into<Index>>(&self, index: I) -> Option<Node> {
+    pub async fn get<I: Indexable>(&self, index: &I) -> Option<Node> {
         let arena = self.handle.read().await;
-        arena.get(index)
+        arena.get(index.index())
     }
 
-    pub async fn traverse(&self, start: impl Into<Index>) -> ArenaTraverser {
-        let queue = VecDeque::from(vec![start.into()]);
+    pub async fn traverse(&self, start: &impl Indexable) -> ArenaTraverser {
+        let queue = VecDeque::from(vec![start.index()]);
         ArenaTraverser {
             handle: self.clone(),
             queue,
@@ -45,12 +48,13 @@ impl HierarchicalArena {
         }
     }
 
-    pub async fn remove<I: Into<Index>>(&self, index: I) -> Option<Node> {
+    pub async fn remove<I: Indexable>(&self, index: I) -> Option<Node> {
         let mut arena = self.handle.write().await;
-        arena.remove(index)
+        arena.remove(index.index())
     }
 }
 
+#[derive(Debug)]
 struct HierarchicalArenaData {
     arena: Arena<Node>,
     children_by_parent: HashMap<Option<Index>, Vec<Index>>,
@@ -105,12 +109,11 @@ impl HierarchicalArenaData {
         }
     }
 
-    pub fn get<I: Into<Index>>(&self, index: I) -> Option<Node> {
-        self.arena.get(index.into()).cloned()
+    pub fn get(&self, index: Index) -> Option<Node> {
+        self.arena.get(index).cloned()
     }
 
-    pub fn remove<I: Into<Index>>(&mut self, index: I) -> Option<Node> {
-        let index = index.into();
+    pub fn remove(&mut self, index: Index) -> Option<Node> {
         if let Some(children) = self.children_by_parent.remove(&Some(index)) {
             for child in children.iter() {
                 self.remove(*child);

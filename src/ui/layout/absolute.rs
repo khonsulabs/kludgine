@@ -2,7 +2,7 @@ use crate::{
     math::{Dimension, Points, Rect, Size, Surround},
     ui::{
         layout::{Layout, LayoutSolver},
-        Index, LayoutContext,
+        Index, Indexable, LayoutContext,
     },
     KludgineError, KludgineResult,
 };
@@ -15,12 +15,8 @@ pub struct AbsoluteLayout {
 }
 
 impl AbsoluteLayout {
-    pub fn child(
-        mut self,
-        index: impl Into<Index>,
-        bounds: AbsoluteBounds,
-    ) -> KludgineResult<Self> {
-        let index = index.into();
+    pub fn child(mut self, index: impl Indexable, bounds: AbsoluteBounds) -> KludgineResult<Self> {
+        let index = index.index();
         self.children.insert(index, bounds.validate()?);
         self.order.push(index);
         Ok(self)
@@ -138,7 +134,7 @@ impl LayoutSolver for AbsoluteLayout {
             let mut child_context = context.clone_for(index).await;
             let child_content_size = context
                 .arena()
-                .get(index)
+                .get(&index)
                 .await
                 .unwrap()
                 .content_size(
@@ -354,6 +350,8 @@ mod tests {
         };
         use async_trait::async_trait;
         use std::collections::HashSet;
+
+        #[derive(Debug)]
         struct TestRoot {
             child: Index,
         }
@@ -379,6 +377,7 @@ mod tests {
         }
         impl StandaloneComponent for TestRoot {}
 
+        #[derive(Debug)]
         struct TestChild {
             other_child: Option<Index>,
         }

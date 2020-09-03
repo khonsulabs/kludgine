@@ -1,6 +1,6 @@
 use crate::{
     style::StyleSheet,
-    ui::{Entity, HierarchicalArena, Index, InteractiveComponent, Layout, UIState},
+    ui::{Entity, HierarchicalArena, Index, Indexable, InteractiveComponent, Layout, UIState},
 };
 mod layout_context;
 mod scene_context;
@@ -12,6 +12,7 @@ pub use self::{
 };
 use std::time::{Duration, Instant};
 
+#[derive(Clone, Debug)]
 pub struct Context {
     index: Index,
     arena: HierarchicalArena,
@@ -19,13 +20,9 @@ pub struct Context {
 }
 
 impl Context {
-    pub(crate) fn new<I: Into<Index>>(
-        index: I,
-        arena: HierarchicalArena,
-        ui_state: UIState,
-    ) -> Self {
+    pub(crate) fn new<I: Indexable>(index: I, arena: HierarchicalArena, ui_state: UIState) -> Self {
         Self {
-            index: index.into(),
+            index: index.index(),
             arena,
             ui_state,
         }
@@ -36,22 +33,18 @@ impl Context {
     }
 
     pub fn entity<T: InteractiveComponent>(&self) -> Entity<T> {
-        Entity::new(self.index)
+        Entity::new(self.clone())
     }
 
-    pub async fn set_parent<I: Into<Index>>(&self, parent: Option<I>) {
-        self.arena
-            .set_parent(self.index, parent.map(|p| p.into()))
-            .await
+    pub async fn set_parent<I: Indexable>(&self, parent: Option<I>) {
+        self.arena.set_parent(self.index, parent).await
     }
 
-    pub async fn add_child<I: Into<Index>>(&self, child: I) {
-        let child = child.into();
-
+    pub async fn add_child<I: Indexable>(&self, child: I) {
         self.arena.set_parent(child, Some(self.index)).await
     }
 
-    pub async fn remove<I: Into<Index>>(&self, element: I) {
+    pub async fn remove<I: Indexable>(&self, element: I) {
         self.arena.remove(element).await;
     }
 
@@ -59,16 +52,16 @@ impl Context {
         self.arena.children(&Some(self.index)).await
     }
 
-    pub fn clone_for<I: Into<Index>>(&self, index: I) -> Self {
+    pub fn clone_for<I: Indexable>(&self, index: &I) -> Self {
         Self {
-            index: index.into(),
+            index: index.index(),
             arena: self.arena.clone(),
             ui_state: self.ui_state.clone(),
         }
     }
 
     pub async fn last_layout(&self) -> Layout {
-        let node = self.arena.get(self.index).await.unwrap();
+        let node = self.arena.get(&self.index).await.unwrap();
         node.last_layout().await
     }
 
@@ -89,12 +82,12 @@ impl Context {
     }
 
     pub async fn style_sheet(&self) -> StyleSheet {
-        let node = self.arena.get(self.index).await.unwrap();
+        let node = self.arena.get(&self.index).await.unwrap();
         node.style_sheet().await
     }
 
     pub async fn set_style_sheet(&self, sheet: StyleSheet) {
-        let node = self.arena.get(self.index).await.unwrap();
+        let node = self.arena.get(&self.index).await.unwrap();
         node.set_style_sheet(sheet).await
     }
 

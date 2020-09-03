@@ -2,7 +2,10 @@ use crate::{
     math::{Point, Points, Rect, Size, Surround},
     scene::SceneTarget,
     style::EffectiveStyle,
-    ui::{HierarchicalArena, Index, Layout, LayoutSolver, SceneContext, StyledContext, UIState},
+    ui::{
+        HierarchicalArena, Index, Indexable, Layout, LayoutSolver, SceneContext, StyledContext,
+        UIState,
+    },
     KludgineHandle, KludgineResult,
 };
 use std::{
@@ -28,10 +31,10 @@ impl LayoutEngine {
     pub fn new(
         layout_solvers: HashMap<Index, KludgineHandle<Box<dyn LayoutSolver>>>,
         effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
-        root: impl Into<Index>,
+        root: impl Indexable,
     ) -> Self {
         let mut indicies_to_process = VecDeque::default();
-        indicies_to_process.push_back(root.into());
+        indicies_to_process.push_back(root.index());
         Self {
             data: KludgineHandle::new(LayoutEngineData {
                 layout_solvers,
@@ -52,10 +55,10 @@ impl LayoutEngine {
     ) -> KludgineResult<Self> {
         let mut effective_styles = HashMap::new();
         let mut computed_styles = HashMap::new();
-        let mut traverser = arena.traverse(root).await;
+        let mut traverser = arena.traverse(&root).await;
         let mut found_nodes = VecDeque::new();
         while let Some(index) = traverser.next().await {
-            let node = arena.get(index).await.unwrap();
+            let node = arena.get(&index).await.unwrap();
             let style_sheet = node.style_sheet().await;
             let mut node_style = style_sheet.normal;
 
@@ -89,7 +92,7 @@ impl LayoutEngine {
         // Traverse the found nodes starting at the back (leaf nodes) and iterate upwards to update stretch
         let mut layout_solvers = HashMap::new();
         while let Some(index) = found_nodes.pop_back() {
-            let node = arena.get(index).await.unwrap();
+            let node = arena.get(&index).await.unwrap();
             let effective_style = effective_styles.get(&index).unwrap().clone();
             let mut context = StyledContext::new(
                 index,
@@ -131,7 +134,7 @@ impl LayoutEngine {
             context
                 .layout_within(index, &computed_layout.inner_bounds())
                 .await?;
-            let node = arena.get(index).await.unwrap();
+            let node = arena.get(&index).await.unwrap();
             node.set_layout(computed_layout).await;
         }
 
@@ -208,7 +211,7 @@ impl std::ops::DerefMut for LayoutContext {
 }
 
 impl LayoutContext {
-    pub(crate) fn new<I: Into<Index>>(
+    pub(crate) fn new<I: Indexable>(
         index: I,
         scene: SceneTarget,
         effective_style: EffectiveStyle,
@@ -222,8 +225,8 @@ impl LayoutContext {
         }
     }
 
-    pub async fn clone_for<I: Into<Index>>(&self, index: I) -> Self {
-        let index = index.into();
+    pub async fn clone_for<I: Indexable>(&self, index: I) -> Self {
+        let index = index.index();
         let effective_style = self.layout.effective_style(&index).await.unwrap();
         Self {
             base: StyledContext::new(
@@ -244,11 +247,11 @@ impl LayoutContext {
 
     pub async fn layout_within(
         &mut self,
-        index: impl Into<Index>,
+        index: impl Indexable,
         bounds: &Rect<Points>,
     ) -> KludgineResult<()> {
-        let index = index.into();
-        let node = self.arena().get(index).await.unwrap();
+        let index = index.index();
+        let node = self.arena().get(&index).await.unwrap();
         let content_size = node
             .content_size(
                 self.styled_context(),
@@ -264,12 +267,12 @@ impl LayoutContext {
         Ok(())
     }
 
-    pub async fn layout_for(&self, index: impl Into<Index>) -> Option<Layout> {
-        self.layout.get_layout(&index.into()).await
+    pub async fn layout_for(&self, index: impl Indexable) -> Option<Layout> {
+        self.layout.get_layout(&index.index()).await
     }
 
-    pub async fn insert_layout(&mut self, index: impl Into<Index>, layout: Layout) {
-        let index = index.into();
+    pub async fn insert_layout(&mut self, index: impl Indexable, layout: Layout) {
+        let index = index.index();
         self.layout.insert_layout(index, layout, true).await;
     }
 }

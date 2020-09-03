@@ -1,6 +1,6 @@
 use crate::{
     scene::SceneTarget,
-    ui::{Context, HierarchicalArena, Index, UIState},
+    ui::{Context, HierarchicalArena, Indexable, UIState},
 };
 
 pub struct SceneContext {
@@ -23,7 +23,7 @@ impl std::ops::DerefMut for SceneContext {
 }
 
 impl SceneContext {
-    pub(crate) fn new<I: Into<Index>>(
+    pub(crate) fn new<I: Indexable>(
         index: I,
         scene: SceneTarget,
         arena: HierarchicalArena,
@@ -35,7 +35,7 @@ impl SceneContext {
         }
     }
 
-    pub fn clone_for<I: Into<Index>>(&self, index: I) -> Self {
+    pub fn clone_for<I: Indexable>(&self, index: &I) -> Self {
         Self {
             base: self.base.clone_for(index),
             scene: self.scene.clone(),

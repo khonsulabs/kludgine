@@ -233,27 +233,32 @@ where
     C: InteractiveComponent + 'static,
 {
     pub async fn new(root: C, scene: SceneTarget) -> KludgineResult<Self> {
-        let root = Entity::new({
-            let node = Node::new(
-                root,
-                StyleSheet::default(),
-                AbsoluteBounds::default(),
-                true,
-                None,
-            );
+        let ui_state = UIState::default();
+        let root = Entity::new(Context::new(
+            {
+                let node = Node::new(
+                    root,
+                    StyleSheet::default(),
+                    AbsoluteBounds::default(),
+                    true,
+                    None,
+                );
 
-            global_arena().insert(None, node).await
-        });
+                global_arena().insert(None, node).await
+            },
+            global_arena().clone(),
+            ui_state.clone(),
+        ));
 
         let ui = Self {
-            root,
+            root: root.clone(),
             hover: None,
             last_render_order: Default::default(),
-            ui_state: Default::default(),
+            ui_state,
             last_mouse_position: None,
             mouse_button_handlers: Default::default(),
         };
-        ui.initialize(root, scene).await?;
+        ui.initialize(&root, scene).await?;
         Ok(ui)
     }
 
@@ -262,7 +267,7 @@ where
         let layouts = LayoutEngine::layout(
             global_arena(),
             &self.ui_state,
-            self.root.into(),
+            self.root.index(),
             scene,
             hovered_indicies,
         )
@@ -272,7 +277,7 @@ where
         while let Some(index) = layouts.next_to_render().await {
             if let Some(layout) = layouts.get_layout(&index).await {
                 self.last_render_order.push(index);
-                let node = global_arena().get(index).await.unwrap();
+                let node = global_arena().get(&index).await.unwrap();
                 let mut context = StyledContext::new(
                     index,
                     scene.clone(),
@@ -317,15 +322,7 @@ where
         // for each node.
         self.ui_state.initialize_redraw_target(target_fps).await;
 
-        let mut traverser = global_arena().traverse(self.root).await;
-        while let Some(index) = traverser.next().await {
-            let mut context = Context::new(index, global_arena().clone(), self.ui_state.clone());
-            let node = global_arena().get(index).await.unwrap();
-
-            node.process_pending_events(&mut context).await?;
-        }
-
-        let mut traverser = global_arena().traverse(self.root).await;
+        let mut traverser = global_arena().traverse(&self.root).await;
         while let Some(index) = traverser.next().await {
             let mut context = SceneContext::new(
                 index,
@@ -333,7 +330,7 @@ where
                 global_arena().clone(),
                 self.ui_state.clone(),
             );
-            let node = global_arena().get(index).await.unwrap();
+            let node = global_arena().get(&index).await.unwrap();
 
             node.update(&mut context).await?;
         }
@@ -347,7 +344,7 @@ where
                 self.last_mouse_position = position;
 
                 for (&button, &index) in self.mouse_button_handlers.iter() {
-                    if let Some(node) = global_arena().get(index).await {
+                    if let Some(node) = global_arena().get(&index).await {
                         let mut context =
                             Context::new(index, global_arena().clone(), self.ui_state.clone());
                         node.mouse_drag(&mut context, &position, button).await?;
@@ -358,7 +355,7 @@ where
                 self.hover = None;
                 if let Some(position) = position {
                     for &index in self.last_render_order.iter() {
-                        if let Some(node) = global_arena().get(index).await {
+                        if let Some(node) = global_arena().get(&index).await {
                             let mut context =
                                 Context::new(index, global_arena().clone(), self.ui_state.clone());
                             if node.hit_test(&mut context, &position).await? {
@@ -371,7 +368,7 @@ where
                 let current_hovered_indicies = self.hovered_indicies().await;
 
                 for &new_hover in current_hovered_indicies.difference(&starting_hovered_indicies) {
-                    if let Some(node) = global_arena().get(new_hover).await {
+                    if let Some(node) = global_arena().get(&new_hover).await {
                         let mut context =
                             Context::new(new_hover, global_arena().clone(), self.ui_state.clone());
                         node.hovered(&mut context).await?;
@@ -379,7 +376,7 @@ where
                 }
 
                 for &new_hover in starting_hovered_indicies.difference(&current_hovered_indicies) {
-                    if let Some(node) = global_arena().get(new_hover).await {
+                    if let Some(node) = global_arena().get(&new_hover).await {
                         let mut context =
                             Context::new(new_hover, global_arena().clone(), self.ui_state.clone());
                         node.unhovered(&mut context).await?;
@@ -394,7 +391,7 @@ where
             Event::MouseButton { button, state } => match state {
                 ElementState::Released => {
                     if let Some(&index) = self.mouse_button_handlers.get(&button) {
-                        if let Some(node) = global_arena().get(index).await {
+                        if let Some(node) = global_arena().get(&index).await {
                             let mut context =
                                 Context::new(index, global_arena().clone(), self.ui_state.clone());
                             node.mouse_up(&mut context, &self.last_mouse_position, button)
@@ -411,7 +408,7 @@ where
                     if let Some(last_mouse_position) = self.last_mouse_position {
                         let mut next_to_process = self.hover;
                         while let Some(index) = next_to_process {
-                            if let Some(node) = global_arena().get(index).await {
+                            if let Some(node) = global_arena().get(&index).await {
                                 let mut context = Context::new(
                                     index,
                                     global_arena().clone(),
@@ -449,9 +446,9 @@ where
         self.ui_state.needs_render().await
     }
 
-    async fn initialize(&self, index: impl Into<Index>, scene: SceneTarget) -> KludgineResult<()> {
-        let index = index.into();
-        let node = global_arena().get(index).await.unwrap();
+    async fn initialize(&self, index: &impl Indexable, scene: SceneTarget) -> KludgineResult<()> {
+        let index = index.index();
+        let node = global_arena().get(&index).await.unwrap();
 
         node.initialize(&mut SceneContext::new(
             index,
@@ -468,7 +465,7 @@ where
     C: InteractiveComponent + 'static,
 {
     fn drop(&mut self) {
-        let root = self.root;
+        let root = std::mem::take(&mut self.root);
         Runtime::spawn(async move {
             global_arena().remove(root).await;
         })
@@ -478,35 +475,41 @@ where
 
 #[derive(Debug)]
 pub struct Entity<C> {
-    index: RequiresInitialization<Index>,
+    context: RequiresInitialization<Context>,
     _phantom: std::marker::PhantomData<C>,
 }
 
 impl<C> Default for Entity<C> {
     fn default() -> Self {
         Self {
-            index: Default::default(),
+            context: Default::default(),
             _phantom: Default::default(),
         }
     }
 }
 
-impl<C> Into<Index> for Entity<C> {
-    fn into(self) -> Index {
-        *self.index
+pub trait Indexable {
+    fn index(&self) -> Index;
+}
+
+impl<C> Indexable for Entity<C> {
+    fn index(&self) -> Index {
+        self.context.index()
+    }
+}
+
+impl Indexable for Index {
+    fn index(&self) -> Index {
+        *self
     }
 }
 
 impl<C> Entity<C> {
-    pub fn new(index: Index) -> Self {
+    pub fn new(context: Context) -> Self {
         Self {
-            index: index.into(),
+            context: RequiresInitialization::new(context),
             _phantom: Default::default(),
         }
-    }
-
-    pub fn index(&self) -> Index {
-        *self.index
     }
 }
 
@@ -515,10 +518,20 @@ where
     C: InteractiveComponent + 'static,
 {
     pub async fn send(&self, message: C::Input) -> KludgineResult<()> {
-        if let Some(target_node) = global_arena().get(*self.index).await {
+        if let Some(target_node) = global_arena().get(self).await {
             let component = target_node.component.read().await;
             if let Some(node_data) = component.as_any().downcast_ref::<NodeData<C>>() {
-                let _ = node_data.input_sender.send(message);
+                let component_handle = node_data.component.clone();
+                let mut context = self.context.clone();
+                Runtime::spawn(async move {
+                    let mut component = component_handle.write().await;
+                    component
+                        .receive_input(&mut context, message)
+                        .await
+                        .unwrap()
+                })
+                .detach();
+
                 Ok(())
             } else {
                 unreachable!("Invalid type in Entity<T> -- Node contained different type than T")
@@ -534,17 +547,15 @@ where
     C: AnimatableComponent + 'static,
 {
     pub fn animate(&self) -> C::AnimationFactory {
-        C::new_animation_factory(*self)
+        C::new_animation_factory(self.clone())
     }
 }
 
 impl<C> Clone for Entity<C> {
     fn clone(&self) -> Self {
         Self {
-            index: self.index,
+            context: self.context.clone(),
             _phantom: Default::default(),
         }
     }
 }
-
-impl<C> Copy for Entity<C> {}

@@ -86,7 +86,7 @@ impl RuntimeWindow {
     where
         T: Window,
     {
-        let root_node = global_arena().get(ui.root).await.unwrap();
+        let root_node = global_arena().get(&ui.root).await.unwrap();
         let component = root_node.component.read().await;
         let window = component.as_any().downcast_ref::<NodeData<T>>().unwrap();
         if let CloseResponse::Close = window.close_requested().await? {

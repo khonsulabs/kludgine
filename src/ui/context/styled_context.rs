@@ -2,7 +2,7 @@ use crate::{
     math::{Points, Size},
     scene::SceneTarget,
     style::EffectiveStyle,
-    ui::{HierarchicalArena, Index, SceneContext, UIState},
+    ui::{HierarchicalArena, Indexable, SceneContext, UIState},
     KludgineError, KludgineResult,
 };
 
@@ -26,7 +26,7 @@ impl std::ops::DerefMut for StyledContext {
 }
 
 impl StyledContext {
-    pub(crate) fn new<I: Into<Index>>(
+    pub(crate) fn new<I: Indexable>(
         index: I,
         scene: SceneTarget,
         effective_style: EffectiveStyle,
@@ -39,7 +39,7 @@ impl StyledContext {
         }
     }
 
-    pub fn clone_for<I: Into<Index>>(&self, index: I) -> Self {
+    pub fn clone_for<I: Indexable>(&self, index: &I) -> Self {
         Self {
             base: self.base.clone_for(index),
             effective_style: self.effective_style.clone(), // TODO this isn't right
@@ -59,10 +59,9 @@ impl StyledContext {
 
     pub async fn content_size(
         &self,
-        index: impl Into<Index>,
+        index: &impl Indexable,
         constraints: &Size<Option<Points>>,
     ) -> KludgineResult<Size<Points>> {
-        let index = index.into();
         let node = self
             .arena
             .get(index)

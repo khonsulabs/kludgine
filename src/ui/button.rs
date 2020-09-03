@@ -23,6 +23,7 @@ impl Default for ButtonStyle {
     }
 }
 
+#[derive(Debug)]
 pub struct Button {
     caption: String,
     label: Entity<Label>,
@@ -97,7 +98,7 @@ impl Component for Button {
     ) -> KludgineResult<Size<Points>> {
         let contraints_minus_padding = *constraints - self.style.padding.minimum_size();
         Ok(context
-            .content_size(self.label, &contraints_minus_padding)
+            .content_size(&self.label, &contraints_minus_padding)
             .await?
             + self.style.padding.minimum_size())
     }
