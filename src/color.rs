@@ -65,6 +65,10 @@ impl Color {
     pub fn alpha(&self) -> f32 {
         self.0.a
     }
+
+    pub fn rgba(&self) -> [f32; 4] {
+        [self.0.r, self.0.g, self.0.b, self.0.a]
+    }
 }
 
 impl Color {

@@ -73,15 +73,9 @@ pub trait Component: Send + Sync {
         layout: &Layout,
     ) -> KludgineResult<()> {
         if let Some(background) = context.effective_style().background_color {
-            context
-                .scene()
-                .draw_shape(
-                    Shape::rect(
-                        layout.bounds_without_margin().coord1().to_f32(),
-                        layout.bounds_without_margin().coord2().to_f32(),
-                    )
-                    .fill(Fill::Solid(background.into())),
-                )
+            Shape::rect(layout.bounds_without_margin())
+                .fill(Fill::new(background))
+                .draw_at(Point::default(), context.scene())
                 .await;
         }
         Ok(())

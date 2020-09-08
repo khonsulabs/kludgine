@@ -71,13 +71,16 @@ where
             size: Size::new(max.x - min.x, max.y - min.y),
         }
     }
-
     pub fn x1(&self) -> S {
         self.origin.x
     }
 
     pub fn y1(&self) -> S {
         self.origin.y
+    }
+
+    pub fn coord1(&self) -> Point<S> {
+        self.origin
     }
 
     pub fn x2(&self) -> S {
@@ -88,11 +91,23 @@ where
         self.origin.y + self.size.height
     }
 
-    pub fn coord1(&self) -> Point<S> {
-        self.origin
+    pub fn coord2(&self) -> Point<S> {
+        Point::new(self.x2(), self.y2())
     }
 
-    pub fn coord2(&self) -> Point<S> {
+    pub fn x1y1(&self) -> Point<S> {
+        Point::new(self.x1(), self.y1())
+    }
+
+    pub fn x1y2(&self) -> Point<S> {
+        Point::new(self.x1(), self.y2())
+    }
+
+    pub fn x2y1(&self) -> Point<S> {
+        Point::new(self.x2(), self.y1())
+    }
+
+    pub fn x2y2(&self) -> Point<S> {
         Point::new(self.x2(), self.y2())
     }
 

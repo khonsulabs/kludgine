@@ -128,7 +128,7 @@ impl Frame {
                     }
 
                     if current_batch.is_none() {
-                        current_batch = Some(FrameBatch::Shape(shape::Batch::new()));
+                        current_batch = Some(FrameBatch::Shape(shape::Batch::default()));
                     }
 
                     let current_batch = current_batch.as_mut().unwrap().shape_batch().unwrap();
