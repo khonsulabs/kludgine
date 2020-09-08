@@ -16,7 +16,7 @@ pub enum KludgineError {
     #[error("error parsing json: {0}")]
     JsonError(#[from] json::Error),
     #[error("error tessellating shape")]
-    TesselationError(lyon_tessellation::TessellationError),
+    TessellationError(lyon_tessellation::TessellationError),
     #[error("AtlasSpriteId belongs to an Atlas not registered in this collection")]
     InvalidAtlasSpriteId,
     #[error("An index provided was not found")]

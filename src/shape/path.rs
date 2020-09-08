@@ -1,6 +1,8 @@
 use crate::{
     math::{Pixels, Point, Points},
     scene::SceneTarget,
+    shape::{Fill, Stroke},
+    KludgineError, KludgineResult,
 };
 use lyon_tessellation::path::{builder::PathBuilder as _, PathEvent as LyonPathEvent};
 
@@ -139,6 +141,30 @@ impl Path<Points> {
 }
 
 impl Path<Pixels> {
+    pub fn build(
+        &self,
+        builder: &mut rgx_lyon::ShapeBuilder,
+        stroke: &Option<Stroke>,
+        fill: &Option<Fill>,
+    ) -> KludgineResult<()> {
+        let path = self.as_lyon();
+        if let Some(fill) = fill {
+            builder.default_color = fill.color.rgba();
+            builder
+                .fill(&path, &fill.options)
+                .map_err(KludgineError::TessellationError)?;
+        }
+
+        if let Some(stroke) = stroke {
+            builder.default_color = stroke.color.rgba();
+            builder
+                .stroke(&path, &stroke.options)
+                .map_err(KludgineError::TessellationError)?;
+        }
+
+        Ok(())
+    }
+
     pub(crate) fn as_lyon(&self) -> lyon_tessellation::path::Path {
         let mut builder = lyon_tessellation::path::Path::builder();
         for &event in &self.events {
@@ -192,6 +218,32 @@ where
     pub fn line_to(mut self, end_at: Endpoint<S>) -> Self {
         self.path.events.push(PathEvent::Line {
             from: self.current_location,
+            to: end_at,
+        });
+        self.current_location = end_at;
+        self
+    }
+
+    pub fn quadratic_curve_to(mut self, control: ControlPoint<S>, end_at: Endpoint<S>) -> Self {
+        self.path.events.push(PathEvent::Quadratic {
+            from: self.current_location,
+            ctrl: control,
+            to: end_at,
+        });
+        self.current_location = end_at;
+        self
+    }
+
+    pub fn cubic_curve_to(
+        mut self,
+        control1: ControlPoint<S>,
+        control2: ControlPoint<S>,
+        end_at: Endpoint<S>,
+    ) -> Self {
+        self.path.events.push(PathEvent::Cubic {
+            from: self.current_location,
+            ctrl1: control1,
+            ctrl2: control2,
             to: end_at,
         });
         self.current_location = end_at;

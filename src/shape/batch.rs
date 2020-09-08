@@ -1,4 +1,4 @@
-use crate::{math::Pixels, shape::Shape, KludgineError, KludgineResult};
+use crate::{math::Pixels, shape::Shape, KludgineResult};
 use rgx_lyon::ShapeBuilder;
 
 #[derive(Default, Clone)]
@@ -15,19 +15,7 @@ impl Batch {
         let mut builder = ShapeBuilder::default();
 
         for shape in self.shapes {
-            if let Some(fill) = shape.fill {
-                builder.default_color = fill.color.rgba();
-                builder
-                    .fill(&shape.path.as_lyon(), &fill.options)
-                    .map_err(KludgineError::TesselationError)?;
-            }
-
-            if let Some(stroke) = shape.stroke {
-                builder.default_color = stroke.color.rgba();
-                builder
-                    .stroke(&shape.path.as_lyon(), &stroke.options)
-                    .map_err(KludgineError::TesselationError)?;
-            }
+            shape.build(&mut builder)?;
         }
 
         Ok(builder.prepare(renderer))

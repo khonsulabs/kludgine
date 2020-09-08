@@ -1,16 +1,22 @@
 mod batch;
+mod circle;
+mod fill;
+mod geometry;
 mod path;
+mod stroke;
 
-pub use self::{batch::*, path::*};
+pub use self::{batch::*, fill::*, path::*, stroke::*};
 use crate::{
-    color::Color,
     math::{Pixels, Point, Points, Rect},
     scene::{Element, SceneTarget},
+    KludgineResult,
 };
+use circle::Circle;
+use geometry::ShapeGeometry;
 
 #[derive(Default, Clone)]
 pub struct Shape<S> {
-    path: Path<S>,
+    geometry: ShapeGeometry<S>,
     stroke: Option<Stroke>,
     fill: Option<Fill>,
 }
@@ -26,9 +32,35 @@ impl Shape<Points> {
             .build();
 
         Self {
-            path,
+            geometry: ShapeGeometry::Path(path),
             stroke: None,
             fill: None,
+        }
+    }
+
+    pub fn circle(center: Point<Points>, radius: Points) -> Self {
+        Self {
+            geometry: ShapeGeometry::Circle(Circle { center, radius }),
+            stroke: None,
+            fill: None,
+        }
+    }
+
+    pub fn polygon(points: impl IntoIterator<Item = Point<Points>>) -> Self {
+        let mut points = points.into_iter();
+        if let Some(start) = points.next() {
+            let mut builder = PathBuilder::new(start);
+            for point in points {
+                builder = builder.line_to(point);
+            }
+
+            Self {
+                geometry: ShapeGeometry::Path(builder.close().build()),
+                stroke: None,
+                fill: None,
+            }
+        } else {
+            Self::default()
         }
     }
 
@@ -53,8 +85,8 @@ impl Shape<Points> {
         scene: &SceneTarget,
     ) -> Shape<Pixels> {
         Shape {
-            path: self
-                .path
+            geometry: self
+                .geometry
                 .translate_and_convert_to_device(location, scene)
                 .await,
             fill: self.fill.clone(),
@@ -63,32 +95,8 @@ impl Shape<Points> {
     }
 }
 
-#[derive(Default, Clone, Debug)]
-pub struct Fill {
-    pub color: Color,
-    pub options: lyon_tessellation::FillOptions,
-}
-
-impl Fill {
-    pub fn new(color: Color) -> Self {
-        Self {
-            color,
-            options: Default::default(),
-        }
-    }
-}
-
-#[derive(Default, Clone, Debug)]
-pub struct Stroke {
-    pub color: Color,
-    pub options: lyon_tessellation::StrokeOptions,
-}
-
-impl Stroke {
-    pub fn new(color: Color) -> Self {
-        Self {
-            color,
-            options: Default::default(),
-        }
+impl Shape<Pixels> {
+    pub(crate) fn build(&self, builder: &mut rgx_lyon::ShapeBuilder) -> KludgineResult<()> {
+        self.geometry.build(builder, &self.stroke, &self.fill)
     }
 }
