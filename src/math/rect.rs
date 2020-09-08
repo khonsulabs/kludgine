@@ -187,6 +187,18 @@ where
     }
 }
 
+impl<S> Rect<S>
+where
+    S: std::ops::Div<f32, Output = S>
+        + std::ops::Add<Output = S>
+        + Copy,
+{
+    pub fn center(&self) -> Point<S> {
+        let half_size = self.size / 2f32;
+        self.origin + half_size
+    }
+}
+
 impl<S> Into<rgx::rect::Rect<S>> for Rect<S>
 where
     S: std::ops::Sub<Output = S> + std::ops::Add<Output = S> + Copy + PartialOrd,
