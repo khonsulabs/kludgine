@@ -1,8 +1,4 @@
 mod dimension;
-// mod measurement;
-// mod point;
-// mod rect;
-// mod size;
 mod length_traits;
 pub(crate) mod rgx_conversions;
 mod surround;
