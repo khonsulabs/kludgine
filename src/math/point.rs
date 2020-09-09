@@ -69,6 +69,34 @@ where
     }
 }
 
+impl<S> std::ops::Add<S> for Point<S>
+where
+    S: std::ops::Add<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn add(self, s: S) -> Self {
+        Self {
+            x: self.x + s,
+            y: self.y + s,
+        }
+    }
+}
+
+impl<S> std::ops::Sub<S> for Point<S>
+where
+    S: std::ops::Sub<Output = S> + Copy,
+{
+    type Output = Self;
+
+    fn sub(self, s: S) -> Self {
+        Self {
+            x: self.x - s,
+            y: self.y - s,
+        }
+    }
+}
+
 impl<S> std::ops::Add<Point<S>> for Point<S>
 where
     S: std::ops::Add<Output = S> + Copy,

@@ -6,7 +6,8 @@ use crate::{
 use crossbeam::atomic::AtomicCell;
 use rgx::core::*;
 use rgx::kit;
-use rgx::kit::{shape2d, sprite2d, Repeat, ZDepth};
+use rgx::kit::{sprite2d, Repeat, ZDepth};
+use rgx_lyon::LyonPipeline;
 use std::sync::Arc;
 
 pub(crate) struct FrameSynchronizer {
@@ -52,7 +53,7 @@ pub(crate) struct FrameRenderer {
     swap_chain: SwapChain,
     frame_synchronizer: FrameSynchronizer,
     sprite_pipeline: sprite2d::Pipeline,
-    shape_pipeline: shape2d::Pipeline,
+    shape_pipeline: LyonPipeline,
 }
 
 impl FrameRenderer {
@@ -247,9 +248,9 @@ impl FrameRenderer {
                         );
                     }
                     FrameCommand::DrawShapes(batch) => {
-                        let buffer = batch.finish(&self.renderer);
+                        let prepared_shape = batch.finish(&self.renderer)?;
                         pass.set_pipeline(&self.shape_pipeline);
-                        pass.draw_buffer(&buffer);
+                        prepared_shape.draw(&mut pass);
                     }
                     FrameCommand::DrawText { text, loaded_font } => {
                         let text_data = text.handle.read().await;

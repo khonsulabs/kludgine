@@ -18,7 +18,7 @@ use winit::event::VirtualKeyCode;
 pub(crate) enum Element {
     Sprite(RenderedSprite),
     Text(PreparedSpan),
-    Shape(Shape),
+    Shape(Shape<Pixels>),
 }
 
 #[derive(Clone)]
@@ -65,73 +65,6 @@ impl SceneTarget {
 
     pub(crate) async fn push_element(&self, element: Element) {
         self.scene_mut().await.elements.push(element);
-    }
-
-    pub async fn draw_shape(&self, shape: Shape) {
-        let shape = match shape {
-            Shape::Rectangle(rectangle, zdepth, rotation, stroke, fill) => {
-                let effective_scale = self.effective_scale_factor().await;
-                let p1 = self
-                    .user_to_device_point(Point::new(rectangle.x1.into(), rectangle.y1.into()))
-                    .await
-                    .to_pixels(effective_scale);
-                let p2 = self
-                    .user_to_device_point(Point::new(rectangle.x2.into(), rectangle.y2.into()))
-                    .await
-                    .to_pixels(effective_scale);
-
-                Shape::Rectangle(
-                    rgx::rect::Rect::new(
-                        p1.x.to_f32(),
-                        p1.y.to_f32(),
-                        p2.x.to_f32(),
-                        p2.y.to_f32(),
-                    ),
-                    zdepth,
-                    rotation,
-                    stroke,
-                    fill,
-                )
-            }
-            Shape::Line(line, zdepth, rotation, stroke) => {
-                let effective_scale = self.effective_scale_factor().await;
-                let p1 = self
-                    .user_to_device_point(Point::new(line.p1.x.into(), line.p1.y.into()))
-                    .await
-                    .to_pixels(effective_scale);
-                let p2 = self
-                    .user_to_device_point(Point::new(line.p2.x.into(), line.p2.y.into()))
-                    .await
-                    .to_pixels(effective_scale);
-                Shape::Line(
-                    rgx::kit::shape2d::Line {
-                        p1: rgx::math::Point2::new(p1.x.to_f32(), p1.y.to_f32()),
-                        p2: rgx::math::Point2::new(p2.x.to_f32(), p2.y.to_f32()),
-                    },
-                    zdepth,
-                    rotation,
-                    stroke,
-                )
-            }
-            Shape::Circle(..) => {
-                todo!("rgx needs to expose the fields on shape2d::Circle to be pub, can't make this code work otherwise https://github.com/cloudhead/rgx/issues/25")
-                // let position = self
-                //     .user_to_device_point(circle.position.into())
-                //     .await
-                //     .into();
-                // Shape::Circle(
-                //     rgx::kit::shape2d::Circle {
-                //         position,
-                //         radius: circle.radius,
-                //         sides: circle.sides,
-                //     },
-                //     zdepth,
-                //     stroke,
-                //     fill,
-                // )
-            }
-        };
-        self.scene_mut().await.elements.push(Element::Shape(shape));
     }
 
     pub fn set_camera(&self, zoom: f32, look_at: Point<Points>) -> SceneTarget {

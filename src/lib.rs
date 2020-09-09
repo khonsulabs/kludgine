@@ -15,6 +15,8 @@ pub enum KludgineError {
     ImageError(#[from] image::ImageError),
     #[error("error parsing json: {0}")]
     JsonError(#[from] json::Error),
+    #[error("error tessellating shape")]
+    TessellationError(lyon_tessellation::TessellationError),
     #[error("AtlasSpriteId belongs to an Atlas not registered in this collection")]
     InvalidAtlasSpriteId,
     #[error("An index provided was not found")]
@@ -125,6 +127,7 @@ pub mod frame;
 pub mod math;
 pub mod runtime;
 pub mod scene;
+pub mod shape;
 pub mod sprite;
 pub mod style;
 pub mod text;
@@ -133,8 +136,6 @@ pub mod theme;
 pub mod tilemap;
 pub mod ui;
 pub mod window;
-
-pub use rgx::kit::shape2d as shape;
 
 /// Convenience module that exports the public interface of Kludgine
 pub mod prelude {
