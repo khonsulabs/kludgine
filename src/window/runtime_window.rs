@@ -1,11 +1,11 @@
 use crate::{
     event::{ElementState, VirtualKeyCode},
-    frame::Frame,
     math::{Pixels, Point, ScreenScale, Size},
     runtime::Runtime,
     scene::{Scene, SceneTarget},
     ui::{global_arena, NodeData, NodeDataWindowExt, UserInterface},
     window::{
+        frame::Frame,
         renderer::{FrameRenderer, FrameSynchronizer},
         CloseResponse, Event, InputEvent, Renderer, Window, WindowEvent, WindowMessage, WINDOWS,
         WINDOW_CHANNELS,

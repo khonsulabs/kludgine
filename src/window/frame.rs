@@ -1,4 +1,4 @@
-use super::{
+use crate::{
     math::Size,
     scene::{Element, Scene},
     shape::{self},

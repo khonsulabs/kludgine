@@ -123,7 +123,6 @@ mod internal_macros {
 pub mod application;
 pub mod color;
 pub mod event;
-pub mod frame;
 pub mod math;
 pub mod runtime;
 pub mod scene;

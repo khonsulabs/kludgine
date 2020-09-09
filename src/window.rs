@@ -14,6 +14,7 @@ use rgx::core::*;
 use std::collections::HashMap;
 use winit::window::{WindowBuilder as WinitWindowBuilder, WindowId};
 
+pub(crate) mod frame;
 mod renderer;
 mod runtime_window;
 pub(crate) use runtime_window::RuntimeWindow;
