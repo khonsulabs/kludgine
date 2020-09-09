@@ -1,5 +1,5 @@
 use super::{
-    math::{Point, Points, Size},
+    math::{Point, Scaled, Size},
     scene::SceneTarget,
     sprite::Sprite,
     KludgineResult,
@@ -31,10 +31,14 @@ where
         self.stagger = Some(stagger);
     }
 
-    pub async fn draw(&self, scene: &SceneTarget, location: Point<Points>) -> KludgineResult<()> {
+    pub async fn draw(
+        &self,
+        scene: &SceneTarget,
+        location: Point<f32, Scaled>,
+    ) -> KludgineResult<()> {
         // Normally we don't need to worry about the origin, but in the case of TileMap
         // it will fill the screen with whatever the provider returns for each tile coordinate
-        let location = Point::new(location.x + scene.origin().x, location.y + scene.origin().y);
+        let location = location + scene.origin().to_vector();
 
         let tile_height = if let Some(stagger) = &self.stagger {
             stagger.height
@@ -43,13 +47,13 @@ where
         };
 
         // We need to start at the upper-left of inverting the location
-        let min_x = (-location.x.to_f32() / self.tile_size.width as f32).floor() as i32;
-        let min_y = (-location.y.to_f32() / self.tile_size.height as f32).floor() as i32;
+        let min_x = (-location.x / self.tile_size.width as f32).floor() as i32;
+        let min_y = (-location.y / self.tile_size.height as f32).floor() as i32;
         let extra_x = (self.tile_size.width - 1) as f32;
         let extra_y = (self.tile_size.height - 1) as f32;
         let scene_size = scene.size().await;
-        let total_width = scene_size.width.to_f32() + extra_x;
-        let total_height = scene_size.height.to_f32() + extra_y;
+        let total_width = scene_size.width + extra_x;
+        let total_height = scene_size.height + extra_y;
         let tiles_wide = (total_width / self.tile_size.width as f32).ceil() as i32;
         let tiles_high = (total_height / tile_height as f32).ceil() as i32;
 
@@ -87,7 +91,7 @@ where
         Ok(())
     }
 
-    fn coordinate_for_tile(&self, location: Point<i32>) -> Point<Points> {
+    fn coordinate_for_tile(&self, location: Point<i32>) -> Point<f32, Scaled> {
         if let Some(stagger) = &self.stagger {
             let x_stagger = if location.y % 2 == 0 {
                 stagger.width as i32
@@ -95,13 +99,13 @@ where
                 0
             };
             Point::new(
-                Points::from_f32((location.x * self.tile_size.width as i32 - x_stagger) as f32),
-                Points::from_f32((location.y * stagger.height as i32) as f32),
+                (location.x * self.tile_size.width as i32 - x_stagger) as f32,
+                (location.y * stagger.height as i32) as f32,
             )
         } else {
             Point::new(
-                Points::from_f32((location.x * self.tile_size.width as i32) as f32),
-                Points::from_f32((location.y * self.tile_size.height as i32) as f32),
+                (location.x * self.tile_size.width as i32) as f32,
+                (location.y * self.tile_size.height as i32) as f32,
             )
         }
     }

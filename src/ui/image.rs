@@ -1,6 +1,6 @@
 use crate::{
     event::MouseButton,
-    math::{Point, Points, Rect, Size},
+    math::{Point, Rect, Scaled, Size},
     sprite::{Sprite, SpriteSource},
     ui::{
         animation::Transition,
@@ -150,25 +150,22 @@ impl Component for Image {
         if let Some(frame) = &self.current_frame {
             let render_bounds = location.inner_bounds();
             let frame_location = frame.location().await;
-            let size_as_points = Size::new(
-                Points::from_f32(frame_location.size.width as f32),
-                Points::from_f32(frame_location.size.height as f32),
-            );
+            let size_as_points = frame_location.size.to_f32().cast_unit();
             let target_bounds = match &self.options.scaling {
-                None => Rect::sized(render_bounds.origin, size_as_points),
+                None => Rect::new(render_bounds.origin, size_as_points),
                 Some(scaling) => match scaling {
                     ImageScaling::Fill => location.inner_bounds(),
                     _ => {
                         let horizontal_scale = render_bounds.size.width / size_as_points.width;
                         let horizontal_fit =
-                            Rect::sized(render_bounds.origin, size_as_points * horizontal_scale);
+                            Rect::new(render_bounds.origin, size_as_points * horizontal_scale);
                         let vertical_scale = render_bounds.size.height / size_as_points.height;
                         let vertical_fit =
-                            Rect::sized(render_bounds.origin, size_as_points * vertical_scale);
+                            Rect::new(render_bounds.origin, size_as_points * vertical_scale);
 
                         match scaling {
                             ImageScaling::AspectFit => {
-                                if render_bounds.approximately_contains_rect(&horizontal_fit) {
+                                if render_bounds.contains_rect(&horizontal_fit) {
                                     horizontal_fit
                                 } else {
                                     vertical_fit
@@ -176,7 +173,7 @@ impl Component for Image {
                             }
 
                             ImageScaling::AspectFill => {
-                                if horizontal_fit.approximately_contains_rect(&render_bounds) {
+                                if horizontal_fit.contains_rect(&render_bounds) {
                                     horizontal_fit
                                 } else {
                                     vertical_fit
@@ -198,16 +195,11 @@ impl Component for Image {
     async fn content_size(
         &self,
         _context: &mut StyledContext,
-        _constraints: &Size<Option<Points>>,
-    ) -> KludgineResult<Size<Points>> {
+        _constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<Size<f32, Scaled>> {
         // TODO update size desires based on fill settings
         if let Some(frame) = &self.current_frame {
-            let frame_location = frame.location().await;
-            let size_as_points = Size::new(
-                Points::from_f32(frame_location.size.width as f32),
-                Points::from_f32(frame_location.size.height as f32),
-            );
-            Ok(size_as_points)
+            Ok(frame.location().await.size.to_f32().cast_unit())
         } else {
             Ok(Size::default())
         }
@@ -216,14 +208,14 @@ impl Component for Image {
     async fn clicked(
         &mut self,
         context: &mut Context,
-        window_position: &Point<Points>,
+        window_position: Point<f32, Scaled>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         self.callback(
             context,
             ControlEvent::Clicked {
                 button,
-                window_position: *window_position,
+                window_position,
             },
         )
         .await;

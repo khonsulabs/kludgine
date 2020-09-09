@@ -1,5 +1,5 @@
 use crate::{
-    math::{max_f, min_f, Pixels, Points},
+    math::{max_f, min_f, Pixels, PointExt, Points},
     scene::SceneTarget,
     style::Alignment,
     text::{PreparedLine, PreparedSpan, PreparedText, Text},
@@ -43,16 +43,16 @@ impl TextWrapState {
             let total_width = join_all(spans.iter().map(|s| s.width()))
                 .await
                 .into_iter()
-                .sum::<Pixels>();
+                .fold(Pixels::default(), |sum, width| sum + width);
 
             if let Some(width) = self.width {
                 let new_width = total_width + self.current_span_offset;
                 let remaining_width = width - new_width;
 
-                if !relative_eq!(remaining_width.to_f32(), 0., epsilon = 0.001)
-                    && remaining_width.to_f32().is_sign_negative()
+                if !relative_eq!(remaining_width.get(), 0., epsilon = 0.001)
+                    && remaining_width.get().is_sign_negative()
                 {
-                    if relative_eq!(self.current_span_offset.to_f32(), 0.) {
+                    if relative_eq!(self.current_span_offset.get(), 0.) {
                         // TODO Split the group if it can't fit on a single line
                         // For now, just render it anyways.
                     } else {
@@ -78,7 +78,7 @@ impl TextWrapState {
 
     async fn position_span(&mut self, span: &mut PreparedSpan) {
         let width = span.width().await;
-        span.location.x = self.current_span_offset;
+        span.location.set_x(self.current_span_offset);
         self.current_span_offset += width;
     }
 
@@ -144,7 +144,7 @@ impl TextWrapper {
         let measured = MeasuredText::new(text, &self.scene).await?;
 
         let mut state = TextWrapState {
-            width: width.map(|w| w.to_pixels(effective_scale_factor)),
+            width: width.map(|w| w * effective_scale_factor),
             current_span_offset: Pixels::default(),
             current_vmetrics: None,
             current_groups: Vec::new(),
@@ -230,20 +230,20 @@ impl TextWrap {
 #[cfg(all(test, feature = "bundled-fonts"))]
 mod tests {
     use super::*;
-    use crate::{scene::Scene, style::Style, text::Span};
+    use crate::{math::ScreenScale, scene::Scene, style::Style, text::Span};
 
     #[async_test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word() {
         for &scale in &[1f32, 2.] {
             let mut scene = Scene::default();
-            scene.set_scale_factor(scale).await;
+            scene.set_scale_factor(ScreenScale::new(scale)).await;
             scene.register_bundled_fonts().await;
             let scene_target = SceneTarget::Scene(scene);
             let wrap = Text::new(vec![Span::new(
                 "This line should wrap",
                 Style {
-                    font_size: Some(12.0),
+                    font_size: Some(Points::new(12.0)),
                     ..Default::default()
                 }
                 .effective_style(&scene_target)
@@ -252,8 +252,8 @@ mod tests {
             .wrap(
                 &scene_target,
                 TextWrap::MultiLine {
-                    width: Points::from_f32(80.0),
-                    height: Points::from_f32(f32::MAX),
+                    width: Points::new(80.0),
+                    height: Points::new(f32::MAX),
                     alignment: Alignment::Left,
                 },
             )
@@ -282,14 +282,14 @@ mod tests {
         let scene_target = SceneTarget::Scene(scene);
 
         let first_style = Style {
-            font_size: Some(12.0),
+            font_size: Some(Points::new(12.0)),
             ..Default::default()
         }
         .effective_style(&scene_target)
         .await;
 
         let second_style = Style {
-            font_size: Some(10.0),
+            font_size: Some(Points::new(10.0)),
             ..Default::default()
         }
         .effective_style(&scene_target)
@@ -302,8 +302,8 @@ mod tests {
         .wrap(
             &scene_target,
             TextWrap::MultiLine {
-                width: Points::from_f32(80.0),
-                height: Points::from_f32(f32::MAX),
+                width: Points::new(80.0),
+                height: Points::new(f32::MAX),
                 alignment: Alignment::Left,
             },
         )

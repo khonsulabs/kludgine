@@ -1,5 +1,5 @@
 use crate::{
-    math::{Dimension, Points, Rect, Size, Surround},
+    math::{Dimension, Points, Rect, Scaled, Size, Surround},
     ui::{
         layout::{Layout, LayoutSolver},
         Index, Indexable, LayoutContext,
@@ -29,18 +29,18 @@ impl AbsoluteLayout {
         available_length: Points,
         content_length: Points,
     ) -> (Points, Points) {
-        let content_length = length.points().unwrap_or(content_length);
+        let content_length = length.length().unwrap_or(content_length);
 
         let mut remaining_length = available_length - content_length;
 
         let mut auto_measurements = 0;
-        if let Some(points) = start.points() {
+        if let Some(points) = start.length() {
             remaining_length -= points;
         } else {
             auto_measurements += 1;
         }
 
-        if let Some(points) = end.points() {
+        if let Some(points) = end.length() {
             remaining_length -= points;
         } else {
             auto_measurements += 1;
@@ -48,12 +48,12 @@ impl AbsoluteLayout {
 
         let effective_side1 = match start {
             Dimension::Auto => remaining_length.max(Points::default()) / auto_measurements as f32,
-            Dimension::Points(points) => *points,
+            Dimension::Length(points) => *points,
         };
 
         let effective_side2 = match end {
             Dimension::Auto => remaining_length.max(Points::default()) / auto_measurements as f32,
-            Dimension::Points(points) => *points,
+            Dimension::Length(points) => *points,
         };
 
         remaining_length = available_length - content_length - effective_side1 - effective_side2;
@@ -75,7 +75,7 @@ impl AbsoluteLayout {
             // If the dimension isn't auto, increase the padding
             match length {
                 Dimension::Auto => (effective_side1, effective_side2),
-                Dimension::Points(_) => (
+                Dimension::Length(_) => (
                     effective_side1 + remaining_length / 2.,
                     effective_side2 + remaining_length / 2.,
                 ),
@@ -96,9 +96,9 @@ pub struct AbsoluteBounds {
 
 impl AbsoluteBounds {
     fn validate(self) -> KludgineResult<Self> {
-        if self.left.is_points() && self.right.is_points() && self.width.is_points() {
+        if self.left.is_length() && self.right.is_length() && self.width.is_length() {
             Err(KludgineError::AbsoluteBoundsInvalidHorizontal)
-        } else if self.top.is_points() && self.bottom.is_points() && self.height.is_points() {
+        } else if self.top.is_length() && self.bottom.is_length() && self.height.is_length() {
             Err(KludgineError::AbsoluteBoundsInvalidVertical)
         } else {
             Ok(self)
@@ -109,10 +109,10 @@ impl AbsoluteBounds {
 impl From<Surround<Dimension>> for AbsoluteBounds {
     fn from(surround: Surround<Dimension>) -> Self {
         Self {
-            left: surround.left,
-            right: surround.right,
-            top: surround.top,
-            bottom: surround.bottom,
+            left: surround.left.get(),
+            right: surround.right.get(),
+            top: surround.top.get(),
+            bottom: surround.bottom.get(),
             ..Default::default()
         }
     }
@@ -122,8 +122,8 @@ impl From<Surround<Dimension>> for AbsoluteBounds {
 impl LayoutSolver for AbsoluteLayout {
     async fn layout_within(
         &self,
-        bounds: &Rect<Points>,
-        content_size: &Size<Points>,
+        bounds: &Rect<f32, Scaled>,
+        content_size: &Size<f32, Scaled>,
         context: &mut LayoutContext,
     ) -> KludgineResult<()> {
         for (index, child_bounds) in self
@@ -146,15 +146,15 @@ impl LayoutSolver for AbsoluteLayout {
                 &child_bounds.left,
                 &child_bounds.right,
                 &child_bounds.width,
-                bounds.size.width,
-                child_content_size.width,
+                Points::new(bounds.size.width),
+                Points::new(child_content_size.width),
             );
             let (top, bottom) = Self::solve_dimension(
                 &child_bounds.top,
                 &child_bounds.bottom,
                 &child_bounds.height,
-                bounds.size.height,
-                child_content_size.height,
+                Points::new(bounds.size.height),
+                Points::new(child_content_size.height),
             );
 
             context
@@ -185,8 +185,8 @@ mod tests {
 
     macro_rules! assert_dimension_eq {
         ($left:expr, $check:expr) => {
-            assert_relative_eq!($left.0.to_f32(), $check.0);
-            assert_relative_eq!($left.1.to_f32(), $check.1)
+            assert_relative_eq!($left.0.get(), $check.0);
+            assert_relative_eq!($left.1.get(), $check.1)
         };
     }
 
@@ -198,8 +198,8 @@ mod tests {
                 &Dimension::Auto,
                 &Dimension::Auto,
                 &Dimension::Auto,
-                Points::from_f32(90.),
-                Points::from_f32(30.),
+                Points::new(90.),
+                Points::new(30.),
             ),
             (30., 30.)
         );
@@ -207,11 +207,11 @@ mod tests {
         // start.pts  end.auto length.auto
         assert_dimension_eq!(
             AbsoluteLayout::solve_dimension(
-                &Dimension::from_points(50.),
+                &Dimension::from_f32(50.),
                 &Dimension::Auto,
                 &Dimension::Auto,
-                Points::from_f32(90.),
-                Points::from_f32(30.),
+                Points::new(90.),
+                Points::new(30.),
             ),
             (50., 10.)
         );
@@ -219,11 +219,11 @@ mod tests {
         // start.pts end.pts length.auto
         assert_dimension_eq!(
             AbsoluteLayout::solve_dimension(
-                &Dimension::from_points(50.),
-                &Dimension::from_points(0.),
+                &Dimension::from_f32(50.),
+                &Dimension::from_f32(0.),
                 &Dimension::Auto,
-                Points::from_f32(90.),
-                Points::from_f32(30.),
+                Points::new(90.),
+                Points::new(30.),
             ),
             (50., 0.)
         );
@@ -231,11 +231,11 @@ mod tests {
         // start.pts end.auto length.pts
         assert_dimension_eq!(
             AbsoluteLayout::solve_dimension(
-                &Dimension::from_points(10.),
+                &Dimension::from_f32(10.),
                 &Dimension::Auto,
-                &Dimension::from_points(10.),
-                Points::from_f32(90.),
-                Points::from_f32(30.),
+                &Dimension::from_f32(10.),
+                Points::new(90.),
+                Points::new(30.),
             ),
             (10., 70.)
         );
@@ -243,11 +243,11 @@ mod tests {
         // start.pts end.pts length.pts
         assert_dimension_eq!(
             AbsoluteLayout::solve_dimension(
-                &Dimension::from_points(10.),
-                &Dimension::from_points(75.),
-                &Dimension::from_points(5.),
-                Points::from_f32(90.),
-                Points::from_f32(30.),
+                &Dimension::from_f32(10.),
+                &Dimension::from_f32(75.),
+                &Dimension::from_f32(5.),
+                Points::new(90.),
+                Points::new(30.),
             ),
             (10., 75.)
         );
@@ -256,20 +256,20 @@ mod tests {
         assert_dimension_eq!(
             AbsoluteLayout::solve_dimension(
                 &Dimension::Auto,
-                &Dimension::from_points(50.),
+                &Dimension::from_f32(50.),
                 &Dimension::Auto,
-                Points::from_f32(90.),
-                Points::from_f32(30.),
+                Points::new(90.),
+                Points::new(30.),
             ),
             (10., 50.)
         );
         assert_dimension_eq!(
             AbsoluteLayout::solve_dimension(
                 &Dimension::Auto,
-                &Dimension::from_points(50.),
+                &Dimension::from_f32(50.),
                 &Dimension::Auto,
-                Points::from_f32(90.),
-                Points::from_f32(90.),
+                Points::new(90.),
+                Points::new(90.),
             ),
             (0., 50.)
         );
@@ -278,10 +278,10 @@ mod tests {
         assert_dimension_eq!(
             AbsoluteLayout::solve_dimension(
                 &Dimension::Auto,
-                &Dimension::from_points(50.),
-                &Dimension::from_points(20.),
-                Points::from_f32(90.),
-                Points::from_f32(30.),
+                &Dimension::from_f32(50.),
+                &Dimension::from_f32(20.),
+                Points::new(90.),
+                Points::new(30.),
             ),
             (20., 50.)
         );
@@ -291,11 +291,11 @@ mod tests {
         // for as long as possible, and start clipping the content.
         assert_dimension_eq!(
             AbsoluteLayout::solve_dimension(
-                &Dimension::from_points(40.),
-                &Dimension::from_points(40.),
-                &Dimension::from_points(30.),
-                Points::from_f32(90.),
-                Points::from_f32(30.),
+                &Dimension::from_f32(40.),
+                &Dimension::from_f32(40.),
+                &Dimension::from_f32(30.),
+                Points::new(90.),
+                Points::new(30.),
             ),
             (40., 40.)
         );
@@ -303,11 +303,11 @@ mod tests {
         // Running out of room: Not even enough room for padding
         assert_dimension_eq!(
             AbsoluteLayout::solve_dimension(
-                &Dimension::from_points(50.),
-                &Dimension::from_points(50.),
-                &Dimension::from_points(30.),
-                Points::from_f32(90.),
-                Points::from_f32(30.),
+                &Dimension::from_f32(50.),
+                &Dimension::from_f32(50.),
+                &Dimension::from_f32(30.),
+                Points::new(90.),
+                Points::new(30.),
             ),
             (45., 45.)
         );
@@ -318,17 +318,17 @@ mod tests {
     #[test]
     fn validate_tests() -> KludgineResult<()> {
         AbsoluteBounds {
-            bottom: Dimension::from_points(1.),
-            height: Dimension::from_points(1.),
-            top: Dimension::from_points(1.),
+            bottom: Dimension::from_f32(1.),
+            height: Dimension::from_f32(1.),
+            top: Dimension::from_f32(1.),
             ..Default::default()
         }
         .validate()
         .expect_err("Invalid Vertical Bounds");
         AbsoluteBounds {
-            left: Dimension::from_points(1.),
-            width: Dimension::from_points(1.),
-            right: Dimension::from_points(1.),
+            left: Dimension::from_f32(1.),
+            width: Dimension::from_f32(1.),
+            right: Dimension::from_f32(1.),
             ..Default::default()
         }
         .validate()
@@ -340,7 +340,6 @@ mod tests {
     #[async_test]
     async fn layout_test() -> KludgineResult<()> {
         use crate::{
-            math::Pixels,
             scene::{Scene, SceneTarget},
             style::StyleSheet,
             ui::{
@@ -365,10 +364,10 @@ mod tests {
                     .child(
                         &self.child,
                         AbsoluteBounds {
-                            right: Dimension::from_points(30.),
-                            bottom: Dimension::from_points(30.),
-                            width: Dimension::from_points(90.),
-                            height: Dimension::from_points(90.),
+                            right: Dimension::from_f32(30.),
+                            bottom: Dimension::from_f32(30.),
+                            width: Dimension::from_f32(90.),
+                            height: Dimension::from_f32(90.),
                             ..Default::default()
                         },
                     )?
@@ -392,10 +391,10 @@ mod tests {
                         .child(
                             &child,
                             AbsoluteBounds {
-                                left: Dimension::from_points(10.),
-                                top: Dimension::from_points(10.),
-                                right: Dimension::from_points(10.),
-                                bottom: Dimension::from_points(10.),
+                                left: Dimension::from_f32(10.),
+                                top: Dimension::from_f32(10.),
+                                right: Dimension::from_f32(10.),
+                                bottom: Dimension::from_f32(10.),
                                 ..Default::default()
                             },
                         )?
@@ -439,9 +438,7 @@ mod tests {
         arena.set_parent(child, Some(root)).await;
 
         let scene = Scene::default();
-        scene
-            .set_internal_size(Size::new(Pixels::from_f32(200.), Pixels::from_f32(200.)))
-            .await;
+        scene.set_internal_size(Size::new(200., 200.)).await;
         let scene_target = SceneTarget::Scene(scene);
         let engine = LayoutEngine::layout(
             &arena,
@@ -456,20 +453,20 @@ mod tests {
         let child_layout = engine.get_layout(&child).await.unwrap();
         let leaf_layout = engine.get_layout(&leaf).await.unwrap();
 
-        assert_relative_eq!(root_layout.inner_bounds().origin.x.to_f32(), 0.);
-        assert_relative_eq!(root_layout.inner_bounds().origin.y.to_f32(), 0.);
-        assert_relative_eq!(root_layout.inner_bounds().size.width.to_f32(), 200.);
-        assert_relative_eq!(root_layout.inner_bounds().size.height.to_f32(), 200.);
+        assert_relative_eq!(root_layout.inner_bounds().origin.x, 0.);
+        assert_relative_eq!(root_layout.inner_bounds().origin.y, 0.);
+        assert_relative_eq!(root_layout.inner_bounds().size.width, 200.);
+        assert_relative_eq!(root_layout.inner_bounds().size.height, 200.);
 
-        assert_relative_eq!(child_layout.inner_bounds().origin.x.to_f32(), 80.);
-        assert_relative_eq!(child_layout.inner_bounds().origin.y.to_f32(), 80.);
-        assert_relative_eq!(child_layout.inner_bounds().size.width.to_f32(), 90.);
-        assert_relative_eq!(child_layout.inner_bounds().size.height.to_f32(), 90.);
+        assert_relative_eq!(child_layout.inner_bounds().origin.x, 80.);
+        assert_relative_eq!(child_layout.inner_bounds().origin.y, 80.);
+        assert_relative_eq!(child_layout.inner_bounds().size.width, 90.);
+        assert_relative_eq!(child_layout.inner_bounds().size.height, 90.);
 
-        assert_relative_eq!(leaf_layout.inner_bounds().origin.x.to_f32(), 90.);
-        assert_relative_eq!(leaf_layout.inner_bounds().origin.y.to_f32(), 90.);
-        assert_relative_eq!(leaf_layout.inner_bounds().size.width.to_f32(), 70.);
-        assert_relative_eq!(leaf_layout.inner_bounds().size.height.to_f32(), 70.);
+        assert_relative_eq!(leaf_layout.inner_bounds().origin.x, 90.);
+        assert_relative_eq!(leaf_layout.inner_bounds().origin.y, 90.);
+        assert_relative_eq!(leaf_layout.inner_bounds().size.width, 70.);
+        assert_relative_eq!(leaf_layout.inner_bounds().size.height, 70.);
 
         Ok(())
     }

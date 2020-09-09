@@ -1,6 +1,6 @@
 use crate::{
     event::MouseButton,
-    math::{Point, Points, Size},
+    math::{Point, Scaled, Size},
     runtime::Runtime,
     style::StyleSheet,
     ui::{
@@ -32,8 +32,8 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
     async fn content_size(
         &self,
         context: &mut StyledContext,
-        constraints: &Size<Option<Points>>,
-    ) -> KludgineResult<Size<Points>>;
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<Size<f32, Scaled>>;
 
     async fn layout(&self, context: &mut StyledContext) -> KludgineResult<Box<dyn LayoutSolver>>;
 
@@ -52,21 +52,21 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
     async fn mouse_down(
         &self,
         context: &mut Context,
-        position: &Point<Points>,
+        position: Point<f32, Scaled>,
         button: MouseButton,
     ) -> KludgineResult<EventStatus>;
 
     async fn mouse_drag(
         &self,
         context: &mut Context,
-        position: &Option<Point<Points>>,
+        position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()>;
 
     async fn mouse_up(
         &self,
         context: &mut Context,
-        position: &Option<Point<Points>>,
+        position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()>;
 
@@ -77,7 +77,7 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
     async fn hit_test(
         &self,
         context: &mut Context,
-        window_position: &Point<Points>,
+        window_position: Point<f32, Scaled>,
     ) -> KludgineResult<bool>;
 }
 
@@ -145,8 +145,8 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     async fn content_size(
         &self,
         context: &mut StyledContext,
-        constraints: &Size<Option<Points>>,
-    ) -> KludgineResult<Size<Points>> {
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<Size<f32, Scaled>> {
         let component = self.component.read().await;
         component.content_size(context, constraints).await
     }
@@ -183,7 +183,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     async fn mouse_down(
         &self,
         context: &mut Context,
-        position: &Point<Points>,
+        position: Point<f32, Scaled>,
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         let mut component = self.component.write().await;
@@ -193,7 +193,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     async fn mouse_drag(
         &self,
         context: &mut Context,
-        position: &Option<Point<Points>>,
+        position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         let mut component = self.component.write().await;
@@ -203,7 +203,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     async fn mouse_up(
         &self,
         context: &mut Context,
-        position: &Option<Point<Points>>,
+        position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         let mut component = self.component.write().await;
@@ -213,7 +213,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     async fn hit_test(
         &self,
         context: &mut Context,
-        window_position: &Point<Points>,
+        window_position: Point<f32, Scaled>,
     ) -> KludgineResult<bool> {
         let component = self.component.read().await;
         component.hit_test(context, window_position).await
@@ -323,8 +323,8 @@ impl Node {
     pub async fn content_size(
         &self,
         context: &mut StyledContext,
-        constraints: &Size<Option<Points>>,
-    ) -> KludgineResult<Size<Points>> {
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<Size<f32, Scaled>> {
         let component = self.component.read().await;
         component.content_size(context, constraints).await
     }
@@ -374,7 +374,7 @@ impl Node {
     pub async fn hit_test(
         &self,
         context: &mut Context,
-        position: &Point<Points>,
+        position: Point<f32, Scaled>,
     ) -> KludgineResult<bool> {
         let component = self.component.read().await;
         component.hit_test(context, position).await
@@ -383,7 +383,7 @@ impl Node {
     pub async fn mouse_down(
         &self,
         context: &mut Context,
-        position: &Point<Points>,
+        position: Point<f32, Scaled>,
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         let component = self.component.read().await;
@@ -393,7 +393,7 @@ impl Node {
     pub async fn mouse_drag(
         &self,
         context: &mut Context,
-        position: &Option<Point<Points>>,
+        position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         let component = self.component.read().await;
@@ -403,7 +403,7 @@ impl Node {
     pub async fn mouse_up(
         &self,
         context: &mut Context,
-        position: &Option<Point<Points>>,
+        position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         let component = self.component.read().await;

@@ -41,6 +41,7 @@ async-trait = "0.1"
 futures = { version = "0.3", features = ["thread-pool"] }
 futures-timer = "3"
 derivative = "2"
+euclid = "0.22"
 
 [dev-dependencies]
 rand = "0.7"

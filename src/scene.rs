@@ -1,5 +1,5 @@
 use crate::{
-    math::{Pixels, Point, Points, Size},
+    math::{Point, PointExt, Raw, Scale, Scaled, ScreenScale, Size, SizeExt},
     shape::Shape,
     sprite::RenderedSprite,
     style::Weight,
@@ -18,34 +18,36 @@ use winit::event::VirtualKeyCode;
 pub(crate) enum Element {
     Sprite(RenderedSprite),
     Text(PreparedSpan),
-    Shape(Shape<Pixels>),
+    Shape(Shape<Raw>),
 }
 
 #[derive(Clone)]
 pub enum SceneTarget {
     Scene(Scene),
     Camera {
-        origin: Point<Points>,
+        origin: Point<f32, Scaled>,
         zoom: f32,
         scene: Scene,
     },
 }
 
 impl SceneTarget {
-    pub async fn size(&self) -> Size<Points> {
+    pub async fn size(&self) -> Size<f32, Scaled> {
         let size = match &self {
             SceneTarget::Scene(scene) => scene.size(),
             SceneTarget::Camera { scene, .. } => scene.size(),
         }
         .await;
         let effective_scale_factor = self.effective_scale_factor().await;
-        size.to_points(effective_scale_factor)
+        size / effective_scale_factor
     }
 
-    pub async fn effective_scale_factor(&self) -> f32 {
+    pub async fn effective_scale_factor(&self) -> ScreenScale {
         match &self {
             SceneTarget::Scene(scene) => scene.scale_factor().await,
-            SceneTarget::Camera { scene, zoom, .. } => scene.scale_factor().await * zoom,
+            SceneTarget::Camera { scene, zoom, .. } => {
+                scene.scale_factor().await * Scale::new(*zoom)
+            }
         }
     }
 
@@ -67,8 +69,8 @@ impl SceneTarget {
         self.scene_mut().await.elements.push(element);
     }
 
-    pub fn set_camera(&self, zoom: f32, look_at: Point<Points>) -> SceneTarget {
-        let origin = Point::new(-look_at.x, -look_at.y);
+    pub fn set_camera(&self, zoom: f32, look_at: Point<f32, Scaled>) -> SceneTarget {
+        let origin = Point::from_lengths(-look_at.x(), -look_at.y());
         match self {
             SceneTarget::Scene(scene) => SceneTarget::Camera {
                 scene: scene.clone(),
@@ -98,10 +100,13 @@ impl SceneTarget {
         }
     }
 
-    pub(crate) async fn user_to_device_point(&self, point: Point<Points>) -> Point<Points> {
-        Point::new(
-            point.x + self.origin().x,
-            self.size().await.height - (point.y + self.origin().y),
+    pub(crate) async fn user_to_device_point(
+        &self,
+        point: Point<f32, Scaled>,
+    ) -> Point<f32, Scaled> {
+        Point::from_lengths(
+            point.x() + self.origin().x(),
+            self.size().await.height() - (point.y() + self.origin().y()),
         )
     }
 
@@ -116,7 +121,7 @@ impl SceneTarget {
         self.scene().await.theme.clone()
     }
 
-    pub fn origin(&self) -> Point<Points> {
+    pub fn origin(&self) -> Point<f32, Scaled> {
         match &self {
             SceneTarget::Scene(_) => Point::default(),
             SceneTarget::Camera { origin, .. } => *origin,
@@ -159,8 +164,8 @@ pub struct Scene {
 
 pub(crate) struct SceneData {
     pub pressed_keys: HashSet<VirtualKeyCode>,
-    scale_factor: f32,
-    size: Size<Pixels>,
+    scale_factor: ScreenScale,
+    size: Size<f32, Raw>,
     pub(crate) elements: Vec<Element>,
     now: Option<Instant>,
     elapsed: Option<Duration>,
@@ -188,7 +193,7 @@ impl Default for Scene {
     fn default() -> Self {
         Self {
             data: KludgineHandle::new(SceneData {
-                scale_factor: 1.0,
+                scale_factor: Scale::identity(),
                 size: Size::default(),
                 pressed_keys: HashSet::new(),
                 now: None,
@@ -202,22 +207,22 @@ impl Default for Scene {
 }
 
 impl Scene {
-    pub(crate) async fn set_internal_size(&self, size: Size<Pixels>) {
+    pub(crate) async fn set_internal_size(&self, size: Size<f32, Raw>) {
         let mut scene = self.data.write().await;
         scene.size = size;
     }
 
-    pub(crate) async fn internal_size(&self) -> Size<Pixels> {
+    pub(crate) async fn internal_size(&self) -> Size<f32, Raw> {
         let scene = self.data.read().await;
         scene.size
     }
 
-    pub(crate) async fn set_scale_factor(&mut self, scale_factor: f32) {
+    pub(crate) async fn set_scale_factor(&mut self, scale_factor: ScreenScale) {
         let mut scene = self.data.write().await;
         scene.scale_factor = scale_factor;
     }
 
-    pub async fn scale_factor(&self) -> f32 {
+    pub async fn scale_factor(&self) -> ScreenScale {
         let scene = self.data.read().await;
         scene.scale_factor
     }
@@ -263,7 +268,7 @@ impl Scene {
         scene.elements.clear();
     }
 
-    pub async fn size(&self) -> Size<Pixels> {
+    pub async fn size(&self) -> Size<f32, Raw> {
         let scene = self.data.read().await;
         scene.size
     }

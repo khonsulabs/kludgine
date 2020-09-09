@@ -28,7 +28,7 @@ pub use self::{
 };
 use crate::{
     event::{ElementState, MouseButton},
-    math::{Point, Points},
+    math::{Point, Scaled},
     runtime::Runtime,
     scene::SceneTarget,
     style::StyleSheet,
@@ -226,15 +226,18 @@ where
     mouse_button_handlers: HashMap<MouseButton, Index>,
     hover: Option<Index>,
     last_render_order: Vec<Index>,
-    last_mouse_position: Option<Point<Points>>,
+    last_mouse_position: Option<Point<f32, Scaled>>,
 }
 
 impl<C> UserInterface<C>
 where
     C: InteractiveComponent + 'static,
 {
-    pub async fn new(root: C, scene: SceneTarget,
-        arena: HierarchicalArena,) -> KludgineResult<Self> {
+    pub async fn new(
+        root: C,
+        scene: SceneTarget,
+        arena: HierarchicalArena,
+    ) -> KludgineResult<Self> {
         let ui_state = UIState::default();
         let root = Entity::new(Context::new(
             {
@@ -351,7 +354,7 @@ where
                     if let Some(node) = self.arena.get(&index).await {
                         let mut context =
                             Context::new(index, self.arena.clone(), self.ui_state.clone());
-                        node.mouse_drag(&mut context, &position, button).await?;
+                        node.mouse_drag(&mut context, position, button).await?;
                     }
                 }
 
@@ -362,7 +365,7 @@ where
                         if let Some(node) = self.arena.get(&index).await {
                             let mut context =
                                 Context::new(index, self.arena.clone(), self.ui_state.clone());
-                            if node.hit_test(&mut context, &position).await? {
+                            if node.hit_test(&mut context, position).await? {
                                 self.hover = Some(index);
                                 break;
                             }
@@ -398,7 +401,7 @@ where
                         if let Some(node) = self.arena.get(&index).await {
                             let mut context =
                                 Context::new(index, self.arena.clone(), self.ui_state.clone());
-                            node.mouse_up(&mut context, &self.last_mouse_position, button)
+                            node.mouse_up(&mut context, self.last_mouse_position, button)
                                 .await?;
                         }
                     }
@@ -413,14 +416,11 @@ where
                         let mut next_to_process = self.hover;
                         while let Some(index) = next_to_process {
                             if let Some(node) = self.arena.get(&index).await {
-                                let mut context = Context::new(
-                                    index,
-                                    self.arena.clone(),
-                                    self.ui_state.clone(),
-                                );
+                                let mut context =
+                                    Context::new(index, self.arena.clone(), self.ui_state.clone());
                                 if node.interactive().await {
                                     if let EventStatus::Handled = node
-                                        .mouse_down(&mut context, &last_mouse_position, button)
+                                        .mouse_down(&mut context, last_mouse_position, button)
                                         .await?
                                     {
                                         self.mouse_button_handlers.insert(button, index);

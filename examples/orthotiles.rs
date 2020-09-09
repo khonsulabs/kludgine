@@ -10,7 +10,7 @@ struct OrthoTiles {
     map: Option<PersistentTileMap>,
     stickguy: Option<Sprite>,
     zoom: f32,
-    position: Point<Points>,
+    position: Point<f32, Scaled>,
 }
 
 impl WindowCreator<OrthoTiles> for OrthoTiles {
@@ -34,7 +34,7 @@ impl Component for OrthoTiles {
     async fn initialize(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
         self.load_assets().await?;
         self.zoom = 1.0;
-        self.position.x = Points::from_f32(MAP_SIZE as f32 * 32.0 / 2.0);
+        self.position.x = MAP_SIZE as f32 * 32.0 / 2.0;
         self.position.y = self.position.x;
         Ok(())
     }

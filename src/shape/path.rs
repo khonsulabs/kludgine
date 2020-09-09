@@ -1,13 +1,13 @@
 use crate::{
-    math::{Pixels, Point, Points},
+    math::{Point, Raw, Scaled, ScreenScale},
     scene::SceneTarget,
     shape::{Fill, Stroke},
     KludgineError, KludgineResult,
 };
 use lyon_tessellation::path::{builder::PathBuilder as _, PathEvent as LyonPathEvent};
 
-pub type Endpoint<S> = Point<S>;
-pub type ControlPoint<S> = Point<S>;
+pub type Endpoint<S> = Point<f32, S>;
+pub type ControlPoint<S> = Point<f32, S>;
 
 #[derive(Debug, Clone, Copy)]
 pub enum PathEvent<S> {
@@ -36,24 +36,18 @@ pub enum PathEvent<S> {
     },
 }
 
-impl Into<lyon_tessellation::math::Point> for Point<Pixels> {
-    fn into(self) -> lyon_tessellation::math::Point {
-        lyon_tessellation::math::point(self.x.to_f32(), self.y.to_f32())
-    }
-}
-
-impl Into<LyonPathEvent> for PathEvent<Pixels> {
+impl Into<LyonPathEvent> for PathEvent<Raw> {
     fn into(self) -> LyonPathEvent {
         match self {
-            Self::Begin { at } => LyonPathEvent::Begin { at: at.into() },
+            Self::Begin { at } => LyonPathEvent::Begin { at: at.cast_unit() },
             Self::Line { from, to } => LyonPathEvent::Line {
-                from: from.into(),
-                to: to.into(),
+                from: from.cast_unit(),
+                to: to.cast_unit(),
             },
             Self::Quadratic { from, ctrl, to } => LyonPathEvent::Quadratic {
-                from: from.into(),
-                ctrl: ctrl.into(),
-                to: to.into(),
+                from: from.cast_unit(),
+                ctrl: ctrl.cast_unit(),
+                to: to.cast_unit(),
             },
             Self::Cubic {
                 from,
@@ -61,14 +55,14 @@ impl Into<LyonPathEvent> for PathEvent<Pixels> {
                 ctrl2,
                 to,
             } => LyonPathEvent::Cubic {
-                from: from.into(),
-                ctrl1: ctrl1.into(),
-                ctrl2: ctrl2.into(),
-                to: to.into(),
+                from: from.cast_unit(),
+                ctrl1: ctrl1.cast_unit(),
+                ctrl2: ctrl2.cast_unit(),
+                to: to.cast_unit(),
             },
             Self::End { last, first, close } => LyonPathEvent::End {
-                last: last.into(),
-                first: first.into(),
+                last: last.cast_unit(),
+                first: first.cast_unit(),
                 close,
             },
         }
@@ -80,12 +74,12 @@ pub struct Path<S> {
     events: Vec<PathEvent<S>>,
 }
 
-impl Path<Points> {
+impl Path<Scaled> {
     pub(crate) async fn translate_and_convert_to_device(
         &self,
-        location: Point<Points>,
+        location: Point<f32, Scaled>,
         scene: &SceneTarget,
-    ) -> Path<Pixels> {
+    ) -> Path<Raw> {
         let effective_scale = scene.effective_scale_factor().await;
         let mut events = Vec::new();
 
@@ -128,19 +122,19 @@ impl Path<Points> {
     }
 
     async fn convert_point(
-        point: Point<Points>,
-        location: Point<Points>,
+        point: Point<f32, Scaled>,
+        location: Point<f32, Scaled>,
         scene: &SceneTarget,
-        effective_scale: f32,
-    ) -> Point<Pixels> {
+        effective_scale: ScreenScale,
+    ) -> Point<f32, Raw> {
         scene
-            .user_to_device_point(location + point)
+            .user_to_device_point(location + point.to_vector())
             .await
-            .to_pixels(effective_scale)
+            * effective_scale
     }
 }
 
-impl Path<Pixels> {
+impl Path<Raw> {
     pub fn build(
         &self,
         builder: &mut rgx_lyon::ShapeBuilder,

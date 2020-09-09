@@ -7,7 +7,7 @@ mod stroke;
 
 pub use self::{batch::*, fill::*, path::*, stroke::*};
 use crate::{
-    math::{Pixels, Point, Points, Rect},
+    math::{Point, Points, Raw, Rect, Scaled},
     scene::{Element, SceneTarget},
     KludgineResult,
 };
@@ -21,13 +21,13 @@ pub struct Shape<S> {
     fill: Option<Fill>,
 }
 
-impl Shape<Points> {
-    pub fn rect(rect: impl Into<Rect<Points>>) -> Self {
+impl Shape<Scaled> {
+    pub fn rect(rect: impl Into<Rect<f32, Scaled>>) -> Self {
         let rect = rect.into();
-        let path = PathBuilder::new(rect.x1y1())
-            .line_to(rect.x2y1())
-            .line_to(rect.x2y2())
-            .line_to(rect.x1y2())
+        let path = PathBuilder::new(Point::new(rect.min_x(), rect.min_y()))
+            .line_to(Point::new(rect.max_x(), rect.min_y()))
+            .line_to(Point::new(rect.max_x(), rect.max_y()))
+            .line_to(Point::new(rect.min_x(), rect.max_y()))
             .close()
             .build();
 
@@ -38,7 +38,7 @@ impl Shape<Points> {
         }
     }
 
-    pub fn circle(center: Point<Points>, radius: Points) -> Self {
+    pub fn circle(center: Point<f32, Scaled>, radius: Points) -> Self {
         Self {
             geometry: ShapeGeometry::Circle(Circle { center, radius }),
             stroke: None,
@@ -46,7 +46,7 @@ impl Shape<Points> {
         }
     }
 
-    pub fn polygon(points: impl IntoIterator<Item = Point<Points>>) -> Self {
+    pub fn polygon(points: impl IntoIterator<Item = Point<f32, Scaled>>) -> Self {
         let mut points = points.into_iter();
         if let Some(start) = points.next() {
             let mut builder = PathBuilder::new(start);
@@ -74,16 +74,16 @@ impl Shape<Points> {
         self
     }
 
-    pub async fn draw_at(&self, location: Point<Points>, scene: &SceneTarget) {
+    pub async fn draw_at(&self, location: Point<f32, Scaled>, scene: &SceneTarget) {
         let translated = self.convert_from_user_to_device(location, scene).await;
         scene.push_element(Element::Shape(translated)).await
     }
 
     async fn convert_from_user_to_device(
         &self,
-        location: Point<Points>,
+        location: Point<f32, Scaled>,
         scene: &SceneTarget,
-    ) -> Shape<Pixels> {
+    ) -> Shape<Raw> {
         Shape {
             geometry: self
                 .geometry
@@ -95,7 +95,7 @@ impl Shape<Points> {
     }
 }
 
-impl Shape<Pixels> {
+impl Shape<Raw> {
     pub(crate) fn build(&self, builder: &mut rgx_lyon::ShapeBuilder) -> KludgineResult<()> {
         self.geometry.build(builder, &self.stroke, &self.fill)
     }

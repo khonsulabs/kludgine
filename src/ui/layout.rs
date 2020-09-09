@@ -1,7 +1,7 @@
 mod absolute;
 pub use self::absolute::*;
 use crate::{
-    math::{Point, Points, Rect, Size, Surround},
+    math::{Point, Rect, Scaled, Size, Surround},
     ui::LayoutContext,
     KludgineResult,
 };
@@ -11,17 +11,17 @@ use async_trait::async_trait;
 pub trait LayoutSolver: Send + Sync + std::fmt::Debug {
     async fn layout_within(
         &self,
-        bounds: &Rect<Points>,
-        content_size: &Size<Points>,
+        bounds: &Rect<f32, Scaled>,
+        content_size: &Size<f32, Scaled>,
         context: &mut LayoutContext,
     ) -> KludgineResult<()>;
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct Layout {
-    pub bounds: Rect<Points>,
-    pub padding: Surround<Points>,
-    pub margin: Surround<Points>,
+    pub bounds: Rect<f32, Scaled>,
+    pub padding: Surround<f32, Scaled>,
+    pub margin: Surround<f32, Scaled>,
 }
 
 impl Layout {
@@ -32,24 +32,24 @@ impl Layout {
         AbsoluteLayout::default()
     }
 
-    pub fn bounds(&self) -> &'_ Rect<Points> {
+    pub fn bounds(&self) -> &'_ Rect<f32, Scaled> {
         &self.bounds
     }
 
-    pub fn bounds_without_margin(&self) -> Rect<Points> {
-        self.bounds.inset(&self.margin)
+    pub fn bounds_without_margin(&self) -> Rect<f32, Scaled> {
+        self.margin.inset_rect(&self.bounds)
     }
 
-    pub fn inner_bounds(&self) -> Rect<Points> {
-        self.bounds_without_margin().inset(&self.padding)
+    pub fn inner_bounds(&self) -> Rect<f32, Scaled> {
+        self.padding.inset_rect(&self.bounds_without_margin())
     }
 
-    pub fn window_to_local(&self, location: Point<Points>) -> Point<Points> {
-        location - self.bounds.origin
+    pub fn window_to_local(&self, location: Point<f32, Scaled>) -> Point<f32, Scaled> {
+        location - self.bounds.origin.to_vector()
     }
 
-    pub fn local_to_window(&self, location: Point<Points>) -> Point<Points> {
-        location + self.bounds.origin
+    pub fn local_to_window(&self, location: Point<f32, Scaled>) -> Point<f32, Scaled> {
+        location + self.bounds.origin.to_vector()
     }
 }
 
@@ -73,8 +73,8 @@ pub struct NoLayout {}
 impl LayoutSolver for NoLayout {
     async fn layout_within(
         &self,
-        _bounds: &Rect<Points>,
-        _content_size: &Size<Points>,
+        _bounds: &Rect<f32, Scaled>,
+        _content_size: &Size<f32, Scaled>,
         _context: &mut LayoutContext,
     ) -> KludgineResult<()> {
         Ok(())

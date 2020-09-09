@@ -1,8 +1,9 @@
-use crate::KludgineHandle;
+use crate::{math::Pixels, KludgineHandle};
 use crossbeam::atomic::AtomicCell;
 use lazy_static::lazy_static;
 use rgx::core::*;
 use rusttype::{gpu_cache, Scale};
+
 lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicCell<u64> = AtomicCell::new(0);
 }
@@ -29,9 +30,9 @@ impl Font {
         font.id
     }
 
-    pub async fn metrics(&self, size: f32) -> rusttype::VMetrics {
+    pub async fn metrics(&self, size: Pixels) -> rusttype::VMetrics {
         let font = self.handle.read().await;
-        font.font.v_metrics(rusttype::Scale::uniform(size))
+        font.font.v_metrics(rusttype::Scale::uniform(size.get()))
     }
 
     pub async fn family(&self) -> Option<String> {

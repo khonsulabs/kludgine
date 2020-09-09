@@ -1,10 +1,14 @@
-use crate::{color::Color, scene::SceneTarget};
+use crate::{
+    color::Color,
+    math::{Pixels, Points},
+    scene::SceneTarget,
+};
 pub use ttf_parser::Weight;
 
 #[derive(Default, Clone, Debug)]
 pub struct Style {
     pub font_family: Option<String>,
-    pub font_size: Option<f32>,
+    pub font_size: Option<Points>,
     pub font_weight: Option<Weight>,
     pub color: Option<Color>,
     pub background_color: Option<Color>,
@@ -44,7 +48,8 @@ impl Style {
                 .font_family
                 .clone()
                 .unwrap_or_else(|| "sans-serif".to_owned()),
-            font_size: self.font_size.unwrap_or(14.0) * scene.effective_scale_factor().await,
+            font_size: self.font_size.unwrap_or_else(|| Points::new(14.0))
+                * scene.effective_scale_factor().await,
             font_weight: self.font_weight.unwrap_or(Weight::Normal),
             color: self.color.unwrap_or(Color::BLACK),
             background_color: self.background_color,
@@ -75,7 +80,7 @@ impl From<Style> for StyleSheet {
 #[derive(PartialEq, Clone, Debug, Default)]
 pub struct EffectiveStyle {
     pub font_family: String,
-    pub font_size: f32,
+    pub font_size: Pixels,
     pub font_weight: Weight,
     pub color: Color,
     pub background_color: Option<Color>,

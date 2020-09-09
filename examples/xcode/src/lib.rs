@@ -55,9 +55,9 @@ impl Window for OrthoTiles {
 
         // Set up the camera to zoom and center the stick guy
         scene.set_zoom(self.zoom);
-        scene.set_origin(Point::new(
-            -self.x + scene.size().width / 2.0,
-            -self.y + scene.size().height / 2.0,
+        scene.set_origin(Point::from_lenghts(
+            -self.x() + scene.size().width() / 2.0,
+            -self.y() + scene.size().height() / 2.0,
         ));
 
         Ok(())

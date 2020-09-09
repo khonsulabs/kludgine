@@ -72,8 +72,8 @@ impl Component for UIExample {
                 ..Default::default()
             })
             .bounds(AbsoluteBounds {
-                right: Dimension::from_points(10.),
-                bottom: Dimension::from_points(10.),
+                right: Dimension::from_f32(10.),
+                bottom: Dimension::from_f32(10.),
                 ..Default::default()
             })
             .insert()
@@ -84,15 +84,15 @@ impl Component for UIExample {
             .style(Style {
                 color: Some(Color::new(1.0, 1.0, 1.0, 0.1)),
                 background_color: Some(Color::new(1.0, 0.0, 1.0, 0.5)),
-                font_size: Some(72.),
+                font_size: Some(Points::new(72.)),
                 alignment: Some(Alignment::Right),
                 ..Default::default()
             })
             .bounds(AbsoluteBounds {
-                left: Dimension::from_points(32.),
-                right: Dimension::from_points(32.),
-                top: Dimension::from_points(32.),
-                bottom: Dimension::from_points(64.),
+                left: Dimension::from_f32(32.),
+                right: Dimension::from_f32(32.),
+                top: Dimension::from_f32(32.),
+                bottom: Dimension::from_f32(64.),
                 ..Default::default()
             })
             .callback(|_| Message::LabelClicked)
@@ -106,7 +106,7 @@ impl Component for UIExample {
                 ..Default::default()
             })
             .bounds(AbsoluteBounds {
-                bottom: Dimension::from_points(10.),
+                bottom: Dimension::from_f32(10.),
 
                 ..Default::default()
             })
@@ -117,8 +117,8 @@ impl Component for UIExample {
         self.new_window_button = self
             .new_entity(context, Button::new("New Window"))
             .bounds(AbsoluteBounds {
-                bottom: Dimension::from_points(10.),
-                left: Dimension::from_points(10.),
+                bottom: Dimension::from_f32(10.),
+                left: Dimension::from_f32(10.),
                 ..Default::default()
             })
             .callback(|_| Message::NewWindowClicked)

@@ -41,8 +41,8 @@ impl Component for Animation {
         self.image = self
             .new_entity(context, Image::new(sprite))
             .bounds(AbsoluteBounds {
-                left: Dimension::from_points(30.),
-                top: Dimension::from_points(30.),
+                left: Dimension::from_f32(30.),
+                top: Dimension::from_f32(30.),
                 ..Default::default()
             })
             .insert()
@@ -75,7 +75,7 @@ impl Component for Animation {
     async fn clicked(
         &mut self,
         _context: &mut Context,
-        _window_position: &Point<Points>,
+        _window_position: Point<f32, Scaled>,
         _button: MouseButton,
     ) -> KludgineResult<()> {
         self.fade().await;

@@ -1,7 +1,7 @@
 use crate::{
     event::{ElementState, VirtualKeyCode},
     frame::Frame,
-    math::{Pixels, Point, Size},
+    math::{Pixels, Point, ScreenScale, Size},
     runtime::Runtime,
     scene::{Scene, SceneTarget},
     ui::{global_arena, NodeData, NodeDataWindowExt, UserInterface},
@@ -27,7 +27,7 @@ pub(crate) struct RuntimeWindow {
     receiver: async_channel::Receiver<WindowMessage>,
     event_sender: async_channel::Sender<WindowEvent>,
     last_known_size: Size,
-    last_known_scale_factor: f32,
+    last_known_scale_factor: ScreenScale,
     keep_running: Arc<AtomicCell<bool>>,
 }
 
@@ -73,7 +73,7 @@ impl RuntimeWindow {
             last_known_size: size,
             keep_running,
             event_sender,
-            last_known_scale_factor: window.scale_factor() as f32,
+            last_known_scale_factor: ScreenScale::new(window.scale_factor() as f32),
             window,
         };
         runtime_window.notify_size_changed();
@@ -162,7 +162,12 @@ impl RuntimeWindow {
     {
         let mut scene = Scene::default();
         let target_fps = window.target_fps();
-        let mut ui = UserInterface::new(window, SceneTarget::Scene(scene.clone()), global_arena().clone()).await?;
+        let mut ui = UserInterface::new(
+            window,
+            SceneTarget::Scene(scene.clone()),
+            global_arena().clone(),
+        )
+        .await?;
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         loop {
@@ -173,10 +178,7 @@ impl RuntimeWindow {
                 match event {
                     WindowEvent::Resize { size, scale_factor } => {
                         scene
-                            .set_internal_size(Size {
-                                width: Pixels::from_f32(size.width as f32),
-                                height: Pixels::from_f32(size.height as f32),
-                            })
+                            .set_internal_size(Size::new(size.width as f32, size.height as f32))
                             .await;
                         scene.set_scale_factor(scale_factor).await;
                     }
@@ -220,7 +222,7 @@ impl RuntimeWindow {
                 }
             }
 
-            if scene.size().await.area().to_f32() > 0.0 {
+            if scene.size().await.area() > 0.0 {
                 scene.start_frame().await;
 
                 let target = SceneTarget::Scene(scene.clone());
@@ -310,7 +312,7 @@ impl RuntimeWindow {
                 scale_factor,
                 new_inner_size,
             } => {
-                self.last_known_scale_factor = *scale_factor as f32;
+                self.last_known_scale_factor = ScreenScale::new(*scale_factor as f32);
                 self.last_known_size =
                     Size::new(new_inner_size.width as f32, new_inner_size.height as f32);
                 self.notify_size_changed();
@@ -367,11 +369,10 @@ impl RuntimeWindow {
                     device_id: *device_id,
                     event: Event::MouseMoved {
                         position: Some(
-                            Point::new(
-                                Pixels::from_f32(position.x as f32),
-                                Pixels::from_f32(position.y as f32),
-                            )
-                            .to_points(self.last_known_scale_factor),
+                            Point::from_lengths(
+                                Pixels::new(position.x as f32),
+                                Pixels::new(position.y as f32),
+                            ) / self.last_known_scale_factor,
                         ),
                     },
                 }))

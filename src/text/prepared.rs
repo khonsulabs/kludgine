@@ -1,6 +1,6 @@
 use crate::{
     color::Color,
-    math::{Pixels, Point, Points, Size},
+    math::{Pixels, Point, Points, Raw, ScreenScale, Size, SizeExt},
     style::Alignment,
     text::Font,
     KludgineHandle,
@@ -13,20 +13,22 @@ pub struct PreparedText {
 }
 
 impl PreparedText {
-    pub async fn size(&self) -> Size<Pixels> {
+    pub async fn size(&self) -> Size<f32, Raw> {
         let line_sizes = join_all(self.lines.iter().map(|line| line.size())).await;
         let (width, height) = line_sizes.into_iter().fold(
             (Pixels::default(), Pixels::default()),
-            |(width, height), line_size| (width.max(line_size.width), height + line_size.height),
+            |(width, height), line_size| {
+                (width.max(line_size.width()), height + line_size.height())
+            },
         );
-        Size::new(width, height)
+        Size::from_lengths(width, height)
     }
 
     pub(crate) async fn align(
         &mut self,
         alignment: Alignment,
         width: Points,
-        effective_scale: f32,
+        effective_scale: ScreenScale,
     ) {
         let line_sizes = join_all(self.lines.iter().map(|line| line.size())).await;
 
@@ -37,10 +39,10 @@ impl PreparedText {
                 }
                 Alignment::Center => {
                     self.lines[i].alignment_offset =
-                        (width - size.width.to_points(effective_scale)) / 2.;
+                        (width - (size.width() / effective_scale)) / 2.;
                 }
                 Alignment::Right => {
-                    self.lines[i].alignment_offset = width - size.width.to_points(effective_scale);
+                    self.lines[i].alignment_offset = width - size.width() / effective_scale;
                 }
             }
         }
@@ -57,9 +59,9 @@ pub struct VMetrics {
 impl From<rusttype::VMetrics> for VMetrics {
     fn from(value: rusttype::VMetrics) -> Self {
         Self {
-            ascent: Pixels::from_f32(value.ascent),
-            descent: Pixels::from_f32(value.descent),
-            line_gap: Pixels::from_f32(value.line_gap),
+            ascent: Pixels::new(value.ascent),
+            descent: Pixels::new(value.descent),
+            line_gap: Pixels::new(value.line_gap),
         }
     }
 }
@@ -72,16 +74,17 @@ pub struct PreparedLine {
 }
 
 impl PreparedLine {
-    pub async fn size(&self) -> Size<Pixels> {
+    pub async fn size(&self) -> Size<f32, Raw> {
         if self.spans.is_empty() {
-            return Size::new(Pixels::default(), self.height());
+            return Size::from_lengths(Pixels::default(), self.height());
         }
 
         let width = join_all(self.spans.iter().map(|s| s.width()))
             .await
             .into_iter()
-            .sum::<Pixels>();
-        Size::new(width, self.height())
+            .fold(Pixels::default(), |sum, s| sum + s);
+
+        Size::from_lengths(width, self.height())
     }
 
     pub fn height(&self) -> Pixels {
@@ -91,14 +94,14 @@ impl PreparedLine {
 
 #[derive(Clone, Debug)]
 pub struct PreparedSpan {
-    pub location: Point<Pixels>,
+    pub location: Point<f32, Raw>,
     pub handle: KludgineHandle<PreparedSpanData>,
 }
 
 impl PreparedSpan {
     pub fn new(
         font: Font,
-        size: f32,
+        size: Pixels,
         color: Color,
         width: Pixels,
         positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
@@ -117,7 +120,7 @@ impl PreparedSpan {
         }
     }
 
-    pub fn translate(&self, location: Point<Pixels>) -> Self {
+    pub fn translate(&self, location: Point<f32, Raw>) -> Self {
         Self {
             location,
             handle: self.handle.clone(),
@@ -138,7 +141,7 @@ impl PreparedSpan {
 #[derive(Debug)]
 pub struct PreparedSpanData {
     pub font: Font,
-    pub size: f32,
+    pub size: Pixels,
     pub color: Color,
     pub width: Pixels,
     pub positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,

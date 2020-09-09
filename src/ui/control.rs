@@ -1,12 +1,12 @@
 use crate::{
     event::MouseButton,
-    math::{Point, Points},
+    math::{Point, Scaled},
 };
 
 #[derive(Clone, Debug)]
 pub enum ControlEvent {
     Clicked {
         button: MouseButton,
-        window_position: Point<Points>,
+        window_position: Point<f32, Scaled>,
     },
 }

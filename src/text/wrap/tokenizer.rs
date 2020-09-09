@@ -136,16 +136,17 @@ impl Tokenizer {
 
                     let base_glyph = font.glyph(c).await;
                     if let Some(id) = state.last_glyph_id.take() {
-                        state.caret += font
-                            .pair_kerning(span.style.font_size, id, base_glyph.id())
-                            .await;
+                        state.caret += Pixels::new(
+                            font.pair_kerning(span.style.font_size.get(), id, base_glyph.id())
+                                .await,
+                        );
                     }
                     state.last_glyph_id = Some(base_glyph.id());
                     let glyph = base_glyph
-                        .scaled(Scale::uniform(span.style.font_size))
-                        .positioned(rusttype::point(state.caret.to_f32(), 0.0));
+                        .scaled(Scale::uniform(span.style.font_size.get()))
+                        .positioned(rusttype::point(state.caret.get(), 0.0));
 
-                    state.caret += glyph.unpositioned().h_metrics().advance_width;
+                    state.caret += Pixels::new(glyph.unpositioned().h_metrics().advance_width);
                     state.glyphs.push(glyph);
                 }
             }

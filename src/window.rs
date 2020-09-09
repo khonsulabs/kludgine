@@ -1,6 +1,6 @@
 use crate::{
     event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode},
-    math::{Point, Points, Size},
+    math::{Point, Scaled, ScreenScale, Size},
     runtime::Runtime,
     ui::InteractiveComponent,
     KludgineError, KludgineHandle, KludgineResult,
@@ -73,7 +73,9 @@ pub enum Event {
         state: ElementState,
     },
     /// Mouse cursor event
-    MouseMoved { position: Option<Point<Points>> },
+    MouseMoved {
+        position: Option<Point<f32, Scaled>>,
+    },
     /// Mouse wheel event
     MouseWheel {
         delta: MouseScrollDelta,
@@ -111,7 +113,7 @@ pub trait WindowCreator<T>: Window {
 #[derive(Default)]
 pub struct WindowBuilder {
     title: Option<String>,
-    size: Option<Size>,
+    size: Option<Size<u32, Scaled>>,
     resizable: Option<bool>,
     maximized: Option<bool>,
     visible: Option<bool>,
@@ -127,7 +129,7 @@ impl WindowBuilder {
         self
     }
 
-    pub fn with_size(mut self, size: Size) -> Self {
+    pub fn with_size(mut self, size: Size<u32, Scaled>) -> Self {
         self.size = Some(size);
         self
     }
@@ -175,7 +177,11 @@ impl Into<WinitWindowBuilder> for WindowBuilder {
             builder = builder.with_title(title);
         }
         if let Some(size) = self.size {
-            builder = builder.with_inner_size(size);
+            builder =
+                builder.with_inner_size(winit::dpi::Size::Physical(winit::dpi::PhysicalSize {
+                    width: size.width,
+                    height: size.height,
+                }));
         }
         if let Some(resizable) = self.resizable {
             builder = builder.with_resizable(resizable);
@@ -252,7 +258,10 @@ impl WindowMessage {
 #[derive(Debug)]
 pub(crate) enum WindowEvent {
     CloseRequested,
-    Resize { size: Size, scale_factor: f32 },
+    Resize {
+        size: Size,
+        scale_factor: ScreenScale,
+    },
     Input(InputEvent),
     RedrawRequested,
 }

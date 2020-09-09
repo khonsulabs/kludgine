@@ -1,6 +1,6 @@
 use crate::{
     event::MouseButton,
-    math::{Point, Points, Size, Surround},
+    math::{Point, Points, Scaled, Size, Surround},
     style::{Style, StyleSheet},
     ui::{
         AbsoluteBounds, Component, Context, ControlEvent, Entity, InteractiveComponent, Label,
@@ -12,13 +12,13 @@ use async_trait::async_trait;
 
 #[derive(Debug, Clone)]
 pub struct ButtonStyle {
-    padding: Surround<Points>,
+    padding: Surround<f32, Scaled>,
 }
 
 impl Default for ButtonStyle {
     fn default() -> Self {
         Self {
-            padding: Surround::uniform(Points::from_f32(10.)),
+            padding: Surround::uniform(Points::new(10.)),
         }
     }
 }
@@ -44,10 +44,10 @@ impl Component for Button {
                 ..Default::default()
             }))
             .bounds(AbsoluteBounds {
-                left: crate::math::Dimension::from_points(10.),
-                top: crate::math::Dimension::from_points(10.),
-                right: crate::math::Dimension::from_points(10.),
-                bottom: crate::math::Dimension::from_points(10.),
+                left: crate::math::Dimension::from_f32(10.),
+                top: crate::math::Dimension::from_f32(10.),
+                right: crate::math::Dimension::from_f32(10.),
+                bottom: crate::math::Dimension::from_f32(10.),
                 ..Default::default()
             })
             .interactive(false)
@@ -77,14 +77,14 @@ impl Component for Button {
     async fn clicked(
         &mut self,
         context: &mut Context,
-        window_position: &Point<Points>,
+        window_position: Point<f32, Scaled>,
         button: MouseButton,
     ) -> KludgineResult<()> {
         self.callback(
             context,
             ControlEvent::Clicked {
                 button,
-                window_position: *window_position,
+                window_position,
             },
         )
         .await;
@@ -94,9 +94,9 @@ impl Component for Button {
     async fn content_size(
         &self,
         context: &mut StyledContext,
-        constraints: &Size<Option<Points>>,
-    ) -> KludgineResult<Size<Points>> {
-        let contraints_minus_padding = *constraints - self.style.padding.minimum_size();
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<Size<f32, Scaled>> {
+        let contraints_minus_padding = self.style.padding.inset_constraints(constraints);
         Ok(context
             .content_size(&self.label, &contraints_minus_padding)
             .await?

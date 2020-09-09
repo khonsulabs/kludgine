@@ -1,13 +1,13 @@
-use crate::{math::Pixels, shape::Shape, KludgineResult};
+use crate::{math::Raw, shape::Shape, KludgineResult};
 use rgx_lyon::ShapeBuilder;
 
 #[derive(Default, Clone)]
 pub struct Batch {
-    shapes: Vec<Shape<Pixels>>,
+    shapes: Vec<Shape<Raw>>,
 }
 
 impl Batch {
-    pub fn add(&mut self, shape: Shape<Pixels>) {
+    pub fn add(&mut self, shape: Shape<Raw>) {
         self.shapes.push(shape)
     }
 

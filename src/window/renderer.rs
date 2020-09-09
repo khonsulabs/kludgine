@@ -1,5 +1,6 @@
 use crate::{
     frame::{FontUpdate, Frame, FrameCommand},
+    math::rgx_conversions,
     runtime::Runtime,
     KludgineResult,
 };
@@ -224,12 +225,12 @@ impl FrameRenderer {
                             let source = sprite.source.handle.read().await;
                             gpu_batch.add(
                                 Rect::new(
-                                    source.location.x1() as f32,
-                                    source.location.y1() as f32,
-                                    source.location.x2() as f32,
-                                    source.location.y2() as f32,
+                                    source.location.min_x() as f32,
+                                    source.location.min_y() as f32,
+                                    source.location.max_x() as f32,
+                                    source.location.max_y() as f32,
                                 ),
-                                sprite.render_at.into(),
+                                rgx_conversions::rect(&sprite.render_at),
                                 ZDepth::default(),
                                 Rgba::new(1.0, 1.0, 1.0, 0.0),
                                 sprite.alpha,
@@ -275,10 +276,10 @@ impl FrameRenderer {
                                 // For the destination, we need to invert the y coordinate because without that step, the baseline will be at the top
                                 // of the text, not at the bottom.
                                 let dest = Rect::new(
-                                    text.location.x.to_f32() + screen_rect.min.x as f32,
-                                    text.location.y.to_f32() - screen_rect.min.y as f32,
-                                    text.location.x.to_f32() + screen_rect.max.x as f32,
-                                    text.location.y.to_f32() - screen_rect.max.y as f32,
+                                    text.location.x + screen_rect.min.x as f32,
+                                    text.location.y - screen_rect.min.y as f32,
+                                    text.location.x + screen_rect.max.x as f32,
+                                    text.location.y - screen_rect.max.y as f32,
                                 );
                                 batch.add(
                                     source,

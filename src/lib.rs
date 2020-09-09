@@ -144,7 +144,10 @@ pub mod prelude {
         color::Color,
         event::*,
         include_aseprite_sprite, include_font, include_texture,
-        math::{Dimension, Pixels, Point, Points, Rect, Size, Surround},
+        math::{
+            Dimension, Pixels, Point, PointExt, Points, Raw, Rect, Scale, Scaled, ScreenScale,
+            Size, SizeExt, Surround, Unknown, Vector,
+        },
         runtime::Runtime,
         scene::{Scene, SceneTarget},
         shape::*,

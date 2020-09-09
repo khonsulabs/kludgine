@@ -25,7 +25,7 @@ impl Component for TextExample {
             "Wrapping ",
             Style {
                 color: Some(Color::RED),
-                font_size: Some(120.0),
+                font_size: Some(Points::new(120.0)),
                 ..Default::default()
             }
             .effective_style(context.scene())
@@ -35,7 +35,7 @@ impl Component for TextExample {
             "rapped ",
             Style {
                 color: Some(Color::WHITE),
-                font_size: Some(60.0),
+                font_size: Some(Points::new(60.0)),
                 ..Default::default()
             }
             .effective_style(context.scene())
@@ -45,7 +45,7 @@ impl Component for TextExample {
             "Words to live by",
             Style {
                 color: Some(Color::BLUE),
-                font_size: Some(120.0),
+                font_size: Some(Points::new(120.0)),
                 ..Default::default()
             }
             .effective_style(context.scene())
@@ -55,9 +55,9 @@ impl Component for TextExample {
         Text::new(spans)
             .render_at(
                 context.scene(),
-                Point::new(Points::from_f32(0.0), Points::from_f32(120.0)),
+                Point::new(0.0, 120.0),
                 TextWrap::SingleLine {
-                    max_width: context.scene().size().await.width,
+                    max_width: context.scene().size().await.width(),
                     truncate: false,
                     alignment: Alignment::Left,
                 },

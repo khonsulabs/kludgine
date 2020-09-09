@@ -1,5 +1,5 @@
 use super::{
-    math::{Point, Rect, Size},
+    math::{Point, Raw, Rect, Size},
     texture::{LoadedTexture, Texture},
     KludgineError, KludgineHandle, KludgineResult,
 };
@@ -95,10 +95,7 @@ impl Sprite {
 
     pub async fn single_frame(texture: Texture) -> Self {
         let size = texture.size().await;
-        let source = SpriteSource::new(
-            Rect::sized(Point::default(), Size::new(size.width, size.height)),
-            texture,
-        );
+        let source = SpriteSource::new(Rect::new(Point::default(), size.cast_unit()), texture);
         let mut frames = HashMap::new();
         frames.insert(
             None,
@@ -170,7 +167,7 @@ impl Sprite {
                 }
             };
 
-            let frame = Rect::sized(
+            let frame = Rect::new(
                 Point::new(
                     frame["frame"]["x"].as_u32().ok_or_else(|| {
                         KludgineError::SpriteParseError(
@@ -479,7 +476,7 @@ pub(crate) struct RenderedSprite {
 }
 
 impl RenderedSprite {
-    pub fn new(render_at: Rect, alpha: f32, source: SpriteSource) -> Self {
+    pub fn new(render_at: Rect<f32, Raw>, alpha: f32, source: SpriteSource) -> Self {
         Self {
             handle: KludgineHandle::new(RenderedSpriteData {
                 render_at,
@@ -491,7 +488,7 @@ impl RenderedSprite {
 }
 
 pub(crate) struct RenderedSpriteData {
-    pub render_at: Rect,
+    pub render_at: Rect<f32, Raw>,
     pub alpha: f32,
     pub source: SpriteSource,
 }

@@ -24,21 +24,18 @@ impl Component for Shapes {
         let center = layout.bounds_without_margin().center();
 
         Shape::polygon(vec![
-            Point::new(Points::from_f32(-100.), Points::from_f32(-100.)),
-            Point::new(Points::from_f32(0.), Points::from_f32(100.)),
-            Point::new(Points::from_f32(100.), Points::from_f32(-100.)),
+            Point::new(-100., -100.),
+            Point::new(0., 100.),
+            Point::new(100., -100.),
         ])
         .fill(Fill::new(Color::GREEN))
         .draw_at(center, context.scene())
         .await;
 
-        Shape::circle(
-            Point::new(Points::from_f32(0.), Points::from_f32(0.)),
-            Points::from_f32(25.),
-        )
-        .fill(Fill::new(Color::RED))
-        .draw_at(center, context.scene())
-        .await;
+        Shape::circle(Point::new(0., 0.), Points::new(25.))
+            .fill(Fill::new(Color::RED))
+            .draw_at(center, context.scene())
+            .await;
 
         Ok(())
     }

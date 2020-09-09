@@ -1,5 +1,5 @@
 use crate::{
-    math::{Pixels, Point, Points},
+    math::{Point, Raw, Scaled},
     scene::SceneTarget,
     shape::{circle::Circle, Fill, Path, Stroke},
     KludgineResult,
@@ -12,7 +12,7 @@ pub(crate) enum ShapeGeometry<S> {
     Circle(Circle<S>),
 }
 
-impl ShapeGeometry<Pixels> {
+impl ShapeGeometry<Raw> {
     pub fn build(
         &self,
         builder: &mut rgx_lyon::ShapeBuilder,
@@ -27,12 +27,12 @@ impl ShapeGeometry<Pixels> {
     }
 }
 
-impl ShapeGeometry<Points> {
+impl ShapeGeometry<Scaled> {
     pub(crate) async fn translate_and_convert_to_device(
         &self,
-        location: Point<Points>,
+        location: Point<f32, Scaled>,
         scene: &SceneTarget,
-    ) -> ShapeGeometry<Pixels> {
+    ) -> ShapeGeometry<Raw> {
         match self {
             Self::Empty => ShapeGeometry::Empty,
             Self::Path(path) => {

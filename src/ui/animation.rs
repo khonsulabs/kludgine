@@ -29,8 +29,8 @@ pub trait PropertyChange<T>: Clone + Send + Sync {
     async fn update(&self, existing: &T, target: &T, elapsed_percent: f32);
 }
 // pub struct PointChange<T> {
-//     target: Point<Points>,
-//     existing: Point<Points>,
+//     target: Point<f32, Scaled>,
+//     existing: Point<f32, Scaled>,
 //     transition: T,
 //     mutator: Box<dyn PropertyMutator<T>>,
 //     // entity: Entity<E>,
