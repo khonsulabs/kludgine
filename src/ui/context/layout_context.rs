@@ -93,11 +93,10 @@ impl LayoutEngine {
         let mut layout_solvers = HashMap::new();
         while let Some(index) = found_nodes.pop_back() {
             let node = arena.get(&index).await.unwrap();
-            let effective_style = effective_styles.get(&index).unwrap().clone();
             let mut context = StyledContext::new(
                 index,
                 scene.clone(),
-                effective_style.clone(),
+                effective_styles.clone(),
                 arena.clone(),
                 ui_state.clone(),
             );
@@ -108,11 +107,10 @@ impl LayoutEngine {
         let layout_data = LayoutEngine::new(layout_solvers, effective_styles.clone(), root);
 
         while let Some(index) = layout_data.next_to_layout().await {
-            let effective_style = effective_styles.get(&index).unwrap().clone();
             let mut context = LayoutContext::new(
                 index,
                 scene.clone(),
-                effective_style.clone(),
+                effective_styles.clone(),
                 layout_data.clone(),
                 arena.clone(),
                 ui_state.clone(),
@@ -214,29 +212,21 @@ impl LayoutContext {
     pub(crate) fn new<I: Indexable>(
         index: I,
         scene: SceneTarget,
-        effective_style: EffectiveStyle,
+        effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
         layout: LayoutEngine,
         arena: HierarchicalArena,
         ui_state: UIState,
     ) -> Self {
         Self {
-            base: StyledContext::new(index, scene, effective_style, arena, ui_state),
+            base: StyledContext::new(index, scene, effective_styles, arena, ui_state),
             layout,
         }
     }
 
-    pub async fn clone_for<I: Indexable>(&self, index: I) -> Self {
+    pub async fn clone_for<I: Indexable>(&self, index: &I) -> Self {
         let index = index.index();
-        let effective_style = self.layout.effective_style(&index).await.unwrap();
         Self {
-            base: StyledContext::new(
-                // TODO use clone_for once it's fixed
-                index,
-                self.scene().clone(),
-                effective_style,
-                self.arena().clone(),
-                self.ui_state.clone(),
-            ),
+            base: self.base.clone_for(&index),
             layout: self.layout.clone(),
         }
     }
@@ -259,7 +249,7 @@ impl LayoutContext {
             )
             .await?;
 
-        let mut solving_context = self.clone_for(index).await;
+        let mut solving_context = self.clone_for(&index).await;
         self.layout
             .solve_layout_for(&index, &mut solving_context, bounds, &content_size)
             .await?;

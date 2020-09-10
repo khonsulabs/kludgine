@@ -287,12 +287,7 @@ where
                 let mut context = StyledContext::new(
                     index,
                     scene.clone(),
-                    layouts
-                        .effective_styles()
-                        .await
-                        .get(&index)
-                        .unwrap()
-                        .clone(),
+                    layouts.effective_styles().await.clone(),
                     self.arena.clone(),
                     self.ui_state.clone(),
                 );

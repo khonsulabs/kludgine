@@ -131,7 +131,7 @@ impl LayoutSolver for AbsoluteLayout {
             .iter()
             .map(|&index| (index, self.children.get(&index).unwrap()))
         {
-            let mut child_context = context.clone_for(index).await;
+            let mut child_context = context.clone_for(&index).await;
             let child_content_size = context
                 .arena()
                 .get(&index)

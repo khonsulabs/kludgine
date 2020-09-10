@@ -2,13 +2,14 @@ use crate::{
     math::{Scaled, Size},
     scene::SceneTarget,
     style::EffectiveStyle,
-    ui::{HierarchicalArena, Indexable, SceneContext, UIState},
+    ui::{HierarchicalArena, Index, Indexable, SceneContext, UIState},
     KludgineError, KludgineResult,
 };
+use std::{collections::HashMap, sync::Arc};
 
 pub struct StyledContext {
     base: SceneContext,
-    effective_style: EffectiveStyle,
+    effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
 }
 
 impl std::ops::Deref for StyledContext {
@@ -29,32 +30,35 @@ impl StyledContext {
     pub(crate) fn new<I: Indexable>(
         index: I,
         scene: SceneTarget,
-        effective_style: EffectiveStyle,
+        effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
         arena: HierarchicalArena,
         ui_state: UIState,
     ) -> Self {
         Self {
             base: SceneContext::new(index, scene, arena, ui_state),
-            effective_style,
+            effective_styles,
         }
     }
 
     pub fn clone_for<I: Indexable>(&self, index: &I) -> Self {
         Self {
             base: self.base.clone_for(index),
-            effective_style: self.effective_style.clone(), // TODO this isn't right
+            effective_styles: self.effective_styles.clone(),
         }
     }
 
-    pub fn from_scene_context(effective_style: EffectiveStyle, base: SceneContext) -> Self {
+    pub fn from_scene_context(
+        effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
+        base: SceneContext,
+    ) -> Self {
         Self {
             base,
-            effective_style,
+            effective_styles,
         }
     }
 
     pub fn effective_style(&self) -> &'_ EffectiveStyle {
-        &self.effective_style
+        &self.effective_styles.get(&self.index()).unwrap()
     }
 
     pub async fn content_size(
