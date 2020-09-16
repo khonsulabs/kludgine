@@ -1,7 +1,7 @@
 use super::{
     math::{Point, Scaled, Size},
     scene::SceneTarget,
-    sprite::Sprite,
+    sprite::{Sprite, SpriteRotation},
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -85,7 +85,11 @@ where
         if let Some(tile) = self.provider.get_tile(location).await {
             let sprite = tile.sprite.get_frame(elapsed).await?;
             sprite
-                .render_at(scene, self.coordinate_for_tile(location))
+                .render_at(
+                    scene,
+                    self.coordinate_for_tile(location),
+                    SpriteRotation::default(),
+                )
                 .await;
         }
         Ok(())

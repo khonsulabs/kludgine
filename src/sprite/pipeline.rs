@@ -4,6 +4,8 @@ use rgx::{
     math::{Matrix4, Vector2, Vector3},
 };
 
+use crate::math::{Angle, Point, Raw};
+
 /// A pipeline for rendering shapes.
 pub struct Pipeline {
     pipeline: core::Pipeline,
@@ -26,6 +28,25 @@ pub struct Vertex {
     pub position: Vector3<f32>,
     pub uv: Vector2<f32>,
     pub color: Rgba8,
+}
+
+impl Vertex {
+    pub fn rotate_by(mut self, angle: Option<Angle>, origin: Point<f32, Raw>) -> Self {
+        if let Some(angle) = angle {
+            let origin = origin.to_vector();
+            let rotation2d = euclid::Rotation2D::new(angle);
+            let position = Point::new(self.position.x, self.position.y);
+            let relative_position = position - origin;
+            let rotated = rotation2d.transform_point(relative_position) + origin;
+
+            self.position.x = rotated.x;
+            self.position.y = rotated.y;
+
+            self
+        } else {
+            self
+        }
+    }
 }
 
 impl Pipeline {

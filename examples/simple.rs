@@ -8,6 +8,7 @@ fn main() {
 #[derive(Default)]
 struct Simple {
     source_sprite: Option<SpriteSource>,
+    rotation_angle: Angle,
 }
 
 impl WindowCreator<Simple> for Simple {
@@ -16,7 +17,11 @@ impl WindowCreator<Simple> for Simple {
     }
 }
 
-impl Window for Simple {}
+impl Window for Simple {
+    fn target_fps(&self) -> Option<u16> {
+        Some(60)
+    }
+}
 
 impl StandaloneComponent for Simple {}
 
@@ -28,10 +33,24 @@ impl Component for Simple {
         Ok(())
     }
 
-    async fn render(&self, context: &mut StyledContext, _layout: &Layout) -> KludgineResult<()> {
+    async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+        if let Some(elapsed) = context.scene().elapsed().await {
+            self.rotation_angle += Angle::radians(elapsed.as_secs_f32());
+        }
+
+        Ok(())
+    }
+
+    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         let sprite = self.source_sprite.as_ref().unwrap();
 
-        sprite.render_at(context.scene(), Point::default()).await;
+        sprite
+            .render_at(
+                context.scene(),
+                layout.bounds_without_margin().center(),
+                SpriteRotation::around_center(self.rotation_angle),
+            )
+            .await;
 
         Ok(())
     }

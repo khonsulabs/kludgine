@@ -274,6 +274,7 @@ impl FrameRenderer {
                                 batch.add_box(
                                     source.cast_unit().cast(),
                                     dest,
+                                    sprite::SpriteRotation::default(),
                                     text_data.color.into(),
                                 );
                             }

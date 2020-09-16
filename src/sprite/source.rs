@@ -1,7 +1,7 @@
 use crate::{
     math::{Point, Rect, Scaled, Size},
     scene::{Element, SceneTarget},
-    sprite::RenderedSprite,
+    sprite::{RenderedSprite, SpriteRotation},
     texture::Texture,
     KludgineHandle,
 };
@@ -31,24 +31,37 @@ impl SpriteSource {
         Self::new(Rect::new(Point::default(), Size::new(w, h)), texture)
     }
 
-    pub async fn render_at(&self, scene: &SceneTarget, location: Point<f32, Scaled>) {
-        self.render_at_with_alpha(scene, location, 1.).await
+    pub async fn render_at(
+        &self,
+        scene: &SceneTarget,
+        location: Point<f32, Scaled>,
+        rotation: SpriteRotation<Scaled>,
+    ) {
+        self.render_at_with_alpha(scene, location, rotation, 1.)
+            .await
     }
 
-    pub async fn render_within(&self, scene: &SceneTarget, bounds: Rect<f32, Scaled>) {
-        self.render_with_alpha(scene, bounds, 1.).await
+    pub async fn render_within(
+        &self,
+        scene: &SceneTarget,
+        bounds: Rect<f32, Scaled>,
+        rotation: SpriteRotation<Scaled>,
+    ) {
+        self.render_with_alpha(scene, bounds, rotation, 1.).await
     }
 
     pub async fn render_at_with_alpha(
         &self,
         scene: &SceneTarget,
         location: Point<f32, Scaled>,
+        rotation: SpriteRotation<Scaled>,
         alpha: f32,
     ) {
         let sprite_location = self.location().await;
         self.render_with_alpha(
             scene,
             Rect::new(location, sprite_location.size.to_f32().cast_unit()),
+            rotation,
             alpha,
         )
         .await
@@ -58,12 +71,15 @@ impl SpriteSource {
         &self,
         scene: &SceneTarget,
         bounds: Rect<f32, Scaled>,
+        rotation: SpriteRotation<Scaled>,
         alpha: f32,
     ) {
-        let destination = bounds * scene.effective_scale_factor().await;
+        let effective_scale = scene.effective_scale_factor().await;
+        let destination = bounds * effective_scale;
         scene
             .push_element(Element::Sprite(RenderedSprite::new(
                 destination,
+                rotation * effective_scale,
                 alpha,
                 self.clone(),
             )))

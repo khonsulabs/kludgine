@@ -1,6 +1,6 @@
 use crate::{
     math::{Point, PointExt, Raw, Unknown},
-    sprite::{pipeline::Vertex, RenderedSprite},
+    sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation},
 };
 use euclid::Box2D;
 use rgx::{
@@ -38,6 +38,7 @@ impl GpuBatch {
         self.add_box(
             source.location.to_box2d(),
             sprite.render_at.to_box2d(),
+            sprite.rotation,
             white_transparent,
         )
     }
@@ -53,23 +54,38 @@ impl GpuBatch {
         }
     }
 
-    pub fn add_box(&mut self, src: Box2D<u32, Unknown>, dest: Box2D<f32, Raw>, color: Rgba8) {
-        let top_left = self.vertex(src.min, dest.min, color);
-        let top_right = self.vertex(
-            Point::from_lengths(src.max.x(), src.min.y()),
-            Point::from_lengths(dest.max.x(), dest.min.y()),
-            color,
-        );
-        let bottom_left = self.vertex(
-            Point::from_lengths(src.min.x(), src.max.y()),
-            Point::from_lengths(dest.min.x(), dest.max.y()),
-            color,
-        );
-        let bottom_right = self.vertex(
-            Point::from_lengths(src.max.x(), src.max.y()),
-            Point::from_lengths(dest.max.x(), dest.max.y()),
-            color,
-        );
+    pub fn add_box(
+        &mut self,
+        src: Box2D<u32, Unknown>,
+        dest: Box2D<f32, Raw>,
+        rotation: SpriteRotation<Raw>,
+        color: Rgba8,
+    ) {
+        let origin = rotation.screen_location.unwrap_or_else(|| dest.center());
+        let top_left = self
+            .vertex(src.min, dest.min, color)
+            .rotate_by(rotation.angle, origin);
+        let top_right = self
+            .vertex(
+                Point::from_lengths(src.max.x(), src.min.y()),
+                Point::from_lengths(dest.max.x(), dest.min.y()),
+                color,
+            )
+            .rotate_by(rotation.angle, origin);
+        let bottom_left = self
+            .vertex(
+                Point::from_lengths(src.min.x(), src.max.y()),
+                Point::from_lengths(dest.min.x(), dest.max.y()),
+                color,
+            )
+            .rotate_by(rotation.angle, origin);
+        let bottom_right = self
+            .vertex(
+                Point::from_lengths(src.max.x(), src.max.y()),
+                Point::from_lengths(dest.max.x(), dest.max.y()),
+                color,
+            )
+            .rotate_by(rotation.angle, origin);
 
         self.add_triangle(top_left, top_right, bottom_left);
         self.add_triangle(top_right, bottom_right, bottom_left);

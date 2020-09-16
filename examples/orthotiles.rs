@@ -122,6 +122,7 @@ impl Component for OrthoTiles {
             .render_at(
                 &camera_scene,
                 Point::new(self.position.x - 16.0, self.position.y - 16.0),
+                SpriteRotation::default(),
             )
             .await;
 

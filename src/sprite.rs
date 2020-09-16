@@ -1,5 +1,5 @@
-use super::{
-    math::{Point, Raw, Rect, Size},
+use crate::{
+    math::{Angle, Point, Raw, Rect, Size},
     texture::Texture,
     KludgineError, KludgineHandle, KludgineResult,
 };
@@ -480,10 +480,16 @@ pub(crate) struct RenderedSprite {
 }
 
 impl RenderedSprite {
-    pub fn new(render_at: Rect<f32, Raw>, alpha: f32, source: SpriteSource) -> Self {
+    pub fn new(
+        render_at: Rect<f32, Raw>,
+        rotation: SpriteRotation<Raw>,
+        alpha: f32,
+        source: SpriteSource,
+    ) -> Self {
         Self {
             handle: KludgineHandle::new(RenderedSpriteData {
                 render_at,
+                rotation,
                 alpha,
                 source,
             }),
@@ -493,6 +499,41 @@ impl RenderedSprite {
 
 pub(crate) struct RenderedSpriteData {
     pub render_at: Rect<f32, Raw>,
+    pub rotation: SpriteRotation<Raw>,
     pub alpha: f32,
     pub source: SpriteSource,
+}
+
+#[derive(Copy, Clone, Debug, Default)]
+pub struct SpriteRotation<Unit> {
+    pub angle: Option<Angle>,
+    /// The location to rotate the sprite around. If not specified, the center of the sprite is used.
+    pub screen_location: Option<Point<f32, Unit>>,
+}
+
+impl<Unit> SpriteRotation<Unit> {
+    pub fn around_center(angle: Angle) -> Self {
+        Self {
+            angle: Some(angle),
+            screen_location: None,
+        }
+    }
+
+    pub fn around(angle: Angle, screen_location: Point<f32, Unit>) -> Self {
+        Self {
+            angle: Some(angle),
+            screen_location: Some(screen_location),
+        }
+    }
+}
+
+impl<A, B> std::ops::Mul<euclid::Scale<f32, A, B>> for SpriteRotation<A> {
+    type Output = SpriteRotation<B>;
+
+    fn mul(self, rhs: euclid::Scale<f32, A, B>) -> Self::Output {
+        SpriteRotation {
+            angle: self.angle,
+            screen_location: self.screen_location.map(|l| l * rhs),
+        }
+    }
 }

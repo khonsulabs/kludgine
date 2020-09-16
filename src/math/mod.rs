@@ -12,6 +12,7 @@ pub type Points = euclid::Length<f32, Scaled>;
 pub type Vector<T = f32, Unit = Unknown> = euclid::Vector2D<T, Unit>;
 pub use euclid::{Length, Scale};
 pub type ScreenScale = Scale<f32, Scaled, Raw>;
+pub type Angle = euclid::Angle<f32>;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct Raw;

@@ -1,7 +1,7 @@
 use crate::{
     event::MouseButton,
     math::{Point, Rect, Scaled, Size},
-    sprite::{Sprite, SpriteSource},
+    sprite::{Sprite, SpriteRotation, SpriteSource},
     ui::{
         animation::Transition,
         animation::{FloatChange, PropertyFrameManager, PropertyMutator},
@@ -186,7 +186,12 @@ impl Component for Image {
             };
 
             frame
-                .render_with_alpha(context.scene(), target_bounds, self.options.alpha)
+                .render_with_alpha(
+                    context.scene(),
+                    target_bounds,
+                    SpriteRotation::default(),
+                    self.options.alpha,
+                )
                 .await
         }
         Ok(())
