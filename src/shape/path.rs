@@ -88,21 +88,21 @@ impl Path<Scaled> {
             #[allow(clippy::eval_order_dependence)]
             events.push(match event {
                 PathEvent::Begin { at } => PathEvent::Begin {
-                    at: Self::convert_point(*at, location, scene, effective_scale).await,
+                    at: Self::convert_point(*at, location, effective_scale),
                 },
                 PathEvent::Line { from, to } => PathEvent::Line {
-                    from: Self::convert_point(*from, location, scene, effective_scale).await,
-                    to: Self::convert_point(*to, location, scene, effective_scale).await,
+                    from: Self::convert_point(*from, location, effective_scale),
+                    to: Self::convert_point(*to, location, effective_scale),
                 },
                 PathEvent::End { first, last, close } => PathEvent::End {
-                    first: Self::convert_point(*first, location, scene, effective_scale).await,
-                    last: Self::convert_point(*last, location, scene, effective_scale).await,
+                    first: Self::convert_point(*first, location, effective_scale),
+                    last: Self::convert_point(*last, location, effective_scale),
                     close: *close,
                 },
                 PathEvent::Quadratic { from, ctrl, to } => PathEvent::Quadratic {
-                    from: Self::convert_point(*from, location, scene, effective_scale).await,
-                    ctrl: Self::convert_point(*ctrl, location, scene, effective_scale).await,
-                    to: Self::convert_point(*to, location, scene, effective_scale).await,
+                    from: Self::convert_point(*from, location, effective_scale),
+                    ctrl: Self::convert_point(*ctrl, location, effective_scale),
+                    to: Self::convert_point(*to, location, effective_scale),
                 },
                 PathEvent::Cubic {
                     from,
@@ -110,10 +110,10 @@ impl Path<Scaled> {
                     ctrl2,
                     to,
                 } => PathEvent::Cubic {
-                    from: Self::convert_point(*from, location, scene, effective_scale).await,
-                    ctrl1: Self::convert_point(*ctrl1, location, scene, effective_scale).await,
-                    ctrl2: Self::convert_point(*ctrl2, location, scene, effective_scale).await,
-                    to: Self::convert_point(*to, location, scene, effective_scale).await,
+                    from: Self::convert_point(*from, location, effective_scale),
+                    ctrl1: Self::convert_point(*ctrl1, location, effective_scale),
+                    ctrl2: Self::convert_point(*ctrl2, location, effective_scale),
+                    to: Self::convert_point(*to, location, effective_scale),
                 },
             })
         }
@@ -121,16 +121,12 @@ impl Path<Scaled> {
         Path { events }
     }
 
-    async fn convert_point(
+    fn convert_point(
         point: Point<f32, Scaled>,
         location: Point<f32, Scaled>,
-        scene: &SceneTarget,
         effective_scale: ScreenScale,
     ) -> Point<f32, Raw> {
-        scene
-            .user_to_device_point(location + point.to_vector())
-            .await
-            * effective_scale
+        (location + point.to_vector()) * effective_scale
     }
 }
 

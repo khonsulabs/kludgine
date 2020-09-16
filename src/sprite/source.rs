@@ -60,14 +60,7 @@ impl SpriteSource {
         bounds: Rect<f32, Scaled>,
         alpha: f32,
     ) {
-        let translated_origin = scene
-            .user_to_device_point(Point::new(
-                bounds.origin.x,
-                bounds.origin.y + bounds.size.height,
-            ))
-            .await;
-        let destination =
-            Rect::new(translated_origin, bounds.size) * scene.effective_scale_factor().await;
+        let destination = bounds * scene.effective_scale_factor().await;
         scene
             .push_element(Element::Sprite(RenderedSprite::new(
                 destination,

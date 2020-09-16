@@ -1,13 +1,16 @@
 use crate::{
-    math::rgx_conversions,
+    math::{Point, Unknown},
     runtime::Runtime,
+    sprite,
     window::frame::{FontUpdate, Frame, FrameCommand},
     KludgineResult,
 };
 use crossbeam::atomic::AtomicCell;
-use rgx::core::*;
-use rgx::kit;
-use rgx::kit::{sprite2d, Repeat, ZDepth};
+use euclid::Box2D;
+use rgx::{
+    color::{Rgba, Rgba8},
+    core,
+};
 use rgx_lyon::LyonPipeline;
 use std::sync::Arc;
 
@@ -50,24 +53,25 @@ impl FrameSynchronizer {
 
 pub(crate) struct FrameRenderer {
     keep_running: Arc<AtomicCell<bool>>,
-    renderer: Renderer,
-    swap_chain: SwapChain,
+    renderer: core::Renderer,
+    swap_chain: core::SwapChain,
     frame_synchronizer: FrameSynchronizer,
-    sprite_pipeline: sprite2d::Pipeline,
+    sprite_pipeline: sprite::Pipeline,
     shape_pipeline: LyonPipeline,
 }
 
 impl FrameRenderer {
     fn new(
-        renderer: Renderer,
+        renderer: core::Renderer,
         frame_synchronizer: FrameSynchronizer,
         keep_running: Arc<AtomicCell<bool>>,
         initial_width: u32,
         initial_height: u32,
     ) -> Self {
-        let swap_chain = renderer.swap_chain(initial_width, initial_height, PresentMode::Vsync);
-        let shape_pipeline = renderer.pipeline(Blending::default());
-        let sprite_pipeline = renderer.pipeline(Blending::default());
+        let swap_chain =
+            renderer.swap_chain(initial_width, initial_height, core::PresentMode::Vsync);
+        let shape_pipeline = renderer.pipeline(core::Blending::default());
+        let sprite_pipeline = renderer.pipeline(core::Blending::default());
         Self {
             renderer,
             keep_running,
@@ -78,7 +82,7 @@ impl FrameRenderer {
         }
     }
     pub fn run(
-        renderer: Renderer,
+        renderer: core::Renderer,
         keep_running: Arc<AtomicCell<bool>>,
         initial_width: u32,
         initial_height: u32,
@@ -128,7 +132,9 @@ impl FrameRenderer {
             let mut loaded_font = font.handle.write().await;
             if loaded_font.texture.is_none() {
                 let texture = self.renderer.texture(512, 512); // TODO font texture should be configurable
-                let sampler = self.renderer.sampler(Filter::Nearest, Filter::Nearest);
+                let sampler = self
+                    .renderer
+                    .sampler(core::Filter::Nearest, core::Filter::Nearest);
 
                 let binding = self
                     .sprite_pipeline
@@ -145,7 +151,7 @@ impl FrameRenderer {
             }
             let pixels = Rgba8::align(&pixels);
 
-            self.renderer.submit(&[Op::Transfer(
+            self.renderer.submit(&[core::Op::Transfer(
                 loaded_font.texture.as_ref().unwrap(),
                 pixels,
                 rect.width(),
@@ -161,39 +167,29 @@ impl FrameRenderer {
         engine_frame.pending_font_updates.clear();
 
         if self.swap_chain.width != w || self.swap_chain.height != h {
-            self.swap_chain = self.renderer.swap_chain(w, h, PresentMode::Vsync);
+            self.swap_chain = self.renderer.swap_chain(w, h, core::PresentMode::Vsync);
         }
-
-        // let (mx, my) = (self.size().width / 2.0, self.size().height / 2.0);
-        // let buffer = shape2d::Batch::singleton(
-        //     Shape::circle(Point::new(mx, size.height as f32 - my), 20., 32)
-        //         .fill(Fill::Solid(Rgba::new(1., 0., 0., 1.))),
-        // )
-        // .finish(&self.renderer);
 
         let output = self.swap_chain.next();
         let mut frame = self.renderer.frame();
 
-        self.renderer.update_pipeline(
-            &self.shape_pipeline,
-            kit::ortho(output.width, output.height, Default::default()),
-            &mut frame,
-        );
+        let ortho = ortho(output.width, output.height, Default::default());
+        self.renderer
+            .update_pipeline(&self.shape_pipeline, ortho, &mut frame);
 
-        self.renderer.update_pipeline(
-            &self.sprite_pipeline,
-            kit::ortho(output.width, output.height, Default::default()),
-            &mut frame,
-        );
+        self.renderer
+            .update_pipeline(&self.sprite_pipeline, ortho, &mut frame);
 
         {
-            let mut pass = frame.pass(PassOp::Clear(Rgba::TRANSPARENT), &output);
+            let mut pass = frame.pass(core::PassOp::Clear(Rgba::TRANSPARENT), &output);
             for command in std::mem::take(&mut engine_frame.commands) {
                 match command {
                     FrameCommand::LoadTexture(texture_handle) => {
                         let mut loaded_texture = texture_handle.handle.write().await;
                         if loaded_texture.binding.is_none() {
-                            let sampler = self.renderer.sampler(Filter::Nearest, Filter::Nearest);
+                            let sampler = self
+                                .renderer
+                                .sampler(core::Filter::Nearest, core::Filter::Nearest);
 
                             let (gpu_texture, texels) = {
                                 let texture = loaded_texture.texture.handle.read().await;
@@ -205,7 +201,7 @@ impl FrameRenderer {
                             };
 
                             self.renderer
-                                .submit(&[Op::Fill(&gpu_texture, texels.as_slice())]);
+                                .submit(&[core::Op::Fill(&gpu_texture, texels.as_slice())]);
 
                             loaded_texture.binding = Some(self.sprite_pipeline.binding(
                                 &self.renderer,
@@ -219,23 +215,9 @@ impl FrameRenderer {
                         let texture = loaded_texture.texture.handle.read().await;
 
                         let mut gpu_batch =
-                            sprite2d::Batch::new(texture.image.width(), texture.image.height());
+                            sprite::GpuBatch::new(texture.image.width(), texture.image.height());
                         for sprite_handle in batch.sprites.iter() {
-                            let sprite = sprite_handle.handle.read().await;
-                            let source = sprite.source.handle.read().await;
-                            gpu_batch.add(
-                                Rect::new(
-                                    source.location.min_x() as f32,
-                                    source.location.min_y() as f32,
-                                    source.location.max_x() as f32,
-                                    source.location.max_y() as f32,
-                                ),
-                                rgx_conversions::rect(&sprite.render_at),
-                                ZDepth::default(),
-                                Rgba::new(1.0, 1.0, 1.0, 0.0),
-                                sprite.alpha,
-                                Repeat::default(),
-                            );
+                            gpu_batch.add_sprite(sprite_handle.clone()).await;
                         }
                         let buffer = gpu_batch.finish(&self.renderer);
 
@@ -257,7 +239,7 @@ impl FrameRenderer {
                         let text_data = text.handle.read().await;
                         let loaded_font_data = loaded_font.handle.read().await;
                         if let Some(texture) = loaded_font_data.texture.as_ref() {
-                            let mut batch = sprite2d::Batch::new(texture.w, texture.h);
+                            let mut batch = sprite::GpuBatch::new(texture.w, texture.h);
                             for (uv_rect, screen_rect) in
                                 text_data.positioned_glyphs.iter().filter_map(|g| {
                                     loaded_font_data.cache.rect_for(0, g).ok().flatten()
@@ -266,28 +248,33 @@ impl FrameRenderer {
                                 // This is one section that feels like a kludge. gpu_cache is storing the textures upside down like normal
                                 // but rgx is automatically flipping textures. Rgx isn't exactly the best compatibility with this process
                                 // because gpu_cache also produces data that is 1 byte per pixel, and we have to expand it when we're updating the texture
-                                let source = Rect::new(
-                                    uv_rect.min.x * 512.0,
-                                    (1.0 - uv_rect.min.y) * 512.0,
-                                    uv_rect.max.x * 512.0,
-                                    (1.0 - uv_rect.max.y) * 512.0,
+                                let source = Box2D::<_, Unknown>::new(
+                                    Point::new(
+                                        uv_rect.min.x * 512.0,
+                                        (1.0 - uv_rect.max.y) * 512.0,
+                                    ),
+                                    Point::new(
+                                        uv_rect.max.x * 512.0,
+                                        (1.0 - uv_rect.min.y) * 512.0,
+                                    ),
                                 );
 
-                                // For the destination, we need to invert the y coordinate because without that step, the baseline will be at the top
-                                // of the text, not at the bottom.
-                                let dest = Rect::new(
-                                    text.location.x + screen_rect.min.x as f32,
-                                    text.location.y - screen_rect.min.y as f32,
-                                    text.location.x + screen_rect.max.x as f32,
-                                    text.location.y - screen_rect.max.y as f32,
+                                let dest = Box2D::new(
+                                    text.location
+                                        + euclid::Vector2D::new(
+                                            screen_rect.min.x as f32,
+                                            screen_rect.min.y as f32,
+                                        ),
+                                    text.location
+                                        + euclid::Vector2D::new(
+                                            screen_rect.max.x as f32,
+                                            screen_rect.max.y as f32,
+                                        ),
                                 );
-                                batch.add(
-                                    source,
+                                batch.add_box(
+                                    source.cast_unit().cast(),
                                     dest,
-                                    ZDepth::default(),
                                     text_data.color.into(),
-                                    text_data.color.alpha(),
-                                    Repeat::default(),
                                 );
                             }
                             let buffer = batch.finish(&self.renderer);
@@ -310,4 +297,20 @@ impl FrameRenderer {
 
         Ok(())
     }
+}
+
+pub fn ortho(w: u32, h: u32, origin: rgx::kit::Origin) -> rgx::math::Matrix4<f32> {
+    let (bottom, top) = match origin {
+        rgx::kit::Origin::BottomLeft => (h as f32, 0.),
+        rgx::kit::Origin::TopLeft => (0., h as f32),
+    };
+    rgx::math::Ortho::<f32> {
+        left: 0.0,
+        right: w as f32,
+        bottom,
+        top,
+        near: -1.0,
+        far: 1.0,
+    }
+    .into()
 }

@@ -1,5 +1,5 @@
 use palette::{rgb::Srgba, Shade};
-use rgx::color::Rgba;
+use rgx::color::{Rgba, Rgba8};
 
 #[derive(Default, Clone, Debug, Copy, PartialEq)]
 pub struct Color(Rgba);
@@ -30,6 +30,12 @@ impl From<Rgba> for Color {
 impl Into<Rgba> for Color {
     fn into(self) -> Rgba {
         self.0
+    }
+}
+
+impl Into<Rgba8> for Color {
+    fn into(self) -> Rgba8 {
+        self.0.into()
     }
 }
 

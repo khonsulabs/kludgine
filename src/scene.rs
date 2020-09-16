@@ -1,5 +1,5 @@
 use crate::{
-    math::{Point, PointExt, Raw, Scale, Scaled, ScreenScale, Size, SizeExt},
+    math::{Point, PointExt, Raw, Scale, Scaled, ScreenScale, Size},
     shape::Shape,
     sprite::RenderedSprite,
     style::Weight,
@@ -98,16 +98,6 @@ impl SceneTarget {
                 origin: *origin,
             },
         }
-    }
-
-    pub(crate) async fn user_to_device_point(
-        &self,
-        point: Point<f32, Scaled>,
-    ) -> Point<f32, Scaled> {
-        Point::from_lengths(
-            point.x() + self.origin().x(),
-            self.size().await.height() - (point.y() + self.origin().y()),
-        )
     }
 
     pub async fn lookup_font(&self, family: &str, weight: Weight) -> KludgineResult<Font> {

@@ -1,8 +1,12 @@
 use super::{
     math::{Point, Raw, Rect, Size},
-    texture::{LoadedTexture, Texture},
+    texture::Texture,
     KludgineError, KludgineHandle, KludgineResult,
 };
+mod batch;
+mod gpu_batch;
+mod pipeline;
+pub(crate) use self::{batch::Batch, gpu_batch::GpuBatch, pipeline::Pipeline};
 mod source;
 pub use source::*;
 use std::{collections::HashMap, iter::IntoIterator, time::Duration};
@@ -491,18 +495,4 @@ pub(crate) struct RenderedSpriteData {
     pub render_at: Rect<f32, Raw>,
     pub alpha: f32,
     pub source: SpriteSource,
-}
-
-pub(crate) struct SpriteBatch {
-    pub loaded_texture: LoadedTexture,
-    pub sprites: Vec<RenderedSprite>,
-}
-
-impl SpriteBatch {
-    pub fn new(loaded_texture: LoadedTexture) -> Self {
-        SpriteBatch {
-            loaded_texture,
-            sprites: Vec::new(),
-        }
-    }
 }

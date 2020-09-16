@@ -1,0 +1,35 @@
+[tasks.compile-fragment-shader]
+script_runner = "@shell"
+script = [
+    '''
+glslc src/sprite/shaders/sprite.frag -o src/sprite/shaders/sprite.frag.spv
+'''
+]
+
+
+[tasks.compile-vertex-shader]
+script_runner = "@shell"
+script = [
+'''
+glslc src/sprite/shaders/sprite.vert -o src/sprite/shaders/sprite.vert.spv
+'''
+]
+
+[tasks.pre-build]
+dependencies = ["compile-fragment-shader", "compile-vertex-shader"]
+
+[tasks.clean]
+dependencies = ["cargo-clean", "shaders-clean"]
+
+[tasks.cargo-clean]
+command = "cargo"
+args = ["clean"]
+
+
+[tasks.shaders-clean]
+script_runner = "@shell"
+script = [
+'''
+rm src/sprite/shaders/*.spv
+'''
+]

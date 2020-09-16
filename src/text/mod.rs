@@ -91,11 +91,8 @@ impl Text {
             let cursor_position =
                 location + Vector::from_lengths(line.alignment_offset, current_line_baseline);
             for span in line.spans.iter() {
-                let location = scene
-                    .user_to_device_point(
-                        cursor_position + span.location.to_vector() / effective_scale_factor,
-                    )
-                    .await
+                let location = (cursor_position
+                    + span.location.to_vector() / effective_scale_factor)
                     * effective_scale_factor;
                 scene
                     .push_element(Element::Text(span.translate(location)))

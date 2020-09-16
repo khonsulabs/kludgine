@@ -1,8 +1,7 @@
 use crate::{
     math::Size,
     scene::{Element, Scene},
-    shape::{self},
-    sprite::SpriteBatch,
+    shape, sprite,
     text::{font::LoadedFont, prepared::PreparedSpan},
     texture::LoadedTexture,
 };
@@ -26,7 +25,7 @@ pub(crate) struct FontUpdate {
 }
 
 enum FrameBatch {
-    Sprite(SpriteBatch),
+    Sprite(sprite::Batch),
     Shape(shape::Batch),
 }
 
@@ -43,7 +42,7 @@ impl FrameBatch {
         !self.is_shape()
     }
 
-    fn sprite_batch(&mut self) -> Option<&'_ mut SpriteBatch> {
+    fn sprite_batch(&mut self) -> Option<&'_ mut sprite::Batch> {
         if let FrameBatch::Sprite(batch) = self {
             Some(batch)
         } else {
@@ -101,7 +100,7 @@ impl Frame {
                                 .push(FrameCommand::LoadTexture(loaded_texture_handle.clone()));
                         }
 
-                        current_batch = Some(FrameBatch::Sprite(SpriteBatch::new(
+                        current_batch = Some(FrameBatch::Sprite(sprite::Batch::new(
                             loaded_texture_handle.clone(),
                         )));
                     }
@@ -219,7 +218,7 @@ impl Frame {
 
 pub(crate) enum FrameCommand {
     LoadTexture(LoadedTexture),
-    DrawBatch(SpriteBatch),
+    DrawBatch(sprite::Batch),
     DrawShapes(shape::Batch),
     DrawText {
         text: PreparedSpan,
