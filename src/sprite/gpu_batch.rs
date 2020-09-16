@@ -93,13 +93,13 @@ impl GpuBatch {
     }
 
     pub fn add_quad(&mut self, tl: Vertex, tr: Vertex, bl: Vertex, br: Vertex) {
-        let tl_index = self.indicies.len() as u16;
+        let tl_index = self.items.len() as u16;
         self.items.push(tl);
-        let tr_index = tl_index + 1;
+        let tr_index = self.items.len() as u16;
         self.items.push(tr);
-        let bl_index = tl_index + 2;
+        let bl_index = self.items.len() as u16;
         self.items.push(bl);
-        let br_index = tl_index + 3;
+        let br_index = self.items.len() as u16;
         self.items.push(br);
 
         self.indicies.push(tl_index);
