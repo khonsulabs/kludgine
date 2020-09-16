@@ -14,6 +14,7 @@ pub(crate) struct GpuBatch {
     pub height: u32,
 
     items: Vec<Vertex>,
+    indicies: Vec<u16>,
 }
 
 impl GpuBatch {
@@ -22,6 +23,7 @@ impl GpuBatch {
             width,
             height,
             items: Default::default(),
+            indicies: Default::default(),
         }
     }
 
@@ -87,17 +89,59 @@ impl GpuBatch {
             )
             .rotate_by(rotation.angle, origin);
 
-        self.add_triangle(top_left, top_right, bottom_left);
-        self.add_triangle(top_right, bottom_right, bottom_left);
+        self.add_quad(top_left, top_right, bottom_left, bottom_right);
     }
 
-    pub fn add_triangle(&mut self, a: Vertex, b: Vertex, c: Vertex) {
-        self.items.push(a);
-        self.items.push(b);
-        self.items.push(c);
+    pub fn add_quad(&mut self, tl: Vertex, tr: Vertex, bl: Vertex, br: Vertex) {
+        let tl_index = self.indicies.len() as u16;
+        self.items.push(tl);
+        let tr_index = tl_index + 1;
+        self.items.push(tr);
+        let bl_index = tl_index + 2;
+        self.items.push(bl);
+        let br_index = tl_index + 3;
+        self.items.push(br);
+
+        self.indicies.push(tl_index);
+        self.indicies.push(tr_index);
+        self.indicies.push(bl_index);
+
+        self.indicies.push(tr_index);
+        self.indicies.push(br_index);
+        self.indicies.push(bl_index);
     }
 
-    pub fn finish(&self, renderer: &core::Renderer) -> core::VertexBuffer {
-        renderer.device.create_buffer(&self.items)
+    // pub fn add_triangle(&mut self, a: Vertex, b: Vertex, c: Vertex) {
+    //     self.indicies.push(self.indicies.len() as u16);
+    //     self.items.push(a);
+    //     self.indicies.push(self.indicies.len() as u16);
+    //     self.items.push(b);
+    //     self.indicies.push(self.indicies.len() as u16);
+    //     self.items.push(c);
+    // }
+
+    pub fn finish(&self, renderer: &core::Renderer) -> BatchBuffers {
+        let vertices = renderer.device.create_buffer(&self.items);
+        let indices = renderer.device.create_index(&self.indicies);
+        BatchBuffers {
+            vertices,
+            indices,
+            index_count: self.indicies.len() as u32,
+        }
+    }
+}
+
+pub(crate) struct BatchBuffers {
+    vertices: core::VertexBuffer,
+    indices: core::IndexBuffer,
+    index_count: u32,
+}
+
+impl rgx::core::Draw for BatchBuffers {
+    fn draw(&self, binding: &rgx::core::BindingGroup, pass: &mut rgx::core::Pass) {
+        pass.set_binding(binding, &[]);
+        pass.set_vertex_buffer(&self.vertices);
+        pass.set_index_buffer(&self.indices);
+        pass.draw_indexed(0..self.index_count as u32, 0..1);
     }
 }
