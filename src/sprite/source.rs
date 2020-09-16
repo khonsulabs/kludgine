@@ -3,11 +3,11 @@ use crate::{
     scene::{Element, SceneTarget},
     sprite::{RenderedSprite, SpriteRotation},
     texture::Texture,
-    KludgineHandle,
+    Handle,
 };
 #[derive(Debug, Clone)]
 pub struct SpriteSource {
-    pub(crate) handle: KludgineHandle<SpriteSourceData>,
+    pub(crate) handle: Handle<SpriteSourceData>,
 }
 
 #[derive(Debug)]
@@ -19,7 +19,7 @@ pub(crate) struct SpriteSourceData {
 impl SpriteSource {
     pub fn new(location: Rect<u32>, texture: Texture) -> Self {
         SpriteSource {
-            handle: KludgineHandle::new(SpriteSourceData { location, texture }),
+            handle: Handle::new(SpriteSourceData { location, texture }),
         }
     }
 
@@ -75,7 +75,8 @@ impl SpriteSource {
         alpha: f32,
     ) {
         let effective_scale = scene.effective_scale_factor().await;
-        let destination = bounds * effective_scale;
+        let destination =
+            Rect::new(scene.user_to_device_point(bounds.origin), bounds.size) * effective_scale;
         scene
             .push_element(Element::Sprite(RenderedSprite::new(
                 destination,

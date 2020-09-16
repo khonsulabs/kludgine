@@ -1,6 +1,4 @@
 #![deny(clippy::all)]
-use futures::executor::block_on;
-use std::{fmt::Display, sync::Arc};
 use thiserror::Error;
 
 #[cfg(test)]
@@ -43,56 +41,7 @@ pub enum KludgineError {
 /// [`Result<T,E>`]: http://doc.rust-lang.org/std/result/enum.Result.html
 /// [`KludgineError`]: enum.KludgineError.html
 pub type KludgineResult<T> = Result<T, KludgineError>;
-
-#[derive(Debug)]
-pub struct KludgineHandle<T> {
-    handle: Arc<async_rwlock::RwLock<T>>,
-}
-
-impl<T> KludgineHandle<T> {
-    pub fn new(wrapped: T) -> Self {
-        Self {
-            handle: Arc::new(async_rwlock::RwLock::new(wrapped)),
-        }
-    }
-
-    pub async fn read(&self) -> async_rwlock::RwLockReadGuard<'_, T> {
-        self.handle.read().await
-    }
-
-    pub async fn write(&self) -> async_rwlock::RwLockWriteGuard<'_, T> {
-        self.handle.write().await
-    }
-}
-
-impl<T> Clone for KludgineHandle<T> {
-    fn clone(&self) -> Self {
-        Self {
-            handle: self.handle.clone(),
-        }
-    }
-}
-
-impl<T> Display for KludgineHandle<T>
-where
-    T: Display,
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "KludgineHandle<")?;
-        let inner = block_on(self.handle.read());
-        inner.fmt(f)?;
-        write!(f, ">")
-    }
-}
-
-impl<T> Default for KludgineHandle<T>
-where
-    T: Default,
-{
-    fn default() -> Self {
-        Self::new(T::default())
-    }
-}
+pub use async_handle::Handle;
 
 #[macro_use]
 mod internal_macros {
@@ -159,7 +108,7 @@ pub mod prelude {
         },
         ui::*,
         window::{Event, EventStatus, InputEvent, OpenableWindow, Window, WindowCreator},
-        KludgineError, KludgineHandle, KludgineResult, RequiresInitialization,
+        Handle, KludgineError, KludgineResult, RequiresInitialization,
     };
     pub use async_trait::async_trait;
     pub use winit::event::*;

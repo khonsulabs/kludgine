@@ -1,4 +1,4 @@
-use crate::{math::Pixels, KludgineHandle};
+use crate::{math::Pixels, Handle};
 use crossbeam::atomic::AtomicCell;
 use lazy_static::lazy_static;
 use rgx::core::*;
@@ -12,7 +12,7 @@ lazy_static! {
 #[derive(Clone, Debug)]
 pub struct Font {
     pub(crate) id: u64,
-    pub(crate) handle: KludgineHandle<FontData>,
+    pub(crate) handle: Handle<FontData>,
 }
 
 impl Font {
@@ -21,7 +21,7 @@ impl Font {
         let id = GLOBAL_ID_CELL.fetch_add(1);
         Some(Font {
             id,
-            handle: KludgineHandle::new(FontData { font, id }),
+            handle: Handle::new(FontData { font, id }),
         })
     }
 
@@ -70,13 +70,13 @@ pub(crate) struct FontData {
 
 #[derive(Clone)]
 pub(crate) struct LoadedFont {
-    pub handle: KludgineHandle<LoadedFontData>,
+    pub handle: Handle<LoadedFontData>,
 }
 
 impl LoadedFont {
     pub fn new(font: &Font) -> Self {
         Self {
-            handle: KludgineHandle::new(LoadedFontData {
+            handle: Handle::new(LoadedFontData {
                 font: font.clone(),
                 cache: gpu_cache::Cache::builder().dimensions(512, 512).build(),
                 binding: None,

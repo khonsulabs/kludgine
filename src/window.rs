@@ -3,7 +3,7 @@ use crate::{
     math::{Point, Scaled, ScreenScale, Size},
     runtime::Runtime,
     ui::InteractiveComponent,
-    KludgineError, KludgineHandle, KludgineResult,
+    Handle, KludgineError, KludgineResult,
 };
 use async_trait::async_trait;
 
@@ -225,8 +225,8 @@ where
 }
 
 lazy_static! {
-    static ref WINDOW_CHANNELS: KludgineHandle<HashMap<WindowId, async_channel::Sender<WindowMessage>>> =
-        KludgineHandle::new(HashMap::new());
+    static ref WINDOW_CHANNELS: Handle<HashMap<WindowId, async_channel::Sender<WindowMessage>>> =
+        Handle::new(HashMap::new());
 }
 
 lazy_static! {

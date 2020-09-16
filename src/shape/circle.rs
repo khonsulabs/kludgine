@@ -17,7 +17,8 @@ impl Circle<Scaled> {
         scene: &SceneTarget,
     ) -> Circle<Raw> {
         let effective_scale = scene.effective_scale_factor().await;
-        let center = (location + self.center.to_vector()) * effective_scale;
+        let center =
+            scene.user_to_device_point(location + self.center.to_vector()) * effective_scale;
         let radius = self.radius * effective_scale;
         Circle { center, radius }
     }

@@ -3,7 +3,7 @@ use crate::{
     math::{Pixels, Point, Points, Raw, ScreenScale, Size, SizeExt},
     style::Alignment,
     text::Font,
-    KludgineHandle,
+    Handle,
 };
 use futures::future::join_all;
 
@@ -95,7 +95,7 @@ impl PreparedLine {
 #[derive(Clone, Debug)]
 pub struct PreparedSpan {
     pub location: Point<f32, Raw>,
-    pub handle: KludgineHandle<PreparedSpanData>,
+    pub handle: Handle<PreparedSpanData>,
 }
 
 impl PreparedSpan {
@@ -109,7 +109,7 @@ impl PreparedSpan {
     ) -> Self {
         Self {
             location: Point::default(),
-            handle: KludgineHandle::new(PreparedSpanData {
+            handle: Handle::new(PreparedSpanData {
                 font,
                 size,
                 color,

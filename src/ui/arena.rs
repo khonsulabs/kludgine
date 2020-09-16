@@ -1,6 +1,6 @@
 use crate::{
     ui::{Indexable, Node},
-    KludgineHandle,
+    Handle,
 };
 use generational_arena::Arena;
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -9,7 +9,7 @@ pub use generational_arena::Index;
 
 #[derive(Default, Clone, Debug)]
 pub struct HierarchicalArena {
-    handle: KludgineHandle<HierarchicalArenaData>,
+    handle: Handle<HierarchicalArenaData>,
 }
 
 impl HierarchicalArena {

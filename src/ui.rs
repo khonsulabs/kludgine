@@ -33,7 +33,7 @@ use crate::{
     scene::SceneTarget,
     style::StyleSheet,
     window::{Event, InputEvent},
-    KludgineError, KludgineHandle, KludgineResult, RequiresInitialization,
+    Handle, KludgineError, KludgineResult, RequiresInitialization,
 };
 pub use arena::{HierarchicalArena, Index};
 use once_cell::sync::OnceCell;
@@ -50,7 +50,7 @@ pub(crate) fn global_arena() -> &'static HierarchicalArena {
 
 #[derive(Default, Debug, Clone)]
 pub(crate) struct UIState {
-    data: KludgineHandle<UIStateData>,
+    data: Handle<UIStateData>,
 }
 
 impl UIState {

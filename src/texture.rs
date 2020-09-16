@@ -1,4 +1,4 @@
-use crate::{math::Size, window::Icon, KludgineHandle, KludgineResult};
+use crate::{math::Size, window::Icon, Handle, KludgineResult};
 use crossbeam::atomic::AtomicCell;
 use image::{DynamicImage, RgbaImage};
 use lazy_static::lazy_static;
@@ -19,7 +19,7 @@ macro_rules! include_texture {
 
 #[derive(Debug, Clone)]
 pub struct Texture {
-    pub(crate) handle: KludgineHandle<TextureData>,
+    pub(crate) handle: Handle<TextureData>,
 }
 
 #[derive(Debug)]
@@ -33,7 +33,7 @@ impl Texture {
         let image = image.to_rgba();
         let id = GLOBAL_ID_CELL.fetch_add(1);
         Self {
-            handle: KludgineHandle::new(TextureData { id, image }),
+            handle: Handle::new(TextureData { id, image }),
         }
     }
 
@@ -72,7 +72,7 @@ impl Texture {
 
 #[derive(Clone)]
 pub struct LoadedTexture {
-    pub(crate) handle: KludgineHandle<LoadedTextureData>,
+    pub(crate) handle: Handle<LoadedTextureData>,
 }
 
 pub(crate) struct LoadedTextureData {
@@ -83,7 +83,7 @@ pub(crate) struct LoadedTextureData {
 impl LoadedTexture {
     pub fn new(texture: &Texture) -> Self {
         LoadedTexture {
-            handle: KludgineHandle::new(LoadedTextureData {
+            handle: Handle::new(LoadedTextureData {
                 texture: texture.clone(),
                 binding: None,
             }),

@@ -84,12 +84,9 @@ where
         let location = Point::new(x, y);
         if let Some(tile) = self.provider.get_tile(location).await {
             let sprite = tile.sprite.get_frame(elapsed).await?;
+            let destination = self.coordinate_for_tile(location);
             sprite
-                .render_at(
-                    scene,
-                    self.coordinate_for_tile(location),
-                    SpriteRotation::default(),
-                )
+                .render_at(scene, destination, SpriteRotation::default())
                 .await;
         }
         Ok(())

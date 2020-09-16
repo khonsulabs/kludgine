@@ -8,7 +8,7 @@ use crate::{
         SceneContext, StyledContext,
     },
     window::{CloseResponse, InputEvent, Window},
-    KludgineHandle, KludgineResult,
+    Handle, KludgineResult,
 };
 use async_trait::async_trait;
 use derivative::Derivative;
@@ -247,13 +247,13 @@ where
     T: InteractiveComponent,
 {
     #[derivative(Debug = "ignore")]
-    pub(crate) component: KludgineHandle<T>,
+    pub(crate) component: Handle<T>,
     #[derivative(Debug = "ignore")]
     callback: Option<Callback<T::Output>>,
     interactive: bool,
-    pub(crate) layout: KludgineHandle<Layout>,
-    pub(crate) style_sheet: KludgineHandle<StyleSheet>,
-    pub(crate) bounds: KludgineHandle<AbsoluteBounds>,
+    pub(crate) layout: Handle<Layout>,
+    pub(crate) style_sheet: Handle<StyleSheet>,
+    pub(crate) bounds: Handle<AbsoluteBounds>,
 }
 
 #[async_trait]
@@ -274,7 +274,7 @@ where
 
 #[derive(Clone, Debug)]
 pub struct Node {
-    pub(crate) component: KludgineHandle<Box<dyn AnyNode>>,
+    pub(crate) component: Handle<Box<dyn AnyNode>>,
 }
 
 impl Node {
@@ -285,11 +285,11 @@ impl Node {
         interactive: bool,
         callback: Option<Callback<T::Output>>,
     ) -> Self {
-        let component = KludgineHandle::new(component);
-        let style_sheet = KludgineHandle::new(style_sheet);
-        let bounds = KludgineHandle::new(bounds);
+        let component = Handle::new(component);
+        let style_sheet = Handle::new(style_sheet);
+        let bounds = Handle::new(bounds);
         Self {
-            component: KludgineHandle::new(Box::new(NodeData {
+            component: Handle::new(Box::new(NodeData {
                 style_sheet,
                 component,
                 callback,

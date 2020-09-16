@@ -1,6 +1,6 @@
 [package]
 name = "kludgine"
-version = "0.1.0"
+version = "0.1.0-dev-1"
 authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
 edition = "2018"
 
@@ -26,14 +26,15 @@ thiserror = "1.0"
 anyhow = "1.0"
 rusttype = { version = "0.9", features = ["gpu_cache"] }
 json = "0.12"
-platforms = "0.2"
-generational-arena = "*"
+platforms = "1"
+generational-arena = "0.2"
 ttf-parser = "0.6"
 once_cell = "1"
 approx = "0.3"
 palette = "0.5"
 async-channel = "1"
 async-rwlock = "1"
+async-handle = "0.1"
 smol = "1"
 smol-timeout = "0.5"
 easy-parallel = "3"

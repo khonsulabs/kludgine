@@ -5,7 +5,7 @@ use crate::{
     style::Weight,
     text::{font::Font, prepared::PreparedSpan},
     theme::{Minimal, Theme},
-    KludgineError, KludgineHandle, KludgineResult,
+    Handle, KludgineError, KludgineResult,
 };
 use platforms::target::{OS, TARGET_OS};
 use std::{
@@ -67,6 +67,10 @@ impl SceneTarget {
 
     pub(crate) async fn push_element(&self, element: Element) {
         self.scene_mut().await.elements.push(element);
+    }
+
+    pub(crate) fn user_to_device_point(&self, point: Point<f32, Scaled>) -> Point<f32, Scaled> {
+        point + self.origin().to_vector()
     }
 
     pub fn set_camera(&self, zoom: f32, look_at: Point<f32, Scaled>) -> SceneTarget {
@@ -149,7 +153,7 @@ impl SceneTarget {
 
 #[derive(Clone)]
 pub struct Scene {
-    pub(crate) data: KludgineHandle<SceneData>,
+    pub(crate) data: Handle<SceneData>,
 }
 
 pub(crate) struct SceneData {
@@ -182,7 +186,7 @@ impl Modifiers {
 impl Default for Scene {
     fn default() -> Self {
         Self {
-            data: KludgineHandle::new(SceneData {
+            data: Handle::new(SceneData {
                 scale_factor: Scale::identity(),
                 size: Size::default(),
                 pressed_keys: HashSet::new(),

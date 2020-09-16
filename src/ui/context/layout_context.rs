@@ -6,7 +6,7 @@ use crate::{
         HierarchicalArena, Index, Indexable, Layout, LayoutSolver, SceneContext, StyledContext,
         UIState,
     },
-    KludgineHandle, KludgineResult,
+    Handle, KludgineResult,
 };
 use std::{
     collections::{HashMap, HashSet, VecDeque},
@@ -15,12 +15,12 @@ use std::{
 
 #[derive(Clone, Debug)]
 pub struct LayoutEngine {
-    data: KludgineHandle<LayoutEngineData>,
+    data: Handle<LayoutEngineData>,
 }
 
 #[derive(Debug)]
 struct LayoutEngineData {
-    layout_solvers: HashMap<Index, KludgineHandle<Box<dyn LayoutSolver>>>,
+    layout_solvers: HashMap<Index, Handle<Box<dyn LayoutSolver>>>,
     pub(crate) layouts: HashMap<Index, Layout>,
     indicies_to_process: VecDeque<Index>,
     render_queue: VecDeque<Index>,
@@ -29,14 +29,14 @@ struct LayoutEngineData {
 
 impl LayoutEngine {
     pub fn new(
-        layout_solvers: HashMap<Index, KludgineHandle<Box<dyn LayoutSolver>>>,
+        layout_solvers: HashMap<Index, Handle<Box<dyn LayoutSolver>>>,
         effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
         root: impl Indexable,
     ) -> Self {
         let mut indicies_to_process = VecDeque::default();
         indicies_to_process.push_back(root.index());
         Self {
-            data: KludgineHandle::new(LayoutEngineData {
+            data: Handle::new(LayoutEngineData {
                 layout_solvers,
                 effective_styles,
                 indicies_to_process,
@@ -101,7 +101,7 @@ impl LayoutEngine {
                 ui_state.clone(),
             );
             let solver = node.layout(&mut context).await?;
-            layout_solvers.insert(index, KludgineHandle::new(solver));
+            layout_solvers.insert(index, Handle::new(solver));
         }
 
         let layout_data = LayoutEngine::new(layout_solvers, effective_styles.clone(), root);

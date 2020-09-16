@@ -1,7 +1,7 @@
 use crate::{
     math::{Angle, Point, Raw, Rect, Size},
     texture::Texture,
-    KludgineError, KludgineHandle, KludgineResult,
+    Handle, KludgineError, KludgineResult,
 };
 mod batch;
 mod gpu_batch;
@@ -50,7 +50,7 @@ enum AnimationDirection {
 
 #[derive(Debug, Clone)]
 pub struct Sprite {
-    pub(crate) handle: KludgineHandle<SpriteData>,
+    pub(crate) handle: Handle<SpriteData>,
 }
 
 #[derive(Debug, Clone)]
@@ -66,7 +66,7 @@ pub(crate) struct SpriteData {
 impl Sprite {
     pub(crate) fn new(title: Option<String>, animations: SpriteAnimations) -> Self {
         Self {
-            handle: KludgineHandle::new(SpriteData {
+            handle: Handle::new(SpriteData {
                 title,
                 animations,
                 current_frame: 0,
@@ -93,7 +93,7 @@ impl Sprite {
     pub async fn new_instance(&self) -> Self {
         let data = self.handle.read().await;
         Self {
-            handle: KludgineHandle::new(data.clone()),
+            handle: Handle::new(data.clone()),
         }
     }
 
@@ -400,13 +400,13 @@ impl SpriteData {
 
 #[derive(Clone, Debug)]
 pub struct SpriteAnimations {
-    handle: KludgineHandle<HashMap<Option<String>, SpriteAnimation>>,
+    handle: Handle<HashMap<Option<String>, SpriteAnimation>>,
 }
 
 impl SpriteAnimations {
     pub fn new(animations: HashMap<Option<String>, SpriteAnimation>) -> Self {
         Self {
-            handle: KludgineHandle::new(animations),
+            handle: Handle::new(animations),
         }
     }
 
@@ -476,7 +476,7 @@ impl SpriteFrameBuilder {
 
 #[derive(Clone)]
 pub(crate) struct RenderedSprite {
-    pub(crate) handle: KludgineHandle<RenderedSpriteData>,
+    pub(crate) handle: Handle<RenderedSpriteData>,
 }
 
 impl RenderedSprite {
@@ -487,7 +487,7 @@ impl RenderedSprite {
         source: SpriteSource,
     ) -> Self {
         Self {
-            handle: KludgineHandle::new(RenderedSpriteData {
+            handle: Handle::new(RenderedSpriteData {
                 render_at,
                 rotation,
                 alpha,
