@@ -3,6 +3,21 @@ name = "kludgine"
 version = "0.1.0-dev-1"
 authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
 edition = "2018"
+description = "An asynchronous app and 2d game framework"
+readme = "./README.md"
+license = "MIT"
+keywords = ["gamedev", "graphics", "gui", "wgpu"]
+categories = [
+    "gui",
+    "graphics",
+    "rendering::engine",
+    "game-engines",
+    "asynchronous"
+]
+repository = "https://github.com/khonsulabs/kludgine"
+
+[package.metadata.docs.rs]
+all-features = true
 
 [features]
 default = ["bundled-fonts"]
