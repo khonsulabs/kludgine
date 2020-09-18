@@ -33,8 +33,10 @@ impl InteractiveComponent for Label {
     ) -> KludgineResult<()> {
         match message {
             LabelCommand::SetValue(new_value) => {
-                self.value = new_value;
-                context.set_needs_redraw().await;
+                if self.value != new_value {
+                    self.value = new_value;
+                    context.set_needs_redraw().await;
+                }
             }
         }
         Ok(())
