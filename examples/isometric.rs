@@ -10,7 +10,7 @@ struct Isometric {
     map: Option<PersistentTileMap>,
 }
 
-impl WindowCreator<Isometric> for Isometric {
+impl WindowCreator for Isometric {
     fn window_title() -> String {
         "Isometric - Kludgine".to_owned()
     }

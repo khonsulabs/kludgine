@@ -14,7 +14,7 @@ struct Animation {
     fade_in: bool,
 }
 
-impl WindowCreator<Animation> for Animation {
+impl WindowCreator for Animation {
     fn window_title() -> String {
         "Animation - Kludgine".to_owned()
     }

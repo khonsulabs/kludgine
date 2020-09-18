@@ -101,7 +101,7 @@ pub trait Window: InteractiveComponent + Send + Sync + 'static {
     }
 }
 
-pub trait WindowCreator<T>: Window {
+pub trait WindowCreator<T = Self>: Window {
     fn get_window_builder() -> WindowBuilder {
         WindowBuilder::default().with_title(Self::window_title())
     }

@@ -11,7 +11,7 @@ struct Simple {
     rotation_angle: Angle,
 }
 
-impl WindowCreator<Simple> for Simple {
+impl WindowCreator for Simple {
     fn window_title() -> String {
         "Simple - Kludgine".to_owned()
     }

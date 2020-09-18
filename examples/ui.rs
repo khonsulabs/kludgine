@@ -14,7 +14,7 @@ struct UIExample {
     current_count: usize,
 }
 
-impl WindowCreator<UIExample> for UIExample {
+impl WindowCreator for UIExample {
     fn window_title() -> String {
         "User Interface - Kludgine".to_owned()
     }

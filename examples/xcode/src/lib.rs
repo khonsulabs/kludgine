@@ -16,7 +16,7 @@ struct OrthoTiles {
     y: f32,
 }
 
-impl WindowCreator<OrthoTiles> for OrthoTiles {
+impl WindowCreator for OrthoTiles {
     fn window_title() -> String {
         "Ortho Tiles - Kludgine".to_owned()
     }

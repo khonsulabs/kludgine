@@ -8,7 +8,7 @@ fn main() {
 #[derive(Default)]
 struct Shapes;
 
-impl WindowCreator<Shapes> for Shapes {
+impl WindowCreator for Shapes {
     fn window_title() -> String {
         "Shapes - Kludgine".to_owned()
     }

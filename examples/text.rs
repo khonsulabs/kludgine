@@ -7,7 +7,7 @@ fn main() {
 
 struct TextExample {}
 
-impl WindowCreator<TextExample> for TextExample {
+impl WindowCreator for TextExample {
     fn window_title() -> String {
         "Text - Kludgine".to_owned()
     }
