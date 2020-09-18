@@ -342,6 +342,7 @@ mod tests {
         use crate::{
             scene::{Scene, SceneTarget},
             style::StyleSheet,
+            theme::Minimal,
             ui::{
                 Component, HierarchicalArena, Layout, LayoutEngine, LayoutSolver, LayoutSolverExt,
                 Node, StandaloneComponent, StyledContext, UIState,
@@ -437,12 +438,13 @@ mod tests {
         arena.set_parent(leaf, Some(child)).await;
         arena.set_parent(child, Some(root)).await;
 
-        let scene = Scene::default();
+        let scene = Scene::new(Box::new(Minimal::default()));
         scene.set_internal_size(Size::new(200., 200.)).await;
         let scene_target = SceneTarget::Scene(scene);
+        let (event_sender, _) = async_channel::unbounded();
         let engine = LayoutEngine::layout(
             &arena,
-            &UIState::default(),
+            &UIState::new(event_sender),
             root,
             &scene_target,
             HashSet::new(),

@@ -16,22 +16,22 @@ pub struct ColorGroup {
 
 #[derive(Debug)]
 pub struct Palette {
-    dark: PaletteShade,
-    light: PaletteShade,
+    pub dark: PaletteShade,
+    pub light: PaletteShade,
 
-    primary: VariableColor,
-    danger: VariableColor,
-    warning: VariableColor,
-    info: VariableColor,
-    success: VariableColor,
+    pub primary: VariableColor,
+    pub danger: VariableColor,
+    pub warning: VariableColor,
+    pub info: VariableColor,
+    pub success: VariableColor,
 
-    others: HashMap<String, VariableColor>,
+    pub others: HashMap<String, VariableColor>,
 }
 
 #[derive(Debug)]
 pub struct PaletteShade {
-    default: ColorGroup,
-    control: ColorGroup,
+    pub default: ColorGroup,
+    pub control: ColorGroup,
 }
 
 impl Default for Palette {
@@ -123,5 +123,6 @@ impl From<Color> for VariableColor {
 }
 
 pub trait Theme: Send + Sync {
+    fn default_font_family(&self) -> &'_ str;
     fn light_control(&self) -> ColorGroup;
 }

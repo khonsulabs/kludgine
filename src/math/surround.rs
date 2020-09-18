@@ -55,6 +55,7 @@ impl<S, Unit> Surround<S, Unit>
 where
     S: Copy,
 {
+    // TODO: How does this work for Surround<Dimension>?
     pub fn uniform(measurement: Length<S, Unit>) -> Self {
         Self {
             left: measurement,

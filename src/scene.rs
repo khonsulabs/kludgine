@@ -3,8 +3,11 @@ use crate::{
     shape::Shape,
     sprite::RenderedSprite,
     style::Weight,
-    text::{font::Font, prepared::PreparedSpan},
-    theme::{Minimal, Theme},
+    text::{
+        font::{Font, FontStyle},
+        prepared::PreparedSpan,
+    },
+    theme::Theme,
     Handle, KludgineError, KludgineResult,
 };
 use platforms::target::{OS, TARGET_OS};
@@ -104,10 +107,15 @@ impl SceneTarget {
         }
     }
 
-    pub async fn lookup_font(&self, family: &str, weight: Weight) -> KludgineResult<Font> {
+    pub async fn lookup_font(
+        &self,
+        family: &str,
+        weight: Weight,
+        style: FontStyle,
+    ) -> KludgineResult<Font> {
         match &self {
-            SceneTarget::Scene(scene) => scene.lookup_font(family, weight).await,
-            SceneTarget::Camera { scene, .. } => scene.lookup_font(family, weight).await,
+            SceneTarget::Scene(scene) => scene.lookup_font(family, weight, style).await,
+            SceneTarget::Camera { scene, .. } => scene.lookup_font(family, weight, style).await,
         }
     }
 
@@ -183,10 +191,11 @@ impl Modifiers {
     }
 }
 
-impl Default for Scene {
-    fn default() -> Self {
+impl Scene {
+    pub(crate) fn new(theme: Box<dyn Theme>) -> Self {
         Self {
             data: Handle::new(SceneData {
+                theme: Arc::new(theme),
                 scale_factor: Scale::identity(),
                 size: Size::default(),
                 pressed_keys: HashSet::new(),
@@ -194,13 +203,10 @@ impl Default for Scene {
                 elapsed: None,
                 elements: Vec::new(),
                 fonts: HashMap::new(),
-                theme: Arc::new(Box::new(Minimal::default())),
             }),
         }
     }
-}
 
-impl Scene {
     pub(crate) async fn set_internal_size(&self, size: Size<f32, Raw>) {
         let mut scene = self.data.write().await;
         scene.size = size;
@@ -292,6 +298,7 @@ impl Scene {
             .or_insert_with(|| vec![font.clone()]);
     }
 
+    #[cfg(feature = "bundled-fonts-enabled")]
     pub(crate) async fn register_bundled_fonts(&mut self) {
         #[cfg(feature = "bundled-fonts-roboto")]
         {
@@ -322,25 +329,41 @@ impl Scene {
         }
     }
 
-    pub async fn lookup_font(&self, family: &str, weight: Weight) -> KludgineResult<Font> {
-        let family = if family.eq_ignore_ascii_case("sans-serif") {
-            "Roboto" // TODO Themes should resolve the font family name
-        } else {
-            family
-        };
+    pub async fn lookup_font(
+        &self,
+        family: &str,
+        weight: Weight,
+        style: FontStyle,
+    ) -> KludgineResult<Font> {
         let scene = self.data.read().await;
-        match scene.fonts.get(family) {
+        let fonts = if family.eq_ignore_ascii_case("sans-serif") {
+            let theme = self.theme().await;
+            scene.fonts.get(theme.default_font_family())
+        } else {
+            scene.fonts.get(family)
+        };
+
+        match fonts {
             Some(fonts) => {
                 let mut closest_font = None;
                 let mut closest_weight = None;
 
                 for font in fonts.iter() {
-                    if font.weight().await == weight {
+                    let font_weight = font.weight().await;
+                    let font_style = font.style().await;
+
+                    if font_weight == weight && font_style == style {
                         return Ok(font.clone());
                     } else {
+                        // If it's not the right style, we want to heavily penalize the score
+                        // But if no font matches the style, we should pick the weight that matches
+                        // best in another style.
+                        let style_multiplier = if font_style == style { 1 } else { 10 };
                         let delta = (font.weight().await.to_number() as i32
                             - weight.to_number() as i32)
-                            .abs();
+                            .abs()
+                            * style_multiplier;
+
                         if closest_weight.is_none() || closest_weight.unwrap() > delta {
                             closest_weight = Some(delta);
                             closest_font = Some(font.clone());

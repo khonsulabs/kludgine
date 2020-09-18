@@ -32,10 +32,11 @@ use crate::{
     runtime::Runtime,
     scene::SceneTarget,
     style::StyleSheet,
-    window::{Event, InputEvent},
+    window::{Event, InputEvent, WindowEvent},
     Handle, KludgineError, KludgineResult, RequiresInitialization,
 };
 pub use arena::{HierarchicalArena, Index};
+use async_channel::Sender;
 use once_cell::sync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
@@ -48,12 +49,18 @@ pub(crate) fn global_arena() -> &'static HierarchicalArena {
     UI.get_or_init(HierarchicalArena::default)
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct UIState {
     data: Handle<UIStateData>,
 }
 
 impl UIState {
+    pub(crate) fn new(event_sender: Sender<WindowEvent>) -> Self {
+        Self {
+            data: Handle::new(UIStateData::new(event_sender)),
+        }
+    }
+
     async fn deactivate(&self) {
         let mut data = self.data.write().await;
         if data.active != None {
@@ -92,7 +99,10 @@ impl UIState {
 
     async fn set_needs_redraw(&self) {
         let mut data = self.data.write().await;
-        data.needs_render = true;
+        if !data.needs_render {
+            data.needs_render = true;
+            let _ = data.event_sender.send(WindowEvent::WakeUp).await;
+        }
     }
 
     async fn clear_redraw_target(&self) {
@@ -203,15 +213,17 @@ struct UIStateData {
     active: Option<Index>,
     next_redraw_target: RedrawTarget,
     needs_render: bool,
+    event_sender: Sender<WindowEvent>,
 }
 
-impl Default for UIStateData {
-    fn default() -> Self {
+impl UIStateData {
+    fn new(event_sender: Sender<WindowEvent>) -> Self {
         Self {
             needs_render: true,
             focus: None,
             active: None,
             next_redraw_target: RedrawTarget::default(),
+            event_sender,
         }
     }
 }
@@ -233,12 +245,13 @@ impl<C> UserInterface<C>
 where
     C: InteractiveComponent + 'static,
 {
-    pub async fn new(
+    pub(crate) async fn new(
         root: C,
         scene: SceneTarget,
         arena: HierarchicalArena,
+        event_sender: Sender<WindowEvent>,
     ) -> KludgineResult<Self> {
-        let ui_state = UIState::default();
+        let ui_state = UIState::new(event_sender);
         let root = Entity::new(Context::new(
             {
                 let node = Node::new(

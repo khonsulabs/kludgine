@@ -230,13 +230,13 @@ impl TextWrap {
 #[cfg(all(test, feature = "bundled-fonts"))]
 mod tests {
     use super::*;
-    use crate::{math::ScreenScale, scene::Scene, style::Style, text::Span};
+    use crate::{math::ScreenScale, scene::Scene, style::Style, text::Span, theme::Minimal};
 
     #[async_test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word() {
         for &scale in &[1f32, 2.] {
-            let mut scene = Scene::default();
+            let mut scene = Scene::new(Box::new(Minimal::default()));
             scene.set_scale_factor(ScreenScale::new(scale)).await;
             scene.register_bundled_fonts().await;
             let scene_target = SceneTarget::Scene(scene);
@@ -277,7 +277,7 @@ mod tests {
     #[async_test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word_different_span() {
-        let mut scene = Scene::default();
+        let mut scene = Scene::new(Box::new(Minimal::default()));
         scene.register_bundled_fonts().await;
         let scene_target = SceneTarget::Scene(scene);
 

@@ -102,7 +102,7 @@ impl Component for UIExample {
         self.button = self
             .new_entity(context, Button::new("Press Me"))
             .style(Style {
-                color: Some(Color::ROYALBLUE),
+                color: Some(Color::ROYALBLUE), // TODO what?
                 ..Default::default()
             })
             .bounds(AbsoluteBounds {

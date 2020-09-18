@@ -12,6 +12,10 @@ impl Minimal {
 }
 
 impl Theme for Minimal {
+    fn default_font_family(&self) -> &'_ str {
+        "Roboto"
+    }
+
     fn light_control(&self) -> ColorGroup {
         self.palette.light.control.clone()
     }

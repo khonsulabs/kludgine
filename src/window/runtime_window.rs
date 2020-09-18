@@ -55,9 +55,17 @@ impl RuntimeWindow {
             window.inner_size().width,
             window.inner_size().height,
         );
+        let window_event_sender = event_sender.clone();
         Runtime::spawn(async move {
             frame_synchronizer.relinquish(Frame::default()).await;
-            Self::window_main(window_id, frame_synchronizer, event_receiver, app_window).await
+            Self::window_main(
+                window_id,
+                frame_synchronizer,
+                window_event_sender,
+                event_receiver,
+                app_window,
+            )
+            .await
         })
         .detach();
 
@@ -154,18 +162,20 @@ impl RuntimeWindow {
     async fn window_loop<T>(
         id: WindowId,
         mut frame_synchronizer: FrameSynchronizer,
+        event_sender: async_channel::Sender<WindowEvent>,
         mut event_receiver: async_channel::Receiver<WindowEvent>,
         window: T,
     ) -> KludgineResult<()>
     where
         T: Window,
     {
-        let mut scene = Scene::default();
+        let mut scene = Scene::new(window.theme());
         let target_fps = window.target_fps();
         let mut ui = UserInterface::new(
             window,
             SceneTarget::Scene(scene.clone()),
             global_arena().clone(),
+            event_sender,
         )
         .await?;
         #[cfg(feature = "bundled-fonts-enabled")]
@@ -176,6 +186,7 @@ impl RuntimeWindow {
                 Err(_) => return Ok(()),
             } {
                 match event {
+                    WindowEvent::WakeUp => {}
                     WindowEvent::Resize { size, scale_factor } => {
                         scene
                             .set_internal_size(Size::new(size.width as f32, size.height as f32))
@@ -211,7 +222,7 @@ impl RuntimeWindow {
                 }
             }
 
-            // CHeck for Cmd + W or Alt + f4 to close the window.
+            // Check for Cmd + W or Alt + f4 to close the window.
             {
                 let modifiers = scene.modifiers_pressed().await;
                 if modifiers.primary_modifier()
@@ -242,12 +253,13 @@ impl RuntimeWindow {
     async fn window_main<T>(
         id: WindowId,
         frame_synchronizer: FrameSynchronizer,
+        event_sender: async_channel::Sender<WindowEvent>,
         event_receiver: async_channel::Receiver<WindowEvent>,
         window: T,
     ) where
         T: Window,
     {
-        Self::window_loop(id, frame_synchronizer, event_receiver, window)
+        Self::window_loop(id, frame_synchronizer, event_sender, event_receiver, window)
             .await
             .expect("Error running window loop.")
     }

@@ -8,6 +8,27 @@ lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicCell<u64> = AtomicCell::new(0);
 }
 
+#[macro_export]
+macro_rules! include_font {
+    ($path:expr) => {{
+        let bytes = std::include_bytes!($path);
+        Font::try_from_bytes(bytes as &[u8]).expect("Error loading bundled font")
+    }};
+}
+
+#[derive(Eq, PartialEq, Clone, Copy, Debug)]
+pub enum FontStyle {
+    Regular,
+    Italic,
+    Oblique,
+}
+
+impl Default for FontStyle {
+    fn default() -> Self {
+        FontStyle::Regular
+    }
+}
+
 /// Font provides TrueType Font rendering
 #[derive(Clone, Debug)]
 pub struct Font {
@@ -48,6 +69,23 @@ impl Font {
         match &font.font {
             rusttype::Font::Ref(f) => f.weight(),
             _ => ttf_parser::Weight::Normal,
+        }
+    }
+
+    pub async fn style(&self) -> FontStyle {
+        let font = self.handle.read().await;
+
+        match &font.font {
+            rusttype::Font::Ref(f) => {
+                if f.is_italic() {
+                    FontStyle::Italic
+                } else if f.is_oblique() {
+                    FontStyle::Oblique
+                } else {
+                    FontStyle::Regular
+                }
+            }
+            _ => FontStyle::Regular,
         }
     }
 

@@ -93,7 +93,7 @@ pub mod prelude {
         event::*,
         include_aseprite_sprite, include_font, include_texture,
         math::{
-            Angle, Dimension, Pixels, Point, PointExt, Points, Raw, Rect, Scale, Scaled,
+            Angle, Dimension, Length, Pixels, Point, PointExt, Points, Raw, Rect, Scale, Scaled,
             ScreenScale, Size, SizeExt, Surround, Unknown, Vector,
         },
         runtime::Runtime,
@@ -103,6 +103,7 @@ pub mod prelude {
         style::*,
         text::{font::Font, wrap::TextWrap, Span, Text},
         texture::Texture,
+        theme::{ColorGroup, ElementKind, Intent, Palette, PaletteShade, Theme, VariableColor},
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,
         },

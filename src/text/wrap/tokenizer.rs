@@ -106,7 +106,11 @@ impl Tokenizer {
     ) -> KludgineResult<Vec<Token>> {
         for span in text.spans.iter() {
             let font = scene
-                .lookup_font(&span.style.font_family, span.style.font_weight)
+                .lookup_font(
+                    &span.style.font_family,
+                    span.style.font_weight,
+                    span.style.font_style,
+                )
                 .await?;
             let vmetrics = font.metrics(span.style.font_size).await;
 

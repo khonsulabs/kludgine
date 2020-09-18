@@ -13,16 +13,8 @@
 //!
 //! WHen enabled, the Scene object's font library is initialized with all bundled fonts that are enabled.
 
-use super::font::Font;
+use crate::{include_font, text::font::Font};
 use lazy_static::lazy_static;
-
-#[macro_export]
-macro_rules! include_font {
-    ($path:expr) => {{
-        let bytes = std::include_bytes!($path);
-        Font::try_from_bytes(bytes as &[u8]).expect("Error loading bundled font")
-    }};
-}
 
 lazy_static! {
     /// Roboto Regular font, licensed under APL 2.0, feature flag `bundled-fonts-roboto`

@@ -2,6 +2,7 @@ use crate::{
     event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode},
     math::{Point, Scaled, ScreenScale, Size},
     runtime::Runtime,
+    theme::{Minimal, Theme},
     ui::InteractiveComponent,
     Handle, KludgineError, KludgineResult,
 };
@@ -98,6 +99,10 @@ pub trait Window: InteractiveComponent + Send + Sync + 'static {
     /// redraw when requested via methods on Context.
     fn target_fps(&self) -> Option<u16> {
         None
+    }
+
+    fn theme(&self) -> Box<dyn Theme> {
+        Box::new(Minimal::default())
     }
 }
 
@@ -258,6 +263,7 @@ impl WindowMessage {
 
 #[derive(Debug)]
 pub(crate) enum WindowEvent {
+    WakeUp,
     CloseRequested,
     Resize {
         size: Size,
