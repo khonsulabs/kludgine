@@ -55,7 +55,7 @@ lazy_static! {
         Mutex::new(None);
     pub(crate) static ref GLOBAL_EVENT_HANDLER: Mutex<Option<Box<dyn EventProcessor>>> =
         Mutex::new(None);
-    pub(crate) static ref GLOBAL_THREAD_POOL: ShardedLock<Option<smol::Executor>> =
+    pub(crate) static ref GLOBAL_THREAD_POOL: ShardedLock<Option<smol::Executor<'static>>> =
         ShardedLock::new(None);
 }
 
