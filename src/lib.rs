@@ -113,7 +113,7 @@ pub mod prelude {
             HierarchicalArena, Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation,
             ImageOptions, ImageScaling, Index, Indexable, InteractiveComponent, Label,
             LabelCommand, Layout, LayoutConstraints, LayoutContext, LinearTransition, SceneContext,
-            StandaloneComponent, StyledContext,
+            StandaloneComponent, StyledContext, Timeout,
         },
         window::{Event, EventStatus, InputEvent, OpenableWindow, Window, WindowCreator},
         Handle, KludgineError, KludgineResult, RequiresInitialization,
