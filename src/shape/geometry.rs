@@ -1,5 +1,5 @@
 use crate::{
-    math::{Point, Raw, Scaled},
+    math::{Point, Raw, Scale, Scaled},
     scene::SceneTarget,
     shape::{circle::Circle, Fill, Path, Stroke},
     KludgineResult,
@@ -50,5 +50,16 @@ impl ShapeGeometry<Scaled> {
 impl<S> Default for ShapeGeometry<S> {
     fn default() -> Self {
         Self::Empty
+    }
+}
+
+impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for ShapeGeometry<Src> {
+    type Output = ShapeGeometry<Dst>;
+    fn mul(self, rhs: Scale<f32, Src, Dst>) -> Self::Output {
+        match self {
+            Self::Empty => Self::Output::Empty,
+            Self::Path(path) => Self::Output::Path(path * rhs),
+            Self::Circle(circle) => Self::Output::Circle(circle * rhs),
+        }
     }
 }

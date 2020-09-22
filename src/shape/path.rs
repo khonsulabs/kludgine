@@ -1,5 +1,5 @@
 use crate::{
-    math::{Point, Raw, Scaled, ScreenScale},
+    math::{Point, Raw, Scale, Scaled, ScreenScale},
     scene::SceneTarget,
     shape::{Fill, Stroke},
     KludgineError, KludgineResult,
@@ -244,5 +244,48 @@ where
     pub fn close(mut self) -> Self {
         self.close = true;
         self
+    }
+}
+
+impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for Path<Src> {
+    type Output = Path<Dst>;
+    fn mul(self, scale: Scale<f32, Src, Dst>) -> Self::Output {
+        Self::Output {
+            events: self.events.into_iter().map(|event| event * scale).collect(),
+        }
+    }
+}
+
+impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for PathEvent<Src> {
+    type Output = PathEvent<Dst>;
+    fn mul(self, scale: Scale<f32, Src, Dst>) -> Self::Output {
+        match self {
+            PathEvent::Begin { at } => Self::Output::Begin { at: at * scale },
+            PathEvent::Line { from, to } => Self::Output::Line {
+                from: from * scale,
+                to: to * scale,
+            },
+            PathEvent::Quadratic { from, ctrl, to } => Self::Output::Quadratic {
+                from: from * scale,
+                ctrl: ctrl * scale,
+                to: to * scale,
+            },
+            PathEvent::Cubic {
+                from,
+                ctrl1,
+                ctrl2,
+                to,
+            } => Self::Output::Cubic {
+                from: from * scale,
+                ctrl1: ctrl1 * scale,
+                ctrl2: ctrl2 * scale,
+                to: to * scale,
+            },
+            PathEvent::End { last, first, close } => Self::Output::End {
+                last: last * scale,
+                first: first * scale,
+                close,
+            },
+        }
     }
 }

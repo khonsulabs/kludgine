@@ -7,11 +7,12 @@ mod stroke;
 
 pub use self::{batch::*, fill::*, path::*, stroke::*};
 use crate::{
-    math::{Point, Points, Raw, Rect, Scaled},
+    math::{Point, Raw, Rect, Scaled},
     scene::{Element, SceneTarget},
     KludgineResult,
 };
 use circle::Circle;
+use euclid::{Length, Scale};
 use geometry::ShapeGeometry;
 
 #[derive(Default, Clone, Debug)]
@@ -21,8 +22,11 @@ pub struct Shape<S> {
     fill: Option<Fill>,
 }
 
-impl Shape<Scaled> {
-    pub fn rect(rect: impl Into<Rect<f32, Scaled>>) -> Self {
+impl<S> Shape<S>
+where
+    S: Copy + Default,
+{
+    pub fn rect(rect: impl Into<Rect<f32, S>>) -> Self {
         let rect = rect.into();
         let path = PathBuilder::new(Point::new(rect.min_x(), rect.min_y()))
             .line_to(Point::new(rect.max_x(), rect.min_y()))
@@ -38,7 +42,7 @@ impl Shape<Scaled> {
         }
     }
 
-    pub fn circle(center: Point<f32, Scaled>, radius: Points) -> Self {
+    pub fn circle(center: Point<f32, S>, radius: Length<f32, S>) -> Self {
         Self {
             geometry: ShapeGeometry::Circle(Circle { center, radius }),
             stroke: None,
@@ -46,7 +50,7 @@ impl Shape<Scaled> {
         }
     }
 
-    pub fn polygon(points: impl IntoIterator<Item = Point<f32, Scaled>>) -> Self {
+    pub fn polygon(points: impl IntoIterator<Item = Point<f32, S>>) -> Self {
         let mut points = points.into_iter();
         if let Some(start) = points.next() {
             let mut builder = PathBuilder::new(start);
@@ -73,7 +77,9 @@ impl Shape<Scaled> {
         self.stroke = Some(stroke);
         self
     }
+}
 
+impl Shape<Scaled> {
     pub async fn render_at(&self, location: Point<f32, Scaled>, scene: &SceneTarget) {
         let translated = self.convert_from_user_to_device(location, scene).await;
         scene.push_element(Element::Shape(translated)).await
@@ -98,5 +104,16 @@ impl Shape<Scaled> {
 impl Shape<Raw> {
     pub(crate) fn build(&self, builder: &mut rgx_lyon::ShapeBuilder) -> KludgineResult<()> {
         self.geometry.build(builder, &self.stroke, &self.fill)
+    }
+}
+
+impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for Shape<Src> {
+    type Output = Shape<Dst>;
+    fn mul(self, scale: Scale<f32, Src, Dst>) -> Self::Output {
+        Self::Output {
+            geometry: self.geometry * scale,
+            fill: self.fill,
+            stroke: self.stroke,
+        }
     }
 }

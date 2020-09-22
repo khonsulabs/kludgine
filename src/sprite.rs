@@ -1,5 +1,5 @@
 use crate::{
-    math::{Angle, Point, Raw, Rect, Size},
+    math::{Angle, Point, Raw, Rect, Scale, Size},
     texture::Texture,
     Handle, KludgineError, KludgineResult,
 };
@@ -527,10 +527,10 @@ impl<Unit> SpriteRotation<Unit> {
     }
 }
 
-impl<A, B> std::ops::Mul<euclid::Scale<f32, A, B>> for SpriteRotation<A> {
+impl<A, B> std::ops::Mul<Scale<f32, A, B>> for SpriteRotation<A> {
     type Output = SpriteRotation<B>;
 
-    fn mul(self, rhs: euclid::Scale<f32, A, B>) -> Self::Output {
+    fn mul(self, rhs: Scale<f32, A, B>) -> Self::Output {
         SpriteRotation {
             angle: self.angle,
             screen_location: self.screen_location.map(|l| l * rhs),

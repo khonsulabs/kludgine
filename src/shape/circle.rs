@@ -1,5 +1,5 @@
 use crate::{
-    math::{Length, Point, Raw, Scaled},
+    math::{Length, Point, Raw, Scale, Scaled},
     scene::SceneTarget,
     shape::{Fill, Stroke},
     KludgineError, KludgineResult,
@@ -54,5 +54,15 @@ impl Circle<Raw> {
         }
 
         Ok(())
+    }
+}
+
+impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for Circle<Src> {
+    type Output = Circle<Dst>;
+    fn mul(self, scale: Scale<f32, Src, Dst>) -> Self::Output {
+        Self::Output {
+            center: self.center * scale,
+            radius: self.radius * scale,
+        }
     }
 }

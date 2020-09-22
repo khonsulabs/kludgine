@@ -6,11 +6,23 @@ A 2d app and game engine for the [Rust](https://rust-lang.org/) language.
 
 Kludgine is named in a way to hopefully be ironic in nature, but it's being designed and written by a developer that is fairly new to modern graphics programming and rust. Thus, it is probably a [kludge](https://en.wikipedia.org/wiki/Kludge).
 
-# Why use Kludgine?
+## Why use Kludgine?
 
 Well frankly, **you probably shouldn't right now**, because it's not even considered alpha.
 
 If you are daring enough to use it before the [v0.1](https://github.com/khonsulabs/kludgine/projects/1) release, here are some of the features you can utilize:
+
+## About versioning
+
+_Before v0.1, breaking changes will regularly happen._ In the process of preparing to release 0.1, a process for marking features as stable or unstable will be added. The version 0.1 milestone will be reached when a large enough core set of stable APIs has been reached to make such a milestone meaningful.
+
+Once that process is determined, it will be applied to the versioning scheme this way:
+
+- Major version updates: Massive fundamental architecture changes that require most users to carefully consider upgrading.
+- Minor version updates: One or more stable features has breaking changes to it under expected use cases.
+- Patch version updates: All other updates
+
+As this project matures, a changelog will eventually be added.
 
 ## Fully async Component-based rendering engine
 
@@ -35,7 +47,7 @@ This is a bit nebulous but examples include:
 - Font fallback system (with more support for Unicode-driven fallback choices [eventually coming](https://github.com/khonsulabs/kludgine/issues/28))
 - Batteries-included input mapping system ([to be developed](https://github.com/khonsulabs/kludgine/issues/27)) -- Easily respond to intent-based inputs intead of hard-coding key mappings, and a flexible system for providing UI hints for the user based on those intents.
 
-# About
+## About
 
 This is being developed by and for [Khonsu Labs](https://khonsulabs.com/) partially as a learning experience. I hope it will be useful to others eventually.
 

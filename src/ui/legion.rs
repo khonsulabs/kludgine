@@ -1,8 +1,8 @@
 use crate::{
-    math::{Angle, Point, Rect, Scaled},
+    math::{Angle, Point, Rect, Scale, Scaled},
     runtime::Runtime,
     shape::Shape,
-    sprite::{SpriteRotation, SpriteSource},
+    sprite::{Sprite, SpriteRotation, SpriteSource},
     ui::{Component, Context, InteractiveComponent, Layout, StyledContext},
     KludgineResult,
 };
@@ -33,8 +33,9 @@ impl Component for Canvas {
     async fn render(
         &self,
         context: &mut StyledContext,
-        _layout: &Layout, // TODO this should be used to offset the camera's viewport (and eventually clip)
+        layout: &Layout, // TODO this should be used to offset the camera's viewport (and eventually clip)
     ) -> KludgineResult<()> {
+        let center = layout.inner_bounds().center();
         for rendered in self.current_frame.iter() {
             match &rendered.drawable {
                 Drawable::Sprite(sprite) => {
@@ -48,7 +49,10 @@ impl Component for Canvas {
                     sprite
                         .render_within(
                             context.scene(),
-                            Rect::new(rendered.center - source_size / 2., source_size),
+                            Rect::new(
+                                center + rendered.center.to_vector() - source_size / 2.,
+                                source_size,
+                            ),
                             rendered
                                 .rotation
                                 .map(|rotation| SpriteRotation::around(rotation, rendered.center))
@@ -61,7 +65,9 @@ impl Component for Canvas {
                         rendered.rotation.is_none(),
                         "TODO Need to implement rotated shapes"
                     );
-                    shape.render_at(rendered.center, context.scene()).await;
+                    shape
+                        .render_at(center + rendered.center.to_vector(), context.scene())
+                        .await;
                 }
             }
         }
@@ -157,14 +163,48 @@ pub enum Drawable {
     Shape(Shape<Scaled>),
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct ZIndex(pub i32);
+
 /// queues all entities that have a Drawable component for rendering
 #[legion::system(for_each)]
-pub fn render_drawable(
-    drawable: &RenderedDrawable,
+pub fn render_sprite<Unit: Sized + Send + Sync + 'static>(
+    sprite: &Sprite,
+    elapsed: Option<&Duration>,
+    location: &Point<f32, Unit>,
+    rotation: Option<&Angle>,
+    z: Option<&ZIndex>,
     #[resource] frame: &mut CanvasFrame,
-    // #[resource] camera: &CameraState,
+    #[resource] camera: &CameraState<Unit>,
 ) {
-    frame.drawables.insert(drawable.clone());
+    let elapsed = elapsed.cloned();
+    let sprite = Runtime::block_on(sprite.get_frame(elapsed)).unwrap();
+    let mut drawable = RenderedDrawable::new(Drawable::Sprite(sprite))
+        .with_center((*location - camera.look_at.to_vector()) * camera.scale)
+        .with_z(z.cloned().unwrap_or_default().0);
+    if let Some(rotation) = rotation {
+        drawable = drawable.with_rotation(*rotation);
+    }
+    frame.drawables.insert(drawable);
+}
+
+/// queues all entities that have a Drawable component for rendering
+#[legion::system(for_each)]
+pub fn render_shape<Unit: Clone + Sized + Send + Sync + 'static>(
+    shape: &Shape<Unit>,
+    location: &Point<f32, Unit>,
+    rotation: Option<&Angle>,
+    z: Option<&ZIndex>,
+    #[resource] frame: &mut CanvasFrame,
+    #[resource] camera: &CameraState<Unit>,
+) {
+    let mut drawable = RenderedDrawable::new(Drawable::Shape(shape.clone() * camera.scale))
+        .with_center((*location - camera.look_at.to_vector()) * camera.scale)
+        .with_z(z.cloned().unwrap_or_default().0);
+    if let Some(rotation) = rotation {
+        drawable = drawable.with_rotation(*rotation);
+    }
+    frame.drawables.insert(drawable);
 }
 
 /// requests the canvas to redraw
@@ -176,18 +216,31 @@ pub fn render(#[resource] canvas: &crate::ui::Entity<Canvas>, #[resource] frame:
     });
 }
 
-// pub struct CameraTracking(legion::Entity);
+#[legion::system(for_each)]
+pub fn focus_camera<Unit: Sized + Send + Sync + 'static>(
+    location: &Point<f32, Unit>,
+    _focus: &CameraFocus, // This focuses the query only on the element we are supposed to focus on
+    #[resource] camera: &mut CameraState<Unit>,
+) {
+    // TODO tween the camera's focus within a camera box.. that can be an optional thing on CameraState?
+    camera.look_at = *location;
+}
 
-// pub struct CameraState {
-//     look_at: Point<f32, Scaled>,
-// }
+pub struct CameraState<Unit> {
+    pub look_at: Point<f32, Unit>,
+    pub scale: Scale<f32, Unit, Scaled>,
+}
 
-// #[legion::system]
-// pub fn update_camera(
-//     #[resource] tracked_entity: &CameraTracking,
-//     #[resource] camera: &mut CameraState,
-// ) {
-// }
+impl<Unit> Default for CameraState<Unit> {
+    fn default() -> Self {
+        Self {
+            look_at: Default::default(),
+            scale: Scale::new(1.),
+        }
+    }
+}
+
+pub struct CameraFocus;
 
 #[derive(Debug)]
 pub struct SystemsHandle {
@@ -206,45 +259,53 @@ impl Drop for SystemShutdownHandle {
 }
 
 pub trait LegionSystemsThread: Sized {
-    fn initialize(canvas: crate::ui::Entity<Canvas>) -> anyhow::Result<Self>;
-    fn tick(&mut self, elapsed: Option<Duration>) -> anyhow::Result<()>;
-}
+    type Unit: 'static;
 
-pub fn spawn<T: LegionSystemsThread + 'static>(
-    canvas: crate::ui::Entity<Canvas>,
-    tick_rate: Duration,
-) -> SystemsHandle {
-    let shutdown_handle = SystemShutdownHandle {
-        shutdown: Arc::new(AtomicCell::new(false)),
-    };
-    let handle = SystemsHandle {
-        shutdown_handle: shutdown_handle.clone(),
-    };
+    fn initialize(resources: &mut legion::Resources) -> anyhow::Result<Self>;
+    fn tick(&mut self, resources: &mut legion::Resources) -> anyhow::Result<()>;
 
-    std::thread::spawn(move || {
-        let mut last_tick_start = None;
-        let mut systems_thread = T::initialize(canvas).unwrap();
-        loop {
-            if shutdown_handle.shutdown.load() {
-                break;
+    fn spawn(canvas: crate::ui::Entity<Canvas>, tick_rate: Duration) -> SystemsHandle {
+        let shutdown_handle = SystemShutdownHandle {
+            shutdown: Arc::new(AtomicCell::new(false)),
+        };
+        let handle = SystemsHandle {
+            shutdown_handle: shutdown_handle.clone(),
+        };
+
+        std::thread::spawn(move || {
+            let mut last_tick_start = None;
+            let mut resources = legion::Resources::default();
+            resources.insert(canvas);
+            resources.insert(CanvasFrame::default());
+            resources.insert(CameraState::<Self::Unit>::default());
+            let mut systems_thread = Self::initialize(&mut resources).unwrap();
+            loop {
+                if shutdown_handle.shutdown.load() {
+                    break;
+                }
+
+                let tick_start = Instant::now();
+                if let Some(elapsed) = last_tick_start
+                    .map(|last_tick_start| tick_start.checked_duration_since(last_tick_start))
+                    .flatten()
+                {
+                    resources.insert(elapsed);
+                } else {
+                    resources.remove::<Duration>();
+                }
+
+                systems_thread.tick(&mut resources).unwrap();
+
+                last_tick_start = Some(tick_start);
+
+                let now = Instant::now();
+                let elapsed = now.checked_duration_since(tick_start).unwrap_or_default();
+                if let Some(sleep_duration) = tick_rate.checked_sub(elapsed) {
+                    std::thread::sleep(sleep_duration);
+                }
             }
+        });
 
-            let tick_start = Instant::now();
-            let elapsed = last_tick_start
-                .map(|last_tick_start| tick_start.checked_duration_since(last_tick_start))
-                .flatten();
-
-            systems_thread.tick(elapsed).unwrap();
-
-            last_tick_start = Some(tick_start);
-
-            let now = Instant::now();
-            let elapsed = now.checked_duration_since(tick_start).unwrap_or_default();
-            if let Some(sleep_duration) = tick_rate.checked_sub(elapsed) {
-                std::thread::sleep(sleep_duration);
-            }
-        }
-    });
-
-    handle
+        handle
+    }
 }
