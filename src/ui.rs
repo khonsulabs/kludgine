@@ -7,7 +7,7 @@ mod control;
 mod image;
 mod label;
 mod layout;
-#[cfg(feature = "legion")]
+#[cfg(feature = "ecs")]
 pub mod legion;
 mod node;
 mod timeout;

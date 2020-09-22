@@ -75,7 +75,7 @@ pub trait Component: Send + Sync {
         if let Some(background) = context.effective_style().background_color {
             Shape::rect(layout.bounds_without_margin())
                 .fill(Fill::new(background))
-                .draw_at(Point::default(), context.scene())
+                .render_at(Point::default(), context.scene())
                 .await;
         }
         Ok(())

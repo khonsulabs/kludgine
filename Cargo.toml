@@ -20,13 +20,14 @@ repository = "https://github.com/khonsulabs/kludgine"
 all-features = true
 
 [features]
-default = ["bundled-fonts", "legion"]
+default = ["bundled-fonts", "ecs"]
 # Enable all bundled fonts. All bundled fonts are licensed under the Apache License 2.0.
 # For more information, see here: https://github.com/khonsulabs/kludgine/tree/master/fonts/README.md
 bundled-fonts = ["bundled-fonts-roboto"]
 bundled-fonts-roboto = ["bundled-fonts-enabled"]
 # Internal feature that exports the bundled_fonts module
 bundled-fonts-enabled = []
+ecs = ["legion", "sorted-vec"]
 
 [dependencies]
 rgx = { version = "0.8", features = ["renderer"] }
@@ -59,6 +60,7 @@ futures-timer = "3"
 derivative = "2"
 euclid = "0.22"
 legion = { version = "0.3", optional = true }
+sorted-vec = { version = "0.4", optional = true }
 
 [dev-dependencies]
 rand = "0.7"

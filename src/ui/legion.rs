@@ -1,15 +1,16 @@
 use crate::{
-    math::Angle,
-    math::Rect,
-    math::Scaled,
+    math::{Angle, Point, Rect, Scaled},
     runtime::Runtime,
+    shape::Shape,
     sprite::{SpriteRotation, SpriteSource},
     ui::{Component, Context, InteractiveComponent, Layout, StyledContext},
     KludgineResult,
 };
 use async_trait::async_trait;
 use crossbeam::atomic::AtomicCell;
+use sorted_vec::SortedVec;
 use std::{
+    cmp::Ordering,
     sync::Arc,
     time::{Duration, Instant},
 };
@@ -19,12 +20,12 @@ use std::{
 /// after the `render_drawable` system.
 #[derive(Default, Debug)]
 pub struct Canvas {
-    current_frame: Vec<Drawable>,
+    current_frame: SortedVec<RenderedDrawable>,
 }
 
 #[derive(Default, Debug)]
 pub struct CanvasFrame {
-    drawables: Vec<Drawable>,
+    drawables: SortedVec<RenderedDrawable>,
 }
 
 #[async_trait]
@@ -34,21 +35,33 @@ impl Component for Canvas {
         context: &mut StyledContext,
         _layout: &Layout, // TODO this should be used to offset the camera's viewport (and eventually clip)
     ) -> KludgineResult<()> {
-        for drawable in self.current_frame.iter() {
-            match drawable {
-                Drawable::Sprite {
-                    sprite,
-                    destination,
-                    rotation,
-                    ..
-                } => {
+        for rendered in self.current_frame.iter() {
+            match &rendered.drawable {
+                Drawable::Sprite(sprite) => {
+                    let source_size = sprite
+                        .location()
+                        .await
+                        .size
+                        .cast_unit::<Scaled>()
+                        .cast::<f32>();
+
                     sprite
                         .render_within(
                             context.scene(),
-                            *destination,
-                            SpriteRotation::around_center(*rotation),
+                            Rect::new(rendered.center - source_size / 2., source_size),
+                            rendered
+                                .rotation
+                                .map(|rotation| SpriteRotation::around(rotation, rendered.center))
+                                .unwrap_or_default(),
                         )
                         .await;
+                }
+                Drawable::Shape(shape) => {
+                    assert!(
+                        rendered.rotation.is_none(),
+                        "TODO Need to implement rotated shapes"
+                    );
+                    shape.render_at(rendered.center, context.scene()).await;
                 }
             }
         }
@@ -81,22 +94,77 @@ impl InteractiveComponent for Canvas {
 
 #[derive(Clone, Debug)]
 pub enum CanvasCommand {
-    Render(Vec<Drawable>),
+    Render(SortedVec<RenderedDrawable>),
 }
 
 #[derive(Clone, Debug)]
+pub struct RenderedDrawable {
+    drawable: Drawable,
+    center: Point<f32, Scaled>,
+    rotation: Option<Angle>,
+    z: i32,
+}
+
+impl RenderedDrawable {
+    pub fn new(drawable: Drawable) -> Self {
+        Self {
+            drawable,
+            center: Default::default(),
+            rotation: None,
+            z: 0,
+        }
+    }
+
+    pub fn with_z(mut self, z: i32) -> Self {
+        self.z = z;
+        self
+    }
+
+    pub fn with_center(mut self, center: Point<f32, Scaled>) -> Self {
+        self.center = center;
+        self
+    }
+
+    pub fn with_rotation(mut self, rotation: Angle) -> Self {
+        self.rotation = Some(rotation);
+        self
+    }
+}
+
+impl Ord for RenderedDrawable {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.z.cmp(&other.z)
+    }
+}
+
+impl PartialOrd for RenderedDrawable {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.z.partial_cmp(&other.z)
+    }
+}
+
+impl PartialEq for RenderedDrawable {
+    fn eq(&self, other: &Self) -> bool {
+        self.z.eq(&other.z)
+    }
+}
+
+impl Eq for RenderedDrawable {}
+
+#[derive(Clone, Debug)]
 pub enum Drawable {
-    Sprite {
-        sprite: SpriteSource,
-        destination: Rect<f32, Scaled>,
-        rotation: Angle,
-    },
+    Sprite(SpriteSource),
+    Shape(Shape<Scaled>),
 }
 
 /// queues all entities that have a Drawable component for rendering
 #[legion::system(for_each)]
-pub fn render_drawable(drawable: &Drawable, #[resource] frame: &mut CanvasFrame) {
-    frame.drawables.push(drawable.clone());
+pub fn render_drawable(
+    drawable: &RenderedDrawable,
+    #[resource] frame: &mut CanvasFrame,
+    // #[resource] camera: &CameraState,
+) {
+    frame.drawables.insert(drawable.clone());
 }
 
 /// requests the canvas to redraw
@@ -107,6 +175,19 @@ pub fn render(#[resource] canvas: &crate::ui::Entity<Canvas>, #[resource] frame:
         canvas.send(CanvasCommand::Render(new_frame)).await
     });
 }
+
+// pub struct CameraTracking(legion::Entity);
+
+// pub struct CameraState {
+//     look_at: Point<f32, Scaled>,
+// }
+
+// #[legion::system]
+// pub fn update_camera(
+//     #[resource] tracked_entity: &CameraTracking,
+//     #[resource] camera: &mut CameraState,
+// ) {
+// }
 
 #[derive(Debug)]
 pub struct SystemsHandle {

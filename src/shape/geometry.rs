@@ -5,7 +5,7 @@ use crate::{
     KludgineResult,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) enum ShapeGeometry<S> {
     Empty,
     Path(Path<S>),

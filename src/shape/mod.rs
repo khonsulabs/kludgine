@@ -14,7 +14,7 @@ use crate::{
 use circle::Circle;
 use geometry::ShapeGeometry;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Shape<S> {
     geometry: ShapeGeometry<S>,
     stroke: Option<Stroke>,
@@ -74,7 +74,7 @@ impl Shape<Scaled> {
         self
     }
 
-    pub async fn draw_at(&self, location: Point<f32, Scaled>, scene: &SceneTarget) {
+    pub async fn render_at(&self, location: Point<f32, Scaled>, scene: &SceneTarget) {
         let translated = self.convert_from_user_to_device(location, scene).await;
         scene.push_element(Element::Shape(translated)).await
     }

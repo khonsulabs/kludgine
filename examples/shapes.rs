@@ -29,12 +29,12 @@ impl Component for Shapes {
             Point::new(100., -100.),
         ])
         .fill(Fill::new(Color::GREEN))
-        .draw_at(center, context.scene())
+        .render_at(center, context.scene())
         .await;
 
         Shape::circle(Point::new(0., 0.), Points::new(25.))
             .fill(Fill::new(Color::RED))
-            .draw_at(center, context.scene())
+            .render_at(center, context.scene())
             .await;
 
         Ok(())

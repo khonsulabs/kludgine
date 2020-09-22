@@ -4,7 +4,7 @@ use crate::{
     shape::{Fill, Stroke},
     KludgineError, KludgineResult,
 };
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct Circle<S> {
     pub center: Point<f32, S>,
     pub radius: Length<f32, S>,
