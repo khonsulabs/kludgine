@@ -32,8 +32,8 @@ pub enum Message {
 #[async_trait]
 impl InteractiveComponent for UIExample {
     type Message = Message;
-    type Input = ();
-    type Output = ();
+    type Command = ();
+    type Event = ();
 
     async fn receive_message(
         &mut self,

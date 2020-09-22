@@ -76,13 +76,13 @@ pub enum ImageCommand {
 #[async_trait]
 impl InteractiveComponent for Image {
     type Message = ();
-    type Input = ImageCommand;
-    type Output = ControlEvent;
+    type Command = ImageCommand;
+    type Event = ControlEvent;
 
-    async fn receive_input(
+    async fn receive_command(
         &mut self,
         context: &mut Context,
-        command: Self::Input,
+        command: Self::Command,
     ) -> KludgineResult<()> {
         match command {
             ImageCommand::SetSprite(sprite) => {
@@ -147,43 +147,13 @@ impl Component for Image {
     }
 
     async fn render(&self, context: &mut StyledContext, location: &Layout) -> KludgineResult<()> {
+        let render_bounds = location.inner_bounds();
+        let target_size = self.calculate_target_size(render_bounds.size).await;
         if let Some(frame) = &self.current_frame {
-            let render_bounds = location.inner_bounds();
-            let frame_location = frame.location().await;
-            let size_as_points = frame_location.size.to_f32().cast_unit();
-            let target_bounds = match &self.options.scaling {
-                None => Rect::new(render_bounds.origin, size_as_points),
-                Some(scaling) => match scaling {
-                    ImageScaling::Fill => location.inner_bounds(),
-                    _ => {
-                        let horizontal_scale = render_bounds.size.width / size_as_points.width;
-                        let horizontal_fit =
-                            Rect::new(render_bounds.origin, size_as_points * horizontal_scale);
-                        let vertical_scale = render_bounds.size.height / size_as_points.height;
-                        let vertical_fit =
-                            Rect::new(render_bounds.origin, size_as_points * vertical_scale);
-
-                        match scaling {
-                            ImageScaling::AspectFit => {
-                                if render_bounds.contains_rect(&horizontal_fit) {
-                                    horizontal_fit
-                                } else {
-                                    vertical_fit
-                                }
-                            }
-
-                            ImageScaling::AspectFill => {
-                                if horizontal_fit.contains_rect(&render_bounds) {
-                                    horizontal_fit
-                                } else {
-                                    vertical_fit
-                                }
-                            }
-                            ImageScaling::Fill => unreachable!(),
-                        }
-                    }
-                },
-            };
+            let target_bounds = Rect::new(
+                render_bounds.origin + (render_bounds.size - target_size) / 2.,
+                target_size,
+            );
 
             frame
                 .render_with_alpha(
@@ -199,15 +169,16 @@ impl Component for Image {
 
     async fn content_size(
         &self,
-        _context: &mut StyledContext,
-        _constraints: &Size<Option<f32>, Scaled>,
+        context: &mut StyledContext,
+        constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<Size<f32, Scaled>> {
-        // TODO update size desires based on fill settings
-        if let Some(frame) = &self.current_frame {
-            Ok(frame.location().await.size.to_f32().cast_unit())
-        } else {
-            Ok(Size::default())
-        }
+        let scene_size = context.scene().size().await;
+        Ok(self
+            .calculate_target_size(Size::new(
+                constraints.width.unwrap_or(scene_size.width),
+                constraints.height.unwrap_or(scene_size.height),
+            ))
+            .await)
     }
 
     async fn clicked(
@@ -240,6 +211,49 @@ impl Image {
     pub fn options(mut self, options: ImageOptions) -> Self {
         self.options = options;
         self
+    }
+
+    async fn calculate_target_size(&self, content_size: Size<f32, Scaled>) -> Size<f32, Scaled> {
+        if let Some(frame) = &self.current_frame {
+            let frame_location = frame.location().await;
+            let size_as_points = frame_location.size.to_f32().cast_unit();
+            match &self.options.scaling {
+                None => size_as_points,
+                Some(scaling) => match scaling {
+                    ImageScaling::Fill => content_size,
+                    _ => {
+                        let horizontal_scale = content_size.width / size_as_points.width;
+                        let horizontal_fit = size_as_points * horizontal_scale;
+                        let vertical_scale = content_size.height / size_as_points.height;
+                        let vertical_fit = size_as_points * vertical_scale;
+
+                        match scaling {
+                            ImageScaling::AspectFit => {
+                                if horizontal_fit.width <= content_size.width
+                                    && horizontal_fit.height <= content_size.height
+                                {
+                                    horizontal_fit
+                                } else {
+                                    vertical_fit
+                                }
+                            }
+
+                            ImageScaling::AspectFill => {
+                                todo!("This isn't right, it's the same as AspectFit")
+                                // if horizontal_fit.contains_rect(&render_bounds) {
+                                //     horizontal_fit
+                                // } else {
+                                //     vertical_fit
+                                // }
+                            }
+                            ImageScaling::Fill => unreachable!(),
+                        }
+                    }
+                },
+            }
+        } else {
+            Size::default()
+        }
     }
 }
 

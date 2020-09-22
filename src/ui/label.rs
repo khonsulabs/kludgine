@@ -22,16 +22,16 @@ pub enum LabelCommand {
 
 #[async_trait]
 impl InteractiveComponent for Label {
-    type Input = LabelCommand;
+    type Command = LabelCommand;
     type Message = ();
-    type Output = ControlEvent;
+    type Event = ControlEvent;
 
-    async fn receive_input(
+    async fn receive_command(
         &mut self,
         context: &mut Context,
-        message: Self::Input,
+        command: Self::Command,
     ) -> KludgineResult<()> {
-        match message {
+        match command {
             LabelCommand::SetValue(new_value) => {
                 if self.value != new_value {
                     self.value = new_value;

@@ -107,7 +107,14 @@ pub mod prelude {
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,
         },
-        ui::*,
+        ui::{
+            AbsoluteBounds, AbsoluteLayout, AnimatableComponent, AnimationManager, Button,
+            ButtonStyle, Callback, Component, Context, ControlEvent, Entity, EntityBuilder,
+            HierarchicalArena, Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation,
+            ImageOptions, ImageScaling, Index, Indexable, InteractiveComponent, Label,
+            LabelCommand, Layout, LayoutConstraints, LayoutContext, LinearTransition, SceneContext,
+            StandaloneComponent, StyledContext,
+        },
         window::{Event, EventStatus, InputEvent, OpenableWindow, Window, WindowCreator},
         Handle, KludgineError, KludgineResult, RequiresInitialization,
     };

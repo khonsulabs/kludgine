@@ -7,7 +7,7 @@ use crate::{
         AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout, LayoutSolver,
         LayoutSolverExt, Node, SceneContext, StyledContext, UIState,
     },
-    window::InputEvent,
+    window::{EventStatus, InputEvent},
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -90,7 +90,7 @@ pub trait Component: Send + Sync {
         if self.hit_test(context, window_position).await? {
             context.activate().await;
 
-            Ok(EventStatus::Handled)
+            Ok(EventStatus::Processed)
         } else {
             Ok(EventStatus::Ignored)
         }
@@ -162,17 +162,12 @@ pub trait Component: Send + Sync {
     }
 }
 
-pub enum EventStatus {
-    Ignored,
-    Handled,
-}
-
 #[async_trait]
 #[allow(unused_variables)]
 pub trait InteractiveComponent: Component {
     type Message: Clone + Send + Sync + std::fmt::Debug + 'static;
-    type Input: Clone + Send + Sync + std::fmt::Debug + 'static;
-    type Output: Clone + Send + Sync + std::fmt::Debug + 'static;
+    type Command: Clone + Send + Sync + std::fmt::Debug + 'static;
+    type Event: Clone + Send + Sync + std::fmt::Debug + 'static;
 
     async fn receive_message(
         &mut self,
@@ -184,10 +179,10 @@ pub trait InteractiveComponent: Component {
         )
     }
 
-    async fn receive_input(
+    async fn receive_command(
         &mut self,
         context: &mut Context,
-        command: Self::Input,
+        command: Self::Command,
     ) -> KludgineResult<()> {
         unimplemented!(
             "Component::receive_message() must be implemented if you're receiving messages"
@@ -213,7 +208,7 @@ pub trait InteractiveComponent: Component {
         }
     }
 
-    async fn callback(&self, context: &mut Context, message: Self::Output) {
+    async fn callback(&self, context: &mut Context, message: Self::Event) {
         let node = context.arena().get(&context.index()).await.unwrap();
         node.callback(message).await;
     }
@@ -226,12 +221,12 @@ where
     T: StandaloneComponent,
 {
     type Message = ();
-    type Input = ();
-    type Output = ();
+    type Command = ();
+    type Event = ();
 }
 
-struct FullyTypedCallback<Input, Output> {
-    translator: Box<dyn Fn(Input) -> Output + Send + Sync>,
+struct FullyTypedCallback<Command, Event> {
+    translator: Box<dyn Fn(Command) -> Event + Send + Sync>,
     target: Context,
 }
 
@@ -288,7 +283,7 @@ where
     style_sheet: StyleSheet,
     bounds: AbsoluteBounds,
     interactive: bool,
-    callback: Option<Callback<C::Output>>,
+    callback: Option<Callback<C::Event>>,
     ui_state: UIState,
     arena: HierarchicalArena,
     _marker: std::marker::PhantomData<P>,
@@ -334,7 +329,7 @@ where
         self
     }
 
-    pub fn callback<F: Fn(C::Output) -> P + Send + Sync + 'static>(mut self, callback: F) -> Self {
+    pub fn callback<F: Fn(C::Event) -> P + Send + Sync + 'static>(mut self, callback: F) -> Self {
         let target = Context::new(
             self.parent.unwrap(),
             self.arena.clone(),

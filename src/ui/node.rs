@@ -233,7 +233,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
 #[async_trait]
 impl<T: InteractiveComponent + 'static> CallbackSender for NodeData<T> {
     async fn send_callback(&self, output: Box<dyn Any + Send + Sync>) {
-        let output = output.downcast_ref::<T::Output>().unwrap().clone();
+        let output = output.downcast_ref::<T::Event>().unwrap().clone();
         if let Some(callback) = self.callback.as_ref() {
             callback.invoke(output).await;
         }
@@ -249,7 +249,7 @@ where
     #[derivative(Debug = "ignore")]
     pub(crate) component: Handle<T>,
     #[derivative(Debug = "ignore")]
-    callback: Option<Callback<T::Output>>,
+    callback: Option<Callback<T::Event>>,
     interactive: bool,
     pub(crate) layout: Handle<Layout>,
     pub(crate) style_sheet: Handle<StyleSheet>,
@@ -283,7 +283,7 @@ impl Node {
         style_sheet: StyleSheet,
         bounds: AbsoluteBounds,
         interactive: bool,
-        callback: Option<Callback<T::Output>>,
+        callback: Option<Callback<T::Event>>,
     ) -> Self {
         let component = Handle::new(component);
         let style_sheet = Handle::new(style_sheet);

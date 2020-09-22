@@ -128,16 +128,16 @@ pub enum ButtonCommand {
 
 #[async_trait]
 impl InteractiveComponent for Button {
-    type Output = ControlEvent;
+    type Event = ControlEvent;
     type Message = ();
-    type Input = ButtonCommand;
+    type Command = ButtonCommand;
 
-    async fn receive_input(
+    async fn receive_command(
         &mut self,
         _context: &mut Context,
-        message: Self::Input,
+        command: Self::Command,
     ) -> KludgineResult<()> {
-        match message {
+        match command {
             ButtonCommand::SetCaption(caption) => {
                 self.caption = caption;
             }

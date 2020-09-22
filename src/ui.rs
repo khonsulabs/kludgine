@@ -7,14 +7,17 @@ mod control;
 mod image;
 mod label;
 mod layout;
+#[cfg(feature = "legion")]
+pub mod legion;
 mod node;
+mod timeout;
 
 pub(crate) use self::node::NodeData;
 pub use self::{
     animation::{AnimationManager, LinearTransition},
     button::{Button, ButtonStyle},
     component::{
-        AnimatableComponent, Callback, Component, EntityBuilder, EventStatus, InteractiveComponent,
+        AnimatableComponent, Callback, Component, EntityBuilder, InteractiveComponent,
         LayoutConstraints, StandaloneComponent,
     },
     context::*,
@@ -25,6 +28,7 @@ pub use self::{
     label::{Label, LabelCommand},
     layout::*,
     node::{Node, NodeDataWindowExt},
+    timeout::Timeout,
 };
 use crate::{
     event::{ElementState, MouseButton},
@@ -32,6 +36,7 @@ use crate::{
     runtime::Runtime,
     scene::SceneTarget,
     style::StyleSheet,
+    window::EventStatus,
     window::{Event, InputEvent, WindowEvent},
     Handle, KludgineError, KludgineResult, RequiresInitialization,
 };
@@ -427,7 +432,7 @@ where
                                 let mut context =
                                     Context::new(index, self.arena.clone(), self.ui_state.clone());
                                 if node.interactive().await {
-                                    if let EventStatus::Handled = node
+                                    if let EventStatus::Processed = node
                                         .mouse_down(&mut context, last_mouse_position, button)
                                         .await?
                                     {
@@ -530,7 +535,7 @@ impl<C> Entity<C>
 where
     C: InteractiveComponent + 'static,
 {
-    pub async fn send(&self, message: C::Input) -> KludgineResult<()> {
+    pub async fn send(&self, command: C::Command) -> KludgineResult<()> {
         if let Some(target_node) = global_arena().get(self).await {
             let component = target_node.component.read().await;
             if let Some(node_data) = component.as_any().downcast_ref::<NodeData<C>>() {
@@ -539,7 +544,7 @@ where
                 Runtime::spawn(async move {
                     let mut component = component_handle.write().await;
                     component
-                        .receive_input(&mut context, message)
+                        .receive_command(&mut context, command)
                         .await
                         .unwrap()
                 })
