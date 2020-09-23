@@ -107,6 +107,7 @@ pub enum CanvasCommand {
 pub struct RenderedDrawable {
     kind: DrawableKind,
     sorting_id: u64,
+    render_id: usize,
     drawable: Drawable,
     center: Point<f32, Scaled>,
     rotation: Option<Angle>,
@@ -120,11 +121,12 @@ enum DrawableKind {
 }
 
 impl RenderedDrawable {
-    pub fn new(drawable: Drawable) -> Self {
+    pub fn new(drawable: Drawable, render_id: usize) -> Self {
         let (kind, sorting_id) = drawable.sorting_keys();
         Self {
             kind,
             sorting_id,
+            render_id,
             drawable,
             center: Default::default(),
             rotation: None,
@@ -156,7 +158,10 @@ impl Ord for RenderedDrawable {
     fn cmp(&self, other: &Self) -> Ordering {
         match self.z.cmp(&other.z) {
             Ordering::Equal => match self.kind.cmp(&other.kind) {
-                Ordering::Equal => self.sorting_id.cmp(&other.sorting_id),
+                Ordering::Equal => match self.sorting_id.cmp(&other.sorting_id) {
+                    Ordering::Equal => self.render_id.cmp(&other.render_id),
+                    not_equal => not_equal,
+                },
                 not_equal => not_equal,
             },
 
@@ -224,7 +229,7 @@ pub fn render_sprite<Unit: Sized + Send + Sync + 'static>(
 ) {
     let elapsed = elapsed.cloned();
     let sprite = Runtime::block_on(sprite.get_frame(elapsed)).unwrap();
-    let mut drawable = RenderedDrawable::new(Drawable::Sprite(sprite))
+    let mut drawable = RenderedDrawable::new(Drawable::Sprite(sprite), frame.drawables.len())
         .with_center((*location - camera.look_at.to_vector()) * camera.scale)
         .with_z(z.cloned().unwrap_or_default().0);
     if let Some(rotation) = rotation {
@@ -243,9 +248,12 @@ pub fn render_shape<Unit: Clone + Sized + Send + Sync + 'static>(
     #[resource] frame: &mut CanvasFrame,
     #[resource] camera: &CameraState<Unit>,
 ) {
-    let mut drawable = RenderedDrawable::new(Drawable::Shape(shape.clone() * camera.scale))
-        .with_center((*location - camera.look_at.to_vector()) * camera.scale)
-        .with_z(z.cloned().unwrap_or_default().0);
+    let mut drawable = RenderedDrawable::new(
+        Drawable::Shape(shape.clone() * camera.scale),
+        frame.drawables.len(),
+    )
+    .with_center((*location - camera.look_at.to_vector()) * camera.scale)
+    .with_z(z.cloned().unwrap_or_default().0);
     if let Some(rotation) = rotation {
         drawable = drawable.with_rotation(*rotation);
     }
