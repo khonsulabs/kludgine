@@ -407,7 +407,23 @@ where
                     self.ui_state.set_needs_redraw().await;
                 }
             }
-            Event::MouseWheel { .. } => {} //{todo!("Hook up mouse scroll to hovered nodes"),
+            Event::MouseWheel { delta, touch_phase } => {
+                let mut next_to_process = self.hover;
+                while let Some(index) = next_to_process {
+                    if let Some(node) = self.arena.get(&index).await {
+                        let mut context =
+                            Context::new(index, self.arena.clone(), self.ui_state.clone());
+                        if node.interactive().await {
+                            if let EventStatus::Processed =
+                                node.mouse_wheel(&mut context, delta, touch_phase).await?
+                            {
+                                break;
+                            }
+                        }
+                    }
+                    next_to_process = self.arena.parent(index).await;
+                }
+            }
             Event::MouseButton { button, state } => match state {
                 ElementState::Released => {
                     if let Some(&index) = self.mouse_button_handlers.get(&button) {

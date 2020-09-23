@@ -1,4 +1,5 @@
 use crate::{
+    event::{MouseButton, MouseScrollDelta, TouchPhase},
     math::{Point, Scaled, Size},
     scene::SceneTarget,
     shape::{Fill, Shape},
@@ -7,11 +8,10 @@ use crate::{
         AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout, LayoutSolver,
         LayoutSolverExt, Node, SceneContext, StyledContext, UIState,
     },
-    window::{EventStatus, InputEvent},
+    window::EventStatus,
     KludgineResult,
 };
 use async_trait::async_trait;
-use winit::event::MouseButton;
 
 pub struct LayoutConstraints {}
 
@@ -57,14 +57,6 @@ pub trait Component: Send + Sync {
             }
             layout.layout()
         }
-    }
-
-    async fn process_input(
-        &mut self,
-        context: &mut Context,
-        event: InputEvent,
-    ) -> KludgineResult<()> {
-        Ok(())
     }
 
     async fn render_background(
@@ -147,6 +139,15 @@ pub trait Component: Send + Sync {
         button: MouseButton,
     ) -> KludgineResult<()> {
         Ok(())
+    }
+
+    async fn mouse_wheel(
+        &mut self,
+        context: &mut Context,
+        delta: MouseScrollDelta,
+        touch_phase: TouchPhase,
+    ) -> KludgineResult<EventStatus> {
+        Ok(EventStatus::Ignored)
     }
 
     async fn hit_test(

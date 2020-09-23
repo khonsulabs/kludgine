@@ -1,5 +1,5 @@
 use crate::{
-    event::MouseButton,
+    event::{MouseButton, MouseScrollDelta, TouchPhase},
     math::{Point, Scaled, Size},
     runtime::Runtime,
     style::StyleSheet,
@@ -7,7 +7,7 @@ use crate::{
         AbsoluteBounds, Callback, Context, EventStatus, InteractiveComponent, Layout, LayoutSolver,
         SceneContext, StyledContext,
     },
-    window::{CloseResponse, InputEvent, Window},
+    window::{CloseResponse, Window},
     Handle, KludgineResult,
 };
 use async_trait::async_trait;
@@ -47,8 +47,6 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
 
     async fn update(&self, context: &mut SceneContext) -> KludgineResult<()>;
 
-    async fn process_input(&self, context: &mut Context, event: InputEvent) -> KludgineResult<()>;
-
     async fn mouse_down(
         &self,
         context: &mut Context,
@@ -69,6 +67,13 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
         position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()>;
+
+    async fn mouse_wheel(
+        &self,
+        context: &mut Context,
+        delta: MouseScrollDelta,
+        touch_phase: TouchPhase,
+    ) -> KludgineResult<EventStatus>;
 
     async fn hovered(&self, context: &mut Context) -> KludgineResult<()>;
 
@@ -175,11 +180,6 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         component.update(context).await
     }
 
-    async fn process_input(&self, context: &mut Context, event: InputEvent) -> KludgineResult<()> {
-        let mut component = self.component.write().await;
-        component.process_input(context, event).await
-    }
-
     async fn mouse_down(
         &self,
         context: &mut Context,
@@ -208,6 +208,16 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     ) -> KludgineResult<()> {
         let mut component = self.component.write().await;
         component.mouse_up(context, position, button).await
+    }
+
+    async fn mouse_wheel(
+        &self,
+        context: &mut Context,
+        delta: MouseScrollDelta,
+        touch_phase: TouchPhase,
+    ) -> KludgineResult<EventStatus> {
+        let mut component = self.component.write().await;
+        component.mouse_wheel(context, delta, touch_phase).await
     }
 
     async fn hit_test(
@@ -362,15 +372,6 @@ impl Node {
         component.update(context).await
     }
 
-    pub async fn process_input(
-        &self,
-        context: &mut Context,
-        event: InputEvent,
-    ) -> KludgineResult<()> {
-        let component = self.component.read().await;
-        component.process_input(context, event).await
-    }
-
     pub async fn hit_test(
         &self,
         context: &mut Context,
@@ -388,6 +389,16 @@ impl Node {
     ) -> KludgineResult<EventStatus> {
         let component = self.component.read().await;
         component.mouse_down(context, position, button).await
+    }
+
+    pub async fn mouse_wheel(
+        &self,
+        context: &mut Context,
+        delta: MouseScrollDelta,
+        touch_phase: TouchPhase,
+    ) -> KludgineResult<EventStatus> {
+        let component = self.component.read().await;
+        component.mouse_wheel(context, delta, touch_phase).await
     }
 
     pub async fn mouse_drag(

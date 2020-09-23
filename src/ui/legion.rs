@@ -6,6 +6,7 @@ use crate::{
     ui::{Component, Context, InteractiveComponent, Layout, StyledContext},
     KludgineResult,
 };
+use async_channel::Sender;
 use async_trait::async_trait;
 use crossbeam::atomic::AtomicCell;
 use sorted_vec::SortedVec;
@@ -40,7 +41,8 @@ impl Component for Canvas {
                         .await
                         .size
                         .cast_unit::<Scaled>()
-                        .cast::<f32>();
+                        .cast::<f32>()
+                        * rendered.scale;
 
                     sprite
                         .render_within(
@@ -107,6 +109,7 @@ pub struct RenderedDrawable {
     drawable: Drawable,
     center: Point<f32, Scaled>,
     rotation: Option<Angle>,
+    scale: f32,
     z: i32,
 }
 
@@ -127,6 +130,7 @@ impl RenderedDrawable {
             center: Default::default(),
             rotation: None,
             z: 0,
+            scale: 1.,
         }
     }
 
@@ -142,6 +146,11 @@ impl RenderedDrawable {
 
     pub fn with_rotation(mut self, rotation: Angle) -> Self {
         self.rotation = Some(rotation);
+        self
+    }
+
+    pub fn with_scale(mut self, scale: f32) -> Self {
+        self.scale = scale;
         self
     }
 }
@@ -213,12 +222,15 @@ impl Default for Scaling {
 }
 
 /// queues all entities that have a Drawable component for rendering
+// TODO: Split this system into two systems, first does the sprite update, and a second system renders a SpriteSource component with the rest of the values
 #[legion::system(for_each)]
+#[allow(clippy::too_many_arguments)]
 pub fn render_sprite<Unit: Sized + Send + Sync + 'static>(
     sprite: &Sprite,
     elapsed: Option<&Duration>,
     location: &Point<f32, Unit>,
     rotation: Option<&Angle>,
+    scaling: Option<&Scaling>,
     z: Option<&ZIndex>,
     #[resource] frame: &mut CanvasFrame,
     #[resource] camera: &CameraState<Unit>,
@@ -231,10 +243,14 @@ pub fn render_sprite<Unit: Sized + Send + Sync + 'static>(
     if let Some(rotation) = rotation {
         drawable = drawable.with_rotation(*rotation);
     }
+    if let Some(scaling) = scaling {
+        drawable = drawable.with_scale(scaling.0);
+    }
     frame.drawables.insert(drawable);
 }
 
 /// queues all entities that have a Drawable component for rendering
+// TODO: Investigate change tracking #[filter(maybe_changed::<Position>())]
 #[legion::system(for_each)]
 pub fn render_shape<Unit: Clone + Sized + Send + Sync + 'static>(
     shape: &Shape<Unit>,
@@ -292,16 +308,12 @@ impl<Unit> Default for CameraState<Unit> {
 pub struct CameraFocus;
 
 #[derive(Debug)]
-pub struct SystemsHandle {
-    shutdown_handle: SystemShutdownHandle,
-}
-
-#[derive(Clone, Debug)]
-struct SystemShutdownHandle {
+pub struct SystemsHandle<Command> {
     shutdown: Arc<AtomicCell<bool>>,
+    pub sender: Sender<Command>,
 }
 
-impl Drop for SystemShutdownHandle {
+impl<Command> Drop for SystemsHandle<Command> {
     fn drop(&mut self) {
         self.shutdown.store(true);
     }
@@ -309,16 +321,25 @@ impl Drop for SystemShutdownHandle {
 
 pub trait LegionSystemsThread: Sized {
     type Unit: 'static;
+    type Command: Send + 'static;
 
     fn initialize(resources: &mut legion::Resources) -> anyhow::Result<Self>;
+    fn command_received(
+        &mut self,
+        command: Self::Command,
+        resources: &mut legion::Resources,
+    ) -> anyhow::Result<()>;
     fn tick(&mut self, resources: &mut legion::Resources) -> anyhow::Result<()>;
 
-    fn spawn(canvas: crate::ui::Entity<Canvas>, tick_rate: Duration) -> SystemsHandle {
-        let shutdown_handle = SystemShutdownHandle {
-            shutdown: Arc::new(AtomicCell::new(false)),
-        };
+    fn spawn(
+        canvas: crate::ui::Entity<Canvas>,
+        tick_rate: Duration,
+    ) -> SystemsHandle<Self::Command> {
+        let (sender, receiver) = async_channel::unbounded();
+        let shutdown = Arc::new(AtomicCell::new(false));
         let handle = SystemsHandle {
-            shutdown_handle: shutdown_handle.clone(),
+            shutdown: shutdown.clone(),
+            sender,
         };
 
         std::thread::spawn(move || {
@@ -329,8 +350,14 @@ pub trait LegionSystemsThread: Sized {
             resources.insert(CameraState::<Self::Unit>::default());
             let mut systems_thread = Self::initialize(&mut resources).unwrap();
             loop {
-                if shutdown_handle.shutdown.load() {
+                if shutdown.load() {
                     break;
+                }
+
+                while let Ok(command) = receiver.try_recv() {
+                    systems_thread
+                        .command_received(command, &mut resources)
+                        .unwrap();
                 }
 
                 let tick_start = Instant::now();
@@ -349,9 +376,8 @@ pub trait LegionSystemsThread: Sized {
 
                 let now = Instant::now();
                 let elapsed = now.checked_duration_since(tick_start).unwrap_or_default();
-                if let Some(sleep_duration) = tick_rate.checked_sub(elapsed) {
-                    std::thread::sleep(sleep_duration);
-                }
+                let sleep_duration = tick_rate.checked_sub(elapsed).unwrap_or_default();
+                std::thread::sleep(sleep_duration);
             }
         });
 
