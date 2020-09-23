@@ -13,6 +13,7 @@ where
     fn width(&self) -> Length<S, U> {
         Length::new(self.width)
     }
+
     fn height(&self) -> Length<S, U> {
         Length::new(self.height)
     }

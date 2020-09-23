@@ -30,11 +30,7 @@ pub struct CanvasFrame {
 
 #[async_trait]
 impl Component for Canvas {
-    async fn render(
-        &self,
-        context: &mut StyledContext,
-        layout: &Layout, // TODO this should be used to offset the camera's viewport (and eventually clip)
-    ) -> KludgineResult<()> {
+    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         let center = layout.inner_bounds().center();
         for rendered in self.current_frame.iter() {
             match &rendered.drawable {

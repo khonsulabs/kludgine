@@ -14,11 +14,17 @@ pub use euclid::{Length, Scale};
 pub type ScreenScale = Scale<f32, Scaled, Raw>;
 pub type Angle = euclid::Angle<f32>;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 #[derive(Clone, Copy, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Raw;
 #[derive(Clone, Copy, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Scaled;
 #[derive(Clone, Copy, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Unknown;
 
 pub(crate) fn max_f(a: f32, b: f32) -> f32 {

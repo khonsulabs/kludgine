@@ -1,6 +1,9 @@
 use crate::math::{Length, PointExt, Rect, Size, Unknown, Vector};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Surround<S = f32, Unit = Unknown> {
     pub left: Length<S, Unit>,
     pub top: Length<S, Unit>,

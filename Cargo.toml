@@ -28,6 +28,7 @@ bundled-fonts-roboto = ["bundled-fonts-enabled"]
 # Internal feature that exports the bundled_fonts module
 bundled-fonts-enabled = []
 ecs = ["legion", "sorted-vec"]
+serialization = ["serde", "euclid/serde", "palette/serializing"]
 
 [dependencies]
 rgx = { version = "0.8", features = ["renderer"] }
@@ -61,6 +62,7 @@ derivative = "2"
 euclid = "0.22"
 legion = { version = "0.3", optional = true }
 sorted-vec = { version = "0.4", optional = true }
+serde = { version = "1", optional = true, features = ["derive"] }
 
 [dev-dependencies]
 rand = "0.7"
