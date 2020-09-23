@@ -105,15 +105,26 @@ pub enum CanvasCommand {
 
 #[derive(Clone, Debug)]
 pub struct RenderedDrawable {
+    kind: DrawableKind,
+    sorting_id: u64,
     drawable: Drawable,
     center: Point<f32, Scaled>,
     rotation: Option<Angle>,
     z: i32,
 }
 
+#[derive(Ord, PartialOrd, Eq, PartialEq, Debug, Copy, Clone)]
+enum DrawableKind {
+    Shape,
+    Sprite,
+}
+
 impl RenderedDrawable {
     pub fn new(drawable: Drawable) -> Self {
+        let (kind, sorting_id) = drawable.sorting_keys();
         Self {
+            kind,
+            sorting_id,
             drawable,
             center: Default::default(),
             rotation: None,
@@ -138,14 +149,25 @@ impl RenderedDrawable {
 }
 
 impl Ord for RenderedDrawable {
+    /// This implementation of cmp is for ordering within SortedVec.
+    /// The ordering is chosen to optimize for Frame's batching operations
+    /// by ensuring if a texture is drawn on the same Z level, it is done using
+    /// one batched draw call.
     fn cmp(&self, other: &Self) -> Ordering {
-        self.z.cmp(&other.z)
+        match self.z.cmp(&other.z) {
+            Ordering::Equal => match self.kind.cmp(&other.kind) {
+                Ordering::Equal => self.sorting_id.cmp(&other.sorting_id),
+                not_equal => not_equal,
+            },
+
+            not_equal => not_equal,
+        }
     }
 }
 
 impl PartialOrd for RenderedDrawable {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.z.partial_cmp(&other.z)
+        Some(self.cmp(other))
     }
 }
 
@@ -163,8 +185,31 @@ pub enum Drawable {
     Shape(Shape<Scaled>),
 }
 
+impl Drawable {
+    fn sorting_keys(&self) -> (DrawableKind, u64) {
+        match self {
+            Drawable::Shape(_) => {
+                // Shapes don't have groupings
+                (DrawableKind::Shape, 0u64)
+            }
+            Drawable::Sprite(sprite) => Runtime::block_on(async {
+                (DrawableKind::Sprite, sprite.texture().await.id().await)
+            }),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct ZIndex(pub i32);
+
+#[derive(Clone, Debug)]
+pub struct Scaling(pub f32);
+
+impl Default for Scaling {
+    fn default() -> Self {
+        Self(1.)
+    }
+}
 
 /// queues all entities that have a Drawable component for rendering
 #[legion::system(for_each)]

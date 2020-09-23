@@ -91,4 +91,9 @@ impl SpriteSource {
         let sprite = self.handle.read().await;
         sprite.location
     }
+
+    pub async fn texture(&self) -> Texture {
+        let sprite = self.handle.read().await;
+        sprite.texture.clone()
+    }
 }

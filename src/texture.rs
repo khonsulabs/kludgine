@@ -43,6 +43,11 @@ impl Texture {
         Ok(Self::new(img))
     }
 
+    pub async fn id(&self) -> u64 {
+        let texture = self.handle.read().await;
+        texture.id
+    }
+
     pub fn from_bytes(bytes: &[u8]) -> KludgineResult<Self> {
         let img = image::load_from_memory(bytes)?;
 
