@@ -54,6 +54,13 @@ impl SceneTarget {
         }
     }
 
+    pub fn scene_handle(&self) -> Scene {
+        match self {
+            SceneTarget::Scene(scene) => scene.clone(),
+            SceneTarget::Camera { scene, .. } => scene.clone(),
+        }
+    }
+
     async fn scene(&self) -> async_rwlock::RwLockReadGuard<'_, SceneData> {
         match self {
             SceneTarget::Scene(scene) => scene.data.read().await,
@@ -225,6 +232,11 @@ impl Scene {
     pub async fn scale_factor(&self) -> ScreenScale {
         let scene = self.data.read().await;
         scene.scale_factor
+    }
+
+    pub async fn keys_pressed(&self) -> HashSet<VirtualKeyCode> {
+        let scene = self.data.read().await;
+        scene.pressed_keys.clone()
     }
 
     pub async fn key_pressed(&self, key: VirtualKeyCode) -> bool {
