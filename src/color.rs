@@ -1,16 +1,29 @@
-use palette::{rgb::Srgba, Shade};
+use palette::{rgb::Srgba, Component, Shade, Srgb};
 use rgx::color::{Rgba, Rgba8};
 
 #[derive(Default, Clone, Debug, Copy, PartialEq)]
 pub struct Color(Rgba);
 
-impl From<Srgba> for Color {
-    fn from(color: Srgba) -> Self {
+impl<U: Component> From<Srgba<U>> for Color {
+    fn from(color: Srgba<U>) -> Self {
+        let color = color.into_format::<_, f32>();
         Self(Rgba {
             r: color.color.red,
             g: color.color.green,
             b: color.color.blue,
             a: color.alpha,
+        })
+    }
+}
+
+impl<U: Component> From<Srgb<U>> for Color {
+    fn from(color: Srgb<U>) -> Self {
+        let color = color.into_format::<f32>();
+        Self(Rgba {
+            r: color.red,
+            g: color.green,
+            b: color.blue,
+            a: 1.,
         })
     }
 }
