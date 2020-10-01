@@ -53,7 +53,7 @@ async-channel = "1"
 async-rwlock = "1"
 async-handle = "0.1"
 smol = "1"
-smol-timeout = "0.5"
+smol-timeout = "0.6"
 easy-parallel = "3"
 async-trait = "0.1"
 futures = { version = "0.3", features = ["thread-pool"] }
