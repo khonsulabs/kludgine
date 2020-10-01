@@ -1,6 +1,6 @@
 [package]
 name = "kludgine"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
 edition = "2018"
 description = "An asynchronous app and 2d game framework"
@@ -38,7 +38,6 @@ winit = "0.22"
 image = "0.23"
 crossbeam = "0.7"
 lazy_static = "1"
-chrono = "0.4"
 thiserror = "1.0"
 anyhow = "1.0"
 rusttype = { version = "0.9", features = ["gpu_cache"] }
