@@ -6,9 +6,10 @@ use crate::{
 mod batch;
 mod gpu_batch;
 mod pipeline;
+mod sheet;
 pub(crate) use self::{batch::Batch, gpu_batch::GpuBatch, pipeline::Pipeline};
 mod source;
-pub use source::*;
+pub use self::{sheet::*, source::*};
 use std::{collections::HashMap, iter::IntoIterator, time::Duration};
 
 #[macro_export]
@@ -63,8 +64,14 @@ pub(crate) struct SpriteData {
     animations: SpriteAnimations,
 }
 
+impl From<SpriteAnimations> for Sprite {
+    fn from(animations: SpriteAnimations) -> Self {
+        Self::new(None, animations)
+    }
+}
+
 impl Sprite {
-    pub(crate) fn new(title: Option<String>, animations: SpriteAnimations) -> Self {
+    pub fn new(title: Option<String>, animations: SpriteAnimations) -> Self {
         Self {
             handle: Handle::new(SpriteData {
                 title,

@@ -48,7 +48,7 @@ mod internal_macros {
 
     #[macro_export]
     macro_rules! hash_map {
-        ($($key:expr => $value:expr),+) => {{
+        ($($key:expr => $value:expr),+ $(,)*) => {{
             let mut map = std::collections::HashMap::new();
             $(
                 map.insert($key, $value);
@@ -59,7 +59,7 @@ mod internal_macros {
 
     #[macro_export]
     macro_rules! hash_set {
-        ($($value:expr),+) => {{
+        ($($value:expr),+ $(,)*) => {{
             let mut set = std::collections::HashSet::new();
             $(
                 set.insert($value);
@@ -99,7 +99,10 @@ pub mod prelude {
         runtime::Runtime,
         scene::{Scene, SceneTarget},
         shape::*,
-        sprite::{Sprite, SpriteRotation, SpriteSource},
+        sprite::{
+            AnimationMode, Sprite, SpriteAnimation, SpriteAnimations, SpriteFrame, SpriteRotation,
+            SpriteSheet, SpriteSource,
+        },
         style::*,
         text::{font::Font, wrap::TextWrap, Span, Text},
         texture::Texture,
