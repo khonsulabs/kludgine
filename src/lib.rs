@@ -100,8 +100,9 @@ pub mod prelude {
         scene::{Scene, SceneTarget},
         shape::*,
         sprite::{
-            AnimationMode, Sprite, SpriteAnimation, SpriteAnimations, SpriteFrame, SpriteRotation,
-            SpriteSheet, SpriteSource,
+            AnimationMode, Sprite, SpriteAnimation, SpriteAnimations, SpriteCollection,
+            SpriteFrame, SpriteMap, SpriteRotation, SpriteSheet, SpriteSource,
+            SpriteSourceSublocation,
         },
         style::*,
         text::{font::Font, wrap::TextWrap, Span, Text},

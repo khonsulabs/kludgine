@@ -4,12 +4,13 @@ use crate::{
     Handle, KludgineError, KludgineResult,
 };
 mod batch;
+mod collection;
 mod gpu_batch;
 mod pipeline;
 mod sheet;
 pub(crate) use self::{batch::Batch, gpu_batch::GpuBatch, pipeline::Pipeline};
 mod source;
-pub use self::{sheet::*, source::*};
+pub use self::{collection::*, sheet::*, source::*};
 use std::{collections::HashMap, iter::IntoIterator, time::Duration};
 
 #[macro_export]
@@ -337,12 +338,23 @@ impl Sprite {
         handle.animations.clone()
     }
 
+    pub async fn bounds(&self) -> Option<Rect<u32>> {
+        let handle = self.handle.read().await;
+        let animations = handle.animations.handle.read().await;
+        if let Some(animation) = animations.values().next() {
+            if let Some(frame) = animation.frames.first() {
+                return Some(frame.source.location().await.bounds());
+            }
+        }
+        None
+    }
+
     pub async fn size(&self) -> Option<Size<u32>> {
         let handle = self.handle.read().await;
         let animations = handle.animations.handle.read().await;
         if let Some(animation) = animations.values().next() {
             if let Some(frame) = animation.frames.first() {
-                return Some(frame.source.location().await.size);
+                return Some(frame.source.location().await.size());
             }
         }
         None

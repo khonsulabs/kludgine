@@ -1,10 +1,11 @@
 use crate::{
     math::Size,
     math::{Point, Rect},
-    sprite::SpriteSource,
+    sprite::{SpriteCollection, SpriteMap, SpriteSource},
     texture::Texture,
 };
 use async_handle::Handle;
+use async_trait::async_trait;
 use std::{collections::HashMap, fmt::Debug, hash::Hash};
 
 #[derive(Debug, Clone)]
@@ -12,7 +13,7 @@ pub struct SpriteSheet<T>
 where
     T: Debug,
 {
-    texture: Texture,
+    pub texture: Texture,
     data: Handle<SpriteSheetData<T>>,
 }
 
@@ -43,12 +44,6 @@ where
         data.tile_size
     }
 
-    pub async fn sprite(&self, tile: &T) -> Option<SpriteSource> {
-        let data = self.data.read().await;
-        let location = data.sprites.get(tile);
-        location.map(|location| SpriteSource::new(*location, self.texture.clone()))
-    }
-
     pub async fn sprites<I: IntoIterator<Item = T>>(&self, iterator: I) -> Vec<SpriteSource> {
         let data = self.data.read().await;
         iterator
@@ -56,6 +51,36 @@ where
             .map(|tile| {
                 let location = data.sprites.get(&tile).unwrap();
                 SpriteSource::new(*location, self.texture.clone())
+            })
+            .collect()
+    }
+
+    pub async fn sprite_map<I: IntoIterator<Item = T>>(&self, iterator: I) -> SpriteMap<T> {
+        let data = self.data.read().await;
+        let map = iterator
+            .into_iter()
+            .map(|tile| {
+                let location = data.sprites.get(&tile).unwrap();
+                (tile, SpriteSource::new(*location, self.texture.clone()))
+            })
+            .collect::<HashMap<_, _>>();
+        SpriteMap::new(map)
+    }
+}
+
+impl<T> SpriteSheet<T>
+where
+    T: Clone + Debug + Eq + Hash,
+{
+    pub async fn all_sprites(&self) -> HashMap<T, SpriteSource> {
+        let data = self.data.read().await;
+        data.sprites
+            .iter()
+            .map(|(tile, location)| {
+                (
+                    tile.clone(),
+                    SpriteSource::new(*location, self.texture.clone()),
+                )
             })
             .collect()
     }
@@ -87,5 +112,17 @@ impl<T: Debug + Eq + Hash> SpriteSheetData<T> {
             sprites,
             tile_size,
         }
+    }
+}
+
+#[async_trait]
+impl<T> SpriteCollection<T> for SpriteSheet<T>
+where
+    T: Debug + Send + Sync + Eq + Hash,
+{
+    async fn sprite(&self, tile: &T) -> Option<SpriteSource> {
+        let data = self.data.read().await;
+        let location = data.sprites.get(tile);
+        location.map(|location| SpriteSource::new(*location, self.texture.clone()))
     }
 }

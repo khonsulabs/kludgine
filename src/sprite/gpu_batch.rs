@@ -1,5 +1,5 @@
 use crate::{
-    math::{Point, PointExt, Raw, Unknown},
+    math::{Point, PointExt, Raw, Rect, Size, Unknown},
     sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation},
 };
 use euclid::Box2D;
@@ -8,6 +8,8 @@ use rgx::{
     core,
     math::{Vector2, Vector3},
 };
+
+use super::SpriteSourceLocation;
 
 pub(crate) struct GpuBatch {
     pub width: u32,
@@ -37,12 +39,33 @@ impl GpuBatch {
             a: 0,
         };
 
-        self.add_box(
-            source.location.to_box2d(),
-            sprite.render_at.to_box2d(),
-            sprite.rotation,
-            white_transparent,
-        )
+        match &source.location {
+            SpriteSourceLocation::Rect(location) => self.add_box(
+                location.to_box2d(),
+                sprite.render_at.to_box2d(),
+                sprite.rotation,
+                white_transparent,
+            ),
+            SpriteSourceLocation::Joined(locations) => {
+                let source_bounds = source.location.bounds();
+                let scale_x = sprite.render_at.size.width as f32 / source_bounds.size.width as f32;
+                let scale_y =
+                    sprite.render_at.size.height as f32 / source_bounds.size.height as f32;
+                for location in locations {
+                    let x = sprite.render_at.origin.x + location.destination.x as f32 * scale_x;
+                    let y = sprite.render_at.origin.y + location.destination.y as f32 * scale_y;
+                    let width = sprite.render_at.size.width * scale_x;
+                    let height = sprite.render_at.size.height * scale_y;
+                    let destination = Rect::new(Point::new(x, y), Size::new(width, height));
+                    self.add_box(
+                        location.source.to_box2d(),
+                        destination.to_box2d(),
+                        sprite.rotation,
+                        white_transparent,
+                    );
+                }
+            }
+        }
     }
 
     pub fn vertex(&self, src: Point<u32, Unknown>, dest: Point<f32, Raw>, color: Rgba8) -> Vertex {

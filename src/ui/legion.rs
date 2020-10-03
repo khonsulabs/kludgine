@@ -61,7 +61,7 @@ where
                     let source_size = sprite
                         .location()
                         .await
-                        .size
+                        .size()
                         .cast_unit::<Unit>()
                         .cast::<f32>()
                         * rendered.scale;
