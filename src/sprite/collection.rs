@@ -69,8 +69,17 @@ where
 }
 
 #[async_trait]
-pub trait SpriteCollection<T> {
+pub trait SpriteCollection<T>
+where
+    T: Send + Sync,
+{
     async fn sprite(&self, tile: &T) -> Option<SpriteSource>;
+
+    async fn sprites(&self, tiles: &[T]) -> Vec<SpriteSource> {
+        let sprite_futures = tiles.iter().map(|t| self.sprite(t)).collect::<Vec<_>>();
+        let results = futures::future::join_all(sprite_futures).await;
+        results.into_iter().map(|r| r.unwrap()).collect()
+    }
 }
 
 #[async_trait]

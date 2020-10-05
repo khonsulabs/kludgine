@@ -138,6 +138,10 @@ impl<T> RequiresInitialization<T> {
         assert!(self.0.is_none());
         self.0 = Some(value);
     }
+
+    pub fn unwrap(self) -> T {
+        self.0.unwrap()
+    }
 }
 
 impl<T> Default for RequiresInitialization<T> {

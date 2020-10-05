@@ -1,11 +1,13 @@
 use crate::{
+    event::MouseButton,
     math::{Angle, Point, Rect, Scale, Scaled},
     runtime::Runtime,
     scene::SceneTarget,
     shape::Shape,
     sprite::{Sprite, SpriteRotation, SpriteSource},
     ui::{Component, Context, InteractiveComponent, Layout, StyledContext},
-    KludgineResult,
+    window::EventStatus,
+    KludgineResult, RequiresInitialization,
 };
 use async_channel::Sender;
 use async_trait::async_trait;
@@ -14,17 +16,50 @@ use legion::{systems::CommandBuffer, Entity};
 use sorted_vec::SortedVec;
 use std::{
     cmp::Ordering,
+    collections::HashSet,
     fmt::Debug,
     sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
 
+pub enum UIEvent<Unit, Command> {
+    // TODO we don't have a mouse move event structure, just hover() and unhover()
+    // MouseMove {
+    //     location: Point<f32, Unit>,
+    // }
+    MouseDown {
+        location: Point<f32, Unit>,
+        button: MouseButton,
+    },
+    MouseDrag {
+        location: Option<Point<f32, Unit>>,
+        button: MouseButton,
+    },
+    MouseUp {
+        location: Option<Point<f32, Unit>>,
+        button: MouseButton,
+    },
+    Command(Command),
+}
+
 /// The Canvas component interacts with a Legion world through the
 /// `render_drawable` and `render` systems. Schedule the render system
 /// after the `render_drawable` system.
-#[derive(Default, Debug)]
-pub struct Canvas<Unit> {
+#[derive(Debug)]
+pub struct Canvas<Unit, Command> {
+    systems_handle: RequiresInitialization<SystemsHandle<Unit, Command>>,
+    last_camera: CameraState<Unit>,
     current_frame: SortedVec<RenderedDrawable<Unit>>,
+}
+
+impl<Unit, Command> Default for Canvas<Unit, Command> {
+    fn default() -> Self {
+        Self {
+            systems_handle: Default::default(),
+            last_camera: Default::default(),
+            current_frame: Default::default(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -49,9 +84,10 @@ impl<Unit> CanvasFrame<Unit> {
 }
 
 #[async_trait]
-impl<Unit> Component for Canvas<Unit>
+impl<Unit, Command> Component for Canvas<Unit, Command>
 where
-    Unit: Clone + Send + Sync,
+    Unit: Clone + Send + Sync + Debug,
+    Command: Send + Sync,
 {
     async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         let center = layout.inner_bounds().center();
@@ -91,15 +127,72 @@ where
 
         Ok(())
     }
+
+    async fn mouse_down(
+        &mut self,
+        context: &mut Context,
+        window_position: Point<f32, Scaled>,
+        button: MouseButton,
+    ) -> KludgineResult<EventStatus> {
+        let location = (window_position
+            - context.last_layout().await.inner_bounds().size.to_vector() / 2.)
+            / self.last_camera.scale
+            + self.last_camera.look_at.to_vector();
+        let _ = self
+            .systems_handle
+            .sender
+            .send(UIEvent::MouseDown { location, button })
+            .await;
+        Ok(EventStatus::Processed)
+    }
+
+    async fn mouse_up(
+        &mut self,
+        context: &mut Context,
+        window_position: Option<Point<f32, Scaled>>,
+        button: MouseButton,
+    ) -> KludgineResult<()> {
+        let last_bounds = context.last_layout().await.inner_bounds();
+        let location = window_position.map(|window_position| {
+            (window_position - last_bounds.size.to_vector() / 2.) / self.last_camera.scale
+                + self.last_camera.look_at.to_vector()
+        });
+        let _ = self
+            .systems_handle
+            .sender
+            .send(UIEvent::MouseUp { location, button })
+            .await;
+        Ok(())
+    }
+
+    async fn mouse_drag(
+        &mut self,
+        context: &mut Context,
+        window_position: Option<Point<f32, Scaled>>,
+        button: MouseButton,
+    ) -> KludgineResult<()> {
+        let last_bounds = context.last_layout().await.inner_bounds();
+        let location = window_position.map(|window_position| {
+            (window_position - last_bounds.size.to_vector() / 2.) / self.last_camera.scale
+                + self.last_camera.look_at.to_vector()
+        });
+        let _ = self
+            .systems_handle
+            .sender
+            .send(UIEvent::MouseDrag { location, button })
+            .await;
+        Ok(())
+    }
 }
 
 #[async_trait]
-impl<Unit> InteractiveComponent for Canvas<Unit>
+impl<Unit, Command> InteractiveComponent for Canvas<Unit, Command>
 where
     Unit: Clone + Send + Sync + Debug + 'static,
+    Command: Clone + Debug + Send + Sync + 'static,
 {
     type Message = ();
-    type Command = CanvasCommand<Unit>;
+    type Command = CanvasCommand<Unit, Command>;
     type Event = ();
 
     async fn receive_command(
@@ -108,10 +201,14 @@ where
         command: Self::Command,
     ) -> KludgineResult<()> {
         match command {
-            CanvasCommand::Render(new_frame) => {
+            CanvasCommand::Render(new_frame, new_camera) => {
                 self.current_frame = new_frame;
+                self.last_camera = new_camera;
 
                 context.set_needs_redraw().await;
+            }
+            CanvasCommand::ReceiveSystemsHandle(handle) => {
+                self.systems_handle.initialize_with(handle);
             }
         }
         Ok(())
@@ -119,8 +216,9 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub enum CanvasCommand<Unit> {
-    Render(SortedVec<RenderedDrawable<Unit>>),
+pub enum CanvasCommand<Unit, Command> {
+    ReceiveSystemsHandle(SystemsHandle<Unit, Command>),
+    Render(SortedVec<RenderedDrawable<Unit>>, CameraState<Unit>),
 }
 
 #[derive(Clone, Debug)]
@@ -340,16 +438,22 @@ fn render_batch<Unit: Clone + Sized + Send + Sync + 'static>(
 
 /// requests the canvas to redraw with all RenderedDrawables
 #[legion::system]
-fn render<Unit: Clone + Debug + Send + Sync + 'static>(
-    #[resource] canvas: &crate::ui::Entity<Canvas<Unit>>,
+fn render<
+    Unit: Clone + Debug + Send + Sync + 'static,
+    Command: Clone + Debug + Send + Sync + 'static,
+>(
+    #[resource] canvas: &crate::ui::Entity<Canvas<Unit, Command>>,
     #[resource] frame: &CanvasFrame<Unit>,
+    #[resource] camera: &CameraState<Unit>,
 ) {
     let _ = Runtime::block_on(async move {
         let new_frame = {
             let mut drawables = frame.drawables.lock().unwrap();
             std::mem::take(&mut *drawables)
         };
-        canvas.send(CanvasCommand::Render(new_frame)).await
+        canvas
+            .send(CanvasCommand::Render(new_frame, camera.clone()))
+            .await
     });
 }
 
@@ -377,10 +481,11 @@ impl SystemBuilderExt for legion::systems::Builder {
             .add_system(render_shape_system::<T::Unit>())
             .add_system(render_batch_system::<T::Unit>())
             .flush()
-            .add_system(render_system::<T::Unit>())
+            .add_system(render_system::<T::Unit, T::Command>())
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct CameraState<Unit> {
     pub look_at: Point<f32, Unit>,
     pub scale: Scale<f32, Unit, Scaled>,
@@ -397,21 +502,36 @@ impl<Unit> Default for CameraState<Unit> {
 
 pub struct CameraFocus;
 
-#[derive(Debug)]
-pub struct SystemsHandle<Command> {
+#[derive(Debug, Clone)]
+pub struct SystemsHandle<Unit, Command> {
     shutdown: Arc<AtomicCell<bool>>,
-    pub sender: Sender<Command>,
+    sender: Sender<UIEvent<Unit, Command>>,
 }
 
-impl<Command> Drop for SystemsHandle<Command> {
+impl<Unit, Command> SystemsHandle<Unit, Command> {
+    pub async fn send(&self, command: Command) -> Result<(), async_channel::SendError<Command>> {
+        match self.sender.send(UIEvent::Command(command)).await {
+            Ok(_) => Ok(()),
+            Err(async_channel::SendError(UIEvent::Command(command))) => {
+                Err(async_channel::SendError(command))
+            }
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl<Unit, Command> Drop for SystemsHandle<Unit, Command> {
     fn drop(&mut self) {
         self.shutdown.store(true);
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+pub struct MousePosition<Unit>(pub Point<f32, Unit>);
+
 pub trait LegionSystemsThread: Sized {
     type Unit: Send + Sync + Clone + Debug + 'static;
-    type Command: Send + 'static;
+    type Command: Clone + Debug + Send + Sync + 'static;
 
     fn initialize(resources: &mut legion::Resources) -> anyhow::Result<Self>;
     fn command_received(
@@ -421,35 +541,65 @@ pub trait LegionSystemsThread: Sized {
     ) -> anyhow::Result<()>;
     fn tick(&mut self, resources: &mut legion::Resources) -> anyhow::Result<()>;
 
-    fn spawn(
-        canvas: crate::ui::Entity<Canvas<Self::Unit>>,
+    fn spawn<F: FnOnce() -> legion::Resources + Send + Sync + 'static>(
+        canvas: crate::ui::Entity<Canvas<Self::Unit, Self::Command>>,
         scene: &SceneTarget,
         tick_rate: Duration,
-    ) -> SystemsHandle<Self::Command> {
+        resource_initializer: F,
+    ) -> SystemsHandle<Self::Unit, Self::Command> {
         let (sender, receiver) = async_channel::unbounded();
         let shutdown = Arc::new(AtomicCell::new(false));
         let handle = SystemsHandle {
             shutdown: shutdown.clone(),
             sender,
         };
+        let handle_for_canvas = handle.clone();
+        let canvas_for_task = canvas.clone();
+        Runtime::spawn(async move {
+            let _ = canvas_for_task
+                .send(CanvasCommand::ReceiveSystemsHandle(handle_for_canvas))
+                .await;
+        })
+        .detach();
         let scene = scene.scene_handle();
 
         std::thread::spawn(move || {
             let mut last_tick_start = None;
-            let mut resources = legion::Resources::default();
+            let mut resources = resource_initializer();
             resources.insert(canvas);
             resources.insert(CanvasFrame::<Self::Unit>::default());
             resources.insert(CameraState::<Self::Unit>::default());
             let mut systems_thread = Self::initialize(&mut resources).unwrap();
+            resources.insert(HashSet::<MouseButton>::new());
+            resources.insert(Option::<MousePosition<Self::Unit>>::None);
             loop {
                 if shutdown.load() {
                     break;
                 }
 
-                while let Ok(command) = receiver.try_recv() {
-                    systems_thread
-                        .command_received(command, &mut resources)
-                        .unwrap();
+                while let Ok(event) = receiver.try_recv() {
+                    match event {
+                        UIEvent::Command(command) => systems_thread
+                            .command_received(command, &mut resources)
+                            .unwrap(),
+                        UIEvent::MouseDown { location, button } => {
+                            resources
+                                .get_mut::<HashSet<MouseButton>>()
+                                .unwrap()
+                                .insert(button);
+                            resources.insert(Some(MousePosition::<Self::Unit>(location)));
+                        }
+                        UIEvent::MouseDrag { location, .. } => {
+                            resources.insert(location.map(MousePosition::<Self::Unit>));
+                        }
+                        UIEvent::MouseUp { location, button } => {
+                            resources
+                                .get_mut::<HashSet<MouseButton>>()
+                                .unwrap()
+                                .remove(&button);
+                            resources.insert(location.map(MousePosition::<Self::Unit>));
+                        }
+                    }
                 }
 
                 let tick_start = Instant::now();

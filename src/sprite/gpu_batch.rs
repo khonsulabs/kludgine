@@ -42,7 +42,7 @@ impl GpuBatch {
         match &source.location {
             SpriteSourceLocation::Rect(location) => self.add_box(
                 location.to_box2d(),
-                sprite.render_at.to_box2d(),
+                sprite.render_at.to_box2d().round(),
                 sprite.rotation,
                 white_transparent,
             ),
@@ -59,7 +59,7 @@ impl GpuBatch {
                     let destination = Rect::new(Point::new(x, y), Size::new(width, height));
                     self.add_box(
                         location.source.to_box2d(),
-                        destination.to_box2d(),
+                        destination.to_box2d().round(),
                         sprite.rotation,
                         white_transparent,
                     );
