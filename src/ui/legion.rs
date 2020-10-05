@@ -94,7 +94,7 @@ where
         for rendered in self.current_frame.iter() {
             match &rendered.drawable {
                 Drawable::Sprite(sprite) => {
-                    let source_size = sprite
+                    let sprite_size = sprite
                         .location()
                         .await
                         .size()
@@ -102,16 +102,14 @@ where
                         .cast::<f32>()
                         * rendered.scale;
 
+                    let render_location = rendered.center - sprite_size / 2.;
                     sprite
                         .render_within(
                             context.scene(),
-                            Rect::new(
-                                center + rendered.center.to_vector() - source_size / 2.,
-                                source_size,
-                            ),
+                            Rect::new(center + render_location.to_vector(), sprite_size),
                             rendered
                                 .rotation
-                                .map(|rotation| SpriteRotation::around(rotation, rendered.center))
+                                .map(|rotation| SpriteRotation::around(rotation, render_location))
                                 .unwrap_or_default(),
                         )
                         .await;
