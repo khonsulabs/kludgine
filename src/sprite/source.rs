@@ -5,6 +5,7 @@ use crate::{
     texture::Texture,
     Handle,
 };
+use euclid::Box2D; // TODO Expose this in crate::math
 #[derive(Debug, Clone)]
 pub struct SpriteSource {
     pub(crate) handle: Handle<SpriteSourceData>,
@@ -132,6 +133,16 @@ impl SpriteSource {
         self.render_with_alpha(scene, bounds, rotation, 1.).await
     }
 
+    pub async fn render_within_box(
+        &self,
+        scene: &SceneTarget,
+        bounds: Box2D<f32, Scaled>,
+        rotation: SpriteRotation<Scaled>,
+    ) {
+        self.render_with_alpha_in_box(scene, bounds, rotation, 1.)
+            .await
+    }
+
     pub async fn render_at_with_alpha(
         &self,
         scene: &SceneTarget,
@@ -156,9 +167,21 @@ impl SpriteSource {
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
     ) {
+        self.render_with_alpha_in_box(scene, bounds.to_box2d(), rotation, alpha)
+            .await
+    }
+
+    pub async fn render_with_alpha_in_box(
+        &self,
+        scene: &SceneTarget,
+        bounds: Box2D<f32, Scaled>,
+        rotation: SpriteRotation<Scaled>,
+        alpha: f32,
+    ) {
         let effective_scale = scene.effective_scale_factor().await;
-        let destination =
-            Rect::new(scene.user_to_device_point(bounds.origin), bounds.size) * effective_scale;
+        let min = scene.user_to_device_point(bounds.min);
+        let max = scene.user_to_device_point(bounds.max);
+        let destination = Box2D::new(min, max) * effective_scale;
         scene
             .push_element(Element::Sprite(RenderedSprite::new(
                 destination,

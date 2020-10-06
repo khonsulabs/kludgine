@@ -5,6 +5,7 @@ use crate::{
     scene::SceneTarget,
     shape::Shape,
     sprite::{Sprite, SpriteRotation, SpriteSource},
+    tilemap::{TileMap, TileProvider},
     ui::{Component, Context, InteractiveComponent, Layout, StyledContext},
     window::EventStatus,
     KludgineResult, RequiresInitialization,
@@ -102,7 +103,7 @@ where
                         .cast::<f32>()
                         * rendered.scale;
 
-                    let render_location = rendered.center - sprite_size / 2.;
+                    let render_location = rendered.center * rendered.scale - sprite_size / 2.;
                     sprite
                         .render_within(
                             context.scene(),
@@ -117,8 +118,21 @@ where
                 Drawable::Shape(shape) => {
                     let shape = shape.clone() * rendered.scale;
                     shape
-                        .render_at(center + rendered.center.to_vector(), context.scene())
+                        .render_at(
+                            center + rendered.center.to_vector() * rendered.scale,
+                            context.scene(),
+                        )
                         .await;
+                }
+                Drawable::TileMap(tilemap) => {
+                    tilemap
+                        .tilemap
+                        .draw_scaled(
+                            context.scene(),
+                            center / rendered.scale + rendered.center.to_vector(),
+                            rendered.scale,
+                        )
+                        .await?;
                 }
             }
         }
@@ -225,7 +239,7 @@ pub struct RenderedDrawable<Unit> {
     sorting_id: u64,
     render_id: usize,
     drawable: Drawable<Unit>,
-    center: Point<f32, Scaled>,
+    center: Point<f32, Unit>,
     rotation: Option<Angle>,
     scale: Scale<f32, Unit, Scaled>,
     z: i32,
@@ -233,6 +247,7 @@ pub struct RenderedDrawable<Unit> {
 
 #[derive(Ord, PartialOrd, Eq, PartialEq, Debug, Copy, Clone)]
 enum DrawableKind {
+    TileMap,
     Shape,
     Sprite,
 }
@@ -257,7 +272,7 @@ impl<Unit> RenderedDrawable<Unit> {
         self
     }
 
-    pub fn with_center(mut self, center: Point<f32, Scaled>) -> Self {
+    pub fn with_center(mut self, center: Point<f32, Unit>) -> Self {
         self.center = center;
         self
     }
@@ -312,10 +327,49 @@ impl<Unit> PartialEq for RenderedDrawable<Unit> {
 
 impl<Unit> Eq for RenderedDrawable<Unit> {}
 
+#[async_trait]
+trait TypelessTileMap<Unit>: Send + Sync + Debug {
+    async fn draw_scaled(
+        &self,
+        scene: &SceneTarget,
+        location: Point<f32, Unit>,
+        scale: Scale<f32, Unit, Scaled>,
+    ) -> KludgineResult<()>;
+}
+
+#[derive(Clone, Debug)]
+pub struct LegionTileMap<Unit> {
+    tilemap: Arc<Box<dyn TypelessTileMap<Unit>>>,
+}
+
+#[async_trait]
+impl<P: TileProvider + Send + Sync + Debug, Unit: Send + 'static> TypelessTileMap<Unit>
+    for TileMap<P>
+{
+    async fn draw_scaled(
+        &self,
+        scene: &SceneTarget,
+        location: Point<f32, Unit>,
+        scale: Scale<f32, Unit, Scaled>,
+    ) -> KludgineResult<()> {
+        let scene = scene.set_camera(scene.zoom(), -location * scale);
+        self.draw_scaled(&scene, Point::default(), scale).await
+    }
+}
+
+impl<Unit: Send + 'static> LegionTileMap<Unit> {
+    pub fn new<P: TileProvider + Send + Sync + Debug + 'static>(tilemap: TileMap<P>) -> Self {
+        Self {
+            tilemap: Arc::new(Box::new(tilemap)),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum Drawable<Unit> {
     Sprite(SpriteSource),
     Shape(Shape<Unit>),
+    TileMap(LegionTileMap<Unit>),
 }
 
 impl<Unit> Drawable<Unit> {
@@ -328,6 +382,7 @@ impl<Unit> Drawable<Unit> {
             Drawable::Sprite(sprite) => Runtime::block_on(async {
                 (DrawableKind::Sprite, sprite.texture().await.id().await)
             }),
+            Drawable::TileMap(_) => (DrawableKind::TileMap, 0),
         }
     }
 }
@@ -371,7 +426,7 @@ fn render_sprite_source<Unit: Sized + Send + Sync + 'static>(
     #[resource] camera: &CameraState<Unit>,
 ) {
     let mut drawable = RenderedDrawable::new(Drawable::Sprite(sprite.clone()))
-        .with_center((*location - camera.look_at.to_vector()) * camera.scale)
+        .with_center(*location - camera.look_at.to_vector())
         .with_z(z.cloned().unwrap_or_default().0);
     if let Some(rotation) = rotation {
         drawable = drawable.with_rotation(*rotation);
@@ -381,6 +436,29 @@ fn render_sprite_source<Unit: Sized + Send + Sync + 'static>(
     } else {
         drawable = drawable.with_scale(camera.scale);
     }
+    frame.insert(drawable);
+}
+
+/// queues all entities that have a Drawable component for rendering
+#[legion::system(for_each)]
+fn render_tilemap<Unit: Clone + Sized + Send + Sync + 'static>(
+    tilemap: &LegionTileMap<Unit>,
+    location: &Point<f32, Unit>,
+    scaling: Option<&Scaling<Unit>>,
+    z: Option<&ZIndex>,
+    #[resource] frame: &CanvasFrame<Unit>,
+    #[resource] camera: &CameraState<Unit>,
+) {
+    let mut drawable = RenderedDrawable::new(Drawable::TileMap(tilemap.clone()))
+        .with_center(*location - camera.look_at.to_vector())
+        .with_z(z.cloned().unwrap_or_default().0);
+
+    if let Some(scaling) = scaling {
+        drawable = drawable.with_scale(Scale::new(scaling.0.get() * camera.scale.get()));
+    } else {
+        drawable = drawable.with_scale(camera.scale);
+    }
+
     frame.insert(drawable);
 }
 
@@ -396,7 +474,7 @@ fn render_shape<Unit: Clone + Sized + Send + Sync + 'static>(
     #[resource] camera: &CameraState<Unit>,
 ) {
     let mut drawable = RenderedDrawable::new(Drawable::Shape(shape.clone()))
-        .with_center((*location - camera.look_at.to_vector()) * camera.scale)
+        .with_center(*location - camera.look_at.to_vector())
         .with_z(z.cloned().unwrap_or_default().0);
 
     if let Some(scaling) = scaling {
@@ -425,10 +503,13 @@ fn render_batch<Unit: Clone + Sized + Send + Sync + 'static>(
     for drawable in batch.0.iter() {
         match drawable {
             Drawable::Sprite(sprite) => {
-                render_sprite_source::<Unit>(sprite, location, rotation, scaling, z, frame, camera)
+                render_sprite_source(sprite, location, rotation, scaling, z, frame, camera)
             }
             Drawable::Shape(shape) => {
-                render_shape::<Unit>(shape, location, rotation, scaling, z, frame, camera)
+                render_shape(shape, location, rotation, scaling, z, frame, camera)
+            }
+            Drawable::TileMap(tilemap) => {
+                render_tilemap(tilemap, location, scaling, z, frame, camera)
             }
         }
     }
@@ -477,6 +558,7 @@ impl SystemBuilderExt for legion::systems::Builder {
             .flush()
             .add_system(render_sprite_source_system::<T::Unit>())
             .add_system(render_shape_system::<T::Unit>())
+            .add_system(render_tilemap_system::<T::Unit>())
             .add_system(render_batch_system::<T::Unit>())
             .flush()
             .add_system(render_system::<T::Unit, T::Command>())

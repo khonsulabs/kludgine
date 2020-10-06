@@ -42,24 +42,24 @@ impl GpuBatch {
         match &source.location {
             SpriteSourceLocation::Rect(location) => self.add_box(
                 location.to_box2d(),
-                sprite.render_at.to_box2d().round(),
+                sprite.render_at,
                 sprite.rotation,
                 white_transparent,
             ),
             SpriteSourceLocation::Joined(locations) => {
                 let source_bounds = source.location.bounds();
-                let scale_x = sprite.render_at.size.width as f32 / source_bounds.size.width as f32;
-                let scale_y =
-                    sprite.render_at.size.height as f32 / source_bounds.size.height as f32;
+                let scale_x = sprite.render_at.width() as f32 / source_bounds.size.width as f32;
+                let scale_y = sprite.render_at.height() as f32 / source_bounds.size.height as f32;
                 for location in locations {
-                    let x = sprite.render_at.origin.x + location.destination.x as f32 * scale_x;
-                    let y = sprite.render_at.origin.y + location.destination.y as f32 * scale_y;
-                    let width = sprite.render_at.size.width * scale_x;
-                    let height = sprite.render_at.size.height * scale_y;
+                    // TODO this should be easier.
+                    let x = sprite.render_at.min.x + location.destination.x as f32 * scale_x;
+                    let y = sprite.render_at.min.y + location.destination.y as f32 * scale_y;
+                    let width = sprite.render_at.width() * scale_x;
+                    let height = sprite.render_at.height() * scale_y;
                     let destination = Rect::new(Point::new(x, y), Size::new(width, height));
                     self.add_box(
                         location.source.to_box2d(),
-                        destination.to_box2d().round(),
+                        destination.to_box2d(),
                         sprite.rotation,
                         white_transparent,
                     );

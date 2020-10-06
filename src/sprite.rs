@@ -3,6 +3,7 @@ use crate::{
     texture::Texture,
     Handle, KludgineError, KludgineResult,
 };
+use euclid::Box2D;
 mod batch;
 mod collection;
 mod gpu_batch;
@@ -500,7 +501,7 @@ pub(crate) struct RenderedSprite {
 
 impl RenderedSprite {
     pub fn new(
-        render_at: Rect<f32, Raw>,
+        render_at: Box2D<f32, Raw>,
         rotation: SpriteRotation<Raw>,
         alpha: f32,
         source: SpriteSource,
@@ -517,7 +518,7 @@ impl RenderedSprite {
 }
 
 pub(crate) struct RenderedSpriteData {
-    pub render_at: Rect<f32, Raw>,
+    pub render_at: Box2D<f32, Raw>,
     pub rotation: SpriteRotation<Raw>,
     pub alpha: f32,
     pub source: SpriteSource,
