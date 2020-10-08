@@ -1,7 +1,7 @@
 use crate::{math::Pixels, Handle};
 use crossbeam::atomic::AtomicCell;
+use easygpu::core::*;
 use lazy_static::lazy_static;
-use rgx::core::*;
 use rusttype::{gpu_cache, Scale};
 
 lazy_static! {
@@ -128,5 +128,5 @@ pub(crate) struct LoadedFontData {
     pub font: Font,
     pub cache: gpu_cache::Cache<'static>,
     pub(crate) binding: Option<BindingGroup>,
-    pub(crate) texture: Option<rgx::core::Texture>,
+    pub(crate) texture: Option<easygpu::core::Texture>,
 }

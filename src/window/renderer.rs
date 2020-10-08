@@ -1,17 +1,18 @@
 use crate::{
-    math::{Point, Unknown},
+    math::{Point, Size, Unknown},
     runtime::Runtime,
     sprite,
     window::frame::{FontUpdate, Frame, FrameCommand},
     KludgineResult,
 };
 use crossbeam::atomic::AtomicCell;
-use euclid::Box2D;
-use rgx::{
+use easygpu::{
     color::{Rgba, Rgba8},
-    core,
+    core::{self},
+    transform::{ScreenSpace, ScreenTransformation},
 };
-use rgx_lyon::LyonPipeline;
+use easygpu_lyon::LyonPipeline;
+use euclid::Box2D;
 use std::sync::Arc;
 
 pub(crate) struct FrameSynchronizer {
@@ -65,11 +66,9 @@ impl FrameRenderer {
         renderer: core::Renderer,
         frame_synchronizer: FrameSynchronizer,
         keep_running: Arc<AtomicCell<bool>>,
-        initial_width: u32,
-        initial_height: u32,
+        initial_size: Size<u32, ScreenSpace>,
     ) -> Self {
-        let swap_chain =
-            renderer.swap_chain(initial_width, initial_height, core::PresentMode::Vsync);
+        let swap_chain = renderer.swap_chain(initial_size, core::PresentMode::Vsync);
         let shape_pipeline = renderer.pipeline(core::Blending::default());
         let sprite_pipeline = renderer.pipeline(core::Blending::default());
         Self {
@@ -81,21 +80,16 @@ impl FrameRenderer {
             shape_pipeline,
         }
     }
+
     pub fn run(
         renderer: core::Renderer,
         keep_running: Arc<AtomicCell<bool>>,
-        initial_width: u32,
-        initial_height: u32,
+        initial_size: Size<u32, ScreenSpace>,
     ) -> FrameSynchronizer {
         let (client_synchronizer, renderer_synchronizer) = FrameSynchronizer::pair();
 
-        let frame_renderer = FrameRenderer::new(
-            renderer,
-            renderer_synchronizer,
-            keep_running,
-            initial_width,
-            initial_height,
-        );
+        let frame_renderer =
+            FrameRenderer::new(renderer, renderer_synchronizer, keep_running, initial_size);
         Runtime::spawn(frame_renderer.render_loop()).detach();
 
         client_synchronizer
@@ -118,20 +112,15 @@ impl FrameRenderer {
     }
 
     async fn render_frame(&mut self, engine_frame: &mut Frame) -> KludgineResult<()> {
-        let (w, h) = {
-            (
-                engine_frame.size.width as u32,
-                engine_frame.size.height as u32,
-            )
-        };
-        if w == 0 || h == 0 {
+        let frame_size = engine_frame.size.cast::<u32>();
+        if frame_size.width == 0 || frame_size.height == 0 {
             return Ok(());
         }
 
         for FontUpdate { font, rect, data } in engine_frame.pending_font_updates.iter() {
             let mut loaded_font = font.handle.write().await;
             if loaded_font.texture.is_none() {
-                let texture = self.renderer.texture(512, 512); // TODO font texture should be configurable
+                let texture = self.renderer.texture(Size::new(512, 512)); // TODO font texture should be configurable
                 let sampler = self
                     .renderer
                     .sampler(core::Filter::Nearest, core::Filter::Nearest);
@@ -156,24 +145,33 @@ impl FrameRenderer {
                 pixels,
                 rect.width(),
                 rect.height(),
-                rgx::rect::Rect::new(
-                    rect.min.x as i32,
-                    rect.min.y as i32,
-                    rect.max.x as i32,
-                    rect.max.y as i32,
-                ),
+                Box2D::new(
+                    Point::new(rect.min.x, rect.min.y),
+                    Point::new(rect.max.x, rect.max.y),
+                )
+                .to_rect()
+                .cast::<i32>(),
             )]);
         }
         engine_frame.pending_font_updates.clear();
 
-        if self.swap_chain.width != w || self.swap_chain.height != h {
-            self.swap_chain = self.renderer.swap_chain(w, h, core::PresentMode::Vsync);
+        if self.swap_chain.size != frame_size {
+            self.swap_chain = self
+                .renderer
+                .swap_chain(frame_size, core::PresentMode::Vsync);
         }
 
         let output = self.swap_chain.next();
         let mut frame = self.renderer.frame();
 
-        let ortho = ortho(output.width, output.height, Default::default());
+        let ortho = ScreenTransformation::ortho(
+            0.,
+            output.size.width as f32,
+            0.,
+            output.size.height as f32,
+            -1.,
+            1.,
+        );
         self.renderer
             .update_pipeline(&self.shape_pipeline, ortho, &mut frame);
 
@@ -197,7 +195,10 @@ impl FrameRenderer {
                                 let pixels = texture.image.pixels().cloned().collect::<Vec<_>>();
                                 let pixels = Rgba8::align(&pixels);
 
-                                (self.renderer.texture(w as u32, h as u32), pixels.to_owned())
+                                (
+                                    self.renderer.texture(Size::new(w, h).cast::<u32>()),
+                                    pixels.to_owned(),
+                                )
                             };
 
                             self.renderer
@@ -214,8 +215,10 @@ impl FrameRenderer {
                         let loaded_texture = batch.loaded_texture.handle.read().await;
                         let texture = loaded_texture.texture.handle.read().await;
 
-                        let mut gpu_batch =
-                            sprite::GpuBatch::new(texture.image.width(), texture.image.height());
+                        let mut gpu_batch = sprite::GpuBatch::new(Size::new(
+                            texture.image.width(),
+                            texture.image.height(),
+                        ));
                         for sprite_handle in batch.sprites.iter() {
                             gpu_batch.add_sprite(sprite_handle.clone()).await;
                         }
@@ -239,7 +242,7 @@ impl FrameRenderer {
                         let text_data = text.handle.read().await;
                         let loaded_font_data = loaded_font.handle.read().await;
                         if let Some(texture) = loaded_font_data.texture.as_ref() {
-                            let mut batch = sprite::GpuBatch::new(texture.w, texture.h);
+                            let mut batch = sprite::GpuBatch::new(texture.size);
                             for (uv_rect, screen_rect) in
                                 text_data.positioned_glyphs.iter().filter_map(|g| {
                                     loaded_font_data.cache.rect_for(0, g).ok().flatten()
@@ -298,20 +301,4 @@ impl FrameRenderer {
 
         Ok(())
     }
-}
-
-pub fn ortho(w: u32, h: u32, origin: rgx::kit::Origin) -> rgx::math::Matrix4<f32> {
-    let (bottom, top) = match origin {
-        rgx::kit::Origin::BottomLeft => (h as f32, 0.),
-        rgx::kit::Origin::TopLeft => (0., h as f32),
-    };
-    rgx::math::Ortho::<f32> {
-        left: 0.0,
-        right: w as f32,
-        bottom,
-        top,
-        near: -1.0,
-        far: 1.0,
-    }
-    .into()
 }

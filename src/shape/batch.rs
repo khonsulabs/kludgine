@@ -1,5 +1,5 @@
 use crate::{math::Raw, shape::Shape, KludgineResult};
-use rgx_lyon::ShapeBuilder;
+use easygpu_lyon::ShapeBuilder;
 
 #[derive(Default, Clone)]
 pub struct Batch {
@@ -11,7 +11,10 @@ impl Batch {
         self.shapes.push(shape)
     }
 
-    pub(crate) fn finish(self, renderer: &rgx::core::Renderer) -> KludgineResult<rgx_lyon::Shape> {
+    pub(crate) fn finish(
+        self,
+        renderer: &easygpu::core::Renderer,
+    ) -> KludgineResult<easygpu_lyon::Shape> {
         let mut builder = ShapeBuilder::default();
 
         for shape in self.shapes {

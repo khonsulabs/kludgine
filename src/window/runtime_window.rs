@@ -52,8 +52,7 @@ impl RuntimeWindow {
         let mut frame_synchronizer = FrameRenderer::run(
             renderer,
             keep_running.clone(),
-            window.inner_size().width,
-            window.inner_size().height,
+            Size::new(window.inner_size().width, window.inner_size().height),
         );
         let window_event_sender = event_sender.clone();
         Runtime::spawn(async move {

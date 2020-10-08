@@ -2,26 +2,24 @@ use crate::{
     math::{Point, PointExt, Raw, Rect, Size, Unknown},
     sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation, SpriteSourceLocation},
 };
-use euclid::Box2D;
-use rgx::{
+use easygpu::{
     color::Rgba8,
-    core,
-    math::{Vector2, Vector3},
+    core::{self},
+    transform::ScreenSpace,
 };
+use euclid::{Box2D, Vector2D, Vector3D};
 
 pub(crate) struct GpuBatch {
-    pub width: u32,
-    pub height: u32,
+    pub size: Size<u32, ScreenSpace>,
 
     items: Vec<Vertex>,
     indicies: Vec<u16>,
 }
 
 impl GpuBatch {
-    pub fn new(width: u32, height: u32) -> Self {
+    pub fn new(size: Size<u32, ScreenSpace>) -> Self {
         Self {
-            width,
-            height,
+            size,
             items: Default::default(),
             indicies: Default::default(),
         }
@@ -68,10 +66,10 @@ impl GpuBatch {
 
     pub fn vertex(&self, src: Point<u32, Unknown>, dest: Point<f32, Raw>, color: Rgba8) -> Vertex {
         Vertex {
-            position: Vector3::new(dest.x, dest.y, 0.),
-            uv: Vector2::new(
-                src.x as f32 / self.width as f32,
-                src.y as f32 / self.height as f32,
+            position: Vector3D::new(dest.x, dest.y, 0.),
+            uv: Vector2D::new(
+                src.x as f32 / self.size.width as f32,
+                src.y as f32 / self.size.height as f32,
             ),
             color,
         }
@@ -158,8 +156,8 @@ pub(crate) struct BatchBuffers {
     index_count: u32,
 }
 
-impl rgx::core::Draw for BatchBuffers {
-    fn draw(&self, binding: &rgx::core::BindingGroup, pass: &mut rgx::core::Pass) {
+impl easygpu::core::Draw for BatchBuffers {
+    fn draw(&self, binding: &easygpu::core::BindingGroup, pass: &mut easygpu::core::Pass) {
         pass.set_binding(binding, &[]);
         pass.set_vertex_buffer(&self.vertices);
         pass.set_index_buffer(&self.indices);

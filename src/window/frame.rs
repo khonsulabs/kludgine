@@ -1,3 +1,5 @@
+use easygpu::transform::ScreenSpace;
+
 use crate::{
     math::Size,
     scene::{Element, Scene},
@@ -11,7 +13,7 @@ use std::time::Instant;
 pub(crate) struct Frame {
     pub started_at: Option<Instant>,
     pub updated_at: Option<Instant>,
-    pub size: Size,
+    pub size: Size<f32, ScreenSpace>,
     pub commands: Vec<FrameCommand>,
     pub(crate) textures: HashMap<u64, LoadedTexture>,
     pub(crate) fonts: HashMap<u64, LoadedFont>,
