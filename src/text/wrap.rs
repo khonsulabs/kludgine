@@ -1,6 +1,6 @@
 use crate::{
     math::{max_f, min_f, Pixels, PointExt, Points},
-    scene::SceneTarget,
+    scene::Scene,
     style::Alignment,
     text::{PreparedLine, PreparedSpan, PreparedText, Text},
     KludgineResult,
@@ -14,7 +14,7 @@ pub(crate) use self::{measured::*, tokenizer::*};
 
 pub struct TextWrapper {
     options: TextWrap,
-    scene: SceneTarget,
+    scene: Scene,
     prepared_text: PreparedText,
 }
 
@@ -125,7 +125,7 @@ impl TextWrapState {
 impl TextWrapper {
     pub async fn wrap(
         text: &Text,
-        scene: &SceneTarget,
+        scene: &Scene,
         options: TextWrap,
     ) -> KludgineResult<PreparedText> {
         TextWrapper {
@@ -138,7 +138,7 @@ impl TextWrapper {
     }
 
     async fn wrap_text(mut self, text: &Text) -> KludgineResult<PreparedText> {
-        let effective_scale_factor = self.scene.effective_scale_factor().await;
+        let effective_scale_factor = self.scene.scale_factor().await;
         let width = self.options.max_width();
 
         let measured = MeasuredText::new(text, &self.scene).await?;
@@ -239,18 +239,17 @@ mod tests {
             let mut scene = Scene::new(Box::new(Minimal::default()));
             scene.set_scale_factor(ScreenScale::new(scale)).await;
             scene.register_bundled_fonts().await;
-            let scene_target = SceneTarget::Scene(scene);
             let wrap = Text::new(vec![Span::new(
                 "This line should wrap",
                 Style {
                     font_size: Some(Points::new(12.0)),
                     ..Default::default()
                 }
-                .effective_style(&scene_target)
+                .effective_style(&scene)
                 .await,
             )])
             .wrap(
-                &scene_target,
+                &scene,
                 TextWrap::MultiLine {
                     width: Points::new(80.0),
                     height: Points::new(f32::MAX),
@@ -279,20 +278,19 @@ mod tests {
     async fn wrap_one_word_different_span() {
         let mut scene = Scene::new(Box::new(Minimal::default()));
         scene.register_bundled_fonts().await;
-        let scene_target = SceneTarget::Scene(scene);
 
         let first_style = Style {
             font_size: Some(Points::new(12.0)),
             ..Default::default()
         }
-        .effective_style(&scene_target)
+        .effective_style(&scene)
         .await;
 
         let second_style = Style {
             font_size: Some(Points::new(10.0)),
             ..Default::default()
         }
-        .effective_style(&scene_target)
+        .effective_style(&scene)
         .await;
 
         let wrap = Text::new(vec![
@@ -300,7 +298,7 @@ mod tests {
             Span::new("wrap", second_style),
         ])
         .wrap(
-            &scene_target,
+            &scene,
             TextWrap::MultiLine {
                 width: Points::new(80.0),
                 height: Points::new(f32::MAX),

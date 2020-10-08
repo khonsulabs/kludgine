@@ -76,7 +76,7 @@ impl Component for Label {
             context.effective_style().alignment,
         );
         let wrapped_size = text.wrap(context.scene(), wrapping).await?.size().await;
-        Ok(wrapped_size / context.scene().effective_scale_factor().await)
+        Ok(wrapped_size / context.scene().scale_factor().await)
     }
 
     async fn clicked(

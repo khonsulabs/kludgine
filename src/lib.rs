@@ -97,7 +97,7 @@ pub mod prelude {
             ScreenScale, Size, SizeExt, Surround, Unknown, Vector,
         },
         runtime::Runtime,
-        scene::{Scene, SceneTarget},
+        scene::Scene,
         shape::*,
         sprite::{
             AnimationMode, Sprite, SpriteAnimation, SpriteAnimations, SpriteCollection,

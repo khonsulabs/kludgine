@@ -34,7 +34,7 @@ use crate::{
     event::{ElementState, MouseButton},
     math::{Point, Scaled},
     runtime::Runtime,
-    scene::SceneTarget,
+    scene::Scene,
     style::StyleSheet,
     window::EventStatus,
     window::{Event, InputEvent, WindowEvent},
@@ -252,7 +252,7 @@ where
 {
     pub(crate) async fn new(
         root: C,
-        scene: SceneTarget,
+        scene: Scene,
         arena: HierarchicalArena,
         event_sender: Sender<WindowEvent>,
     ) -> KludgineResult<Self> {
@@ -286,7 +286,7 @@ where
         Ok(ui)
     }
 
-    pub async fn render(&mut self, scene: &SceneTarget) -> KludgineResult<()> {
+    pub async fn render(&mut self, scene: &Scene) -> KludgineResult<()> {
         let hovered_indicies = self.hovered_indicies().await;
         let layouts = LayoutEngine::layout(
             &self.arena,
@@ -331,11 +331,7 @@ where
         indicies
     }
 
-    pub async fn update(
-        &mut self,
-        scene: &SceneTarget,
-        target_fps: Option<u16>,
-    ) -> KludgineResult<()> {
+    pub async fn update(&mut self, scene: &Scene, target_fps: Option<u16>) -> KludgineResult<()> {
         // Loop twice, once to allow all the pending messages to be exhausted across all
         // nodes. Then after all messages have been processed, trigger the update method
         // for each node.
@@ -479,7 +475,7 @@ where
         self.ui_state.needs_render().await
     }
 
-    async fn initialize(&self, index: &impl Indexable, scene: SceneTarget) -> KludgineResult<()> {
+    async fn initialize(&self, index: &impl Indexable, scene: Scene) -> KludgineResult<()> {
         let index = index.index();
         let node = self.arena.get(&index).await.unwrap();
 

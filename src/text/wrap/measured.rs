@@ -1,5 +1,5 @@
 use crate::{
-    scene::SceneTarget,
+    scene::Scene,
     text::{ParserStatus, PreparedSpan, SpanGroup, Text, Token, Tokenizer},
     KludgineResult,
 };
@@ -94,7 +94,7 @@ impl TextMeasureState {
 }
 
 impl MeasuredText {
-    pub async fn new(text: &Text, scene: &SceneTarget) -> KludgineResult<Self> {
+    pub async fn new(text: &Text, scene: &Scene) -> KludgineResult<Self> {
         let mut measured = Self { groups: Vec::new() };
 
         measured.measure_text(text, scene).await?;
@@ -102,7 +102,7 @@ impl MeasuredText {
         Ok(measured)
     }
 
-    async fn measure_text(&mut self, text: &Text, scene: &SceneTarget) -> KludgineResult<()> {
+    async fn measure_text(&mut self, text: &Text, scene: &Scene) -> KludgineResult<()> {
         let mut state = TextMeasureState {
             current_group: None,
             status: ParserStatus::LineStart,

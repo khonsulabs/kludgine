@@ -1,6 +1,6 @@
 use crate::{
     math::{Point, PointExt, Raw, Rect, Size, Unknown},
-    sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation},
+    sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation, SpriteSourceLocation},
 };
 use euclid::Box2D;
 use rgx::{
@@ -8,8 +8,6 @@ use rgx::{
     core,
     math::{Vector2, Vector3},
 };
-
-use super::SpriteSourceLocation;
 
 pub(crate) struct GpuBatch {
     pub width: u32,

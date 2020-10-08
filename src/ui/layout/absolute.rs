@@ -340,7 +340,7 @@ mod tests {
     #[async_test]
     async fn layout_test() -> KludgineResult<()> {
         use crate::{
-            scene::{Scene, SceneTarget},
+            scene::Scene,
             style::StyleSheet,
             theme::Minimal,
             ui::{
@@ -440,13 +440,12 @@ mod tests {
 
         let scene = Scene::new(Box::new(Minimal::default()));
         scene.set_internal_size(Size::new(200., 200.)).await;
-        let scene_target = SceneTarget::Scene(scene);
         let (event_sender, _) = async_channel::unbounded();
         let engine = LayoutEngine::layout(
             &arena,
             &UIState::new(event_sender),
             root,
-            &scene_target,
+            &scene,
             HashSet::new(),
         )
         .await?;

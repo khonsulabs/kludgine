@@ -1,11 +1,11 @@
 use crate::{
-    scene::SceneTarget,
+    scene::Scene,
     ui::{Context, HierarchicalArena, Indexable, UIState},
 };
 
 pub struct SceneContext {
     base: Context,
-    scene: SceneTarget,
+    scene: Scene,
 }
 
 impl std::ops::Deref for SceneContext {
@@ -25,7 +25,7 @@ impl std::ops::DerefMut for SceneContext {
 impl SceneContext {
     pub(crate) fn new<I: Indexable>(
         index: I,
-        scene: SceneTarget,
+        scene: Scene,
         arena: HierarchicalArena,
         state: UIState,
     ) -> Self {
@@ -42,11 +42,11 @@ impl SceneContext {
         }
     }
 
-    pub fn scene(&self) -> &'_ SceneTarget {
+    pub fn scene(&self) -> &'_ Scene {
         &self.scene
     }
 
-    pub fn scene_mut(&mut self) -> &'_ mut SceneTarget {
+    pub fn scene_mut(&mut self) -> &'_ mut Scene {
         &mut self.scene
     }
 }

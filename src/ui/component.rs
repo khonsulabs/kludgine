@@ -1,7 +1,7 @@
 use crate::{
     event::{MouseButton, MouseScrollDelta, TouchPhase},
     math::{Point, Scaled, Size},
-    scene::SceneTarget,
+    scene::Scene,
     shape::{Fill, Shape},
     style::{Style, StyleSheet},
     ui::{
@@ -279,7 +279,7 @@ where
     C: InteractiveComponent + 'static,
 {
     component: C,
-    scene: SceneTarget,
+    scene: Scene,
     parent: Option<Index>,
     style_sheet: StyleSheet,
     bounds: AbsoluteBounds,

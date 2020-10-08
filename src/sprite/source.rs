@@ -1,6 +1,6 @@
 use crate::{
-    math::{Point, Rect, Scaled, Size},
-    scene::{Element, SceneTarget},
+    math::{Point, Raw, Rect, Scaled, Size},
+    scene::{Element, Scene},
     sprite::{RenderedSprite, SpriteRotation},
     texture::Texture,
     Handle,
@@ -116,7 +116,7 @@ impl SpriteSource {
 
     pub async fn render_at(
         &self,
-        scene: &SceneTarget,
+        scene: &Scene,
         location: Point<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
@@ -126,7 +126,7 @@ impl SpriteSource {
 
     pub async fn render_within(
         &self,
-        scene: &SceneTarget,
+        scene: &Scene,
         bounds: Rect<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
@@ -135,7 +135,7 @@ impl SpriteSource {
 
     pub async fn render_within_box(
         &self,
-        scene: &SceneTarget,
+        scene: &Scene,
         bounds: Box2D<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
@@ -145,7 +145,7 @@ impl SpriteSource {
 
     pub async fn render_at_with_alpha(
         &self,
-        scene: &SceneTarget,
+        scene: &Scene,
         location: Point<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
@@ -162,7 +162,7 @@ impl SpriteSource {
 
     pub async fn render_with_alpha(
         &self,
-        scene: &SceneTarget,
+        scene: &Scene,
         bounds: Rect<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
@@ -173,19 +173,32 @@ impl SpriteSource {
 
     pub async fn render_with_alpha_in_box(
         &self,
-        scene: &SceneTarget,
+        scene: &Scene,
         bounds: Box2D<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
     ) {
-        let effective_scale = scene.effective_scale_factor().await;
-        let min = scene.user_to_device_point(bounds.min);
-        let max = scene.user_to_device_point(bounds.max);
-        let destination = Box2D::new(min, max) * effective_scale;
+        let effective_scale = scene.scale_factor().await;
+        self.render_raw_with_alpha_in_box(
+            scene,
+            bounds * effective_scale,
+            rotation * effective_scale,
+            alpha,
+        )
+        .await
+    }
+
+    pub async fn render_raw_with_alpha_in_box(
+        &self,
+        scene: &Scene,
+        bounds: Box2D<f32, Raw>,
+        rotation: SpriteRotation<Raw>,
+        alpha: f32,
+    ) {
         scene
             .push_element(Element::Sprite(RenderedSprite::new(
-                destination,
-                rotation * effective_scale,
+                bounds,
+                rotation,
                 alpha,
                 self.clone(),
             )))

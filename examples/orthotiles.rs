@@ -45,7 +45,7 @@ impl Component for OrthoTiles {
         let mut animation = "Idle";
         if context
             .scene()
-            .pressed_keys()
+            .keys_pressed()
             .await
             .contains(&VirtualKeyCode::Right)
         {
@@ -59,7 +59,7 @@ impl Component for OrthoTiles {
                     .as_secs_f32();
         } else if context
             .scene()
-            .pressed_keys()
+            .keys_pressed()
             .await
             .contains(&VirtualKeyCode::Left)
         {
@@ -75,7 +75,7 @@ impl Component for OrthoTiles {
 
         if context
             .scene()
-            .pressed_keys()
+            .keys_pressed()
             .await
             .contains(&VirtualKeyCode::Up)
         {
@@ -88,7 +88,7 @@ impl Component for OrthoTiles {
                     .as_secs_f32();
         } else if context
             .scene()
-            .pressed_keys()
+            .keys_pressed()
             .await
             .contains(&VirtualKeyCode::Down)
         {
@@ -106,14 +106,18 @@ impl Component for OrthoTiles {
     }
 
     async fn render(&self, context: &mut StyledContext, _layout: &Layout) -> KludgineResult<()> {
-        let camera_scene = context.scene().set_camera(
-            self.zoom,
-            self.position - context.scene().size().await / 2.0 / self.zoom,
-        );
+        // TODO this is no longer functional. Zooming needs to be fixed, and then this should get cleaned up.
+        let center = context.scene().size().await.to_vector().to_point() / 2.0;
+        let camera_scene = context.scene().clone();
+        // let camera_scene = context.scene().set_camera(
+        //     self.zoom,
+        //     self.position - context.scene().size().await / 2.0 / self.zoom,
+        // );
         // The map is drawn at a static location of 0,0 (upper-left)
         // It will be offset scene.origin()
         let map = self.map.as_ref().unwrap();
-        map.draw(&camera_scene, Point::default()).await?;
+        map.draw_scaled(&camera_scene, -self.position, Scale::new(self.zoom))
+            .await?;
 
         // Draw the stickguy with the current frame of animation
         let stickguy = self.stickguy.as_ref().unwrap();
@@ -121,7 +125,7 @@ impl Component for OrthoTiles {
         sprite
             .render_at(
                 &camera_scene,
-                Point::new(self.position.x - 16.0, self.position.y - 16.0),
+                center - Point::new(16.0, 16.0).to_vector(),
                 SpriteRotation::default(),
             )
             .await;

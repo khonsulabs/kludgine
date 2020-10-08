@@ -1,6 +1,6 @@
 use crate::{
     math::{Scaled, Size},
-    scene::SceneTarget,
+    scene::Scene,
     style::EffectiveStyle,
     ui::{HierarchicalArena, Index, Indexable, SceneContext, UIState},
     KludgineError, KludgineResult,
@@ -29,7 +29,7 @@ impl std::ops::DerefMut for StyledContext {
 impl StyledContext {
     pub(crate) fn new<I: Indexable>(
         index: I,
-        scene: SceneTarget,
+        scene: Scene,
         effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
         arena: HierarchicalArena,
         ui_state: UIState,

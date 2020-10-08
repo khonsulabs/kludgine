@@ -1,6 +1,6 @@
 use crate::{
     math::Pixels,
-    scene::SceneTarget,
+    scene::Scene,
     style::EffectiveStyle,
     text::{font::Font, PreparedSpan, Text},
     KludgineResult,
@@ -102,7 +102,7 @@ impl Tokenizer {
     pub(crate) async fn prepare_spans(
         mut self,
         text: &Text,
-        scene: &SceneTarget,
+        scene: &Scene,
     ) -> KludgineResult<Vec<Token>> {
         for span in text.spans.iter() {
             let font = scene

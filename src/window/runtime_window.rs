@@ -2,7 +2,7 @@ use crate::{
     event::{ElementState, VirtualKeyCode},
     math::{Pixels, Point, ScreenScale, Size},
     runtime::Runtime,
-    scene::{Scene, SceneTarget},
+    scene::Scene,
     ui::{global_arena, NodeData, NodeDataWindowExt, UserInterface},
     window::{
         frame::Frame,
@@ -171,13 +171,8 @@ impl RuntimeWindow {
     {
         let mut scene = Scene::new(window.theme());
         let target_fps = window.target_fps();
-        let mut ui = UserInterface::new(
-            window,
-            SceneTarget::Scene(scene.clone()),
-            global_arena().clone(),
-            event_sender,
-        )
-        .await?;
+        let mut ui =
+            UserInterface::new(window, scene.clone(), global_arena().clone(), event_sender).await?;
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         loop {
@@ -236,11 +231,10 @@ impl RuntimeWindow {
             if scene.size().await.area() > 0.0 {
                 scene.start_frame().await;
 
-                let target = SceneTarget::Scene(scene.clone());
-                ui.update(&target, target_fps).await?;
+                ui.update(&scene, target_fps).await?;
 
                 if ui.needs_render().await {
-                    ui.render(&target).await?;
+                    ui.render(&scene).await?;
 
                     let mut frame = frame_synchronizer.take().await;
                     frame.update(&scene).await;

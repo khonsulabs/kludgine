@@ -1,8 +1,8 @@
-use crate::sprite::SpriteSource;
+use crate::{math::Raw, math::Unknown, sprite::SpriteSource};
 
 use super::{
-    math::{Point, Scaled, Size, SizeExt},
-    scene::SceneTarget,
+    math::{Point, PointExt, Scaled, Size, SizeExt},
+    scene::Scene,
     sprite::{Sprite, SpriteRotation},
     KludgineResult,
 };
@@ -34,32 +34,22 @@ where
         self.stagger = Some(stagger);
     }
 
-    pub async fn draw(
-        &self,
-        scene: &SceneTarget,
-        location: Point<f32, Scaled>,
-    ) -> KludgineResult<()> {
-        self.draw_scaled(scene, location, Scale::<f32, Scaled, Scaled>::identity())
-            .await
+    pub async fn draw(&self, scene: &Scene, location: Point<f32, Scaled>) -> KludgineResult<()> {
+        self.draw_scaled(scene, location, Scale::identity()).await
     }
 
-    pub async fn draw_scaled<Unit>(
+    pub async fn draw_scaled(
         &self,
-        scene: &SceneTarget,
+        scene: &Scene,
         location: Point<f32, Scaled>,
-        scale: Scale<f32, Unit, Scaled>,
+        scale: Scale<f32, Unknown, Scaled>,
     ) -> KludgineResult<()> {
-        // Normally we don't need to worry about the origin, but in the case of TileMap
-        // it will fill the screen with whatever the provider returns for each tile coordinate
-        let location = location + scene.origin().to_vector();
-
         let tile_height = if let Some(stagger) = &self.stagger {
             stagger.height
         } else {
             self.tile_size.height
         };
-        let tile_size =
-            Size::<u32, Unit>::new(self.tile_size.width, tile_height).cast::<f32>() * scale;
+        let tile_size = Size::<u32>::new(self.tile_size.width, tile_height).cast::<f32>() * scale;
 
         // We need to start at the upper-left of inverting the location
         let min_x = (-location.x / tile_size.width).floor() as i32;
@@ -75,22 +65,27 @@ where
         let elapsed = scene.elapsed().await;
 
         let mut render_calls = Vec::new();
-        let mut y_pos = tile_size.height() * min_y as f32;
+        let effective_scale = scene.scale_factor().await;
+        let tile_size = tile_size * effective_scale;
+        let location = location * effective_scale;
+        let mut y_pos = tile_size.height() * min_y as f32 + location.y();
         for y in min_y..(min_y + tiles_high) {
-            let mut x_pos = tile_size.width() * min_x as f32;
+            let mut x_pos = tile_size.width() * min_x as f32 + location.x();
             let next_y = y_pos + tile_size.height();
             for x in min_x..(min_x + tiles_wide) {
                 let next_x = x_pos + tile_size.width();
-                render_calls.push(self.draw_one_tile(
-                    Point::new(x, y),
-                    Box2D::new(
-                        Point::from_lengths(x_pos, y_pos),
-                        Point::from_lengths(next_x, next_y),
+                render_calls.push(
+                    self.draw_one_tile(
+                        Point::new(x, y),
+                        Box2D::new(
+                            Point::from_lengths(x_pos, y_pos),
+                            Point::from_lengths(next_x, next_y),
+                        )
+                        .round(),
+                        scene,
+                        elapsed,
                     ),
-                    scene,
-                    elapsed,
-                    scale,
-                ));
+                );
                 x_pos = next_x;
             }
             y_pos = next_y;
@@ -104,18 +99,17 @@ where
         Ok(())
     }
 
-    async fn draw_one_tile<Unit>(
+    async fn draw_one_tile(
         &self,
         tile: Point<i32>,
-        destination: Box2D<f32, Scaled>,
-        scene: &SceneTarget,
+        destination: Box2D<f32, Raw>,
+        scene: &Scene,
         elapsed: Option<Duration>,
-        scale: Scale<f32, Unit, Scaled>,
     ) -> KludgineResult<()> {
         if let Some(tile) = self.provider.get_tile(tile).await {
             let sprite = tile.sprite.get_frame(elapsed).await?;
             sprite
-                .render_within_box(scene, destination, SpriteRotation::default())
+                .render_raw_with_alpha_in_box(scene, destination, SpriteRotation::default(), 1.)
                 .await;
         }
         Ok(())

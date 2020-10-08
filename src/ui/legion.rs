@@ -1,8 +1,8 @@
 use crate::{
     event::MouseButton,
-    math::{Angle, Point, Rect, Scale, Scaled},
+    math::{Angle, Point, Rect, Scale, Scaled, Unknown},
     runtime::Runtime,
-    scene::SceneTarget,
+    scene::Scene,
     shape::Shape,
     sprite::{Sprite, SpriteRotation, SpriteSource},
     tilemap::{TileMap, TileProvider},
@@ -129,8 +129,8 @@ where
                         .tilemap
                         .draw_scaled(
                             context.scene(),
-                            center / rendered.scale + rendered.center.to_vector(),
-                            rendered.scale,
+                            rendered.center * rendered.scale + center.to_vector(),
+                            Scale::new(rendered.scale.0),
                         )
                         .await?;
                 }
@@ -331,9 +331,9 @@ impl<Unit> Eq for RenderedDrawable<Unit> {}
 trait TypelessTileMap<Unit>: Send + Sync + Debug {
     async fn draw_scaled(
         &self,
-        scene: &SceneTarget,
-        location: Point<f32, Unit>,
-        scale: Scale<f32, Unit, Scaled>,
+        scene: &Scene,
+        location: Point<f32, Scaled>,
+        scale: Scale<f32, Unknown, Scaled>,
     ) -> KludgineResult<()>;
 }
 
@@ -348,12 +348,12 @@ impl<P: TileProvider + Send + Sync + Debug, Unit: Send + 'static> TypelessTileMa
 {
     async fn draw_scaled(
         &self,
-        scene: &SceneTarget,
-        location: Point<f32, Unit>,
-        scale: Scale<f32, Unit, Scaled>,
+        scene: &Scene,
+        location: Point<f32, Scaled>,
+        scale: Scale<f32, Unknown, Scaled>,
     ) -> KludgineResult<()> {
-        let scene = scene.set_camera(scene.zoom(), -location * scale);
-        self.draw_scaled(&scene, Point::default(), scale).await
+        // let scene = scene.set_camera(scene.zoom(), -location * scale);
+        self.draw_scaled(&scene, location, scale).await
     }
 }
 
@@ -623,7 +623,7 @@ pub trait LegionSystemsThread: Sized {
 
     fn spawn<F: FnOnce() -> legion::Resources + Send + Sync + 'static>(
         canvas: crate::ui::Entity<Canvas<Self::Unit, Self::Command>>,
-        scene: &SceneTarget,
+        scene: &Scene,
         tick_rate: Duration,
         resource_initializer: F,
     ) -> SystemsHandle<Self::Unit, Self::Command> {
@@ -641,8 +641,8 @@ pub trait LegionSystemsThread: Sized {
                 .await;
         })
         .detach();
-        let scene = scene.scene_handle();
 
+        let scene = scene.clone();
         std::thread::spawn(move || {
             let mut last_tick_start = None;
             let mut resources = resource_initializer();

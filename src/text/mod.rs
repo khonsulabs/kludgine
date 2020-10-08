@@ -1,6 +1,6 @@
 use super::{
     math::{Point, Points, Scaled, Vector},
-    scene::{Element, SceneTarget},
+    scene::{Element, Scene},
     style::EffectiveStyle,
     KludgineResult,
 };
@@ -45,17 +45,13 @@ impl Text {
         Self { spans }
     }
 
-    pub async fn wrap(
-        &self,
-        scene: &SceneTarget,
-        options: TextWrap,
-    ) -> KludgineResult<PreparedText> {
+    pub async fn wrap(&self, scene: &Scene, options: TextWrap) -> KludgineResult<PreparedText> {
         TextWrapper::wrap(self, scene, options).await // TODO cache result
     }
 
     pub async fn render_at(
         &self,
-        scene: &SceneTarget,
+        scene: &Scene,
         location: Point<f32, Scaled>,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
@@ -64,7 +60,7 @@ impl Text {
 
     pub async fn render_baseline_at(
         &self,
-        scene: &SceneTarget,
+        scene: &Scene,
         location: Point<f32, Scaled>,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
@@ -73,14 +69,14 @@ impl Text {
 
     async fn render_core(
         &self,
-        scene: &SceneTarget,
+        scene: &Scene,
         location: Point<f32, Scaled>,
         offset_baseline: bool,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
         let prepared_text = self.wrap(scene, wrapping).await?;
         let mut current_line_baseline = Points::new(0.);
-        let effective_scale_factor = scene.effective_scale_factor().await;
+        let effective_scale_factor = scene.scale_factor().await;
 
         if offset_baseline && !prepared_text.lines.is_empty() {
             current_line_baseline += prepared_text.lines[0].metrics.ascent / effective_scale_factor;
@@ -91,9 +87,9 @@ impl Text {
             let cursor_position =
                 location + Vector::from_lengths(line.alignment_offset, current_line_baseline);
             for span in line.spans.iter() {
-                let location = scene.user_to_device_point(
-                    cursor_position + span.location.to_vector() / effective_scale_factor,
-                ) * effective_scale_factor;
+                let location = (cursor_position
+                    + span.location.to_vector() / effective_scale_factor)
+                    * effective_scale_factor;
                 scene
                     .push_element(Element::Text(span.translate(location)))
                     .await;

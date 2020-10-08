@@ -1,7 +1,7 @@
 use crate::{
     color::Color,
     math::{Pixels, Points},
-    scene::SceneTarget,
+    scene::Scene,
     text::font::FontStyle,
 };
 pub use ttf_parser::Weight;
@@ -45,7 +45,7 @@ impl Style {
         }
     }
 
-    pub async fn effective_style(&self, scene: &SceneTarget) -> EffectiveStyle {
+    pub async fn effective_style(&self, scene: &Scene) -> EffectiveStyle {
         EffectiveStyle {
             font_family: self
                 .font_family
@@ -53,7 +53,7 @@ impl Style {
                 .unwrap_or_else(|| "sans-serif".to_owned()),
             font_style: self.font_style.unwrap_or_default(),
             font_size: self.font_size.unwrap_or_else(|| Points::new(14.0))
-                * scene.effective_scale_factor().await,
+                * scene.scale_factor().await,
             font_weight: self.font_weight.unwrap_or(Weight::Normal),
             color: self.color.unwrap_or(Color::BLACK),
             background_color: self.background_color,
