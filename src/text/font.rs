@@ -1,6 +1,6 @@
 use crate::{math::Pixels, Handle};
 use crossbeam::atomic::AtomicCell;
-use easygpu::core::*;
+use easygpu::prelude::*;
 use lazy_static::lazy_static;
 use rusttype::{gpu_cache, Scale};
 
@@ -110,7 +110,7 @@ pub(crate) struct LoadedFont {
     pub font: Font,
     pub cache: gpu_cache::Cache<'static>,
     pub(crate) binding: Option<BindingGroup>,
-    pub(crate) texture: Option<easygpu::core::Texture>,
+    pub(crate) texture: Option<Texture>,
 }
 
 impl LoadedFont {

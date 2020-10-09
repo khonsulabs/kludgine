@@ -9,7 +9,7 @@ use crate::{
 use async_trait::async_trait;
 
 use crossbeam::sync::ShardedLock;
-use easygpu::core::*;
+use easygpu::prelude::*;
 use lazy_static::lazy_static;
 
 use std::collections::HashMap;

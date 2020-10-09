@@ -2,11 +2,7 @@ use crate::{
     math::{Point, PointExt, Raw, Rect, Size, Unknown},
     sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation, SpriteSourceLocation},
 };
-use easygpu::{
-    color::Rgba8,
-    core::{self, PassExt},
-    transform::ScreenSpace,
-};
+use easygpu::prelude::*;
 use euclid::{Box2D, Vector2D, Vector3D};
 
 pub(crate) struct GpuBatch {
@@ -138,7 +134,7 @@ impl GpuBatch {
     //     self.items.push(c);
     // }
 
-    pub fn finish(&self, renderer: &core::Renderer) -> BatchBuffers {
+    pub fn finish(&self, renderer: &Renderer) -> BatchBuffers {
         let vertices = renderer.device.create_buffer(&self.items);
         let indices = renderer.device.create_index(&self.indicies);
         BatchBuffers {
@@ -150,17 +146,13 @@ impl GpuBatch {
 }
 
 pub(crate) struct BatchBuffers {
-    pub vertices: core::VertexBuffer,
-    pub indices: core::IndexBuffer,
+    pub vertices: VertexBuffer,
+    pub indices: IndexBuffer,
     pub index_count: u32,
 }
 
-impl easygpu::core::Draw for BatchBuffers {
-    fn draw<'a, 'b>(
-        &'a self,
-        binding: &'a easygpu::core::BindingGroup,
-        pass: &'b mut easygpu::wgpu::RenderPass<'a>,
-    ) {
+impl Draw for BatchBuffers {
+    fn draw<'a, 'b>(&'a self, binding: &'a BindingGroup, pass: &'b mut wgpu::RenderPass<'a>) {
         pass.set_binding(binding, &[]);
         pass.set_easy_vertex_buffer(&self.vertices);
         pass.set_easy_index_buffer(&self.indices);

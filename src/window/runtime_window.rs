@@ -13,10 +13,10 @@ use crate::{
     KludgineError, KludgineResult,
 };
 use crossbeam::atomic::AtomicCell;
-use std::{sync::Arc, time::Instant};
-
+use easygpu::prelude::*;
 use futures::executor::block_on;
 use smol_timeout::TimeoutExt;
+use std::{sync::Arc, time::Instant};
 use winit::{
     event::{Event as WinitEvent, WindowEvent as WinitWindowEvent},
     window::{Window as WinitWindow, WindowId},
@@ -43,7 +43,7 @@ impl RuntimeWindow {
             .await
             .expect("Error receiving winit::window");
         let window_id = window.id();
-        let instance = easygpu::wgpu::Instance::new(easygpu::wgpu::BackendBit::PRIMARY);
+        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
         let renderer = Renderer::new(&instance, &window)
             .await
             .expect("Error creating renderer for window");

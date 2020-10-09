@@ -31,10 +31,10 @@ ecs = ["legion", "sorted-vec"]
 serialization = ["serde", "euclid/serde", "palette/serializing"]
 
 [dependencies]
-easygpu = { path = "../easygpu" }
-easygpu-lyon = { path = "../easygpu-lyon" }
+easygpu = { version = "0.0.1" }
+easygpu-lyon = { version = "0.0.1" }
 lyon_tessellation = "0.16"
-winit = "0.22"
+winit = "0.23"
 image = "0.23"
 crossbeam = "0.7"
 lazy_static = "1"
@@ -75,3 +75,7 @@ required-features = ["bundled-fonts-roboto"]
 [[example]]
 name = "ui"
 required-features = ["bundled-fonts-roboto"]
+
+[patch.crates-io]
+easygpu = { path = "../easygpu" }
+easygpu-lyon = { path = "../easygpu-lyon" }

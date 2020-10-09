@@ -7,12 +7,7 @@ use crate::{
 };
 use async_lock::Mutex;
 use crossbeam::atomic::AtomicCell;
-use easygpu::{
-    color::{Rgba, Rgba8},
-    core::{self, AbstractPipeline, PassExt},
-    transform::{ScreenSpace, ScreenTransformation},
-    wgpu::COPY_BYTES_PER_ROW_ALIGNMENT,
-};
+use easygpu::{prelude::*, wgpu::FilterMode, wgpu::COPY_BYTES_PER_ROW_ALIGNMENT};
 use easygpu_lyon::LyonPipeline;
 use euclid::Box2D;
 use std::{collections::HashMap, sync::Arc};
@@ -56,8 +51,8 @@ impl FrameSynchronizer {
 
 pub(crate) struct FrameRenderer {
     keep_running: Arc<AtomicCell<bool>>,
-    renderer: core::Renderer,
-    swap_chain: core::SwapChain,
+    renderer: Renderer,
+    swap_chain: SwapChain,
     frame_synchronizer: FrameSynchronizer,
     sprite_pipeline: sprite::Pipeline,
     shape_pipeline: LyonPipeline,
@@ -66,7 +61,7 @@ pub(crate) struct FrameRenderer {
 
 #[derive(Default)]
 struct GpuState {
-    textures: HashMap<u64, easygpu::core::BindingGroup>,
+    textures: HashMap<u64, BindingGroup>,
 }
 
 enum RenderCommand {
@@ -77,14 +72,14 @@ enum RenderCommand {
 
 impl FrameRenderer {
     fn new(
-        renderer: core::Renderer,
+        renderer: Renderer,
         frame_synchronizer: FrameSynchronizer,
         keep_running: Arc<AtomicCell<bool>>,
         initial_size: Size<u32, ScreenSpace>,
     ) -> Self {
-        let swap_chain = renderer.swap_chain(initial_size, core::PresentMode::Vsync);
-        let shape_pipeline = renderer.pipeline(core::Blending::default());
-        let sprite_pipeline = renderer.pipeline(core::Blending::default());
+        let swap_chain = renderer.swap_chain(initial_size, PresentMode::Vsync);
+        let shape_pipeline = renderer.pipeline(Blending::default());
+        let sprite_pipeline = renderer.pipeline(Blending::default());
         Self {
             renderer,
             keep_running,
@@ -97,7 +92,7 @@ impl FrameRenderer {
     }
 
     pub fn run(
-        renderer: core::Renderer,
+        renderer: Renderer,
         keep_running: Arc<AtomicCell<bool>>,
         initial_size: Size<u32, ScreenSpace>,
     ) -> FrameSynchronizer {
@@ -133,12 +128,10 @@ impl FrameRenderer {
         }
 
         if self.swap_chain.size != frame_size {
-            self.swap_chain = self
-                .renderer
-                .swap_chain(frame_size, core::PresentMode::Vsync);
+            self.swap_chain = self.renderer.swap_chain(frame_size, PresentMode::Vsync);
         }
 
-        let output = self.swap_chain.next();
+        let output = self.swap_chain.next_texture();
         let mut frame = self.renderer.frame();
 
         let ortho = ScreenTransformation::ortho(
@@ -173,7 +166,7 @@ impl FrameRenderer {
                     let texture = self.renderer.texture(Size::new(512, 512)); // TODO font texture should be configurable
                     let sampler = self
                         .renderer
-                        .sampler(core::Filter::Nearest, core::Filter::Nearest);
+                        .sampler(FilterMode::Nearest, FilterMode::Nearest);
 
                     let binding = self
                         .sprite_pipeline
@@ -197,7 +190,7 @@ impl FrameRenderer {
                     pixels.resize_with(size_for_aligned_copy(pixels.len()), Default::default);
                 }
                 let pixels = Rgba8::align(&pixels);
-                self.renderer.submit(&[core::Op::Transfer {
+                self.renderer.submit(&[Op::Transfer {
                     f: loaded_font.texture.as_ref().unwrap(),
                     buf: pixels,
                     rect: Box2D::new(
@@ -216,7 +209,7 @@ impl FrameRenderer {
                         if !gpu_state.textures.contains_key(&texture.id) {
                             let sampler = self
                                 .renderer
-                                .sampler(core::Filter::Nearest, core::Filter::Nearest);
+                                .sampler(FilterMode::Nearest, FilterMode::Nearest);
 
                             let (gpu_texture, texels, texture_id) = {
                                 let (w, h) = texture.image.dimensions();
@@ -245,7 +238,7 @@ impl FrameRenderer {
                             };
 
                             self.renderer
-                                .submit(&[core::Op::Fill(&gpu_texture, texels.as_slice())]);
+                                .submit(&[Op::Fill(&gpu_texture, texels.as_slice())]);
 
                             gpu_state.textures.insert(
                                 texture_id,
@@ -334,7 +327,7 @@ impl FrameRenderer {
                     }
                 }
             }
-            let mut pass = frame.pass(core::PassOp::Clear(Rgba::TRANSPARENT), &output);
+            let mut pass = frame.pass(PassOp::Clear(Rgba::TRANSPARENT), &output);
             for command in &render_commands {
                 match command {
                     RenderCommand::SpriteBuffer(texture_id, buffer) => {
@@ -354,9 +347,7 @@ impl FrameRenderer {
                         }
                     }
                     RenderCommand::Shapes(shapes) => {
-                        pass.set_pipeline(self.shape_pipeline.render_pipeline());
-                        pass.set_binding(self.shape_pipeline.bindings().unwrap(), &[]);
-
+                        pass.set_easy_pipeline(&self.shape_pipeline);
                         shapes.draw(&mut pass);
                     }
                 }
