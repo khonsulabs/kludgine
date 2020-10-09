@@ -1,6 +1,5 @@
-use crate::{math::Size, window::Icon, Handle, KludgineResult};
+use crate::{math::Size, window::Icon, KludgineResult};
 use crossbeam::atomic::AtomicCell;
-use easygpu::core::*;
 use image::{DynamicImage, RgbaImage};
 use lazy_static::lazy_static;
 use std::{path::Path, sync::Arc};

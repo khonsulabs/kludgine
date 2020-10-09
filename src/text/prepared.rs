@@ -3,7 +3,6 @@ use crate::{
     math::{Pixels, Point, Points, Raw, ScreenScale, Size, SizeExt},
     style::Alignment,
     text::Font,
-    Handle,
 };
 use futures::future::join_all;
 use std::sync::Arc;

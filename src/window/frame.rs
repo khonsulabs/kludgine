@@ -109,11 +109,6 @@ impl Frame {
                 }
                 Element::Text(text) => {
                     current_batch = self.commit_batch(current_batch);
-                    let font = text.data.font.handle.read().await;
-                    let loaded_font = self
-                        .fonts
-                        .get(&font.id)
-                        .expect("Text being drawn without font being loaded");
                     self.commands
                         .push(FrameCommand::DrawText { text: text.clone() });
                 }
@@ -127,7 +122,7 @@ impl Frame {
                     }
 
                     let current_batch = current_batch.as_mut().unwrap().shape_batch().unwrap();
-                    current_batch.add(shape.clone()); // TODO clone? Can't we own the scene elements at this point?
+                    current_batch.add(shape.clone());
                 }
             }
         }

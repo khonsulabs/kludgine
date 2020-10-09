@@ -156,12 +156,12 @@ pub(crate) struct BatchBuffers {
 }
 
 impl easygpu::core::Draw for BatchBuffers {
-    fn draw<'a, 'b, 'c>(
+    fn draw<'a, 'b>(
         &'a self,
-        binding: &'c easygpu::core::BindingGroup,
+        binding: &'a easygpu::core::BindingGroup,
         pass: &'b mut easygpu::wgpu::RenderPass<'a>,
     ) {
-        // pass.set_binding(binding, &[]);
+        pass.set_binding(binding, &[]);
         pass.set_easy_vertex_buffer(&self.vertices);
         pass.set_easy_index_buffer(&self.indices);
         pass.draw_indexed(0..self.index_count as u32, 0, 0..1);

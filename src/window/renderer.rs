@@ -220,7 +220,21 @@ impl FrameRenderer {
 
                             let (gpu_texture, texels, texture_id) = {
                                 let (w, h) = texture.image.dimensions();
-                                let pixels = texture.image.pixels().cloned().collect::<Vec<_>>();
+                                let bytes_per_row = size_for_aligned_copy(w as usize * 4);
+                                let mut pixels = Vec::with_capacity(bytes_per_row * h as usize);
+                                for (_, row) in texture.image.enumerate_rows() {
+                                    for (_, _, pixel) in row {
+                                        pixels.push(pixel[0]);
+                                        pixels.push(pixel[1]);
+                                        pixels.push(pixel[2]);
+                                        pixels.push(pixel[3]);
+                                    }
+
+                                    pixels.resize_with(
+                                        size_for_aligned_copy(pixels.len()),
+                                        Default::default,
+                                    );
+                                }
                                 let pixels = Rgba8::align(&pixels);
 
                                 (
@@ -324,39 +338,19 @@ impl FrameRenderer {
             for command in &render_commands {
                 match command {
                     RenderCommand::SpriteBuffer(texture_id, buffer) => {
-                        pass.set_pipeline(self.sprite_pipeline.render_pipeline());
-                        pass.set_binding(self.sprite_pipeline.bindings().unwrap(), &[]);
-                        // pass.set_easy_vertex_buffer(&buffer.vertices);
-
-                        // pass.set_easy_index_buffer(&buffer.indices);
-                        // pass.draw_indexed(0..buffer.index_count as u32, 0, 0..1);
-
-                        // pass.set_easy_pipeline(&self.sprite_pipeline);
+                        pass.set_easy_pipeline(&self.sprite_pipeline);
                         let binding = gpu_state.textures.get(texture_id).unwrap();
-                        pass.set_binding(binding, &[]);
-                        pass.set_easy_vertex_buffer(&buffer.vertices);
-                        pass.set_easy_index_buffer(&buffer.indices);
-                        pass.draw_indexed(0..buffer.index_count as u32, 0, 0..1);
+                        pass.easy_draw(buffer, binding);
                     }
                     RenderCommand::FontBuffer(font_id, buffer) => {
-                        pass.set_pipeline(self.sprite_pipeline.render_pipeline());
-                        pass.set_binding(self.sprite_pipeline.bindings().unwrap(), &[]);
-                        // pass.set_easy_vertex_buffer(&buffer.vertices);
-
-                        // pass.set_easy_index_buffer(&buffer.indices);
-                        // pass.draw_indexed(0..buffer.index_count as u32, 0, 0..1);
-
-                        // pass.set_easy_pipeline(&self.sprite_pipeline);
+                        pass.set_easy_pipeline(&self.sprite_pipeline);
                         if let Some(binding) = engine_frame
                             .fonts
                             .get(font_id)
                             .map(|f| f.binding.as_ref())
                             .flatten()
                         {
-                            pass.set_binding(binding, &[]);
-                            pass.set_easy_vertex_buffer(&buffer.vertices);
-                            pass.set_easy_index_buffer(&buffer.indices);
-                            pass.draw_indexed(0..buffer.index_count as u32, 0, 0..1);
+                            pass.easy_draw(buffer, binding);
                         }
                     }
                     RenderCommand::Shapes(shapes) => {

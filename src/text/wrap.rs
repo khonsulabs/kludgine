@@ -6,7 +6,6 @@ use crate::{
     KludgineResult,
 };
 use approx::relative_eq;
-use futures::future::join_all;
 
 mod measured;
 mod tokenizer;

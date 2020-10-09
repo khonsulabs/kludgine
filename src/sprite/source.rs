@@ -3,7 +3,6 @@ use crate::{
     scene::{Element, Scene},
     sprite::{RenderedSprite, SpriteRotation},
     texture::Texture,
-    Handle,
 };
 use euclid::Box2D; // TODO Expose this in crate::math
 #[derive(Debug, Clone)]
