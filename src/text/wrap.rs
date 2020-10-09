@@ -185,10 +185,7 @@ pub enum TextWrap {
 
 impl TextWrap {
     pub fn is_multiline(&self) -> bool {
-        match self {
-            Self::MultiLine { .. } => true,
-            _ => false,
-        }
+        matches!(self, Self::MultiLine { .. })
     }
 
     pub fn is_single_line(&self) -> bool {

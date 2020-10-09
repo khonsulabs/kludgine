@@ -33,11 +33,7 @@ enum FrameBatch {
 
 impl FrameBatch {
     fn is_shape(&self) -> bool {
-        if let Self::Shape(_) = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, Self::Shape(_))
     }
 
     fn is_sprite(&self) -> bool {
