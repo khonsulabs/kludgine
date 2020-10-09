@@ -1,32 +1,27 @@
-use rgx::{
-    color::Rgba8,
-    core,
-    math::{Matrix4, Vector2, Vector3},
-};
-
 use crate::math::{Angle, Point, Raw};
+use easygpu::prelude::*;
+use euclid::{Vector2D, Vector3D};
+use std::ops::Deref;
 
 /// A pipeline for rendering shapes.
 pub struct Pipeline {
-    pipeline: core::Pipeline,
-    bindings: core::BindingGroup,
-    buf: core::UniformBuffer,
+    core: PipelineCore,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-/// The uniforms for the shader. These uniforms match those from rgx's built-in pipelines, and the math performed is identical
+/// The uniforms for the shader.
 pub struct Uniforms {
     /// The orthographic projection matrix
-    pub ortho: Matrix4<f32>,
+    pub ortho: ScreenTransformation<f32>,
     /// The transformation matrix
-    pub transform: Matrix4<f32>,
+    pub transform: ScreenTransformation<f32>,
 }
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct Vertex {
-    pub position: Vector3<f32>,
-    pub uv: Vector2<f32>,
+    pub position: Vector3D<f32, ScreenSpace>,
+    pub uv: Vector2D<f32, ScreenSpace>,
     pub color: Rgba8,
 }
 
@@ -52,40 +47,40 @@ impl Vertex {
 impl Pipeline {
     pub fn binding(
         &self,
-        renderer: &core::Renderer,
-        texture: &core::Texture,
-        sampler: &core::Sampler,
-    ) -> core::BindingGroup {
+        renderer: &Renderer,
+        texture: &Texture,
+        sampler: &Sampler,
+    ) -> BindingGroup {
         renderer
             .device
             .create_binding_group(&self.pipeline.layout.sets[1], &[texture, sampler])
     }
 }
 
-impl<'a> core::AbstractPipeline<'a> for Pipeline {
-    type PrepareContext = Matrix4<f32>;
+impl<'a> AbstractPipeline<'a> for Pipeline {
+    type PrepareContext = ScreenTransformation<f32>;
     type Uniforms = self::Uniforms;
 
-    fn description() -> core::PipelineDescription<'a> {
-        core::PipelineDescription {
+    fn description() -> PipelineDescription<'a> {
+        PipelineDescription {
             vertex_layout: &[
-                core::VertexFormat::Float3,
-                core::VertexFormat::Float2,
-                core::VertexFormat::UByte4,
+                VertexFormat::Float3,
+                VertexFormat::Float2,
+                VertexFormat::UByte4,
             ],
             pipeline_layout: &[
-                core::Set(&[rgx::core::Binding {
-                    binding: rgx::core::BindingType::UniformBuffer,
-                    stage: rgx::core::ShaderStage::Vertex,
+                Set(&[Binding {
+                    binding: BindingType::UniformBuffer,
+                    stage: ShaderStage::VERTEX,
                 }]),
-                core::Set(&[
-                    core::Binding {
-                        binding: core::BindingType::SampledTexture,
-                        stage: core::ShaderStage::Fragment,
+                Set(&[
+                    Binding {
+                        binding: BindingType::SampledTexture,
+                        stage: ShaderStage::FRAGMENT,
                     },
-                    core::Binding {
-                        binding: core::BindingType::Sampler,
-                        stage: core::ShaderStage::Fragment,
+                    Binding {
+                        binding: BindingType::Sampler,
+                        stage: ShaderStage::FRAGMENT,
                     },
                 ]),
             ],
@@ -94,29 +89,33 @@ impl<'a> core::AbstractPipeline<'a> for Pipeline {
         }
     }
 
-    fn setup(pipeline: core::Pipeline, dev: &core::Device) -> Self {
-        let transform = Matrix4::identity();
-        let ortho = Matrix4::identity();
-        let buf = dev.create_uniform_buffer(&[self::Uniforms { ortho, transform }]);
-        let bindings = dev.create_binding_group(&pipeline.layout.sets[0], &[&buf]);
+    fn setup(pipeline: easygpu::pipeline::Pipeline, dev: &Device) -> Self {
+        let transform = ScreenTransformation::identity();
+        let ortho = ScreenTransformation::identity();
+        let uniforms = dev.create_uniform_buffer(&[self::Uniforms { ortho, transform }]);
+        let bindings = dev.create_binding_group(&pipeline.layout.sets[0], &[&uniforms]);
 
         Self {
-            pipeline,
-            buf,
-            bindings,
+            core: PipelineCore {
+                pipeline,
+                uniforms,
+                bindings,
+            },
         }
-    }
-
-    fn apply(&self, pass: &mut core::Pass) {
-        pass.set_pipeline(&self.pipeline);
-        pass.set_binding(&self.bindings, &[]);
     }
 
     fn prepare(
         &'a self,
-        ortho: Matrix4<f32>,
-    ) -> Option<(&'a core::UniformBuffer, Vec<self::Uniforms>)> {
-        let transform = Matrix4::identity();
-        Some((&self.buf, vec![self::Uniforms { transform, ortho }]))
+        ortho: ScreenTransformation<f32>,
+    ) -> Option<(&'a UniformBuffer, Vec<self::Uniforms>)> {
+        let transform = ScreenTransformation::identity();
+        Some((&self.uniforms, vec![self::Uniforms { transform, ortho }]))
+    }
+}
+
+impl Deref for Pipeline {
+    type Target = PipelineCore;
+    fn deref(&self) -> &Self::Target {
+        &self.core
     }
 }

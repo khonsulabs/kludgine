@@ -102,7 +102,7 @@ impl Shape<Scaled> {
 }
 
 impl Shape<Raw> {
-    pub(crate) fn build(&self, builder: &mut rgx_lyon::ShapeBuilder) -> KludgineResult<()> {
+    pub(crate) fn build(&self, builder: &mut easygpu_lyon::ShapeBuilder) -> KludgineResult<()> {
         self.geometry.build(builder, &self.stroke, &self.fill)
     }
 }

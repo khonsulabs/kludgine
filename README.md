@@ -30,7 +30,7 @@ Kludgine is a higher-level rendering engine, and its UI layout system is the sam
 
 ## Fast and highly portable
 
-Kludgine is built upon [rgx](https://lib.rs/rgx), which is based on [wgpu](https://lib.rs/wgpu). `wgpu` is an experimental WebGPU implementation, and it supports DirectX on Windows, Vulkan on Linux, Metal on iOS/Mac OS, and OpenGL support is coming soon to allow for WebAssembly deployment.
+Kludgine is built upon [easygpu](https://github.com/khonsulabs/easygpu), which is based on [wgpu](https://lib.rs/wgpu). `wgpu` is an experimental WebGPU implementation, and it supports DirectX on Windows, Vulkan on Linux, Metal on iOS/Mac OS, and OpenGL support is coming soon to allow for WebAssembly deployment.
 
 Apps and games written in Kludgine should have no problem running with reasonable performance on budget hardware, even without a discrete GPU.
 

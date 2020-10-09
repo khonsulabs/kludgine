@@ -13,10 +13,10 @@ use crate::{
     KludgineError, KludgineResult,
 };
 use crossbeam::atomic::AtomicCell;
-use std::{sync::Arc, time::Instant};
-
+use easygpu::prelude::*;
 use futures::executor::block_on;
 use smol_timeout::TimeoutExt;
+use std::{sync::Arc, time::Instant};
 use winit::{
     event::{Event as WinitEvent, WindowEvent as WinitWindowEvent},
     window::{Window as WinitWindow, WindowId},
@@ -43,7 +43,10 @@ impl RuntimeWindow {
             .await
             .expect("Error receiving winit::window");
         let window_id = window.id();
-        let renderer = Renderer::new(&window).expect("Error creating renderer for window");
+        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+        let renderer = Renderer::new(&instance, &window)
+            .await
+            .expect("Error creating renderer for window");
 
         let (message_sender, message_receiver) = async_channel::unbounded();
         let (event_sender, event_receiver) = async_channel::unbounded();
@@ -52,8 +55,7 @@ impl RuntimeWindow {
         let mut frame_synchronizer = FrameRenderer::run(
             renderer,
             keep_running.clone(),
-            window.inner_size().width,
-            window.inner_size().height,
+            Size::new(window.inner_size().width, window.inner_size().height),
         );
         let window_event_sender = event_sender.clone();
         Runtime::spawn(async move {

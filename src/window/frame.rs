@@ -1,9 +1,11 @@
+use easygpu::transform::ScreenSpace;
+
 use crate::{
     math::Size,
     scene::{Element, Scene},
     shape, sprite,
     text::{font::LoadedFont, prepared::PreparedSpan},
-    texture::LoadedTexture,
+    texture::Texture,
 };
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
@@ -11,15 +13,15 @@ use std::time::Instant;
 pub(crate) struct Frame {
     pub started_at: Option<Instant>,
     pub updated_at: Option<Instant>,
-    pub size: Size,
+    pub size: Size<f32, ScreenSpace>,
     pub commands: Vec<FrameCommand>,
-    pub(crate) textures: HashMap<u64, LoadedTexture>,
+    pub(crate) textures: HashMap<u64, Texture>,
     pub(crate) fonts: HashMap<u64, LoadedFont>,
     pub(crate) pending_font_updates: Vec<FontUpdate>,
 }
 
 pub(crate) struct FontUpdate {
-    pub font: LoadedFont,
+    pub font_id: u64,
     pub rect: rusttype::Rect<u32>,
     pub data: Vec<u8>,
 }
@@ -31,11 +33,7 @@ enum FrameBatch {
 
 impl FrameBatch {
     fn is_shape(&self) -> bool {
-        if let Self::Shape(_) = self {
-            true
-        } else {
-            false
-        }
+        matches!(self, Self::Shape(_))
     }
 
     fn is_sprite(&self) -> bool {
@@ -76,9 +74,8 @@ impl Frame {
         for element in scene.elements.iter() {
             match element {
                 Element::Sprite(sprite_handle) => {
-                    let sprite = sprite_handle.handle.read().await;
-                    let source = sprite.source.handle.read().await;
-                    let texture = source.texture.handle.read().await;
+                    let sprite = sprite_handle.data.clone();
+                    let texture = &sprite.source.texture;
 
                     if current_texture_id.is_none()
                         || current_texture_id.as_ref().unwrap() != &texture.id
@@ -90,18 +87,16 @@ impl Frame {
                         referenced_texture_ids.insert(texture.id);
 
                         // Load the texture if needed
-                        let loaded_texture_handle = self
-                            .textures
-                            .entry(texture.id)
-                            .or_insert_with(|| LoadedTexture::new(&source.texture));
-                        let loaded_texture = loaded_texture_handle.handle.read().await;
-                        if loaded_texture.binding.is_none() {
+                        if !self.textures.contains_key(&texture.id) {
+                            self.textures
+                                .insert(texture.id, sprite.source.texture.clone());
                             self.commands
-                                .push(FrameCommand::LoadTexture(loaded_texture_handle.clone()));
+                                .push(FrameCommand::LoadTexture(sprite.source.texture.clone()));
                         }
 
                         current_batch = Some(FrameBatch::Sprite(sprite::Batch::new(
-                            loaded_texture_handle.clone(),
+                            texture.id,
+                            texture.size(),
                         )));
                     }
 
@@ -110,16 +105,8 @@ impl Frame {
                 }
                 Element::Text(text) => {
                     current_batch = self.commit_batch(current_batch);
-                    let text_data = text.handle.read().await;
-                    let font = text_data.font.handle.read().await;
-                    let loaded_font = self
-                        .fonts
-                        .get(&font.id)
-                        .expect("Text being drawn without font being loaded");
-                    self.commands.push(FrameCommand::DrawText {
-                        text: text.clone(),
-                        loaded_font: loaded_font.clone(),
-                    });
+                    self.commands
+                        .push(FrameCommand::DrawText { text: text.clone() });
                 }
                 Element::Shape(shape) => {
                     if current_batch.is_some() && !current_batch.as_ref().unwrap().is_shape() {
@@ -131,7 +118,7 @@ impl Frame {
                     }
 
                     let current_batch = current_batch.as_mut().unwrap().shape_batch().unwrap();
-                    current_batch.add(shape.clone()); // TODO clone? Can't we own the scene elements at this point?
+                    current_batch.add(shape.clone());
                 }
             }
         }
@@ -175,18 +162,16 @@ impl Frame {
             .filter(|e| e.is_some())
             .map(|e| e.unwrap())
         {
-            let text = text.handle.read().await;
-            referenced_fonts.insert(text.font.id().await);
+            referenced_fonts.insert(text.data.font.id().await);
 
-            for glpyh in text.positioned_glyphs.iter() {
-                let font = text.font.handle.read().await;
+            for glpyh in text.data.positioned_glyphs.iter() {
+                let font = text.data.font.handle.read().await;
 
                 let loaded_font = self
                     .fonts
                     .entry(font.id)
-                    .or_insert_with(|| LoadedFont::new(&text.font));
-                let mut loaded_font_data = loaded_font.handle.write().await;
-                loaded_font_data.cache.queue_glyph(0, glpyh.clone());
+                    .or_insert_with(|| LoadedFont::new(&text.data.font));
+                loaded_font.cache.queue_glyph(0, glpyh.clone());
             }
         }
 
@@ -200,28 +185,26 @@ impl Frame {
             self.fonts.remove(&id);
         }
 
-        for font in self.fonts.values().cloned().collect::<Vec<_>>() {
-            let mut loaded_font_data = font.handle.write().await;
-            loaded_font_data
-                .cache
+        let mut updates = Vec::new();
+        for font in self.fonts.values_mut() {
+            let font_id = font.font.id;
+            font.cache
                 .cache_queued(|rect, data| {
-                    self.pending_font_updates.push(FontUpdate {
-                        font: font.clone(),
+                    updates.push(FontUpdate {
+                        font_id,
                         rect,
                         data: data.to_vec(),
                     })
                 })
                 .expect("Error caching font");
         }
+        self.pending_font_updates.extend(updates);
     }
 }
 
 pub(crate) enum FrameCommand {
-    LoadTexture(LoadedTexture),
+    LoadTexture(Texture),
     DrawBatch(sprite::Batch),
     DrawShapes(shape::Batch),
-    DrawText {
-        text: PreparedSpan,
-        loaded_font: LoadedFont,
-    },
+    DrawText { text: PreparedSpan },
 }

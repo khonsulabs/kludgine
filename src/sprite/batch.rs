@@ -1,14 +1,16 @@
-use crate::{sprite::RenderedSprite, texture::LoadedTexture};
+use crate::{math::Size, sprite::RenderedSprite};
 
 pub(crate) struct Batch {
-    pub loaded_texture: LoadedTexture,
+    pub size: Size<u32>,
+    pub loaded_texture_id: u64,
     pub sprites: Vec<RenderedSprite>,
 }
 
 impl Batch {
-    pub fn new(loaded_texture: LoadedTexture) -> Self {
+    pub fn new(loaded_texture_id: u64, size: Size<u32>) -> Self {
         Self {
-            loaded_texture,
+            loaded_texture_id,
+            size,
             sprites: Vec::new(),
         }
     }

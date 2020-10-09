@@ -6,7 +6,6 @@ use crate::{
     KludgineResult,
 };
 use approx::relative_eq;
-use futures::future::join_all;
 
 mod measured;
 mod tokenizer;
@@ -40,9 +39,9 @@ impl TextWrapState {
             self.new_line().await;
         } else {
             let spans = group.spans();
-            let total_width = join_all(spans.iter().map(|s| s.width()))
-                .await
-                .into_iter()
+            let total_width = spans
+                .iter()
+                .map(|s| s.data.width)
                 .fold(Pixels::default(), |sum, width| sum + width);
 
             if let Some(width) = self.width {
@@ -77,7 +76,7 @@ impl TextWrapState {
     }
 
     async fn position_span(&mut self, span: &mut PreparedSpan) {
-        let width = span.width().await;
+        let width = span.data.width;
         span.location.set_x(self.current_span_offset);
         self.current_span_offset += width;
     }
@@ -186,10 +185,7 @@ pub enum TextWrap {
 
 impl TextWrap {
     pub fn is_multiline(&self) -> bool {
-        match self {
-            Self::MultiLine { .. } => true,
-            _ => false,
-        }
+        matches!(self, Self::MultiLine { .. })
     }
 
     pub fn is_single_line(&self) -> bool {
@@ -261,15 +257,7 @@ mod tests {
             assert_eq!(wrap.lines.len(), 2);
             assert_eq!(wrap.lines[0].spans.len(), 5); // "this"," ","line"," ","should"
             assert_eq!(wrap.lines[1].spans.len(), 1); // "wrap"
-            assert_eq!(
-                wrap.lines[1].spans[0]
-                    .handle
-                    .read()
-                    .await
-                    .positioned_glyphs
-                    .len(),
-                4
-            );
+            assert_eq!(wrap.lines[1].spans[0].data.positioned_glyphs.len(), 4);
         }
     }
 
@@ -310,18 +298,10 @@ mod tests {
         assert_eq!(wrap.lines.len(), 2);
         assert_eq!(wrap.lines[0].spans.len(), 5);
         assert_eq!(wrap.lines[1].spans.len(), 1);
-        assert_eq!(
-            wrap.lines[1].spans[0]
-                .handle
-                .read()
-                .await
-                .positioned_glyphs
-                .len(),
-            4
-        );
+        assert_eq!(wrap.lines[1].spans[0].data.positioned_glyphs.len(), 4);
         assert_ne!(
-            wrap.lines[0].spans[0].handle.read().await.metrics,
-            wrap.lines[1].spans[0].handle.read().await.metrics
+            wrap.lines[0].spans[0].data.metrics,
+            wrap.lines[1].spans[0].data.metrics
         );
     }
 }

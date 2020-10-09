@@ -32,7 +32,7 @@ where
     T: Debug + Eq + Hash,
 {
     pub async fn new(texture: Texture, tile_size: Size<u32>, tiles: Vec<T>) -> Self {
-        let dimensions = divide_size(texture.size().await.cast(), tile_size);
+        let dimensions = divide_size(texture.size().cast(), tile_size);
         Self {
             texture,
             data: Handle::new(SpriteSheetData::from_tiles(tiles, tile_size, dimensions)),

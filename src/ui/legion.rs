@@ -95,13 +95,8 @@ where
         for rendered in self.current_frame.iter() {
             match &rendered.drawable {
                 Drawable::Sprite(sprite) => {
-                    let sprite_size = sprite
-                        .location()
-                        .await
-                        .size()
-                        .cast_unit::<Unit>()
-                        .cast::<f32>()
-                        * rendered.scale;
+                    let sprite_size =
+                        sprite.location.size().cast_unit::<Unit>().cast::<f32>() * rendered.scale;
 
                     let render_location = rendered.center * rendered.scale - sprite_size / 2.;
                     sprite
@@ -379,9 +374,9 @@ impl<Unit> Drawable<Unit> {
                 // Shapes don't have groupings
                 (DrawableKind::Shape, 0u64)
             }
-            Drawable::Sprite(sprite) => Runtime::block_on(async {
-                (DrawableKind::Sprite, sprite.texture().await.id().await)
-            }),
+            Drawable::Sprite(sprite) => {
+                Runtime::block_on(async { (DrawableKind::Sprite, sprite.texture.id) })
+            }
             Drawable::TileMap(_) => (DrawableKind::TileMap, 0),
         }
     }

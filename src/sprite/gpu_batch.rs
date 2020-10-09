@@ -2,34 +2,27 @@ use crate::{
     math::{Point, PointExt, Raw, Rect, Size, Unknown},
     sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation, SpriteSourceLocation},
 };
-use euclid::Box2D;
-use rgx::{
-    color::Rgba8,
-    core,
-    math::{Vector2, Vector3},
-};
+use easygpu::prelude::*;
+use euclid::{Box2D, Vector2D, Vector3D};
 
 pub(crate) struct GpuBatch {
-    pub width: u32,
-    pub height: u32,
+    pub size: Size<u32, ScreenSpace>,
 
     items: Vec<Vertex>,
     indicies: Vec<u16>,
 }
 
 impl GpuBatch {
-    pub fn new(width: u32, height: u32) -> Self {
+    pub fn new(size: Size<u32, ScreenSpace>) -> Self {
         Self {
-            width,
-            height,
+            size,
             items: Default::default(),
             indicies: Default::default(),
         }
     }
 
-    pub async fn add_sprite(&mut self, sprite: RenderedSprite) {
-        let sprite = sprite.handle.read().await;
-        let source = sprite.source.handle.read().await;
+    pub fn add_sprite(&mut self, sprite: RenderedSprite) {
+        let sprite = sprite.data;
         let white_transparent = Rgba8 {
             r: 255,
             g: 255,
@@ -37,7 +30,7 @@ impl GpuBatch {
             a: 0,
         };
 
-        match &source.location {
+        match &sprite.source.location {
             SpriteSourceLocation::Rect(location) => self.add_box(
                 location.to_box2d(),
                 sprite.render_at,
@@ -45,7 +38,7 @@ impl GpuBatch {
                 white_transparent,
             ),
             SpriteSourceLocation::Joined(locations) => {
-                let source_bounds = source.location.bounds();
+                let source_bounds = sprite.source.location.bounds();
                 let scale_x = sprite.render_at.width() as f32 / source_bounds.size.width as f32;
                 let scale_y = sprite.render_at.height() as f32 / source_bounds.size.height as f32;
                 for location in locations {
@@ -68,10 +61,10 @@ impl GpuBatch {
 
     pub fn vertex(&self, src: Point<u32, Unknown>, dest: Point<f32, Raw>, color: Rgba8) -> Vertex {
         Vertex {
-            position: Vector3::new(dest.x, dest.y, 0.),
-            uv: Vector2::new(
-                src.x as f32 / self.width as f32,
-                src.y as f32 / self.height as f32,
+            position: Vector3D::new(dest.x, dest.y, 0.),
+            uv: Vector2D::new(
+                src.x as f32 / self.size.width as f32,
+                src.y as f32 / self.size.height as f32,
             ),
             color,
         }
@@ -141,7 +134,7 @@ impl GpuBatch {
     //     self.items.push(c);
     // }
 
-    pub fn finish(&self, renderer: &core::Renderer) -> BatchBuffers {
+    pub fn finish(&self, renderer: &Renderer) -> BatchBuffers {
         let vertices = renderer.device.create_buffer(&self.items);
         let indices = renderer.device.create_index(&self.indicies);
         BatchBuffers {
@@ -153,16 +146,16 @@ impl GpuBatch {
 }
 
 pub(crate) struct BatchBuffers {
-    vertices: core::VertexBuffer,
-    indices: core::IndexBuffer,
-    index_count: u32,
+    pub vertices: VertexBuffer,
+    pub indices: IndexBuffer,
+    pub index_count: u32,
 }
 
-impl rgx::core::Draw for BatchBuffers {
-    fn draw(&self, binding: &rgx::core::BindingGroup, pass: &mut rgx::core::Pass) {
+impl Draw for BatchBuffers {
+    fn draw<'a, 'b>(&'a self, binding: &'a BindingGroup, pass: &'b mut wgpu::RenderPass<'a>) {
         pass.set_binding(binding, &[]);
-        pass.set_vertex_buffer(&self.vertices);
-        pass.set_index_buffer(&self.indices);
-        pass.draw_indexed(0..self.index_count as u32, 0..1);
+        pass.set_easy_vertex_buffer(&self.vertices);
+        pass.set_easy_index_buffer(&self.indices);
+        pass.draw_indexed(0..self.index_count as u32, 0, 0..1);
     }
 }

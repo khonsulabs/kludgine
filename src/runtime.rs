@@ -228,10 +228,7 @@ impl Runtime {
     }
 
     fn should_run_in_exclusive_mode() -> bool {
-        match TARGET_OS {
-            OS::Android | OS::iOS => true,
-            _ => false,
-        }
+        matches!(TARGET_OS, OS::Android | OS::iOS)
     }
 
     pub fn run<T, F>(self, initial_window: WindowBuilder, window: F) -> !

@@ -1,9 +1,8 @@
-use crate::{math::Size, window::Icon, Handle, KludgineResult};
+use crate::{math::Size, window::Icon, KludgineResult};
 use crossbeam::atomic::AtomicCell;
 use image::{DynamicImage, RgbaImage};
 use lazy_static::lazy_static;
-use rgx::core::*;
-use std::path::Path;
+use std::{path::Path, sync::Arc};
 
 lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicCell<u64> = AtomicCell::new(0);
@@ -19,13 +18,8 @@ macro_rules! include_texture {
 
 #[derive(Debug, Clone)]
 pub struct Texture {
-    pub(crate) handle: Handle<TextureData>,
-}
-
-#[derive(Debug)]
-pub(crate) struct TextureData {
     pub id: u64,
-    pub image: RgbaImage,
+    pub image: Arc<RgbaImage>,
 }
 
 impl Texture {
@@ -33,7 +27,8 @@ impl Texture {
         let image = image.to_rgba();
         let id = GLOBAL_ID_CELL.fetch_add(1);
         Self {
-            handle: Handle::new(TextureData { id, image }),
+            id,
+            image: Arc::new(image),
         }
     }
 
@@ -43,55 +38,22 @@ impl Texture {
         Ok(Self::new(img))
     }
 
-    pub async fn id(&self) -> u64 {
-        let texture = self.handle.read().await;
-        texture.id
-    }
-
     pub fn from_bytes(bytes: &[u8]) -> KludgineResult<Self> {
         let img = image::load_from_memory(bytes)?;
 
         Ok(Self::new(img))
     }
 
-    pub async fn size(&self) -> Size<u32> {
-        let texture = self.handle.read().await;
-        let (w, h) = texture.image.dimensions();
+    pub fn size(&self) -> Size<u32> {
+        let (w, h) = self.image.dimensions();
         Size::new(w as u32, h as u32)
     }
 
-    pub async fn rgba_pixels(&self) -> Vec<u8> {
-        let texture = self.handle.read().await;
-        texture.image.clone().into_vec()
+    pub fn rgba_pixels(&self) -> Vec<u8> {
+        (*self.image).clone().into_vec()
     }
 
-    pub async fn window_icon(&self) -> Result<Icon, winit::window::BadIcon> {
-        let texture = self.handle.read().await;
-        Icon::from_rgba(
-            texture.image.clone().into_vec(),
-            texture.image.width(),
-            texture.image.height(),
-        )
-    }
-}
-
-#[derive(Clone)]
-pub struct LoadedTexture {
-    pub(crate) handle: Handle<LoadedTextureData>,
-}
-
-pub(crate) struct LoadedTextureData {
-    pub texture: Texture,
-    pub binding: Option<BindingGroup>,
-}
-
-impl LoadedTexture {
-    pub fn new(texture: &Texture) -> Self {
-        LoadedTexture {
-            handle: Handle::new(LoadedTextureData {
-                texture: texture.clone(),
-                binding: None,
-            }),
-        }
+    pub fn window_icon(&self) -> Result<Icon, winit::window::BadIcon> {
+        Icon::from_rgba(self.rgba_pixels(), self.image.width(), self.image.height())
     }
 }
