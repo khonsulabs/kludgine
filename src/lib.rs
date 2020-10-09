@@ -1,4 +1,5 @@
 #![deny(clippy::all)]
+#![allow(clippy::map_entry)]
 use thiserror::Error;
 
 #[cfg(test)]

@@ -4,7 +4,7 @@ use crate::{
 };
 use easygpu::{
     color::Rgba8,
-    core::{self},
+    core::{self, PassExt},
     transform::ScreenSpace,
 };
 use euclid::{Box2D, Vector2D, Vector3D};
@@ -25,9 +25,8 @@ impl GpuBatch {
         }
     }
 
-    pub async fn add_sprite(&mut self, sprite: RenderedSprite) {
-        let sprite = sprite.handle.read().await;
-        let source = sprite.source.handle.read().await;
+    pub fn add_sprite(&mut self, sprite: RenderedSprite) {
+        let sprite = sprite.data;
         let white_transparent = Rgba8 {
             r: 255,
             g: 255,
@@ -35,7 +34,7 @@ impl GpuBatch {
             a: 0,
         };
 
-        match &source.location {
+        match &sprite.source.location {
             SpriteSourceLocation::Rect(location) => self.add_box(
                 location.to_box2d(),
                 sprite.render_at,
@@ -43,7 +42,7 @@ impl GpuBatch {
                 white_transparent,
             ),
             SpriteSourceLocation::Joined(locations) => {
-                let source_bounds = source.location.bounds();
+                let source_bounds = sprite.source.location.bounds();
                 let scale_x = sprite.render_at.width() as f32 / source_bounds.size.width as f32;
                 let scale_y = sprite.render_at.height() as f32 / source_bounds.size.height as f32;
                 for location in locations {
@@ -151,16 +150,20 @@ impl GpuBatch {
 }
 
 pub(crate) struct BatchBuffers {
-    vertices: core::VertexBuffer,
-    indices: core::IndexBuffer,
-    index_count: u32,
+    pub vertices: core::VertexBuffer,
+    pub indices: core::IndexBuffer,
+    pub index_count: u32,
 }
 
 impl easygpu::core::Draw for BatchBuffers {
-    fn draw(&self, binding: &easygpu::core::BindingGroup, pass: &mut easygpu::core::Pass) {
-        pass.set_binding(binding, &[]);
-        pass.set_vertex_buffer(&self.vertices);
-        pass.set_index_buffer(&self.indices);
-        pass.draw_indexed(0..self.index_count as u32, 0..1);
+    fn draw<'a, 'b, 'c>(
+        &'a self,
+        binding: &'c easygpu::core::BindingGroup,
+        pass: &'b mut easygpu::wgpu::RenderPass<'a>,
+    ) {
+        // pass.set_binding(binding, &[]);
+        pass.set_easy_vertex_buffer(&self.vertices);
+        pass.set_easy_index_buffer(&self.indices);
+        pass.draw_indexed(0..self.index_count as u32, 0, 0..1);
     }
 }

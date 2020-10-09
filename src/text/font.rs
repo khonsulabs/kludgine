@@ -106,27 +106,20 @@ pub(crate) struct FontData {
     pub(crate) font: rusttype::Font<'static>,
 }
 
-#[derive(Clone)]
 pub(crate) struct LoadedFont {
-    pub handle: Handle<LoadedFontData>,
+    pub font: Font,
+    pub cache: gpu_cache::Cache<'static>,
+    pub(crate) binding: Option<BindingGroup>,
+    pub(crate) texture: Option<easygpu::core::Texture>,
 }
 
 impl LoadedFont {
     pub fn new(font: &Font) -> Self {
         Self {
-            handle: Handle::new(LoadedFontData {
-                font: font.clone(),
-                cache: gpu_cache::Cache::builder().dimensions(512, 512).build(),
-                binding: None,
-                texture: None,
-            }),
+            font: font.clone(),
+            cache: gpu_cache::Cache::builder().dimensions(512, 512).build(),
+            binding: None,
+            texture: None,
         }
     }
-}
-
-pub(crate) struct LoadedFontData {
-    pub font: Font,
-    pub cache: gpu_cache::Cache<'static>,
-    pub(crate) binding: Option<BindingGroup>,
-    pub(crate) texture: Option<easygpu::core::Texture>,
 }

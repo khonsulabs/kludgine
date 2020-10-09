@@ -43,7 +43,10 @@ impl RuntimeWindow {
             .await
             .expect("Error receiving winit::window");
         let window_id = window.id();
-        let renderer = Renderer::new(&window).expect("Error creating renderer for window");
+        let instance = easygpu::wgpu::Instance::new(easygpu::wgpu::BackendBit::PRIMARY);
+        let renderer = Renderer::new(&instance, &window)
+            .await
+            .expect("Error creating renderer for window");
 
         let (message_sender, message_receiver) = async_channel::unbounded();
         let (event_sender, event_receiver) = async_channel::unbounded();

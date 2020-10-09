@@ -1,7 +1,7 @@
 use crate::math::{Angle, Point, Raw};
 use easygpu::{
     color::Rgba8,
-    core::{self},
+    core::{self, BindingGroup},
     transform::{ScreenSpace, ScreenTransformation},
 };
 use euclid::{Vector2D, Vector3D};
@@ -76,16 +76,16 @@ impl<'a> core::AbstractPipeline<'a> for Pipeline {
             pipeline_layout: &[
                 core::Set(&[easygpu::core::Binding {
                     binding: easygpu::core::BindingType::UniformBuffer,
-                    stage: easygpu::core::ShaderStage::Vertex,
+                    stage: easygpu::core::ShaderStage::VERTEX,
                 }]),
                 core::Set(&[
                     core::Binding {
                         binding: core::BindingType::SampledTexture,
-                        stage: core::ShaderStage::Fragment,
+                        stage: core::ShaderStage::FRAGMENT,
                     },
                     core::Binding {
                         binding: core::BindingType::Sampler,
-                        stage: core::ShaderStage::Fragment,
+                        stage: core::ShaderStage::FRAGMENT,
                     },
                 ]),
             ],
@@ -107,9 +107,12 @@ impl<'a> core::AbstractPipeline<'a> for Pipeline {
         }
     }
 
-    fn apply(&self, pass: &mut core::Pass) {
-        pass.set_pipeline(&self.pipeline);
-        pass.set_binding(&self.bindings, &[]);
+    fn render_pipeline(&self) -> &'_ easygpu::wgpu::RenderPipeline {
+        &self.pipeline.wgpu
+    }
+
+    fn bindings(&self) -> Option<&'_ BindingGroup> {
+        Some(&self.bindings)
     }
 
     fn prepare(

@@ -8,7 +8,8 @@ use crate::{
 use euclid::Box2D; // TODO Expose this in crate::math
 #[derive(Debug, Clone)]
 pub struct SpriteSource {
-    pub(crate) handle: Handle<SpriteSourceData>,
+    pub location: SpriteSourceLocation,
+    pub texture: Texture,
 }
 
 #[derive(Debug, Clone)]
@@ -51,19 +52,11 @@ impl SpriteSourceSublocation {
     }
 }
 
-#[derive(Debug)]
-pub(crate) struct SpriteSourceData {
-    pub location: SpriteSourceLocation,
-    pub texture: Texture,
-}
-
 impl SpriteSource {
     pub fn new(location: Rect<u32>, texture: Texture) -> Self {
         SpriteSource {
-            handle: Handle::new(SpriteSourceData {
-                location: SpriteSourceLocation::Rect(location),
-                texture,
-            }),
+            location: SpriteSourceLocation::Rect(location),
+            texture,
         }
     }
 
@@ -72,10 +65,8 @@ impl SpriteSource {
         texture: Texture,
     ) -> Self {
         Self {
-            handle: Handle::new(SpriteSourceData {
-                location: SpriteSourceLocation::Joined(locations.into_iter().collect()),
-                texture,
-            }),
+            location: SpriteSourceLocation::Joined(locations.into_iter().collect()),
+            texture,
         }
     }
 
@@ -84,17 +75,17 @@ impl SpriteSource {
         let sources: Vec<_> = sources.into_iter().collect();
         let sprites_wide = (sources.len() as f32).sqrt() as usize;
         assert!(sprites_wide * sprites_wide == sources.len()); // check for square
-        let texture = sources[0].texture().await;
-        let texture_id = texture.id().await;
-        let sprite_size = sources[0].location().await.bounds().size;
+        let texture = sources[0].texture.clone();
+
+        let sprite_size = sources[0].location.bounds().size;
         let mut sources = sources.into_iter();
         let mut locations = Vec::new();
         for y in 0..sprites_wide {
             for x in 0..sprites_wide {
                 let source = sources.next().unwrap();
-                debug_assert!(texture_id == source.texture().await.id().await);
+                debug_assert!(texture.id == source.texture.id);
                 locations.push(SpriteSourceSublocation {
-                    source: source.location().await.bounds(),
+                    source: source.location.bounds(),
                     destination: Point::new(
                         x as u32 * sprite_size.width,
                         y as u32 * sprite_size.height,
@@ -107,11 +98,7 @@ impl SpriteSource {
     }
 
     pub async fn entire_texture(texture: Texture) -> Self {
-        let (w, h) = {
-            let texture = texture.handle.read().await;
-            (texture.image.width(), texture.image.height())
-        };
-        Self::new(Rect::new(Point::default(), Size::new(w, h)), texture)
+        Self::new(Rect::new(Point::default(), texture.size()), texture)
     }
 
     pub async fn render_at(
@@ -150,10 +137,9 @@ impl SpriteSource {
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
     ) {
-        let sprite_location = self.location().await;
         self.render_with_alpha(
             scene,
-            Rect::new(location, sprite_location.size().to_f32().cast_unit()),
+            Rect::new(location, self.location.size().to_f32().cast_unit()),
             rotation,
             alpha,
         )
@@ -203,15 +189,5 @@ impl SpriteSource {
                 self.clone(),
             )))
             .await;
-    }
-
-    pub async fn location(&self) -> SpriteSourceLocation {
-        let sprite = self.handle.read().await;
-        sprite.location.clone()
-    }
-
-    pub async fn texture(&self) -> Texture {
-        let sprite = self.handle.read().await;
-        sprite.texture.clone()
     }
 }

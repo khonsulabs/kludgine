@@ -9,10 +9,14 @@ mod collection;
 mod gpu_batch;
 mod pipeline;
 mod sheet;
-pub(crate) use self::{batch::Batch, gpu_batch::GpuBatch, pipeline::Pipeline};
+pub(crate) use self::{
+    batch::Batch,
+    gpu_batch::{BatchBuffers, GpuBatch},
+    pipeline::Pipeline,
+};
 mod source;
 pub use self::{collection::*, sheet::*, source::*};
-use std::{collections::HashMap, iter::IntoIterator, time::Duration};
+use std::{collections::HashMap, iter::IntoIterator, sync::Arc, time::Duration};
 
 #[macro_export]
 macro_rules! include_aseprite_sprite {
@@ -107,7 +111,7 @@ impl Sprite {
     }
 
     pub async fn single_frame(texture: Texture) -> Self {
-        let size = texture.size().await;
+        let size = texture.size();
         let source = SpriteSource::new(Rect::new(Point::default(), size.cast_unit()), texture);
         let mut frames = HashMap::new();
         frames.insert(
@@ -141,7 +145,7 @@ impl Sprite {
             ));
         }
 
-        let texture_size = texture.size().await;
+        let texture_size = texture.size();
         if meta["size"]["w"] != texture_size.width || meta["size"]["h"] != texture_size.height {
             return Err(KludgineError::SpriteParseError(
                 "invalid aseprite json: Size did not match input texture".to_owned(),
@@ -344,7 +348,7 @@ impl Sprite {
         let animations = handle.animations.handle.read().await;
         if let Some(animation) = animations.values().next() {
             if let Some(frame) = animation.frames.first() {
-                return Some(frame.source.location().await.bounds());
+                return Some(frame.source.location.bounds());
             }
         }
         None
@@ -355,7 +359,7 @@ impl Sprite {
         let animations = handle.animations.handle.read().await;
         if let Some(animation) = animations.values().next() {
             if let Some(frame) = animation.frames.first() {
-                return Some(frame.source.location().await.size());
+                return Some(frame.source.location.size());
             }
         }
         None
@@ -496,7 +500,7 @@ impl SpriteFrameBuilder {
 
 #[derive(Clone)]
 pub(crate) struct RenderedSprite {
-    pub(crate) handle: Handle<RenderedSpriteData>,
+    pub(crate) data: Arc<RenderedSpriteData>,
 }
 
 impl RenderedSprite {
@@ -507,7 +511,7 @@ impl RenderedSprite {
         source: SpriteSource,
     ) -> Self {
         Self {
-            handle: Handle::new(RenderedSpriteData {
+            data: Arc::new(RenderedSpriteData {
                 render_at,
                 rotation,
                 alpha,
