@@ -10,7 +10,7 @@ pub struct Pipeline {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-/// The uniforms for the shader. These uniforms match those from rgx's built-in pipelines, and the math performed is identical
+/// The uniforms for the shader.
 pub struct Uniforms {
     /// The orthographic projection matrix
     pub ortho: ScreenTransformation<f32>,

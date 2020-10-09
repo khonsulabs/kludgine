@@ -276,7 +276,7 @@ impl FrameRenderer {
                                     })
                                 {
                                     // This is one section that feels like a kludge. gpu_cache is storing the textures upside down like normal
-                                    // but rgx is automatically flipping textures. Rgx isn't exactly the best compatibility with this process
+                                    // but easywgpu is automatically flipping textures. Easygpu's texture isn't exactly the best compatibility with this process
                                     // because gpu_cache also produces data that is 1 byte per pixel, and we have to expand it when we're updating the texture
                                     let source = Box2D::<_, Unknown>::new(
                                         Point::new(
