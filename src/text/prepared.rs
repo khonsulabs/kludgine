@@ -3,9 +3,9 @@ use crate::{
     math::{Pixels, Point, Points, Raw, ScreenScale, Size, SizeExt},
     style::Alignment,
     text::Font,
-    Handle,
 };
 use futures::future::join_all;
+use std::sync::Arc;
 
 #[derive(Default, Debug)]
 pub struct PreparedText {
@@ -79,9 +79,10 @@ impl PreparedLine {
             return Size::from_lengths(Pixels::default(), self.height());
         }
 
-        let width = join_all(self.spans.iter().map(|s| s.width()))
-            .await
-            .into_iter()
+        let width = self
+            .spans
+            .iter()
+            .map(|s| s.data.width)
             .fold(Pixels::default(), |sum, s| sum + s);
 
         Size::from_lengths(width, self.height())
@@ -95,7 +96,7 @@ impl PreparedLine {
 #[derive(Clone, Debug)]
 pub struct PreparedSpan {
     pub location: Point<f32, Raw>,
-    pub handle: Handle<PreparedSpanData>,
+    pub data: Arc<PreparedSpanData>,
 }
 
 impl PreparedSpan {
@@ -109,7 +110,7 @@ impl PreparedSpan {
     ) -> Self {
         Self {
             location: Point::default(),
-            handle: Handle::new(PreparedSpanData {
+            data: Arc::new(PreparedSpanData {
                 font,
                 size,
                 color,
@@ -123,18 +124,12 @@ impl PreparedSpan {
     pub fn translate(&self, location: Point<f32, Raw>) -> Self {
         Self {
             location,
-            handle: self.handle.clone(),
+            data: self.data.clone(),
         }
     }
 
-    pub async fn width(&self) -> Pixels {
-        let handle = self.handle.read().await;
-        handle.width
-    }
-
     pub(crate) async fn metrics(&self) -> rusttype::VMetrics {
-        let handle = self.handle.read().await;
-        handle.font.metrics(handle.size).await
+        self.data.font.metrics(self.data.size).await
     }
 }
 

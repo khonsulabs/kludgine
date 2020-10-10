@@ -215,8 +215,7 @@ impl Image {
 
     async fn calculate_target_size(&self, content_size: Size<f32, Scaled>) -> Size<f32, Scaled> {
         if let Some(frame) = &self.current_frame {
-            let frame_location = frame.location().await;
-            let size_as_points = frame_location.size().to_f32().cast_unit();
+            let size_as_points = frame.location.size().to_f32().cast_unit();
             match &self.options.scaling {
                 None => size_as_points,
                 Some(scaling) => match scaling {

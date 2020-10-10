@@ -26,7 +26,7 @@ impl Circle<Scaled> {
 impl Circle<Raw> {
     pub fn build(
         &self,
-        builder: &mut rgx_lyon::ShapeBuilder,
+        builder: &mut easygpu_lyon::ShapeBuilder,
         stroke: &Option<Stroke>,
         fill: &Option<Fill>,
     ) -> KludgineResult<()> {

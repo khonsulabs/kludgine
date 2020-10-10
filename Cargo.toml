@@ -31,10 +31,10 @@ ecs = ["legion", "sorted-vec"]
 serialization = ["serde", "euclid/serde", "palette/serializing"]
 
 [dependencies]
-rgx = { version = "0.8", features = ["renderer"] }
-rgx-lyon = "0.1"
+easygpu = { version = "0.0.1" }
+easygpu-lyon = { version = "0.0.1" }
 lyon_tessellation = "0.16"
-winit = "0.22"
+winit = "0.23"
 image = "0.23"
 crossbeam = "0.7"
 lazy_static = "1"
@@ -51,6 +51,7 @@ palette = "0.5"
 async-channel = "1"
 async-rwlock = "1"
 async-handle = "0.1"
+async-lock = "2"
 smol = "1"
 smol-timeout = "0.6"
 easy-parallel = "3"
@@ -74,3 +75,7 @@ required-features = ["bundled-fonts-roboto"]
 [[example]]
 name = "ui"
 required-features = ["bundled-fonts-roboto"]
+
+[patch.crates-io]
+# easygpu = { path = "../easygpu" }
+# easygpu-lyon = { path = "../easygpu-lyon" }

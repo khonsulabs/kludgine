@@ -1,5 +1,5 @@
+use easygpu::color::{Rgba, Rgba8};
 use palette::{rgb::Srgba, Component, Shade, Srgb};
-use rgx::color::{Rgba, Rgba8};
 
 #[derive(Default, Clone, Debug, Copy, PartialEq)]
 pub struct Color(Rgba);
