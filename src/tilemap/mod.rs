@@ -7,7 +7,7 @@ use super::{
     KludgineResult,
 };
 use async_trait::async_trait;
-use euclid::{Box2D, Scale};
+use euclid::{Box2D, Length, Scale};
 use std::{mem, time::Duration};
 
 /// TileMap renders tiles retrieved from a TileProvider
@@ -54,13 +54,13 @@ where
         // We need to start at the upper-left of inverting the location
         let min_x = (-location.x / tile_size.width).floor() as i32;
         let min_y = (-location.y / tile_size.height).floor() as i32;
-        let extra_x = tile_size.width - 1.;
-        let extra_y = tile_size.height - 1.;
+        let extra_x = tile_size.width() - Length::new(1.);
+        let extra_y = tile_size.height() - Length::new(1.);
         let scene_size = scene.size().await;
-        let total_width = scene_size.width + extra_x;
-        let total_height = scene_size.height + extra_y;
-        let tiles_wide = (total_width / tile_size.width as f32).ceil() as i32;
-        let tiles_high = (total_height / tile_height as f32).ceil() as i32;
+        let total_width = scene_size.width() + extra_x;
+        let total_height = scene_size.height() + extra_y;
+        let tiles_wide = (total_width / tile_size.width as f32).get().ceil() as i32;
+        let tiles_high = (total_height / tile_size.height as f32).get().ceil() as i32;
 
         let elapsed = scene.elapsed().await;
 
