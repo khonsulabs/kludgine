@@ -5,11 +5,11 @@ use crate::{
     shape::{Fill, Shape},
     style::{Style, StyleSheet},
     ui::{
-        AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout, LayoutSolver,
-        LayoutSolverExt, Node, SceneContext, StyledContext, UIState,
+        node::ThreadsafeAnyMap, AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout,
+        LayoutSolver, LayoutSolverExt, Node, SceneContext, StyledContext, UIState,
     },
     window::EventStatus,
-    KludgineResult,
+    Handle, KludgineResult,
 };
 use async_trait::async_trait;
 
@@ -195,8 +195,11 @@ pub trait InteractiveComponent: Component {
         context: &mut SceneContext,
         component: T,
     ) -> EntityBuilder<T, Self::Message> {
+        let component = Handle::new(component);
+        let mut components = ThreadsafeAnyMap::new();
+        components.insert(component);
         EntityBuilder {
-            component,
+            components,
             scene: context.scene().clone(),
             parent: Some(context.index()),
             interactive: true,
@@ -244,7 +247,9 @@ impl<Input: Send + 'static, Output: Send + Sync + 'static> TypeErasedCallback<In
         if let Some(node) = self.target.arena().get(&self.target.index()).await {
             let translated = self.translator.as_ref()(input);
             let component = node.component.write().await;
-            component.receive_message(&self.target, Box::new(translated))
+            component
+                .receive_message(&self.target, Box::new(translated))
+                .await
         }
     }
 }
@@ -278,7 +283,7 @@ pub struct EntityBuilder<C, P>
 where
     C: InteractiveComponent + 'static,
 {
-    component: C,
+    components: ThreadsafeAnyMap,
     scene: Scene,
     parent: Option<Index>,
     style_sheet: StyleSheet,
@@ -342,8 +347,8 @@ where
 
     pub async fn insert(self) -> KludgineResult<Entity<C>> {
         let index = {
-            let node = Node::new(
-                self.component,
+            let node = Node::from_components::<C>(
+                self.components,
                 self.style_sheet,
                 self.bounds,
                 self.interactive,

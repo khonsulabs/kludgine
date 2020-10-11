@@ -14,6 +14,8 @@ use async_trait::async_trait;
 use derivative::Derivative;
 use std::any::Any;
 
+pub(crate) type ThreadsafeAnyMap = anymap::Map<dyn anymap::any::Any + Send + Sync>;
+
 #[async_trait]
 pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
     fn as_any(&self) -> &dyn Any;
@@ -24,7 +26,7 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
     async fn set_bounds(&self, bounds: AbsoluteBounds);
     async fn set_layout(&self, layout: Layout);
     async fn get_layout(&self) -> Layout;
-    fn receive_message(&self, context: &Context, message: Box<dyn Any>);
+    async fn receive_message(&self, context: &Context, message: Box<dyn Any + Send + Sync>);
 
     // Component methods without mutable self
 
@@ -86,6 +88,22 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
     ) -> KludgineResult<bool>;
 }
 
+impl dyn AnyNode {
+    pub async fn component<C: InteractiveComponent + 'static, T: Send + Sync + 'static>(
+        &self,
+    ) -> Option<Handle<T>> {
+        let components = {
+            if let Some(node_data) = self.as_any().downcast_ref::<NodeData<C>>() {
+                node_data.components.clone()
+            } else {
+                return None;
+            }
+        };
+        let components = components.read().await;
+        components.get::<Handle<T>>().cloned()
+    }
+}
+
 #[async_trait]
 pub(crate) trait CallbackSender {
     async fn send_callback(&self, input: Box<dyn Any + Send + Sync>);
@@ -131,9 +149,9 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         layout.clone()
     }
 
-    fn receive_message(&self, context: &Context, message: Box<dyn Any>) {
+    async fn receive_message(&self, context: &Context, message: Box<dyn Any + Send + Sync>) {
         let message = message.downcast_ref::<T::Message>().unwrap().clone();
-        let component_handle = self.component.clone();
+        let component_handle = self.component::<T>().await.unwrap();
         let mut context = context.clone();
         Runtime::spawn(async move {
             let mut component = component_handle.write().await;
@@ -143,7 +161,8 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     }
 
     async fn initialize(&self, context: &mut SceneContext) -> KludgineResult<()> {
-        let mut component = self.component.write().await;
+        let component = self.interactive_component().await;
+        let mut component = component.write().await;
         component.initialize(context).await
     }
 
@@ -152,17 +171,20 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         context: &mut StyledContext,
         constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<Size<f32, Scaled>> {
-        let component = self.component.read().await;
+        let component = self.interactive_component().await;
+        let component = component.read().await;
         component.content_size(context, constraints).await
     }
 
     async fn layout(&self, context: &mut StyledContext) -> KludgineResult<Box<dyn LayoutSolver>> {
-        let mut component = self.component.write().await;
+        let component = self.interactive_component().await;
+        let mut component = component.write().await;
         component.layout(context).await
     }
 
     async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
-        let component = self.component.read().await;
+        let component = self.interactive_component().await;
+        let component = component.read().await;
         component.render(context, layout).await
     }
 
@@ -171,12 +193,14 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        let component = self.component.read().await;
+        let component = self.interactive_component().await;
+        let component = component.read().await;
         component.render_background(context, layout).await
     }
 
     async fn update(&self, context: &mut SceneContext) -> KludgineResult<()> {
-        let mut component = self.component.write().await;
+        let component = self.interactive_component().await;
+        let mut component = component.write().await;
         component.update(context).await
     }
 
@@ -186,7 +210,8 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         position: Point<f32, Scaled>,
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
-        let mut component = self.component.write().await;
+        let component = self.interactive_component().await;
+        let mut component = component.write().await;
         component.mouse_down(context, position, button).await
     }
 
@@ -196,7 +221,8 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
-        let mut component = self.component.write().await;
+        let component = self.interactive_component().await;
+        let mut component = component.write().await;
         component.mouse_drag(context, position, button).await
     }
 
@@ -206,7 +232,8 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
-        let mut component = self.component.write().await;
+        let component = self.interactive_component().await;
+        let mut component = component.write().await;
         component.mouse_up(context, position, button).await
     }
 
@@ -216,7 +243,8 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         delta: MouseScrollDelta,
         touch_phase: TouchPhase,
     ) -> KludgineResult<EventStatus> {
-        let mut component = self.component.write().await;
+        let component = self.interactive_component().await;
+        let mut component = component.write().await;
         component.mouse_wheel(context, delta, touch_phase).await
     }
 
@@ -225,17 +253,20 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         context: &mut Context,
         window_position: Point<f32, Scaled>,
     ) -> KludgineResult<bool> {
-        let component = self.component.read().await;
+        let component = self.interactive_component().await;
+        let component = component.read().await;
         component.hit_test(context, window_position).await
     }
 
     async fn hovered(&self, context: &mut Context) -> KludgineResult<()> {
-        let mut component = self.component.write().await;
+        let component = self.interactive_component().await;
+        let mut component = component.write().await;
         component.hovered(context).await
     }
 
     async fn unhovered(&self, context: &mut Context) -> KludgineResult<()> {
-        let mut component = self.component.write().await;
+        let component = self.interactive_component().await;
+        let mut component = component.write().await;
         component.unhovered(context).await
     }
 }
@@ -250,20 +281,31 @@ impl<T: InteractiveComponent + 'static> CallbackSender for NodeData<T> {
     }
 }
 
+impl<T: InteractiveComponent + 'static> NodeData<T> {
+    pub async fn component<C: Send + Sync + 'static>(&self) -> Option<Handle<C>> {
+        let anymap = self.components.read().await;
+        anymap.get::<Handle<C>>().cloned()
+    }
+
+    pub async fn interactive_component(&self) -> Handle<T> {
+        self.component().await.unwrap()
+    }
+}
+
 #[derive(Derivative)]
 #[derivative(Debug)]
 pub struct NodeData<T>
 where
     T: InteractiveComponent,
 {
-    #[derivative(Debug = "ignore")]
-    pub(crate) component: Handle<T>,
+    pub(crate) components: Handle<ThreadsafeAnyMap>,
     #[derivative(Debug = "ignore")]
     callback: Option<Callback<T::Event>>,
     interactive: bool,
     pub(crate) layout: Handle<Layout>,
     pub(crate) style_sheet: Handle<StyleSheet>,
     pub(crate) bounds: Handle<AbsoluteBounds>,
+    _phantom: std::marker::PhantomData<T>,
 }
 
 #[async_trait]
@@ -277,7 +319,8 @@ where
     T: Window,
 {
     async fn close_requested(&self) -> KludgineResult<CloseResponse> {
-        let component = self.component.read().await;
+        let component = self.interactive_component().await;
+        let component = component.read().await;
         component.close_requested().await
     }
 }
@@ -288,6 +331,29 @@ pub struct Node {
 }
 
 impl Node {
+    pub fn from_components<T: InteractiveComponent + 'static>(
+        components: ThreadsafeAnyMap,
+        style_sheet: StyleSheet,
+        bounds: AbsoluteBounds,
+        interactive: bool,
+        callback: Option<Callback<T::Event>>,
+    ) -> Self {
+        let components = Handle::new(components);
+
+        let style_sheet = Handle::new(style_sheet);
+        let bounds = Handle::new(bounds);
+        Self {
+            component: Handle::new(Box::new(NodeData::<T> {
+                style_sheet,
+                components,
+                callback,
+                bounds,
+                interactive,
+                layout: Default::default(),
+                _phantom: Default::default(),
+            })),
+        }
+    }
     pub fn new<T: InteractiveComponent + 'static>(
         component: T,
         style_sheet: StyleSheet,
@@ -296,18 +362,10 @@ impl Node {
         callback: Option<Callback<T::Event>>,
     ) -> Self {
         let component = Handle::new(component);
-        let style_sheet = Handle::new(style_sheet);
-        let bounds = Handle::new(bounds);
-        Self {
-            component: Handle::new(Box::new(NodeData {
-                style_sheet,
-                component,
-                callback,
-                bounds,
-                interactive,
-                layout: Default::default(),
-            })),
-        }
+        let mut components = ThreadsafeAnyMap::new();
+        components.insert(component);
+
+        Self::from_components::<T>(components, style_sheet, bounds, interactive, callback)
     }
 
     pub async fn style_sheet(&self) -> StyleSheet {
