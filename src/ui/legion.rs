@@ -16,6 +16,7 @@ use crossbeam::atomic::AtomicCell;
 use legion::{systems::CommandBuffer, Entity};
 use sorted_vec::SortedVec;
 use std::{
+    any::Any,
     cmp::Ordering,
     collections::HashSet,
     fmt::Debug,
@@ -87,7 +88,7 @@ impl<Unit> CanvasFrame<Unit> {
 #[async_trait]
 impl<Unit, Command> Component for Canvas<Unit, Command>
 where
-    Unit: Clone + Send + Sync + Debug,
+    Unit: Clone + Send + Sync + Debug + 'static,
     Command: Send + Sync,
 {
     async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
@@ -323,7 +324,8 @@ impl<Unit> PartialEq for RenderedDrawable<Unit> {
 impl<Unit> Eq for RenderedDrawable<Unit> {}
 
 #[async_trait]
-trait TypelessTileMap<Unit>: Send + Sync + Debug {
+trait TypelessTileMap<Unit: 'static>: Send + Sync + Debug + 'static {
+    fn as_any(&self) -> &dyn Any;
     async fn draw_scaled(
         &self,
         scene: &Scene,
@@ -338,7 +340,7 @@ pub struct LegionTileMap<Unit> {
 }
 
 #[async_trait]
-impl<P: TileProvider + Send + Sync + Debug, Unit: Send + 'static> TypelessTileMap<Unit>
+impl<P: TileProvider + Send + Sync + Debug + 'static, Unit: Send + 'static> TypelessTileMap<Unit>
     for TileMap<P>
 {
     async fn draw_scaled(
@@ -350,6 +352,10 @@ impl<P: TileProvider + Send + Sync + Debug, Unit: Send + 'static> TypelessTileMa
         // let scene = scene.set_camera(scene.zoom(), -location * scale);
         self.draw_scaled(&scene, location, scale).await
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 impl<Unit: Send + 'static> LegionTileMap<Unit> {
@@ -357,6 +363,10 @@ impl<Unit: Send + 'static> LegionTileMap<Unit> {
         Self {
             tilemap: Arc::new(Box::new(tilemap)),
         }
+    }
+
+    pub fn tilemap<P: TileProvider + Send + Sync + Debug + 'static>(&self) -> &TileMap<P> {
+        self.tilemap.as_any().downcast_ref::<TileMap<P>>().unwrap()
     }
 }
 

@@ -1,14 +1,17 @@
-use crate::{math::Raw, math::Unknown, sprite::SpriteSource};
-
 use super::{
     math::{Point, PointExt, Scaled, Size, SizeExt},
     scene::Scene,
     sprite::{Sprite, SpriteRotation},
     KludgineResult,
 };
+use crate::{math::Raw, math::Unknown, sprite::SpriteSource};
 use async_trait::async_trait;
 use euclid::{Box2D, Length, Scale};
-use std::{mem, time::Duration};
+use std::{
+    mem,
+    ops::{Deref, DerefMut},
+    time::Duration,
+};
 
 /// TileMap renders tiles retrieved from a TileProvider
 #[derive(Debug)]
@@ -251,5 +254,19 @@ impl PersistentMap for PersistentTileMap {
 
     fn set<I: Into<TileSprite>>(&mut self, location: Point<u32>, sprite: Option<I>) {
         self.provider.set(location, sprite.map(|s| s.into()));
+    }
+}
+
+impl<T> Deref for TileMap<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.provider
+    }
+}
+
+impl<T> DerefMut for TileMap<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.provider
     }
 }
