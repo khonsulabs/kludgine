@@ -206,7 +206,6 @@ pub trait InteractiveComponent: Component {
             ui_state: context.ui_state().clone(),
             arena: context.arena().clone(),
             style_sheet: Default::default(),
-            bounds: Default::default(),
             callback: None,
             _marker: Default::default(),
         }
@@ -287,7 +286,6 @@ where
     scene: Scene,
     parent: Option<Index>,
     style_sheet: StyleSheet,
-    bounds: AbsoluteBounds,
     interactive: bool,
     callback: Option<Callback<C::Event>>,
     ui_state: UIState,
@@ -326,7 +324,7 @@ where
     }
 
     pub fn bounds(mut self, bounds: AbsoluteBounds) -> Self {
-        self.bounds = bounds;
+        self.components.insert(Handle::new(bounds));
         self
     }
 
@@ -345,15 +343,10 @@ where
         self
     }
 
-    pub async fn insert(self) -> KludgineResult<Entity<C>> {
+    pub async fn insert(mut self) -> KludgineResult<Entity<C>> {
+        self.components.insert(Handle::new(self.style_sheet));
         let index = {
-            let node = Node::from_components::<C>(
-                self.components,
-                self.style_sheet,
-                self.bounds,
-                self.interactive,
-                self.callback,
-            );
+            let node = Node::from_components::<C>(self.components, self.interactive, self.callback);
             let index = self.arena.insert(self.parent, node).await;
 
             let mut context =

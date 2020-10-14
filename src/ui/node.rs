@@ -120,33 +120,42 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     }
 
     async fn style_sheet(&self) -> StyleSheet {
-        let style_sheet = self.style_sheet.read().await;
-        style_sheet.clone()
+        if let Some(sheet) = self.component::<StyleSheet>().await {
+            let sheet = sheet.read().await;
+            sheet.clone()
+        } else {
+            StyleSheet::default()
+        }
     }
 
     async fn set_style_sheet(&self, sheet: StyleSheet) {
-        let mut style_sheet = self.style_sheet.write().await;
-        *style_sheet = sheet;
+        self.insert_component(sheet).await;
     }
 
     async fn bounds(&self) -> AbsoluteBounds {
-        let bounds = self.bounds.read().await;
-        bounds.clone()
+        if let Some(bounds) = self.component::<AbsoluteBounds>().await {
+            let bounds = bounds.read().await;
+            bounds.clone()
+        } else {
+            AbsoluteBounds::default()
+        }
     }
 
     async fn set_bounds(&self, new_bounds: AbsoluteBounds) {
-        let mut bounds = self.bounds.write().await;
-        *bounds = new_bounds;
+        self.insert_component(new_bounds).await;
     }
 
     async fn set_layout(&self, layout: Layout) {
-        let mut handle = self.layout.write().await;
-        *handle = layout;
+        self.insert_component(layout).await;
     }
 
     async fn get_layout(&self) -> Layout {
-        let layout = self.layout.read().await;
-        layout.clone()
+        if let Some(bounds) = self.component::<Layout>().await {
+            let bounds = bounds.read().await;
+            bounds.clone()
+        } else {
+            Layout::default()
+        }
     }
 
     async fn receive_message(&self, context: &Context, message: Box<dyn Any + Send + Sync>) {
@@ -287,6 +296,13 @@ impl<T: InteractiveComponent + 'static> NodeData<T> {
         anymap.get::<Handle<C>>().cloned()
     }
 
+    pub async fn insert_component<C: Send + Sync + 'static>(
+        &self,
+        component: C,
+    ) -> Option<Handle<C>> {
+        let mut anymap = self.components.write().await;
+        anymap.insert(Handle::new(component))
+    }
     pub async fn interactive_component(&self) -> Handle<T> {
         self.component().await.unwrap()
     }
@@ -302,9 +318,6 @@ where
     #[derivative(Debug = "ignore")]
     callback: Option<Callback<T::Event>>,
     interactive: bool,
-    pub(crate) layout: Handle<Layout>,
-    pub(crate) style_sheet: Handle<StyleSheet>,
-    pub(crate) bounds: Handle<AbsoluteBounds>,
     _phantom: std::marker::PhantomData<T>,
 }
 
@@ -333,23 +346,15 @@ pub struct Node {
 impl Node {
     pub fn from_components<T: InteractiveComponent + 'static>(
         components: ThreadsafeAnyMap,
-        style_sheet: StyleSheet,
-        bounds: AbsoluteBounds,
         interactive: bool,
         callback: Option<Callback<T::Event>>,
     ) -> Self {
         let components = Handle::new(components);
-
-        let style_sheet = Handle::new(style_sheet);
-        let bounds = Handle::new(bounds);
         Self {
             component: Handle::new(Box::new(NodeData::<T> {
-                style_sheet,
                 components,
                 callback,
-                bounds,
                 interactive,
-                layout: Default::default(),
                 _phantom: Default::default(),
             })),
         }
@@ -361,11 +366,12 @@ impl Node {
         interactive: bool,
         callback: Option<Callback<T::Event>>,
     ) -> Self {
-        let component = Handle::new(component);
         let mut components = ThreadsafeAnyMap::new();
-        components.insert(component);
+        components.insert(Handle::new(component));
+        components.insert(Handle::new(bounds));
+        components.insert(Handle::new(style_sheet));
 
-        Self::from_components::<T>(components, style_sheet, bounds, interactive, callback)
+        Self::from_components::<T>(components, interactive, callback)
     }
 
     pub async fn style_sheet(&self) -> StyleSheet {
