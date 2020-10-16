@@ -1,10 +1,12 @@
 use crate::{
     event::MouseButton,
     math::{Angle, Point, Rect, Scale, Scaled, Unknown},
+    prelude::TextWrap,
     runtime::Runtime,
     scene::Scene,
     shape::Shape,
     sprite::{Sprite, SpriteRotation, SpriteSource},
+    text::Text,
     tilemap::{TileMap, TileProvider},
     ui::{Component, Context, InteractiveComponent, Layout, StyledContext},
     window::EventStatus,
@@ -130,6 +132,26 @@ where
                         )
                         .await?;
                 }
+                Drawable::Text(text) => {
+                    text.render_at(
+                        context.scene(),
+                        rendered.center * rendered.scale + center.to_vector(),
+                        TextWrap::NoWrap,
+                    )
+                    .await?;
+                }
+                Drawable::Custom(component) => {
+                    component
+                        .drawable
+                        .render(
+                            context.scene(),
+                            rendered.center * rendered.scale + center.to_vector(),
+                            rendered.scale,
+                            rendered.rotation,
+                            rendered.z,
+                        )
+                        .await?
+                }
             }
         }
 
@@ -246,6 +268,8 @@ enum DrawableKind {
     TileMap,
     Shape,
     Sprite,
+    Text,
+    Custom,
 }
 
 impl<Unit> RenderedDrawable<Unit> {
@@ -340,6 +364,60 @@ pub struct LegionTileMap<Unit> {
 }
 
 #[async_trait]
+pub trait CustomDrawable<Unit: 'static>: Send + Sync + Debug + 'static {
+    async fn update(&self, _elapsed: Option<Duration>) -> KludgineResult<()> {
+        Ok(())
+    }
+    async fn render(
+        &self,
+        scene: &Scene,
+        origin: Point<f32, Scaled>,
+        scale: Scale<f32, Unit, Scaled>,
+        rotation: Option<Angle>,
+        z: i32,
+    ) -> KludgineResult<()>;
+}
+
+trait AnyDrawable<Unit: 'static>: CustomDrawable<Unit> {
+    fn as_any(&self) -> &dyn Any;
+}
+
+impl<T, Unit> AnyDrawable<Unit> for T
+where
+    T: CustomDrawable<Unit>,
+    Unit: 'static,
+{
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+#[derive(Debug)]
+pub struct DrawableComponent<Unit> {
+    drawable: Arc<Box<dyn AnyDrawable<Unit>>>,
+}
+
+impl<Unit> Clone for DrawableComponent<Unit> {
+    fn clone(&self) -> Self {
+        Self {
+            drawable: self.drawable.clone(),
+        }
+    }
+}
+
+impl<Unit: 'static> DrawableComponent<Unit> {
+    pub fn new<D: CustomDrawable<Unit>>(drawable: D) -> Self {
+        Self {
+            drawable: Arc::new(Box::new(drawable)),
+        }
+    }
+
+    pub fn drawable<D: CustomDrawable<Unit> + Send + Sync + Debug + 'static>(&self) -> Option<&D> {
+        self.drawable.as_any().downcast_ref::<D>()
+    }
+}
+
+#[async_trait]
 impl<P: TileProvider + Send + Sync + Debug + 'static, Unit: Send + 'static> TypelessTileMap<Unit>
     for TileMap<P>
 {
@@ -349,7 +427,6 @@ impl<P: TileProvider + Send + Sync + Debug + 'static, Unit: Send + 'static> Type
         location: Point<f32, Scaled>,
         scale: Scale<f32, Unknown, Scaled>,
     ) -> KludgineResult<()> {
-        // let scene = scene.set_camera(scene.zoom(), -location * scale);
         self.draw_scaled(&scene, location, scale).await
     }
 
@@ -365,8 +442,8 @@ impl<Unit: Send + 'static> LegionTileMap<Unit> {
         }
     }
 
-    pub fn tilemap<P: TileProvider + Send + Sync + Debug + 'static>(&self) -> &TileMap<P> {
-        self.tilemap.as_any().downcast_ref::<TileMap<P>>().unwrap()
+    pub fn tilemap<P: TileProvider + Send + Sync + Debug + 'static>(&self) -> Option<&TileMap<P>> {
+        self.tilemap.as_any().downcast_ref::<TileMap<P>>()
     }
 }
 
@@ -375,6 +452,8 @@ pub enum Drawable<Unit> {
     Sprite(SpriteSource),
     Shape(Shape<Unit>),
     TileMap(LegionTileMap<Unit>),
+    Text(Text),
+    Custom(DrawableComponent<Unit>),
 }
 
 impl<Unit> Drawable<Unit> {
@@ -388,6 +467,8 @@ impl<Unit> Drawable<Unit> {
                 Runtime::block_on(async { (DrawableKind::Sprite, sprite.texture.id) })
             }
             Drawable::TileMap(_) => (DrawableKind::TileMap, 0),
+            Drawable::Text(_) => (DrawableKind::Text, 0),
+            Drawable::Custom(_) => (DrawableKind::Custom, 0),
         }
     }
 }
@@ -431,6 +512,62 @@ fn render_sprite_source<Unit: Sized + Send + Sync + 'static>(
     #[resource] camera: &CameraState<Unit>,
 ) {
     let mut drawable = RenderedDrawable::new(Drawable::Sprite(sprite.clone()))
+        .with_center(*location - camera.look_at.to_vector())
+        .with_z(z.cloned().unwrap_or_default().0);
+    if let Some(rotation) = rotation {
+        drawable = drawable.with_rotation(*rotation);
+    }
+    if let Some(scaling) = scaling {
+        drawable = drawable.with_scale(Scale::new(scaling.0.get() * camera.scale.get()));
+    } else {
+        drawable = drawable.with_scale(camera.scale);
+    }
+    frame.insert(drawable);
+}
+
+#[legion::system(for_each)]
+#[allow(clippy::too_many_arguments)]
+fn render_custom_drawable<Unit: Sized + Send + Sync + 'static>(
+    component: &DrawableComponent<Unit>,
+    location: &Point<f32, Unit>,
+    rotation: Option<&Angle>,
+    scaling: Option<&Scaling<Unit>>,
+    z: Option<&ZIndex>,
+    #[resource] frame: &CanvasFrame<Unit>,
+    #[resource] camera: &CameraState<Unit>,
+    #[resource] elapsed: &Option<Duration>,
+) {
+    let update_component = component.clone();
+    let elapsed = *elapsed;
+    Runtime::spawn(async move { update_component.drawable.update(elapsed).await.unwrap() })
+        .detach();
+
+    let mut drawable = RenderedDrawable::new(Drawable::Custom(component.clone()))
+        .with_center(*location - camera.look_at.to_vector())
+        .with_z(z.cloned().unwrap_or_default().0);
+    if let Some(rotation) = rotation {
+        drawable = drawable.with_rotation(*rotation);
+    }
+    if let Some(scaling) = scaling {
+        drawable = drawable.with_scale(Scale::new(scaling.0.get() * camera.scale.get()));
+    } else {
+        drawable = drawable.with_scale(camera.scale);
+    }
+    frame.insert(drawable);
+}
+
+#[legion::system(for_each)]
+#[allow(clippy::too_many_arguments)]
+fn render_text<Unit: Sized + Send + Sync + 'static>(
+    text: &Text,
+    location: &Point<f32, Unit>,
+    rotation: Option<&Angle>,
+    scaling: Option<&Scaling<Unit>>,
+    z: Option<&ZIndex>,
+    #[resource] frame: &CanvasFrame<Unit>,
+    #[resource] camera: &CameraState<Unit>,
+) {
+    let mut drawable = RenderedDrawable::new(Drawable::Text(text.clone()))
         .with_center(*location - camera.look_at.to_vector())
         .with_z(z.cloned().unwrap_or_default().0);
     if let Some(rotation) = rotation {
@@ -496,6 +633,7 @@ fn render_shape<Unit: Clone + Sized + Send + Sync + 'static>(
 }
 
 #[legion::system(for_each)]
+#[allow(clippy::too_many_arguments)]
 fn render_batch<Unit: Clone + Sized + Send + Sync + 'static>(
     batch: &BatchRender<Unit>,
     location: &Point<f32, Unit>,
@@ -504,6 +642,7 @@ fn render_batch<Unit: Clone + Sized + Send + Sync + 'static>(
     z: Option<&ZIndex>,
     #[resource] frame: &mut CanvasFrame<Unit>,
     #[resource] camera: &CameraState<Unit>,
+    #[resource] elapsed: &Option<Duration>,
 ) {
     for drawable in batch.0.iter() {
         match drawable {
@@ -516,6 +655,12 @@ fn render_batch<Unit: Clone + Sized + Send + Sync + 'static>(
             Drawable::TileMap(tilemap) => {
                 render_tilemap(tilemap, location, scaling, z, frame, camera)
             }
+            Drawable::Text(text) => {
+                render_text(text, location, rotation, scaling, z, frame, camera)
+            }
+            Drawable::Custom(component) => render_custom_drawable(
+                component, location, rotation, scaling, z, frame, camera, elapsed,
+            ),
         }
     }
 }
@@ -561,7 +706,9 @@ impl SystemBuilderExt for legion::systems::Builder {
             .add_system(focus_camera_system::<T::Unit>())
             .add_system(render_sprite_system::<T::Unit>())
             .flush()
+            .add_system(render_text_system::<T::Unit>())
             .add_system(render_sprite_source_system::<T::Unit>())
+            .add_system(render_custom_drawable_system::<T::Unit>())
             .add_system(render_shape_system::<T::Unit>())
             .add_system(render_tilemap_system::<T::Unit>())
             .add_system(render_batch_system::<T::Unit>())
