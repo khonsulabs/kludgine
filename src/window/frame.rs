@@ -196,7 +196,7 @@ impl Frame {
                         data: data.to_vec(),
                     })
                 })
-                .expect("Error caching font");
+                .expect("Error caching font"); // TODO Change this to a graceful failure
         }
         self.pending_font_updates.extend(updates);
     }
