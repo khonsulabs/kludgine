@@ -23,33 +23,27 @@ impl Component for TextExample {
         let mut spans = Vec::new();
         spans.push(Span::new(
             "Wrapping ",
-            Style {
-                color: Some(Color::RED),
-                font_size: Some(Points::new(120.0)),
-                ..Default::default()
-            }
-            .effective_style(context.scene())
-            .await,
+            Style::new()
+                .with(ForegroundColor(Color::RED))
+                .with(FontSize::points(120.))
+                .effective_style(context.scene())
+                .await,
         ));
         spans.push(Span::new(
             "rapped ",
-            Style {
-                color: Some(Color::WHITE),
-                font_size: Some(Points::new(60.0)),
-                ..Default::default()
-            }
-            .effective_style(context.scene())
-            .await,
+            Style::new()
+                .with(ForegroundColor(Color::WHITE))
+                .with(FontSize::points(60.))
+                .effective_style(context.scene())
+                .await,
         ));
         spans.push(Span::new(
             "Words to live by",
-            Style {
-                color: Some(Color::BLUE),
-                font_size: Some(Points::new(120.0)),
-                ..Default::default()
-            }
-            .effective_style(context.scene())
-            .await,
+            Style::new()
+                .with(ForegroundColor(Color::BLUE))
+                .with(FontSize::points(120.))
+                .effective_style(context.scene())
+                .await,
         ));
 
         Text::new(spans)

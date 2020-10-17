@@ -112,10 +112,7 @@ impl Component for SpriteSheetExample {
         let sprite = Sprite::from(animations);
         sprite.set_current_tag(Some("Idle".to_string())).await?;
         self.new_entity(context, Image::new(sprite))
-            .style(Style {
-                background_color: Some(Color::GREEN),
-                ..Default::default()
-            })
+            .style(Style::new().with(BackgroundColor(Color::GREEN)))
             .insert()
             .await?;
         Ok(())

@@ -1,7 +1,7 @@
 use crate::{
     event::MouseButton,
     math::{Point, Points, Scaled, Size, Surround},
-    style::{Style, StyleSheet},
+    style::{BackgroundColor, ForegroundColor, Style, StyleSheet},
     ui::{
         AbsoluteBounds, Component, Context, ControlEvent, Entity, InteractiveComponent, Label,
         SceneContext, StyledContext,
@@ -39,10 +39,9 @@ impl Component for Button {
 
         self.label = self
             .new_entity(context, Label::new(&self.caption))
-            .style_sheet(StyleSheet::from(Style {
-                color: Some(control_colors.text.normal()),
-                ..Default::default()
-            }))
+            .style_sheet(StyleSheet::from(
+                Style::new().with(ForegroundColor(control_colors.text.normal())),
+            ))
             .bounds(AbsoluteBounds {
                 left: crate::math::Dimension::from_f32(10.),
                 top: crate::math::Dimension::from_f32(10.),
@@ -54,20 +53,23 @@ impl Component for Button {
             .insert()
             .await?;
 
-        style_sheet.normal.background_color = style_sheet
-            .normal
-            .background_color
-            .or_else(|| Some(control_colors.background.normal()));
+        if style_sheet.normal.get::<BackgroundColor>().is_none() {
+            style_sheet.normal = style_sheet
+                .normal
+                .with(BackgroundColor(control_colors.background.normal()));
+        }
 
-        style_sheet.hover.background_color = style_sheet
-            .hover
-            .background_color
-            .or_else(|| Some(control_colors.background.lighter()));
+        if style_sheet.hover.get::<BackgroundColor>().is_none() {
+            style_sheet.hover = style_sheet
+                .hover
+                .with(BackgroundColor(control_colors.background.lighter()));
+        }
 
-        style_sheet.active.background_color = style_sheet
-            .active
-            .background_color
-            .or_else(|| Some(control_colors.background.darker()));
+        if style_sheet.active.get::<BackgroundColor>().is_none() {
+            style_sheet.active = style_sheet
+                .active
+                .with(BackgroundColor(control_colors.background.darker()));
+        }
 
         context.set_style_sheet(style_sheet).await;
 

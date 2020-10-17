@@ -56,7 +56,7 @@ impl Component for Label {
             layout.inner_bounds().origin,
             self.wrapping(
                 &layout.inner_bounds().size,
-                context.effective_style().alignment,
+                context.effective_style().get_or_default::<Alignment>(),
             ),
         )
         .await
@@ -73,7 +73,7 @@ impl Component for Label {
                 constraints.width.unwrap_or_else(|| f32::MAX),
                 constraints.height.unwrap_or_else(|| f32::MAX),
             ),
-            context.effective_style().alignment,
+            context.effective_style().get_or_default::<Alignment>(),
         );
         let wrapped_size = text.wrap(context.scene(), wrapping).await?.size().await;
         Ok(wrapped_size / context.scene().scale_factor().await)

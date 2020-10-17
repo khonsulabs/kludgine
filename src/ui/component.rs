@@ -3,7 +3,7 @@ use crate::{
     math::{Point, Scaled, Size},
     scene::Scene,
     shape::{Fill, Shape},
-    style::{Style, StyleSheet},
+    style::{BackgroundColor, Style, StyleSheet},
     ui::{
         node::ThreadsafeAnyMap, AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout,
         LayoutSolver, LayoutSolverExt, Node, SceneContext, StyledContext, UIState,
@@ -64,9 +64,9 @@ pub trait Component: Send + Sync {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        if let Some(background) = context.effective_style().background_color {
+        if let Some(background) = context.effective_style().get::<BackgroundColor>() {
             Shape::rect(layout.bounds_without_margin())
-                .fill(Fill::new(background))
+                .fill(Fill::new(background.0))
                 .render_at(Point::default(), context.scene())
                 .await;
         }

@@ -1,4 +1,4 @@
-use crate::{math::Pixels, Handle};
+use crate::{math::Pixels, style::Weight, Handle};
 use crossbeam::atomic::AtomicCell;
 use easygpu::prelude::*;
 use lazy_static::lazy_static;
@@ -64,11 +64,11 @@ impl Font {
         }
     }
 
-    pub async fn weight(&self) -> ttf_parser::Weight {
+    pub async fn weight(&self) -> Weight {
         let font = self.handle.read().await;
         match &font.font {
-            rusttype::Font::Ref(f) => f.weight(),
-            _ => ttf_parser::Weight::Normal,
+            rusttype::Font::Ref(f) => f.weight().into(),
+            _ => Weight::Normal,
         }
     }
 

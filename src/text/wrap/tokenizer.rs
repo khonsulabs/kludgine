@@ -1,11 +1,19 @@
 use crate::{
     math::Pixels,
+    math::Raw,
+    math::Scaled,
     scene::Scene,
     style::EffectiveStyle,
-    text::{font::Font, PreparedSpan, Text},
+    style::FontFamily,
+    style::FontSize,
+    style::ForegroundColor,
+    style::Weight,
+    text::{font::Font, font::FontStyle, PreparedSpan, Text},
     KludgineResult,
 };
+use euclid::Length;
 use rusttype::{GlyphId, PositionedGlyph, Scale};
+
 #[derive(Debug)]
 pub(crate) enum Token {
     EndOfLine(rusttype::VMetrics),
@@ -69,17 +77,22 @@ impl<'a> TokenizerState<'a> {
         }
     }
 
-    async fn emit_token_if_needed(&mut self) -> Option<Token> {
+    async fn emit_token_if_needed(
+        &mut self,
+        scale: euclid::Scale<f32, Scaled, Raw>,
+    ) -> Option<Token> {
         if self.glyphs.is_empty() {
             None
         } else {
             let current_committed_glyphs = std::mem::take(&mut self.glyphs);
 
-            let metrics = self.font.metrics(self.style.font_size).await;
+            let font_size = style_font_size(&self.style, scale);
+            let foreground = self.style.get_or_default::<ForegroundColor>().0;
+            let metrics = self.font.metrics(font_size).await;
             let span = PreparedSpan::new(
                 self.font.clone(),
-                self.style.font_size,
-                self.style.color,
+                font_size,
+                foreground,
                 self.caret,
                 current_committed_glyphs,
                 metrics,
@@ -104,15 +117,16 @@ impl Tokenizer {
         text: &Text,
         scene: &Scene,
     ) -> KludgineResult<Vec<Token>> {
+        let scale = scene.scale_factor().await;
         for span in text.spans.iter() {
             let font = scene
                 .lookup_font(
-                    &span.style.font_family,
-                    span.style.font_weight,
-                    span.style.font_style,
+                    &span.style.get_or_default::<FontFamily>().0,
+                    span.style.get_or_default::<Weight>(),
+                    span.style.get_or_default::<FontStyle>(),
                 )
                 .await?;
-            let vmetrics = font.metrics(span.style.font_size).await;
+            let vmetrics = font.metrics(style_font_size(&span.style, scale)).await;
 
             let mut state = TokenizerState::new(&font, &span.style);
 
@@ -131,7 +145,7 @@ impl Tokenizer {
                     };
 
                     if new_lexer_state != state.lexer_state {
-                        if let Some(token) = state.emit_token_if_needed().await {
+                        if let Some(token) = state.emit_token_if_needed(scale).await {
                             self.tokens.push(token);
                         }
                     }
@@ -141,13 +155,17 @@ impl Tokenizer {
                     let base_glyph = font.glyph(c).await;
                     if let Some(id) = state.last_glyph_id.take() {
                         state.caret += Pixels::new(
-                            font.pair_kerning(span.style.font_size.get(), id, base_glyph.id())
-                                .await,
+                            font.pair_kerning(
+                                style_font_size(&span.style, scale).get(),
+                                id,
+                                base_glyph.id(),
+                            )
+                            .await,
                         );
                     }
                     state.last_glyph_id = Some(base_glyph.id());
                     let glyph = base_glyph
-                        .scaled(Scale::uniform(span.style.font_size.get()))
+                        .scaled(Scale::uniform(style_font_size(&span.style, scale).get()))
                         .positioned(rusttype::point(state.caret.get(), 0.0));
 
                     state.caret += Pixels::new(glyph.unpositioned().h_metrics().advance_width);
@@ -155,11 +173,22 @@ impl Tokenizer {
                 }
             }
 
-            if let Some(token) = state.emit_token_if_needed().await {
+            if let Some(token) = state.emit_token_if_needed(scale).await {
                 self.tokens.push(token);
             }
         }
 
         Ok(self.tokens)
     }
+}
+
+fn style_font_size(
+    style: &EffectiveStyle,
+    scale: euclid::Scale<f32, Scaled, Raw>,
+) -> Length<f32, Raw> {
+    style
+        .get::<FontSize<Raw>>()
+        .cloned()
+        .unwrap_or_else(|| FontSize(Length::<f32, Scaled>::new(14.) * scale))
+        .0
 }

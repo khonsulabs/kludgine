@@ -226,7 +226,10 @@ impl TextWrap {
 #[cfg(all(test, feature = "bundled-fonts"))]
 mod tests {
     use super::*;
-    use crate::{math::ScreenScale, scene::Scene, style::Style, text::Span, theme::Minimal};
+    use crate::{
+        math::Scaled, math::ScreenScale, scene::Scene, style::FontSize, style::Style, text::Span,
+        theme::Minimal,
+    };
 
     #[async_test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
@@ -237,12 +240,10 @@ mod tests {
             scene.register_bundled_fonts().await;
             let wrap = Text::new(vec![Span::new(
                 "This line should wrap",
-                Style {
-                    font_size: Some(Points::new(12.0)),
-                    ..Default::default()
-                }
-                .effective_style(&scene)
-                .await,
+                Style::new()
+                    .with(FontSize::<Scaled>::new(12.))
+                    .effective_style(&scene)
+                    .await,
             )])
             .wrap(
                 &scene,
@@ -267,19 +268,15 @@ mod tests {
         let mut scene = Scene::new(Box::new(Minimal::default()));
         scene.register_bundled_fonts().await;
 
-        let first_style = Style {
-            font_size: Some(Points::new(12.0)),
-            ..Default::default()
-        }
-        .effective_style(&scene)
-        .await;
+        let first_style = Style::new()
+            .with(FontSize::<Scaled>::new(12.))
+            .effective_style(&scene)
+            .await;
 
-        let second_style = Style {
-            font_size: Some(Points::new(10.0)),
-            ..Default::default()
-        }
-        .effective_style(&scene)
-        .await;
+        let second_style = Style::new()
+            .with(FontSize::<Scaled>::new(10.))
+            .effective_style(&scene)
+            .await;
 
         let wrap = Text::new(vec![
             Span::new("This line should ", first_style),
