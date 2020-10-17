@@ -1,6 +1,6 @@
 use super::{
-    math::{Point, Points, Scaled, Vector},
-    scene::{Element, Scene},
+    math::{Point, Scaled},
+    scene::Scene,
     style::EffectiveStyle,
     KludgineResult,
 };
