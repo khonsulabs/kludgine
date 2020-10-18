@@ -1,7 +1,7 @@
 use super::{
-    math::{Point, Scaled},
+    math::{Point, Raw, Scaled},
     scene::Scene,
-    style::EffectiveStyle,
+    style::Style,
     KludgineResult,
 };
 
@@ -17,11 +17,11 @@ use wrap::*;
 #[derive(Debug, Clone)]
 pub struct Span {
     pub text: String,
-    pub style: EffectiveStyle,
+    pub style: Style<Raw>,
 }
 
 impl Span {
-    pub fn new<S: Into<String>>(text: S, style: EffectiveStyle) -> Self {
+    pub fn new<S: Into<String>>(text: S, style: Style<Raw>) -> Self {
         Self {
             text: text.into(),
             style,
@@ -35,7 +35,7 @@ pub struct Text {
 }
 
 impl Text {
-    pub fn span<S: Into<String>>(text: S, style: &EffectiveStyle) -> Self {
+    pub fn span<S: Into<String>>(text: S, style: &Style<Raw>) -> Self {
         Self {
             spans: vec![Span::new(text, style.clone())],
         }

@@ -3,10 +3,10 @@ use crate::{
     math::Raw,
     math::Scaled,
     scene::Scene,
-    style::EffectiveStyle,
     style::FontFamily,
     style::FontSize,
     style::ForegroundColor,
+    style::Style,
     style::Weight,
     text::{font::Font, font::FontStyle, PreparedSpan, Text},
     KludgineResult,
@@ -57,7 +57,7 @@ pub(crate) struct Tokenizer {
 }
 
 struct TokenizerState<'a> {
-    style: &'a EffectiveStyle,
+    style: &'a Style<Raw>,
     font: &'a Font,
     glyphs: Vec<PositionedGlyph<'static>>,
     lexer_state: TokenizerStatus,
@@ -66,7 +66,7 @@ struct TokenizerState<'a> {
 }
 
 impl<'a> TokenizerState<'a> {
-    pub(crate) fn new(font: &'a Font, style: &'a EffectiveStyle) -> Self {
+    pub(crate) fn new(font: &'a Font, style: &'a Style<Raw>) -> Self {
         Self {
             font,
             style,
@@ -182,10 +182,7 @@ impl Tokenizer {
     }
 }
 
-fn style_font_size(
-    style: &EffectiveStyle,
-    scale: euclid::Scale<f32, Scaled, Raw>,
-) -> Length<f32, Raw> {
+fn style_font_size(style: &Style<Raw>, scale: euclid::Scale<f32, Scaled, Raw>) -> Length<f32, Raw> {
     style
         .get::<FontSize<Raw>>()
         .cloned()

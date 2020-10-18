@@ -303,22 +303,22 @@ where
         self
     }
 
-    pub fn style(mut self, style: Style) -> Self {
+    pub fn style(mut self, style: Style<Scaled>) -> Self {
         self.style_sheet.normal = style;
         self
     }
 
-    pub fn hover(mut self, style: Style) -> Self {
+    pub fn hover(mut self, style: Style<Scaled>) -> Self {
         self.style_sheet.hover = style;
         self
     }
 
-    pub fn active(mut self, style: Style) -> Self {
+    pub fn active(mut self, style: Style<Scaled>) -> Self {
         self.style_sheet.active = style;
         self
     }
 
-    pub fn focus(mut self, style: Style) -> Self {
+    pub fn focus(mut self, style: Style<Scaled>) -> Self {
         self.style_sheet.focus = style;
         self
     }

@@ -1,7 +1,7 @@
 use crate::{
-    math::{Point, Rect, Scaled, Size, Surround},
+    math::{Point, Raw, Rect, Scaled, Size, Surround},
     scene::Scene,
-    style::EffectiveStyle,
+    style::Style,
     ui::{
         HierarchicalArena, Index, Indexable, Layout, LayoutSolver, SceneContext, StyledContext,
         UIState,
@@ -24,13 +24,13 @@ struct LayoutEngineData {
     pub(crate) layouts: HashMap<Index, Layout>,
     indicies_to_process: VecDeque<Index>,
     render_queue: VecDeque<Index>,
-    effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
+    effective_styles: Arc<HashMap<Index, Style<Raw>>>,
 }
 
 impl LayoutEngine {
     pub fn new(
         layout_solvers: HashMap<Index, Handle<Box<dyn LayoutSolver>>>,
-        effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
+        effective_styles: Arc<HashMap<Index, Style<Raw>>>,
         root: impl Indexable,
     ) -> Self {
         let mut indicies_to_process = VecDeque::default();
@@ -153,7 +153,7 @@ impl LayoutEngine {
         data.layouts.get(index).cloned()
     }
 
-    pub async fn effective_style(&self, index: &Index) -> Option<EffectiveStyle> {
+    pub async fn effective_style(&self, index: &Index) -> Option<Style<Raw>> {
         let data = self.data.read().await;
         data.effective_styles.get(index).cloned()
     }
@@ -183,7 +183,7 @@ impl LayoutEngine {
         solver.layout_within(bounds, content_size, context).await
     }
 
-    pub async fn effective_styles(&self) -> Arc<HashMap<Index, EffectiveStyle>> {
+    pub async fn effective_styles(&self) -> Arc<HashMap<Index, Style<Raw>>> {
         let data = self.data.read().await;
         data.effective_styles.clone()
     }
@@ -212,7 +212,7 @@ impl LayoutContext {
     pub(crate) fn new<I: Indexable>(
         index: I,
         scene: Scene,
-        effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
+        effective_styles: Arc<HashMap<Index, Style<Raw>>>,
         layout: LayoutEngine,
         arena: HierarchicalArena,
         ui_state: UIState,

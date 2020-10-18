@@ -1,7 +1,7 @@
 use crate::{
     event::MouseButton,
-    math::{Point, Points, Scaled, Size},
-    style::{Alignment, EffectiveStyle},
+    math::{Point, Points, Raw, Scaled, Size},
+    style::{Alignment, Style},
     text::{wrap::TextWrap, Text},
     ui::{
         Component, Context, ControlEvent, InteractiveComponent, Layout, SceneContext, StyledContext,
@@ -103,7 +103,7 @@ impl Label {
             value: value.to_string(),
         }
     }
-    fn create_text(&self, effective_style: &EffectiveStyle) -> Text {
+    fn create_text(&self, effective_style: &Style<Raw>) -> Text {
         Text::span(&self.value, effective_style)
     }
 

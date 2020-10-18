@@ -73,11 +73,11 @@ impl Into<ttf_parser::Weight> for Weight {
 }
 
 #[derive(Debug)]
-pub struct Style {
-    components: Map<dyn StyleComponent>,
+pub struct Style<Unit: 'static> {
+    components: Map<dyn StyleComponent<Unit>>,
 }
 
-impl Clone for Style {
+impl<Unit> Clone for Style<Unit> {
     fn clone(&self) -> Self {
         let mut new_map = Map::new();
 
@@ -96,7 +96,7 @@ impl Clone for Style {
     }
 }
 
-impl Default for Style {
+impl<Unit> Default for Style<Unit> {
     fn default() -> Self {
         Self {
             components: Map::new(),
@@ -104,80 +104,89 @@ impl Default for Style {
     }
 }
 
-impl Style {
+impl<Unit> Style<Unit> {
     pub fn new() -> Self {
         Self {
             components: Map::new(),
         }
     }
 
-    pub fn with<T: StyleComponent>(mut self, component: T) -> Self {
+    pub fn with<T: StyleComponent<Unit>>(mut self, component: T) -> Self {
         self.components.insert(StyleComponentWrapper(component));
         self
     }
 
-    pub fn get<T: StyleComponent>(&self) -> Option<&T> {
+    pub fn get<T: StyleComponent<Unit>>(&self) -> Option<&T> {
         self.components
             .get::<StyleComponentWrapper<T>>()
             .map(|w| &w.0)
     }
+
+    pub fn get_or_default<T: StyleComponent<Unit> + Default + Clone>(&self) -> T {
+        self.components
+            .get::<StyleComponentWrapper<T>>()
+            .map(|w| w.0.clone())
+            .unwrap_or_default()
+    }
 }
 
-pub trait CloneToAnyStyleComponent: Send + Sync {
-    fn clone_to_any_style_component(&self) -> Box<dyn StyleComponent>;
+pub trait CloneToAnyStyleComponent<Unit>: Send + Sync {
+    fn clone_to_any_style_component(&self) -> Box<dyn StyleComponent<Unit>>;
 }
 
-impl<T: StyleComponent + Clone + ?Sized> CloneToAnyStyleComponent for T {
-    fn clone_to_any_style_component(&self) -> Box<dyn StyleComponent> {
+impl<T: StyleComponent<Unit> + Clone + ?Sized, Unit> CloneToAnyStyleComponent<Unit> for T {
+    fn clone_to_any_style_component(&self) -> Box<dyn StyleComponent<Unit>> {
         Box::new(self.clone())
     }
 }
 
-impl StyleComponent for FontSize<Raw> {
-    fn apply(&self, _scale: Scale<f32, Scaled, Raw>, map: &mut ComponentCollection) {
+impl StyleComponent<Raw> for FontSize<Raw> {
+    fn apply(&self, _scale: Scale<f32, Raw, Raw>, map: &mut ComponentCollection<Raw>) {
         map.push(*self);
     }
 }
 
-impl StyleComponent for FontSize<Scaled> {
-    fn apply(&self, scale: Scale<f32, Scaled, Raw>, map: &mut ComponentCollection) {
+impl StyleComponent<Scaled> for FontSize<Scaled> {
+    fn apply(&self, scale: Scale<f32, Scaled, Raw>, map: &mut ComponentCollection<Raw>) {
         map.push(FontSize(self.0 * scale));
     }
 }
 
-pub struct ComponentCollection {
-    map: Map<dyn StyleComponent>,
+pub struct ComponentCollection<Unit: 'static> {
+    map: Map<dyn StyleComponent<Unit>>,
 }
 
-impl ComponentCollection {
-    pub fn push<T: StyleComponent>(&mut self, component: T) {
+impl<Unit> ComponentCollection<Unit> {
+    pub fn push<T: StyleComponent<Unit>>(&mut self, component: T) {
         self.map.insert(StyleComponentWrapper(component));
     }
 }
 
-pub trait StyleComponent:
-    anymap::any::CloneAny + CloneToAnyStyleComponent + Send + Sync + Debug + 'static
+pub trait StyleComponent<Unit>:
+    anymap::any::CloneAny + CloneToAnyStyleComponent<Unit> + Send + Sync + Debug + 'static
 {
-    fn apply(&self, scale: Scale<f32, Scaled, Raw>, map: &mut ComponentCollection);
+    fn apply(&self, scale: Scale<f32, Unit, Raw>, map: &mut ComponentCollection<Raw>);
 }
 
 pub trait UnscaledStyleComponent: Clone + Send + Sync + Debug + 'static {}
 
 struct StyleComponentWrapper<T>(T);
 
-impl<T: StyleComponent> IntoBox<dyn StyleComponent> for StyleComponentWrapper<T> {
-    fn into_box(self) -> Box<dyn StyleComponent> {
+impl<T: StyleComponent<Unit>, Unit: 'static> IntoBox<dyn StyleComponent<Unit>>
+    for StyleComponentWrapper<T>
+{
+    fn into_box(self) -> Box<dyn StyleComponent<Unit>> {
         Box::new(self.0)
     }
 }
 
-impl<T: UnscaledStyleComponent> StyleComponent for T {
-    fn apply(&self, _scale: Scale<f32, Scaled, Raw>, map: &mut ComponentCollection) {
+impl<T: UnscaledStyleComponent, Unit> StyleComponent<Unit> for T {
+    fn apply(&self, _scale: Scale<f32, Unit, Raw>, map: &mut ComponentCollection<Raw>) {
         map.push(self.clone());
     }
 }
 
-impl UncheckedAnyExt for dyn StyleComponent {
+impl<Unit: 'static> UncheckedAnyExt for dyn StyleComponent<Unit> {
     unsafe fn downcast_ref_unchecked<T: anymap::any::Any>(&self) -> &T {
         &*(self as *const Self as *const T)
     }
@@ -203,9 +212,9 @@ impl Default for Alignment {
     }
 }
 
-impl Style {
-    pub fn inherit_from(&self, parent: &Style) -> Self {
-        let mut merged_components = Map::<dyn StyleComponent>::new();
+impl<Unit> Style<Unit> {
+    pub fn inherit_from(&self, parent: &Style<Unit>) -> Self {
+        let mut merged_components = Map::<dyn StyleComponent<Unit>>::new();
         let self_types = self
             .components
             .as_ref()
@@ -237,8 +246,10 @@ impl Style {
             components: merged_components,
         }
     }
+}
 
-    pub async fn effective_style(&self, scene: &Scene) -> EffectiveStyle {
+impl Style<Scaled> {
+    pub async fn effective_style(&self, scene: &Scene) -> Style<Raw> {
         let mut component_collection = ComponentCollection { map: Map::new() };
         let scale = scene.scale_factor().await;
 
@@ -246,22 +257,22 @@ impl Style {
             component.apply(scale, &mut component_collection);
         }
 
-        EffectiveStyle {
-            components: Arc::new(component_collection.map),
+        Style {
+            components: component_collection.map,
         }
     }
 }
 
 #[derive(Default, Clone, Debug)]
 pub struct StyleSheet {
-    pub normal: Style,
-    pub hover: Style,
-    pub focus: Style,
-    pub active: Style,
+    pub normal: Style<Scaled>,
+    pub hover: Style<Scaled>,
+    pub focus: Style<Scaled>,
+    pub active: Style<Scaled>,
 }
 
-impl From<Style> for StyleSheet {
-    fn from(style: Style) -> Self {
+impl From<Style<Scaled>> for StyleSheet {
+    fn from(style: Style<Scaled>) -> Self {
         Self {
             normal: style.clone(),
             active: style.clone(),
@@ -272,26 +283,6 @@ impl From<Style> for StyleSheet {
 }
 
 use anymap::{any::IntoBox, any::UncheckedAnyExt, Map};
-
-#[derive(Clone, Debug)]
-pub struct EffectiveStyle {
-    components: Arc<Map<dyn StyleComponent>>,
-}
-
-impl EffectiveStyle {
-    pub fn get<T: StyleComponent>(&self) -> Option<&T> {
-        self.components
-            .get::<StyleComponentWrapper<T>>()
-            .map(|w| &w.0)
-    }
-
-    pub fn get_or_default<T: StyleComponent + Default + Clone>(&self) -> T {
-        self.components
-            .get::<StyleComponentWrapper<T>>()
-            .map(|w| w.0.clone())
-            .unwrap_or_default()
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct FontFamily(pub String);
