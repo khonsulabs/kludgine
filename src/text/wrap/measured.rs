@@ -4,6 +4,7 @@ use crate::{
     KludgineResult,
 };
 
+#[derive(Debug)]
 pub struct MeasuredText {
     pub(crate) groups: Vec<SpanGroup>,
 }

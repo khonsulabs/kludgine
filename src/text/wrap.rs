@@ -127,13 +127,15 @@ impl TextWrapper {
         scene: &Scene,
         options: TextWrap,
     ) -> KludgineResult<PreparedText> {
-        TextWrapper {
-            options,
-            scene: scene.clone(),
-            prepared_text: PreparedText::default(),
-        }
-        .wrap_text(text)
-        .await
+        dbg!(
+            TextWrapper {
+                options,
+                scene: scene.clone(),
+                prepared_text: PreparedText::default(),
+            }
+            .wrap_text(text)
+            .await
+        )
     }
 
     async fn wrap_text(mut self, text: &Text) -> KludgineResult<PreparedText> {

@@ -25,7 +25,7 @@ impl Component for TextExample {
             "Wrapping ",
             Style::new()
                 .with(ForegroundColor(Color::RED))
-                .with(FontSize::points(120.))
+                .with(FontSize::new(120.))
                 .effective_style(context.scene())
                 .await,
         ));
@@ -33,7 +33,7 @@ impl Component for TextExample {
             "rapped ",
             Style::new()
                 .with(ForegroundColor(Color::WHITE))
-                .with(FontSize::points(60.))
+                .with(FontSize::new(60.))
                 .effective_style(context.scene())
                 .await,
         ));
@@ -41,7 +41,7 @@ impl Component for TextExample {
             "Words to live by",
             Style::new()
                 .with(ForegroundColor(Color::BLUE))
-                .with(FontSize::points(120.))
+                .with(FontSize::new(120.))
                 .effective_style(context.scene())
                 .await,
         ));

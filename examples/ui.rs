@@ -82,7 +82,7 @@ impl Component for UIExample {
                 Style::new()
                     .with(ForegroundColor(Color::new(1.0, 1.0, 1.0, 0.1)))
                     .with(BackgroundColor(Color::new(1.0, 0.0, 1.0, 0.5)))
-                    .with(FontSize::points(72.))
+                    .with(FontSize::new(72.))
                     .with(Alignment::Right),
             )
             .bounds(AbsoluteBounds {
