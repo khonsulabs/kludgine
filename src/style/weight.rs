@@ -1,7 +1,4 @@
-use crate::{
-    math::{Raw, Scaled},
-    style::UnscaledStyleComponent,
-};
+use crate::{math::Scaled, style::UnscaledStyleComponent};
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Weight {
@@ -23,7 +20,6 @@ impl Default for Weight {
     }
 }
 
-impl UnscaledStyleComponent<Raw> for Weight {}
 impl UnscaledStyleComponent<Scaled> for Weight {}
 
 impl Weight {

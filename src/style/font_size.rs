@@ -27,13 +27,13 @@ impl<Unit: Default + Copy> FontSize<Unit> {
 }
 
 impl StyleComponent<Scaled> for FontSize<Scaled> {
-    fn apply(&self, scale: Scale<f32, Scaled, Raw>, map: &mut Style<Raw>) {
+    fn scale(&self, scale: Scale<f32, Scaled, Raw>, map: &mut Style<Raw>) {
         map.push(FontSize(self.0 * scale));
     }
 }
 
 impl StyleComponent<Raw> for FontSize<Raw> {
-    fn apply(&self, _scale: Scale<f32, Raw, Raw>, map: &mut Style<Raw>) {
+    fn scale(&self, _scale: Scale<f32, Raw, Raw>, map: &mut Style<Raw>) {
         map.push(FontSize(self.0));
     }
 }

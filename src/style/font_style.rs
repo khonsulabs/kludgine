@@ -1,7 +1,4 @@
-use crate::{
-    math::{Raw, Scaled},
-    style::UnscaledStyleComponent,
-};
+use crate::{math::Scaled, style::UnscaledStyleComponent};
 
 #[derive(Eq, PartialEq, Clone, Copy, Debug)]
 pub enum FontStyle {
@@ -16,5 +13,4 @@ impl Default for FontStyle {
     }
 }
 
-impl UnscaledStyleComponent<Raw> for FontStyle {}
 impl UnscaledStyleComponent<Scaled> for FontStyle {}

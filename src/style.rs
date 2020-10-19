@@ -91,7 +91,7 @@ impl<Unit> ComponentCollection<Unit> {
 }
 
 pub trait StyleComponent<Unit>: std::any::Any + Send + Sync + Debug + 'static {
-    fn apply(&self, scale: Scale<f32, Unit, Raw>, destination: &mut Style<Raw>);
+    fn scale(&self, scale: Scale<f32, Unit, Raw>, destination: &mut Style<Raw>);
 }
 
 pub trait UnscaledStyleComponent<Unit>:
@@ -99,12 +99,20 @@ pub trait UnscaledStyleComponent<Unit>:
 {
 }
 
-impl<T, Unit> StyleComponent<Unit> for T
+impl<T> StyleComponent<Scaled> for T
 where
-    T: UnscaledStyleComponent<Unit> + UnscaledStyleComponent<Raw>,
-    Unit: Clone + Send + Sync + Debug + 'static,
+    T: UnscaledStyleComponent<Scaled>,
 {
-    fn apply(&self, _scale: Scale<f32, Unit, Raw>, destination: &mut Style<Raw>) {
+    fn scale(&self, _scale: Scale<f32, Scaled, Raw>, destination: &mut Style<Raw>) {
+        destination.push(self.clone());
+    }
+}
+
+impl<T> StyleComponent<Raw> for T
+where
+    T: StyleComponent<Scaled> + Clone,
+{
+    fn scale(&self, _scale: Scale<f32, Raw, Raw>, destination: &mut Style<Raw>) {
         destination.push(self.clone());
     }
 }
@@ -142,7 +150,7 @@ impl Style<Scaled> {
         let scale = scene.scale_factor().await;
 
         for component in self.components.values() {
-            component.apply(scale, &mut style);
+            component.scale(scale, &mut style);
         }
 
         style
