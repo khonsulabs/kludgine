@@ -1,78 +1,23 @@
-use std::{any::TypeId, collections::HashMap, collections::HashSet, fmt::Debug};
-
 use crate::{
-    color::Color,
     math::{Raw, Scaled},
     scene::Scene,
-    text::font::FontStyle,
 };
-use euclid::{Length, Scale};
+use euclid::Scale;
+use std::{any::TypeId, collections::HashMap, collections::HashSet, fmt::Debug};
 
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub enum Weight {
-    Thin,
-    ExtraLight,
-    Light,
-    Normal,
-    Medium,
-    SemiBold,
-    Bold,
-    ExtraBold,
-    Black,
-    Other(u16),
-}
-
-impl Default for Weight {
-    fn default() -> Self {
-        ttf_parser::Weight::default().into()
-    }
-}
-
-impl UnscaledStyleComponent<Raw> for Weight {}
-impl UnscaledStyleComponent<Scaled> for Weight {}
-impl UnscaledStyleComponent<Raw> for FontStyle {}
-impl UnscaledStyleComponent<Scaled> for FontStyle {}
-
-impl Weight {
-    pub fn to_number(self) -> u16 {
-        let ttf: ttf_parser::Weight = self.into();
-        ttf.to_number()
-    }
-}
-
-impl From<ttf_parser::Weight> for Weight {
-    fn from(weight: ttf_parser::Weight) -> Self {
-        match weight {
-            ttf_parser::Weight::Thin => Weight::Thin,
-            ttf_parser::Weight::ExtraLight => Weight::ExtraLight,
-            ttf_parser::Weight::Light => Weight::Light,
-            ttf_parser::Weight::Normal => Weight::Normal,
-            ttf_parser::Weight::Medium => Weight::Medium,
-            ttf_parser::Weight::SemiBold => Weight::SemiBold,
-            ttf_parser::Weight::Bold => Weight::Bold,
-            ttf_parser::Weight::ExtraBold => Weight::ExtraBold,
-            ttf_parser::Weight::Black => Weight::Black,
-            ttf_parser::Weight::Other(value) => Weight::Other(value),
-        }
-    }
-}
-
-impl Into<ttf_parser::Weight> for Weight {
-    fn into(self) -> ttf_parser::Weight {
-        match self {
-            Weight::Thin => ttf_parser::Weight::Thin,
-            Weight::ExtraLight => ttf_parser::Weight::ExtraLight,
-            Weight::Light => ttf_parser::Weight::Light,
-            Weight::Normal => ttf_parser::Weight::Normal,
-            Weight::Medium => ttf_parser::Weight::Medium,
-            Weight::SemiBold => ttf_parser::Weight::SemiBold,
-            Weight::Bold => ttf_parser::Weight::Bold,
-            Weight::ExtraBold => ttf_parser::Weight::ExtraBold,
-            Weight::Black => ttf_parser::Weight::Black,
-            Weight::Other(value) => ttf_parser::Weight::Other(value),
-        }
-    }
-}
+mod alignment;
+mod any;
+mod background_color;
+mod font_family;
+mod font_size;
+mod font_style;
+mod foreground_color;
+mod weight;
+pub use self::{
+    alignment::Alignment, any::AnyStyleComponent, background_color::BackgroundColor,
+    font_family::FontFamily, font_size::FontSize, font_style::FontStyle,
+    foreground_color::ForegroundColor, weight::Weight,
+};
 
 #[derive(Debug)]
 pub struct Style<Unit: 'static> {
@@ -100,41 +45,6 @@ impl<Unit> Default for Style<Unit> {
         }
     }
 }
-
-pub trait AnyStyleComponent<Unit>: StyleComponent<Unit> + Send + Sync + Debug + 'static {
-    fn as_any(&self) -> &'_ dyn std::any::Any;
-    fn clone_to_style_component(&self) -> Box<dyn AnyStyleComponent<Unit>>;
-}
-
-// impl<Unit: Send + Sync + Debug + 'static> AnyStyleComponent<Unit> for StyleComponentWrapper<Unit> {
-//     fn as_any(&self) -> &'_ dyn std::any::Any {
-//         self
-//     }
-// }
-
-impl<T: StyleComponent<Unit> + Clone, Unit: Send + Sync + Debug + 'static> AnyStyleComponent<Unit>
-    for T
-{
-    fn as_any(&self) -> &'_ dyn std::any::Any {
-        self
-    }
-
-    fn clone_to_style_component(&self) -> Box<dyn AnyStyleComponent<Unit>> {
-        Box::new(self.clone())
-    }
-}
-
-// impl<Unit: Send + Sync + Debug + 'static> StyleComponent<Unit> for StyleComponentWrapper<Unit> {
-//     fn apply(&self, scale: Scale<f32, Unit, Raw>, destination: &mut Style<Raw>) {
-//         self.0.apply(scale, destination);
-//     }
-// }
-
-// impl<Unit> CloneToAnyStyleComponent<Unit> for StyleComponentWrapper<Unit> {
-//     fn clone_to_any_style_component(&self) -> Box<dyn StyleComponent<Unit>> {
-//         Box::new(self.0.clone())
-//     }
-// }
 
 impl<Unit: Send + Sync + Debug + 'static> Style<Unit> {
     pub fn new() -> Self {
@@ -170,18 +80,6 @@ impl<Unit: Send + Sync + Debug + 'static> Style<Unit> {
     }
 }
 
-impl StyleComponent<Scaled> for FontSize<Scaled> {
-    fn apply(&self, scale: Scale<f32, Scaled, Raw>, map: &mut Style<Raw>) {
-        map.push(FontSize(self.0 * scale));
-    }
-}
-
-impl StyleComponent<Raw> for FontSize<Raw> {
-    fn apply(&self, _scale: Scale<f32, Raw, Raw>, map: &mut Style<Raw>) {
-        map.push(FontSize(self.0));
-    }
-}
-
 pub struct ComponentCollection<Unit: 'static> {
     map: HashMap<TypeId, Box<dyn StyleComponent<Unit>>>,
 }
@@ -208,21 +106,6 @@ where
 {
     fn apply(&self, _scale: Scale<f32, Unit, Raw>, destination: &mut Style<Raw>) {
         destination.push(self.clone());
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Alignment {
-    Left,
-    Center,
-    Right,
-}
-impl UnscaledStyleComponent<Raw> for Alignment {}
-impl UnscaledStyleComponent<Scaled> for Alignment {}
-
-impl Default for Alignment {
-    fn default() -> Self {
-        Self::Left
     }
 }
 
@@ -282,69 +165,5 @@ impl From<Style<Scaled>> for StyleSheet {
             hover: style.clone(),
             focus: style,
         }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct FontFamily(pub String);
-impl UnscaledStyleComponent<Raw> for FontFamily {}
-impl UnscaledStyleComponent<Scaled> for FontFamily {}
-impl Default for FontFamily {
-    fn default() -> Self {
-        Self("sans-serif".to_owned())
-    }
-}
-
-impl<T> From<T> for FontFamily
-where
-    T: ToString,
-{
-    fn from(family: T) -> Self {
-        Self(family.to_string())
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-pub struct FontSize<Unit: Default + Copy>(pub Length<f32, Unit>);
-
-impl Default for FontSize<Scaled> {
-    fn default() -> Self {
-        Self::new(14.)
-    }
-}
-
-impl<Unit: Default + Copy> FontSize<Unit> {
-    pub fn new(value: f32) -> Self {
-        Self(Length::new(value))
-    }
-
-    pub fn get(&self) -> f32 {
-        self.0.get()
-    }
-
-    pub fn length(&self) -> Length<f32, Unit> {
-        self.0
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct BackgroundColor(pub Color);
-impl UnscaledStyleComponent<Raw> for BackgroundColor {}
-impl UnscaledStyleComponent<Scaled> for BackgroundColor {}
-
-impl Default for BackgroundColor {
-    fn default() -> Self {
-        BackgroundColor(Color::WHITE)
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct ForegroundColor(pub Color);
-impl UnscaledStyleComponent<Raw> for ForegroundColor {}
-impl UnscaledStyleComponent<Scaled> for ForegroundColor {}
-
-impl Default for ForegroundColor {
-    fn default() -> Self {
-        ForegroundColor(Color::BLACK)
     }
 }

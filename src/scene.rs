@@ -2,11 +2,8 @@ use crate::{
     math::{Raw, Scale, Scaled, ScreenScale, Size},
     shape::Shape,
     sprite::RenderedSprite,
-    style::Weight,
-    text::{
-        font::{Font, FontStyle},
-        prepared::PreparedSpan,
-    },
+    style::{FontStyle, Weight},
+    text::{font::Font, prepared::PreparedSpan},
     theme::Theme,
     Handle, KludgineError, KludgineResult,
 };

@@ -3,12 +3,8 @@ use crate::{
     math::Raw,
     math::Scaled,
     scene::Scene,
-    style::FontFamily,
-    style::FontSize,
-    style::ForegroundColor,
-    style::Style,
-    style::Weight,
-    text::{font::Font, font::FontStyle, PreparedSpan, Text},
+    style::{FontFamily, FontSize, FontStyle, ForegroundColor, Style, Weight},
+    text::{font::Font, PreparedSpan, Text},
     KludgineResult,
 };
 use euclid::Length;

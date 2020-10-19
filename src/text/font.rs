@@ -1,4 +1,4 @@
-use crate::{math::Pixels, style::Weight, Handle};
+use crate::{math::Pixels, style::{Weight, FontStyle}, Handle};
 use crossbeam::atomic::AtomicCell;
 use easygpu::prelude::*;
 use lazy_static::lazy_static;
@@ -14,19 +14,6 @@ macro_rules! include_font {
         let bytes = std::include_bytes!($path);
         Font::try_from_bytes(bytes as &[u8]).expect("Error loading bundled font")
     }};
-}
-
-#[derive(Eq, PartialEq, Clone, Copy, Debug)]
-pub enum FontStyle {
-    Regular,
-    Italic,
-    Oblique,
-}
-
-impl Default for FontStyle {
-    fn default() -> Self {
-        FontStyle::Regular
-    }
 }
 
 /// Font provides TrueType Font rendering
