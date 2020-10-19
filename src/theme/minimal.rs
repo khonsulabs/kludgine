@@ -1,4 +1,8 @@
-use crate::theme::{ColorGroup, Palette, Theme};
+use crate::{
+    math::Scaled,
+    style::{BackgroundColor, Style, TextColor},
+    theme::{Palette, Theme},
+};
 
 #[derive(Debug, Default)]
 pub struct Minimal {
@@ -16,7 +20,27 @@ impl Theme for Minimal {
         "Roboto"
     }
 
-    fn light_control(&self) -> ColorGroup {
-        self.palette.light.control.clone()
+    fn default_normal_style(&self) -> Style<Scaled> {
+        Style::new()
+            .with(TextColor(self.palette.light.control.text.normal()))
+            .with(BackgroundColor(
+                self.palette.light.control.background.normal(),
+            ))
+    }
+
+    fn default_hover_style(&self) -> Style<Scaled> {
+        Style::new()
+            .with(TextColor(self.palette.light.control.text.normal()))
+            .with(BackgroundColor(
+                self.palette.light.control.background.lighter(),
+            ))
+    }
+
+    fn default_active_style(&self) -> Style<Scaled> {
+        Style::new()
+            .with(TextColor(self.palette.light.control.text.normal()))
+            .with(BackgroundColor(
+                self.palette.light.control.background.darker(),
+            ))
     }
 }

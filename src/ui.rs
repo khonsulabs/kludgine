@@ -259,7 +259,7 @@ where
         let ui_state = UIState::new(event_sender);
         let root = Entity::new(Context::new(
             {
-                let node = Node::new(
+                let node = Node::new::<C>(
                     root,
                     StyleSheet::default(),
                     AbsoluteBounds::default(),
@@ -550,8 +550,7 @@ where
     pub async fn send(&self, command: C::Command) -> KludgineResult<()> {
         if let Some(target_node) = global_arena().get(self).await {
             let component = target_node.component.read().await;
-            if let Some(node_data) = component.as_any().downcast_ref::<NodeData<C>>() {
-                let component_handle = node_data.component.clone();
+            if let Some(component_handle) = component.component::<C, C>().await {
                 let mut context = self.context.clone();
                 Runtime::spawn(async move {
                     let mut component = component_handle.write().await;
@@ -568,6 +567,15 @@ where
             }
         } else {
             Err(KludgineError::InvalidIndex)
+        }
+    }
+
+    pub async fn component<T: Send + Sync + 'static>(&self) -> Option<Handle<T>> {
+        if let Some(target_node) = global_arena().get(self).await {
+            let component = target_node.component.read().await;
+            component.component::<C, T>().await
+        } else {
+            None
         }
     }
 }

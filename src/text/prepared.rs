@@ -1,13 +1,16 @@
 use crate::{
     color::Color,
-    math::{Pixels, Point, Points, Raw, ScreenScale, Size, SizeExt},
+    math::{Pixels, Point, Points, Raw, Scaled, ScreenScale, Size, SizeExt, Vector},
+    scene::Element,
+    scene::Scene,
     style::Alignment,
     text::Font,
+    KludgineResult,
 };
 use futures::future::join_all;
 use std::sync::Arc;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct PreparedText {
     pub lines: Vec<PreparedLine>,
 }
@@ -47,6 +50,38 @@ impl PreparedText {
             }
         }
     }
+
+    pub async fn render(
+        &self,
+        scene: &Scene,
+        location: Point<f32, Scaled>,
+        offset_baseline: bool,
+    ) -> KludgineResult<()> {
+        let mut current_line_baseline = Points::new(0.);
+        let effective_scale_factor = scene.scale_factor().await;
+
+        if offset_baseline && !self.lines.is_empty() {
+            current_line_baseline += self.lines[0].metrics.ascent / effective_scale_factor;
+        }
+
+        for line in self.lines.iter() {
+            let metrics = line.metrics;
+            let cursor_position =
+                location + Vector::from_lengths(line.alignment_offset, current_line_baseline);
+            for span in line.spans.iter() {
+                let location = (cursor_position
+                    + span.location.to_vector() / effective_scale_factor)
+                    * effective_scale_factor;
+                scene
+                    .push_element(Element::Text(span.translate(location)))
+                    .await;
+            }
+            current_line_baseline +=
+                (metrics.ascent - metrics.descent + metrics.line_gap) / effective_scale_factor;
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -66,7 +101,7 @@ impl From<rusttype::VMetrics> for VMetrics {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PreparedLine {
     pub spans: Vec<PreparedSpan>,
     pub metrics: VMetrics,

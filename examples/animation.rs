@@ -28,13 +28,7 @@ impl StandaloneComponent for Animation {}
 impl Component for Animation {
     async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         context
-            .set_style_sheet(
-                Style {
-                    background_color: Some(Color::GREEN),
-                    ..Default::default()
-                }
-                .into(),
-            )
+            .set_style_sheet(Style::new().with(BackgroundColor(Color::GREEN)).into())
             .await;
         let sprite = include_aseprite_sprite!("assets/stickguy").await?;
         sprite.set_current_tag(Some("Idle")).await?;

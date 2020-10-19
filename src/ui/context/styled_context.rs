@@ -1,7 +1,7 @@
 use crate::{
-    math::{Scaled, Size},
+    math::{Raw, Scaled, Size},
     scene::Scene,
-    style::EffectiveStyle,
+    style::Style,
     ui::{HierarchicalArena, Index, Indexable, SceneContext, UIState},
     KludgineError, KludgineResult,
 };
@@ -9,7 +9,7 @@ use std::{collections::HashMap, sync::Arc};
 
 pub struct StyledContext {
     base: SceneContext,
-    effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
+    effective_styles: Arc<HashMap<Index, Style<Raw>>>,
 }
 
 impl std::ops::Deref for StyledContext {
@@ -30,7 +30,7 @@ impl StyledContext {
     pub(crate) fn new<I: Indexable>(
         index: I,
         scene: Scene,
-        effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
+        effective_styles: Arc<HashMap<Index, Style<Raw>>>,
         arena: HierarchicalArena,
         ui_state: UIState,
     ) -> Self {
@@ -48,7 +48,7 @@ impl StyledContext {
     }
 
     pub fn from_scene_context(
-        effective_styles: Arc<HashMap<Index, EffectiveStyle>>,
+        effective_styles: Arc<HashMap<Index, Style<Raw>>>,
         base: SceneContext,
     ) -> Self {
         Self {
@@ -57,7 +57,7 @@ impl StyledContext {
         }
     }
 
-    pub fn effective_style(&self) -> &'_ EffectiveStyle {
+    pub fn effective_style(&self) -> &'_ Style<Raw> {
         &self.effective_styles.get(&self.index()).unwrap()
     }
 

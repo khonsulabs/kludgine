@@ -1,7 +1,7 @@
 use crate::{
     event::MouseButton,
-    math::{Point, Points, Scaled, Size},
-    style::{Alignment, EffectiveStyle},
+    math::{Point, Points, Raw, Scaled, Size},
+    style::{Alignment, Style},
     text::{wrap::TextWrap, Text},
     ui::{
         Component, Context, ControlEvent, InteractiveComponent, Layout, SceneContext, StyledContext,
@@ -56,7 +56,7 @@ impl Component for Label {
             layout.inner_bounds().origin,
             self.wrapping(
                 &layout.inner_bounds().size,
-                context.effective_style().alignment,
+                context.effective_style().get_or_default::<Alignment>(),
             ),
         )
         .await
@@ -73,7 +73,7 @@ impl Component for Label {
                 constraints.width.unwrap_or_else(|| f32::MAX),
                 constraints.height.unwrap_or_else(|| f32::MAX),
             ),
-            context.effective_style().alignment,
+            context.effective_style().get_or_default::<Alignment>(),
         );
         let wrapped_size = text.wrap(context.scene(), wrapping).await?.size().await;
         Ok(wrapped_size / context.scene().scale_factor().await)
@@ -103,7 +103,7 @@ impl Label {
             value: value.to_string(),
         }
     }
-    fn create_text(&self, effective_style: &EffectiveStyle) -> Text {
+    fn create_text(&self, effective_style: &Style<Raw>) -> Text {
         Text::span(&self.value, effective_style)
     }
 

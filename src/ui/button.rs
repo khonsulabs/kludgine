@@ -1,9 +1,15 @@
 use crate::{
+    color::Color,
     event::MouseButton,
     math::{Point, Points, Scaled, Size, Surround},
-    style::{Style, StyleSheet},
+    style::{
+        FallbackStyle, GenericStyle, Style, StyleSheet, UnscaledFallbackStyle,
+        UnscaledStyleComponent,
+    },
     ui::{
-        AbsoluteBounds, Component, Context, ControlEvent, Entity, InteractiveComponent, Label,
+        component::{render_background, Component},
+        control::{ControlBackgroundColor, ControlTextColor},
+        AbsoluteBounds, Context, ControlEvent, Entity, InteractiveComponent, Label, Layout,
         SceneContext, StyledContext,
     },
     KludgineResult,
@@ -34,15 +40,14 @@ pub struct Button {
 impl Component for Button {
     async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         let theme = context.scene().theme().await;
-        let control_colors = theme.light_control();
-        let mut style_sheet = context.style_sheet().await;
+        let control_colors = theme.default_style_sheet();
+        let style_sheet = context.style_sheet().await.inherit_from(&control_colors);
 
         self.label = self
             .new_entity(context, Label::new(&self.caption))
-            .style_sheet(StyleSheet::from(Style {
-                color: Some(control_colors.text.normal()),
-                ..Default::default()
-            }))
+            .style_sheet(StyleSheet::from(Style::new().with(
+                ButtonTextColor::lookup(&style_sheet.normal).unwrap_or_default(),
+            )))
             .bounds(AbsoluteBounds {
                 left: crate::math::Dimension::from_f32(10.),
                 top: crate::math::Dimension::from_f32(10.),
@@ -53,21 +58,6 @@ impl Component for Button {
             .interactive(false)
             .insert()
             .await?;
-
-        style_sheet.normal.background_color = style_sheet
-            .normal
-            .background_color
-            .or_else(|| Some(control_colors.background.normal()));
-
-        style_sheet.hover.background_color = style_sheet
-            .hover
-            .background_color
-            .or_else(|| Some(control_colors.background.lighter()));
-
-        style_sheet.active.background_color = style_sheet
-            .active
-            .background_color
-            .or_else(|| Some(control_colors.background.darker()));
 
         context.set_style_sheet(style_sheet).await;
 
@@ -101,6 +91,14 @@ impl Component for Button {
             .content_size(&self.label, &contraints_minus_padding)
             .await?
             + self.style.padding.minimum_size())
+    }
+
+    async fn render_background(
+        &self,
+        context: &mut StyledContext,
+        layout: &Layout,
+    ) -> KludgineResult<()> {
+        render_background::<ButtonBackgroundColor>(context, layout).await
     }
 }
 
@@ -146,5 +144,42 @@ impl InteractiveComponent for Button {
             }
         }
         Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ButtonBackgroundColor(pub Color);
+impl UnscaledStyleComponent<Scaled> for ButtonBackgroundColor {}
+
+impl UnscaledFallbackStyle for ButtonBackgroundColor {
+    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
+        style.get::<Self>().cloned().or_else(|| {
+            ControlBackgroundColor::lookup_unscaled(style).map(|fg| ButtonBackgroundColor(fg.0))
+        })
+    }
+}
+
+impl Into<Color> for ButtonBackgroundColor {
+    fn into(self) -> Color {
+        self.0
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ButtonTextColor(pub Color);
+impl UnscaledStyleComponent<Scaled> for ButtonTextColor {}
+
+impl UnscaledFallbackStyle for ButtonTextColor {
+    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
+        style
+            .get::<Self>()
+            .cloned()
+            .or_else(|| ControlTextColor::lookup_unscaled(style).map(|fg| ButtonTextColor(fg.0)))
+    }
+}
+
+impl Into<Color> for ButtonTextColor {
+    fn into(self) -> Color {
+        self.0
     }
 }

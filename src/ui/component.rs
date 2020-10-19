@@ -1,15 +1,16 @@
 use crate::{
+    color::Color,
     event::{MouseButton, MouseScrollDelta, TouchPhase},
-    math::{Point, Scaled, Size},
+    math::{Point, Raw, Scaled, Size},
     scene::Scene,
     shape::{Fill, Shape},
-    style::{Style, StyleSheet},
+    style::{BackgroundColor, FallbackStyle, Style, StyleSheet},
     ui::{
-        AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout, LayoutSolver,
-        LayoutSolverExt, Node, SceneContext, StyledContext, UIState,
+        node::ThreadsafeAnyMap, AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout,
+        LayoutSolver, LayoutSolverExt, Node, SceneContext, StyledContext, UIState,
     },
     window::EventStatus,
-    KludgineResult,
+    Handle, KludgineResult,
 };
 use async_trait::async_trait;
 
@@ -64,13 +65,7 @@ pub trait Component: Send + Sync {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        if let Some(background) = context.effective_style().background_color {
-            Shape::rect(layout.bounds_without_margin())
-                .fill(Fill::new(background))
-                .render_at(Point::default(), context.scene())
-                .await;
-        }
-        Ok(())
+        render_background::<BackgroundColor>(context, layout).await
     }
 
     async fn mouse_down(
@@ -195,15 +190,17 @@ pub trait InteractiveComponent: Component {
         context: &mut SceneContext,
         component: T,
     ) -> EntityBuilder<T, Self::Message> {
+        let component = Handle::new(component);
+        let mut components = ThreadsafeAnyMap::new();
+        components.insert(component);
         EntityBuilder {
-            component,
+            components,
             scene: context.scene().clone(),
             parent: Some(context.index()),
             interactive: true,
             ui_state: context.ui_state().clone(),
             arena: context.arena().clone(),
             style_sheet: Default::default(),
-            bounds: Default::default(),
             callback: None,
             _marker: Default::default(),
         }
@@ -244,7 +241,9 @@ impl<Input: Send + 'static, Output: Send + Sync + 'static> TypeErasedCallback<In
         if let Some(node) = self.target.arena().get(&self.target.index()).await {
             let translated = self.translator.as_ref()(input);
             let component = node.component.write().await;
-            component.receive_message(&self.target, Box::new(translated))
+            component
+                .receive_message(&self.target, Box::new(translated))
+                .await
         }
     }
 }
@@ -278,11 +277,10 @@ pub struct EntityBuilder<C, P>
 where
     C: InteractiveComponent + 'static,
 {
-    component: C,
+    components: ThreadsafeAnyMap,
     scene: Scene,
     parent: Option<Index>,
     style_sheet: StyleSheet,
-    bounds: AbsoluteBounds,
     interactive: bool,
     callback: Option<Callback<C::Event>>,
     ui_state: UIState,
@@ -295,33 +293,33 @@ where
     C: InteractiveComponent + 'static,
     P: Send + Sync + 'static,
 {
-    pub fn style_sheet(mut self, sheet: StyleSheet) -> Self {
-        self.style_sheet = sheet;
+    pub fn style_sheet<S: Into<StyleSheet>>(mut self, sheet: S) -> Self {
+        self.style_sheet = sheet.into();
         self
     }
 
-    pub fn style(mut self, style: Style) -> Self {
+    pub fn normal_style(mut self, style: Style<Scaled>) -> Self {
         self.style_sheet.normal = style;
         self
     }
 
-    pub fn hover(mut self, style: Style) -> Self {
+    pub fn hover(mut self, style: Style<Scaled>) -> Self {
         self.style_sheet.hover = style;
         self
     }
 
-    pub fn active(mut self, style: Style) -> Self {
+    pub fn active(mut self, style: Style<Scaled>) -> Self {
         self.style_sheet.active = style;
         self
     }
 
-    pub fn focus(mut self, style: Style) -> Self {
+    pub fn focus(mut self, style: Style<Scaled>) -> Self {
         self.style_sheet.focus = style;
         self
     }
 
     pub fn bounds(mut self, bounds: AbsoluteBounds) -> Self {
-        self.bounds = bounds;
+        self.components.insert(Handle::new(bounds));
         self
     }
 
@@ -340,15 +338,10 @@ where
         self
     }
 
-    pub async fn insert(self) -> KludgineResult<Entity<C>> {
+    pub async fn insert(mut self) -> KludgineResult<Entity<C>> {
+        self.components.insert(Handle::new(self.style_sheet));
         let index = {
-            let node = Node::new(
-                self.component,
-                self.style_sheet,
-                self.bounds,
-                self.interactive,
-                self.callback,
-            );
+            let node = Node::from_components::<C>(self.components, self.interactive, self.callback);
             let index = self.arena.insert(self.parent, node).await;
 
             let mut context =
@@ -374,4 +367,17 @@ pub trait AnimatableComponent: InteractiveComponent + Sized {
     type AnimationFactory;
 
     fn new_animation_factory(target: Entity<Self>) -> Self::AnimationFactory;
+}
+
+pub async fn render_background<C: Into<Color> + FallbackStyle<Raw> + Clone>(
+    context: &mut StyledContext,
+    layout: &Layout,
+) -> KludgineResult<()> {
+    if let Some(background) = C::lookup(context.effective_style()) {
+        Shape::rect(layout.bounds_without_margin())
+            .fill(Fill::new(background.clone().into()))
+            .render_at(Point::default(), context.scene())
+            .await;
+    }
+    Ok(())
 }

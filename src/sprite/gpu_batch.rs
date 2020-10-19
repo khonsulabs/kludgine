@@ -45,8 +45,8 @@ impl GpuBatch {
                     // TODO this should be easier.
                     let x = sprite.render_at.min.x + location.destination.x as f32 * scale_x;
                     let y = sprite.render_at.min.y + location.destination.y as f32 * scale_y;
-                    let width = sprite.render_at.width() * scale_x;
-                    let height = sprite.render_at.height() * scale_y;
+                    let width = location.source.width() as f32 * scale_x;
+                    let height = location.source.height() as f32 * scale_y;
                     let destination = Rect::new(Point::new(x, y), Size::new(width, height));
                     self.add_box(
                         location.source.to_box2d(),

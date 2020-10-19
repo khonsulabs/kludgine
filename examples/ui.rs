@@ -67,10 +67,7 @@ impl Component for UIExample {
         let sprite = include_aseprite_sprite!("assets/stickguy").await?;
         self.image = self
             .new_entity(context, Image::new(sprite))
-            .style(Style {
-                background_color: Some(Color::new(0.0, 1.0, 1.0, 1.0)),
-                ..Default::default()
-            })
+            .style_sheet(Style::new().with(BackgroundColor(Color::new(0.0, 1.0, 1.0, 1.0))))
             .bounds(AbsoluteBounds {
                 right: Dimension::from_f32(10.),
                 bottom: Dimension::from_f32(10.),
@@ -81,13 +78,13 @@ impl Component for UIExample {
 
         self.label = self
             .new_entity(context, Label::new("Test Label"))
-            .style(Style {
-                color: Some(Color::new(1.0, 1.0, 1.0, 0.1)),
-                background_color: Some(Color::new(1.0, 0.0, 1.0, 0.5)),
-                font_size: Some(Points::new(72.)),
-                alignment: Some(Alignment::Right),
-                ..Default::default()
-            })
+            .style_sheet(
+                Style::new()
+                    .with(ForegroundColor(Color::new(1.0, 1.0, 1.0, 0.1)))
+                    .with(BackgroundColor(Color::new(1.0, 0.0, 1.0, 0.5)))
+                    .with(FontSize::new(72.))
+                    .with(Alignment::Right),
+            )
             .bounds(AbsoluteBounds {
                 left: Dimension::from_f32(32.),
                 right: Dimension::from_f32(32.),
@@ -101,10 +98,7 @@ impl Component for UIExample {
 
         self.button = self
             .new_entity(context, Button::new("Press Me"))
-            .style(Style {
-                color: Some(Color::ROYALBLUE), // TODO what?
-                ..Default::default()
-            })
+            .normal_style(Style::new().with(BackgroundColor(Color::ROYALBLUE)))
             .bounds(AbsoluteBounds {
                 bottom: Dimension::from_f32(10.),
 

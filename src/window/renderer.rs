@@ -131,7 +131,11 @@ impl FrameRenderer {
             self.swap_chain = self.renderer.swap_chain(frame_size, PresentMode::Vsync);
         }
 
-        let output = self.swap_chain.next_texture();
+        let output = match self.swap_chain.next_texture() {
+            Ok(texture) => texture,
+            Err(wgpu::SwapChainError::Outdated) => return Ok(()), // Ignore outdated, we'll draw next time.
+            Err(err) => panic!("Unrecoverable error on swap chain {:?}", err),
+        };
         let mut frame = self.renderer.frame();
 
         let ortho = ScreenTransformation::ortho(
