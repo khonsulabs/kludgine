@@ -76,7 +76,6 @@ required-features = ["bundled-fonts-roboto"]
 [[example]]
 name = "ui"
 required-features = ["bundled-fonts-roboto"]
-
-[patch.crates-io]
-easygpu = { path = "../easygpu" }
-easygpu-lyon = { path = "../easygpu-lyon" }
+# [patch.crates-io]
+# easygpu = { path = "../easygpu" }
+# easygpu-lyon = { path = "../easygpu-lyon" }
