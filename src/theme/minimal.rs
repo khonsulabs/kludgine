@@ -4,20 +4,30 @@ use crate::{
     theme::{Palette, Theme},
 };
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Minimal {
+    font_family: String,
     palette: Palette,
 }
 
 impl Minimal {
-    pub fn new(palette: Palette) -> Self {
-        Self { palette }
+    pub fn new<S: ToString>(font_family: S, palette: Palette) -> Self {
+        Self {
+            font_family: font_family.to_string(),
+            palette,
+        }
+    }
+}
+
+impl Default for Minimal {
+    fn default() -> Self {
+        Self::new("Roboto", Default::default())
     }
 }
 
 impl Theme for Minimal {
     fn default_font_family(&self) -> &'_ str {
-        "Roboto"
+        &self.font_family
     }
 
     fn default_normal_style(&self) -> Style<Scaled> {

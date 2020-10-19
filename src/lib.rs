@@ -108,7 +108,9 @@ pub mod prelude {
         style::*,
         text::{font::Font, wrap::TextWrap, Span, Text},
         texture::Texture,
-        theme::{ColorGroup, ElementKind, Intent, Palette, PaletteShade, Theme, VariableColor},
+        theme::{
+            ColorGroup, ElementKind, Intent, Minimal, Palette, PaletteShade, Theme, VariableColor,
+        },
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,
         },
