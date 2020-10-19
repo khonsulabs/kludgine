@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v1
       - name: Remove Patches
         run: |
-          sed -e '/patch.crates-io/,$d' Cargo.toml
+          sed -e '/patch.crates-io/,$d' Cargo.toml > Cargo.toml
       - name: Run clippy
         run: cargo clippy
         env:
