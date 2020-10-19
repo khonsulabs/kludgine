@@ -1,14 +1,16 @@
 use crate::{
     math::{Raw, Scaled},
-    style::{GenericStyle, Style},
+    style::{GenericStyle, Style, StyleComponent},
 };
 
 pub trait FallbackStyle<Unit>: Sized {
     fn lookup(style: &Style<Unit>) -> Option<Self>;
 }
 
-pub trait UnscaledFallbackStyle: Sized {
-    fn lookup(style: GenericStyle) -> Option<Self>;
+pub trait UnscaledFallbackStyle: StyleComponent<Scaled> + Clone {
+    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
+        style.get::<Self>().cloned()
+    }
 }
 
 impl<T> FallbackStyle<Scaled> for T
@@ -16,7 +18,7 @@ where
     T: UnscaledFallbackStyle,
 {
     fn lookup(style: &Style<Scaled>) -> Option<Self> {
-        T::lookup(GenericStyle::Scaled(style))
+        T::lookup_unscaled(GenericStyle::Scaled(style))
     }
 }
 
@@ -25,6 +27,6 @@ where
     T: UnscaledFallbackStyle,
 {
     fn lookup(style: &Style<Raw>) -> Option<Self> {
-        T::lookup(GenericStyle::Raw(style))
+        T::lookup_unscaled(GenericStyle::Raw(style))
     }
 }

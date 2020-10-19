@@ -192,6 +192,15 @@ impl StyleSheet {
             focus: self.focus.inherit_from(&other.focus),
         }
     }
+
+    pub fn map_each<F: Fn(&Style<Scaled>) -> Style<Scaled>>(&self, map: F) -> Self {
+        Self {
+            normal: map(&self.normal),
+            active: map(&self.active),
+            hover: map(&self.hover),
+            focus: map(&self.focus),
+        }
+    }
 }
 
 pub enum GenericStyle<'a> {

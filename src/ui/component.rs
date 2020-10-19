@@ -1,8 +1,11 @@
 use crate::{
+    color::Color,
     event::{MouseButton, MouseScrollDelta, TouchPhase},
+    math::Raw,
     math::{Point, Scaled, Size},
     scene::Scene,
     shape::{Fill, Shape},
+    style::StyleComponent,
     style::{BackgroundColor, Style, StyleSheet},
     ui::{
         node::ThreadsafeAnyMap, AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout,
@@ -64,13 +67,7 @@ pub trait Component: Send + Sync {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        if let Some(background) = context.effective_style().get::<BackgroundColor>() {
-            Shape::rect(layout.bounds_without_margin())
-                .fill(Fill::new(background.0))
-                .render_at(Point::default(), context.scene())
-                .await;
-        }
-        Ok(())
+        render_background::<BackgroundColor>(context, layout).await
     }
 
     async fn mouse_down(
@@ -372,4 +369,17 @@ pub trait AnimatableComponent: InteractiveComponent + Sized {
     type AnimationFactory;
 
     fn new_animation_factory(target: Entity<Self>) -> Self::AnimationFactory;
+}
+
+pub async fn render_background<C: Into<Color> + StyleComponent<Raw> + Clone>(
+    context: &mut StyledContext,
+    layout: &Layout,
+) -> KludgineResult<()> {
+    if let Some(background) = context.effective_style().get::<C>() {
+        Shape::rect(layout.bounds_without_margin())
+            .fill(Fill::new(background.clone().into()))
+            .render_at(Point::default(), context.scene())
+            .await;
+    }
+    Ok(())
 }

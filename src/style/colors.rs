@@ -16,19 +16,22 @@ impl Default for ForegroundColor {
     }
 }
 
-impl UnscaledFallbackStyle for ForegroundColor {
-    fn lookup(style: GenericStyle) -> Option<Self> {
-        style.get::<Self>().cloned()
-    }
-}
+impl UnscaledFallbackStyle for ForegroundColor {}
 
 #[derive(Debug, Clone)]
 pub struct BackgroundColor(pub Color);
 impl UnscaledStyleComponent<Scaled> for BackgroundColor {}
+impl UnscaledFallbackStyle for BackgroundColor {}
 
 impl Default for BackgroundColor {
     fn default() -> Self {
         BackgroundColor(Color::WHITE)
+    }
+}
+
+impl Into<Color> for BackgroundColor {
+    fn into(self) -> Color {
+        self.0
     }
 }
 
@@ -37,10 +40,16 @@ pub struct TextColor(pub Color);
 impl UnscaledStyleComponent<Scaled> for TextColor {}
 
 impl UnscaledFallbackStyle for TextColor {
-    fn lookup(style: GenericStyle) -> Option<Self> {
+    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
         style
             .get::<Self>()
             .cloned()
-            .or_else(|| ForegroundColor::lookup(style).map(|fg| TextColor(fg.0)))
+            .or_else(|| ForegroundColor::lookup_unscaled(style).map(|fg| TextColor(fg.0)))
+    }
+}
+
+impl Into<Color> for TextColor {
+    fn into(self) -> Color {
+        self.0
     }
 }
