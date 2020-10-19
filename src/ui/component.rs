@@ -1,12 +1,10 @@
 use crate::{
     color::Color,
     event::{MouseButton, MouseScrollDelta, TouchPhase},
-    math::Raw,
-    math::{Point, Scaled, Size},
+    math::{Point, Raw, Scaled, Size},
     scene::Scene,
     shape::{Fill, Shape},
-    style::StyleComponent,
-    style::{BackgroundColor, Style, StyleSheet},
+    style::{BackgroundColor, FallbackStyle, Style, StyleSheet},
     ui::{
         node::ThreadsafeAnyMap, AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout,
         LayoutSolver, LayoutSolverExt, Node, SceneContext, StyledContext, UIState,
@@ -371,11 +369,11 @@ pub trait AnimatableComponent: InteractiveComponent + Sized {
     fn new_animation_factory(target: Entity<Self>) -> Self::AnimationFactory;
 }
 
-pub async fn render_background<C: Into<Color> + StyleComponent<Raw> + Clone>(
+pub async fn render_background<C: Into<Color> + FallbackStyle<Raw> + Clone>(
     context: &mut StyledContext,
     layout: &Layout,
 ) -> KludgineResult<()> {
-    if let Some(background) = context.effective_style().get::<C>() {
+    if let Some(background) = C::lookup(context.effective_style()) {
         Shape::rect(layout.bounds_without_margin())
             .fill(Fill::new(background.clone().into()))
             .render_at(Point::default(), context.scene())
