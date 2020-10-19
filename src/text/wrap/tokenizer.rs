@@ -3,7 +3,8 @@ use crate::{
     math::Raw,
     math::Scaled,
     scene::Scene,
-    style::{FontFamily, FontSize, FontStyle, ForegroundColor, Style, Weight},
+    style::FallbackStyle,
+    style::{FontFamily, FontSize, FontStyle, Style, TextColor, Weight},
     text::{font::Font, PreparedSpan, Text},
     KludgineResult,
 };
@@ -83,7 +84,7 @@ impl<'a> TokenizerState<'a> {
             let current_committed_glyphs = std::mem::take(&mut self.glyphs);
 
             let font_size = style_font_size(&self.style, scale);
-            let foreground = self.style.get_or_default::<ForegroundColor>().0;
+            let foreground = TextColor::lookup(self.style).unwrap_or_default().0;
             let metrics = self.font.metrics(font_size).await;
             let span = PreparedSpan::new(
                 self.font.clone(),

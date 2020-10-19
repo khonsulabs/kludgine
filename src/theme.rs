@@ -1,4 +1,8 @@
-use crate::color::Color;
+use crate::{
+    color::Color,
+    math::Scaled,
+    style::{Style, StyleSheet},
+};
 use std::collections::HashMap;
 mod minimal;
 pub use minimal::Minimal;
@@ -124,5 +128,27 @@ impl From<Color> for VariableColor {
 
 pub trait Theme: Send + Sync {
     fn default_font_family(&self) -> &'_ str;
-    fn light_control(&self) -> ColorGroup;
+
+    fn default_normal_style(&self) -> Style<Scaled>;
+
+    fn default_active_style(&self) -> Style<Scaled> {
+        self.default_normal_style()
+    }
+
+    fn default_hover_style(&self) -> Style<Scaled> {
+        self.default_normal_style()
+    }
+
+    fn default_focus_style(&self) -> Style<Scaled> {
+        self.default_normal_style()
+    }
+
+    fn default_style_sheet(&self) -> StyleSheet {
+        StyleSheet {
+            normal: self.default_normal_style(),
+            active: self.default_active_style(),
+            hover: self.default_hover_style(),
+            focus: self.default_focus_style(),
+        }
+    }
 }

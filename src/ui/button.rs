@@ -1,7 +1,8 @@
 use crate::{
     event::MouseButton,
     math::{Point, Points, Scaled, Size, Surround},
-    style::{BackgroundColor, ForegroundColor, Style, StyleSheet},
+    style::TextColor,
+    style::{FallbackStyle, Style, StyleSheet},
     ui::{
         AbsoluteBounds, Component, Context, ControlEvent, Entity, InteractiveComponent, Label,
         SceneContext, StyledContext,
@@ -34,13 +35,13 @@ pub struct Button {
 impl Component for Button {
     async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         let theme = context.scene().theme().await;
-        let control_colors = theme.light_control();
-        let mut style_sheet = context.style_sheet().await;
+        let control_colors = theme.default_style_sheet();
+        let style_sheet = dbg!(context.style_sheet().await.inherit_from(&control_colors));
 
         self.label = self
             .new_entity(context, Label::new(&self.caption))
             .style_sheet(StyleSheet::from(
-                Style::new().with(ForegroundColor(control_colors.text.normal())),
+                Style::new().with(TextColor::lookup(&style_sheet.normal).unwrap_or_default()),
             ))
             .bounds(AbsoluteBounds {
                 left: crate::math::Dimension::from_f32(10.),
@@ -52,24 +53,6 @@ impl Component for Button {
             .interactive(false)
             .insert()
             .await?;
-
-        if style_sheet.normal.get::<BackgroundColor>().is_none() {
-            style_sheet.normal = style_sheet
-                .normal
-                .with(BackgroundColor(control_colors.background.normal()));
-        }
-
-        if style_sheet.hover.get::<BackgroundColor>().is_none() {
-            style_sheet.hover = style_sheet
-                .hover
-                .with(BackgroundColor(control_colors.background.lighter()));
-        }
-
-        if style_sheet.active.get::<BackgroundColor>().is_none() {
-            style_sheet.active = style_sheet
-                .active
-                .with(BackgroundColor(control_colors.background.darker()));
-        }
 
         context.set_style_sheet(style_sheet).await;
 

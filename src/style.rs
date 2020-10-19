@@ -7,16 +7,21 @@ use std::{any::TypeId, collections::HashMap, collections::HashSet, fmt::Debug};
 
 mod alignment;
 mod any;
-mod background_color;
+mod colors;
+mod fallback;
 mod font_family;
 mod font_size;
 mod font_style;
-mod foreground_color;
 mod weight;
 pub use self::{
-    alignment::Alignment, any::AnyStyleComponent, background_color::BackgroundColor,
-    font_family::FontFamily, font_size::FontSize, font_style::FontStyle,
-    foreground_color::ForegroundColor, weight::Weight,
+    alignment::Alignment,
+    any::AnyStyleComponent,
+    colors::{BackgroundColor, ForegroundColor, TextColor},
+    fallback::{FallbackStyle, UnscaledFallbackStyle},
+    font_family::FontFamily,
+    font_size::FontSize,
+    font_style::FontStyle,
+    weight::Weight,
 };
 
 #[derive(Debug)]
@@ -117,6 +122,8 @@ where
     }
 }
 
+impl UnscaledStyleComponent<Scaled> for () {}
+
 impl<Unit: Send + Sync + Debug + 'static> Style<Unit> {
     pub fn inherit_from(&self, parent: &Style<Unit>) -> Self {
         let mut merged_components = HashMap::<TypeId, Box<dyn AnyStyleComponent<Unit>>>::new();
@@ -172,6 +179,31 @@ impl From<Style<Scaled>> for StyleSheet {
             active: style.clone(),
             hover: style.clone(),
             focus: style,
+        }
+    }
+}
+
+impl StyleSheet {
+    pub fn inherit_from(&self, other: &StyleSheet) -> Self {
+        Self {
+            normal: self.normal.inherit_from(&other.normal),
+            active: self.active.inherit_from(&other.active),
+            hover: self.hover.inherit_from(&other.hover),
+            focus: self.focus.inherit_from(&other.focus),
+        }
+    }
+}
+
+pub enum GenericStyle<'a> {
+    Scaled(&'a Style<Scaled>),
+    Raw(&'a Style<Raw>),
+}
+
+impl<'a> GenericStyle<'a> {
+    pub fn get<T: StyleComponent<Raw> + StyleComponent<Scaled>>(&'a self) -> Option<&'a T> {
+        match self {
+            Self::Scaled(style) => style.get::<T>(),
+            Self::Raw(style) => style.get::<T>(),
         }
     }
 }

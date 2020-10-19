@@ -298,12 +298,12 @@ where
     C: InteractiveComponent + 'static,
     P: Send + Sync + 'static,
 {
-    pub fn style_sheet(mut self, sheet: StyleSheet) -> Self {
-        self.style_sheet = sheet;
+    pub fn style_sheet<S: Into<StyleSheet>>(mut self, sheet: S) -> Self {
+        self.style_sheet = sheet.into();
         self
     }
 
-    pub fn style(mut self, style: Style<Scaled>) -> Self {
+    pub fn normal_style(mut self, style: Style<Scaled>) -> Self {
         self.style_sheet.normal = style;
         self
     }
