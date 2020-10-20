@@ -265,7 +265,7 @@ mod tests {
     #[async_test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word_different_span() {
-        let mut scene = Scene::new(Box::new(Minimal::default()));
+        let scene = Scene::new(Box::new(Minimal::default()));
         scene.register_bundled_fonts().await;
 
         let first_style = Style::new()

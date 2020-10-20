@@ -2,18 +2,18 @@ use crate::{
     math::{Raw, Scaled, Size},
     scene::Scene,
     style::Style,
-    ui::{HierarchicalArena, Index, Indexable, SceneContext, UIState},
+    ui::{Context, HierarchicalArena, Index, Indexable, UIState},
     KludgineError, KludgineResult,
 };
 use std::{collections::HashMap, sync::Arc};
 
 pub struct StyledContext {
-    base: SceneContext,
+    base: Context,
     effective_styles: Arc<HashMap<Index, Style<Raw>>>,
 }
 
 impl std::ops::Deref for StyledContext {
-    type Target = SceneContext;
+    type Target = Context;
 
     fn deref(&self) -> &Self::Target {
         &self.base
@@ -35,7 +35,7 @@ impl StyledContext {
         ui_state: UIState,
     ) -> Self {
         Self {
-            base: SceneContext::new(index, scene, arena, ui_state),
+            base: Context::new(index, arena, ui_state, scene),
             effective_styles,
         }
     }
@@ -49,7 +49,7 @@ impl StyledContext {
 
     pub fn from_scene_context(
         effective_styles: Arc<HashMap<Index, Style<Raw>>>,
-        base: SceneContext,
+        base: Context,
     ) -> Self {
         Self {
             base,

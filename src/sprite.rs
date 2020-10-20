@@ -498,7 +498,7 @@ impl SpriteFrameBuilder {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub(crate) struct RenderedSprite {
     pub(crate) data: Arc<RenderedSpriteData>,
 }
@@ -521,6 +521,7 @@ impl RenderedSprite {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct RenderedSpriteData {
     pub render_at: Box2D<f32, Raw>,
     pub rotation: SpriteRotation<Raw>,

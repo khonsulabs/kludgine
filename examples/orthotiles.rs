@@ -31,7 +31,7 @@ impl StandaloneComponent for OrthoTiles {}
 
 #[async_trait]
 impl Component for OrthoTiles {
-    async fn initialize(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
+    async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
         self.load_assets().await?;
         self.zoom = 1.0;
         self.position.x = MAP_SIZE as f32 * 32.0 / 2.0;
@@ -39,7 +39,7 @@ impl Component for OrthoTiles {
         Ok(())
     }
 
-    async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+    async fn update(&mut self, context: &mut Context) -> KludgineResult<()> {
         let stickguy = self.stickguy.as_ref().unwrap();
         // Our default animation is Idle
         let mut animation = "Idle";

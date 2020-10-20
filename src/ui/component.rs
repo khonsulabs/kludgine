@@ -7,7 +7,7 @@ use crate::{
     style::{BackgroundColor, FallbackStyle, Style, StyleSheet},
     ui::{
         node::ThreadsafeAnyMap, AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout,
-        LayoutSolver, LayoutSolverExt, Node, SceneContext, StyledContext, UIState,
+        LayoutSolver, LayoutSolverExt, Node, StyledContext, UIState,
     },
     window::EventStatus,
     Handle, KludgineResult,
@@ -20,7 +20,7 @@ pub struct LayoutConstraints {}
 #[allow(unused_variables)]
 pub trait Component: Send + Sync {
     /// Called once the Window is opened
-    async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         Ok(())
     }
 
@@ -39,7 +39,7 @@ pub trait Component: Send + Sync {
         Ok(())
     }
 
-    async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+    async fn update(&mut self, context: &mut Context) -> KludgineResult<()> {
         Ok(())
     }
 
@@ -187,7 +187,7 @@ pub trait InteractiveComponent: Component {
 
     fn new_entity<T: InteractiveComponent + 'static>(
         &self,
-        context: &mut SceneContext,
+        context: &mut Context,
         component: T,
     ) -> EntityBuilder<T, Self::Message> {
         let component = Handle::new(component);
@@ -333,6 +333,7 @@ where
             self.parent.unwrap(),
             self.arena.clone(),
             self.ui_state.clone(),
+            self.scene.clone(),
         );
         self.callback = Some(Callback::new(target, callback));
         self
@@ -344,8 +345,12 @@ where
             let node = Node::from_components::<C>(self.components, self.interactive, self.callback);
             let index = self.arena.insert(self.parent, node).await;
 
-            let mut context =
-                SceneContext::new(index, self.scene, self.arena.clone(), self.ui_state.clone());
+            let mut context = Context::new(
+                index,
+                self.arena.clone(),
+                self.ui_state.clone(),
+                self.scene.clone(),
+            );
             self.arena
                 .get(&index)
                 .await
@@ -359,6 +364,7 @@ where
             index,
             self.arena.clone(),
             self.ui_state,
+            self.scene.clone(),
         )))
     }
 }

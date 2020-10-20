@@ -236,7 +236,7 @@ impl RuntimeWindow {
                 ui.update(&scene, target_fps).await?;
 
                 if ui.needs_render().await {
-                    ui.render(&scene).await?;
+                    ui.render().await?;
 
                     let mut frame = frame_synchronizer.take().await;
                     frame.update(&scene).await;

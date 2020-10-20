@@ -27,13 +27,13 @@ impl StandaloneComponent for Simple {}
 
 #[async_trait]
 impl Component for Simple {
-    async fn initialize(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
+    async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
         let texture = Texture::load("examples/assets/k.png")?;
         self.source_sprite = Some(SpriteSource::entire_texture(texture).await);
         Ok(())
     }
 
-    async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+    async fn update(&mut self, context: &mut Context) -> KludgineResult<()> {
         if let Some(elapsed) = context.scene().elapsed().await {
             self.rotation_angle += Angle::radians(elapsed.as_secs_f32());
         }

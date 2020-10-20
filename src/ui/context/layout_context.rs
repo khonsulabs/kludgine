@@ -3,8 +3,7 @@ use crate::{
     scene::Scene,
     style::Style,
     ui::{
-        HierarchicalArena, Index, Indexable, Layout, LayoutSolver, SceneContext, StyledContext,
-        UIState,
+        Context, HierarchicalArena, Index, Indexable, Layout, LayoutSolver, StyledContext, UIState,
     },
     Handle, KludgineResult,
 };
@@ -58,30 +57,31 @@ impl LayoutEngine {
         let mut traverser = arena.traverse(&root).await;
         let mut found_nodes = VecDeque::new();
         while let Some(index) = traverser.next().await {
-            let node = arena.get(&index).await.unwrap();
-            let style_sheet = node.style_sheet().await;
-            let mut node_style = style_sheet.normal;
+            if let Some(node) = arena.get(&index).await {
+                let style_sheet = node.style_sheet().await;
+                let mut node_style = style_sheet.normal;
 
-            if hovered_indicies.contains(&index) {
-                node_style = style_sheet.hover.inherit_from(&node_style);
-            }
-
-            if ui_state.focused().await == Some(index) {
-                node_style = style_sheet.focus.inherit_from(&node_style);
-            }
-
-            if ui_state.active().await == Some(index) {
-                node_style = style_sheet.active.inherit_from(&node_style);
-            }
-
-            let computed_style = match arena.parent(index).await {
-                Some(parent_index) => {
-                    node_style.inherit_from(computed_styles.get(&parent_index).unwrap())
+                if hovered_indicies.contains(&index) {
+                    node_style = style_sheet.hover.inherit_from(&node_style);
                 }
-                None => node_style.clone(),
-            };
-            computed_styles.insert(index, computed_style);
-            found_nodes.push_back(index);
+
+                if ui_state.focused().await == Some(index) {
+                    node_style = style_sheet.focus.inherit_from(&node_style);
+                }
+
+                if ui_state.active().await == Some(index) {
+                    node_style = style_sheet.active.inherit_from(&node_style);
+                }
+
+                let computed_style = match arena.parent(index).await {
+                    Some(parent_index) => {
+                        node_style.inherit_from(computed_styles.get(&parent_index).unwrap())
+                    }
+                    None => node_style.clone(),
+                };
+                computed_styles.insert(index, computed_style);
+                found_nodes.push_back(index);
+            }
         }
 
         for (index, style) in computed_styles {
@@ -92,16 +92,17 @@ impl LayoutEngine {
         // Traverse the found nodes starting at the back (leaf nodes) and iterate upwards to update stretch
         let mut layout_solvers = HashMap::new();
         while let Some(index) = found_nodes.pop_back() {
-            let node = arena.get(&index).await.unwrap();
-            let mut context = StyledContext::new(
-                index,
-                scene.clone(),
-                effective_styles.clone(),
-                arena.clone(),
-                ui_state.clone(),
-            );
-            let solver = node.layout(&mut context).await?;
-            layout_solvers.insert(index, Handle::new(solver));
+            if let Some(node) = arena.get(&index).await {
+                let mut context = StyledContext::new(
+                    index,
+                    scene.clone(),
+                    effective_styles.clone(),
+                    arena.clone(),
+                    ui_state.clone(),
+                );
+                let solver = node.layout(&mut context).await?;
+                layout_solvers.insert(index, Handle::new(solver));
+            }
         }
 
         let layout_data = LayoutEngine::new(layout_solvers, effective_styles.clone(), root);
@@ -132,8 +133,10 @@ impl LayoutEngine {
             context
                 .layout_within(index, &computed_layout.inner_bounds())
                 .await?;
-            let node = arena.get(&index).await.unwrap();
-            node.set_layout(computed_layout).await;
+
+            if let Some(node) = arena.get(&index).await {
+                node.set_layout(computed_layout).await;
+            }
         }
 
         Ok(layout_data)
@@ -177,10 +180,13 @@ impl LayoutEngine {
     ) -> KludgineResult<()> {
         let solver_handle = {
             let data = self.data.read().await;
-            data.layout_solvers.get(index).unwrap().clone()
+            data.layout_solvers.get(index).cloned()
         };
-        let solver = solver_handle.read().await;
-        solver.layout_within(bounds, content_size, context).await
+        if let Some(solver_handle) = solver_handle {
+            let solver = solver_handle.read().await;
+            solver.layout_within(bounds, content_size, context).await?;
+        }
+        Ok(())
     }
 
     pub async fn effective_styles(&self) -> Arc<HashMap<Index, Style<Raw>>> {
@@ -195,7 +201,7 @@ pub struct LayoutContext {
 }
 
 impl std::ops::Deref for LayoutContext {
-    type Target = SceneContext;
+    type Target = Context;
 
     fn deref(&self) -> &Self::Target {
         &self.base
@@ -241,18 +247,19 @@ impl LayoutContext {
         bounds: &Rect<f32, Scaled>,
     ) -> KludgineResult<()> {
         let index = index.index();
-        let node = self.arena().get(&index).await.unwrap();
-        let content_size = node
-            .content_size(
-                self.styled_context(),
-                &Size::new(Some(bounds.size.width), Some(bounds.size.height)),
-            )
-            .await?;
+        if let Some(node) = self.arena().get(&index).await {
+            let content_size = node
+                .content_size(
+                    self.styled_context(),
+                    &Size::new(Some(bounds.size.width), Some(bounds.size.height)),
+                )
+                .await?;
 
-        let mut solving_context = self.clone_for(&index).await;
-        self.layout
-            .solve_layout_for(&index, &mut solving_context, bounds, &content_size)
-            .await?;
+            let mut solving_context = self.clone_for(&index).await;
+            self.layout
+                .solve_layout_for(&index, &mut solving_context, bounds, &content_size)
+                .await?;
+        }
 
         Ok(())
     }

@@ -119,7 +119,7 @@ pub mod prelude {
             ButtonStyle, Callback, Component, Context, ControlEvent, Entity, EntityBuilder,
             HierarchicalArena, Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation,
             ImageOptions, ImageScaling, Index, Indexable, InteractiveComponent, Label,
-            LabelCommand, Layout, LayoutConstraints, LayoutContext, LinearTransition, SceneContext,
+            LabelCommand, Layout, LayoutConstraints, LayoutContext, LinearTransition,
             StandaloneComponent, StyledContext, Timeout,
         },
         window::{Event, EventStatus, InputEvent, OpenableWindow, Window, WindowCreator},

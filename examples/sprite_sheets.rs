@@ -36,7 +36,7 @@ impl StandaloneComponent for SpriteSheetExample {}
 
 #[async_trait]
 impl Component for SpriteSheetExample {
-    async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         let texture = include_texture!("assets/stickguy.png")?;
         let sheet = SpriteSheet::new(
             texture,

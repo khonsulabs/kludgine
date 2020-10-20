@@ -10,7 +10,7 @@ use crate::{
         component::{render_background, Component},
         control::{ControlBackgroundColor, ControlTextColor},
         AbsoluteBounds, Context, ControlEvent, Entity, InteractiveComponent, Label, Layout,
-        SceneContext, StyledContext,
+        StyledContext,
     },
     KludgineResult,
 };
@@ -38,7 +38,7 @@ pub struct Button {
 
 #[async_trait]
 impl Component for Button {
-    async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         let theme = context.scene().theme().await;
         let control_colors = theme.default_style_sheet();
         let style_sheet = context.style_sheet().await.inherit_from(&control_colors);

@@ -3,9 +3,7 @@ use crate::{
     math::{Point, Points, Raw, Scaled, Size},
     style::{Alignment, Style},
     text::{wrap::TextWrap, Text},
-    ui::{
-        Component, Context, ControlEvent, InteractiveComponent, Layout, SceneContext, StyledContext,
-    },
+    ui::{Component, Context, ControlEvent, InteractiveComponent, Layout, StyledContext},
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -45,7 +43,7 @@ impl InteractiveComponent for Label {
 
 #[async_trait]
 impl Component for Label {
-    async fn update(&mut self, _context: &mut SceneContext) -> KludgineResult<()> {
+    async fn update(&mut self, _context: &mut Context) -> KludgineResult<()> {
         Ok(())
     }
 

@@ -63,7 +63,7 @@ impl InteractiveComponent for UIExample {
 
 #[async_trait]
 impl Component for UIExample {
-    async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         let sprite = include_aseprite_sprite!("assets/stickguy").await?;
         self.image = self
             .new_entity(context, Image::new(sprite))

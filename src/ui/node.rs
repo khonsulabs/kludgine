@@ -5,7 +5,7 @@ use crate::{
     style::StyleSheet,
     ui::{
         AbsoluteBounds, Callback, Context, EventStatus, InteractiveComponent, Layout, LayoutSolver,
-        SceneContext, StyledContext,
+        StyledContext,
     },
     window::{CloseResponse, Window},
     Handle, KludgineResult,
@@ -30,7 +30,7 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
 
     // Component methods without mutable self
 
-    async fn initialize(&self, context: &mut SceneContext) -> KludgineResult<()>;
+    async fn initialize(&self, context: &mut Context) -> KludgineResult<()>;
     async fn content_size(
         &self,
         context: &mut StyledContext,
@@ -47,7 +47,7 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
         layout: &Layout,
     ) -> KludgineResult<()>;
 
-    async fn update(&self, context: &mut SceneContext) -> KludgineResult<()>;
+    async fn update(&self, context: &mut Context) -> KludgineResult<()>;
 
     async fn mouse_down(
         &self,
@@ -169,7 +169,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         .detach();
     }
 
-    async fn initialize(&self, context: &mut SceneContext) -> KludgineResult<()> {
+    async fn initialize(&self, context: &mut Context) -> KludgineResult<()> {
         let component = self.interactive_component().await;
         let mut component = component.write().await;
         component.initialize(context).await
@@ -207,7 +207,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         component.render_background(context, layout).await
     }
 
-    async fn update(&self, context: &mut SceneContext) -> KludgineResult<()> {
+    async fn update(&self, context: &mut Context) -> KludgineResult<()> {
         let component = self.interactive_component().await;
         let mut component = component.write().await;
         component.update(context).await
@@ -412,7 +412,7 @@ impl Node {
     }
 
     /// Called once the Window is opened
-    pub async fn initialize(&self, context: &mut SceneContext) -> KludgineResult<()> {
+    pub async fn initialize(&self, context: &mut Context) -> KludgineResult<()> {
         let component = self.component.read().await;
         component.initialize(context).await
     }
@@ -431,7 +431,7 @@ impl Node {
         component.render_background(context, layout).await
     }
 
-    pub async fn update(&self, context: &mut SceneContext) -> KludgineResult<()> {
+    pub async fn update(&self, context: &mut Context) -> KludgineResult<()> {
         let component = self.component.read().await;
         component.update(context).await
     }

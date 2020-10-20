@@ -120,11 +120,12 @@ impl HierarchicalArenaData {
             }
         }
 
-        let parent = self.parents.get(&index).unwrap();
-        if let Some(parent_children) = self.children_by_parent.get_mut(&parent) {
-            parent_children.retain(|i| i != &index);
+        if let Some(parent) = self.parents.get(&index) {
+            if let Some(parent_children) = self.children_by_parent.get_mut(&parent) {
+                parent_children.retain(|i| i != &index);
+            }
+            self.parents.remove(&index);
         }
-        self.parents.remove(&index);
 
         self.arena.remove(index)
     }

@@ -26,7 +26,7 @@ impl StandaloneComponent for Animation {}
 
 #[async_trait]
 impl Component for Animation {
-    async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         context
             .set_style_sheet(Style::new().with(BackgroundColor(Color::GREEN)).into())
             .await;
@@ -60,7 +60,7 @@ impl Component for Animation {
         Ok(())
     }
 
-    async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+    async fn update(&mut self, context: &mut Context) -> KludgineResult<()> {
         self.manager.update(context).await;
         self.frame_manager.update(context).await;
         Ok(())

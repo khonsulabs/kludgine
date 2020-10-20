@@ -6,7 +6,7 @@ use crate::{
         animation::Transition,
         animation::{FloatChange, PropertyFrameManager, PropertyMutator},
         AnimatableComponent, Component, Context, ControlEvent, Entity, InteractiveComponent,
-        Layout, SceneContext, StyledContext,
+        Layout, StyledContext,
     },
     KludgineResult,
 };
@@ -110,7 +110,7 @@ impl InteractiveComponent for Image {
 
 #[async_trait]
 impl Component for Image {
-    async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+    async fn update(&mut self, context: &mut Context) -> KludgineResult<()> {
         self.current_frame = match &self.options.override_frame {
             Some(override_frame) => {
                 let current_tag = self.sprite.current_tag().await;

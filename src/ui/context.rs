@@ -1,13 +1,12 @@
 use crate::{
+    prelude::Scene,
     style::StyleSheet,
     ui::{Entity, HierarchicalArena, Index, Indexable, InteractiveComponent, Layout, UIState},
 };
 mod layout_context;
-mod scene_context;
 mod styled_context;
 pub use self::{
     layout_context::{LayoutContext, LayoutEngine},
-    scene_context::SceneContext,
     styled_context::StyledContext,
 };
 use std::time::{Duration, Instant};
@@ -17,19 +16,34 @@ pub struct Context {
     index: Index,
     arena: HierarchicalArena,
     ui_state: UIState,
+    scene: Scene,
 }
 
 impl Context {
-    pub(crate) fn new<I: Indexable>(index: I, arena: HierarchicalArena, ui_state: UIState) -> Self {
+    pub(crate) fn new<I: Indexable>(
+        index: I,
+        arena: HierarchicalArena,
+        ui_state: UIState,
+        scene: Scene,
+    ) -> Self {
         Self {
             index: index.index(),
             arena,
             ui_state,
+            scene,
         }
     }
 
     pub fn index(&self) -> Index {
         self.index
+    }
+
+    pub fn scene(&self) -> &'_ Scene {
+        &self.scene
+    }
+
+    pub fn scene_mut(&mut self) -> &'_ mut Scene {
+        &mut self.scene
     }
 
     pub fn entity<T: InteractiveComponent>(&self) -> Entity<T> {
@@ -57,6 +71,7 @@ impl Context {
             index: index.index(),
             arena: self.arena.clone(),
             ui_state: self.ui_state.clone(),
+            scene: self.scene.clone(),
         }
     }
 

@@ -15,17 +15,20 @@ use std::{
 };
 use winit::event::VirtualKeyCode;
 
+#[derive(Debug)]
 pub(crate) enum Element {
     Sprite(RenderedSprite),
     Text(PreparedSpan),
     Shape(Shape<Raw>),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Scene {
     pub(crate) data: Handle<SceneData>,
 }
 
+#[derive(derivative::Derivative)]
+#[derivative(Debug)]
 pub(crate) struct SceneData {
     pub pressed_keys: HashSet<VirtualKeyCode>,
     scale_factor: ScreenScale,
@@ -34,6 +37,7 @@ pub(crate) struct SceneData {
     now: Option<Instant>,
     elapsed: Option<Duration>,
     fonts: HashMap<String, Vec<Font>>,
+    #[derivative(Debug = "ignore")]
     theme: Arc<Box<dyn Theme>>,
 }
 
@@ -160,7 +164,7 @@ impl Scene {
         scene.elapsed.is_none()
     }
 
-    pub async fn register_font(&mut self, font: &Font) {
+    pub async fn register_font(&self, font: &Font) {
         let family = font.family().await.expect("Unable to register VecFonts");
         let mut scene = self.data.write().await;
         scene
@@ -171,7 +175,7 @@ impl Scene {
     }
 
     #[cfg(feature = "bundled-fonts-enabled")]
-    pub(crate) async fn register_bundled_fonts(&mut self) {
+    pub(crate) async fn register_bundled_fonts(&self) {
         #[cfg(feature = "bundled-fonts-roboto")]
         {
             self.register_font(&crate::text::bundled_fonts::ROBOTO)
