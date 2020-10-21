@@ -1,9 +1,13 @@
+use std::fmt::Debug;
+
 use crate::{
     color::Color,
     event::MouseButton,
-    math::{Point, Scaled},
-    style::TextColor,
-    style::{BackgroundColor, GenericStyle, UnscaledFallbackStyle, UnscaledStyleComponent},
+    math::{Point, Raw, Scale, Scaled, Surround},
+    style::{
+        BackgroundColor, FallbackStyle, GenericStyle, Style, StyleComponent, TextColor,
+        UnscaledFallbackStyle, UnscaledStyleComponent,
+    },
 };
 
 #[derive(Clone, Debug)]
@@ -50,3 +54,21 @@ impl Into<Color> for ControlTextColor {
         self.0
     }
 }
+
+#[derive(Debug, Clone, Default)]
+pub struct ControlPadding<Unit>(pub Surround<f32, Unit>);
+
+impl StyleComponent<Scaled> for ControlPadding<Scaled> {
+    fn scale(&self, scale: Scale<f32, Scaled, Raw>, destination: &mut Style<Raw>) {
+        destination.push(ControlPadding(self.0 * scale))
+    }
+}
+
+impl StyleComponent<Raw> for ControlPadding<Raw> {
+    fn scale(&self, _scale: Scale<f32, Raw, Raw>, map: &mut Style<Raw>) {
+        map.push(ControlPadding(self.0));
+    }
+}
+
+impl FallbackStyle<Scaled> for ControlPadding<Scaled> {}
+impl FallbackStyle<Raw> for ControlPadding<Raw> {}

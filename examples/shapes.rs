@@ -20,7 +20,7 @@ impl StandaloneComponent for Shapes {}
 
 #[async_trait]
 impl Component for Shapes {
-    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
+    async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         let center = layout.bounds_without_margin().center();
 
         Shape::polygon(vec![

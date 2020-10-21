@@ -41,7 +41,7 @@ impl Component for Simple {
         Ok(())
     }
 
-    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
+    async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         let sprite = self.source_sprite.as_ref().unwrap();
 
         sprite

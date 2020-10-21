@@ -10,6 +10,7 @@ struct UIExample {
     image: Entity<Image>,
     label: Entity<Label>,
     button: Entity<Button>,
+    text_field: Entity<TextField>,
     new_window_button: Entity<Button>,
     current_count: usize,
 }
@@ -76,6 +77,17 @@ impl Component for UIExample {
             .insert()
             .await?;
 
+        self.text_field = self
+            .new_entity(context, TextField::new("Lorem ipsum"))
+            .bounds(AbsoluteBounds {
+                left: Dimension::from_f32(32.),
+                right: Dimension::from_f32(32.),
+                top: Dimension::from_f32(32.),
+                ..Default::default()
+            })
+            .insert()
+            .await?;
+
         self.label = self
             .new_entity(context, Label::new("Test Label"))
             .style_sheet(
@@ -88,7 +100,7 @@ impl Component for UIExample {
             .bounds(AbsoluteBounds {
                 left: Dimension::from_f32(32.),
                 right: Dimension::from_f32(32.),
-                top: Dimension::from_f32(32.),
+                top: Dimension::from_f32(64.),
                 bottom: Dimension::from_f32(64.),
                 ..Default::default()
             })

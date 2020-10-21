@@ -93,7 +93,7 @@ where
     Unit: Clone + Send + Sync + Debug + 'static,
     Command: Send + Sync,
 {
-    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
+    async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         let center = layout.inner_bounds().center();
         for rendered in self.current_frame.iter() {
             match &rendered.drawable {

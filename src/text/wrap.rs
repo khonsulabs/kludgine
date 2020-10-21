@@ -227,7 +227,10 @@ impl TextWrap {
 mod tests {
     use super::*;
     use crate::{
-        math::Scaled, math::ScreenScale, scene::Scene, style::FontSize, style::Style, text::Span,
+        math::{Scaled, ScreenScale},
+        scene::Scene,
+        style::{FontSize, Style},
+        text::Span,
         theme::Minimal,
     };
 
@@ -258,7 +261,7 @@ mod tests {
             assert_eq!(wrap.lines.len(), 2);
             assert_eq!(wrap.lines[0].spans.len(), 5); // "this"," ","line"," ","should"
             assert_eq!(wrap.lines[1].spans.len(), 1); // "wrap"
-            assert_eq!(wrap.lines[1].spans[0].data.positioned_glyphs.len(), 4);
+            assert_eq!(wrap.lines[1].spans[0].data.glyphs.len(), 4);
         }
     }
 
@@ -295,7 +298,7 @@ mod tests {
         assert_eq!(wrap.lines.len(), 2);
         assert_eq!(wrap.lines[0].spans.len(), 5);
         assert_eq!(wrap.lines[1].spans.len(), 1);
-        assert_eq!(wrap.lines[1].spans[0].data.positioned_glyphs.len(), 4);
+        assert_eq!(wrap.lines[1].spans[0].data.glyphs.len(), 4);
         assert_ne!(
             wrap.lines[0].spans[0].data.metrics,
             wrap.lines[1].spans[0].data.metrics

@@ -193,7 +193,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
 
     async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         let component = self.interactive_component().await;
-        let component = component.read().await;
+        let mut component = component.write().await;
         component.render(context, layout).await
     }
 

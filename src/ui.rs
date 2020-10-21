@@ -10,24 +10,26 @@ mod layout;
 #[cfg(feature = "ecs")]
 pub mod legion;
 mod node;
+mod text_field;
 mod timeout;
 
 pub(crate) use self::node::NodeData;
 pub use self::{
     animation::{AnimationManager, LinearTransition},
-    button::{Button, ButtonStyle},
+    button::{Button, ButtonBackgroundColor, ButtonPadding, ButtonTextColor},
     component::{
         AnimatableComponent, Callback, Component, EntityBuilder, InteractiveComponent,
         LayoutConstraints, StandaloneComponent,
     },
     context::*,
-    control::ControlEvent,
+    control::{ControlBackgroundColor, ControlEvent, ControlPadding, ControlTextColor},
     image::{
         Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
     },
     label::{Label, LabelCommand},
     layout::*,
     node::{Node, NodeDataWindowExt},
+    text_field::{TextField, TextFieldBackgroundColor},
     timeout::Timeout,
 };
 use crate::{
@@ -36,8 +38,7 @@ use crate::{
     runtime::Runtime,
     scene::Scene,
     style::StyleSheet,
-    window::EventStatus,
-    window::{Event, InputEvent, WindowEvent},
+    window::{Event, EventStatus, InputEvent, WindowEvent},
     Handle, KludgineError, KludgineResult, RequiresInitialization,
 };
 pub use arena::{HierarchicalArena, Index};
@@ -82,15 +83,15 @@ impl UIState {
         }
     }
 
-    // async fn focus(&self, index: Index) {
-    //     let mut data = self.data.write().await;
-    //     data.focus = Some(index);
-    // }
+    async fn focus(&self, index: Index) {
+        let mut data = self.data.write().await;
+        data.focus = Some(index);
+    }
 
-    // async fn blur(&self) {
-    //     let mut data = self.data.write().await;
-    //     data.focus = None;
-    // }
+    async fn blur(&self) {
+        let mut data = self.data.write().await;
+        data.focus = None;
+    }
 
     async fn focused(&self) -> Option<Index> {
         let data = self.data.read().await;
@@ -462,6 +463,7 @@ where
                     self.mouse_button_handlers.remove(&button);
                 }
                 ElementState::Pressed => {
+                    self.ui_state.blur().await;
                     self.ui_state.deactivate().await;
                     self.mouse_button_handlers.remove(&button);
 

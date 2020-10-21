@@ -7,6 +7,7 @@ use crate::{
     KludgineError, KludgineResult,
 };
 use async_trait::async_trait;
+use euclid::Length;
 use std::collections::HashMap;
 #[derive(Default, Debug)]
 pub struct AbsoluteLayout {
@@ -113,6 +114,18 @@ impl From<Surround<Dimension>> for AbsoluteBounds {
             right: surround.right.get(),
             top: surround.top.get(),
             bottom: surround.bottom.get(),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<Surround<f32, Scaled>> for AbsoluteBounds {
+    fn from(surround: Surround<f32, Scaled>) -> Self {
+        Self {
+            left: Dimension::from_length(surround.left),
+            right: Dimension::from_length(surround.right),
+            top: Dimension::from_length(surround.top),
+            bottom: Dimension::from_length(surround.bottom),
             ..Default::default()
         }
     }

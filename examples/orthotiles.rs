@@ -105,7 +105,11 @@ impl Component for OrthoTiles {
         Ok(())
     }
 
-    async fn render(&self, context: &mut StyledContext, _layout: &Layout) -> KludgineResult<()> {
+    async fn render(
+        &mut self,
+        context: &mut StyledContext,
+        _layout: &Layout,
+    ) -> KludgineResult<()> {
         // TODO this is no longer functional. Zooming needs to be fixed, and then this should get cleaned up.
         let center = context.scene().size().await.to_vector().to_point() / 2.0;
         let camera_scene = context.scene().clone();

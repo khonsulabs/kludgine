@@ -75,6 +75,9 @@ impl Text {
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
         let prepared_text = self.wrap(scene, wrapping).await?;
-        prepared_text.render(scene, location, offset_baseline).await
+        prepared_text
+            .render(scene, location, offset_baseline)
+            .await
+            .map(|_| ())
     }
 }

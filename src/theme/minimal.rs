@@ -1,7 +1,8 @@
 use crate::{
-    math::Scaled,
+    math::{Points, Scaled, Surround},
     style::{BackgroundColor, Style, TextColor},
     theme::{Palette, Theme},
+    ui::{ControlBackgroundColor, ControlPadding},
 };
 
 #[derive(Debug)]
@@ -34,23 +35,35 @@ impl Theme for Minimal {
         Style::new()
             .with(TextColor(self.palette.light.control.text.normal()))
             .with(BackgroundColor(
+                self.palette.light.default.background.normal(),
+            ))
+            .with(ControlBackgroundColor(
                 self.palette.light.control.background.normal(),
             ))
+            .with(ControlPadding(Surround::uniform(Points::new(10.))))
     }
 
     fn default_hover_style(&self) -> Style<Scaled> {
         Style::new()
             .with(TextColor(self.palette.light.control.text.normal()))
             .with(BackgroundColor(
+                self.palette.light.default.background.lighter(),
+            ))
+            .with(ControlBackgroundColor(
                 self.palette.light.control.background.lighter(),
             ))
+            .with(ControlPadding(Surround::uniform(Points::new(10.))))
     }
 
     fn default_active_style(&self) -> Style<Scaled> {
         Style::new()
             .with(TextColor(self.palette.light.control.text.normal()))
             .with(BackgroundColor(
+                self.palette.light.default.background.darker(),
+            ))
+            .with(ControlBackgroundColor(
                 self.palette.light.control.background.darker(),
             ))
+            .with(ControlPadding(Surround::uniform(Points::new(10.))))
     }
 }

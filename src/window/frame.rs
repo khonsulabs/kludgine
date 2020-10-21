@@ -7,8 +7,10 @@ use crate::{
     text::{font::LoadedFont, prepared::PreparedSpan},
     texture::Texture,
 };
-use std::collections::{HashMap, HashSet};
-use std::time::Instant;
+use std::{
+    collections::{HashMap, HashSet},
+    time::Instant,
+};
 #[derive(Default)]
 pub(crate) struct Frame {
     pub started_at: Option<Instant>,
@@ -164,14 +166,14 @@ impl Frame {
         {
             referenced_fonts.insert(text.data.font.id().await);
 
-            for glpyh in text.data.positioned_glyphs.iter() {
+            for glyph_info in text.data.glyphs.iter() {
                 let font = text.data.font.handle.read().await;
 
                 let loaded_font = self
                     .fonts
                     .entry(font.id)
                     .or_insert_with(|| LoadedFont::new(&text.data.font));
-                loaded_font.cache.queue_glyph(0, glpyh.clone());
+                loaded_font.cache.queue_glyph(0, glyph_info.glyph.clone());
             }
         }
 

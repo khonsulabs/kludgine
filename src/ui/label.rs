@@ -3,7 +3,10 @@ use crate::{
     math::{Point, Points, Raw, Scaled, Size},
     style::{Alignment, Style},
     text::{wrap::TextWrap, Text},
-    ui::{Component, Context, ControlEvent, InteractiveComponent, Layout, StyledContext},
+    ui::{
+        component::render_background, Component, Context, ControlBackgroundColor, ControlEvent,
+        InteractiveComponent, Layout, StyledContext,
+    },
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -47,7 +50,7 @@ impl Component for Label {
         Ok(())
     }
 
-    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
+    async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         let text = self.create_text(context.effective_style());
         text.render_at(
             context.scene(),
@@ -92,6 +95,14 @@ impl Component for Label {
         )
         .await;
         Ok(())
+    }
+
+    async fn render_background(
+        &self,
+        context: &mut StyledContext,
+        layout: &Layout,
+    ) -> KludgineResult<()> {
+        render_background::<ControlBackgroundColor>(context, layout).await
     }
 }
 

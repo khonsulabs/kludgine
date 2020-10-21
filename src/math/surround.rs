@@ -1,4 +1,5 @@
 use crate::math::{Length, PointExt, Rect, Size, Unknown, Vector};
+use euclid::Scale;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -51,6 +52,32 @@ where
             .map(|height| height - self.minimum_width().get());
 
         Size::new(width, height)
+    }
+}
+
+impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for Surround<f32, Src> {
+    type Output = Surround<f32, Dst>;
+
+    fn mul(self, rhs: Scale<f32, Src, Dst>) -> Self::Output {
+        Surround {
+            left: self.left * rhs,
+            right: self.right * rhs,
+            top: self.top * rhs,
+            bottom: self.bottom * rhs,
+        }
+    }
+}
+
+impl<Src, Dst> std::ops::Div<Scale<f32, Src, Dst>> for Surround<f32, Dst> {
+    type Output = Surround<f32, Src>;
+
+    fn div(self, rhs: Scale<f32, Src, Dst>) -> Self::Output {
+        Surround {
+            left: self.left / rhs,
+            right: self.right / rhs,
+            top: self.top / rhs,
+            bottom: self.bottom / rhs,
+        }
     }
 }
 

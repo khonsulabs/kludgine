@@ -19,7 +19,11 @@ impl StandaloneComponent for TextExample {}
 
 #[async_trait]
 impl Component for TextExample {
-    async fn render(&self, context: &mut StyledContext, _layout: &Layout) -> KludgineResult<()> {
+    async fn render(
+        &mut self,
+        context: &mut StyledContext,
+        _layout: &Layout,
+    ) -> KludgineResult<()> {
         let mut spans = Vec::new();
         spans.push(Span::new(
             "Wrapping ",

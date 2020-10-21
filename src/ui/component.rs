@@ -35,7 +35,7 @@ pub trait Component: Send + Sync {
         ))
     }
 
-    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
+    async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         Ok(())
     }
 
@@ -340,7 +340,10 @@ where
     }
 
     pub async fn insert(mut self) -> KludgineResult<Entity<C>> {
-        self.components.insert(Handle::new(self.style_sheet));
+        let theme = self.scene.theme().await;
+        self.components.insert(Handle::new(
+            self.style_sheet.inherit_from(&theme.default_style_sheet()),
+        ));
         let index = {
             let node = Node::from_components::<C>(self.components, self.interactive, self.callback);
             let index = self.arena.insert(self.parent, node).await;

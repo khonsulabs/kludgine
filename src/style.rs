@@ -3,7 +3,11 @@ use crate::{
     scene::Scene,
 };
 use euclid::Scale;
-use std::{any::TypeId, collections::HashMap, collections::HashSet, fmt::Debug};
+use std::{
+    any::TypeId,
+    collections::{HashMap, HashSet},
+    fmt::Debug,
+};
 
 mod alignment;
 mod any;
@@ -121,8 +125,6 @@ where
         destination.push(self.clone());
     }
 }
-
-impl UnscaledStyleComponent<Scaled> for () {}
 
 impl<Unit: Send + Sync + Debug + 'static> Style<Unit> {
     pub fn inherit_from(&self, parent: &Style<Unit>) -> Self {

@@ -1,8 +1,7 @@
 use crate::{
     color::Color,
     math::{Pixels, Point, Points, Raw, Scaled, ScreenScale, Size, SizeExt, Vector},
-    scene::Element,
-    scene::Scene,
+    scene::{Element, Scene},
     style::Alignment,
     text::Font,
     KludgineResult,
@@ -56,15 +55,14 @@ impl PreparedText {
         scene: &Scene,
         location: Point<f32, Scaled>,
         offset_baseline: bool,
-    ) -> KludgineResult<()> {
+    ) -> KludgineResult<Points> {
         let mut current_line_baseline = Points::new(0.);
         let effective_scale_factor = scene.scale_factor().await;
 
-        if offset_baseline && !self.lines.is_empty() {
-            current_line_baseline += self.lines[0].metrics.ascent / effective_scale_factor;
-        }
-
-        for line in self.lines.iter() {
+        for (line_index, line) in self.lines.iter().enumerate() {
+            if offset_baseline || line_index > 0 {
+                current_line_baseline += line.metrics.ascent / effective_scale_factor;
+            }
             let metrics = line.metrics;
             let cursor_position =
                 location + Vector::from_lengths(line.alignment_offset, current_line_baseline);
@@ -76,11 +74,10 @@ impl PreparedText {
                     .push_element(Element::Text(span.translate(location)))
                     .await;
             }
-            current_line_baseline +=
-                (metrics.ascent - metrics.descent + metrics.line_gap) / effective_scale_factor;
+            current_line_baseline += (metrics.line_gap - metrics.descent) / effective_scale_factor;
         }
 
-        Ok(())
+        Ok(current_line_baseline)
     }
 }
 
@@ -140,7 +137,8 @@ impl PreparedSpan {
         size: Pixels,
         color: Color,
         width: Pixels,
-        positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
+        characters: Vec<char>,
+        glyphs: Vec<GlyphInfo>,
         metrics: rusttype::VMetrics,
     ) -> Self {
         Self {
@@ -150,8 +148,9 @@ impl PreparedSpan {
                 size,
                 color,
                 width,
-                positioned_glyphs,
+                glyphs,
                 metrics,
+                characters,
             }),
         }
     }
@@ -174,6 +173,14 @@ pub struct PreparedSpanData {
     pub size: Pixels,
     pub color: Color,
     pub width: Pixels,
-    pub positioned_glyphs: Vec<rusttype::PositionedGlyph<'static>>,
+    pub characters: Vec<char>,
+    pub glyphs: Vec<GlyphInfo>,
     pub metrics: rusttype::VMetrics,
+}
+
+#[derive(Debug)]
+pub struct GlyphInfo {
+    pub source_offset: usize,
+    pub source: char,
+    pub glyph: rusttype::PositionedGlyph<'static>,
 }
