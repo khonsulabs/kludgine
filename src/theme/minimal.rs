@@ -2,7 +2,7 @@ use crate::{
     math::{Points, Scaled, Surround},
     style::{BackgroundColor, Style, TextColor},
     theme::{Palette, Theme},
-    ui::{ControlBackgroundColor, ControlPadding},
+    ui::{ControlBackgroundColor, ControlPadding, TextFieldBackgroundColor},
 };
 
 #[derive(Debug)]
@@ -63,6 +63,9 @@ impl Theme for Minimal {
             ))
             .with(ControlBackgroundColor(
                 self.palette.light.control.background.darker(),
+            ))
+            .with(TextFieldBackgroundColor(
+                self.palette.light.control.background.normal(),
             ))
             .with(ControlPadding(Surround::uniform(Points::new(10.))))
     }

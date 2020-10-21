@@ -6,7 +6,7 @@ use std::{
 use crate::{
     color::Color,
     event::MouseButton,
-    math::{Point, PointExt, Points, Raw, Rect, Scaled, Size, SizeExt, Surround, Vector},
+    math::{Pixels, Point, PointExt, Points, Raw, Rect, Scaled, Size, SizeExt, Surround, Vector},
     prelude::Scene,
     shape::{Fill, Shape},
     style::{
@@ -127,10 +127,11 @@ impl Component for TextField {
     }
 
     async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
+        let scale = context.scene().scale_factor().await;
         let padding = TextFieldPadding::<Raw>::lookup(context.effective_style())
             .unwrap_or_default()
             .0
-            / context.scene().scale_factor().await;
+            / scale;
 
         let bounds = padding.inset_rect(&layout.inner_bounds());
         let mut y = Points::default();
@@ -153,7 +154,7 @@ impl Component for TextField {
             {
                 Shape::rect(Rect::new(
                     Default::default(),
-                    Size::new(1., cursor_location.size.height),
+                    Size::from_lengths(Pixels::new(1.) / scale, cursor_location.size.height()),
                 ))
                 .fill(Fill::new(Color::RED))
                 .render_at(
@@ -291,7 +292,8 @@ impl TextField {
                             let span_end = x + dbg!(span.data.width) / scale;
                             if !span.data.glyphs.is_empty() && location.x() < span_end {
                                 // Click was within this span
-                                let relative_pixels = (location.x() - x) * scale;
+                                dbg!(&span);
+                                let relative_pixels = dbg!((location.x() - x) * scale);
                                 for info in span.data.glyphs.iter() {
                                     if let Some(bounding_box) = info.glyph.pixel_bounding_box() {
                                         if (relative_pixels.get() as i32) < bounding_box.max.x {
@@ -302,6 +304,11 @@ impl TextField {
                                         }
                                     }
                                 }
+
+                                return Some(CursorPosition {
+                                    paragraph: paragraph_index,
+                                    offset: span.data.glyphs.last().unwrap().source_offset,
+                                });
                             }
                         }
                         if let Some(span) = line.spans.last() {
@@ -337,11 +344,10 @@ impl TextField {
                 location.y = (location.y() + line.metrics.ascent / scale).get();
                 location.x = line.alignment_offset.get();
                 for span in line.spans.iter() {
-                    dbg!(&span.data.glyphs);
                     let next_x = location.x() + (span.data.width / scale);
                     if !span.data.glyphs.is_empty() {
                         let last_glyph = span.data.glyphs.last().unwrap();
-                        if dbg!(position.offset) <= dbg!(last_glyph.source_offset) {
+                        if position.offset <= last_glyph.source_offset {
                             // Return a box of the width of the last character with the start of the character at the origin
                             for info in span.data.glyphs.iter() {
                                 if info.source_offset >= position.offset {
@@ -359,11 +365,30 @@ impl TextField {
                                                     bounding_box.max.x - bounding_box.min.x,
                                                 )
                                                 .cast::<f32>(),
-                                                Length::<f32, Raw>::new(span.data.metrics.ascent),
+                                                Length::<f32, Raw>::new(
+                                                    span.data.metrics.ascent
+                                                        - span.data.metrics.descent,
+                                                ),
                                             ) / scale,
                                         ));
                                     } else {
-                                        panic!("Unsure if this is reachable or not. A glphy didn't have a bounding box")
+                                        return Some(Rect::new(
+                                            Point::from_lengths(
+                                                (span.location.x()
+                                                    + Length::<f32, Raw>::new(
+                                                        info.glyph.position().x,
+                                                    ))
+                                                    / scale,
+                                                span.location.y() / scale,
+                                            ),
+                                            Size::from_lengths(
+                                                Default::default(),
+                                                Length::<f32, Raw>::new(
+                                                    span.data.metrics.ascent
+                                                        - span.data.metrics.descent,
+                                                ),
+                                            ) / scale,
+                                        ));
                                     }
                                 }
                             }
@@ -380,7 +405,9 @@ impl TextField {
                                 ),
                                 Size::from_lengths(
                                     Default::default(),
-                                    Length::<f32, Raw>::new(span.data.metrics.ascent) / scale,
+                                    Length::<f32, Raw>::new(
+                                        span.data.metrics.ascent - span.data.metrics.descent,
+                                    ) / scale,
                                 ),
                             ));
                         }
