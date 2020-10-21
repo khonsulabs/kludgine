@@ -13,6 +13,7 @@ use crate::{
     Handle, KludgineResult,
 };
 use async_trait::async_trait;
+use winit::event::{ElementState, VirtualKeyCode};
 
 pub struct LayoutConstraints {}
 
@@ -88,6 +89,23 @@ pub trait Component: Send + Sync {
     }
 
     async fn unhovered(&mut self, context: &mut Context) -> KludgineResult<()> {
+        Ok(())
+    }
+
+    async fn receive_character(
+        &mut self,
+        context: &mut Context,
+        character: char,
+    ) -> KludgineResult<()> {
+        Ok(())
+    }
+
+    async fn keyboard_event(
+        &mut self,
+        context: &mut Context,
+        key: Option<VirtualKeyCode>,
+        state: ElementState,
+    ) -> KludgineResult<()> {
         Ok(())
     }
 

@@ -359,6 +359,24 @@ where
         Ok(())
     }
 
+    pub async fn receive_character(&mut self, character: char) -> KludgineResult<()> {
+        let event_target = self
+            .ui_state
+            .focused()
+            .await
+            .unwrap_or_else(|| self.root.index());
+        if let Some(node) = self.arena.get(&event_target).await {
+            let mut context = Context::new(
+                event_target,
+                self.arena.clone(),
+                self.ui_state.clone(),
+                self.scene.clone(),
+            );
+            node.receive_character(&mut context, character).await?
+        }
+        Ok(())
+    }
+
     pub async fn process_input(&mut self, event: InputEvent) -> KludgineResult<()> {
         match event.event {
             Event::MouseMoved { position } => {
@@ -492,7 +510,22 @@ where
                     }
                 }
             },
-            _ => {}
+            Event::Keyboard { key, state } => {
+                let event_target = self
+                    .ui_state
+                    .focused()
+                    .await
+                    .unwrap_or_else(|| self.root.index());
+                if let Some(node) = self.arena.get(&event_target).await {
+                    let mut context = Context::new(
+                        event_target,
+                        self.arena.clone(),
+                        self.ui_state.clone(),
+                        self.scene.clone(),
+                    );
+                    node.keyboard_event(&mut context, key, state).await?
+                }
+            }
         }
         Ok(())
     }

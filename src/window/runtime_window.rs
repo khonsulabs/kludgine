@@ -196,9 +196,6 @@ impl RuntimeWindow {
                         }
                     }
                     WindowEvent::Input(input) => {
-                        // Notify the window of the raw event, before updaing our internal state
-                        ui.process_input(input).await?;
-
                         if let Event::Keyboard { key, state } = input.event {
                             if let Some(key) = key {
                                 let mut scene = scene.data.write().await;
@@ -212,6 +209,11 @@ impl RuntimeWindow {
                                 }
                             }
                         }
+
+                        ui.process_input(input).await?;
+                    }
+                    WindowEvent::ReceiveCharacter(character) => {
+                        ui.receive_character(character).await?;
                     }
                     WindowEvent::RedrawRequested => {
                         ui.request_redraw().await;
@@ -391,6 +393,10 @@ impl RuntimeWindow {
                     device_id: *device_id,
                     event: Event::MouseMoved { position: None },
                 }))
+                .unwrap_or_default(),
+            WinitWindowEvent::ReceivedCharacter(character) => self
+                .event_sender
+                .try_send(WindowEvent::ReceiveCharacter(*character))
                 .unwrap_or_default(),
             _ => {}
         }

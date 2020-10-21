@@ -13,6 +13,7 @@ use crate::{
 use async_trait::async_trait;
 use derivative::Derivative;
 use std::any::Any;
+use winit::event::{ElementState, VirtualKeyCode};
 
 pub(crate) type ThreadsafeAnyMap = anymap::Map<dyn anymap::any::Any + Send + Sync>;
 
@@ -76,6 +77,16 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
         delta: MouseScrollDelta,
         touch_phase: TouchPhase,
     ) -> KludgineResult<EventStatus>;
+
+    async fn receive_character(&self, context: &mut Context, character: char)
+        -> KludgineResult<()>;
+
+    async fn keyboard_event(
+        &self,
+        context: &mut Context,
+        key: Option<VirtualKeyCode>,
+        state: ElementState,
+    ) -> KludgineResult<()>;
 
     async fn hovered(&self, context: &mut Context) -> KludgineResult<()>;
 
@@ -277,6 +288,27 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         let component = self.interactive_component().await;
         let mut component = component.write().await;
         component.unhovered(context).await
+    }
+
+    async fn receive_character(
+        &self,
+        context: &mut Context,
+        character: char,
+    ) -> KludgineResult<()> {
+        let component = self.interactive_component().await;
+        let mut component = component.write().await;
+        component.receive_character(context, character).await
+    }
+
+    async fn keyboard_event(
+        &self,
+        context: &mut Context,
+        key: Option<VirtualKeyCode>,
+        state: ElementState,
+    ) -> KludgineResult<()> {
+        let component = self.interactive_component().await;
+        let mut component = component.write().await;
+        component.keyboard_event(context, key, state).await
     }
 }
 
@@ -483,6 +515,25 @@ impl Node {
     ) -> KludgineResult<()> {
         let component = self.component.read().await;
         component.mouse_up(context, position, button).await
+    }
+
+    pub async fn receive_character(
+        &self,
+        context: &mut Context,
+        character: char,
+    ) -> KludgineResult<()> {
+        let component = self.component.read().await;
+        component.receive_character(context, character).await
+    }
+
+    pub async fn keyboard_event(
+        &self,
+        context: &mut Context,
+        key: Option<VirtualKeyCode>,
+        state: ElementState,
+    ) -> KludgineResult<()> {
+        let component = self.component.read().await;
+        component.keyboard_event(context, key, state).await
     }
 
     pub async fn hovered(&self, context: &mut Context) -> KludgineResult<()> {

@@ -270,5 +270,6 @@ pub(crate) enum WindowEvent {
         scale_factor: ScreenScale,
     },
     Input(InputEvent),
+    ReceiveCharacter(char),
     RedrawRequested,
 }

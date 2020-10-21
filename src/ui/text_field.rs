@@ -24,6 +24,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use euclid::{Length, Scale};
+use winit::event::{ElementState, VirtualKeyCode};
 
 static CURSOR_BLINK_MS: u64 = 500;
 
@@ -306,6 +307,26 @@ impl Component for TextField {
     ) -> KludgineResult<()> {
         render_background::<TextFieldBackgroundColor>(context, layout).await
     }
+
+    async fn receive_character(
+        &mut self,
+        context: &mut Context,
+        character: char,
+    ) -> KludgineResult<()> {
+        self.replace_selection(&character.to_string(), context)
+            .await;
+        Ok(())
+    }
+
+    async fn keyboard_event(
+        &mut self,
+        context: &mut Context,
+        key: Option<VirtualKeyCode>,
+        state: ElementState,
+    ) -> KludgineResult<()> {
+        dbg!(key);
+        Ok(())
+    }
 }
 
 impl TextField {
@@ -328,6 +349,34 @@ impl TextField {
             truncate: true,
             alignment,
         }
+    }
+
+    pub async fn replace_selection(&mut self, replacement: &str, context: &mut Context) {
+        if let Some(end) = self.cursor.end {
+            let selection_start = self.cursor.start.min(end);
+            let selection_end = self.cursor.start.max(end);
+            if selection_end.paragraph != selection_start.paragraph {
+                todo!("Need to implement multi-paragraph removal logic");
+            }
+
+            let paragraph = self.paragraphs.get_mut(selection_start.paragraph).unwrap();
+            paragraph.replace_range(
+                selection_start.offset..paragraph.len().min(selection_end.offset + 1),
+                "",
+            );
+            self.cursor.end = None;
+            self.cursor.start = selection_start;
+        }
+
+        let paragraph = self
+            .paragraphs
+            .get_mut(self.cursor.start.paragraph)
+            .unwrap();
+        paragraph.insert_str(self.cursor.start.offset, replacement);
+        self.cursor.start.offset += replacement.len();
+        self.cursor.blink_state.force_on();
+
+        context.set_needs_redraw().await;
     }
 
     async fn prepared_text(
@@ -411,12 +460,9 @@ impl TextField {
         if let Some(prepared) = &self.prepared {
             let prepared = prepared.get(position.paragraph)?;
             let scale = scene.scale_factor().await;
-            let mut location: Point<f32, Scaled> = Point::default();
             for line in prepared.lines.iter() {
-                location.y = (location.y() + line.metrics.ascent / scale).get();
-                location.x = line.alignment_offset.get();
+                let line_height = line.height() / scale;
                 for span in line.spans.iter() {
-                    let next_x = location.x() + (span.data.width / scale);
                     if !span.data.glyphs.is_empty() {
                         let last_glyph = span.data.glyphs.last().unwrap();
                         if position.offset <= last_glyph.source_offset {
@@ -436,12 +482,10 @@ impl TextField {
                                                 Length::<i32, Raw>::new(
                                                     bounding_box.max.x - bounding_box.min.x,
                                                 )
-                                                .cast::<f32>(),
-                                                Length::<f32, Raw>::new(
-                                                    span.data.metrics.ascent
-                                                        - span.data.metrics.descent,
-                                                ),
-                                            ) / scale,
+                                                .cast::<f32>()
+                                                    / scale,
+                                                line_height,
+                                            ),
                                         ));
                                     } else {
                                         return Some(Rect::new(
@@ -453,13 +497,7 @@ impl TextField {
                                                     / scale,
                                                 span.location.y() / scale,
                                             ),
-                                            Size::from_lengths(
-                                                Default::default(),
-                                                Length::<f32, Raw>::new(
-                                                    span.data.metrics.ascent
-                                                        - span.data.metrics.descent,
-                                                ),
-                                            ) / scale,
+                                            Size::from_lengths(Default::default(), line_height),
                                         ));
                                     }
                                 }
@@ -475,16 +513,10 @@ impl TextField {
                                         / scale,
                                     span.location.y() / scale,
                                 ),
-                                Size::from_lengths(
-                                    Default::default(),
-                                    Length::<f32, Raw>::new(
-                                        span.data.metrics.ascent - span.data.metrics.descent,
-                                    ) / scale,
-                                ),
+                                Size::from_lengths(Default::default(), line_height),
                             ));
                         }
                     }
-                    location.x = next_x.get();
                 }
             }
         }
