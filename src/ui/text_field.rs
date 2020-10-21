@@ -24,7 +24,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use euclid::{Length, Scale};
-use winit::event::{ElementState, VirtualKeyCode};
+use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 
 static CURSOR_BLINK_MS: u64 = 500;
 
@@ -61,6 +61,24 @@ pub struct Cursor {
     pub blink_state: BlinkState,
     pub start: CursorPosition,
     pub end: Option<CursorPosition>,
+}
+
+impl Cursor {
+    pub fn selection_start(&self) -> CursorPosition {
+        if let Some(end) = self.end {
+            self.start.min(end)
+        } else {
+            self.start
+        }
+    }
+
+    pub fn selection_end(&self) -> CursorPosition {
+        if let Some(end) = self.end {
+            self.start.max(end)
+        } else {
+            self.start
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -286,7 +304,12 @@ impl Component for TextField {
                     )
                     .await
                 {
-                    if self.cursor.end != Some(location) {
+                    if location == self.cursor.start {
+                        if self.cursor.end != None {
+                            self.cursor.end = None;
+                            context.set_needs_redraw().await;
+                        }
+                    } else if self.cursor.end != Some(location) {
                         self.cursor.end = Some(location);
                         context.set_needs_redraw().await;
                     }
@@ -313,18 +336,52 @@ impl Component for TextField {
         context: &mut Context,
         character: char,
     ) -> KludgineResult<()> {
-        self.replace_selection(&character.to_string(), context)
-            .await;
+        match character {
+            '\x08' => {
+                if self.cursor.end.is_none() && self.cursor.start.offset > 0 {
+                    // Select the previous character
+                    self.cursor.end = Some(self.cursor.start);
+                    self.cursor.start = self.previous_cursor_position(self.cursor.start);
+                }
+
+                self.replace_selection("", context).await
+            }
+            character => {
+                self.replace_selection(&character.to_string(), context)
+                    .await
+            }
+        }
         Ok(())
     }
 
     async fn keyboard_event(
         &mut self,
         context: &mut Context,
+        _scancode: ScanCode,
         key: Option<VirtualKeyCode>,
         state: ElementState,
     ) -> KludgineResult<()> {
-        dbg!(key);
+        if let Some(key) = key {
+            if matches!(state, ElementState::Pressed) {
+                // TODO handle modifiers
+                match key {
+                    VirtualKeyCode::Left => {
+                        self.cursor.start =
+                            self.previous_cursor_position(self.cursor.selection_start());
+                    }
+                    VirtualKeyCode::Right => {
+                        self.cursor.start =
+                            self.next_cursor_position(self.cursor.selection_start());
+                    }
+                    VirtualKeyCode::Up => {}
+                    VirtualKeyCode::Down => {}
+                    _ => {}
+                }
+
+                self.cursor.blink_state.force_on();
+                context.set_needs_redraw().await;
+            }
+        }
         Ok(())
     }
 }
@@ -352,18 +409,15 @@ impl TextField {
     }
 
     pub async fn replace_selection(&mut self, replacement: &str, context: &mut Context) {
-        if let Some(end) = self.cursor.end {
-            let selection_start = self.cursor.start.min(end);
-            let selection_end = self.cursor.start.max(end);
+        if self.cursor.end.is_some() {
+            let selection_start = self.cursor.selection_start();
+            let selection_end = self.cursor.selection_end();
             if selection_end.paragraph != selection_start.paragraph {
                 todo!("Need to implement multi-paragraph removal logic");
             }
 
             let paragraph = self.paragraphs.get_mut(selection_start.paragraph).unwrap();
-            paragraph.replace_range(
-                selection_start.offset..paragraph.len().min(selection_end.offset + 1),
-                "",
-            );
+            paragraph.replace_range(selection_start.offset..selection_end.offset, "");
             self.cursor.end = None;
             self.cursor.start = selection_start;
         }
@@ -460,6 +514,7 @@ impl TextField {
         if let Some(prepared) = &self.prepared {
             let prepared = prepared.get(position.paragraph)?;
             let scale = scene.scale_factor().await;
+            let mut line_top = Points::default();
             for line in prepared.lines.iter() {
                 let line_height = line.height() / scale;
                 for span in line.spans.iter() {
@@ -476,7 +531,7 @@ impl TextField {
                                                     + Length::<i32, Raw>::new(bounding_box.min.x)
                                                         .cast::<f32>())
                                                     / scale,
-                                                span.location.y() / scale,
+                                                line_top + span.location.y() / scale,
                                             ),
                                             Size::from_lengths(
                                                 Length::<i32, Raw>::new(
@@ -488,6 +543,8 @@ impl TextField {
                                             ),
                                         ));
                                     } else {
+                                        // For whitespace glyphs pixel_bounding_box doesn't return a good value
+                                        // TODO Investigate if our GlyphInfo can have a width on it
                                         return Some(Rect::new(
                                             Point::from_lengths(
                                                 (span.location.x()
@@ -495,7 +552,7 @@ impl TextField {
                                                         info.glyph.position().x,
                                                     ))
                                                     / scale,
-                                                span.location.y() / scale,
+                                                line_top + span.location.y() / scale,
                                             ),
                                             Size::from_lengths(Default::default(), line_height),
                                         ));
@@ -511,16 +568,41 @@ impl TextField {
                                         + Length::<i32, Raw>::new(bounding_box.max.x)
                                             .cast::<f32>())
                                         / scale,
-                                    span.location.y() / scale,
+                                    line_top + span.location.y() / scale,
                                 ),
                                 Size::from_lengths(Default::default(), line_height),
                             ));
                         }
                     }
                 }
+                line_top += line_height;
             }
         }
         last_location
+    }
+
+    pub fn next_cursor_position(&self, mut position: CursorPosition) -> CursorPosition {
+        let next_offset = position.offset + 1;
+        if next_offset > self.paragraphs[position.paragraph].len() {
+            if self.paragraphs.len() > position.paragraph + 1 {
+                todo!("Need to support multiple paragraphs")
+            }
+        } else {
+            position.offset = next_offset;
+        }
+        position
+    }
+
+    pub fn previous_cursor_position(&self, mut position: CursorPosition) -> CursorPosition {
+        if position.offset == 0 {
+            if position.paragraph > 0 {
+                todo!("Need to support multiple paragraphs")
+            }
+        } else {
+            position.offset -= 1;
+        }
+
+        position
     }
 }
 

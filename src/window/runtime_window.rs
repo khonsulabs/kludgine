@@ -196,7 +196,7 @@ impl RuntimeWindow {
                         }
                     }
                     WindowEvent::Input(input) => {
-                        if let Event::Keyboard { key, state } = input.event {
+                        if let Event::Keyboard { key, state, .. } = input.event {
                             if let Some(key) = key {
                                 let mut scene = scene.data.write().await;
                                 match state {
@@ -336,6 +336,7 @@ impl RuntimeWindow {
                     event: Event::Keyboard {
                         key: input.virtual_keycode,
                         state: input.state,
+                        scancode: input.scancode,
                     },
                 }))
                 .unwrap_or_default(),

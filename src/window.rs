@@ -13,7 +13,10 @@ use easygpu::prelude::*;
 use lazy_static::lazy_static;
 
 use std::collections::HashMap;
-use winit::window::{WindowBuilder as WinitWindowBuilder, WindowId};
+use winit::{
+    event::ScanCode,
+    window::{WindowBuilder as WinitWindowBuilder, WindowId},
+};
 
 pub(crate) mod frame;
 mod renderer;
@@ -66,6 +69,7 @@ pub struct InputEvent {
 pub enum Event {
     /// A keyboard event
     Keyboard {
+        scancode: ScanCode,
         key: Option<VirtualKeyCode>,
         state: ElementState,
     },

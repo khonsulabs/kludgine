@@ -510,7 +510,11 @@ where
                     }
                 }
             },
-            Event::Keyboard { key, state } => {
+            Event::Keyboard {
+                key,
+                state,
+                scancode,
+            } => {
                 let event_target = self
                     .ui_state
                     .focused()
@@ -523,7 +527,8 @@ where
                         self.ui_state.clone(),
                         self.scene.clone(),
                     );
-                    node.keyboard_event(&mut context, key, state).await?
+                    node.keyboard_event(&mut context, scancode, key, state)
+                        .await?
                 }
             }
         }

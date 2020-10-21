@@ -13,7 +13,7 @@ use crate::{
 use async_trait::async_trait;
 use derivative::Derivative;
 use std::any::Any;
-use winit::event::{ElementState, VirtualKeyCode};
+use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 
 pub(crate) type ThreadsafeAnyMap = anymap::Map<dyn anymap::any::Any + Send + Sync>;
 
@@ -84,6 +84,7 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
     async fn keyboard_event(
         &self,
         context: &mut Context,
+        scancode: ScanCode,
         key: Option<VirtualKeyCode>,
         state: ElementState,
     ) -> KludgineResult<()>;
@@ -303,12 +304,15 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
     async fn keyboard_event(
         &self,
         context: &mut Context,
+        scancode: ScanCode,
         key: Option<VirtualKeyCode>,
         state: ElementState,
     ) -> KludgineResult<()> {
         let component = self.interactive_component().await;
         let mut component = component.write().await;
-        component.keyboard_event(context, key, state).await
+        component
+            .keyboard_event(context, scancode, key, state)
+            .await
     }
 }
 
@@ -529,11 +533,14 @@ impl Node {
     pub async fn keyboard_event(
         &self,
         context: &mut Context,
+        scancode: ScanCode,
         key: Option<VirtualKeyCode>,
         state: ElementState,
     ) -> KludgineResult<()> {
         let component = self.component.read().await;
-        component.keyboard_event(context, key, state).await
+        component
+            .keyboard_event(context, scancode, key, state)
+            .await
     }
 
     pub async fn hovered(&self, context: &mut Context) -> KludgineResult<()> {

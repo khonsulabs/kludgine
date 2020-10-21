@@ -13,7 +13,7 @@ use crate::{
     Handle, KludgineResult,
 };
 use async_trait::async_trait;
-use winit::event::{ElementState, VirtualKeyCode};
+use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 
 pub struct LayoutConstraints {}
 
@@ -103,6 +103,7 @@ pub trait Component: Send + Sync {
     async fn keyboard_event(
         &mut self,
         context: &mut Context,
+        scancode: ScanCode,
         key: Option<VirtualKeyCode>,
         state: ElementState,
     ) -> KludgineResult<()> {
