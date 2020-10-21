@@ -100,7 +100,7 @@ impl Component for UIExample {
             .bounds(AbsoluteBounds {
                 left: Dimension::from_f32(32.),
                 right: Dimension::from_f32(32.),
-                top: Dimension::from_f32(64.),
+                top: Dimension::from_f32(96.),
                 bottom: Dimension::from_f32(64.),
                 ..Default::default()
             })

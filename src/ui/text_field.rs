@@ -6,20 +6,20 @@ use std::{
 use crate::{
     color::Color,
     event::MouseButton,
-    math::{Pixels, Point, PointExt, Points, Raw, Rect, Scaled, Size, SizeExt, Surround, Vector},
+    math::{Pixels, Point, PointExt, Points, Raw, Rect, Scaled, Size, SizeExt, Surround},
     prelude::Scene,
     shape::{Fill, Shape},
     style::{
         Alignment, FallbackStyle, GenericStyle, Style, StyleComponent, UnscaledFallbackStyle,
         UnscaledStyleComponent,
     },
-    text::{prepared::PreparedText, wrap::TextWrap, Span, Text},
+    text::{prepared::PreparedText, wrap::TextWrap, Text},
     ui::{
         component::render_background,
         control::{ControlBackgroundColor, ControlTextColor},
-        Component, Context, ControlEvent, ControlPadding, InteractiveComponent, Layout,
-        StyledContext,
+        Component, Context, ControlPadding, InteractiveComponent, Layout, StyledContext,
     },
+    window::EventStatus,
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -34,10 +34,25 @@ pub struct TextField {
     cursor: Cursor,
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
 pub struct CursorPosition {
     pub paragraph: usize,
     pub offset: usize,
+}
+
+impl PartialOrd for CursorPosition {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for CursorPosition {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.paragraph.cmp(&other.paragraph) {
+            Ordering::Equal => self.offset.cmp(&other.offset),
+            not_equal => not_equal,
+        }
+    }
 }
 
 #[derive(Debug, Default)]
@@ -147,11 +162,30 @@ impl Component for TextField {
         }
         self.prepared = Some(prepared);
 
-        if context.is_focused().await && self.cursor.blink_state.visible {
+        if let Some(end) = self.cursor.end {
+            let selection_start = self.cursor.start.min(end);
+            let selection_end = self.cursor.start.max(end);
+            if let Some(start_position) = self
+                .character_rect_for_position(context.scene(), selection_start)
+                .await
+            {
+                if let Some(end_position) = self
+                    .character_rect_for_position(context.scene(), selection_end)
+                    .await
+                {
+                    // TODO multiline rendering is not right!
+                    Shape::rect(start_position.union(&end_position))
+                        .fill(Fill::new(Color::new(1., 0., 0., 0.3)))
+                        .render_at(bounds.origin, context.scene())
+                        .await;
+                }
+            }
+        } else if context.is_focused().await && self.cursor.blink_state.visible {
             if let Some(cursor_location) = self
                 .character_rect_for_position(context.scene(), self.cursor.start)
                 .await
             {
+                // No selection, draw a caret
                 Shape::rect(Rect::new(
                     Default::default(),
                     Size::from_lengths(Pixels::new(1.) / scale, cursor_location.size.height()),
@@ -198,28 +232,68 @@ impl Component for TextField {
         Ok(content_size / context.scene().scale_factor().await + padding.minimum_size())
     }
 
-    async fn clicked(
+    async fn mouse_down(
         &mut self,
         context: &mut Context,
         window_position: Point<f32, Scaled>,
         button: MouseButton,
+    ) -> KludgineResult<EventStatus> {
+        if button == MouseButton::Left {
+            context.focus().await;
+            self.cursor.blink_state.force_on();
+
+            let padding = TextFieldPadding::<Scaled>::lookup(&context.style_sheet().await.normal)
+                .unwrap_or_default()
+                .0;
+            let bounds = padding.inset_rect(&context.last_layout().await.inner_bounds());
+
+            if let Some(location) = self
+                .position_for_location(context.scene(), window_position - bounds.origin.to_vector())
+                .await
+            {
+                self.cursor.start = location;
+                self.cursor.end = None;
+            }
+
+            context.set_needs_redraw().await;
+
+            Ok(EventStatus::Processed)
+        } else {
+            Ok(EventStatus::Ignored)
+        }
+    }
+
+    async fn mouse_drag(
+        &mut self,
+        context: &mut Context,
+        window_position: Option<Point<f32, Scaled>>,
+        button: MouseButton,
     ) -> KludgineResult<()> {
-        context.focus().await;
-        self.cursor.blink_state.force_on();
+        if button == MouseButton::Left {
+            self.cursor.blink_state.force_on();
+            if let Some(window_position) = window_position {
+                let padding =
+                    TextFieldPadding::<Scaled>::lookup(&context.style_sheet().await.normal)
+                        .unwrap_or_default()
+                        .0;
+                let bounds = padding.inset_rect(&context.last_layout().await.inner_bounds());
 
-        let padding = TextFieldPadding::<Scaled>::lookup(&context.style_sheet().await.normal)
-            .unwrap_or_default()
-            .0;
-        let bounds = padding.inset_rect(&context.last_layout().await.inner_bounds());
-
-        if let Some(location) = dbg!(
-            self.position_for_location(
-                context.scene(),
-                window_position - bounds.origin.to_vector(),
-            )
-            .await
-        ) {
-            self.cursor.start = location;
+                if let Some(location) = self
+                    .position_for_location(
+                        context.scene(),
+                        window_position - bounds.origin.to_vector(),
+                    )
+                    .await
+                {
+                    if self.cursor.end != Some(location) {
+                        self.cursor.end = Some(location);
+                        context.set_needs_redraw().await;
+                    }
+                }
+            } else if self.cursor.end != None {
+                self.cursor.end = None;
+                context.set_needs_redraw().await;
+            }
         }
 
         Ok(())
@@ -278,7 +352,6 @@ impl TextField {
         scene: &Scene,
         location: Point<f32, Scaled>,
     ) -> Option<CursorPosition> {
-        dbg!(location);
         if let Some(prepared) = &self.prepared {
             let mut y = Points::default();
             let scale = scene.scale_factor().await;
@@ -288,15 +361,14 @@ impl TextField {
                     if location.y() < line_bottom {
                         // Click location was within this line
                         for span in line.spans.iter() {
-                            let x = dbg!(&span.location).x() / scale;
-                            let span_end = x + dbg!(span.data.width) / scale;
+                            let x = span.location.x() / scale;
+                            let span_end = x + span.data.width / scale;
                             if !span.data.glyphs.is_empty() && location.x() < span_end {
                                 // Click was within this span
-                                dbg!(&span);
-                                let relative_pixels = dbg!((location.x() - x) * scale);
+                                let relative_pixels = (location.x() - x) * scale;
                                 for info in span.data.glyphs.iter() {
                                     if let Some(bounding_box) = info.glyph.pixel_bounding_box() {
-                                        if (relative_pixels.get() as i32) < bounding_box.max.x {
+                                        if relative_pixels.get() <= bounding_box.max.x as f32 {
                                             return Some(CursorPosition {
                                                 paragraph: paragraph_index,
                                                 offset: info.source_offset,

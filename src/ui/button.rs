@@ -1,7 +1,7 @@
 use crate::{
     color::Color,
     event::MouseButton,
-    math::{Point, Points, Raw, Scaled, Size, Surround},
+    math::{Point, Raw, Scaled, Size, Surround},
     style::{
         FallbackStyle, GenericStyle, Style, StyleComponent, StyleSheet, TextColor,
         UnscaledFallbackStyle, UnscaledStyleComponent,
@@ -15,7 +15,7 @@ use crate::{
     KludgineResult,
 };
 use async_trait::async_trait;
-use euclid::{Length, Scale};
+use euclid::Scale;
 
 use super::control::ControlPadding;
 
