@@ -4,7 +4,7 @@ use crate::{
     sprite::RenderedSprite,
     style::{FontStyle, Weight},
     text::{font::Font, prepared::PreparedSpan},
-    theme::Theme,
+    theme::{SystemTheme, Theme},
     Handle, KludgineError, KludgineResult,
 };
 use platforms::target::{OS, TARGET_OS};
@@ -37,6 +37,7 @@ pub(crate) struct SceneData {
     now: Option<Instant>,
     elapsed: Option<Duration>,
     fonts: HashMap<String, Vec<Font>>,
+    system_theme: SystemTheme,
     #[derivative(Debug = "ignore")]
     theme: Arc<Box<dyn Theme>>,
 }
@@ -69,8 +70,19 @@ impl Scene {
                 elapsed: None,
                 elements: Vec::new(),
                 fonts: HashMap::new(),
+                system_theme: SystemTheme::Light,
             }),
         }
+    }
+
+    pub async fn system_theme(&self) -> SystemTheme {
+        let scene = self.data.read().await;
+        scene.system_theme.clone()
+    }
+
+    pub(crate) async fn set_system_theme(&self, system_theme: SystemTheme) {
+        let mut scene = self.data.write().await;
+        scene.system_theme = system_theme;
     }
 
     pub(crate) async fn push_element(&self, element: Element) {

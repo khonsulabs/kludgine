@@ -3,6 +3,7 @@ use crate::{
     math::{Pixels, Point, ScreenScale, Size},
     runtime::Runtime,
     scene::Scene,
+    theme::SystemTheme,
     ui::{global_arena, NodeData, NodeDataWindowExt, UserInterface},
     window::{
         frame::Frame,
@@ -34,6 +35,7 @@ pub(crate) struct RuntimeWindow {
 impl RuntimeWindow {
     pub(crate) async fn open<T>(
         window_receiver: async_channel::Receiver<WinitWindow>,
+        initial_system_theme: SystemTheme,
         app_window: T,
     ) where
         T: Window + Sized + 'static,
@@ -65,6 +67,7 @@ impl RuntimeWindow {
                 frame_synchronizer,
                 window_event_sender,
                 event_receiver,
+                initial_system_theme,
                 app_window,
             )
             .await
@@ -166,12 +169,14 @@ impl RuntimeWindow {
         mut frame_synchronizer: FrameSynchronizer,
         event_sender: async_channel::Sender<WindowEvent>,
         mut event_receiver: async_channel::Receiver<WindowEvent>,
+        initial_system_theme: SystemTheme,
         window: T,
     ) -> KludgineResult<()>
     where
         T: Window,
     {
         let mut scene = Scene::new(window.theme());
+        scene.set_system_theme(initial_system_theme).await;
         let target_fps = window.target_fps();
         let mut ui =
             UserInterface::new(window, scene.clone(), global_arena().clone(), event_sender).await?;
@@ -184,6 +189,10 @@ impl RuntimeWindow {
             } {
                 match event {
                     WindowEvent::WakeUp => {}
+                    WindowEvent::SystemThemeChanged(system_theme) => {
+                        scene.set_system_theme(system_theme).await;
+                        ui.request_redraw().await;
+                    }
                     WindowEvent::Resize { size, scale_factor } => {
                         scene
                             .set_internal_size(Size::new(size.width as f32, size.height as f32))
@@ -253,13 +262,21 @@ impl RuntimeWindow {
         frame_synchronizer: FrameSynchronizer,
         event_sender: async_channel::Sender<WindowEvent>,
         event_receiver: async_channel::Receiver<WindowEvent>,
+        initial_system_theme: SystemTheme,
         window: T,
     ) where
         T: Window,
     {
-        Self::window_loop(id, frame_synchronizer, event_sender, event_receiver, window)
-            .await
-            .expect("Error running window loop.")
+        Self::window_loop(
+            id,
+            frame_synchronizer,
+            event_sender,
+            event_receiver,
+            initial_system_theme,
+            window,
+        )
+        .await
+        .expect("Error running window loop.")
     }
 
     pub(crate) async fn count() -> usize {
@@ -398,6 +415,10 @@ impl RuntimeWindow {
             WinitWindowEvent::ReceivedCharacter(character) => self
                 .event_sender
                 .try_send(WindowEvent::ReceiveCharacter(*character))
+                .unwrap_or_default(),
+            WinitWindowEvent::ThemeChanged(theme) => self
+                .event_sender
+                .try_send(WindowEvent::SystemThemeChanged(theme.clone()))
                 .unwrap_or_default(),
             _ => {}
         }

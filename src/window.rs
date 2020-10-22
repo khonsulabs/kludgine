@@ -2,7 +2,7 @@ use crate::{
     event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode},
     math::{Point, Scaled, ScreenScale, Size},
     runtime::Runtime,
-    theme::{Minimal, Theme},
+    theme::{Minimal, SystemTheme, Theme},
     ui::InteractiveComponent,
     Handle, KludgineError, KludgineResult,
 };
@@ -130,6 +130,7 @@ pub struct WindowBuilder {
     transparent: Option<bool>,
     decorations: Option<bool>,
     always_on_top: Option<bool>,
+    pub(crate) initial_system_theme: Option<SystemTheme>,
     icon: Option<winit::window::Icon>,
 }
 
@@ -176,6 +177,11 @@ impl WindowBuilder {
 
     pub fn with_icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
+        self
+    }
+
+    pub fn with_initial_system_theme(mut self, system_theme: SystemTheme) -> Self {
+        self.initial_system_theme = Some(system_theme);
         self
     }
 }
@@ -276,4 +282,5 @@ pub(crate) enum WindowEvent {
     Input(InputEvent),
     ReceiveCharacter(char),
     RedrawRequested,
+    SystemThemeChanged(SystemTheme),
 }

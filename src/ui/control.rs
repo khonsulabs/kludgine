@@ -1,11 +1,10 @@
 use std::fmt::Debug;
 
 use crate::{
-    color::Color,
     event::MouseButton,
     math::{Point, Raw, Scale, Scaled, Surround},
     style::{
-        BackgroundColor, FallbackStyle, GenericStyle, Style, StyleComponent, TextColor,
+        BackgroundColor, ColorPair, FallbackStyle, GenericStyle, Style, StyleComponent, TextColor,
         UnscaledFallbackStyle, UnscaledStyleComponent,
     },
 };
@@ -18,9 +17,19 @@ pub enum ControlEvent {
     },
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct ControlBackgroundColor(pub Color);
-impl UnscaledStyleComponent<Scaled> for ControlBackgroundColor {}
+#[derive(Debug, Clone)]
+pub struct ControlBackgroundColor(pub ColorPair);
+impl UnscaledStyleComponent<Scaled> for ControlBackgroundColor {
+    fn unscaled_should_be_inherited(&self) -> bool {
+        false
+    }
+}
+
+impl Default for ControlBackgroundColor {
+    fn default() -> Self {
+        Self(BackgroundColor::default().0)
+    }
+}
 
 impl UnscaledFallbackStyle for ControlBackgroundColor {
     fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
@@ -30,15 +39,21 @@ impl UnscaledFallbackStyle for ControlBackgroundColor {
     }
 }
 
-impl Into<Color> for ControlBackgroundColor {
-    fn into(self) -> Color {
+impl Into<ColorPair> for ControlBackgroundColor {
+    fn into(self) -> ColorPair {
         self.0
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct ControlTextColor(pub Color);
+#[derive(Debug, Clone)]
+pub struct ControlTextColor(pub ColorPair);
 impl UnscaledStyleComponent<Scaled> for ControlTextColor {}
+
+impl Default for ControlTextColor {
+    fn default() -> Self {
+        Self(TextColor::default().0)
+    }
+}
 
 impl UnscaledFallbackStyle for ControlTextColor {
     fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
@@ -49,8 +64,8 @@ impl UnscaledFallbackStyle for ControlTextColor {
     }
 }
 
-impl Into<Color> for ControlTextColor {
-    fn into(self) -> Color {
+impl Into<ColorPair> for ControlTextColor {
+    fn into(self) -> ColorPair {
         self.0
     }
 }

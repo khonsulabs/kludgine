@@ -1,6 +1,6 @@
 use crate::{
     math::{Points, Scaled, Surround},
-    style::{BackgroundColor, Style, TextColor},
+    style::{BackgroundColor, ColorPair, Style, TextColor},
     theme::{Palette, Theme},
     ui::{ControlBackgroundColor, ControlPadding, TextFieldBackgroundColor},
 };
@@ -33,40 +33,56 @@ impl Theme for Minimal {
 
     fn default_normal_style(&self) -> Style<Scaled> {
         Style::new()
-            .with(TextColor(self.palette.light.control.text.normal()))
-            .with(BackgroundColor(
-                self.palette.light.default.background.normal(),
-            ))
-            .with(ControlBackgroundColor(
-                self.palette.light.control.background.normal(),
-            ))
+            .with(TextColor(ColorPair {
+                light_color: self.palette.light.control.text.normal(),
+                dark_color: self.palette.dark.control.text.normal(),
+            }))
+            .with(BackgroundColor(ColorPair {
+                light_color: self.palette.light.default.background.normal(),
+                dark_color: self.palette.dark.default.background.normal(),
+            }))
+            .with(ControlBackgroundColor(ColorPair {
+                light_color: self.palette.light.control.background.normal(),
+                dark_color: self.palette.dark.control.background.normal(),
+            }))
             .with(ControlPadding(Surround::uniform(Points::new(10.))))
     }
 
     fn default_hover_style(&self) -> Style<Scaled> {
         Style::new()
-            .with(TextColor(self.palette.light.control.text.normal()))
-            .with(BackgroundColor(
-                self.palette.light.default.background.lighter(),
-            ))
-            .with(ControlBackgroundColor(
-                self.palette.light.control.background.lighter(),
-            ))
+            .with(TextColor(ColorPair {
+                light_color: self.palette.light.control.text.normal(),
+                dark_color: self.palette.dark.default.background.lighter(),
+            }))
+            .with(BackgroundColor(ColorPair {
+                light_color: self.palette.light.default.background.lighter(),
+                dark_color: self.palette.dark.default.background.lighter(),
+            }))
+            .with(ControlBackgroundColor(ColorPair {
+                light_color: self.palette.light.control.background.lighter(),
+                dark_color: self.palette.dark.control.background.lighter(),
+            }))
             .with(ControlPadding(Surround::uniform(Points::new(10.))))
     }
 
     fn default_active_style(&self) -> Style<Scaled> {
         Style::new()
-            .with(TextColor(self.palette.light.control.text.normal()))
-            .with(BackgroundColor(
-                self.palette.light.default.background.darker(),
-            ))
-            .with(ControlBackgroundColor(
-                self.palette.light.control.background.darker(),
-            ))
-            .with(TextFieldBackgroundColor(
-                self.palette.light.control.background.normal(),
-            ))
+            .with(TextColor(ColorPair {
+                light_color: self.palette.light.control.text.normal(),
+                dark_color: self.palette.dark.control.background.normal(),
+            }))
+            .with(BackgroundColor(ColorPair {
+                light_color: self.palette.light.default.background.darker(),
+                dark_color: self.palette.dark.default.background.darker(),
+            }))
+            .with(ControlBackgroundColor(ColorPair {
+                light_color: self.palette.light.control.background.darker(),
+                dark_color: self.palette.dark.control.background.darker(),
+            }))
+            .with(TextFieldBackgroundColor(ColorPair {
+                light_color: self.palette.light.control.background.normal(),
+                dark_color: self.palette.dark.control.background.normal(),
+            }))
             .with(ControlPadding(Surround::uniform(Points::new(10.))))
     }
 }

@@ -1,10 +1,9 @@
 use crate::{
-    color::Color,
     event::{MouseButton, MouseScrollDelta, TouchPhase},
     math::{Point, Raw, Scaled, Size},
     scene::Scene,
     shape::{Fill, Shape},
-    style::{BackgroundColor, FallbackStyle, Style, StyleSheet},
+    style::{BackgroundColor, ColorPair, FallbackStyle, Style, StyleSheet},
     ui::{
         node::ThreadsafeAnyMap, AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout,
         LayoutSolver, LayoutSolverExt, Node, StyledContext, UIState,
@@ -66,7 +65,25 @@ pub trait Component: Send + Sync {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        render_background::<BackgroundColor>(context, layout).await
+        self.render_standard_background::<BackgroundColor>(context, layout)
+            .await
+    }
+
+    async fn render_standard_background<C: Into<ColorPair> + FallbackStyle<Raw> + Clone>(
+        &self,
+        context: &mut StyledContext,
+        layout: &Layout,
+    ) -> KludgineResult<()> {
+        if let Some(background) = C::lookup(context.effective_style()) {
+            let color_pair = background.clone().into();
+            Shape::rect(layout.bounds_without_margin())
+                .fill(Fill::new(
+                    color_pair.themed_color(&context.scene().system_theme().await),
+                ))
+                .render_at(Point::default(), context.scene())
+                .await;
+        }
+        Ok(())
     }
 
     async fn mouse_down(
@@ -361,7 +378,8 @@ where
     pub async fn insert(mut self) -> KludgineResult<Entity<C>> {
         let theme = self.scene.theme().await;
         self.components.insert(Handle::new(
-            self.style_sheet.inherit_from(&theme.default_style_sheet()),
+            self.style_sheet
+                .merge_with(&theme.default_style_sheet(), false),
         ));
         let index = {
             let node = Node::from_components::<C>(self.components, self.interactive, self.callback);
@@ -395,17 +413,4 @@ pub trait AnimatableComponent: InteractiveComponent + Sized {
     type AnimationFactory;
 
     fn new_animation_factory(target: Entity<Self>) -> Self::AnimationFactory;
-}
-
-pub async fn render_background<C: Into<Color> + FallbackStyle<Raw> + Clone>(
-    context: &mut StyledContext,
-    layout: &Layout,
-) -> KludgineResult<()> {
-    if let Some(background) = C::lookup(context.effective_style()) {
-        Shape::rect(layout.bounds_without_margin())
-            .fill(Fill::new(background.clone().into()))
-            .render_at(Point::default(), context.scene())
-            .await;
-    }
-    Ok(())
 }

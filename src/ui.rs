@@ -37,7 +37,6 @@ use crate::{
     math::{Point, Scaled},
     runtime::Runtime,
     scene::Scene,
-    style::StyleSheet,
     window::{Event, EventStatus, InputEvent, WindowEvent},
     Handle, KludgineError, KludgineResult, RequiresInitialization,
 };
@@ -263,7 +262,7 @@ where
             {
                 let node = Node::new::<C>(
                     root,
-                    StyleSheet::default(),
+                    scene.theme().await.default_style_sheet(),
                     AbsoluteBounds::default(),
                     true,
                     None,

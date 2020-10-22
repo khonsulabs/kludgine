@@ -6,6 +6,7 @@ use crate::{
 use std::collections::HashMap;
 mod minimal;
 pub use minimal::Minimal;
+pub use winit::window::Theme as SystemTheme;
 
 pub enum ElementKind {
     Button,

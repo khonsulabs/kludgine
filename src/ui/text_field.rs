@@ -10,12 +10,11 @@ use crate::{
     prelude::Scene,
     shape::{Fill, Shape},
     style::{
-        Alignment, FallbackStyle, GenericStyle, Style, StyleComponent, UnscaledFallbackStyle,
-        UnscaledStyleComponent,
+        Alignment, ColorPair, FallbackStyle, GenericStyle, Style, StyleComponent,
+        UnscaledFallbackStyle, UnscaledStyleComponent,
     },
     text::{prepared::PreparedText, wrap::TextWrap, Text},
     ui::{
-        component::render_background,
         control::{ControlBackgroundColor, ControlTextColor},
         Component, Context, ControlPadding, InteractiveComponent, Layout, StyledContext,
     },
@@ -328,7 +327,8 @@ impl Component for TextField {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        render_background::<TextFieldBackgroundColor>(context, layout).await
+        self.render_standard_background::<TextFieldBackgroundColor>(context, layout)
+            .await
     }
 
     async fn receive_character(
@@ -606,9 +606,20 @@ impl TextField {
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct TextFieldBackgroundColor(pub Color);
-impl UnscaledStyleComponent<Scaled> for TextFieldBackgroundColor {}
+#[derive(Debug, Clone)]
+pub struct TextFieldBackgroundColor(pub ColorPair);
+
+impl Default for TextFieldBackgroundColor {
+    fn default() -> Self {
+        Self(ControlBackgroundColor::default().0)
+    }
+}
+
+impl UnscaledStyleComponent<Scaled> for TextFieldBackgroundColor {
+    fn unscaled_should_be_inherited(&self) -> bool {
+        false
+    }
+}
 
 impl UnscaledFallbackStyle for TextFieldBackgroundColor {
     fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
@@ -618,14 +629,21 @@ impl UnscaledFallbackStyle for TextFieldBackgroundColor {
     }
 }
 
-impl Into<Color> for TextFieldBackgroundColor {
-    fn into(self) -> Color {
+impl Into<ColorPair> for TextFieldBackgroundColor {
+    fn into(self) -> ColorPair {
         self.0
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct TextFieldTextColor(pub Color);
+#[derive(Debug, Clone)]
+pub struct TextFieldTextColor(pub ColorPair);
+
+impl Default for TextFieldTextColor {
+    fn default() -> Self {
+        Self(ControlTextColor::default().0)
+    }
+}
+
 impl UnscaledStyleComponent<Scaled> for TextFieldTextColor {}
 
 impl UnscaledFallbackStyle for TextFieldTextColor {
@@ -637,8 +655,8 @@ impl UnscaledFallbackStyle for TextFieldTextColor {
     }
 }
 
-impl Into<Color> for TextFieldTextColor {
-    fn into(self) -> Color {
+impl Into<ColorPair> for TextFieldTextColor {
+    fn into(self) -> ColorPair {
         self.0
     }
 }

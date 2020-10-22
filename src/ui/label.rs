@@ -4,8 +4,8 @@ use crate::{
     style::{Alignment, Style},
     text::{wrap::TextWrap, Text},
     ui::{
-        component::render_background, Component, Context, ControlBackgroundColor, ControlEvent,
-        InteractiveComponent, Layout, StyledContext,
+        Component, Context, ControlBackgroundColor, ControlEvent, InteractiveComponent, Layout,
+        StyledContext,
     },
     KludgineResult,
 };
@@ -102,7 +102,8 @@ impl Component for Label {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        render_background::<ControlBackgroundColor>(context, layout).await
+        self.render_standard_background::<ControlBackgroundColor>(context, layout)
+            .await
     }
 }
 

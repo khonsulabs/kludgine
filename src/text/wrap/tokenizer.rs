@@ -76,6 +76,7 @@ impl<'a> TokenizerState<'a> {
     async fn emit_token_if_needed(
         &mut self,
         scale: euclid::Scale<f32, Scaled, Raw>,
+        scene: &Scene,
     ) -> Option<Token> {
         if self.glyphs.is_empty() {
             None
@@ -88,7 +89,7 @@ impl<'a> TokenizerState<'a> {
             let span = PreparedSpan::new(
                 self.font.clone(),
                 font_size,
-                foreground,
+                foreground.themed_color(&scene.system_theme().await),
                 self.caret,
                 std::mem::take(&mut self.chars),
                 current_committed_glyphs,
@@ -145,7 +146,7 @@ impl Tokenizer {
                     };
 
                     if new_lexer_state != state.lexer_state {
-                        if let Some(token) = state.emit_token_if_needed(scale).await {
+                        if let Some(token) = state.emit_token_if_needed(scale, scene).await {
                             self.tokens.push(token);
                         }
                     }
@@ -177,7 +178,7 @@ impl Tokenizer {
                 }
             }
 
-            if let Some(token) = state.emit_token_if_needed(scale).await {
+            if let Some(token) = state.emit_token_if_needed(scale, scene).await {
                 self.tokens.push(token);
             }
         }

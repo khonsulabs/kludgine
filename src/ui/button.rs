@@ -1,13 +1,12 @@
 use crate::{
-    color::Color,
     event::MouseButton,
     math::{Point, Raw, Scaled, Size, Surround},
     style::{
-        FallbackStyle, GenericStyle, Style, StyleComponent, StyleSheet, TextColor,
+        ColorPair, FallbackStyle, GenericStyle, Style, StyleComponent, StyleSheet, TextColor,
         UnscaledFallbackStyle, UnscaledStyleComponent,
     },
     ui::{
-        component::{render_background, Component},
+        component::Component,
         control::{ControlBackgroundColor, ControlTextColor},
         AbsoluteBounds, Context, ControlEvent, Entity, InteractiveComponent, Label, Layout,
         StyledContext,
@@ -63,7 +62,10 @@ impl Component for Button {
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         let theme = context.scene().theme().await;
         let control_colors = theme.default_style_sheet();
-        let style_sheet = context.style_sheet().await.inherit_from(&control_colors);
+        let style_sheet = context
+            .style_sheet()
+            .await
+            .merge_with(&control_colors, false);
 
         self.label = self
             .new_entity(context, Label::new(&self.caption))
@@ -125,7 +127,8 @@ impl Component for Button {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        render_background::<ButtonBackgroundColor>(context, layout).await
+        self.render_standard_background::<ButtonBackgroundColor>(context, layout)
+            .await
     }
 }
 
@@ -164,9 +167,19 @@ impl InteractiveComponent for Button {
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct ButtonBackgroundColor(pub Color);
-impl UnscaledStyleComponent<Scaled> for ButtonBackgroundColor {}
+#[derive(Debug, Clone)]
+pub struct ButtonBackgroundColor(pub ColorPair);
+impl UnscaledStyleComponent<Scaled> for ButtonBackgroundColor {
+    fn unscaled_should_be_inherited(&self) -> bool {
+        false
+    }
+}
+
+impl Default for ButtonBackgroundColor {
+    fn default() -> Self {
+        Self(ControlBackgroundColor::default().0)
+    }
+}
 
 impl UnscaledFallbackStyle for ButtonBackgroundColor {
     fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
@@ -176,15 +189,21 @@ impl UnscaledFallbackStyle for ButtonBackgroundColor {
     }
 }
 
-impl Into<Color> for ButtonBackgroundColor {
-    fn into(self) -> Color {
+impl Into<ColorPair> for ButtonBackgroundColor {
+    fn into(self) -> ColorPair {
         self.0
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct ButtonTextColor(pub Color);
+#[derive(Debug, Clone)]
+pub struct ButtonTextColor(pub ColorPair);
 impl UnscaledStyleComponent<Scaled> for ButtonTextColor {}
+
+impl Default for ButtonTextColor {
+    fn default() -> Self {
+        Self(ControlTextColor::default().0)
+    }
+}
 
 impl UnscaledFallbackStyle for ButtonTextColor {
     fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
@@ -195,8 +214,8 @@ impl UnscaledFallbackStyle for ButtonTextColor {
     }
 }
 
-impl Into<Color> for ButtonTextColor {
-    fn into(self) -> Color {
+impl Into<ColorPair> for ButtonTextColor {
+    fn into(self) -> ColorPair {
         self.0
     }
 }
