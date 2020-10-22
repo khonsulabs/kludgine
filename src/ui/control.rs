@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use euclid::Length;
+
 use crate::{
     event::MouseButton,
     math::{Point, Raw, Scale, Scaled, Surround},
@@ -87,3 +89,64 @@ impl StyleComponent<Raw> for ControlPadding<Raw> {
 
 impl FallbackStyle<Scaled> for ControlPadding<Scaled> {}
 impl FallbackStyle<Raw> for ControlPadding<Raw> {}
+
+#[derive(Debug, Clone)]
+pub struct Border {
+    pub width: Length<f32, Scaled>,
+    pub color: ColorPair,
+}
+
+impl Border {
+    pub fn new(width: f32, color: ColorPair) -> Self {
+        Self {
+            width: Length::new(width),
+            color,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ComponentBorder {
+    pub left: Option<Border>,
+    pub top: Option<Border>,
+    pub right: Option<Border>,
+    pub bottom: Option<Border>,
+}
+
+impl ComponentBorder {
+    pub fn uniform(border: Border) -> Self {
+        Self {
+            left: Some(border.clone()),
+            top: Some(border.clone()),
+            right: Some(border.clone()),
+            bottom: Some(border),
+        }
+    }
+}
+
+impl UnscaledStyleComponent<Scaled> for ComponentBorder {}
+
+impl UnscaledFallbackStyle for ComponentBorder {
+    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
+        style.get::<Self>().cloned()
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ControlBorder(pub ComponentBorder);
+impl UnscaledStyleComponent<Scaled> for ControlBorder {}
+
+impl UnscaledFallbackStyle for ControlBorder {
+    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
+        style
+            .get::<Self>()
+            .cloned()
+            .or_else(|| ComponentBorder::lookup_unscaled(style).map(ControlBorder))
+    }
+}
+
+impl Into<ComponentBorder> for ControlBorder {
+    fn into(self) -> ComponentBorder {
+        self.0
+    }
+}

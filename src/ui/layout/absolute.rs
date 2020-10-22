@@ -1,5 +1,5 @@
 use crate::{
-    math::{Dimension, Points, Rect, Scaled, Size, Surround},
+    math::{Dimension, Points, Rect, Scaled, Size, SizeExt, Surround},
     ui::{
         layout::{Layout, LayoutSolver},
         Index, Indexable, LayoutContext,
@@ -144,6 +144,14 @@ impl LayoutSolver for AbsoluteLayout {
             .map(|&index| (index, self.children.get(&index).unwrap()))
         {
             let mut child_context = context.clone_for(&index).await;
+            let content_size = Size::from_lengths(
+                content_size.width()
+                    - child_bounds.left.length().unwrap_or_default()
+                    - child_bounds.right.length().unwrap_or_default(),
+                content_size.height()
+                    - child_bounds.top.length().unwrap_or_default()
+                    - child_bounds.bottom.length().unwrap_or_default(),
+            );
             let child_content_size = context
                 .arena()
                 .get(&index)
@@ -158,15 +166,15 @@ impl LayoutSolver for AbsoluteLayout {
                 &child_bounds.left,
                 &child_bounds.right,
                 &child_bounds.width,
-                Points::new(bounds.size.width),
-                Points::new(child_content_size.width),
+                bounds.size.width(),
+                child_content_size.width(),
             );
             let (top, bottom) = Self::solve_dimension(
                 &child_bounds.top,
                 &child_bounds.bottom,
                 &child_bounds.height,
-                Points::new(bounds.size.height),
-                Points::new(child_content_size.height),
+                bounds.size.height(),
+                child_content_size.height(),
             );
 
             context

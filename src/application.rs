@@ -19,11 +19,11 @@ pub struct SingleWindowApplication<T> {
     phantom: PhantomData<T>,
 }
 
-impl<T> Application for SingleWindowApplication<T> where T: Window + WindowCreator<T> + 'static {}
+impl<T> Application for SingleWindowApplication<T> where T: Window + WindowCreator + 'static {}
 
 impl<T> SingleWindowApplication<T>
 where
-    T: Window + WindowCreator<T> + 'static,
+    T: Window + WindowCreator + 'static,
 {
     pub fn run(window: T) -> ! {
         let app = Self {

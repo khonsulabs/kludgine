@@ -110,13 +110,54 @@ pub trait Window: InteractiveComponent + Send + Sync + 'static {
     }
 }
 
-pub trait WindowCreator<T = Self>: Window {
+pub trait WindowCreator: Window {
     fn get_window_builder() -> WindowBuilder {
-        WindowBuilder::default().with_title(Self::window_title())
+        WindowBuilder::default()
+            .with_title(Self::window_title())
+            .with_initial_system_theme(Self::initial_system_theme())
+            .with_size(Self::initial_size())
+            .with_resizable(Self::resizable())
+            .with_maximized(Self::maximized())
+            .with_visible(Self::visible())
+            .with_transparent(Self::transparent())
+            .with_decorations(Self::decorations())
+            .with_always_on_top(Self::always_on_top())
     }
 
     fn window_title() -> String {
         "Kludgine".to_owned()
+    }
+
+    fn initial_size() -> Size<u32, Scaled> {
+        Size::new(1024, 768)
+    }
+
+    fn resizable() -> bool {
+        true
+    }
+
+    fn maximized() -> bool {
+        false
+    }
+
+    fn visible() -> bool {
+        true
+    }
+
+    fn transparent() -> bool {
+        false
+    }
+
+    fn decorations() -> bool {
+        true
+    }
+
+    fn always_on_top() -> bool {
+        false
+    }
+
+    fn initial_system_theme() -> SystemTheme {
+        SystemTheme::Light
     }
 }
 
@@ -232,7 +273,7 @@ pub trait OpenableWindow {
 #[async_trait]
 impl<T> OpenableWindow for T
 where
-    T: Window + WindowCreator<T>,
+    T: Window + WindowCreator,
 {
     async fn open(window: Self) {
         Runtime::open_window(Self::get_window_builder(), window).await

@@ -1,11 +1,10 @@
-use std::fmt::Debug;
-
 use crate::{
     color::Color,
     math::Scaled,
     style::{GenericStyle, UnscaledFallbackStyle, UnscaledStyleComponent},
     theme::SystemTheme,
 };
+use std::fmt::Debug;
 
 #[derive(Debug, Clone, Copy)]
 pub struct ColorPair {

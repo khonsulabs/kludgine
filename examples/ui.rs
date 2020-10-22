@@ -19,6 +19,10 @@ impl WindowCreator for UIExample {
     fn window_title() -> String {
         "User Interface - Kludgine".to_owned()
     }
+
+    fn initial_system_theme() -> SystemTheme {
+        SystemTheme::Dark
+    }
 }
 
 impl Window for UIExample {}

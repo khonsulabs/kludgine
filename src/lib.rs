@@ -109,7 +109,8 @@ pub mod prelude {
         text::{font::Font, wrap::TextWrap, Span, Text},
         texture::Texture,
         theme::{
-            ColorGroup, ElementKind, Intent, Minimal, Palette, PaletteShade, Theme, VariableColor,
+            ColorGroup, ElementKind, Intent, Minimal, Palette, PaletteShade, SystemTheme, Theme,
+            VariableColor,
         },
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,
@@ -122,7 +123,9 @@ pub mod prelude {
             LabelCommand, Layout, LayoutConstraints, LayoutContext, LinearTransition,
             StandaloneComponent, StyledContext, TextField, Timeout,
         },
-        window::{Event, EventStatus, InputEvent, OpenableWindow, Window, WindowCreator},
+        window::{
+            Event, EventStatus, InputEvent, OpenableWindow, Window, WindowBuilder, WindowCreator,
+        },
         Handle, KludgineError, KludgineResult, RequiresInitialization,
     };
     pub use async_trait::async_trait;

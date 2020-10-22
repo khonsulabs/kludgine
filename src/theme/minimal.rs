@@ -2,7 +2,10 @@ use crate::{
     math::{Points, Scaled, Surround},
     style::{BackgroundColor, ColorPair, Style, TextColor},
     theme::{Palette, Theme},
-    ui::{ControlBackgroundColor, ControlPadding, TextFieldBackgroundColor},
+    ui::{
+        Border, ComponentBorder, ControlBackgroundColor, ControlPadding, TextFieldBackgroundColor,
+        TextFieldBorder,
+    },
 };
 
 #[derive(Debug)]
@@ -46,18 +49,17 @@ impl Theme for Minimal {
                 dark_color: self.palette.dark.control.background.normal(),
             }))
             .with(ControlPadding(Surround::uniform(Points::new(10.))))
+            .with(TextFieldBorder(ComponentBorder::uniform(Border::new(
+                2.,
+                ColorPair {
+                    light_color: self.palette.light.control.background.darker(),
+                    dark_color: self.palette.dark.control.background.lighter(),
+                },
+            ))))
     }
 
     fn default_hover_style(&self) -> Style<Scaled> {
-        Style::new()
-            .with(TextColor(ColorPair {
-                light_color: self.palette.light.control.text.normal(),
-                dark_color: self.palette.dark.default.background.lighter(),
-            }))
-            .with(BackgroundColor(ColorPair {
-                light_color: self.palette.light.default.background.lighter(),
-                dark_color: self.palette.dark.default.background.lighter(),
-            }))
+        self.default_normal_style()
             .with(ControlBackgroundColor(ColorPair {
                 light_color: self.palette.light.control.background.lighter(),
                 dark_color: self.palette.dark.control.background.lighter(),
@@ -71,10 +73,6 @@ impl Theme for Minimal {
                 light_color: self.palette.light.control.text.normal(),
                 dark_color: self.palette.dark.control.background.normal(),
             }))
-            .with(BackgroundColor(ColorPair {
-                light_color: self.palette.light.default.background.darker(),
-                dark_color: self.palette.dark.default.background.darker(),
-            }))
             .with(ControlBackgroundColor(ColorPair {
                 light_color: self.palette.light.control.background.darker(),
                 dark_color: self.palette.dark.control.background.darker(),
@@ -84,5 +82,13 @@ impl Theme for Minimal {
                 dark_color: self.palette.dark.control.background.normal(),
             }))
             .with(ControlPadding(Surround::uniform(Points::new(10.))))
+    }
+
+    fn default_focus_style(&self) -> Style<Scaled> {
+        self.default_normal_style()
+            .with(TextFieldBorder(ComponentBorder::uniform(Border::new(
+                2.,
+                self.palette.primary.normal().into(),
+            ))))
     }
 }

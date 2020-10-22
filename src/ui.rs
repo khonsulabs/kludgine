@@ -16,20 +16,23 @@ mod timeout;
 pub(crate) use self::node::NodeData;
 pub use self::{
     animation::{AnimationManager, LinearTransition},
-    button::{Button, ButtonBackgroundColor, ButtonPadding, ButtonTextColor},
+    button::{Button, ButtonBackgroundColor, ButtonBorder, ButtonPadding, ButtonTextColor},
     component::{
         AnimatableComponent, Callback, Component, EntityBuilder, InteractiveComponent,
         LayoutConstraints, StandaloneComponent,
     },
     context::*,
-    control::{ControlBackgroundColor, ControlEvent, ControlPadding, ControlTextColor},
+    control::{
+        Border, ComponentBorder, ControlBackgroundColor, ControlBorder, ControlEvent,
+        ControlPadding, ControlTextColor,
+    },
     image::{
         Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
     },
     label::{Label, LabelCommand},
     layout::*,
     node::{Node, NodeDataWindowExt},
-    text_field::{TextField, TextFieldBackgroundColor},
+    text_field::{TextField, TextFieldBackgroundColor, TextFieldBorder},
     timeout::Timeout,
 };
 use crate::{

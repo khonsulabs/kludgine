@@ -11,6 +11,8 @@ use crate::{
 };
 use async_trait::async_trait;
 
+use super::control::ControlBorder;
+
 #[derive(Debug)]
 pub struct Label {
     value: String,
@@ -102,7 +104,7 @@ impl Component for Label {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        self.render_standard_background::<ControlBackgroundColor>(context, layout)
+        self.render_standard_background::<ControlBackgroundColor, ControlBorder>(context, layout)
             .await
     }
 }

@@ -1,6 +1,6 @@
 use crate::{
     event::{MouseButton, MouseScrollDelta, TouchPhase},
-    math::{Point, Raw, Scaled, Size},
+    math::{Point, PointExt, Raw, Rect, Scaled, Size, SizeExt},
     scene::Scene,
     shape::{Fill, Shape},
     style::{BackgroundColor, ColorPair, FallbackStyle, Style, StyleSheet},
@@ -13,6 +13,8 @@ use crate::{
 };
 use async_trait::async_trait;
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
+
+use super::control::ComponentBorder;
 
 pub struct LayoutConstraints {}
 
@@ -65,23 +67,81 @@ pub trait Component: Send + Sync {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        self.render_standard_background::<BackgroundColor>(context, layout)
+        self.render_standard_background::<BackgroundColor, ComponentBorder>(context, layout)
             .await
     }
 
-    async fn render_standard_background<C: Into<ColorPair> + FallbackStyle<Raw> + Clone>(
+    async fn render_standard_background<
+        C: Into<ColorPair> + FallbackStyle<Raw> + Clone,
+        B: Into<ComponentBorder> + FallbackStyle<Raw> + Clone,
+    >(
         &self,
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
+        let bounds = layout.bounds_without_margin();
         if let Some(background) = C::lookup(context.effective_style()) {
             let color_pair = background.clone().into();
-            Shape::rect(layout.bounds_without_margin())
+            Shape::rect(bounds)
                 .fill(Fill::new(
                     color_pair.themed_color(&context.scene().system_theme().await),
                 ))
                 .render_at(Point::default(), context.scene())
                 .await;
+        }
+        if let Some(border) = B::lookup(context.effective_style()) {
+            let border = border.into();
+            // TODO the borders should be mitered together rather than drawn overlapping
+            if let Some(left) = border.left {
+                Shape::rect(Rect::new(
+                    bounds.origin,
+                    Size::from_lengths(left.width, bounds.size.height()),
+                ))
+                .fill(Fill::new(
+                    left.color
+                        .themed_color(&context.scene().system_theme().await),
+                ))
+                .render_at(Point::default(), context.scene())
+                .await;
+            }
+            if let Some(right) = border.right {
+                Shape::rect(Rect::new(
+                    Point::from_lengths(bounds.max().x() - right.width, bounds.origin.y()),
+                    Size::from_lengths(right.width, bounds.size.height()),
+                ))
+                .fill(Fill::new(
+                    right
+                        .color
+                        .themed_color(&context.scene().system_theme().await),
+                ))
+                .render_at(Point::default(), context.scene())
+                .await;
+            }
+            if let Some(top) = border.top {
+                Shape::rect(Rect::new(
+                    bounds.origin,
+                    Size::from_lengths(bounds.size.width(), top.width),
+                ))
+                .fill(Fill::new(
+                    top.color
+                        .themed_color(&context.scene().system_theme().await),
+                ))
+                .render_at(Point::default(), context.scene())
+                .await;
+            }
+            if let Some(bottom) = border.bottom {
+                Shape::rect(Rect::new(
+                    Point::from_lengths(bounds.origin.x(), bounds.max().y() - bottom.width),
+                    Size::from_lengths(bounds.size.width(), bottom.width),
+                ))
+                .fill(Fill::new(
+                    bottom
+                        .color
+                        .themed_color(&context.scene().system_theme().await),
+                ))
+                .render_at(Point::default(), context.scene())
+                .await;
+            }
         }
         Ok(())
     }

@@ -15,7 +15,7 @@ use crate::{
     },
     text::{prepared::PreparedText, wrap::TextWrap, Text},
     ui::{
-        control::{ControlBackgroundColor, ControlTextColor},
+        control::{ComponentBorder, ControlBackgroundColor, ControlBorder, ControlTextColor},
         Component, Context, ControlPadding, InteractiveComponent, Layout, StyledContext,
     },
     window::EventStatus,
@@ -225,10 +225,11 @@ impl Component for TextField {
         context: &mut StyledContext,
         constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<Size<f32, Scaled>> {
+        let scale = context.scene().scale_factor().await;
         let padding = TextFieldPadding::<Raw>::lookup(context.effective_style())
             .unwrap_or_default()
             .0
-            / context.scene().scale_factor().await;
+            / scale;
 
         let contraints_minus_padding = padding.inset_constraints(constraints);
 
@@ -244,10 +245,11 @@ impl Component for TextField {
             .await?
         {
             let size = prepared.size().await;
+            size / scale;
             content_size.width = content_size.width.max(size.width);
             content_size.height += size.height;
         }
-        Ok(content_size / context.scene().scale_factor().await + padding.minimum_size())
+        Ok(content_size / scale + padding.minimum_size())
     }
 
     async fn mouse_down(
@@ -327,8 +329,10 @@ impl Component for TextField {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        self.render_standard_background::<TextFieldBackgroundColor>(context, layout)
-            .await
+        self.render_standard_background::<TextFieldBackgroundColor, TextFieldBorder>(
+            context, layout,
+        )
+        .await
     }
 
     async fn receive_character(
@@ -691,5 +695,24 @@ impl FallbackStyle<Raw> for TextFieldPadding<Raw> {
             .get::<Self>()
             .cloned()
             .or_else(|| ControlPadding::<Raw>::lookup(style).map(|cp| TextFieldPadding(cp.0)))
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct TextFieldBorder(pub ComponentBorder);
+impl UnscaledStyleComponent<Scaled> for TextFieldBorder {}
+
+impl UnscaledFallbackStyle for TextFieldBorder {
+    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
+        style
+            .get::<Self>()
+            .cloned()
+            .or_else(|| ControlBorder::lookup_unscaled(style).map(|cb| TextFieldBorder(cb.0)))
+    }
+}
+
+impl Into<ComponentBorder> for TextFieldBorder {
+    fn into(self) -> ComponentBorder {
+        self.0
     }
 }

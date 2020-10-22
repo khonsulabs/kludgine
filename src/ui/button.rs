@@ -16,7 +16,7 @@ use crate::{
 use async_trait::async_trait;
 use euclid::Scale;
 
-use super::control::ControlPadding;
+use super::control::{ComponentBorder, ControlBorder, ControlPadding};
 
 #[derive(Debug, Clone, Default)]
 pub struct ButtonPadding<Unit>(pub Surround<f32, Unit>);
@@ -127,7 +127,7 @@ impl Component for Button {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        self.render_standard_background::<ButtonBackgroundColor>(context, layout)
+        self.render_standard_background::<ButtonBackgroundColor, ButtonBorder>(context, layout)
             .await
     }
 }
@@ -216,6 +216,25 @@ impl UnscaledFallbackStyle for ButtonTextColor {
 
 impl Into<ColorPair> for ButtonTextColor {
     fn into(self) -> ColorPair {
+        self.0
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ButtonBorder(pub ComponentBorder);
+impl UnscaledStyleComponent<Scaled> for ButtonBorder {}
+
+impl UnscaledFallbackStyle for ButtonBorder {
+    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
+        style
+            .get::<Self>()
+            .cloned()
+            .or_else(|| ControlBorder::lookup_unscaled(style).map(|cb| ButtonBorder(cb.0)))
+    }
+}
+
+impl Into<ComponentBorder> for ButtonBorder {
+    fn into(self) -> ComponentBorder {
         self.0
     }
 }
