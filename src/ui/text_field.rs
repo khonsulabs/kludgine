@@ -245,7 +245,6 @@ impl Component for TextField {
             .await?
         {
             let size = prepared.size().await;
-            size / scale;
             content_size.width = content_size.width.max(size.width);
             content_size.height += size.height;
         }
