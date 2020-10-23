@@ -22,7 +22,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use clipboard::{ClipboardContext, ClipboardProvider};
-use euclid::{Length, Scale};
+use euclid::Scale;
 use std::time::{Duration, Instant};
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 
@@ -549,13 +549,11 @@ impl TextField {
                                 // Click was within this span
                                 let relative_pixels = (location.x() - x) * scale;
                                 for info in span.data.glyphs.iter() {
-                                    if let Some(bounding_box) = info.glyph.pixel_bounding_box() {
-                                        if relative_pixels.get() <= bounding_box.max.x as f32 {
-                                            return Some(RichTextPosition {
-                                                paragraph: paragraph_index,
-                                                offset: info.source_offset,
-                                            });
-                                        }
+                                    if relative_pixels <= info.location().x() + info.width() {
+                                        return Some(RichTextPosition {
+                                            paragraph: paragraph_index,
+                                            offset: info.source_offset,
+                                        });
                                     }
                                 }
 
@@ -603,55 +601,24 @@ impl TextField {
                             // Return a box of the width of the last character with the start of the character at the origin
                             for info in span.data.glyphs.iter() {
                                 if info.source_offset >= position.offset {
-                                    if let Some(bounding_box) = info.glyph.pixel_bounding_box() {
-                                        return Some(Rect::new(
-                                            Point::from_lengths(
-                                                (span.location.x()
-                                                    + Length::<i32, Raw>::new(bounding_box.min.x)
-                                                        .cast::<f32>())
-                                                    / scale,
-                                                line_top + span.location.y() / scale,
-                                            ),
-                                            Size::from_lengths(
-                                                Length::<i32, Raw>::new(
-                                                    bounding_box.max.x - bounding_box.min.x,
-                                                )
-                                                .cast::<f32>()
-                                                    / scale,
-                                                line_height,
-                                            ),
-                                        ));
-                                    } else {
-                                        // For whitespace glyphs pixel_bounding_box doesn't return a good value
-                                        // TODO Investigate if our GlyphInfo can have a width on it
-                                        return Some(Rect::new(
-                                            Point::from_lengths(
-                                                (span.location.x()
-                                                    + Length::<f32, Raw>::new(
-                                                        info.glyph.position().x,
-                                                    ))
-                                                    / scale,
-                                                line_top + span.location.y() / scale,
-                                            ),
-                                            Size::from_lengths(Default::default(), line_height),
-                                        ));
-                                    }
+                                    return Some(Rect::new(
+                                        Point::from_lengths(
+                                            (span.location.x() + info.location().x()) / scale,
+                                            line_top + span.location.y() / scale,
+                                        ),
+                                        Size::from_lengths(info.width() / scale, line_height),
+                                    ));
                                 }
                             }
                         }
 
-                        if let Some(bounding_box) = last_glyph.glyph.pixel_bounding_box() {
-                            last_location = Some(Rect::new(
-                                Point::from_lengths(
-                                    (span.location.x()
-                                        + Length::<i32, Raw>::new(bounding_box.max.x)
-                                            .cast::<f32>())
-                                        / scale,
-                                    line_top + span.location.y() / scale,
-                                ),
-                                Size::from_lengths(Default::default(), line_height),
-                            ));
-                        }
+                        last_location = Some(Rect::new(
+                            Point::from_lengths(
+                                (span.location.x() + last_glyph.width()) / scale,
+                                line_top + span.location.y() / scale,
+                            ),
+                            Size::from_lengths(Default::default(), line_height),
+                        ));
                     }
                 }
                 line_top += line_height;

@@ -184,3 +184,13 @@ pub struct GlyphInfo {
     pub source: char,
     pub glyph: rusttype::PositionedGlyph<'static>,
 }
+
+impl GlyphInfo {
+    pub fn width(&self) -> Pixels {
+        Pixels::new(self.glyph.unpositioned().h_metrics().advance_width)
+    }
+
+    pub fn location(&self) -> Point<f32, Raw> {
+        Point::new(self.glyph.position().x, self.glyph.position().y)
+    }
+}
