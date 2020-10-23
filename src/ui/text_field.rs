@@ -1,8 +1,3 @@
-use std::{
-    cmp::Ordering,
-    time::{Duration, Instant},
-};
-
 use crate::{
     color::Color,
     event::MouseButton,
@@ -13,7 +8,11 @@ use crate::{
         Alignment, ColorPair, FallbackStyle, GenericStyle, Style, StyleComponent,
         UnscaledFallbackStyle, UnscaledStyleComponent,
     },
-    text::{prepared::PreparedText, wrap::TextWrap, Text},
+    text::{
+        prepared::PreparedText,
+        rich::{RichText, RichTextPosition},
+        wrap::TextWrap,
+    },
     ui::{
         control::{ComponentBorder, ControlBackgroundColor, ControlBorder, ControlTextColor},
         Component, Context, ControlPadding, InteractiveComponent, Layout, StyledContext,
@@ -23,47 +22,27 @@ use crate::{
 };
 use async_trait::async_trait;
 use euclid::{Length, Scale};
+use std::time::{Duration, Instant};
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 
 static CURSOR_BLINK_MS: u64 = 500;
 
 #[derive(Debug)]
 pub struct TextField {
-    paragraphs: Vec<String>,
+    text: RichText,
     prepared: Option<Vec<PreparedText>>,
     cursor: Cursor,
-}
-
-#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
-pub struct CursorPosition {
-    pub paragraph: usize,
-    pub offset: usize,
-}
-
-impl PartialOrd for CursorPosition {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for CursorPosition {
-    fn cmp(&self, other: &Self) -> Ordering {
-        match self.paragraph.cmp(&other.paragraph) {
-            Ordering::Equal => self.offset.cmp(&other.offset),
-            not_equal => not_equal,
-        }
-    }
 }
 
 #[derive(Debug, Default)]
 pub struct Cursor {
     pub blink_state: BlinkState,
-    pub start: CursorPosition,
-    pub end: Option<CursorPosition>,
+    pub start: RichTextPosition,
+    pub end: Option<RichTextPosition>,
 }
 
 impl Cursor {
-    pub fn selection_start(&self) -> CursorPosition {
+    pub fn selection_start(&self) -> RichTextPosition {
         if let Some(end) = self.end {
             self.start.min(end)
         } else {
@@ -71,7 +50,7 @@ impl Cursor {
         }
     }
 
-    pub fn selection_end(&self) -> CursorPosition {
+    pub fn selection_end(&self) -> RichTextPosition {
         if let Some(end) = self.end {
             self.start.max(end)
         } else {
@@ -344,7 +323,7 @@ impl Component for TextField {
                 if self.cursor.end.is_none() && self.cursor.start.offset > 0 {
                     // Select the previous character
                     self.cursor.end = Some(self.cursor.start);
-                    self.cursor.start = self.previous_cursor_position(self.cursor.start);
+                    self.cursor.start = self.text.position_before(self.cursor.start).await;
                 }
 
                 self.replace_selection("", context).await
@@ -369,12 +348,16 @@ impl Component for TextField {
                 // TODO handle modifiers
                 match key {
                     VirtualKeyCode::Left => {
-                        self.cursor.start =
-                            self.previous_cursor_position(self.cursor.selection_start());
+                        self.cursor.start = self
+                            .text
+                            .position_before(self.cursor.selection_start())
+                            .await;
                     }
                     VirtualKeyCode::Right => {
-                        self.cursor.start =
-                            self.next_cursor_position(self.cursor.selection_start());
+                        self.cursor.start = self
+                            .text
+                            .position_after(self.cursor.selection_start())
+                            .await;
                     }
                     VirtualKeyCode::Up => {}
                     VirtualKeyCode::Down => {}
@@ -390,14 +373,9 @@ impl Component for TextField {
 }
 
 impl TextField {
-    pub fn new(value: impl ToString) -> Self {
-        let value = value.to_string();
-        // Normalize the line endings so that \r, \r\n, and \n are all split equally
-        let value = value.replace("\r\n", "\n").replace('\r', "\n");
-        let paragraphs = value.split('\n').map(|s| s.to_string()).collect();
-
+    pub fn new(initial_text: RichText) -> Self {
         Self {
-            paragraphs,
+            text: initial_text,
             cursor: Default::default(),
             prepared: None,
         }
@@ -415,21 +393,12 @@ impl TextField {
         if self.cursor.end.is_some() {
             let selection_start = self.cursor.selection_start();
             let selection_end = self.cursor.selection_end();
-            if selection_end.paragraph != selection_start.paragraph {
-                todo!("Need to implement multi-paragraph removal logic");
-            }
-
-            let paragraph = self.paragraphs.get_mut(selection_start.paragraph).unwrap();
-            paragraph.replace_range(selection_start.offset..selection_end.offset, "");
+            self.text.remove_range(selection_start..selection_end).await;
             self.cursor.end = None;
             self.cursor.start = selection_start;
         }
 
-        let paragraph = self
-            .paragraphs
-            .get_mut(self.cursor.start.paragraph)
-            .unwrap();
-        paragraph.insert_str(self.cursor.start.offset, replacement);
+        self.text.insert_str(self.cursor.start, replacement).await;
         self.cursor.start.offset += replacement.len();
         self.cursor.blink_state.force_on();
 
@@ -441,23 +410,22 @@ impl TextField {
         context: &mut StyledContext,
         constraints: &Size<f32, Scaled>,
     ) -> KludgineResult<Vec<PreparedText>> {
-        let mut prepared = Vec::new();
-        for paragraph in self.paragraphs.iter() {
-            let text = Text::span(paragraph, context.effective_style());
-            let wrapping = self.wrapping(
-                constraints,
-                context.effective_style().get_or_default::<Alignment>(),
-            );
-            prepared.push(text.wrap(context.scene(), wrapping).await?);
-        }
-        Ok(prepared)
+        self.text
+            .prepare(
+                context,
+                self.wrapping(
+                    constraints,
+                    context.effective_style().get_or_default::<Alignment>(),
+                ),
+            )
+            .await
     }
 
     async fn position_for_location(
         &self,
         scene: &Scene,
         location: Point<f32, Scaled>,
-    ) -> Option<CursorPosition> {
+    ) -> Option<RichTextPosition> {
         if let Some(prepared) = &self.prepared {
             let mut y = Points::default();
             let scale = scene.scale_factor().await;
@@ -475,7 +443,7 @@ impl TextField {
                                 for info in span.data.glyphs.iter() {
                                     if let Some(bounding_box) = info.glyph.pixel_bounding_box() {
                                         if relative_pixels.get() <= bounding_box.max.x as f32 {
-                                            return Some(CursorPosition {
+                                            return Some(RichTextPosition {
                                                 paragraph: paragraph_index,
                                                 offset: info.source_offset,
                                             });
@@ -483,7 +451,7 @@ impl TextField {
                                     }
                                 }
 
-                                return Some(CursorPosition {
+                                return Some(RichTextPosition {
                                     paragraph: paragraph_index,
                                     offset: span.data.glyphs.last().unwrap().source_offset,
                                 });
@@ -492,7 +460,7 @@ impl TextField {
                         if let Some(span) = line.spans.last() {
                             if let Some(info) = span.data.glyphs.last() {
                                 // Didn't match within the span, put it at the end of the span
-                                return Some(CursorPosition {
+                                return Some(RichTextPosition {
                                     paragraph: paragraph_index,
                                     offset: info.source_offset + 1,
                                 });
@@ -511,7 +479,7 @@ impl TextField {
     async fn character_rect_for_position(
         &self,
         scene: &Scene,
-        position: CursorPosition,
+        position: RichTextPosition,
     ) -> Option<Rect<f32, Scaled>> {
         let mut last_location = None;
         if let Some(prepared) = &self.prepared {
@@ -582,30 +550,6 @@ impl TextField {
             }
         }
         last_location
-    }
-
-    pub fn next_cursor_position(&self, mut position: CursorPosition) -> CursorPosition {
-        let next_offset = position.offset + 1;
-        if next_offset > self.paragraphs[position.paragraph].len() {
-            if self.paragraphs.len() > position.paragraph + 1 {
-                todo!("Need to support multiple paragraphs")
-            }
-        } else {
-            position.offset = next_offset;
-        }
-        position
-    }
-
-    pub fn previous_cursor_position(&self, mut position: CursorPosition) -> CursorPosition {
-        if position.offset == 0 {
-            if position.paragraph > 0 {
-                todo!("Need to support multiple paragraphs")
-            }
-        } else {
-            position.offset -= 1;
-        }
-
-        position
     }
 }
 

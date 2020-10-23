@@ -116,7 +116,7 @@ impl Label {
         }
     }
     fn create_text(&self, effective_style: &Style<Raw>) -> Text {
-        Text::span(&self.value, effective_style)
+        Text::span(&self.value, effective_style.clone())
     }
 
     fn wrapping(&self, size: &Size<f32, Scaled>, alignment: Alignment) -> TextWrap {

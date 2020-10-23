@@ -168,7 +168,7 @@ impl TextWrapper {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TextWrap {
     NoWrap,
     SingleLine {

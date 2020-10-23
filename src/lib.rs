@@ -106,7 +106,12 @@ pub mod prelude {
             SpriteSourceSublocation,
         },
         style::*,
-        text::{font::Font, wrap::TextWrap, Span, Text},
+        text::{
+            font::Font,
+            rich::{RichText, RichTextPosition},
+            wrap::TextWrap,
+            Span, Text,
+        },
         texture::Texture,
         theme::{
             ColorGroup, ElementKind, Intent, Minimal, Palette, PaletteShade, SystemTheme, Theme,

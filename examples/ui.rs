@@ -82,7 +82,13 @@ impl Component for UIExample {
             .await?;
 
         self.text_field = self
-            .new_entity(context, TextField::new("Lorem ipsum"))
+            .new_entity(
+                context,
+                TextField::new(RichText::new(vec![Text::span(
+                    "Lorem ipsum",
+                    Default::default(),
+                )])),
+            )
             .bounds(AbsoluteBounds {
                 left: Dimension::from_f32(32.),
                 right: Dimension::from_f32(32.),
