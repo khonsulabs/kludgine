@@ -151,6 +151,16 @@ impl RichText {
             offset: data.paragraphs.last().unwrap().len(),
         }
     }
+
+    pub async fn to_string(&self) -> String {
+        let data = self.data.read().await;
+        let mut paragraphs = Vec::with_capacity(data.paragraphs.len());
+        for paragraph in data.paragraphs.iter() {
+            paragraphs.push(paragraph.to_string());
+        }
+
+        paragraphs.join("\n")
+    }
 }
 
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]

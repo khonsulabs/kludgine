@@ -32,7 +32,7 @@ pub use self::{
     label::{Label, LabelCommand},
     layout::*,
     node::{Node, NodeDataWindowExt},
-    text_field::{TextField, TextFieldBackgroundColor, TextFieldBorder},
+    text_field::{TextField, TextFieldBackgroundColor, TextFieldBorder, TextFieldEvent},
     timeout::Timeout,
 };
 use crate::{

@@ -161,6 +161,16 @@ impl Text {
     }
 }
 
+impl ToString for Text {
+    fn to_string(&self) -> String {
+        self.spans
+            .iter()
+            .map(|s| s.text.as_str())
+            .collect::<Vec<_>>()
+            .join("")
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

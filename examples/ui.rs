@@ -32,6 +32,7 @@ pub enum Message {
     ButtonClicked,
     NewWindowClicked,
     LabelClicked,
+    TextFieldEvent(TextFieldEvent),
 }
 
 #[async_trait]
@@ -60,6 +61,13 @@ impl InteractiveComponent for UIExample {
             }
             Message::NewWindowClicked => {
                 Runtime::open_window(Self::get_window_builder(), UIExample::default()).await;
+            }
+            Message::TextFieldEvent(event) => {
+                if let TextFieldEvent::ValueChanged(text) = event {
+                    self.label
+                        .send(LabelCommand::SetValue(text.to_string().await))
+                        .await?;
+                }
             }
         }
         Ok(())
@@ -95,6 +103,7 @@ impl Component for UIExample {
                 top: Dimension::from_f32(32.),
                 ..Default::default()
             })
+            .callback(Message::TextFieldEvent)
             .insert()
             .await?;
 

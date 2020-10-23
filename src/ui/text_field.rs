@@ -37,6 +37,10 @@ pub struct TextField {
 #[derive(Debug, Clone)]
 pub enum TextFieldEvent {
     ValueChanged(RichText),
+    SelectionChanged {
+        start: RichTextPosition,
+        end: Option<RichTextPosition>,
+    },
 }
 
 #[derive(Debug, Default)]
@@ -355,23 +359,35 @@ impl Component for TextField {
                 // TODO handle modifiers
                 match key {
                     VirtualKeyCode::Left => {
-                        self.cursor.start = self
-                            .text
-                            .position_before(self.cursor.selection_start())
-                            .await;
+                        self.set_selection(
+                            context,
+                            self.text
+                                .position_before(self.cursor.selection_start())
+                                .await,
+                            None,
+                        )
+                        .await;
                     }
                     VirtualKeyCode::Right => {
-                        self.cursor.start = self
-                            .text
-                            .position_after(self.cursor.selection_start())
-                            .await;
+                        self.set_selection(
+                            context,
+                            self.text
+                                .position_after(self.cursor.selection_start())
+                                .await,
+                            None,
+                        )
+                        .await;
                     }
                     VirtualKeyCode::Up => {}
                     VirtualKeyCode::Down => {}
                     VirtualKeyCode::A => {
                         if context.scene().modifiers_pressed().await.primary_modifier() {
-                            self.cursor.start = Default::default();
-                            self.cursor.end = Some(self.text.end().await);
+                            self.set_selection(
+                                context,
+                                Default::default(),
+                                Some(self.text.end().await),
+                            )
+                            .await;
                         }
                     }
                     _ => {}
@@ -416,6 +432,7 @@ impl TextField {
         self.cursor.blink_state.force_on();
 
         self.notify_changed(context).await;
+        self.notify_selection_changed(context).await;
         context.set_needs_redraw().await;
     }
 
@@ -569,6 +586,28 @@ impl TextField {
     async fn notify_changed(&self, context: &mut Context) {
         self.callback(context, TextFieldEvent::ValueChanged(self.text.clone()))
             .await
+    }
+
+    async fn notify_selection_changed(&self, context: &mut Context) {
+        self.callback(
+            context,
+            TextFieldEvent::SelectionChanged {
+                start: self.cursor.start,
+                end: self.cursor.end,
+            },
+        )
+        .await
+    }
+
+    pub async fn set_selection(
+        &mut self,
+        context: &mut Context,
+        selection_start: RichTextPosition,
+        end: Option<RichTextPosition>,
+    ) {
+        self.cursor.start = selection_start;
+        self.cursor.end = end;
+        self.notify_selection_changed(context).await;
     }
 }
 

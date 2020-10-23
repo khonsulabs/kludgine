@@ -126,7 +126,7 @@ pub mod prelude {
             HierarchicalArena, Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation,
             ImageOptions, ImageScaling, Index, Indexable, InteractiveComponent, Label,
             LabelCommand, Layout, LayoutConstraints, LayoutContext, LinearTransition,
-            StandaloneComponent, StyledContext, TextField, Timeout,
+            StandaloneComponent, StyledContext, TextField, TextFieldEvent, Timeout,
         },
         window::{
             Event, EventStatus, InputEvent, OpenableWindow, Window, WindowBuilder, WindowCreator,
