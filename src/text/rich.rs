@@ -31,7 +31,7 @@ impl RichText {
         assert!(range.start <= range.end);
 
         self.for_each_in_range_mut(range.clone(), |text, text_range, paragraph_index| {
-            text.remove_range(text_range);
+            text.remove_range(dbg!(text_range));
             if paragraph_index != range.start.paragraph && paragraph_index != range.end.paragraph {
                 ParagraphRemoval::Remove
             } else {
@@ -39,6 +39,16 @@ impl RichText {
             }
         })
         .await;
+
+        // If the range spanned paragraphs, the inner paragraphs will be removed but we need to
+        // merge the first and last paragraphs
+        if range.start.paragraph != range.end.paragraph {
+            let mut data = self.data.write().await;
+            let mut paragraph_to_merge = data.paragraphs.remove(range.start.paragraph + 1);
+            data.paragraphs[range.start.paragraph]
+                .spans
+                .append(&mut paragraph_to_merge.spans);
+        }
     }
 
     pub async fn insert_str(&self, location: RichTextPosition, value: &str) {
@@ -58,15 +68,18 @@ impl RichText {
         let data = self.data.read().await;
         for paragraph_index in range.start.paragraph..(range.end.paragraph + 1) {
             if let Some(paragraph) = data.paragraphs.get(paragraph_index) {
-                let relative_range = if range.start.paragraph == paragraph_index {
-                    range.start.offset..paragraph.len()
-                } else if range.end.paragraph == paragraph_index {
-                    0..paragraph.len().min(range.end.offset + 1)
+                let start = if range.start.paragraph == paragraph_index {
+                    range.start.offset
                 } else {
-                    0..paragraph.len()
+                    0
+                };
+                let end = if range.end.paragraph == paragraph_index {
+                    paragraph.len().min(range.end.offset)
+                } else {
+                    paragraph.len()
                 };
 
-                callback(paragraph, relative_range)
+                callback(paragraph, start..end)
             }
         }
     }
@@ -80,18 +93,22 @@ impl RichText {
     ) {
         let mut data = self.data.write().await;
         let mut paragraphs_to_remove = Vec::new();
+
         for paragraph_index in range.start.paragraph..(range.end.paragraph + 1) {
             if let Some(paragraph) = data.paragraphs.get_mut(paragraph_index) {
-                let relative_range = if range.start.paragraph == paragraph_index {
-                    range.start.offset..paragraph.len()
-                } else if range.end.paragraph == paragraph_index {
-                    0..paragraph.len().min(range.end.offset + 1)
+                let start = if range.start.paragraph == paragraph_index {
+                    range.start.offset
                 } else {
-                    0..paragraph.len()
+                    0
+                };
+                let end = if range.end.paragraph == paragraph_index {
+                    paragraph.len().min(range.end.offset)
+                } else {
+                    paragraph.len()
                 };
 
                 if matches!(
-                    callback(paragraph, relative_range, paragraph_index),
+                    callback(paragraph, start..end, paragraph_index),
                     ParagraphRemoval::Remove
                 ) {
                     paragraphs_to_remove.push(paragraph_index);
@@ -161,6 +178,11 @@ impl RichText {
 
         paragraphs.join("\n")
     }
+
+    pub async fn paragraphs(&self) -> Vec<Text> {
+        let data = self.data.read().await;
+        data.paragraphs.clone()
+    }
 }
 
 #[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
@@ -181,5 +203,97 @@ impl Ord for RichTextPosition {
             Ordering::Equal => self.offset.cmp(&other.offset),
             not_equal => not_equal,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[async_test]
+    async fn remove_range_one_paragraph_start() {
+        let text = RichText::new(vec![Text::span("a123", Default::default())]);
+        text.remove_range(
+            RichTextPosition {
+                offset: 0,
+                paragraph: 0,
+            }..RichTextPosition {
+                offset: 1,
+                paragraph: 0,
+            },
+        )
+        .await;
+        assert_eq!(text.to_string().await, "123");
+    }
+
+    #[async_test]
+    async fn remove_range_one_paragraph_end() {
+        let text = RichText::new(vec![Text::span("123a", Default::default())]);
+        text.remove_range(
+            RichTextPosition {
+                offset: 3,
+                paragraph: 0,
+            }..RichTextPosition {
+                offset: 4,
+                paragraph: 0,
+            },
+        )
+        .await;
+        assert_eq!(text.to_string().await, "123");
+    }
+
+    #[async_test]
+    async fn remove_range_one_paragraph_inner() {
+        let text = RichText::new(vec![Text::span("1a23", Default::default())]);
+        text.remove_range(
+            RichTextPosition {
+                offset: 1,
+                paragraph: 0,
+            }..RichTextPosition {
+                offset: 2,
+                paragraph: 0,
+            },
+        )
+        .await;
+        assert_eq!(text.to_string().await, "123");
+    }
+
+    #[async_test]
+    async fn remove_range_multi_paragraph_cross_boundaries() {
+        let text = RichText::new(vec![
+            Text::span("123a", Default::default()),
+            Text::span("b456", Default::default()),
+        ]);
+        text.remove_range(
+            RichTextPosition {
+                offset: 3,
+                paragraph: 0,
+            }..RichTextPosition {
+                offset: 1,
+                paragraph: 1,
+            },
+        )
+        .await;
+        assert_eq!(text.to_string().await, "123456");
+    }
+
+    #[async_test]
+    async fn remove_range_multi_paragraph_cross_multiple_boundaries() {
+        let text = RichText::new(vec![
+            Text::span("123a", Default::default()),
+            Text::span("bc", Default::default()),
+            Text::span("d456", Default::default()),
+        ]);
+        text.remove_range(
+            RichTextPosition {
+                offset: 3,
+                paragraph: 0,
+            }..RichTextPosition {
+                offset: 1,
+                paragraph: 2,
+            },
+        )
+        .await;
+        assert_eq!(text.to_string().await, "123456");
     }
 }

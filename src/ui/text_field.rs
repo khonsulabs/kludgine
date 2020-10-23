@@ -179,11 +179,45 @@ impl Component for TextField {
                     .character_rect_for_position(context.scene(), selection_end)
                     .await
                 {
-                    // TODO multiline rendering is not right!
-                    Shape::rect(start_position.union(&end_position))
+                    if dbg!(start_position).max_y() <= dbg!(end_position).min_y() {
+                        // Multi-line
+                        // First line is start_position -> end of bounds
+                        let mut area = start_position;
+                        area.size.width = bounds.size.width - start_position.origin.x;
+                        Shape::rect(area)
+                            .fill(Fill::new(Color::new(1., 0., 0., 0.3)))
+                            .render_at(bounds.origin, context.scene())
+                            .await;
+                        if start_position.max_y() < end_position.min_y() {
+                            // Draw a solid block for all the inner lines
+                            Shape::rect(Rect::new(
+                                Point::new(0., start_position.max_y()),
+                                Size::new(
+                                    bounds.size.width,
+                                    end_position.min_y() - start_position.max_y(),
+                                ),
+                            ))
+                            .fill(Fill::new(Color::new(1., 0., 0., 0.3)))
+                            .render_at(bounds.origin, context.scene())
+                            .await;
+                        }
+                        // Last line is start of line -> start of end position
+                        Shape::rect(Rect::new(
+                            Point::new(0., end_position.min_y()),
+                            Size::new(end_position.origin.x, end_position.size.height),
+                        ))
                         .fill(Fill::new(Color::new(1., 0., 0., 0.3)))
                         .render_at(bounds.origin, context.scene())
                         .await;
+                    } else {
+                        // Single-line
+                        let mut area = start_position;
+                        area.size.width = end_position.origin.x - start_position.origin.x;
+                        Shape::rect(area)
+                            .fill(Fill::new(Color::new(1., 0., 0., 0.3)))
+                            .render_at(bounds.origin, context.scene())
+                            .await;
+                    }
                 }
             }
         } else if context.is_focused().await && self.cursor.blink_state.visible {
