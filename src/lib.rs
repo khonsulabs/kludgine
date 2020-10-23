@@ -6,6 +6,13 @@ use thiserror::Error;
 #[macro_use]
 extern crate futures_await_test;
 
+// Re-exports
+pub use async_handle::Handle;
+pub use async_trait::async_trait;
+pub use clipboard;
+pub use easygpu;
+pub use winit;
+
 #[derive(Error, Debug)]
 pub enum KludgineError {
     #[error("error sending a WindowMessage to a Window: {0}")]
@@ -28,6 +35,8 @@ pub enum KludgineError {
     FontFamilyNotFound(String),
     #[error("argument is out of bounds")]
     OutOfBounds,
+    #[error("clipboard error: {0}")]
+    Clipboard(String),
 
     #[error("specify at most 2 of the dimensions top, bottom, and height. (e.g., top and bottom, but not height")]
     AbsoluteBoundsInvalidVertical,
@@ -42,7 +51,6 @@ pub enum KludgineError {
 /// [`Result<T,E>`]: http://doc.rust-lang.org/std/result/enum.Result.html
 /// [`KludgineError`]: enum.KludgineError.html
 pub type KludgineResult<T> = Result<T, KludgineError>;
-pub use async_handle::Handle;
 
 #[macro_use]
 mod internal_macros {
@@ -138,8 +146,6 @@ pub mod prelude {
 
     #[cfg(feature = "bundled-fonts-enabled")]
     pub use super::text::bundled_fonts;
-
-    pub use lazy_static::lazy_static;
 }
 
 pub struct RequiresInitialization<T>(Option<T>);

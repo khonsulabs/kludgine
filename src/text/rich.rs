@@ -31,7 +31,7 @@ impl RichText {
         assert!(range.start <= range.end);
 
         self.for_each_in_range_mut(range.clone(), |text, text_range, paragraph_index| {
-            text.remove_range(dbg!(text_range));
+            text.remove_range(text_range);
             if paragraph_index != range.start.paragraph && paragraph_index != range.end.paragraph {
                 ParagraphRemoval::Remove
             } else {
@@ -60,10 +60,10 @@ impl RichText {
         .await;
     }
 
-    pub async fn for_each_in_range<F: Fn(&Text, Range<usize>)>(
+    pub async fn for_each_in_range<F: FnMut(&Text, Range<usize>)>(
         &self,
         range: Range<RichTextPosition>,
-        callback: F,
+        mut callback: F,
     ) {
         let data = self.data.read().await;
         for paragraph_index in range.start.paragraph..(range.end.paragraph + 1) {

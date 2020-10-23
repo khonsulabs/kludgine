@@ -104,7 +104,11 @@ impl Text {
         self.len() == 0
     }
 
-    pub fn for_each_in_range<F: Fn(&Span, Range<usize>)>(&self, range: Range<usize>, callback: F) {
+    pub fn for_each_in_range<F: FnMut(&Span, Range<usize>)>(
+        &self,
+        range: Range<usize>,
+        mut callback: F,
+    ) {
         let mut span_start = 0usize;
         for span in self.spans.iter() {
             let span_len = span.text.len();

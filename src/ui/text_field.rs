@@ -18,9 +18,10 @@ use crate::{
         Component, Context, ControlPadding, InteractiveComponent, Layout, StyledContext,
     },
     window::EventStatus,
-    KludgineResult,
+    KludgineError, KludgineResult,
 };
 use async_trait::async_trait;
+use clipboard::{ClipboardContext, ClipboardProvider};
 use euclid::{Length, Scale};
 use std::time::{Duration, Instant};
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
@@ -179,7 +180,7 @@ impl Component for TextField {
                     .character_rect_for_position(context.scene(), selection_end)
                     .await
                 {
-                    if dbg!(start_position).max_y() <= dbg!(end_position).min_y() {
+                    if start_position.max_y() <= end_position.min_y() {
                         // Multi-line
                         // First line is start_position -> end of bounds
                         let mut area = start_position;
@@ -424,6 +425,31 @@ impl Component for TextField {
                             .await;
                         }
                     }
+                    VirtualKeyCode::V => {
+                        if context.scene().modifiers_pressed().await.primary_modifier() {
+                            let mut clipboard = ClipboardContext::new()
+                                .map_err(|err| KludgineError::Clipboard(err.to_string()))?;
+
+                            // Convert Result to Option to get rid of the Box<dyn Error> before the await
+                            let pasted = clipboard.get_contents().ok();
+                            if let Some(pasted) = pasted {
+                                self.replace_selection(&pasted, context).await;
+                            }
+                        }
+                    }
+                    VirtualKeyCode::X | VirtualKeyCode::C => {
+                        if context.scene().modifiers_pressed().await.primary_modifier() {
+                            let mut clipboard = ClipboardContext::new()
+                                .map_err(|err| KludgineError::Clipboard(err.to_string()))?;
+
+                            let selected = self.selected_string().await;
+                            if key == VirtualKeyCode::X {
+                                self.replace_selection("", context).await;
+                            }
+
+                            let _ = clipboard.set_contents(selected);
+                        }
+                    }
                     _ => {}
                 }
 
@@ -468,6 +494,23 @@ impl TextField {
         self.notify_changed(context).await;
         self.notify_selection_changed(context).await;
         context.set_needs_redraw().await;
+    }
+
+    pub async fn selected_string(&self) -> String {
+        let mut copied_paragraphs = Vec::new();
+        self.text
+            .for_each_in_range(
+                self.cursor.selection_start()..self.cursor.selection_end(),
+                |paragraph, relative_range| {
+                    let mut span_strings = Vec::new();
+                    paragraph.for_each_in_range(relative_range, |span, relative_range| {
+                        span_strings.push(span.text[relative_range].to_string());
+                    });
+                    copied_paragraphs.push(span_strings.join(""));
+                },
+            )
+            .await;
+        copied_paragraphs.join("\n")
     }
 
     async fn prepared_text(

@@ -64,6 +64,7 @@ legion = { version = "0.3", optional = true }
 sorted-vec = { version = "0.4", optional = true }
 serde = { version = "1", optional = true, features = ["derive"] }
 anymap = "0.12"
+clipboard = "0.5"
 
 [dev-dependencies]
 rand = "0.7"

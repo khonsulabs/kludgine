@@ -36,7 +36,7 @@ impl Component for TextExample {
         spans.push(Span::new(
             "rapped ",
             Style::new()
-                .with(ForegroundColor(Color::WHITE.into()))
+                .with(ForegroundColor(Color::BLACK.into()))
                 .with(FontSize::new(60.))
                 .effective_style(context.scene())
                 .await,
