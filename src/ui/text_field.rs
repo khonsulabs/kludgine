@@ -34,6 +34,11 @@ pub struct TextField {
     cursor: Cursor,
 }
 
+#[derive(Debug, Clone)]
+pub enum TextFieldEvent {
+    ValueChanged(RichText),
+}
+
 #[derive(Debug, Default)]
 pub struct Cursor {
     pub blink_state: BlinkState,
@@ -106,7 +111,7 @@ impl BlinkState {
 impl InteractiveComponent for TextField {
     type Command = ();
     type Message = ();
-    type Event = ();
+    type Event = TextFieldEvent;
 
     // async fn receive_command(
     //     &mut self,
@@ -329,8 +334,10 @@ impl Component for TextField {
                 self.replace_selection("", context).await
             }
             character => {
-                self.replace_selection(&character.to_string(), context)
-                    .await
+                if !character.is_control() {
+                    self.replace_selection(&character.to_string(), context)
+                        .await
+                }
             }
         }
         Ok(())
@@ -361,6 +368,12 @@ impl Component for TextField {
                     }
                     VirtualKeyCode::Up => {}
                     VirtualKeyCode::Down => {}
+                    VirtualKeyCode::A => {
+                        if context.scene().modifiers_pressed().await.primary_modifier() {
+                            self.cursor.start = Default::default();
+                            self.cursor.end = Some(self.text.end().await);
+                        }
+                    }
                     _ => {}
                 }
 
@@ -402,6 +415,7 @@ impl TextField {
         self.cursor.start.offset += replacement.len();
         self.cursor.blink_state.force_on();
 
+        self.notify_changed(context).await;
         context.set_needs_redraw().await;
     }
 
@@ -550,6 +564,11 @@ impl TextField {
             }
         }
         last_location
+    }
+
+    async fn notify_changed(&self, context: &mut Context) {
+        self.callback(context, TextFieldEvent::ValueChanged(self.text.clone()))
+            .await
     }
 }
 

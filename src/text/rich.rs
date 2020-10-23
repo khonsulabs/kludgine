@@ -1,16 +1,11 @@
 use std::{cmp::Ordering, ops::Range};
 
-use crate::{
-    math::{Scaled, Size},
-    text::{Span, Text},
-    ui::StyledContext,
-    KludgineResult,
-};
+use crate::{text::Text, ui::StyledContext, KludgineResult};
 use async_handle::Handle;
 
 use super::{prepared::PreparedText, wrap::TextWrap};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RichText {
     data: Handle<RichTextData>,
 }
@@ -147,6 +142,14 @@ impl RichText {
         }
 
         position
+    }
+
+    pub async fn end(&self) -> RichTextPosition {
+        let data = self.data.read().await;
+        RichTextPosition {
+            paragraph: data.paragraphs.len() - 1,
+            offset: data.paragraphs.last().unwrap().len(),
+        }
     }
 }
 

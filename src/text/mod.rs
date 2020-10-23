@@ -110,7 +110,7 @@ impl Text {
             let span_len = span.text.len();
             let span_end = span_start + span_len;
 
-            if span_end > range.start {
+            if span_end >= range.start {
                 if span_start >= range.end {
                     return;
                 }
