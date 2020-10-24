@@ -614,7 +614,10 @@ impl TextField {
 
                         last_location = Some(Rect::new(
                             Point::from_lengths(
-                                (span.location.x() + last_glyph.width()) / scale,
+                                (span.location.x()
+                                    + last_glyph.location().x()
+                                    + last_glyph.width())
+                                    / scale,
                                 line_top + span.location.y() / scale,
                             ),
                             Size::from_lengths(Default::default(), line_height),
