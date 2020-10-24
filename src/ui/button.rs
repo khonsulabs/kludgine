@@ -1,13 +1,12 @@
 use crate::{
-    color::Color,
     event::MouseButton,
-    math::{Point, Points, Scaled, Size, Surround},
+    math::{Point, Raw, Scaled, Size, Surround},
     style::{
-        FallbackStyle, GenericStyle, Style, StyleSheet, UnscaledFallbackStyle,
-        UnscaledStyleComponent,
+        ColorPair, FallbackStyle, GenericStyle, Style, StyleComponent, StyleSheet, TextColor,
+        UnscaledFallbackStyle, UnscaledStyleComponent,
     },
     ui::{
-        component::{render_background, Component},
+        component::Component,
         control::{ControlBackgroundColor, ControlTextColor},
         AbsoluteBounds, Context, ControlEvent, Entity, InteractiveComponent, Label, Layout,
         StyledContext,
@@ -15,17 +14,40 @@ use crate::{
     KludgineResult,
 };
 use async_trait::async_trait;
+use euclid::Scale;
 
-#[derive(Debug, Clone)]
-pub struct ButtonStyle {
-    padding: Surround<f32, Scaled>,
+use super::control::{ComponentBorder, ControlBorder, ControlPadding};
+
+#[derive(Debug, Clone, Default)]
+pub struct ButtonPadding<Unit>(pub Surround<f32, Unit>);
+
+impl StyleComponent<Scaled> for ButtonPadding<Scaled> {
+    fn scale(&self, scale: Scale<f32, Scaled, Raw>, destination: &mut Style<Raw>) {
+        destination.push(ButtonPadding(self.0 * scale))
+    }
 }
 
-impl Default for ButtonStyle {
-    fn default() -> Self {
-        Self {
-            padding: Surround::uniform(Points::new(10.)),
-        }
+impl StyleComponent<Raw> for ButtonPadding<Raw> {
+    fn scale(&self, _scale: Scale<f32, Raw, Raw>, map: &mut Style<Raw>) {
+        map.push(ButtonPadding(self.0));
+    }
+}
+
+impl FallbackStyle<Scaled> for ButtonPadding<Scaled> {
+    fn lookup(style: &Style<Scaled>) -> Option<Self> {
+        style
+            .get::<Self>()
+            .cloned()
+            .or_else(|| ControlPadding::<Scaled>::lookup(style).map(|cp| ButtonPadding(cp.0)))
+    }
+}
+
+impl FallbackStyle<Raw> for ButtonPadding<Raw> {
+    fn lookup(style: &Style<Raw>) -> Option<Self> {
+        style
+            .get::<Self>()
+            .cloned()
+            .or_else(|| ControlPadding::<Raw>::lookup(style).map(|cp| ButtonPadding(cp.0)))
     }
 }
 
@@ -33,7 +55,6 @@ impl Default for ButtonStyle {
 pub struct Button {
     caption: String,
     label: Entity<Label>,
-    style: ButtonStyle,
 }
 
 #[async_trait]
@@ -41,25 +62,28 @@ impl Component for Button {
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         let theme = context.scene().theme().await;
         let control_colors = theme.default_style_sheet();
-        let style_sheet = context.style_sheet().await.inherit_from(&control_colors);
+        let style_sheet = context
+            .style_sheet()
+            .await
+            .merge_with(&control_colors, false);
 
         self.label = self
             .new_entity(context, Label::new(&self.caption))
-            .style_sheet(StyleSheet::from(Style::new().with(
-                ButtonTextColor::lookup(&style_sheet.normal).unwrap_or_default(),
-            )))
-            .bounds(AbsoluteBounds {
-                left: crate::math::Dimension::from_f32(10.),
-                top: crate::math::Dimension::from_f32(10.),
-                right: crate::math::Dimension::from_f32(10.),
-                bottom: crate::math::Dimension::from_f32(10.),
-                ..Default::default()
-            })
+            .style_sheet(StyleSheet::from(
+                Style::new().with(TextColor(
+                    ButtonTextColor::lookup(&style_sheet.normal)
+                        .unwrap_or_default()
+                        .into(),
+                )),
+            ))
+            .bounds(AbsoluteBounds::from(
+                ButtonPadding::<Scaled>::lookup(&style_sheet.normal)
+                    .unwrap_or_default()
+                    .0,
+            ))
             .interactive(false)
             .insert()
             .await?;
-
-        context.set_style_sheet(style_sheet).await;
 
         Ok(())
     }
@@ -86,11 +110,16 @@ impl Component for Button {
         context: &mut StyledContext,
         constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<Size<f32, Scaled>> {
-        let contraints_minus_padding = self.style.padding.inset_constraints(constraints);
+        let padding = ButtonPadding::<Raw>::lookup(context.effective_style())
+            .unwrap_or_default()
+            .0
+            / context.scene().scale_factor().await;
+
+        let contraints_minus_padding = padding.inset_constraints(constraints);
         Ok(context
             .content_size(&self.label, &contraints_minus_padding)
             .await?
-            + self.style.padding.minimum_size())
+            + padding.minimum_size())
     }
 
     async fn render_background(
@@ -98,7 +127,8 @@ impl Component for Button {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        render_background::<ButtonBackgroundColor>(context, layout).await
+        self.render_standard_background::<ButtonBackgroundColor, ButtonBorder>(context, layout)
+            .await
     }
 }
 
@@ -108,20 +138,13 @@ impl Button {
         Self {
             caption,
             label: Default::default(),
-            style: Default::default(),
         }
-    }
-
-    pub fn button_style(mut self, style: ButtonStyle) -> Self {
-        self.style = style;
-        self
     }
 }
 
 #[derive(Clone, Debug)]
 pub enum ButtonCommand {
     SetCaption(String),
-    SetButtonStyle(ButtonStyle),
 }
 
 #[async_trait]
@@ -139,17 +162,24 @@ impl InteractiveComponent for Button {
             ButtonCommand::SetCaption(caption) => {
                 self.caption = caption;
             }
-            ButtonCommand::SetButtonStyle(style) => {
-                self.style = style;
-            }
         }
         Ok(())
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct ButtonBackgroundColor(pub Color);
-impl UnscaledStyleComponent<Scaled> for ButtonBackgroundColor {}
+#[derive(Debug, Clone)]
+pub struct ButtonBackgroundColor(pub ColorPair);
+impl UnscaledStyleComponent<Scaled> for ButtonBackgroundColor {
+    fn unscaled_should_be_inherited(&self) -> bool {
+        false
+    }
+}
+
+impl Default for ButtonBackgroundColor {
+    fn default() -> Self {
+        Self(ControlBackgroundColor::default().0)
+    }
+}
 
 impl UnscaledFallbackStyle for ButtonBackgroundColor {
     fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
@@ -159,15 +189,21 @@ impl UnscaledFallbackStyle for ButtonBackgroundColor {
     }
 }
 
-impl Into<Color> for ButtonBackgroundColor {
-    fn into(self) -> Color {
+impl Into<ColorPair> for ButtonBackgroundColor {
+    fn into(self) -> ColorPair {
         self.0
     }
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct ButtonTextColor(pub Color);
+#[derive(Debug, Clone)]
+pub struct ButtonTextColor(pub ColorPair);
 impl UnscaledStyleComponent<Scaled> for ButtonTextColor {}
+
+impl Default for ButtonTextColor {
+    fn default() -> Self {
+        Self(ControlTextColor::default().0)
+    }
+}
 
 impl UnscaledFallbackStyle for ButtonTextColor {
     fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
@@ -178,8 +214,27 @@ impl UnscaledFallbackStyle for ButtonTextColor {
     }
 }
 
-impl Into<Color> for ButtonTextColor {
-    fn into(self) -> Color {
+impl Into<ColorPair> for ButtonTextColor {
+    fn into(self) -> ColorPair {
+        self.0
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ButtonBorder(pub ComponentBorder);
+impl UnscaledStyleComponent<Scaled> for ButtonBorder {}
+
+impl UnscaledFallbackStyle for ButtonBorder {
+    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
+        style
+            .get::<Self>()
+            .cloned()
+            .or_else(|| ControlBorder::lookup_unscaled(style).map(|cb| ButtonBorder(cb.0)))
+    }
+}
+
+impl Into<ComponentBorder> for ButtonBorder {
+    fn into(self) -> ComponentBorder {
         self.0
     }
 }

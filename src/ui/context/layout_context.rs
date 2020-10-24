@@ -62,20 +62,20 @@ impl LayoutEngine {
                 let mut node_style = style_sheet.normal;
 
                 if hovered_indicies.contains(&index) {
-                    node_style = style_sheet.hover.inherit_from(&node_style);
+                    node_style = style_sheet.hover.merge_with(&node_style, false);
                 }
 
                 if ui_state.focused().await == Some(index) {
-                    node_style = style_sheet.focus.inherit_from(&node_style);
+                    node_style = style_sheet.focus.merge_with(&node_style, false);
                 }
 
                 if ui_state.active().await == Some(index) {
-                    node_style = style_sheet.active.inherit_from(&node_style);
+                    node_style = style_sheet.active.merge_with(&node_style, false);
                 }
 
                 let computed_style = match arena.parent(index).await {
                     Some(parent_index) => {
-                        node_style.inherit_from(computed_styles.get(&parent_index).unwrap())
+                        node_style.merge_with(computed_styles.get(&parent_index).unwrap(), true)
                     }
                     None => node_style.clone(),
                 };

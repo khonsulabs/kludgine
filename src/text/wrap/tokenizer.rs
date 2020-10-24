@@ -1,15 +1,12 @@
 use crate::{
-    math::Pixels,
-    math::Raw,
-    math::Scaled,
+    math::{Pixels, Raw, Scaled},
     scene::Scene,
-    style::FallbackStyle,
-    style::{FontFamily, FontSize, FontStyle, Style, TextColor, Weight},
-    text::{font::Font, PreparedSpan, Text},
+    style::{FallbackStyle, FontFamily, FontSize, FontStyle, Style, TextColor, Weight},
+    text::{font::Font, prepared::GlyphInfo, PreparedSpan, Text},
     KludgineResult,
 };
 use euclid::Length;
-use rusttype::{GlyphId, PositionedGlyph, Scale};
+use rusttype::{GlyphId, Scale};
 
 #[derive(Debug)]
 pub(crate) enum Token {
@@ -56,7 +53,8 @@ pub(crate) struct Tokenizer {
 struct TokenizerState<'a> {
     style: &'a Style<Raw>,
     font: &'a Font,
-    glyphs: Vec<PositionedGlyph<'static>>,
+    glyphs: Vec<GlyphInfo>,
+    chars: Vec<char>,
     lexer_state: TokenizerStatus,
     last_glyph_id: Option<GlyphId>,
     caret: Pixels,
@@ -69,6 +67,7 @@ impl<'a> TokenizerState<'a> {
             style,
             lexer_state: TokenizerStatus::AtSpanStart,
             glyphs: Default::default(),
+            chars: Default::default(),
             last_glyph_id: None,
             caret: Pixels::default(),
         }
@@ -77,6 +76,7 @@ impl<'a> TokenizerState<'a> {
     async fn emit_token_if_needed(
         &mut self,
         scale: euclid::Scale<f32, Scaled, Raw>,
+        scene: &Scene,
     ) -> Option<Token> {
         if self.glyphs.is_empty() {
             None
@@ -89,8 +89,9 @@ impl<'a> TokenizerState<'a> {
             let span = PreparedSpan::new(
                 self.font.clone(),
                 font_size,
-                foreground,
+                foreground.themed_color(&scene.system_theme().await),
                 self.caret,
+                std::mem::take(&mut self.chars),
                 current_committed_glyphs,
                 metrics,
             );
@@ -115,6 +116,7 @@ impl Tokenizer {
         scene: &Scene,
     ) -> KludgineResult<Vec<Token>> {
         let scale = scene.scale_factor().await;
+        let mut current_offset = 0usize;
         for span in text.spans.iter() {
             let font = scene
                 .lookup_font(
@@ -128,6 +130,8 @@ impl Tokenizer {
             let mut state = TokenizerState::new(&font, &span.style);
 
             for c in span.text.chars() {
+                let source_offset = current_offset;
+                current_offset += 1;
                 if c.is_control() {
                     if c == '\n' {
                         self.tokens.push(Token::EndOfLine(vmetrics));
@@ -142,7 +146,7 @@ impl Tokenizer {
                     };
 
                     if new_lexer_state != state.lexer_state {
-                        if let Some(token) = state.emit_token_if_needed(scale).await {
+                        if let Some(token) = state.emit_token_if_needed(scale, scene).await {
                             self.tokens.push(token);
                         }
                     }
@@ -166,11 +170,15 @@ impl Tokenizer {
                         .positioned(rusttype::point(state.caret.get(), 0.0));
 
                     state.caret += Pixels::new(glyph.unpositioned().h_metrics().advance_width);
-                    state.glyphs.push(glyph);
+                    state.glyphs.push(GlyphInfo {
+                        source_offset,
+                        source: c,
+                        glyph,
+                    });
                 }
             }
 
-            if let Some(token) = state.emit_token_if_needed(scale).await {
+            if let Some(token) = state.emit_token_if_needed(scale, scene).await {
                 self.tokens.push(token);
             }
         }

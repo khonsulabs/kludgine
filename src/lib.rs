@@ -6,6 +6,13 @@ use thiserror::Error;
 #[macro_use]
 extern crate futures_await_test;
 
+// Re-exports
+pub use async_handle::Handle;
+pub use async_trait::async_trait;
+pub use clipboard;
+pub use easygpu;
+pub use winit;
+
 #[derive(Error, Debug)]
 pub enum KludgineError {
     #[error("error sending a WindowMessage to a Window: {0}")]
@@ -28,6 +35,8 @@ pub enum KludgineError {
     FontFamilyNotFound(String),
     #[error("argument is out of bounds")]
     OutOfBounds,
+    #[error("clipboard error: {0}")]
+    Clipboard(String),
 
     #[error("specify at most 2 of the dimensions top, bottom, and height. (e.g., top and bottom, but not height")]
     AbsoluteBoundsInvalidVertical,
@@ -42,7 +51,6 @@ pub enum KludgineError {
 /// [`Result<T,E>`]: http://doc.rust-lang.org/std/result/enum.Result.html
 /// [`KludgineError`]: enum.KludgineError.html
 pub type KludgineResult<T> = Result<T, KludgineError>;
-pub use async_handle::Handle;
 
 #[macro_use]
 mod internal_macros {
@@ -106,23 +114,31 @@ pub mod prelude {
             SpriteSourceSublocation,
         },
         style::*,
-        text::{font::Font, wrap::TextWrap, Span, Text},
+        text::{
+            font::Font,
+            rich::{RichText, RichTextPosition},
+            wrap::TextWrap,
+            Span, Text,
+        },
         texture::Texture,
         theme::{
-            ColorGroup, ElementKind, Intent, Minimal, Palette, PaletteShade, Theme, VariableColor,
+            ColorGroup, ElementKind, Intent, Minimal, Palette, PaletteShade, SystemTheme, Theme,
+            VariableColor,
         },
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,
         },
         ui::{
             AbsoluteBounds, AbsoluteLayout, AnimatableComponent, AnimationManager, Button,
-            ButtonStyle, Callback, Component, Context, ControlEvent, Entity, EntityBuilder,
+            ButtonPadding, Callback, Component, Context, ControlEvent, Entity, EntityBuilder,
             HierarchicalArena, Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation,
             ImageOptions, ImageScaling, Index, Indexable, InteractiveComponent, Label,
             LabelCommand, Layout, LayoutConstraints, LayoutContext, LinearTransition,
-            StandaloneComponent, StyledContext, Timeout,
+            StandaloneComponent, StyledContext, TextField, TextFieldEvent, Timeout,
         },
-        window::{Event, EventStatus, InputEvent, OpenableWindow, Window, WindowCreator},
+        window::{
+            Event, EventStatus, InputEvent, OpenableWindow, Window, WindowBuilder, WindowCreator,
+        },
         Handle, KludgineError, KludgineResult, RequiresInitialization,
     };
     pub use async_trait::async_trait;
@@ -130,8 +146,6 @@ pub mod prelude {
 
     #[cfg(feature = "bundled-fonts-enabled")]
     pub use super::text::bundled_fonts;
-
-    pub use lazy_static::lazy_static;
 }
 
 pub struct RequiresInitialization<T>(Option<T>);

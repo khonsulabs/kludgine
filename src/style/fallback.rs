@@ -1,10 +1,14 @@
+use std::fmt::Debug;
+
 use crate::{
     math::{Raw, Scaled},
     style::{GenericStyle, Style, StyleComponent},
 };
 
-pub trait FallbackStyle<Unit>: Sized {
-    fn lookup(style: &Style<Unit>) -> Option<Self>;
+pub trait FallbackStyle<Unit: Send + Sync + Debug + 'static>: StyleComponent<Unit> + Clone {
+    fn lookup(style: &Style<Unit>) -> Option<Self> {
+        style.get::<Self>().cloned()
+    }
 }
 
 pub trait UnscaledFallbackStyle: StyleComponent<Scaled> + Clone {

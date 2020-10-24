@@ -1,10 +1,9 @@
 use crate::{
-    color::Color,
     event::{MouseButton, MouseScrollDelta, TouchPhase},
-    math::{Point, Raw, Scaled, Size},
+    math::{Point, PointExt, Raw, Rect, Scaled, Size, SizeExt},
     scene::Scene,
     shape::{Fill, Shape},
-    style::{BackgroundColor, FallbackStyle, Style, StyleSheet},
+    style::{BackgroundColor, ColorPair, FallbackStyle, Style, StyleSheet},
     ui::{
         node::ThreadsafeAnyMap, AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout,
         LayoutSolver, LayoutSolverExt, Node, StyledContext, UIState,
@@ -13,6 +12,9 @@ use crate::{
     Handle, KludgineResult,
 };
 use async_trait::async_trait;
+use winit::event::{ElementState, ScanCode, VirtualKeyCode};
+
+use super::control::ComponentBorder;
 
 pub struct LayoutConstraints {}
 
@@ -35,7 +37,7 @@ pub trait Component: Send + Sync {
         ))
     }
 
-    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
+    async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         Ok(())
     }
 
@@ -65,7 +67,83 @@ pub trait Component: Send + Sync {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        render_background::<BackgroundColor>(context, layout).await
+        self.render_standard_background::<BackgroundColor, ComponentBorder>(context, layout)
+            .await
+    }
+
+    async fn render_standard_background<
+        C: Into<ColorPair> + FallbackStyle<Raw> + Clone,
+        B: Into<ComponentBorder> + FallbackStyle<Raw> + Clone,
+    >(
+        &self,
+        context: &mut StyledContext,
+        layout: &Layout,
+    ) -> KludgineResult<()> {
+        let bounds = layout.bounds_without_margin();
+        if let Some(background) = C::lookup(context.effective_style()) {
+            let color_pair = background.clone().into();
+            Shape::rect(bounds)
+                .fill(Fill::new(
+                    color_pair.themed_color(&context.scene().system_theme().await),
+                ))
+                .render_at(Point::default(), context.scene())
+                .await;
+        }
+        if let Some(border) = B::lookup(context.effective_style()) {
+            let border = border.into();
+            // TODO the borders should be mitered together rather than drawn overlapping
+            if let Some(left) = border.left {
+                Shape::rect(Rect::new(
+                    bounds.origin,
+                    Size::from_lengths(left.width, bounds.size.height()),
+                ))
+                .fill(Fill::new(
+                    left.color
+                        .themed_color(&context.scene().system_theme().await),
+                ))
+                .render_at(Point::default(), context.scene())
+                .await;
+            }
+            if let Some(right) = border.right {
+                Shape::rect(Rect::new(
+                    Point::from_lengths(bounds.max().x() - right.width, bounds.origin.y()),
+                    Size::from_lengths(right.width, bounds.size.height()),
+                ))
+                .fill(Fill::new(
+                    right
+                        .color
+                        .themed_color(&context.scene().system_theme().await),
+                ))
+                .render_at(Point::default(), context.scene())
+                .await;
+            }
+            if let Some(top) = border.top {
+                Shape::rect(Rect::new(
+                    bounds.origin,
+                    Size::from_lengths(bounds.size.width(), top.width),
+                ))
+                .fill(Fill::new(
+                    top.color
+                        .themed_color(&context.scene().system_theme().await),
+                ))
+                .render_at(Point::default(), context.scene())
+                .await;
+            }
+            if let Some(bottom) = border.bottom {
+                Shape::rect(Rect::new(
+                    Point::from_lengths(bounds.origin.x(), bounds.max().y() - bottom.width),
+                    Size::from_lengths(bounds.size.width(), bottom.width),
+                ))
+                .fill(Fill::new(
+                    bottom
+                        .color
+                        .themed_color(&context.scene().system_theme().await),
+                ))
+                .render_at(Point::default(), context.scene())
+                .await;
+            }
+        }
+        Ok(())
     }
 
     async fn mouse_down(
@@ -88,6 +166,24 @@ pub trait Component: Send + Sync {
     }
 
     async fn unhovered(&mut self, context: &mut Context) -> KludgineResult<()> {
+        Ok(())
+    }
+
+    async fn receive_character(
+        &mut self,
+        context: &mut Context,
+        character: char,
+    ) -> KludgineResult<()> {
+        Ok(())
+    }
+
+    async fn keyboard_event(
+        &mut self,
+        context: &mut Context,
+        scancode: ScanCode,
+        key: Option<VirtualKeyCode>,
+        state: ElementState,
+    ) -> KludgineResult<()> {
         Ok(())
     }
 
@@ -340,7 +436,11 @@ where
     }
 
     pub async fn insert(mut self) -> KludgineResult<Entity<C>> {
-        self.components.insert(Handle::new(self.style_sheet));
+        let theme = self.scene.theme().await;
+        self.components.insert(Handle::new(
+            self.style_sheet
+                .merge_with(&theme.default_style_sheet(), false),
+        ));
         let index = {
             let node = Node::from_components::<C>(self.components, self.interactive, self.callback);
             let index = self.arena.insert(self.parent, node).await;
@@ -373,17 +473,4 @@ pub trait AnimatableComponent: InteractiveComponent + Sized {
     type AnimationFactory;
 
     fn new_animation_factory(target: Entity<Self>) -> Self::AnimationFactory;
-}
-
-pub async fn render_background<C: Into<Color> + FallbackStyle<Raw> + Clone>(
-    context: &mut StyledContext,
-    layout: &Layout,
-) -> KludgineResult<()> {
-    if let Some(background) = C::lookup(context.effective_style()) {
-        Shape::rect(layout.bounds_without_margin())
-            .fill(Fill::new(background.clone().into()))
-            .render_at(Point::default(), context.scene())
-            .await;
-    }
-    Ok(())
 }

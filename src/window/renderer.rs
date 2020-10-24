@@ -7,7 +7,10 @@ use crate::{
 };
 use async_lock::Mutex;
 use crossbeam::atomic::AtomicCell;
-use easygpu::{prelude::*, wgpu::FilterMode, wgpu::COPY_BYTES_PER_ROW_ALIGNMENT};
+use easygpu::{
+    prelude::*,
+    wgpu::{FilterMode, COPY_BYTES_PER_ROW_ALIGNMENT},
+};
 use easygpu_lyon::LyonPipeline;
 use euclid::Box2D;
 use std::{collections::HashMap, sync::Arc};
@@ -275,8 +278,8 @@ impl FrameRenderer {
                             if let Some(texture) = loaded_font.texture.as_ref() {
                                 let mut batch = sprite::GpuBatch::new(texture.size);
                                 for (uv_rect, screen_rect) in
-                                    text.data.positioned_glyphs.iter().filter_map(|g| {
-                                        loaded_font.cache.rect_for(0, g).ok().flatten()
+                                    text.data.glyphs.iter().filter_map(|g| {
+                                        loaded_font.cache.rect_for(0, &g.glyph).ok().flatten()
                                     })
                                 {
                                     // This is one section that feels like a kludge. gpu_cache is storing the textures upside down like normal

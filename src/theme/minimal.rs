@@ -1,7 +1,11 @@
 use crate::{
-    math::Scaled,
-    style::{BackgroundColor, Style, TextColor},
+    math::{Points, Scaled, Surround},
+    style::{BackgroundColor, ColorPair, Style, TextColor},
     theme::{Palette, Theme},
+    ui::{
+        Border, ComponentBorder, ControlBackgroundColor, ControlPadding, TextFieldBackgroundColor,
+        TextFieldBorder,
+    },
 };
 
 #[derive(Debug)]
@@ -32,25 +36,59 @@ impl Theme for Minimal {
 
     fn default_normal_style(&self) -> Style<Scaled> {
         Style::new()
-            .with(TextColor(self.palette.light.control.text.normal()))
-            .with(BackgroundColor(
-                self.palette.light.control.background.normal(),
-            ))
+            .with(TextColor(ColorPair {
+                light_color: self.palette.light.control.text.normal(),
+                dark_color: self.palette.dark.control.text.normal(),
+            }))
+            .with(BackgroundColor(ColorPair {
+                light_color: self.palette.light.default.background.normal(),
+                dark_color: self.palette.dark.default.background.normal(),
+            }))
+            .with(ControlBackgroundColor(ColorPair {
+                light_color: self.palette.light.control.background.normal(),
+                dark_color: self.palette.dark.control.background.normal(),
+            }))
+            .with(ControlPadding(Surround::uniform(Points::new(10.))))
+            .with(TextFieldBorder(ComponentBorder::uniform(Border::new(
+                2.,
+                ColorPair {
+                    light_color: self.palette.light.control.background.darker(),
+                    dark_color: self.palette.dark.control.background.lighter(),
+                },
+            ))))
     }
 
     fn default_hover_style(&self) -> Style<Scaled> {
-        Style::new()
-            .with(TextColor(self.palette.light.control.text.normal()))
-            .with(BackgroundColor(
-                self.palette.light.control.background.lighter(),
-            ))
+        self.default_normal_style()
+            .with(ControlBackgroundColor(ColorPair {
+                light_color: self.palette.light.control.background.lighter(),
+                dark_color: self.palette.dark.control.background.lighter(),
+            }))
+            .with(ControlPadding(Surround::uniform(Points::new(10.))))
     }
 
     fn default_active_style(&self) -> Style<Scaled> {
         Style::new()
-            .with(TextColor(self.palette.light.control.text.normal()))
-            .with(BackgroundColor(
-                self.palette.light.control.background.darker(),
-            ))
+            .with(TextColor(ColorPair {
+                light_color: self.palette.light.control.text.normal(),
+                dark_color: self.palette.dark.control.background.normal(),
+            }))
+            .with(ControlBackgroundColor(ColorPair {
+                light_color: self.palette.light.control.background.darker(),
+                dark_color: self.palette.dark.control.background.darker(),
+            }))
+            .with(TextFieldBackgroundColor(ColorPair {
+                light_color: self.palette.light.control.background.normal(),
+                dark_color: self.palette.dark.control.background.normal(),
+            }))
+            .with(ControlPadding(Surround::uniform(Points::new(10.))))
+    }
+
+    fn default_focus_style(&self) -> Style<Scaled> {
+        self.default_normal_style()
+            .with(TextFieldBorder(ComponentBorder::uniform(Border::new(
+                2.,
+                self.palette.primary.normal().into(),
+            ))))
     }
 }

@@ -10,24 +10,29 @@ mod layout;
 #[cfg(feature = "ecs")]
 pub mod legion;
 mod node;
+mod text_field;
 mod timeout;
 
 pub(crate) use self::node::NodeData;
 pub use self::{
     animation::{AnimationManager, LinearTransition},
-    button::{Button, ButtonStyle},
+    button::{Button, ButtonBackgroundColor, ButtonBorder, ButtonPadding, ButtonTextColor},
     component::{
         AnimatableComponent, Callback, Component, EntityBuilder, InteractiveComponent,
         LayoutConstraints, StandaloneComponent,
     },
     context::*,
-    control::ControlEvent,
+    control::{
+        Border, ComponentBorder, ControlBackgroundColor, ControlBorder, ControlEvent,
+        ControlPadding, ControlTextColor,
+    },
     image::{
         Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
     },
     label::{Label, LabelCommand},
     layout::*,
     node::{Node, NodeDataWindowExt},
+    text_field::{TextField, TextFieldBackgroundColor, TextFieldBorder, TextFieldEvent},
     timeout::Timeout,
 };
 use crate::{
@@ -35,9 +40,7 @@ use crate::{
     math::{Point, Scaled},
     runtime::Runtime,
     scene::Scene,
-    style::StyleSheet,
-    window::EventStatus,
-    window::{Event, InputEvent, WindowEvent},
+    window::{Event, EventStatus, InputEvent, WindowEvent},
     Handle, KludgineError, KludgineResult, RequiresInitialization,
 };
 pub use arena::{HierarchicalArena, Index};
@@ -82,15 +85,15 @@ impl UIState {
         }
     }
 
-    // async fn focus(&self, index: Index) {
-    //     let mut data = self.data.write().await;
-    //     data.focus = Some(index);
-    // }
+    async fn focus(&self, index: Index) {
+        let mut data = self.data.write().await;
+        data.focus = Some(index);
+    }
 
-    // async fn blur(&self) {
-    //     let mut data = self.data.write().await;
-    //     data.focus = None;
-    // }
+    async fn blur(&self) {
+        let mut data = self.data.write().await;
+        data.focus = None;
+    }
 
     async fn focused(&self) -> Option<Index> {
         let data = self.data.read().await;
@@ -262,7 +265,7 @@ where
             {
                 let node = Node::new::<C>(
                     root,
-                    StyleSheet::default(),
+                    scene.theme().await.default_style_sheet(),
                     AbsoluteBounds::default(),
                     true,
                     None,
@@ -355,6 +358,24 @@ where
             }
         }
 
+        Ok(())
+    }
+
+    pub async fn receive_character(&mut self, character: char) -> KludgineResult<()> {
+        let event_target = self
+            .ui_state
+            .focused()
+            .await
+            .unwrap_or_else(|| self.root.index());
+        if let Some(node) = self.arena.get(&event_target).await {
+            let mut context = Context::new(
+                event_target,
+                self.arena.clone(),
+                self.ui_state.clone(),
+                self.scene.clone(),
+            );
+            node.receive_character(&mut context, character).await?
+        }
         Ok(())
     }
 
@@ -462,6 +483,7 @@ where
                     self.mouse_button_handlers.remove(&button);
                 }
                 ElementState::Pressed => {
+                    self.ui_state.blur().await;
                     self.ui_state.deactivate().await;
                     self.mouse_button_handlers.remove(&button);
 
@@ -490,7 +512,27 @@ where
                     }
                 }
             },
-            _ => {}
+            Event::Keyboard {
+                key,
+                state,
+                scancode,
+            } => {
+                let event_target = self
+                    .ui_state
+                    .focused()
+                    .await
+                    .unwrap_or_else(|| self.root.index());
+                if let Some(node) = self.arena.get(&event_target).await {
+                    let mut context = Context::new(
+                        event_target,
+                        self.arena.clone(),
+                        self.ui_state.clone(),
+                        self.scene.clone(),
+                    );
+                    node.keyboard_event(&mut context, scancode, key, state)
+                        .await?
+                }
+            }
         }
         Ok(())
     }

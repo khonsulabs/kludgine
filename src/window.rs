@@ -2,7 +2,7 @@ use crate::{
     event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode},
     math::{Point, Scaled, ScreenScale, Size},
     runtime::Runtime,
-    theme::{Minimal, Theme},
+    theme::{Minimal, SystemTheme, Theme},
     ui::InteractiveComponent,
     Handle, KludgineError, KludgineResult,
 };
@@ -13,7 +13,10 @@ use easygpu::prelude::*;
 use lazy_static::lazy_static;
 
 use std::collections::HashMap;
-use winit::window::{WindowBuilder as WinitWindowBuilder, WindowId};
+use winit::{
+    event::ScanCode,
+    window::{WindowBuilder as WinitWindowBuilder, WindowId},
+};
 
 pub(crate) mod frame;
 mod renderer;
@@ -66,6 +69,7 @@ pub struct InputEvent {
 pub enum Event {
     /// A keyboard event
     Keyboard {
+        scancode: ScanCode,
         key: Option<VirtualKeyCode>,
         state: ElementState,
     },
@@ -106,13 +110,54 @@ pub trait Window: InteractiveComponent + Send + Sync + 'static {
     }
 }
 
-pub trait WindowCreator<T = Self>: Window {
+pub trait WindowCreator: Window {
     fn get_window_builder() -> WindowBuilder {
-        WindowBuilder::default().with_title(Self::window_title())
+        WindowBuilder::default()
+            .with_title(Self::window_title())
+            .with_initial_system_theme(Self::initial_system_theme())
+            .with_size(Self::initial_size())
+            .with_resizable(Self::resizable())
+            .with_maximized(Self::maximized())
+            .with_visible(Self::visible())
+            .with_transparent(Self::transparent())
+            .with_decorations(Self::decorations())
+            .with_always_on_top(Self::always_on_top())
     }
 
     fn window_title() -> String {
         "Kludgine".to_owned()
+    }
+
+    fn initial_size() -> Size<u32, Scaled> {
+        Size::new(1024, 768)
+    }
+
+    fn resizable() -> bool {
+        true
+    }
+
+    fn maximized() -> bool {
+        false
+    }
+
+    fn visible() -> bool {
+        true
+    }
+
+    fn transparent() -> bool {
+        false
+    }
+
+    fn decorations() -> bool {
+        true
+    }
+
+    fn always_on_top() -> bool {
+        false
+    }
+
+    fn initial_system_theme() -> SystemTheme {
+        SystemTheme::Light
     }
 }
 
@@ -126,6 +171,7 @@ pub struct WindowBuilder {
     transparent: Option<bool>,
     decorations: Option<bool>,
     always_on_top: Option<bool>,
+    pub(crate) initial_system_theme: Option<SystemTheme>,
     icon: Option<winit::window::Icon>,
 }
 
@@ -172,6 +218,11 @@ impl WindowBuilder {
 
     pub fn with_icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
+        self
+    }
+
+    pub fn with_initial_system_theme(mut self, system_theme: SystemTheme) -> Self {
+        self.initial_system_theme = Some(system_theme);
         self
     }
 }
@@ -222,7 +273,7 @@ pub trait OpenableWindow {
 #[async_trait]
 impl<T> OpenableWindow for T
 where
-    T: Window + WindowCreator<T>,
+    T: Window + WindowCreator,
 {
     async fn open(window: Self) {
         Runtime::open_window(Self::get_window_builder(), window).await
@@ -270,5 +321,7 @@ pub(crate) enum WindowEvent {
         scale_factor: ScreenScale,
     },
     Input(InputEvent),
+    ReceiveCharacter(char),
     RedrawRequested,
+    SystemThemeChanged(SystemTheme),
 }

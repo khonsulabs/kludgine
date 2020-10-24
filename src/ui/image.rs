@@ -3,8 +3,7 @@ use crate::{
     math::{Point, Rect, Scaled, Size},
     sprite::{Sprite, SpriteRotation, SpriteSource},
     ui::{
-        animation::Transition,
-        animation::{FloatChange, PropertyFrameManager, PropertyMutator},
+        animation::{FloatChange, PropertyFrameManager, PropertyMutator, Transition},
         AnimatableComponent, Component, Context, ControlEvent, Entity, InteractiveComponent,
         Layout, StyledContext,
     },
@@ -146,7 +145,11 @@ impl Component for Image {
         Ok(())
     }
 
-    async fn render(&self, context: &mut StyledContext, location: &Layout) -> KludgineResult<()> {
+    async fn render(
+        &mut self,
+        context: &mut StyledContext,
+        location: &Layout,
+    ) -> KludgineResult<()> {
         let render_bounds = location.inner_bounds();
         let target_size = self.calculate_target_size(render_bounds.size).await;
         if let Some(frame) = &self.current_frame {

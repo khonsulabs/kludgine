@@ -3,10 +3,15 @@ use crate::{
     math::{Point, Points, Raw, Scaled, Size},
     style::{Alignment, Style},
     text::{wrap::TextWrap, Text},
-    ui::{Component, Context, ControlEvent, InteractiveComponent, Layout, StyledContext},
+    ui::{
+        Component, Context, ControlBackgroundColor, ControlEvent, InteractiveComponent, Layout,
+        StyledContext,
+    },
     KludgineResult,
 };
 use async_trait::async_trait;
+
+use super::control::ControlBorder;
 
 #[derive(Debug)]
 pub struct Label {
@@ -47,7 +52,7 @@ impl Component for Label {
         Ok(())
     }
 
-    async fn render(&self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
+    async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         let text = self.create_text(context.effective_style());
         text.render_at(
             context.scene(),
@@ -93,6 +98,15 @@ impl Component for Label {
         .await;
         Ok(())
     }
+
+    async fn render_background(
+        &self,
+        context: &mut StyledContext,
+        layout: &Layout,
+    ) -> KludgineResult<()> {
+        self.render_standard_background::<ControlBackgroundColor, ControlBorder>(context, layout)
+            .await
+    }
 }
 
 impl Label {
@@ -102,7 +116,7 @@ impl Label {
         }
     }
     fn create_text(&self, effective_style: &Style<Raw>) -> Text {
-        Text::span(&self.value, effective_style)
+        Text::span(&self.value, effective_style.clone())
     }
 
     fn wrapping(&self, size: &Size<f32, Scaled>, alignment: Alignment) -> TextWrap {

@@ -1,5 +1,6 @@
-use super::{
+use crate::{
     application::Application,
+    theme::SystemTheme,
     window::{RuntimeWindow, Window, WindowBuilder},
     KludgineResult,
 };
@@ -250,6 +251,10 @@ impl Runtime {
         }
 
         let event_loop = winit::event_loop::EventLoop::new();
+        let initial_system_theme = initial_window
+            .initial_system_theme
+            .clone()
+            .unwrap_or(SystemTheme::Light);
         let mut initial_window: winit::window::WindowBuilder = initial_window.into();
 
         if Self::should_run_in_exclusive_mode() {
@@ -268,7 +273,11 @@ impl Runtime {
         let initial_window = initial_window.build(&event_loop).unwrap();
         let (window_sender, window_receiver) = async_channel::bounded(1);
         window_sender.try_send(initial_window).unwrap();
-        Runtime::block_on(RuntimeWindow::open(window_receiver, window));
+        Runtime::block_on(RuntimeWindow::open(
+            window_receiver,
+            initial_system_theme,
+            window,
+        ));
         event_loop.run(move |event, event_loop, control_flow| {
             let mut event_handler_guard = GLOBAL_EVENT_HANDLER
                 .lock()
@@ -301,6 +310,10 @@ impl Runtime {
         T: Window + Sized,
     {
         let (window_sender, window_receiver) = async_channel::bounded(1);
+        let initial_system_theme = builder
+            .initial_system_theme
+            .clone()
+            .unwrap_or(SystemTheme::Light);
         RuntimeRequest::OpenWindow {
             builder,
             window_sender,
@@ -309,6 +322,6 @@ impl Runtime {
         .await
         .unwrap_or_default();
 
-        RuntimeWindow::open(window_receiver, window).await;
+        RuntimeWindow::open(window_receiver, initial_system_theme, window).await;
     }
 }

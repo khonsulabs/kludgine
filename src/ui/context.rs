@@ -101,6 +101,22 @@ impl Context {
         node.style_sheet().await
     }
 
+    pub async fn focus(&self) {
+        self.ui_state.focus(self.index).await
+    }
+
+    pub async fn is_focused(&self) -> bool {
+        self.ui_state
+            .focused()
+            .await
+            .map(|focus| focus == self.index)
+            .unwrap_or_default()
+    }
+
+    pub async fn blur(&self) {
+        self.ui_state.blur().await
+    }
+
     pub async fn set_style_sheet(&self, sheet: StyleSheet) {
         let node = self.arena.get(&self.index).await.unwrap();
         node.set_style_sheet(sheet).await
