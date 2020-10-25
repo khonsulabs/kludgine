@@ -1,8 +1,7 @@
 use crate::{
     color::Color,
     math::Scaled,
-    style::{GenericStyle, UnscaledFallbackStyle, UnscaledStyleComponent},
-    theme::SystemTheme,
+    style::{theme::SystemTheme, GenericStyle, UnscaledFallbackStyle, UnscaledStyleComponent},
 };
 use std::fmt::Debug;
 

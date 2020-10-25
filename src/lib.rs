@@ -80,7 +80,6 @@ mod internal_macros {
 
 pub mod application;
 pub mod color;
-pub mod event;
 pub mod math;
 pub mod runtime;
 pub mod scene;
@@ -89,7 +88,6 @@ pub mod sprite;
 pub mod style;
 pub mod text;
 pub mod texture;
-pub mod theme;
 pub mod tilemap;
 pub mod ui;
 pub mod window;
@@ -99,7 +97,6 @@ pub mod prelude {
     pub use super::{
         application::{Application, SingleWindowApplication},
         color::Color,
-        event::*,
         include_aseprite_sprite, include_font, include_texture,
         math::{
             Angle, Dimension, Length, Pixels, Point, PointExt, Points, Raw, Rect, Scale, Scaled,
@@ -113,7 +110,16 @@ pub mod prelude {
             SpriteFrame, SpriteMap, SpriteRotation, SpriteSheet, SpriteSource,
             SpriteSourceSublocation,
         },
-        style::*,
+        style::{
+            theme::{
+                ColorGroup, ElementKind, Intent, Minimal, Palette, PaletteShade, SystemTheme,
+                Theme, VariableColor,
+            },
+            Alignment, AnyStyleComponent, BackgroundColor, ColorPair, ComponentCollection,
+            FallbackStyle, FontFamily, FontSize, FontStyle, ForegroundColor, GenericStyle, Style,
+            StyleComponent, StyleSheet, TextColor, UnscaledFallbackStyle, UnscaledStyleComponent,
+            Weight,
+        },
         text::{
             font::Font,
             rich::{RichText, RichTextPosition},
@@ -121,10 +127,6 @@ pub mod prelude {
             Span, Text,
         },
         texture::Texture,
-        theme::{
-            ColorGroup, ElementKind, Intent, Minimal, Palette, PaletteShade, SystemTheme, Theme,
-            VariableColor,
-        },
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,
         },
@@ -137,7 +139,11 @@ pub mod prelude {
             StandaloneComponent, StyledContext, TextField, TextFieldEvent, Timeout,
         },
         window::{
-            Event, EventStatus, InputEvent, OpenableWindow, Window, WindowBuilder, WindowCreator,
+            event::{
+                DeviceId, ElementState, Event, EventStatus, InputEvent, MouseButton,
+                MouseScrollDelta, ScanCode, TouchPhase, VirtualKeyCode,
+            },
+            OpenableWindow, Window, WindowBuilder, WindowCreator,
         },
         Handle, KludgineError, KludgineResult, RequiresInitialization,
     };

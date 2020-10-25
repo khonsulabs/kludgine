@@ -2,9 +2,11 @@ use crate::{
     math::{Raw, Scale, Scaled, ScreenScale, Size},
     shape::Shape,
     sprite::RenderedSprite,
-    style::{FontStyle, Weight},
+    style::{
+        theme::{SystemTheme, Theme},
+        FontStyle, Weight,
+    },
     text::{font::Font, prepared::PreparedSpan},
-    theme::{SystemTheme, Theme},
     Handle, KludgineError, KludgineResult,
 };
 use platforms::target::{OS, TARGET_OS};

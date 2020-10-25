@@ -361,8 +361,7 @@ mod tests {
     async fn layout_test() -> KludgineResult<()> {
         use crate::{
             scene::Scene,
-            style::StyleSheet,
-            theme::Minimal,
+            style::{theme::Minimal, StyleSheet},
             ui::{
                 Component, HierarchicalArena, Layout, LayoutEngine, LayoutSolver, LayoutSolverExt,
                 Node, StandaloneComponent, StyledContext, UIState,

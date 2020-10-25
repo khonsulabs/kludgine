@@ -1,5 +1,4 @@
 use crate::{
-    event::{MouseButton, MouseScrollDelta, TouchPhase},
     math::{Point, PointExt, Raw, Rect, Scaled, Size, SizeExt},
     scene::Scene,
     shape::{Fill, Shape},
@@ -8,7 +7,7 @@ use crate::{
         node::ThreadsafeAnyMap, AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout,
         LayoutSolver, LayoutSolverExt, Node, StyledContext, UIState,
     },
-    window::EventStatus,
+    window::event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
     Handle, KludgineResult,
 };
 use async_trait::async_trait;

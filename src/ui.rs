@@ -36,11 +36,10 @@ pub use self::{
     timeout::Timeout,
 };
 use crate::{
-    event::{ElementState, MouseButton},
     math::{Point, Scaled},
     runtime::Runtime,
     scene::Scene,
-    window::{Event, EventStatus, InputEvent, WindowEvent},
+    window::event::{ElementState, Event, EventStatus, InputEvent, MouseButton, WindowEvent},
     Handle, KludgineError, KludgineResult, RequiresInitialization,
 };
 pub use arena::{HierarchicalArena, Index};

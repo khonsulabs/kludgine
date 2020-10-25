@@ -3,12 +3,12 @@ use std::fmt::Debug;
 use euclid::Length;
 
 use crate::{
-    event::MouseButton,
     math::{Point, Raw, Scale, Scaled, Surround},
     style::{
         BackgroundColor, ColorPair, FallbackStyle, GenericStyle, Style, StyleComponent, TextColor,
         UnscaledFallbackStyle, UnscaledStyleComponent,
     },
+    window::event::MouseButton,
 };
 
 #[derive(Clone, Debug)]

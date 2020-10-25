@@ -1,5 +1,4 @@
 use crate::{
-    event::MouseButton,
     math::{Point, Rect, Scaled, Size},
     sprite::{Sprite, SpriteRotation, SpriteSource},
     ui::{
@@ -7,6 +6,7 @@ use crate::{
         AnimatableComponent, Component, Context, ControlEvent, Entity, InteractiveComponent,
         Layout, StyledContext,
     },
+    window::event::MouseButton,
     KludgineResult,
 };
 use async_trait::async_trait;

@@ -1,15 +1,14 @@
 use crate::{
-    event::{ElementState, VirtualKeyCode},
     math::{Pixels, Point, ScreenScale, Size},
     runtime::Runtime,
     scene::Scene,
-    theme::SystemTheme,
+    style::theme::SystemTheme,
     ui::{global_arena, NodeData, NodeDataWindowExt, UserInterface},
     window::{
+        event::{ElementState, Event, InputEvent, VirtualKeyCode, WindowEvent},
         frame::Frame,
         renderer::{FrameRenderer, FrameSynchronizer},
-        CloseResponse, Event, InputEvent, Renderer, Window, WindowEvent, WindowMessage, WINDOWS,
-        WINDOW_CHANNELS,
+        CloseResponse, Renderer, Window, WindowMessage, WINDOWS, WINDOW_CHANNELS,
     },
     KludgineError, KludgineResult,
 };

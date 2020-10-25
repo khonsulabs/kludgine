@@ -1,7 +1,9 @@
 use crate::{
     math::{Points, Scaled, Surround},
-    style::{BackgroundColor, ColorPair, Style, TextColor},
-    theme::{Palette, Theme},
+    style::{
+        theme::{Palette, Theme},
+        BackgroundColor, ColorPair, Style, TextColor,
+    },
     ui::{
         Border, ComponentBorder, ControlBackgroundColor, ControlPadding, TextFieldBackgroundColor,
         TextFieldBorder,

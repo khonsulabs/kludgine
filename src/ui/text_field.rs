@@ -1,6 +1,5 @@
 use crate::{
     color::Color,
-    event::MouseButton,
     math::{Pixels, Point, PointExt, Points, Raw, Rect, Scaled, Size, SizeExt, Surround},
     prelude::Scene,
     shape::{Fill, Shape},
@@ -17,7 +16,7 @@ use crate::{
         control::{ComponentBorder, ControlBackgroundColor, ControlBorder, ControlTextColor},
         Component, Context, ControlPadding, InteractiveComponent, Layout, StyledContext,
     },
-    window::EventStatus,
+    window::event::{EventStatus, MouseButton},
     KludgineError, KludgineResult,
 };
 use async_trait::async_trait;

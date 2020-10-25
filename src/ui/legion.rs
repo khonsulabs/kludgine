@@ -1,5 +1,4 @@
 use crate::{
-    event::MouseButton,
     math::{Angle, Point, Rect, Scale, Scaled, Unknown},
     prelude::TextWrap,
     runtime::Runtime,
@@ -9,7 +8,7 @@ use crate::{
     text::Text,
     tilemap::{TileMap, TileProvider},
     ui::{Component, Context, InteractiveComponent, Layout, StyledContext},
-    window::EventStatus,
+    window::event::{EventStatus, MouseButton},
     KludgineResult, RequiresInitialization,
 };
 use async_channel::Sender;
