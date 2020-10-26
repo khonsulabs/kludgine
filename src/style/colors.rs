@@ -5,7 +5,7 @@ use crate::{
 };
 use std::fmt::Debug;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Default, Copy)]
 pub struct ColorPair {
     pub light_color: Color,
     pub dark_color: Color,

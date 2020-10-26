@@ -1,5 +1,7 @@
 use std::ops::Range;
 
+use crate::style::{ColorPair, FallbackStyle};
+
 use super::{
     math::{Point, Raw, Scaled},
     scene::Scene,
@@ -48,36 +50,42 @@ impl Text {
         Self { spans }
     }
 
-    pub async fn wrap(&self, scene: &Scene, options: TextWrap) -> KludgineResult<PreparedText> {
-        TextWrapper::wrap(self, scene, options).await // TODO cache result
+    pub async fn wrap<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
+        &self,
+        scene: &Scene,
+        options: TextWrap,
+    ) -> KludgineResult<PreparedText> {
+        TextWrapper::wrap::<TextColor>(self, scene, options).await // TODO cache result
     }
 
-    pub async fn render_at(
+    pub async fn render_at<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
         &self,
         scene: &Scene,
         location: Point<f32, Scaled>,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
-        self.render_core(scene, location, true, wrapping).await
+        self.render_core::<TextColor>(scene, location, true, wrapping)
+            .await
     }
 
-    pub async fn render_baseline_at(
+    pub async fn render_baseline_at<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
         &self,
         scene: &Scene,
         location: Point<f32, Scaled>,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
-        self.render_core(scene, location, false, wrapping).await
+        self.render_core::<TextColor>(scene, location, false, wrapping)
+            .await
     }
 
-    async fn render_core(
+    async fn render_core<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
         &self,
         scene: &Scene,
         location: Point<f32, Scaled>,
         offset_baseline: bool,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
-        let prepared_text = self.wrap(scene, wrapping).await?;
+        let prepared_text = self.wrap::<TextColor>(scene, wrapping).await?;
         prepared_text
             .render(scene, location, offset_baseline)
             .await

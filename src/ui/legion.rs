@@ -5,6 +5,7 @@ use crate::{
     scene::Scene,
     shape::Shape,
     sprite::{Sprite, SpriteRotation, SpriteSource},
+    style::TextColor,
     text::Text,
     tilemap::{TileMap, TileProvider},
     ui::{Component, Context, InteractiveComponent, Layout, StyledContext},
@@ -132,7 +133,7 @@ where
                         .await?;
                 }
                 Drawable::Text(text) => {
-                    text.render_at(
+                    text.render_at::<TextColor>(
                         context.scene(),
                         rendered.center * rendered.scale + center.to_vector(),
                         TextWrap::NoWrap,

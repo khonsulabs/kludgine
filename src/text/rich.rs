@@ -1,6 +1,12 @@
 use std::{cmp::Ordering, ops::Range};
 
-use crate::{text::Text, ui::StyledContext, KludgineResult};
+use crate::{
+    math::Raw,
+    style::{ColorPair, FallbackStyle},
+    text::Text,
+    ui::StyledContext,
+    KludgineResult,
+};
 use async_handle::Handle;
 
 use super::{prepared::PreparedText, wrap::TextWrap};
@@ -123,7 +129,7 @@ impl RichText {
         }
     }
 
-    pub async fn prepare(
+    pub async fn prepare<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
         &self,
         context: &mut StyledContext,
         wrapping: TextWrap,
@@ -131,7 +137,11 @@ impl RichText {
         let data = self.data.read().await;
         let mut prepared = Vec::new();
         for paragraph in data.paragraphs.iter() {
-            prepared.push(paragraph.wrap(context.scene(), wrapping.clone()).await?);
+            prepared.push(
+                paragraph
+                    .wrap::<TextColor>(context.scene(), wrapping.clone())
+                    .await?,
+            );
         }
         Ok(prepared)
     }

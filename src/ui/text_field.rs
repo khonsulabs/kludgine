@@ -518,7 +518,7 @@ impl TextField {
         constraints: &Size<f32, Scaled>,
     ) -> KludgineResult<Vec<PreparedText>> {
         self.text
-            .prepare(
+            .prepare::<TextFieldTextColor>(
                 context,
                 self.wrapping(
                     constraints,
