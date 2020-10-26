@@ -1,12 +1,13 @@
 use crate::{
+    color::Color,
     math::{Points, Scaled, Surround},
     style::{
         theme::{Palette, Theme},
         BackgroundColor, ColorPair, Style, TextColor,
     },
     ui::{
-        Border, ComponentBorder, ControlBackgroundColor, ControlPadding, TextFieldBackgroundColor,
-        TextFieldBorder,
+        Border, ComponentBorder, ControlBackgroundColor, ControlPadding, LabelBackgroundColor,
+        TextFieldBackgroundColor, TextFieldBorder,
     },
 };
 
@@ -41,6 +42,10 @@ impl Theme for Minimal {
             .with(TextColor(ColorPair {
                 light_color: self.palette.light.control.text.normal(),
                 dark_color: self.palette.dark.control.text.normal(),
+            }))
+            .with(LabelBackgroundColor(ColorPair {
+                light_color: Color::CLEAR_WHITE,
+                dark_color: Color::CLEAR_BLACK,
             }))
             .with(BackgroundColor(ColorPair {
                 light_color: self.palette.light.default.background.normal(),

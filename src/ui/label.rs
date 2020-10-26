@@ -1,17 +1,17 @@
 use crate::{
     math::{Point, Points, Raw, Scaled, Size},
-    style::{Alignment, Style},
+    style::{
+        Alignment, ColorPair, GenericStyle, Style, UnscaledFallbackStyle, UnscaledStyleComponent,
+    },
     text::{wrap::TextWrap, Text},
     ui::{
-        Component, Context, ControlBackgroundColor, ControlEvent, InteractiveComponent, Layout,
-        StyledContext,
+        control::ControlBorder, Component, Context, ControlBackgroundColor, ControlEvent,
+        ControlTextColor, InteractiveComponent, Layout, StyledContext,
     },
     window::event::MouseButton,
     KludgineResult,
 };
 use async_trait::async_trait;
-
-use super::control::ControlBorder;
 
 #[derive(Debug)]
 pub struct Label {
@@ -104,7 +104,7 @@ impl Component for Label {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        self.render_standard_background::<ControlBackgroundColor, ControlBorder>(context, layout)
+        self.render_standard_background::<LabelBackgroundColor, ControlBorder>(context, layout)
             .await
     }
 }
@@ -125,5 +125,58 @@ impl Label {
             truncate: true,
             alignment,
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct LabelBackgroundColor(pub ColorPair);
+impl UnscaledStyleComponent<Scaled> for LabelBackgroundColor {
+    fn unscaled_should_be_inherited(&self) -> bool {
+        false
+    }
+}
+
+impl Default for LabelBackgroundColor {
+    fn default() -> Self {
+        Self(ControlBackgroundColor::default().0)
+    }
+}
+
+impl UnscaledFallbackStyle for LabelBackgroundColor {
+    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
+        style.get::<Self>().cloned().or_else(|| {
+            ControlBackgroundColor::lookup_unscaled(style).map(|fg| LabelBackgroundColor(fg.0))
+        })
+    }
+}
+
+impl Into<ColorPair> for LabelBackgroundColor {
+    fn into(self) -> ColorPair {
+        self.0
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct LabelTextColor(pub ColorPair);
+impl UnscaledStyleComponent<Scaled> for LabelTextColor {}
+
+impl Default for LabelTextColor {
+    fn default() -> Self {
+        Self(ControlTextColor::default().0)
+    }
+}
+
+impl UnscaledFallbackStyle for LabelTextColor {
+    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
+        style
+            .get::<Self>()
+            .cloned()
+            .or_else(|| ControlTextColor::lookup_unscaled(style).map(|fg| LabelTextColor(fg.0)))
+    }
+}
+
+impl Into<ColorPair> for LabelTextColor {
+    fn into(self) -> ColorPair {
+        self.0
     }
 }

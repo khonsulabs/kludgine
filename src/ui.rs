@@ -29,7 +29,7 @@ pub use self::{
     image::{
         Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
     },
-    label::{Label, LabelCommand},
+    label::{Label, LabelBackgroundColor, LabelCommand, LabelTextColor},
     layout::*,
     node::{Node, NodeDataWindowExt},
     text_field::{TextField, TextFieldBackgroundColor, TextFieldBorder, TextFieldEvent},
