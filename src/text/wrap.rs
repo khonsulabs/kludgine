@@ -1,7 +1,7 @@
 use crate::{
-    math::{max_f, min_f, Pixels, PointExt, Points},
+    math::{max_f, min_f, Pixels, PointExt, Points, Raw},
     scene::Scene,
-    style::Alignment,
+    style::{Alignment, ColorPair, FallbackStyle},
     text::{PreparedLine, PreparedSpan, PreparedText, Text},
     KludgineResult,
 };
@@ -122,8 +122,8 @@ impl TextWrapState {
 }
 
 impl TextWrapper {
-    pub async fn wrap(
-        text: &Text,
+    pub async fn wrap<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
+        text: &Text<TextColor>,
         scene: &Scene,
         options: TextWrap,
     ) -> KludgineResult<PreparedText> {
@@ -136,7 +136,10 @@ impl TextWrapper {
         .await
     }
 
-    async fn wrap_text(mut self, text: &Text) -> KludgineResult<PreparedText> {
+    async fn wrap_text<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
+        mut self,
+        text: &Text<TextColor>,
+    ) -> KludgineResult<PreparedText> {
         let effective_scale_factor = self.scene.scale_factor().await;
         let width = self.options.max_width();
 
@@ -229,7 +232,7 @@ mod tests {
     use crate::{
         math::{Scaled, ScreenScale},
         scene::Scene,
-        style::{theme::Minimal, FontSize, Style},
+        style::{theme::Minimal, FontSize, Style, TextColor},
         text::Span,
     };
 
@@ -240,7 +243,7 @@ mod tests {
             let mut scene = Scene::new(Box::new(Minimal::default()));
             scene.set_scale_factor(ScreenScale::new(scale)).await;
             scene.register_bundled_fonts().await;
-            let wrap = Text::new(vec![Span::new(
+            let wrap = Text::<TextColor>::new(vec![Span::new(
                 "This line should wrap",
                 Style::new()
                     .with(FontSize::<Scaled>::new(12.))
@@ -280,7 +283,7 @@ mod tests {
             .effective_style(&scene)
             .await;
 
-        let wrap = Text::new(vec![
+        let wrap = Text::<TextColor>::new(vec![
             Span::new("This line should ", first_style),
             Span::new("wrap", second_style),
         ])

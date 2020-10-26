@@ -1,5 +1,7 @@
 use std::ops::Range;
 
+use crate::style::{ColorPair, FallbackStyle};
+
 use super::{
     math::{Point, Raw, Scaled},
     scene::Scene,
@@ -33,19 +35,24 @@ impl Span {
 }
 
 #[derive(Debug, Clone)]
-pub struct Text {
+pub struct Text<TextColor = crate::style::TextColor> {
     spans: Vec<Span>,
+    _text_color: std::marker::PhantomData<TextColor>,
 }
 
-impl Text {
+impl<TextColor> Text<TextColor>
+where
+    TextColor: Into<ColorPair> + FallbackStyle<Raw>,
+{
     pub fn span<S: Into<String>>(text: S, style: Style<Raw>) -> Self {
-        Self {
-            spans: vec![Span::new(text, style)],
-        }
+        Self::new(vec![Span::new(text, style)])
     }
 
     pub fn new(spans: Vec<Span>) -> Self {
-        Self { spans }
+        Self {
+            spans,
+            _text_color: Default::default(),
+        }
     }
 
     pub async fn wrap(&self, scene: &Scene, options: TextWrap) -> KludgineResult<PreparedText> {
@@ -165,7 +172,7 @@ impl Text {
     }
 }
 
-impl ToString for Text {
+impl<TextColor> ToString for Text<TextColor> {
     fn to_string(&self) -> String {
         self.spans
             .iter()
@@ -177,10 +184,12 @@ impl ToString for Text {
 
 #[cfg(test)]
 mod tests {
+    use crate::style::TextColor;
+
     use super::*;
     #[test]
     fn test_remove_one_span_partial() {
-        let mut text = Text::span("123456789", Default::default());
+        let mut text = Text::<TextColor>::span("123456789", Default::default());
         text.remove_range(0..1);
         assert_eq!(text.spans.len(), 1);
         assert_eq!(text.spans[0].text, "23456789");
@@ -188,7 +197,7 @@ mod tests {
 
     #[test]
     fn test_remove_one_span_entire() {
-        let mut text = Text::span("1", Default::default());
+        let mut text = Text::<TextColor>::span("1", Default::default());
         text.remove_range(0..1);
         assert_eq!(text.spans.len(), 1);
         assert!(text.spans[0].text.is_empty());
@@ -196,7 +205,7 @@ mod tests {
 
     #[test]
     fn test_remove_multi_span_entire_first() {
-        let mut text = Text::new(vec![
+        let mut text = Text::<TextColor>::new(vec![
             Span::new("1", Default::default()),
             Span::new("2", Default::default()),
             Span::new("3", Default::default()),
@@ -209,7 +218,7 @@ mod tests {
 
     #[test]
     fn test_remove_multi_span_entire_middle() {
-        let mut text = Text::new(vec![
+        let mut text = Text::<TextColor>::new(vec![
             Span::new("1", Default::default()),
             Span::new("2", Default::default()),
             Span::new("3", Default::default()),
@@ -222,7 +231,7 @@ mod tests {
 
     #[test]
     fn test_remove_multi_span_entire_last() {
-        let mut text = Text::new(vec![
+        let mut text = Text::<TextColor>::new(vec![
             Span::new("1", Default::default()),
             Span::new("2", Default::default()),
             Span::new("3", Default::default()),
@@ -235,7 +244,7 @@ mod tests {
 
     #[test]
     fn test_remove_multi_span_multi() {
-        let mut text = Text::new(vec![
+        let mut text = Text::<TextColor>::new(vec![
             Span::new("123a", Default::default()),
             Span::new("b", Default::default()),
             Span::new("c456", Default::default()),
@@ -248,7 +257,7 @@ mod tests {
 
     #[test]
     fn test_insert_start() {
-        let mut text = Text::span("2", Default::default());
+        let mut text = Text::<TextColor>::span("2", Default::default());
         text.insert_str(0, "1");
         assert_eq!(text.spans.len(), 1);
         assert_eq!(text.spans[0].text, "12");
@@ -256,7 +265,7 @@ mod tests {
 
     #[test]
     fn test_insert_end() {
-        let mut text = Text::span("1", Default::default());
+        let mut text = Text::<TextColor>::span("1", Default::default());
         text.insert_str(1, "2");
         assert_eq!(text.spans.len(), 1);
         assert_eq!(text.spans[0].text, "12");

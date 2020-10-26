@@ -29,14 +29,14 @@ static CURSOR_BLINK_MS: u64 = 500;
 
 #[derive(Debug)]
 pub struct TextField {
-    text: RichText,
+    text: RichText<TextFieldTextColor>,
     prepared: Option<Vec<PreparedText>>,
     cursor: Cursor,
 }
 
 #[derive(Debug, Clone)]
 pub enum TextFieldEvent {
-    ValueChanged(RichText),
+    ValueChanged(RichText<TextFieldTextColor>),
     SelectionChanged {
         start: RichTextPosition,
         end: Option<RichTextPosition>,
@@ -461,7 +461,7 @@ impl Component for TextField {
 }
 
 impl TextField {
-    pub fn new(initial_text: RichText) -> Self {
+    pub fn new(initial_text: RichText<TextFieldTextColor>) -> Self {
         Self {
             text: initial_text,
             cursor: Default::default(),
