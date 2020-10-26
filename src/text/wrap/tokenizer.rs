@@ -121,7 +121,7 @@ impl Tokenizer {
     // Text (Vec<Span>) -> Vec<Token{ PreparedSpan, TokenKind }>
     pub(crate) async fn prepare_spans<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
         mut self,
-        text: &Text,
+        text: &Text<TextColor>,
         scene: &Scene,
     ) -> KludgineResult<Vec<Token>> {
         let scale = scene.scale_factor().await;

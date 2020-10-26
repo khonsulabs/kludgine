@@ -50,8 +50,8 @@ impl Component for TextExample {
                 .await,
         ));
 
-        Text::new(spans)
-            .render_at::<TextColor>(
+        Text::<ForegroundColor>::new(spans)
+            .render_at(
                 context.scene(),
                 Point::new(0.0, 120.0),
                 TextWrap::SingleLine {

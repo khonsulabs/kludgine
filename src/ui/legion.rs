@@ -133,7 +133,7 @@ where
                         .await?;
                 }
                 Drawable::Text(text) => {
-                    text.render_at::<TextColor>(
+                    text.render_at(
                         context.scene(),
                         rendered.center * rendered.scale + center.to_vector(),
                         TextWrap::NoWrap,
@@ -452,7 +452,7 @@ pub enum Drawable<Unit> {
     Sprite(SpriteSource),
     Shape(Shape<Unit>),
     TileMap(LegionTileMap<Unit>),
-    Text(Text),
+    Text(Text<TextColor>),
     Custom(DrawableComponent<Unit>),
 }
 

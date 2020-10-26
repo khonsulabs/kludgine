@@ -54,7 +54,7 @@ impl Component for Label {
 
     async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         let text = self.create_text(context.effective_style());
-        text.render_at::<LabelTextColor>(
+        text.render_at(
             context.scene(),
             layout.inner_bounds().origin,
             self.wrapping(
@@ -78,11 +78,7 @@ impl Component for Label {
             ),
             context.effective_style().get_or_default::<Alignment>(),
         );
-        let wrapped_size = text
-            .wrap::<LabelTextColor>(context.scene(), wrapping)
-            .await?
-            .size()
-            .await;
+        let wrapped_size = text.wrap(context.scene(), wrapping).await?.size().await;
         Ok(wrapped_size / context.scene().scale_factor().await)
     }
 

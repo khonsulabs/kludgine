@@ -12,13 +12,13 @@ use async_handle::Handle;
 use super::{prepared::PreparedText, wrap::TextWrap};
 
 #[derive(Debug, Clone)]
-pub struct RichText {
-    data: Handle<RichTextData>,
+pub struct RichText<TextColor> {
+    data: Handle<RichTextData<TextColor>>,
 }
 
 #[derive(Debug)]
-struct RichTextData {
-    paragraphs: Vec<Text>,
+struct RichTextData<TextColor> {
+    paragraphs: Vec<Text<TextColor>>,
 }
 
 pub enum ParagraphRemoval {
@@ -26,8 +26,11 @@ pub enum ParagraphRemoval {
     Keep,
 }
 
-impl RichText {
-    pub fn new(paragraphs: Vec<Text>) -> Self {
+impl<TextColor> RichText<TextColor>
+where
+    TextColor: Into<ColorPair> + FallbackStyle<Raw>,
+{
+    pub fn new(paragraphs: Vec<Text<TextColor>>) -> Self {
         Self {
             data: Handle::new(RichTextData { paragraphs }),
         }
@@ -66,7 +69,7 @@ impl RichText {
         .await;
     }
 
-    pub async fn for_each_in_range<F: FnMut(&Text, Range<usize>)>(
+    pub async fn for_each_in_range<F: FnMut(&Text<TextColor>, Range<usize>)>(
         &self,
         range: Range<RichTextPosition>,
         mut callback: F,
@@ -91,7 +94,7 @@ impl RichText {
     }
 
     pub async fn for_each_in_range_mut<
-        F: Fn(&mut Text, Range<usize>, usize) -> ParagraphRemoval,
+        F: Fn(&mut Text<TextColor>, Range<usize>, usize) -> ParagraphRemoval,
     >(
         &self,
         range: Range<RichTextPosition>,
@@ -129,7 +132,7 @@ impl RichText {
         }
     }
 
-    pub async fn prepare<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
+    pub async fn prepare(
         &self,
         context: &mut StyledContext,
         wrapping: TextWrap,
@@ -137,11 +140,7 @@ impl RichText {
         let data = self.data.read().await;
         let mut prepared = Vec::new();
         for paragraph in data.paragraphs.iter() {
-            prepared.push(
-                paragraph
-                    .wrap::<TextColor>(context.scene(), wrapping.clone())
-                    .await?,
-            );
+            prepared.push(paragraph.wrap(context.scene(), wrapping.clone()).await?);
         }
         Ok(prepared)
     }
@@ -189,7 +188,7 @@ impl RichText {
         paragraphs.join("\n")
     }
 
-    pub async fn paragraphs(&self) -> Vec<Text> {
+    pub async fn paragraphs(&self) -> Vec<Text<TextColor>> {
         let data = self.data.read().await;
         data.paragraphs.clone()
     }
@@ -219,10 +218,11 @@ impl Ord for RichTextPosition {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::style::TextColor;
 
     #[async_test]
     async fn remove_range_one_paragraph_start() {
-        let text = RichText::new(vec![Text::span("a123", Default::default())]);
+        let text = RichText::<TextColor>::new(vec![Text::span("a123", Default::default())]);
         text.remove_range(
             RichTextPosition {
                 offset: 0,
@@ -238,7 +238,7 @@ mod tests {
 
     #[async_test]
     async fn remove_range_one_paragraph_end() {
-        let text = RichText::new(vec![Text::span("123a", Default::default())]);
+        let text = RichText::<TextColor>::new(vec![Text::span("123a", Default::default())]);
         text.remove_range(
             RichTextPosition {
                 offset: 3,
@@ -254,7 +254,7 @@ mod tests {
 
     #[async_test]
     async fn remove_range_one_paragraph_inner() {
-        let text = RichText::new(vec![Text::span("1a23", Default::default())]);
+        let text = RichText::<TextColor>::new(vec![Text::span("1a23", Default::default())]);
         text.remove_range(
             RichTextPosition {
                 offset: 1,
@@ -270,7 +270,7 @@ mod tests {
 
     #[async_test]
     async fn remove_range_multi_paragraph_cross_boundaries() {
-        let text = RichText::new(vec![
+        let text = RichText::<TextColor>::new(vec![
             Text::span("123a", Default::default()),
             Text::span("b456", Default::default()),
         ]);
@@ -289,7 +289,7 @@ mod tests {
 
     #[async_test]
     async fn remove_range_multi_paragraph_cross_multiple_boundaries() {
-        let text = RichText::new(vec![
+        let text = RichText::<TextColor>::new(vec![
             Text::span("123a", Default::default()),
             Text::span("bc", Default::default()),
             Text::span("d456", Default::default()),

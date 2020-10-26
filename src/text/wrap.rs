@@ -123,7 +123,7 @@ impl TextWrapState {
 
 impl TextWrapper {
     pub async fn wrap<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
-        text: &Text,
+        text: &Text<TextColor>,
         scene: &Scene,
         options: TextWrap,
     ) -> KludgineResult<PreparedText> {
@@ -132,18 +132,18 @@ impl TextWrapper {
             scene: scene.clone(),
             prepared_text: PreparedText::default(),
         }
-        .wrap_text::<TextColor>(text)
+        .wrap_text(text)
         .await
     }
 
     async fn wrap_text<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
         mut self,
-        text: &Text,
+        text: &Text<TextColor>,
     ) -> KludgineResult<PreparedText> {
         let effective_scale_factor = self.scene.scale_factor().await;
         let width = self.options.max_width();
 
-        let measured = MeasuredText::new::<TextColor>(text, &self.scene).await?;
+        let measured = MeasuredText::new(text, &self.scene).await?;
 
         let mut state = TextWrapState {
             width: width.map(|w| w * effective_scale_factor),
@@ -243,14 +243,14 @@ mod tests {
             let mut scene = Scene::new(Box::new(Minimal::default()));
             scene.set_scale_factor(ScreenScale::new(scale)).await;
             scene.register_bundled_fonts().await;
-            let wrap = Text::new(vec![Span::new(
+            let wrap = Text::<TextColor>::new(vec![Span::new(
                 "This line should wrap",
                 Style::new()
                     .with(FontSize::<Scaled>::new(12.))
                     .effective_style(&scene)
                     .await,
             )])
-            .wrap::<TextColor>(
+            .wrap(
                 &scene,
                 TextWrap::MultiLine {
                     width: Points::new(80.0),
@@ -283,11 +283,11 @@ mod tests {
             .effective_style(&scene)
             .await;
 
-        let wrap = Text::new(vec![
+        let wrap = Text::<TextColor>::new(vec![
             Span::new("This line should ", first_style),
             Span::new("wrap", second_style),
         ])
-        .wrap::<TextColor>(
+        .wrap(
             &scene,
             TextWrap::MultiLine {
                 width: Points::new(80.0),
