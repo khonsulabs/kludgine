@@ -135,8 +135,9 @@ pub mod prelude {
             ButtonPadding, Callback, Component, Context, ControlEvent, Entity, EntityBuilder,
             HierarchicalArena, Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation,
             ImageOptions, ImageScaling, Index, Indexable, InteractiveComponent, Label,
-            LabelCommand, Layout, LayoutConstraints, LayoutContext, LinearTransition,
-            StandaloneComponent, StyledContext, TextField, TextFieldEvent, Timeout,
+            LabelBackgroundColor, LabelCommand, LabelTextColor, Layout, LayoutConstraints,
+            LayoutContext, LinearTransition, StandaloneComponent, StyledContext, TextField,
+            TextFieldEvent, Timeout,
         },
         window::{
             event::{
