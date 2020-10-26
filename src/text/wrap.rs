@@ -229,9 +229,8 @@ mod tests {
     use crate::{
         math::{Scaled, ScreenScale},
         scene::Scene,
-        style::{FontSize, Style},
+        style::{theme::Minimal, FontSize, Style},
         text::Span,
-        theme::Minimal,
     };
 
     #[async_test]

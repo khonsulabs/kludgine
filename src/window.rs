@@ -1,8 +1,7 @@
 use crate::{
-    event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, VirtualKeyCode},
-    math::{Point, Scaled, ScreenScale, Size},
+    math::{Scaled, Size},
     runtime::Runtime,
-    theme::{Minimal, SystemTheme, Theme},
+    style::theme::{Minimal, SystemTheme, Theme},
     ui::InteractiveComponent,
     Handle, KludgineError, KludgineResult,
 };
@@ -13,14 +12,13 @@ use easygpu::prelude::*;
 use lazy_static::lazy_static;
 
 use std::collections::HashMap;
-use winit::{
-    event::ScanCode,
-    window::{WindowBuilder as WinitWindowBuilder, WindowId},
-};
+use winit::window::{WindowBuilder as WinitWindowBuilder, WindowId};
 
+pub mod event;
 pub(crate) mod frame;
 mod renderer;
 mod runtime_window;
+
 pub(crate) use runtime_window::RuntimeWindow;
 
 pub use winit::window::Icon;
@@ -31,62 +29,6 @@ pub enum CloseResponse {
     RemainOpen,
     /// Window should close
     Close,
-}
-
-#[derive(Eq, PartialEq, Copy, Clone, Debug)]
-pub enum EventStatus {
-    Ignored,
-    Processed,
-}
-
-impl Default for EventStatus {
-    fn default() -> Self {
-        EventStatus::Ignored
-    }
-}
-
-impl EventStatus {
-    pub fn update_with(&mut self, other: Self) {
-        *self = if self == &EventStatus::Processed || other == EventStatus::Processed {
-            EventStatus::Processed
-        } else {
-            EventStatus::Ignored
-        };
-    }
-}
-
-/// An Event from a device
-#[derive(Copy, Clone, Debug)]
-pub struct InputEvent {
-    /// The device that triggered this event
-    pub device_id: DeviceId,
-    /// The event that was triggered
-    pub event: Event,
-}
-
-/// An input Event
-#[derive(Copy, Clone, Debug)]
-pub enum Event {
-    /// A keyboard event
-    Keyboard {
-        scancode: ScanCode,
-        key: Option<VirtualKeyCode>,
-        state: ElementState,
-    },
-    /// A mouse button event
-    MouseButton {
-        button: MouseButton,
-        state: ElementState,
-    },
-    /// Mouse cursor event
-    MouseMoved {
-        position: Option<Point<f32, Scaled>>,
-    },
-    /// Mouse wheel event
-    MouseWheel {
-        delta: MouseScrollDelta,
-        touch_phase: TouchPhase,
-    },
 }
 
 /// Trait to implement a Window
@@ -310,18 +252,4 @@ impl WindowMessage {
         sender.send(self).await.unwrap_or_default();
         Ok(())
     }
-}
-
-#[derive(Debug)]
-pub(crate) enum WindowEvent {
-    WakeUp,
-    CloseRequested,
-    Resize {
-        size: Size,
-        scale_factor: ScreenScale,
-    },
-    Input(InputEvent),
-    ReceiveCharacter(char),
-    RedrawRequested,
-    SystemThemeChanged(SystemTheme),
 }

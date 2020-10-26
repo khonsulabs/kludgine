@@ -29,18 +29,17 @@ pub use self::{
     image::{
         Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
     },
-    label::{Label, LabelCommand},
+    label::{Label, LabelBackgroundColor, LabelCommand, LabelTextColor},
     layout::*,
     node::{Node, NodeDataWindowExt},
     text_field::{TextField, TextFieldBackgroundColor, TextFieldBorder, TextFieldEvent},
     timeout::Timeout,
 };
 use crate::{
-    event::{ElementState, MouseButton},
     math::{Point, Scaled},
     runtime::Runtime,
     scene::Scene,
-    window::{Event, EventStatus, InputEvent, WindowEvent},
+    window::event::{ElementState, Event, EventStatus, InputEvent, MouseButton, WindowEvent},
     Handle, KludgineError, KludgineResult, RequiresInitialization,
 };
 pub use arena::{HierarchicalArena, Index};

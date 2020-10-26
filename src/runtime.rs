@@ -1,6 +1,6 @@
 use crate::{
     application::Application,
-    theme::SystemTheme,
+    style::theme::SystemTheme,
     window::{RuntimeWindow, Window, WindowBuilder},
     KludgineResult,
 };

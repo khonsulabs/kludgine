@@ -1,13 +1,15 @@
 use crate::{
-    event::{MouseButton, MouseScrollDelta, TouchPhase},
     math::{Point, Scaled, Size},
     runtime::Runtime,
     style::StyleSheet,
     ui::{
-        AbsoluteBounds, Callback, Context, EventStatus, InteractiveComponent, Layout, LayoutSolver,
+        AbsoluteBounds, Callback, Context, InteractiveComponent, Layout, LayoutSolver,
         StyledContext,
     },
-    window::{CloseResponse, Window},
+    window::{
+        event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
+        CloseResponse, Window,
+    },
     Handle, KludgineResult,
 };
 use async_trait::async_trait;
