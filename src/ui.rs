@@ -38,7 +38,7 @@ pub use self::{
 use crate::{
     math::{Point, Scaled},
     runtime::Runtime,
-    scene::Scene,
+    scene::{Scene, Target},
     window::event::{ElementState, Event, EventStatus, InputEvent, MouseButton, WindowEvent},
     Handle, KludgineError, KludgineResult, RequiresInitialization,
 };
@@ -274,7 +274,7 @@ where
             },
             arena.clone(),
             ui_state.clone(),
-            scene.clone(),
+            Target::from(scene.clone()),
         ));
 
         let ui = Self {
@@ -292,12 +292,13 @@ where
     }
 
     pub async fn render(&mut self) -> KludgineResult<()> {
+        let scene_scale = self.scene.scale_factor().await;
         let hovered_indicies = self.hovered_indicies().await;
         let layouts = LayoutEngine::layout(
             &self.arena,
             &self.ui_state,
             self.root.index(),
-            &self.scene,
+            &Target::from(self.scene.clone()),
             hovered_indicies,
         )
         .await?;
@@ -309,7 +310,8 @@ where
                 if let Some(node) = self.arena.get(&index).await {
                     let mut context = StyledContext::new(
                         index,
-                        self.scene.clone(),
+                        Target::from(self.scene.clone())
+                            .clipped_to((layout.inner_bounds() * scene_scale).round().to_u32()),
                         layouts.effective_styles().await.clone(),
                         self.arena.clone(),
                         self.ui_state.clone(),
@@ -337,7 +339,7 @@ where
         indicies
     }
 
-    pub async fn update(&mut self, scene: &Scene, target_fps: Option<u16>) -> KludgineResult<()> {
+    pub async fn update(&mut self, scene: &Target, target_fps: Option<u16>) -> KludgineResult<()> {
         // Loop twice, once to allow all the pending messages to be exhausted across all
         // nodes. Then after all messages have been processed, trigger the update method
         // for each node.
@@ -371,7 +373,7 @@ where
                 event_target,
                 self.arena.clone(),
                 self.ui_state.clone(),
-                self.scene.clone(),
+                Target::from(self.scene.clone()),
             );
             node.receive_character(&mut context, character).await?
         }
@@ -389,7 +391,7 @@ where
                             index,
                             self.arena.clone(),
                             self.ui_state.clone(),
-                            self.scene.clone(),
+                            Target::from(self.scene.clone()),
                         );
                         node.mouse_drag(&mut context, position, button).await?;
                     }
@@ -404,7 +406,7 @@ where
                                 index,
                                 self.arena.clone(),
                                 self.ui_state.clone(),
-                                self.scene.clone(),
+                                Target::from(self.scene.clone()),
                             );
                             if node.hit_test(&mut context, position).await? {
                                 self.hover = Some(index);
@@ -421,7 +423,7 @@ where
                             new_hover,
                             self.arena.clone(),
                             self.ui_state.clone(),
-                            self.scene.clone(),
+                            Target::from(self.scene.clone()),
                         );
                         node.hovered(&mut context).await?;
                     }
@@ -433,7 +435,7 @@ where
                             new_hover,
                             self.arena.clone(),
                             self.ui_state.clone(),
-                            self.scene.clone(),
+                            Target::from(self.scene.clone()),
                         );
                         node.unhovered(&mut context).await?;
                     }
@@ -451,7 +453,7 @@ where
                             index,
                             self.arena.clone(),
                             self.ui_state.clone(),
-                            self.scene.clone(),
+                            Target::from(self.scene.clone()),
                         );
                         if node.interactive().await {
                             if let EventStatus::Processed =
@@ -472,7 +474,7 @@ where
                                 index,
                                 self.arena.clone(),
                                 self.ui_state.clone(),
-                                self.scene.clone(),
+                                Target::from(self.scene.clone()),
                             );
                             node.mouse_up(&mut context, self.last_mouse_position, button)
                                 .await?;
@@ -494,7 +496,7 @@ where
                                     index,
                                     self.arena.clone(),
                                     self.ui_state.clone(),
-                                    self.scene.clone(),
+                                    Target::from(self.scene.clone()),
                                 );
                                 if node.interactive().await {
                                     if let EventStatus::Processed = node
@@ -526,7 +528,7 @@ where
                         event_target,
                         self.arena.clone(),
                         self.ui_state.clone(),
-                        self.scene.clone(),
+                        Target::from(self.scene.clone()),
                     );
                     node.keyboard_event(&mut context, scancode, key, state)
                         .await?
@@ -556,7 +558,7 @@ where
             index,
             self.arena.clone(),
             self.ui_state.clone(),
-            self.scene.clone(),
+            Target::from(self.scene.clone()),
         ))
         .await
     }

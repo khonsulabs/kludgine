@@ -1,10 +1,13 @@
 use super::{
     math::{Point, PointExt, Scaled, Size, SizeExt},
-    scene::Scene,
+    scene::Target,
     sprite::{Sprite, SpriteRotation},
     KludgineResult,
 };
-use crate::{math::Raw, math::Unknown, sprite::SpriteSource};
+use crate::{
+    math::{Raw, Unknown},
+    sprite::SpriteSource,
+};
 use async_trait::async_trait;
 use euclid::{Box2D, Length, Scale};
 use std::{
@@ -37,13 +40,13 @@ where
         self.stagger = Some(stagger);
     }
 
-    pub async fn draw(&self, scene: &Scene, location: Point<f32, Scaled>) -> KludgineResult<()> {
+    pub async fn draw(&self, scene: &Target, location: Point<f32, Scaled>) -> KludgineResult<()> {
         self.draw_scaled(scene, location, Scale::identity()).await
     }
 
     pub async fn draw_scaled(
         &self,
-        scene: &Scene,
+        scene: &Target,
         location: Point<f32, Scaled>,
         scale: Scale<f32, Unknown, Scaled>,
     ) -> KludgineResult<()> {
@@ -106,7 +109,7 @@ where
         &self,
         tile: Point<i32>,
         destination: Box2D<f32, Raw>,
-        scene: &Scene,
+        scene: &Target,
         elapsed: Option<Duration>,
     ) -> KludgineResult<()> {
         if let Some(tile) = self.provider.get_tile(tile).await {

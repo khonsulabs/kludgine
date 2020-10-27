@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     math::{Pixels, Raw, Scaled},
-    scene::Scene,
+    scene::Target,
     style::{ColorPair, FallbackStyle, FontFamily, FontSize, FontStyle, Style, Weight},
     text::{font::Font, prepared::GlyphInfo, PreparedSpan, Text},
     KludgineResult,
@@ -83,7 +83,7 @@ where
     async fn emit_token_if_needed(
         &mut self,
         scale: euclid::Scale<f32, Scaled, Raw>,
-        scene: &Scene,
+        scene: &Target,
     ) -> Option<Token> {
         if self.glyphs.is_empty() {
             None
@@ -122,7 +122,7 @@ impl Tokenizer {
     pub(crate) async fn prepare_spans<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
         mut self,
         text: &Text<TextColor>,
-        scene: &Scene,
+        scene: &Target,
     ) -> KludgineResult<Vec<Token>> {
         let scale = scene.scale_factor().await;
         let mut current_offset = 0usize;

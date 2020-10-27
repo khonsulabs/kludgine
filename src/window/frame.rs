@@ -1,8 +1,9 @@
 use easygpu::transform::ScreenSpace;
+use euclid::Rect;
 
 use crate::{
-    math::Size,
-    scene::{Element, Scene},
+    math::{Raw, Size},
+    scene::{Element, Target},
     shape, sprite,
     text::{font::LoadedFont, prepared::PreparedSpan},
     texture::Texture,
@@ -42,7 +43,7 @@ impl FrameBatch {
         !self.is_shape()
     }
 
-    fn sprite_batch(&mut self) -> Option<&'_ mut sprite::Batch> {
+    fn sprite_batch(&self) -> Option<&'_ sprite::Batch> {
         if let FrameBatch::Sprite(batch) = self {
             Some(batch)
         } else {
@@ -50,7 +51,23 @@ impl FrameBatch {
         }
     }
 
-    fn shape_batch(&mut self) -> Option<&'_ mut shape::Batch> {
+    // fn shape_batch(&self) -> Option<&'_ shape::Batch> {
+    //     if let FrameBatch::Shape(batch) = self {
+    //         Some(batch)
+    //     } else {
+    //         None
+    //     }
+    // }
+
+    fn sprite_batch_mut(&mut self) -> Option<&'_ mut sprite::Batch> {
+        if let FrameBatch::Sprite(batch) = self {
+            Some(batch)
+        } else {
+            None
+        }
+    }
+
+    fn shape_batch_mut(&mut self) -> Option<&'_ mut shape::Batch> {
         if let FrameBatch::Shape(batch) = self {
             Some(batch)
         } else {
@@ -60,7 +77,7 @@ impl FrameBatch {
 }
 
 impl Frame {
-    pub async fn update(&mut self, scene: &Scene) {
+    pub async fn update(&mut self, scene: &Target) {
         self.started_at = Some(scene.now().await);
         self.commands.clear();
 
@@ -75,7 +92,10 @@ impl Frame {
         let scene = scene.data.read().await;
         for element in scene.elements.iter() {
             match element {
-                Element::Sprite(sprite_handle) => {
+                Element::Sprite {
+                    sprite: sprite_handle,
+                    clip,
+                } => {
                     let sprite = sprite_handle.data.clone();
                     let texture = &sprite.source.texture;
 
@@ -83,6 +103,13 @@ impl Frame {
                         || current_texture_id.as_ref().unwrap() != &texture.id
                         || current_batch.is_none()
                         || !current_batch.as_ref().unwrap().is_sprite()
+                        || current_batch
+                            .as_ref()
+                            .unwrap()
+                            .sprite_batch()
+                            .unwrap()
+                            .clipping_rect
+                            != *clip
                     {
                         self.commit_batch(current_batch);
                         current_texture_id = Some(texture.id);
@@ -99,16 +126,19 @@ impl Frame {
                         current_batch = Some(FrameBatch::Sprite(sprite::Batch::new(
                             texture.id,
                             texture.size(),
+                            *clip,
                         )));
                     }
 
-                    let current_batch = current_batch.as_mut().unwrap().sprite_batch().unwrap();
+                    let current_batch = current_batch.as_mut().unwrap().sprite_batch_mut().unwrap();
                     current_batch.sprites.push(sprite_handle.clone());
                 }
-                Element::Text(text) => {
+                Element::Text { span, clip } => {
                     current_batch = self.commit_batch(current_batch);
-                    self.commands
-                        .push(FrameCommand::DrawText { text: text.clone() });
+                    self.commands.push(FrameCommand::DrawText {
+                        text: span.clone(),
+                        clip: *clip,
+                    });
                 }
                 Element::Shape(shape) => {
                     if current_batch.is_some() && !current_batch.as_ref().unwrap().is_shape() {
@@ -119,7 +149,7 @@ impl Frame {
                         current_batch = Some(FrameBatch::Shape(shape::Batch::default()));
                     }
 
-                    let current_batch = current_batch.as_mut().unwrap().shape_batch().unwrap();
+                    let current_batch = current_batch.as_mut().unwrap().shape_batch_mut().unwrap();
                     current_batch.add(shape.clone());
                 }
             }
@@ -151,14 +181,14 @@ impl Frame {
         None
     }
 
-    async fn cache_glyphs(&mut self, scene: &Scene) {
+    async fn cache_glyphs(&mut self, scene: &Target) {
         let mut referenced_fonts = HashSet::new();
         let scene = scene.data.read().await;
         for text in scene
             .elements
             .iter()
             .map(|e| match &e {
-                Element::Text(t) => Some(t),
+                Element::Text { span, .. } => Some(span),
                 _ => None,
             })
             .filter(|e| e.is_some())
@@ -208,5 +238,8 @@ pub(crate) enum FrameCommand {
     LoadTexture(Texture),
     DrawBatch(sprite::Batch),
     DrawShapes(shape::Batch),
-    DrawText { text: PreparedSpan },
+    DrawText {
+        text: PreparedSpan,
+        clip: Option<Rect<u32, Raw>>,
+    },
 }

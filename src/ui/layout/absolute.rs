@@ -360,7 +360,7 @@ mod tests {
     #[async_test]
     async fn layout_test() -> KludgineResult<()> {
         use crate::{
-            scene::Scene,
+            scene::{Scene, Target},
             style::{theme::Minimal, StyleSheet},
             ui::{
                 Component, HierarchicalArena, Layout, LayoutEngine, LayoutSolver, LayoutSolverExt,
@@ -457,7 +457,7 @@ mod tests {
         arena.set_parent(leaf, Some(child)).await;
         arena.set_parent(child, Some(root)).await;
 
-        let scene = Scene::new(Box::new(Minimal::default()));
+        let scene = Target::from(Scene::new(Box::new(Minimal::default())));
         scene.set_internal_size(Size::new(200., 200.)).await;
         let (event_sender, _) = async_channel::unbounded();
         let engine = LayoutEngine::layout(

@@ -1,6 +1,6 @@
 use crate::{
     math::{Point, Raw, Scale, Scaled, ScreenScale},
-    scene::Scene,
+    scene::Target,
     shape::{Fill, Stroke},
     KludgineError, KludgineResult,
 };
@@ -78,7 +78,7 @@ impl Path<Scaled> {
     pub(crate) async fn translate_and_convert_to_device(
         &self,
         location: Point<f32, Scaled>,
-        scene: &Scene,
+        scene: &Target,
     ) -> Path<Raw> {
         let effective_scale = scene.scale_factor().await;
         let mut events = Vec::new();

@@ -7,15 +7,17 @@ use euclid::{Box2D, Vector2D, Vector3D};
 
 pub(crate) struct GpuBatch {
     pub size: Size<u32, ScreenSpace>,
+    pub clip: Option<Box2D<u32, Raw>>,
 
     items: Vec<Vertex>,
     indicies: Vec<u16>,
 }
 
 impl GpuBatch {
-    pub fn new(size: Size<u32, ScreenSpace>) -> Self {
+    pub fn new(size: Size<u32, ScreenSpace>, clip: Option<Box2D<u32, Raw>>) -> Self {
         Self {
             size,
+            clip,
             items: Default::default(),
             indicies: Default::default(),
         }
@@ -59,12 +61,12 @@ impl GpuBatch {
         }
     }
 
-    pub fn vertex(&self, src: Point<u32, Unknown>, dest: Point<f32, Raw>, color: Rgba8) -> Vertex {
+    pub fn vertex(&self, src: Point<f32, Unknown>, dest: Point<f32, Raw>, color: Rgba8) -> Vertex {
         Vertex {
             position: Vector3D::new(dest.x, dest.y, 0.),
             uv: Vector2D::new(
-                src.x as f32 / self.size.width as f32,
-                src.y as f32 / self.size.height as f32,
+                src.x / self.size.width as f32,
+                src.y / self.size.height as f32,
             ),
             color,
         }
@@ -73,10 +75,52 @@ impl GpuBatch {
     pub fn add_box(
         &mut self,
         src: Box2D<u32, Unknown>,
-        dest: Box2D<f32, Raw>,
+        mut dest: Box2D<f32, Raw>,
         rotation: SpriteRotation<Raw>,
         color: Rgba8,
     ) {
+        let mut src = src.to_f32();
+        if let Some(clip) = &self.clip {
+            // Convert to i32 because the destination could have negative coordinates.
+            let clip_signed = clip.to_i32();
+            let dest_rounded = dest.round().to_i32();
+
+            if !(clip_signed.min.x as i32 <= dest_rounded.min.x
+                && clip_signed.min.y as i32 <= dest_rounded.min.y
+                && clip_signed.max.x as i32 >= dest_rounded.max.x
+                && clip_signed.max.y as i32 >= dest_rounded.max.y)
+            {
+                if let Some(clipped_destination) = dest.intersection(&clip.to_f32()) {
+                    if rotation.angle.is_some() {
+                        // To properly apply clipping on a rotated quad requires tessellating the remaining polygon, and
+                        // the easygpu-lyon layer doesn't support uv coordinate extrapolation at this moment. We could use
+                        // lyon directly to generate these vertexes.
+                        eprintln!("Kludgine Error: Need to implement partial occlusion for sprites. Not clipping.");
+                    } else {
+                        // Adjust the src box based on how much was clipped
+                        let source_size = src.size();
+                        let dest_size = dest.size();
+                        let x_scale = source_size.width / dest_size.width;
+                        let y_scale = source_size.height / dest_size.height;
+                        src = Box2D::new(
+                            Point::new(
+                                src.min.x + (clipped_destination.min.x - dest.min.x) * x_scale,
+                                src.min.y + (clipped_destination.min.y - dest.min.y) * y_scale,
+                            ),
+                            Point::new(
+                                src.max.x - (dest.max.x - clipped_destination.max.x) * x_scale,
+                                src.max.y - (dest.max.y - clipped_destination.max.y) * y_scale,
+                            ),
+                        );
+                        dest = clipped_destination;
+                    }
+                } else {
+                    // Full clipping, just skip the drawing entirely
+                    return;
+                }
+            }
+        }
+
         let origin = rotation.screen_location.unwrap_or_else(|| dest.center());
         let top_left = self
             .vertex(src.min, dest.min, color)

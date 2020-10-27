@@ -8,7 +8,7 @@ mod stroke;
 pub use self::{batch::*, fill::*, path::*, stroke::*};
 use crate::{
     math::{Point, Raw, Rect, Scaled},
-    scene::{Element, Scene},
+    scene::{Element, Target},
     KludgineResult,
 };
 use circle::Circle;
@@ -80,7 +80,7 @@ where
 }
 
 impl Shape<Scaled> {
-    pub async fn render_at(&self, location: Point<f32, Scaled>, scene: &Scene) {
+    pub async fn render_at(&self, location: Point<f32, Scaled>, scene: &Target) {
         let translated = self.convert_from_user_to_device(location, scene).await;
         scene.push_element(Element::Shape(translated)).await
     }
@@ -88,7 +88,7 @@ impl Shape<Scaled> {
     async fn convert_from_user_to_device(
         &self,
         location: Point<f32, Scaled>,
-        scene: &Scene,
+        scene: &Target,
     ) -> Shape<Raw> {
         Shape {
             geometry: self

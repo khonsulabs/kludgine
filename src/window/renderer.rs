@@ -258,7 +258,10 @@ impl FrameRenderer {
                         }
                     }
                     FrameCommand::DrawBatch(batch) => {
-                        let mut gpu_batch = sprite::GpuBatch::new(batch.size.cast_unit());
+                        let mut gpu_batch = sprite::GpuBatch::new(
+                            batch.size.cast_unit(),
+                            batch.clipping_rect.map(|r| r.to_box2d()),
+                        );
                         for sprite_handle in batch.sprites.iter() {
                             gpu_batch.add_sprite(sprite_handle.clone());
                         }
@@ -273,10 +276,11 @@ impl FrameRenderer {
                         // pass.set_easy_pipeline(&self.shape_pipeline);
                         // prepared_shape.draw(&mut pass);
                     }
-                    FrameCommand::DrawText { text } => {
+                    FrameCommand::DrawText { text, clip } => {
                         if let Some(loaded_font) = engine_frame.fonts.get(&text.data.font.id) {
                             if let Some(texture) = loaded_font.texture.as_ref() {
-                                let mut batch = sprite::GpuBatch::new(texture.size);
+                                let mut batch =
+                                    sprite::GpuBatch::new(texture.size, clip.map(|r| r.to_box2d()));
                                 for (uv_rect, screen_rect) in
                                     text.data.glyphs.iter().filter_map(|g| {
                                         loaded_font.cache.rect_for(0, &g.glyph).ok().flatten()

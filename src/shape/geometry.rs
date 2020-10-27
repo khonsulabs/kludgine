@@ -1,6 +1,6 @@
 use crate::{
     math::{Point, Raw, Scale, Scaled},
-    scene::Scene,
+    scene::Target,
     shape::{circle::Circle, Fill, Path, Stroke},
     KludgineResult,
 };
@@ -31,7 +31,7 @@ impl ShapeGeometry<Scaled> {
     pub(crate) async fn translate_and_convert_to_device(
         &self,
         location: Point<f32, Scaled>,
-        scene: &Scene,
+        scene: &Target,
     ) -> ShapeGeometry<Raw> {
         match self {
             Self::Empty => ShapeGeometry::Empty,

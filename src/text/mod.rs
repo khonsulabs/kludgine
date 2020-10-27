@@ -4,7 +4,7 @@ use crate::style::{ColorPair, FallbackStyle};
 
 use super::{
     math::{Point, Raw, Scaled},
-    scene::Scene,
+    scene::Target,
     style::Style,
     KludgineResult,
 };
@@ -55,13 +55,13 @@ where
         }
     }
 
-    pub async fn wrap(&self, scene: &Scene, options: TextWrap) -> KludgineResult<PreparedText> {
+    pub async fn wrap(&self, scene: &Target, options: TextWrap) -> KludgineResult<PreparedText> {
         TextWrapper::wrap(self, scene, options).await // TODO cache result
     }
 
     pub async fn render_at(
         &self,
-        scene: &Scene,
+        scene: &Target,
         location: Point<f32, Scaled>,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
@@ -70,7 +70,7 @@ where
 
     pub async fn render_baseline_at(
         &self,
-        scene: &Scene,
+        scene: &Target,
         location: Point<f32, Scaled>,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
@@ -79,7 +79,7 @@ where
 
     async fn render_core(
         &self,
-        scene: &Scene,
+        scene: &Target,
         location: Point<f32, Scaled>,
         offset_baseline: bool,
         wrapping: TextWrap,
