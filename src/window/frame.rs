@@ -43,7 +43,7 @@ impl FrameBatch {
         !self.is_shape()
     }
 
-    fn sprite_batch(&mut self) -> Option<&'_ mut sprite::Batch> {
+    fn sprite_batch(&self) -> Option<&'_ sprite::Batch> {
         if let FrameBatch::Sprite(batch) = self {
             Some(batch)
         } else {
@@ -51,7 +51,23 @@ impl FrameBatch {
         }
     }
 
-    fn shape_batch(&mut self) -> Option<&'_ mut shape::Batch> {
+    // fn shape_batch(&self) -> Option<&'_ shape::Batch> {
+    //     if let FrameBatch::Shape(batch) = self {
+    //         Some(batch)
+    //     } else {
+    //         None
+    //     }
+    // }
+
+    fn sprite_batch_mut(&mut self) -> Option<&'_ mut sprite::Batch> {
+        if let FrameBatch::Sprite(batch) = self {
+            Some(batch)
+        } else {
+            None
+        }
+    }
+
+    fn shape_batch_mut(&mut self) -> Option<&'_ mut shape::Batch> {
         if let FrameBatch::Shape(batch) = self {
             Some(batch)
         } else {
@@ -87,6 +103,13 @@ impl Frame {
                         || current_texture_id.as_ref().unwrap() != &texture.id
                         || current_batch.is_none()
                         || !current_batch.as_ref().unwrap().is_sprite()
+                        || current_batch
+                            .as_ref()
+                            .unwrap()
+                            .sprite_batch()
+                            .unwrap()
+                            .clipping_rect
+                            != *clip
                     {
                         self.commit_batch(current_batch);
                         current_texture_id = Some(texture.id);
@@ -107,7 +130,7 @@ impl Frame {
                         )));
                     }
 
-                    let current_batch = current_batch.as_mut().unwrap().sprite_batch().unwrap();
+                    let current_batch = current_batch.as_mut().unwrap().sprite_batch_mut().unwrap();
                     current_batch.sprites.push(sprite_handle.clone());
                 }
                 Element::Text { span, clip } => {
@@ -126,7 +149,7 @@ impl Frame {
                         current_batch = Some(FrameBatch::Shape(shape::Batch::default()));
                     }
 
-                    let current_batch = current_batch.as_mut().unwrap().shape_batch().unwrap();
+                    let current_batch = current_batch.as_mut().unwrap().shape_batch_mut().unwrap();
                     current_batch.add(shape.clone());
                 }
             }
