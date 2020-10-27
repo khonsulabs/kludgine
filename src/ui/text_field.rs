@@ -266,7 +266,10 @@ impl Component for TextField {
             )
             .await?
         {
-            let size = prepared.size().await;
+            let mut size = prepared.size().await;
+            if approx::relative_eq!(size.height, 0.) && !prepared.lines.is_empty() {
+                size.set_height(prepared.lines[0].metrics.height());
+            }
             content_size.width = content_size.width.max(size.width);
             content_size.height += size.height;
         }
@@ -517,7 +520,7 @@ impl TextField {
         context: &mut StyledContext,
         constraints: &Size<f32, Scaled>,
     ) -> KludgineResult<Vec<PreparedText>> {
-        self.text
+        dbg!(&self.text)
             .prepare(
                 context,
                 self.wrapping(

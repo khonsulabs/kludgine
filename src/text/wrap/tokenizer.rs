@@ -16,6 +16,7 @@ pub(crate) enum Token {
     Characters(PreparedSpan),
     Punctuation(PreparedSpan),
     Whitespace(PreparedSpan),
+    NoText(Option<rusttype::VMetrics>),
 }
 
 #[derive(Debug)]
@@ -126,6 +127,7 @@ impl Tokenizer {
     ) -> KludgineResult<Vec<Token>> {
         let scale = scene.scale_factor().await;
         let mut current_offset = 0usize;
+        let mut last_span_metrics = None;
         for span in text.spans.iter() {
             let font = scene
                 .lookup_font(
@@ -135,6 +137,7 @@ impl Tokenizer {
                 )
                 .await?;
             let vmetrics = font.metrics(style_font_size(&span.style, scale)).await;
+            last_span_metrics = Some(vmetrics);
 
             let mut state = TokenizerState::<TextColor>::new(&font, &span.style);
 
@@ -190,6 +193,10 @@ impl Tokenizer {
             if let Some(token) = state.emit_token_if_needed(scale, scene).await {
                 self.tokens.push(token);
             }
+        }
+
+        if self.tokens.is_empty() {
+            self.tokens.push(Token::NoText(last_span_metrics));
         }
 
         Ok(self.tokens)

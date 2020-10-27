@@ -31,6 +31,7 @@ where
         };
         Runtime::new(app).run(T::get_window_builder(), async move { window })
     }
+
     pub fn run_with<C, F>(window_func: C) -> !
     where
         C: FnOnce() -> F,

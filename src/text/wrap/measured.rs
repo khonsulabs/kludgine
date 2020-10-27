@@ -2,19 +2,26 @@ use crate::{
     math::Raw,
     scene::Target,
     style::{ColorPair, FallbackStyle},
-    text::{ParserStatus, PreparedSpan, SpanGroup, Text, Token, Tokenizer},
+    text::{prepared::VMetrics, ParserStatus, PreparedSpan, SpanGroup, Text, Token, Tokenizer},
     KludgineResult,
 };
 
 #[derive(Debug)]
 pub struct MeasuredText {
-    pub(crate) groups: Vec<SpanGroup>,
+    pub(crate) info: MeasuredTextInfo,
+}
+
+#[derive(Debug)]
+pub(crate) enum MeasuredTextInfo {
+    Groups(Vec<SpanGroup>),
+    NoText(VMetrics),
 }
 
 struct TextMeasureState {
     current_group: Option<SpanGroup>,
     status: ParserStatus,
     groups: Vec<SpanGroup>,
+    no_text_metrics: Option<rusttype::VMetrics>,
 }
 
 impl TextMeasureState {
@@ -24,6 +31,9 @@ impl TextMeasureState {
                 self.commit_current_group();
                 self.groups.push(SpanGroup::EndOfLine(vmetrics));
                 self.status = ParserStatus::LineStart;
+            }
+            Token::NoText(vmetrics) => {
+                self.no_text_metrics = vmetrics;
             }
             Token::Characters(span) => {
                 match self.status {
@@ -101,19 +111,8 @@ impl MeasuredText {
         text: &Text<TextColor>,
         scene: &Target,
     ) -> KludgineResult<Self> {
-        let mut measured = Self { groups: Vec::new() };
-
-        measured.measure_text(text, scene).await?;
-
-        Ok(measured)
-    }
-
-    async fn measure_text<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
-        &mut self,
-        text: &Text<TextColor>,
-        scene: &Target,
-    ) -> KludgineResult<()> {
         let mut state = TextMeasureState {
+            no_text_metrics: None,
             current_group: None,
             status: ParserStatus::LineStart,
             groups: Vec::new(),
@@ -124,8 +123,12 @@ impl MeasuredText {
             state.push_token(token);
         }
 
-        self.groups = state.finish();
+        let info = if let Some(no_text_metrics) = state.no_text_metrics {
+            MeasuredTextInfo::NoText(no_text_metrics.into())
+        } else {
+            MeasuredTextInfo::Groups(state.finish())
+        };
 
-        Ok(())
+        Ok(MeasuredText { info })
     }
 }

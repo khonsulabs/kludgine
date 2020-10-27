@@ -101,6 +101,16 @@ impl From<rusttype::VMetrics> for VMetrics {
     }
 }
 
+impl VMetrics {
+    pub fn line_height(&self) -> Pixels {
+        self.height() + self.line_gap
+    }
+
+    pub fn height(&self) -> Pixels {
+        self.ascent - self.descent
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct PreparedLine {
     pub spans: Vec<PreparedSpan>,
@@ -124,7 +134,7 @@ impl PreparedLine {
     }
 
     pub fn height(&self) -> Pixels {
-        self.metrics.ascent - self.metrics.descent + self.metrics.line_gap
+        self.metrics.line_height()
     }
 }
 

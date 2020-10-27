@@ -113,7 +113,7 @@ impl TextWrapState {
     }
 
     async fn finish(mut self) -> Vec<PreparedLine> {
-        if !self.current_groups.is_empty() {
+        if !self.current_groups.is_empty() || self.lines.is_empty() {
             self.new_line().await;
         }
 
@@ -153,11 +153,22 @@ impl TextWrapper {
             lines: Vec::new(),
         };
 
-        for group in measured.groups {
-            state.push_group(group).await;
-        }
+        match measured.info {
+            MeasuredTextInfo::Groups(groups) => {
+                for group in groups {
+                    state.push_group(group).await;
+                }
 
-        self.prepared_text.lines = state.finish().await;
+                self.prepared_text.lines = state.finish().await;
+            }
+            MeasuredTextInfo::NoText(metrics) => {
+                self.prepared_text.lines.push(PreparedLine {
+                    metrics,
+                    alignment_offset: Default::default(),
+                    spans: Default::default(),
+                });
+            }
+        }
 
         if let Some(alignment) = self.options.alignment() {
             if let Some(max_width) = self.options.max_width() {
