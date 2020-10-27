@@ -1,6 +1,6 @@
 use crate::{
     math::{Point, PointExt, Raw, Rect, Scaled, Size, SizeExt},
-    scene::Scene,
+    scene::Target,
     shape::{Fill, Shape},
     style::{BackgroundColor, ColorPair, FallbackStyle, Style, StyleSheet},
     ui::{
@@ -373,7 +373,7 @@ where
     C: InteractiveComponent + 'static,
 {
     components: ThreadsafeAnyMap,
-    scene: Scene,
+    scene: Target,
     parent: Option<Index>,
     style_sheet: StyleSheet,
     interactive: bool,

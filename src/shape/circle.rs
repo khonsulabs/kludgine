@@ -1,6 +1,6 @@
 use crate::{
     math::{Length, Point, Raw, Scale, Scaled},
-    scene::Scene,
+    scene::Target,
     shape::{Fill, Stroke},
     KludgineError, KludgineResult,
 };
@@ -14,7 +14,7 @@ impl Circle<Scaled> {
     pub(crate) async fn translate_and_convert_to_device(
         &self,
         location: Point<f32, Scaled>,
-        scene: &Scene,
+        scene: &Target,
     ) -> Circle<Raw> {
         let effective_scale = scene.scale_factor().await;
         let center = (location + self.center.to_vector()) * effective_scale;

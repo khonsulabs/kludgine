@@ -1,6 +1,6 @@
 use crate::{
     math::{Point, Raw, Rect, Scaled, Size},
-    scene::{Element, Scene},
+    scene::{Element, Target},
     sprite::{RenderedSprite, SpriteRotation},
     texture::Texture,
 };
@@ -102,7 +102,7 @@ impl SpriteSource {
 
     pub async fn render_at(
         &self,
-        scene: &Scene,
+        scene: &Target,
         location: Point<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
@@ -112,7 +112,7 @@ impl SpriteSource {
 
     pub async fn render_within(
         &self,
-        scene: &Scene,
+        scene: &Target,
         bounds: Rect<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
@@ -121,7 +121,7 @@ impl SpriteSource {
 
     pub async fn render_within_box(
         &self,
-        scene: &Scene,
+        scene: &Target,
         bounds: Box2D<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
@@ -131,7 +131,7 @@ impl SpriteSource {
 
     pub async fn render_at_with_alpha(
         &self,
-        scene: &Scene,
+        scene: &Target,
         location: Point<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
@@ -147,7 +147,7 @@ impl SpriteSource {
 
     pub async fn render_with_alpha(
         &self,
-        scene: &Scene,
+        scene: &Target,
         bounds: Rect<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
@@ -158,7 +158,7 @@ impl SpriteSource {
 
     pub async fn render_with_alpha_in_box(
         &self,
-        scene: &Scene,
+        scene: &Target,
         bounds: Box2D<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
@@ -175,18 +175,16 @@ impl SpriteSource {
 
     pub async fn render_raw_with_alpha_in_box(
         &self,
-        scene: &Scene,
+        scene: &Target,
         bounds: Box2D<f32, Raw>,
         rotation: SpriteRotation<Raw>,
         alpha: f32,
     ) {
         scene
-            .push_element(Element::Sprite(RenderedSprite::new(
-                bounds,
-                rotation,
-                alpha,
-                self.clone(),
-            )))
+            .push_element(Element::Sprite {
+                sprite: RenderedSprite::new(bounds, rotation, alpha, self.clone()),
+                clip: scene.clipping_rect(),
+            })
             .await;
     }
 }

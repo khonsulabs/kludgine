@@ -1,6 +1,6 @@
 use crate::{
     math::{Raw, Scaled},
-    scene::Scene,
+    scene::Target,
 };
 use euclid::Scale;
 use std::{
@@ -163,7 +163,7 @@ impl<Unit: Send + Sync + Debug + 'static> Style<Unit> {
 }
 
 impl Style<Scaled> {
-    pub async fn effective_style(&self, scene: &Scene) -> Style<Raw> {
+    pub async fn effective_style(&self, scene: &Target) -> Style<Raw> {
         let mut style = Style::new();
         let scale = scene.scale_factor().await;
 

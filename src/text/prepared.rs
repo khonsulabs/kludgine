@@ -1,7 +1,7 @@
 use crate::{
     color::Color,
     math::{Pixels, Point, Points, Raw, Scaled, ScreenScale, Size, SizeExt, Vector},
-    scene::{Element, Scene},
+    scene::{Element, Target},
     style::Alignment,
     text::Font,
     KludgineResult,
@@ -52,7 +52,7 @@ impl PreparedText {
 
     pub async fn render(
         &self,
-        scene: &Scene,
+        scene: &Target,
         location: Point<f32, Scaled>,
         offset_baseline: bool,
     ) -> KludgineResult<Points> {
@@ -71,7 +71,10 @@ impl PreparedText {
                     + span.location.to_vector() / effective_scale_factor)
                     * effective_scale_factor;
                 scene
-                    .push_element(Element::Text(span.translate(location)))
+                    .push_element(Element::Text {
+                        span: span.translate(location),
+                        clip: scene.clipping_rect(),
+                    })
                     .await;
             }
             current_line_baseline += (metrics.line_gap - metrics.descent) / effective_scale_factor;

@@ -7,15 +7,17 @@ use euclid::{Box2D, Vector2D, Vector3D};
 
 pub(crate) struct GpuBatch {
     pub size: Size<u32, ScreenSpace>,
+    pub clipping_rect: Option<Rect<u32, Raw>>,
 
     items: Vec<Vertex>,
     indicies: Vec<u16>,
 }
 
 impl GpuBatch {
-    pub fn new(size: Size<u32, ScreenSpace>) -> Self {
+    pub fn new(size: Size<u32, ScreenSpace>, clipping_rect: Option<Rect<u32, Raw>>) -> Self {
         Self {
             size,
+            clipping_rect,
             items: Default::default(),
             indicies: Default::default(),
         }
@@ -77,6 +79,23 @@ impl GpuBatch {
         rotation: SpriteRotation<Raw>,
         color: Rgba8,
     ) {
+        // TODO right now the clipping is being done before rotation is applied. This is wrong. However
+        // to properly apply clipping on a rotated quad requires tessellating the remaining polygon, and
+        // the easygpu-lyon layer doesn't support uv coordinate extrapolation at this moment. We could use
+        // lyon directly to generate these vertexes.
+        if let Some(clip) = &self.clipping_rect {
+            let clip_box = clip.to_box2d();
+
+            if !(clip_box.min.x <= dest.min.x.round() as u32
+                && clip_box.min.y <= dest.min.y.round() as u32
+                && clip_box.max.x >= dest.max.x.round() as u32
+                && clip_box.max.y >= dest.max.y.round() as u32)
+            {
+                // Partial occlusion.
+                return;
+            }
+        }
+
         let origin = rotation.screen_location.unwrap_or_else(|| dest.center());
         let top_left = self
             .vertex(src.min, dest.min, color)

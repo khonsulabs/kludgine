@@ -1,6 +1,6 @@
 use crate::{
     math::Raw,
-    scene::Scene,
+    scene::Target,
     style::{ColorPair, FallbackStyle},
     text::{ParserStatus, PreparedSpan, SpanGroup, Text, Token, Tokenizer},
     KludgineResult,
@@ -99,7 +99,7 @@ impl TextMeasureState {
 impl MeasuredText {
     pub async fn new<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
         text: &Text<TextColor>,
-        scene: &Scene,
+        scene: &Target,
     ) -> KludgineResult<Self> {
         let mut measured = Self { groups: Vec::new() };
 
@@ -111,7 +111,7 @@ impl MeasuredText {
     async fn measure_text<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
         &mut self,
         text: &Text<TextColor>,
-        scene: &Scene,
+        scene: &Target,
     ) -> KludgineResult<()> {
         let mut state = TextMeasureState {
             current_group: None,

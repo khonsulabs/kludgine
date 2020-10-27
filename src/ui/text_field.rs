@@ -1,7 +1,7 @@
 use crate::{
     color::Color,
     math::{Pixels, Point, PointExt, Points, Raw, Rect, Scaled, Size, SizeExt, Surround},
-    prelude::Scene,
+    scene::Target,
     shape::{Fill, Shape},
     style::{
         Alignment, ColorPair, FallbackStyle, GenericStyle, Style, StyleComponent,
@@ -530,7 +530,7 @@ impl TextField {
 
     async fn position_for_location(
         &self,
-        scene: &Scene,
+        scene: &Target,
         location: Point<f32, Scaled>,
     ) -> Option<RichTextPosition> {
         if let Some(prepared) = &self.prepared {
@@ -583,7 +583,7 @@ impl TextField {
 
     async fn character_rect_for_position(
         &self,
-        scene: &Scene,
+        scene: &Target,
         position: RichTextPosition,
     ) -> Option<Rect<f32, Scaled>> {
         let mut last_location = None;

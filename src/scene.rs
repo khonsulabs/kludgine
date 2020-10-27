@@ -9,6 +9,7 @@ use crate::{
     text::{font::Font, prepared::PreparedSpan},
     Handle, KludgineError, KludgineResult,
 };
+use euclid::Rect;
 use platforms::target::{OS, TARGET_OS};
 use std::{
     collections::{HashMap, HashSet},
@@ -19,14 +20,75 @@ use winit::event::VirtualKeyCode;
 
 #[derive(Debug)]
 pub(crate) enum Element {
-    Sprite(RenderedSprite),
-    Text(PreparedSpan),
+    Sprite {
+        sprite: RenderedSprite,
+        clip: Option<Rect<u32, Raw>>,
+    },
+    Text {
+        span: PreparedSpan,
+        clip: Option<Rect<u32, Raw>>,
+    },
     Shape(Shape<Raw>),
 }
 
 #[derive(Clone, Debug)]
 pub struct Scene {
     pub(crate) data: Handle<SceneData>,
+}
+
+impl From<Scene> for Target {
+    fn from(scene: Scene) -> Target {
+        Self::Scene(scene)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum Target {
+    Scene(Scene),
+    ClippedScene(Scene, Rect<u32, Raw>),
+}
+
+impl Target {
+    pub fn clipping_rect(&self) -> Option<Rect<u32, Raw>> {
+        match self {
+            Self::Scene(_) => None,
+            Self::ClippedScene(_, clip) => Some(*clip),
+        }
+    }
+
+    pub fn scene(&self) -> &Scene {
+        match self {
+            Self::Scene(scene) => scene,
+            Self::ClippedScene(scene, _) => scene,
+        }
+    }
+
+    pub fn clipped_to(&self, new_clip: Rect<u32, Raw>) -> Self {
+        Self::ClippedScene(
+            self.scene().clone(),
+            match self.clipping_rect() {
+                Some(existing_clip) => existing_clip.union(&new_clip),
+                None => new_clip,
+            },
+        )
+    }
+}
+
+impl std::ops::Deref for Target {
+    type Target = Scene;
+
+    fn deref(&self) -> &Self::Target {
+        self.scene()
+    }
+}
+
+impl std::ops::DerefMut for Target {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        match self {
+            Self::Scene(scene) => scene,
+            Self::ClippedScene(scene, ..) => scene,
+        }
+    }
 }
 
 #[derive(derivative::Derivative)]

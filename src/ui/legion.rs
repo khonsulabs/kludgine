@@ -2,7 +2,7 @@ use crate::{
     math::{Angle, Point, Rect, Scale, Scaled, Unknown},
     prelude::TextWrap,
     runtime::Runtime,
-    scene::Scene,
+    scene::Target,
     shape::Shape,
     sprite::{Sprite, SpriteRotation, SpriteSource},
     style::TextColor,
@@ -352,7 +352,7 @@ trait TypelessTileMap<Unit: 'static>: Send + Sync + Debug + 'static {
     fn as_any(&self) -> &dyn Any;
     async fn draw_scaled(
         &self,
-        scene: &Scene,
+        scene: &Target,
         location: Point<f32, Scaled>,
         scale: Scale<f32, Unknown, Scaled>,
     ) -> KludgineResult<()>;
@@ -370,7 +370,7 @@ pub trait CustomDrawable<Unit: 'static>: Send + Sync + Debug + 'static {
     }
     async fn render(
         &self,
-        scene: &Scene,
+        scene: &Target,
         origin: Point<f32, Scaled>,
         scale: Scale<f32, Unit, Scaled>,
         rotation: Option<Angle>,
@@ -423,7 +423,7 @@ impl<P: TileProvider + Send + Sync + Debug + 'static, Unit: Send + 'static> Type
 {
     async fn draw_scaled(
         &self,
-        scene: &Scene,
+        scene: &Target,
         location: Point<f32, Scaled>,
         scale: Scale<f32, Unknown, Scaled>,
     ) -> KludgineResult<()> {
@@ -775,7 +775,7 @@ pub trait LegionSystemsThread: Sized {
 
     fn spawn<F: FnOnce() -> legion::Resources + Send + Sync + 'static>(
         canvas: crate::ui::Entity<Canvas<Self::Unit, Self::Command>>,
-        scene: &Scene,
+        scene: &Target,
         tick_rate: Duration,
         resource_initializer: F,
     ) -> SystemsHandle<Self::Unit, Self::Command> {

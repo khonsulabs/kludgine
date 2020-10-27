@@ -1,6 +1,6 @@
 use crate::{
     math::{max_f, min_f, Pixels, PointExt, Points, Raw},
-    scene::Scene,
+    scene::Target,
     style::{Alignment, ColorPair, FallbackStyle},
     text::{PreparedLine, PreparedSpan, PreparedText, Text},
     KludgineResult,
@@ -13,7 +13,7 @@ pub(crate) use self::{measured::*, tokenizer::*};
 
 pub struct TextWrapper {
     options: TextWrap,
-    scene: Scene,
+    scene: Target,
     prepared_text: PreparedText,
 }
 
@@ -124,7 +124,7 @@ impl TextWrapState {
 impl TextWrapper {
     pub async fn wrap<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
         text: &Text<TextColor>,
-        scene: &Scene,
+        scene: &Target,
         options: TextWrap,
     ) -> KludgineResult<PreparedText> {
         TextWrapper {
@@ -231,7 +231,7 @@ mod tests {
     use super::*;
     use crate::{
         math::{Scaled, ScreenScale},
-        scene::Scene,
+        scene::{Scene, Target},
         style::{theme::Minimal, FontSize, Style, TextColor},
         text::Span,
     };
@@ -240,7 +240,7 @@ mod tests {
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word() {
         for &scale in &[1f32, 2.] {
-            let mut scene = Scene::new(Box::new(Minimal::default()));
+            let mut scene = Target::from(Scene::new(Box::new(Minimal::default())));
             scene.set_scale_factor(ScreenScale::new(scale)).await;
             scene.register_bundled_fonts().await;
             let wrap = Text::<TextColor>::new(vec![Span::new(
@@ -270,7 +270,7 @@ mod tests {
     #[async_test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word_different_span() {
-        let scene = Scene::new(Box::new(Minimal::default()));
+        let scene = Target::from(Scene::new(Box::new(Minimal::default())));
         scene.register_bundled_fonts().await;
 
         let first_style = Style::new()

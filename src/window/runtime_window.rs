@@ -1,7 +1,8 @@
 use crate::{
     math::{Pixels, Point, ScreenScale, Size},
+    prelude::Scene,
     runtime::Runtime,
-    scene::Scene,
+    scene::Target,
     style::theme::SystemTheme,
     ui::{global_arena, NodeData, NodeDataWindowExt, UserInterface},
     window::{
@@ -243,13 +244,13 @@ impl RuntimeWindow {
             if scene.size().await.area() > 0.0 {
                 scene.start_frame().await;
 
-                ui.update(&scene, target_fps).await?;
+                ui.update(&Target::from(scene.clone()), target_fps).await?;
 
                 if ui.needs_render().await {
                     ui.render().await?;
 
                     let mut frame = frame_synchronizer.take().await;
-                    frame.update(&scene).await;
+                    frame.update(&Target::from(scene.clone())).await;
                     frame_synchronizer.relinquish(frame).await;
                 }
             }

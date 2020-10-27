@@ -1,5 +1,5 @@
 use crate::{
-    prelude::Scene,
+    scene::Target,
     style::StyleSheet,
     ui::{Entity, HierarchicalArena, Index, Indexable, InteractiveComponent, Layout, UIState},
 };
@@ -16,7 +16,7 @@ pub struct Context {
     index: Index,
     arena: HierarchicalArena,
     ui_state: UIState,
-    scene: Scene,
+    scene: Target,
 }
 
 impl Context {
@@ -24,7 +24,7 @@ impl Context {
         index: I,
         arena: HierarchicalArena,
         ui_state: UIState,
-        scene: Scene,
+        scene: Target,
     ) -> Self {
         Self {
             index: index.index(),
@@ -38,11 +38,11 @@ impl Context {
         self.index
     }
 
-    pub fn scene(&self) -> &'_ Scene {
+    pub fn scene(&self) -> &'_ Target {
         &self.scene
     }
 
-    pub fn scene_mut(&mut self) -> &'_ mut Scene {
+    pub fn scene_mut(&mut self) -> &'_ mut Target {
         &mut self.scene
     }
 

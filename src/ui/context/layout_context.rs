@@ -1,6 +1,6 @@
 use crate::{
     math::{Point, Raw, Rect, Scaled, Size, Surround},
-    scene::Scene,
+    scene::Target,
     style::Style,
     ui::{
         Context, HierarchicalArena, Index, Indexable, Layout, LayoutSolver, StyledContext, UIState,
@@ -49,7 +49,7 @@ impl LayoutEngine {
         arena: &HierarchicalArena,
         ui_state: &UIState,
         root: Index,
-        scene: &Scene,
+        scene: &Target,
         hovered_indicies: HashSet<Index>,
     ) -> KludgineResult<Self> {
         let mut effective_styles = HashMap::new();
@@ -217,7 +217,7 @@ impl std::ops::DerefMut for LayoutContext {
 impl LayoutContext {
     pub(crate) fn new<I: Indexable>(
         index: I,
-        scene: Scene,
+        scene: Target,
         effective_styles: Arc<HashMap<Index, Style<Raw>>>,
         layout: LayoutEngine,
         arena: HierarchicalArena,
