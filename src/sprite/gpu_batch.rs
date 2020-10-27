@@ -84,15 +84,22 @@ impl GpuBatch {
         // the easygpu-lyon layer doesn't support uv coordinate extrapolation at this moment. We could use
         // lyon directly to generate these vertexes.
         if let Some(clip) = &self.clipping_rect {
-            let clip_box = clip.to_box2d();
+            // Convert to i32 because the destination could have negative coordinates.
+            let clip_box = clip.to_box2d().to_i32();
+            let dest_rounded = dest.round().to_i32();
 
-            if !(clip_box.min.x <= dest.min.x.round() as u32
-                && clip_box.min.y <= dest.min.y.round() as u32
-                && clip_box.max.x >= dest.max.x.round() as u32
-                && clip_box.max.y >= dest.max.y.round() as u32)
+            if !(clip_box.min.x as i32 <= dest_rounded.min.x
+                && clip_box.min.y as i32 <= dest_rounded.min.y
+                && clip_box.max.x as i32 >= dest_rounded.max.x
+                && clip_box.max.y as i32 >= dest_rounded.max.y)
             {
-                // Partial occlusion.
-                return;
+                if !clip_box.intersects(&dest_rounded) {
+                    // Full clipping, just skip the drawing entirely
+                    return;
+                }
+
+                // Partial occlusion. Don't clip yet.
+                println!("TODO Clip more");
             }
         }
 
