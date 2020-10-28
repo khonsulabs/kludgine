@@ -1,7 +1,8 @@
 use crate::{
-    math::{Point, Points, Raw, Scaled, Size},
+    math::{Point, PointExt, Points, Raw, Scaled, Size, SizeExt},
     style::{
         Alignment, ColorPair, GenericStyle, Style, UnscaledFallbackStyle, UnscaledStyleComponent,
+        VerticalAlignment,
     },
     text::{wrap::TextWrap, Text},
     ui::{
@@ -53,16 +54,38 @@ impl Component for Label {
     }
 
     async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
+        let inner_bounds = layout.inner_bounds();
+        let scale = context.scene().scale_factor().await;
+
         let text = self.create_text(context.effective_style());
-        text.render_at(
-            context.scene(),
-            layout.inner_bounds().origin,
-            self.wrapping(
-                &layout.inner_bounds().size,
-                context.effective_style().get_or_default::<Alignment>(),
+        let wrapped = text
+            .wrap(
+                context.scene(),
+                self.wrapping(
+                    &inner_bounds.size,
+                    context.effective_style().get_or_default::<Alignment>(),
+                ),
+            )
+            .await?;
+        let wrapped_size = wrapped.size().await;
+
+        let vertical_alignment = context
+            .effective_style()
+            .get_or_default::<VerticalAlignment>();
+        let location = match vertical_alignment {
+            VerticalAlignment::Top => inner_bounds.origin,
+            VerticalAlignment::Center => Point::from_lengths(
+                inner_bounds.origin.x(),
+                inner_bounds.origin.y()
+                    + (inner_bounds.size.height() - wrapped_size.height() / scale) / 2.,
             ),
-        )
-        .await
+            VerticalAlignment::Bottom => todo!(),
+        };
+
+        wrapped
+            .render(context.scene(), location, true)
+            .await
+            .map(|_| ())
     }
 
     async fn content_size(

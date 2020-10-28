@@ -118,7 +118,7 @@ pub mod prelude {
             Alignment, AnyStyleComponent, BackgroundColor, ColorPair, ComponentCollection,
             FallbackStyle, FontFamily, FontSize, FontStyle, ForegroundColor, GenericStyle, Style,
             StyleComponent, StyleSheet, TextColor, UnscaledFallbackStyle, UnscaledStyleComponent,
-            Weight,
+            VerticalAlignment, Weight,
         },
         text::{
             font::Font,
@@ -131,12 +131,13 @@ pub mod prelude {
             PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,
         },
         ui::{
-            AbsoluteBounds, AbsoluteLayout, AnimatableComponent, AnimationManager, Button,
-            ButtonPadding, Callback, Component, Context, ControlEvent, Entity, EntityBuilder,
-            HierarchicalArena, Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation,
-            ImageOptions, ImageScaling, Index, Indexable, InteractiveComponent, Label,
-            LabelBackgroundColor, LabelCommand, LabelTextColor, Layout, LayoutConstraints,
-            LayoutContext, LinearTransition, StandaloneComponent, StyledContext, TextField,
+            AbsoluteBounds, AbsoluteLayout, AnimatableComponent, AnimationManager, Border, Button,
+            ButtonPadding, Callback, ColumnLayout, Component, ComponentBorder, Context,
+            ControlEvent, Entity, EntityBuilder, HierarchicalArena, Image, ImageAlphaAnimation,
+            ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling, Index, Indexable,
+            InteractiveComponent, Label, LabelBackgroundColor, LabelCommand, LabelTextColor,
+            Layout, LayoutConstraints, LayoutContext, LayoutSolver, LayoutSolverExt,
+            LinearTransition, RowLayout, StandaloneComponent, StyledContext, TextField,
             TextFieldEvent, Timeout,
         },
         window::{
