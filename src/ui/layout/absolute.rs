@@ -46,14 +46,14 @@ impl AbsoluteLayout {
             auto_measurements += 1;
         }
 
-        let effective_side1 = match start {
-            Dimension::Auto => remaining_length.max(Points::default()) / auto_measurements as f32,
-            Dimension::Length(points) => *points,
+        let effective_side1 = match start.length() {
+            None => remaining_length.max(Points::default()) / auto_measurements as f32,
+            Some(points) => points,
         };
 
-        let effective_side2 = match end {
-            Dimension::Auto => remaining_length.max(Points::default()) / auto_measurements as f32,
-            Dimension::Length(points) => *points,
+        let effective_side2 = match end.length() {
+            None => remaining_length.max(Points::default()) / auto_measurements as f32,
+            Some(points) => points,
         };
 
         remaining_length = available_length - content_length - effective_side1 - effective_side2;
@@ -74,7 +74,7 @@ impl AbsoluteLayout {
             // If the dimension is auto, increase the width of the content.
             // If the dimension isn't auto, increase the padding
             match length {
-                Dimension::Auto => (effective_side1, effective_side2),
+                Dimension::Minimal | Dimension::Auto => (effective_side1, effective_side2),
                 Dimension::Length(_) => (
                     effective_side1 + remaining_length / 2.,
                     effective_side2 + remaining_length / 2.,

@@ -1,5 +1,5 @@
 use super::chain_layout::{ChainElementContents, ChainElementDimensionTranslator, ChainLayout};
-use crate::math::{Dimension, Points, Rect, Scaled, SizeExt, Surround};
+use crate::math::{Dimension, Points, Scaled, Size, SizeExt, Surround};
 use std::ops::Deref;
 
 #[derive(Debug, Default)]
@@ -17,8 +17,14 @@ impl ChainElementDimensionTranslator for ColumnLayout {
         }
     }
 
-    fn length_from_bounds(bounds: &Rect<f32, Scaled>) -> Points {
-        bounds.size.width()
+    fn length_from_size(size: &Size<f32, Scaled>) -> Points {
+        size.width()
+    }
+
+    fn size_replacing_length(size: &Size<f32, Scaled>, length: Points) -> Size<f32, Scaled> {
+        let mut size = *size;
+        size.set_width(length);
+        size
     }
 }
 
@@ -39,6 +45,8 @@ impl Deref for ColumnLayout {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use super::*;
     use crate::{
         math::{Point, Rect, Size},
@@ -48,11 +56,14 @@ mod tests {
 
     #[test]
     fn two_auto_columns_one_fixed_smaller() {
-        let layouts = ColumnLayout::default()
+        let (_, layouts) = ColumnLayout::default()
             .column(Index::from_raw_parts(0, 0), Dimension::Auto)
             .column(Index::from_raw_parts(0, 1), Dimension::from_f32(30.))
             .column(Index::from_raw_parts(0, 2), Dimension::Auto)
-            .layouts_within_bounds(&Rect::new(Point::new(5., 5.), Size::new(100., 150.)));
+            .layouts_within_bounds(
+                &Rect::new(Point::new(5., 5.), Size::new(100., 150.)),
+                &HashMap::default(),
+            );
 
         assert_eq!(layouts.len(), 3);
         assert_eq!(

@@ -6,6 +6,8 @@ pub use self::{column_layout::ColumnLayout, row_layout::RowLayout};
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use generational_arena::Index;
 
     use super::*;
@@ -16,7 +18,7 @@ mod tests {
 
     #[test]
     fn full_grid() {
-        let layouts = ColumnLayout::default()
+        let (_, layouts) = ColumnLayout::default()
             .column(
                 RowLayout::default()
                     .row(Index::from_raw_parts(0, 0), Dimension::Auto)
@@ -26,7 +28,10 @@ mod tests {
             )
             .column(Index::from_raw_parts(1, 0), Dimension::from_f32(30.))
             .column(Index::from_raw_parts(2, 0), Dimension::Auto)
-            .layouts_within_bounds(&Rect::new(Point::new(5., 5.), Size::new(100., 150.)));
+            .layouts_within_bounds(
+                &Rect::new(Point::new(5., 5.), Size::new(100., 150.)),
+                &HashMap::default(),
+            );
 
         assert_eq!(layouts.len(), 5);
         assert_eq!(

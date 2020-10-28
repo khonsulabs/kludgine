@@ -147,7 +147,7 @@ impl Component for TicTacToe {
         _context: &mut StyledContext,
     ) -> KludgineResult<Box<dyn LayoutSolver>> {
         RowLayout::default()
-            .row(self.player_turn_label.index(), Dimension::from_f32(64.))
+            .row(self.player_turn_label.index(), Dimension::Minimal)
             .row(
                 ColumnLayout::default()
                     .column(self.labels[0].index(), Dimension::Auto)
@@ -169,7 +169,7 @@ impl Component for TicTacToe {
                     .column(self.labels[8].index(), Dimension::Auto),
                 Dimension::Auto,
             )
-            .row(self.message_label.index(), Dimension::from_f32(64.))
+            .row(self.message_label.index(), Dimension::Minimal)
             .layout()
     }
 }

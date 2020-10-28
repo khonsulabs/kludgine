@@ -1,5 +1,5 @@
 use crate::{
-    math::{Dimension, Points, Rect, Scaled, Size, Surround},
+    math::{Dimension, Point, Points, Rect, Scaled, Size, Surround},
     ui::{Layout, LayoutContext, LayoutSolver},
     KludgineResult,
 };
@@ -18,37 +18,51 @@ impl ChainLayout {
         self
     }
 
-    pub fn for_each_laid_out_element<F: FnMut(&ChainElementContents, Points, Points)>(
-        &self,
-        full_size: Points,
-        mut callback: F,
-    ) {
-        let mut automatic_measurements = 0usize;
-        let mut defined_size = Points::default();
+    // pub fn layouts<
+    //     F: Fn(&ChainElementContents, Points, LayoutMeasurement) -> (Points, HashMap<Index, (Points, Points)>),
+    // >(
+    //     &self,
+    //     full_size: Points,
+    //     content_sizes: &HashMap<Index, Size<f32, Scaled>>,
+    //     mut calculate_: F,
+    // ) {
+    //     // First loop will process defined sizes first
+    //     let mut remaining_size = full_size - defined_size;
+    //     for (length, element) in self.elements.iter().filter_map(|element| element.size.length().map(|length| (length, element))) {
+    //         let effective_size = length.min(remaining_size);
+    //         let mut measurement = LayoutMeasurement {
+    //             dimension: element.size,
+    //             size: effective_size,
+    //         };
+    //         let effective_size = callback(&element.contents, )
+    //         remaining_size -= effective_size;
+    //     }
 
-        for element in self.elements.iter() {
-            match element.size {
-                Dimension::Auto => automatic_measurements += 1,
-                Dimension::Length(points) => defined_size += points,
-            }
-        }
+    //         let mut automatic_measurements = 0usize;
+    //         let mut defined_size = Points::default();
+    //     for (length, contents) in self.elements.iter().filter_map(|element| element.size.length().map(|length| (length, &element.contents))) {
+    //         match element.size {
+    //             Dimension::Auto => automatic_measurements += 1,
+    //             Dimension::Minimal => if let ChainElementContents::Index(index) = element.contents
+    //             None => automatic_measurements += 1,
+    //             Some(points) => defined_size += points,
+    //         }
+    //     }
 
-        let remaining_size = (full_size - defined_size).max(Points::default());
-        let automatic_size = remaining_size / automatic_measurements as f32;
+    //     let automatic_size = remaining_size / automatic_measurements as f32;
 
-        let mut x = Points::default();
-        for column in self.elements.iter() {
-            let remaining_size = full_size - x;
-            let size = column
-                .size
-                .length()
-                .unwrap_or(automatic_size)
-                .min(remaining_size);
+    //     let mut x = Points::default();
+    //     for column in self.elements.iter() {
+    //         let remaining_size = full_size - x;
+    //         let mut measurement = LayoutMeasurement {
+    //             dimension: column.size,
+    //             size: column.size.length().unwrap_or(automatic_size),
+    //         };
+    //         measurement.size = measurement.size.min(remaining_size);
 
-            callback(&column.contents, x, size);
-            x += size;
-        }
-    }
+    //         x += callback(&column.contents, x, measurement);
+    //     }
+    // }
 }
 
 #[derive(Debug)]
@@ -79,7 +93,11 @@ where
 }
 
 pub trait ChainElementDynamicContents: Send + Sync + Debug {
-    fn layouts_within_bounds(&self, bounds: &Rect<f32, Scaled>) -> HashMap<Index, Layout>;
+    fn layouts_within_bounds(
+        &self,
+        bounds: &Rect<f32, Scaled>,
+        content_sizes: &HashMap<Index, Size<f32, Scaled>>,
+    ) -> (Rect<f32, Scaled>, HashMap<Index, Layout>);
 }
 
 impl ChainElement {
@@ -93,20 +111,104 @@ impl ChainElement {
 
 pub trait ChainElementDimensionTranslator {
     fn convert_to_margin(min: Points, max: Points) -> Surround<f32, Scaled>;
-    fn length_from_bounds(bounds: &Rect<f32, Scaled>) -> Points;
+    fn length_from_size(size: &Size<f32, Scaled>) -> Points;
+    fn size_replacing_length(size: &Size<f32, Scaled>, length: Points) -> Size<f32, Scaled>;
 }
 
 impl<T> ChainElementDynamicContents for T
 where
     T: Deref<Target = ChainLayout> + ChainElementDimensionTranslator + Debug + Send + Sync,
 {
-    fn layouts_within_bounds(&self, bounds: &Rect<f32, Scaled>) -> HashMap<Index, Layout> {
-        let mut layouts = HashMap::new();
-        let full_size = Self::length_from_bounds(bounds);
-        self.for_each_laid_out_element(full_size, |contents, position, size| {
-            let margin = T::convert_to_margin(position, full_size - size - position);
+    fn layouts_within_bounds(
+        &self,
+        bounds: &Rect<f32, Scaled>,
+        content_sizes: &HashMap<Index, Size<f32, Scaled>>,
+    ) -> (Rect<f32, Scaled>, HashMap<Index, Layout>) {
+        let mut established_sizes = Vec::with_capacity(self.elements.len());
+        established_sizes.resize_with(self.elements.len(), Default::default);
+        let full_size = Self::length_from_size(&bounds.size);
 
-            match contents {
+        let mut remaining_size = full_size;
+        for (element_index, length, element) in
+            self.elements
+                .iter()
+                .enumerate()
+                .filter_map(|(index, element)| {
+                    element.size.length().map(|length| (index, length, element))
+                })
+        {
+            let effective_size = length.min(remaining_size);
+            match &element.contents {
+                ChainElementContents::Index(_) => {
+                    established_sizes[element_index] = Some(effective_size);
+                }
+                ChainElementContents::Chain(dynamic_contents) => {
+                    let (inner_bounds, _) = dynamic_contents.layouts_within_bounds(
+                        &Rect::new(
+                            Point::default(),
+                            T::size_replacing_length(&bounds.size, effective_size),
+                        ),
+                        content_sizes,
+                    );
+                    established_sizes[element_index] =
+                        Some(T::length_from_size(&inner_bounds.size));
+                }
+            }
+
+            remaining_size -= effective_size;
+        }
+
+        // All the hardcoded widths have been established, now we need to handle
+        // all the Dimension::Minimal measurements. For these, we want to trust
+        // whatever measurement they provide in content_sizes, otherwise we'll
+        // treat them as automatic in the final loop.
+        for (element_index, element) in self
+            .elements
+            .iter()
+            .enumerate()
+            .filter(|(_, element)| matches!(element.size, Dimension::Minimal))
+        {
+            let effective_size = match &element.contents {
+                ChainElementContents::Index(index) => {
+                    if let Some(content_size) = content_sizes.get(index) {
+                        T::length_from_size(content_size)
+                    } else {
+                        continue;
+                    }
+                }
+                ChainElementContents::Chain(dynamic_contents) => {
+                    let remaining_width_if_auto = remaining_size
+                        / established_sizes.iter().filter(|s| s.is_none()).count() as f32;
+                    let (inner_bounds, _) = dynamic_contents.layouts_within_bounds(
+                        &Rect::new(
+                            Point::default(),
+                            T::size_replacing_length(&bounds.size, remaining_width_if_auto),
+                        ),
+                        content_sizes,
+                    );
+                    T::length_from_size(&inner_bounds.size)
+                }
+            };
+
+            established_sizes[element_index] = Some(effective_size);
+
+            remaining_size -= effective_size;
+        }
+
+        // The final loop will assign hardcoded widths to any that are missing, and insert the layouts
+        let mut layouts = HashMap::new();
+        let mut full_bounds = Option::<Rect<f32, Scaled>>::None;
+        let mut position = Points::default();
+        let automatic_width =
+            dbg!(remaining_size / established_sizes.iter().filter(|s| s.is_none()).count() as f32);
+        for (element_index, element) in self.elements.iter().enumerate() {
+            let size = established_sizes[element_index].unwrap_or(automatic_width);
+            let end = dbg!(full_size - position - size);
+
+            // If the child is a chain, we need to insert all the children layouts
+            let margin = T::convert_to_margin(position, end);
+            let element_bounds = margin.inset_rect(bounds);
+            let element_bounds = match &element.contents {
                 ChainElementContents::Index(index) => {
                     layouts.insert(
                         *index,
@@ -116,17 +218,29 @@ where
                             padding: Default::default(),
                         },
                     );
+                    element_bounds
                 }
                 ChainElementContents::Chain(dynamic_contents) => {
-                    let bounds = margin.inset_rect(bounds);
-                    for (index, layout) in dynamic_contents.layouts_within_bounds(&bounds) {
+                    let (bounds, child_layouts) =
+                        dynamic_contents.layouts_within_bounds(&element_bounds, content_sizes);
+
+                    for (index, layout) in child_layouts {
                         layouts.insert(index, layout);
                     }
-                }
-            }
-        });
 
-        layouts
+                    bounds
+                }
+            };
+            full_bounds = Some(
+                full_bounds
+                    .map(|b| b.union(&element_bounds))
+                    .unwrap_or(element_bounds),
+            );
+
+            position += size;
+        }
+
+        (full_bounds.unwrap_or_default(), layouts)
     }
 }
 
@@ -146,8 +260,23 @@ where
         _content_size: &Size<f32, Scaled>,
         context: &LayoutContext,
     ) -> KludgineResult<()> {
+        let mut content_sizes = HashMap::new();
+        let constraints = Size::new(Some(bounds.size.width), Some(bounds.size.height));
+        for child in context.children().await {
+            let mut child_context = context.clone_for(&child).await;
+            let child_content_size = context
+                .arena()
+                .get(&child)
+                .await
+                .unwrap()
+                .content_size(child_context.styled_context(), &constraints)
+                .await?;
+            content_sizes.insert(child, child_content_size);
+        }
+
         let layouts = self
-            .layouts_within_bounds(bounds)
+            .layouts_within_bounds(bounds, &content_sizes)
+            .1
             .into_iter()
             .map(|(child, layout)| context.insert_layout(child, layout))
             .collect::<Vec<_>>();
@@ -157,88 +286,8 @@ where
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn one_auto_column() {
-        let mut layouts = Vec::new();
-        ChainLayout::default()
-            .element(Index::from_raw_parts(0, 0), Dimension::Auto)
-            .for_each_laid_out_element(Points::new(100.), |_, pos, length| {
-                layouts.push((pos.get() as u32, length.get() as u32));
-            });
-
-        assert_eq!(layouts.len(), 1);
-        assert_eq!(layouts[0], (0, 100));
-    }
-
-    #[test]
-    fn two_auto_columns() {
-        let mut layouts = Vec::new();
-        ChainLayout::default()
-            .element(Index::from_raw_parts(0, 0), Dimension::Auto)
-            .element(Index::from_raw_parts(0, 1), Dimension::Auto)
-            .for_each_laid_out_element(Points::new(100.), |_, pos, length| {
-                layouts.push((pos.get() as u32, length.get() as u32));
-            });
-
-        assert_eq!(layouts.len(), 2);
-        assert_eq!(layouts[0], (0, 50));
-        assert_eq!(layouts[1], (50, 50));
-    }
-
-    #[test]
-    fn two_auto_columns_one_fixed_smaller() {
-        let mut layouts = Vec::new();
-        ChainLayout::default()
-            .element(Index::from_raw_parts(0, 0), Dimension::Auto)
-            .element(Index::from_raw_parts(0, 1), Dimension::from_f32(30.))
-            .element(Index::from_raw_parts(0, 2), Dimension::Auto)
-            .for_each_laid_out_element(Points::new(100.), |_, pos, length| {
-                layouts.push((pos.get() as u32, length.get() as u32));
-            });
-
-        assert_eq!(layouts.len(), 3);
-        assert_eq!(layouts[0], (0, 35));
-        assert_eq!(layouts[1], (35, 30));
-        assert_eq!(layouts[2], (65, 35));
-    }
-
-    #[test]
-    fn two_auto_columns_one_fixed_larger() {
-        let mut layouts = Vec::new();
-        ChainLayout::default()
-            .element(Index::from_raw_parts(0, 0), Dimension::Auto)
-            .element(Index::from_raw_parts(0, 1), Dimension::from_f32(70.))
-            .element(Index::from_raw_parts(0, 2), Dimension::Auto)
-            .for_each_laid_out_element(Points::new(100.), |_, pos, length| {
-                layouts.push((pos.get() as u32, length.get() as u32));
-            });
-
-        assert_eq!(layouts.len(), 3);
-        assert_eq!(layouts[0], (0, 15));
-        assert_eq!(layouts[1], (15, 70));
-        assert_eq!(layouts[2], (85, 15));
-    }
-
-    #[test]
-    fn too_big() {
-        let mut layouts = Vec::new();
-        ChainLayout::default()
-            .element(Index::from_raw_parts(0, 0), Dimension::Auto)
-            .element(Index::from_raw_parts(0, 1), Dimension::from_f32(45.))
-            .element(Index::from_raw_parts(0, 2), Dimension::from_f32(45.))
-            .element(Index::from_raw_parts(0, 3), Dimension::Auto)
-            .for_each_laid_out_element(Points::new(50.), |_, pos, length| {
-                layouts.push((pos.get() as u32, length.get() as u32));
-            });
-
-        assert_eq!(layouts.len(), 4);
-        assert_eq!(layouts[0], (0, 0));
-        assert_eq!(layouts[1], (0, 45));
-        assert_eq!(layouts[2], (45, 5));
-        assert_eq!(layouts[3], (50, 0));
-    }
+#[derive(Clone, Copy, Debug)]
+pub struct LayoutMeasurement {
+    pub dimension: Dimension,
+    pub size: Points,
 }
