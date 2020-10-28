@@ -1,6 +1,6 @@
 mod absolute;
-mod columns;
-pub use self::{absolute::*, columns::*};
+mod grid;
+pub use self::{absolute::*, grid::*};
 use crate::{
     math::{Point, Rect, Scaled, Size, Surround},
     ui::LayoutContext,
