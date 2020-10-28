@@ -106,14 +106,14 @@ mod tests {
 
     #[test]
     fn one_auto_one_minimal_one_fixed() {
-        let (_, layouts) = dbg!(RowLayout::default()
+        let (_, layouts) = RowLayout::default()
             .row(Index::from_raw_parts(0, 0), Dimension::Auto)
             .row(Index::from_raw_parts(0, 1), Dimension::Minimal)
             .row(Index::from_raw_parts(0, 2), Dimension::from_f32(20.))
             .layouts_within_bounds(
                 &Rect::new(Point::new(5., 5.), Size::new(150., 100.)),
                 &hash_map!(Index::from_raw_parts(0, 1) => Size::new(150., 10.)),
-            ));
+            );
 
         assert_eq!(layouts.len(), 3);
         assert_eq!(
@@ -138,13 +138,13 @@ mod tests {
 
     #[test]
     fn two_auto_columns() {
-        let (_, layouts) = dbg!(RowLayout::default()
+        let (_, layouts) = RowLayout::default()
             .row(Index::from_raw_parts(0, 0), Dimension::Auto)
             .row(Index::from_raw_parts(0, 1), Dimension::Auto)
             .layouts_within_bounds(
                 &Rect::new(Point::new(5., 5.), Size::new(150., 100.)),
                 &HashMap::default(),
-            ));
+            );
 
         assert_eq!(layouts.len(), 2);
         assert_eq!(

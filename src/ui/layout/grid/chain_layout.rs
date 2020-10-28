@@ -200,10 +200,10 @@ where
         let mut full_bounds = Option::<Rect<f32, Scaled>>::None;
         let mut position = Points::default();
         let automatic_width =
-            dbg!(remaining_size / established_sizes.iter().filter(|s| s.is_none()).count() as f32);
+            remaining_size / established_sizes.iter().filter(|s| s.is_none()).count() as f32;
         for (element_index, element) in self.elements.iter().enumerate() {
             let size = established_sizes[element_index].unwrap_or(automatic_width);
-            let end = dbg!(full_size - position - size);
+            let end = full_size - position - size;
 
             // If the child is a chain, we need to insert all the children layouts
             let margin = T::convert_to_margin(position, end);

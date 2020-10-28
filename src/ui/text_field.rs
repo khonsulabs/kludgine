@@ -520,7 +520,7 @@ impl TextField {
         context: &mut StyledContext,
         constraints: &Size<f32, Scaled>,
     ) -> KludgineResult<Vec<PreparedText>> {
-        dbg!(&self.text)
+        self.text
             .prepare(
                 context,
                 self.wrapping(
