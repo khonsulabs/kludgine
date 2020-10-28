@@ -1,5 +1,6 @@
 mod absolute;
-pub use self::absolute::*;
+mod columns;
+pub use self::{absolute::*, columns::*};
 use crate::{
     math::{Point, Rect, Scaled, Size, Surround},
     ui::LayoutContext,
@@ -13,7 +14,7 @@ pub trait LayoutSolver: Send + Sync + std::fmt::Debug {
         &self,
         bounds: &Rect<f32, Scaled>,
         content_size: &Size<f32, Scaled>,
-        context: &mut LayoutContext,
+        context: &LayoutContext,
     ) -> KludgineResult<()>;
 }
 
@@ -75,7 +76,7 @@ impl LayoutSolver for NoLayout {
         &self,
         _bounds: &Rect<f32, Scaled>,
         _content_size: &Size<f32, Scaled>,
-        _context: &mut LayoutContext,
+        _context: &LayoutContext,
     ) -> KludgineResult<()> {
         Ok(())
     }

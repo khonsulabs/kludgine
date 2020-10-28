@@ -268,7 +268,7 @@ impl LayoutContext {
         self.layout.get_layout(&index.index()).await
     }
 
-    pub async fn insert_layout(&mut self, index: impl Indexable, layout: Layout) {
+    pub async fn insert_layout(&self, index: impl Indexable, layout: Layout) {
         let index = index.index();
         self.layout.insert_layout(index, layout, true).await;
     }
