@@ -1,18 +1,24 @@
-use crate::math::{Dimension, Points};
+use crate::{
+    math::{Dimension, Points, Rect, Scaled, Size, Surround},
+    ui::{Layout, LayoutContext, LayoutSolver},
+    KludgineResult,
+};
+use async_trait::async_trait;
 use generational_arena::Index;
+use std::{collections::HashMap, fmt::Debug, ops::Deref};
 
 #[derive(Debug, Default)]
-pub(crate) struct ChainLayout {
+pub struct ChainLayout {
     elements: Vec<ChainElement>,
 }
 
 impl ChainLayout {
-    pub fn element<I: Into<Index>>(mut self, child: I, height: Dimension) -> Self {
+    pub fn element<I: Into<ChainElementContents>>(mut self, child: I, height: Dimension) -> Self {
         self.elements.push(ChainElement::new(child.into(), height));
         self
     }
 
-    pub fn for_each_laid_out_element<F: FnMut(Index, Points, Points)>(
+    pub fn for_each_laid_out_element<F: FnMut(&ChainElementContents, Points, Points)>(
         &self,
         full_size: Points,
         mut callback: F,
@@ -21,7 +27,7 @@ impl ChainLayout {
         let mut defined_size = Points::default();
 
         for element in self.elements.iter() {
-            match element.width {
+            match element.size {
                 Dimension::Auto => automatic_measurements += 1,
                 Dimension::Length(points) => defined_size += points,
             }
@@ -34,12 +40,12 @@ impl ChainLayout {
         for column in self.elements.iter() {
             let remaining_size = full_size - x;
             let size = column
-                .width
+                .size
                 .length()
                 .unwrap_or(automatic_size)
                 .min(remaining_size);
 
-            callback(column.index, x, size);
+            callback(&column.contents, x, size);
             x += size;
         }
     }
@@ -47,13 +53,107 @@ impl ChainLayout {
 
 #[derive(Debug)]
 struct ChainElement {
-    pub index: Index,
-    pub width: Dimension,
+    pub contents: ChainElementContents,
+    pub size: Dimension,
+}
+
+#[derive(Debug)]
+pub enum ChainElementContents {
+    Index(Index),
+    Chain(Box<dyn ChainElementDynamicContents>),
+}
+
+impl From<Index> for ChainElementContents {
+    fn from(index: Index) -> Self {
+        Self::Index(index)
+    }
+}
+
+impl<T> From<T> for ChainElementContents
+where
+    T: ChainElementDynamicContents + Sized + 'static,
+{
+    fn from(dynamic: T) -> Self {
+        Self::Chain(Box::new(dynamic))
+    }
+}
+
+pub trait ChainElementDynamicContents: Send + Sync + Debug {
+    fn layouts_within_bounds(&self, bounds: &Rect<f32, Scaled>) -> HashMap<Index, Layout>;
 }
 
 impl ChainElement {
-    pub fn new(index: Index, width: Dimension) -> Self {
-        Self { index, width }
+    pub fn new<C: Into<ChainElementContents>>(contents: C, width: Dimension) -> Self {
+        Self {
+            contents: contents.into(),
+            size: width,
+        }
+    }
+}
+
+pub trait ChainElementDimensionTranslator {
+    fn convert_to_margin(min: Points, max: Points) -> Surround<f32, Scaled>;
+    fn length_from_bounds(bounds: &Rect<f32, Scaled>) -> Points;
+}
+
+impl<T> ChainElementDynamicContents for T
+where
+    T: Deref<Target = ChainLayout> + ChainElementDimensionTranslator + Debug + Send + Sync,
+{
+    fn layouts_within_bounds(&self, bounds: &Rect<f32, Scaled>) -> HashMap<Index, Layout> {
+        let mut layouts = HashMap::new();
+        let full_size = Self::length_from_bounds(bounds);
+        self.for_each_laid_out_element(full_size, |contents, position, size| {
+            let margin = T::convert_to_margin(position, full_size - size - position);
+
+            match contents {
+                ChainElementContents::Index(index) => {
+                    layouts.insert(
+                        *index,
+                        Layout {
+                            bounds: *bounds,
+                            margin,
+                            padding: Default::default(),
+                        },
+                    );
+                }
+                ChainElementContents::Chain(dynamic_contents) => {
+                    let bounds = margin.inset_rect(bounds);
+                    for (index, layout) in dynamic_contents.layouts_within_bounds(&bounds) {
+                        layouts.insert(index, layout);
+                    }
+                }
+            }
+        });
+
+        layouts
+    }
+}
+
+#[async_trait]
+impl<T> LayoutSolver for T
+where
+    T: Deref<Target = ChainLayout>
+        + ChainElementDynamicContents
+        + ChainElementDimensionTranslator
+        + Debug
+        + Send
+        + Sync,
+{
+    async fn layout_within(
+        &self,
+        bounds: &Rect<f32, Scaled>,
+        _content_size: &Size<f32, Scaled>,
+        context: &LayoutContext,
+    ) -> KludgineResult<()> {
+        let layouts = self
+            .layouts_within_bounds(bounds)
+            .into_iter()
+            .map(|(child, layout)| context.insert_layout(child, layout))
+            .collect::<Vec<_>>();
+
+        futures::future::join_all(layouts).await;
+        Ok(())
     }
 }
 
