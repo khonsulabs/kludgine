@@ -19,7 +19,7 @@ mod font_style;
 pub mod theme;
 mod weight;
 pub use self::{
-    alignment::Alignment,
+    alignment::{Alignment, VerticalAlignment},
     any::AnyStyleComponent,
     colors::{BackgroundColor, ColorPair, ForegroundColor, TextColor},
     fallback::{FallbackStyle, UnscaledFallbackStyle},

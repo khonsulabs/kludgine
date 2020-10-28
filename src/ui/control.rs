@@ -122,6 +122,26 @@ impl ComponentBorder {
             bottom: Some(border),
         }
     }
+
+    pub fn with_left(mut self, left: Border) -> Self {
+        self.left = Some(left);
+        self
+    }
+
+    pub fn with_right(mut self, right: Border) -> Self {
+        self.right = Some(right);
+        self
+    }
+
+    pub fn with_bottom(mut self, bottom: Border) -> Self {
+        self.bottom = Some(bottom);
+        self
+    }
+
+    pub fn with_top(mut self, top: Border) -> Self {
+        self.top = Some(top);
+        self
+    }
 }
 
 impl UnscaledStyleComponent<Scaled> for ComponentBorder {}

@@ -136,7 +136,7 @@ impl LayoutSolver for AbsoluteLayout {
         &self,
         bounds: &Rect<f32, Scaled>,
         content_size: &Size<f32, Scaled>,
-        context: &mut LayoutContext,
+        context: &LayoutContext,
     ) -> KludgineResult<()> {
         for (index, child_bounds) in self
             .order

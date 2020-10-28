@@ -13,3 +13,17 @@ impl Default for Alignment {
         Self::Left
     }
 }
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum VerticalAlignment {
+    Top,
+    Center,
+    Bottom,
+}
+impl UnscaledStyleComponent<Scaled> for VerticalAlignment {}
+
+impl Default for VerticalAlignment {
+    fn default() -> Self {
+        Self::Top
+    }
+}
