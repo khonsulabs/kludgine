@@ -21,11 +21,7 @@ pub enum ControlEvent {
 
 #[derive(Debug, Clone)]
 pub struct ControlBackgroundColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for ControlBackgroundColor {
-    fn unscaled_should_be_inherited(&self) -> bool {
-        false
-    }
-}
+impl UnscaledStyleComponent<Scaled> for ControlBackgroundColor {}
 
 impl Default for ControlBackgroundColor {
     fn default() -> Self {

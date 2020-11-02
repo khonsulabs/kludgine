@@ -13,7 +13,9 @@ use crate::{
         wrap::TextWrap,
     },
     ui::{
-        control::{ComponentBorder, ControlBackgroundColor, ControlBorder, ControlTextColor},
+        component::control::{
+            ComponentBorder, ControlBackgroundColor, ControlBorder, ControlTextColor,
+        },
         Component, Context, ControlPadding, InteractiveComponent, Layout, StyledContext,
     },
     window::event::{EventStatus, MouseButton},

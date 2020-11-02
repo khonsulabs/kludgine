@@ -137,8 +137,9 @@ pub mod prelude {
             ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling, Index, Indexable,
             InteractiveComponent, Label, LabelBackgroundColor, LabelCommand, LabelTextColor,
             Layout, LayoutConstraints, LayoutContext, LayoutSolver, LayoutSolverExt,
-            LinearTransition, RowLayout, StandaloneComponent, StyledContext, TextField,
-            TextFieldEvent, Timeout,
+            LinearTransition, Pane, PaneBackgroundColor, PaneBorder, Panel, PanelBackgroundColor,
+            PanelBorder, PanelCommand, PanelEvent, PanelMessage, PanelProvider, RowLayout,
+            StandaloneComponent, StyledContext, TextField, TextFieldEvent, Timeout,
         },
         window::{
             event::{

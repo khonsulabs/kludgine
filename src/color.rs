@@ -1,3 +1,4 @@
+use approx::relative_eq;
 use easygpu::color::{Rgba, Rgba8};
 use palette::{rgb::Srgba, Component, Shade, Srgb};
 
@@ -87,6 +88,10 @@ impl Color {
 
     pub fn rgba(&self) -> [f32; 4] {
         [self.0.r, self.0.g, self.0.b, self.0.a]
+    }
+
+    pub fn visible(&self) -> bool {
+        !relative_eq!(self.0.a, 0.)
     }
 }
 

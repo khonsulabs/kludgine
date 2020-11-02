@@ -1,19 +1,42 @@
 use crate::{
     math::{Point, PointExt, Raw, Rect, Scaled, Size, SizeExt},
-    scene::Target,
     shape::{Fill, Shape},
-    style::{BackgroundColor, ColorPair, FallbackStyle, Style, StyleSheet},
-    ui::{
-        node::ThreadsafeAnyMap, AbsoluteBounds, Context, Entity, HierarchicalArena, Index, Layout,
-        LayoutSolver, LayoutSolverExt, Node, StyledContext, UIState,
-    },
+    style::{BackgroundColor, ColorPair, FallbackStyle},
+    ui::{Context, Entity, Layout, LayoutSolver, LayoutSolverExt, StyledContext},
     window::event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
-    Handle, KludgineResult,
+    KludgineResult,
 };
 use async_trait::async_trait;
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
+mod builder;
+mod button;
+mod control;
+mod image;
+mod label;
+#[cfg(feature = "ecs")]
+pub mod legion;
+mod pane;
+mod panel;
+mod text_field;
 
-use super::control::ComponentBorder;
+pub use self::{
+    builder::EntityBuilder,
+    button::{Button, ButtonBackgroundColor, ButtonBorder, ButtonPadding, ButtonTextColor},
+    control::{
+        Border, ComponentBorder, ControlBackgroundColor, ControlBorder, ControlEvent,
+        ControlPadding, ControlTextColor,
+    },
+    image::{
+        Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
+    },
+    label::{Label, LabelBackgroundColor, LabelCommand, LabelTextColor},
+    pane::{Pane, PaneBackgroundColor, PaneBorder, PanePadding},
+    panel::{
+        Panel, PanelBackgroundColor, PanelBorder, PanelCommand, PanelEvent, PanelMessage,
+        PanelProvider,
+    },
+    text_field::{TextField, TextFieldBackgroundColor, TextFieldBorder, TextFieldEvent},
+};
 
 pub struct LayoutConstraints {}
 
@@ -81,12 +104,14 @@ pub trait Component: Send + Sync {
         let bounds = layout.bounds_without_margin();
         if let Some(background) = C::lookup(context.effective_style()) {
             let color_pair = background.clone().into();
-            Shape::rect(bounds)
-                .fill(Fill::new(
-                    color_pair.themed_color(&context.scene().system_theme().await),
-                ))
-                .render_at(Point::default(), context.scene())
-                .await;
+            let color = color_pair.themed_color(&context.scene().system_theme().await);
+
+            if color.visible() {
+                Shape::rect(bounds)
+                    .fill(Fill::new(color))
+                    .render_at(Point::default(), context.scene())
+                    .await;
+            }
         }
         if let Some(border) = B::lookup(context.effective_style()) {
             let border = border.into();
@@ -285,25 +310,13 @@ pub trait InteractiveComponent: Component {
         context: &mut Context,
         component: T,
     ) -> EntityBuilder<T, Self::Message> {
-        let component = Handle::new(component);
-        let mut components = ThreadsafeAnyMap::new();
-        components.insert(component);
-        EntityBuilder {
-            components,
-            scene: context.scene().clone(),
-            parent: Some(context.index()),
-            interactive: true,
-            ui_state: context.ui_state().clone(),
-            arena: context.arena().clone(),
-            style_sheet: Default::default(),
-            callback: None,
-            _marker: Default::default(),
-        }
+        context.insert_new_entity(context.index(), component)
     }
 
     async fn callback(&self, context: &mut Context, message: Self::Event) {
-        let node = context.arena().get(&context.index()).await.unwrap();
-        node.callback(message).await;
+        if let Some(node) = context.arena().get(&context.index()).await {
+            node.callback(message).await;
+        }
     }
 }
 
@@ -365,106 +378,6 @@ where
 
     pub async fn invoke(&self, input: Input) {
         self.wrapped.callback(input).await
-    }
-}
-
-pub struct EntityBuilder<C, P>
-where
-    C: InteractiveComponent + 'static,
-{
-    components: ThreadsafeAnyMap,
-    scene: Target,
-    parent: Option<Index>,
-    style_sheet: StyleSheet,
-    interactive: bool,
-    callback: Option<Callback<C::Event>>,
-    ui_state: UIState,
-    arena: HierarchicalArena,
-    _marker: std::marker::PhantomData<P>,
-}
-
-impl<C, P> EntityBuilder<C, P>
-where
-    C: InteractiveComponent + 'static,
-    P: Send + Sync + 'static,
-{
-    pub fn style_sheet<S: Into<StyleSheet>>(mut self, sheet: S) -> Self {
-        self.style_sheet = sheet.into();
-        self
-    }
-
-    pub fn normal_style(mut self, style: Style<Scaled>) -> Self {
-        self.style_sheet.normal = style;
-        self
-    }
-
-    pub fn hover(mut self, style: Style<Scaled>) -> Self {
-        self.style_sheet.hover = style;
-        self
-    }
-
-    pub fn active(mut self, style: Style<Scaled>) -> Self {
-        self.style_sheet.active = style;
-        self
-    }
-
-    pub fn focus(mut self, style: Style<Scaled>) -> Self {
-        self.style_sheet.focus = style;
-        self
-    }
-
-    pub fn bounds(mut self, bounds: AbsoluteBounds) -> Self {
-        self.components.insert(Handle::new(bounds));
-        self
-    }
-
-    pub fn interactive(mut self, interactive: bool) -> Self {
-        self.interactive = interactive;
-        self
-    }
-
-    pub fn callback<F: Fn(C::Event) -> P + Send + Sync + 'static>(mut self, callback: F) -> Self {
-        let target = Context::new(
-            self.parent.unwrap(),
-            self.arena.clone(),
-            self.ui_state.clone(),
-            self.scene.clone(),
-        );
-        self.callback = Some(Callback::new(target, callback));
-        self
-    }
-
-    pub async fn insert(mut self) -> KludgineResult<Entity<C>> {
-        let theme = self.scene.theme().await;
-        self.components.insert(Handle::new(
-            self.style_sheet
-                .merge_with(&theme.default_style_sheet(), false),
-        ));
-        let index = {
-            let node = Node::from_components::<C>(self.components, self.interactive, self.callback);
-            let index = self.arena.insert(self.parent, node).await;
-
-            let mut context = Context::new(
-                index,
-                self.arena.clone(),
-                self.ui_state.clone(),
-                self.scene.clone(),
-            );
-            self.arena
-                .get(&index)
-                .await
-                .unwrap()
-                .initialize(&mut context)
-                .await?;
-
-            index
-        };
-        Ok(Entity::new(Context::new(
-            index,
-            self.arena.clone(),
-            self.ui_state,
-            self.scene.clone(),
-        )))
     }
 }
 

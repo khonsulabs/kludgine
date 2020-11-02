@@ -5,8 +5,10 @@ use crate::{
         UnscaledFallbackStyle, UnscaledStyleComponent,
     },
     ui::{
-        component::Component,
-        control::{ControlBackgroundColor, ControlTextColor},
+        component::{
+            control::{ControlBackgroundColor, ControlTextColor},
+            Component,
+        },
         AbsoluteBounds, Context, ControlEvent, Entity, InteractiveComponent, Label, Layout,
         StyledContext,
     },

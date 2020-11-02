@@ -7,7 +7,7 @@ use crate::{
     },
     ui::{
         Border, ComponentBorder, ControlBackgroundColor, ControlPadding, LabelBackgroundColor,
-        TextFieldBackgroundColor, TextFieldBorder,
+        PaneBackgroundColor, PanelBackgroundColor, TextFieldBackgroundColor, TextFieldBorder,
     },
 };
 
@@ -43,10 +43,6 @@ impl Theme for Minimal {
                 light_color: self.palette.light.control.text.normal(),
                 dark_color: self.palette.dark.control.text.normal(),
             }))
-            .with(LabelBackgroundColor(ColorPair {
-                light_color: Color::CLEAR_WHITE,
-                dark_color: Color::CLEAR_BLACK,
-            }))
             .with(BackgroundColor(ColorPair {
                 light_color: self.palette.light.default.background.normal(),
                 dark_color: self.palette.dark.default.background.normal(),
@@ -54,6 +50,18 @@ impl Theme for Minimal {
             .with(ControlBackgroundColor(ColorPair {
                 light_color: self.palette.light.control.background.normal(),
                 dark_color: self.palette.dark.control.background.normal(),
+            }))
+            .with(LabelBackgroundColor(ColorPair {
+                light_color: Color::CLEAR_WHITE,
+                dark_color: Color::CLEAR_BLACK,
+            }))
+            .with(PaneBackgroundColor(ColorPair {
+                light_color: Color::CLEAR_WHITE,
+                dark_color: Color::CLEAR_BLACK,
+            }))
+            .with(PanelBackgroundColor(ColorPair {
+                light_color: Color::CLEAR_WHITE,
+                dark_color: Color::CLEAR_BLACK,
             }))
             .with(ControlPadding(Surround::uniform(Points::new(10.))))
             .with(TextFieldBorder(ComponentBorder::uniform(Border::new(

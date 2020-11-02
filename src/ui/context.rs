@@ -1,3 +1,5 @@
+use async_handle::Handle;
+
 use crate::{
     scene::Target,
     style::StyleSheet,
@@ -10,6 +12,8 @@ pub use self::{
     styled_context::StyledContext,
 };
 use std::time::{Duration, Instant};
+
+use super::{node::ThreadsafeAnyMap, EntityBuilder};
 
 #[derive(Clone, Debug)]
 pub struct Context {
@@ -31,6 +35,27 @@ impl Context {
             arena,
             ui_state,
             scene,
+        }
+    }
+
+    pub fn insert_new_entity<T: InteractiveComponent + 'static, I: Indexable, Message>(
+        &self,
+        parent: I,
+        component: T,
+    ) -> EntityBuilder<T, Message> {
+        let component = Handle::new(component);
+        let mut components = ThreadsafeAnyMap::new();
+        components.insert(component);
+        EntityBuilder {
+            components,
+            scene: self.scene().clone(),
+            parent: Some(parent.index()),
+            interactive: true,
+            ui_state: self.ui_state().clone(),
+            arena: self.arena().clone(),
+            style_sheet: Default::default(),
+            callback: None,
+            _marker: Default::default(),
         }
     }
 

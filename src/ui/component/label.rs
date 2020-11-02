@@ -6,8 +6,8 @@ use crate::{
     },
     text::{wrap::TextWrap, Text},
     ui::{
-        control::ControlBorder, Component, Context, ControlBackgroundColor, ControlEvent,
-        ControlTextColor, InteractiveComponent, Layout, StyledContext,
+        component::control::ControlBorder, Component, Context, ControlBackgroundColor,
+        ControlEvent, ControlTextColor, InteractiveComponent, Layout, StyledContext,
     },
     window::event::MouseButton,
     KludgineResult,
@@ -138,7 +138,7 @@ impl Label {
             value: value.to_string(),
         }
     }
-    fn create_text(&self, effective_style: &Style<Raw>) -> Text {
+    fn create_text(&self, effective_style: &Style<Raw>) -> Text<LabelTextColor> {
         Text::span(&self.value, effective_style.clone())
     }
 
