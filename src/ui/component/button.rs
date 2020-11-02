@@ -171,11 +171,7 @@ impl InteractiveComponent for Button {
 
 #[derive(Debug, Clone)]
 pub struct ButtonBackgroundColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for ButtonBackgroundColor {
-    fn unscaled_should_be_inherited(&self) -> bool {
-        false
-    }
-}
+impl UnscaledStyleComponent<Scaled> for ButtonBackgroundColor {}
 
 impl Default for ButtonBackgroundColor {
     fn default() -> Self {

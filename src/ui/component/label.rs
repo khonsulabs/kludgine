@@ -153,11 +153,7 @@ impl Label {
 
 #[derive(Debug, Clone)]
 pub struct LabelBackgroundColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for LabelBackgroundColor {
-    fn unscaled_should_be_inherited(&self) -> bool {
-        false
-    }
-}
+impl UnscaledStyleComponent<Scaled> for LabelBackgroundColor {}
 
 impl Default for LabelBackgroundColor {
     fn default() -> Self {

@@ -68,11 +68,7 @@ impl StandaloneComponent for Pane {}
 
 #[derive(Debug, Clone)]
 pub struct PaneBackgroundColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for PaneBackgroundColor {
-    fn unscaled_should_be_inherited(&self) -> bool {
-        false
-    }
-}
+impl UnscaledStyleComponent<Scaled> for PaneBackgroundColor {}
 
 impl Default for PaneBackgroundColor {
     fn default() -> Self {

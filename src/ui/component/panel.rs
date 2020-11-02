@@ -138,11 +138,7 @@ pub enum PanelMessage<Event> {
 
 #[derive(Debug, Clone)]
 pub struct PanelBackgroundColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for PanelBackgroundColor {
-    fn unscaled_should_be_inherited(&self) -> bool {
-        false
-    }
-}
+impl UnscaledStyleComponent<Scaled> for PanelBackgroundColor {}
 
 impl Default for PanelBackgroundColor {
     fn default() -> Self {

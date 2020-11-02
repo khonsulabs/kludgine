@@ -671,11 +671,7 @@ impl Default for TextFieldBackgroundColor {
     }
 }
 
-impl UnscaledStyleComponent<Scaled> for TextFieldBackgroundColor {
-    fn unscaled_should_be_inherited(&self) -> bool {
-        false
-    }
-}
+impl UnscaledStyleComponent<Scaled> for TextFieldBackgroundColor {}
 
 impl UnscaledFallbackStyle for TextFieldBackgroundColor {
     fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
