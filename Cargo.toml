@@ -31,8 +31,8 @@ ecs = ["legion", "sorted-vec"]
 serialization = ["serde", "euclid/serde", "palette/serializing"]
 
 [dependencies]
-easygpu = { version = "0.0.2" }
-easygpu-lyon = { version = "0.0.2" }
+easygpu = { version = "0.0.3" }
+easygpu-lyon = { version = "0.0.3" }
 lyon_tessellation = "0.16"
 winit = "0.23"
 image = "0.23"
