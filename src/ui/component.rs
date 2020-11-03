@@ -3,7 +3,10 @@ use crate::{
     shape::{Fill, Shape},
     style::{BackgroundColor, ColorPair, FallbackStyle},
     ui::{Context, Entity, Layout, LayoutSolver, LayoutSolverExt, StyledContext},
-    window::event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
+    window::{
+        event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
+        CloseResponse,
+    },
     KludgineResult,
 };
 use async_trait::async_trait;
@@ -275,6 +278,10 @@ pub trait Component: Send + Sync {
             .await
             .bounds_without_margin()
             .contains(window_position))
+    }
+
+    async fn close_requested(&self) -> KludgineResult<CloseResponse> {
+        Ok(CloseResponse::Close)
     }
 }
 

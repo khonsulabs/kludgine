@@ -6,13 +6,12 @@ mod layout;
 mod node;
 mod timeout;
 
-pub(crate) use self::node::NodeData;
 pub use self::{
     animation::{AnimationManager, LinearTransition},
     component::*,
     context::*,
     layout::*,
-    node::{Node, NodeDataWindowExt},
+    node::Node,
     timeout::Timeout,
 };
 use crate::{
@@ -189,7 +188,7 @@ struct UIStateData {
 
 #[derive(Debug, Clone)]
 pub struct UILayer {
-    root: Index,
+    pub root: Index,
     data: Handle<UILayerData>,
 }
 
@@ -313,17 +312,8 @@ where
         Ok(ui)
     }
 
-    pub(crate) async fn root(&self) -> Entity<C> {
-        let layer = self.ui_state.root().await;
-        Entity::new(Context::new(
-            LayerIndex {
-                index: layer.root,
-                layer,
-            },
-            self.arena.clone(),
-            self.ui_state.clone(),
-            Target::Scene(self.scene.clone()),
-        ))
+    pub(crate) async fn layers(&self) -> Vec<UILayer> {
+        self.ui_state.layers().await
     }
 
     pub async fn render(&mut self) -> KludgineResult<()> {

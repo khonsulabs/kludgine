@@ -4,7 +4,7 @@ use crate::{
     runtime::Runtime,
     scene::Target,
     style::theme::SystemTheme,
-    ui::{global_arena, NodeData, NodeDataWindowExt, UserInterface},
+    ui::{global_arena, UserInterface},
     window::{
         event::{ElementState, Event, InputEvent, VirtualKeyCode, WindowEvent},
         frame::Frame,
@@ -99,14 +99,16 @@ impl RuntimeWindow {
     where
         T: Window,
     {
-        let root_node = global_arena().get(&ui.root().await).await.unwrap();
-        let component = root_node.component.read().await;
-        let window = component.as_any().downcast_ref::<NodeData<T>>().unwrap();
-        if let CloseResponse::Close = window.close_requested().await? {
-            WindowMessage::Close.send_to(id).await?;
-            return Ok(true);
+        for layer in ui.layers().await {
+            let root_node = global_arena().get(&layer.root).await.unwrap();
+            let component = root_node.component.read().await;
+            if let CloseResponse::RemainOpen = component.close_requested().await? {
+                return Ok(false);
+            }
         }
-        Ok(false)
+
+        WindowMessage::Close.send_to(id).await?;
+        Ok(true)
     }
 
     fn next_window_event_non_blocking(

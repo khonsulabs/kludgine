@@ -8,7 +8,7 @@ use crate::{
     },
     window::{
         event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
-        CloseResponse, Window,
+        CloseResponse,
     },
     Handle, KludgineResult,
 };
@@ -100,6 +100,8 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
         context: &mut Context,
         window_position: Point<f32, Scaled>,
     ) -> KludgineResult<bool>;
+
+    async fn close_requested(&self) -> KludgineResult<CloseResponse>;
 }
 
 impl dyn AnyNode {
@@ -316,6 +318,12 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
             .keyboard_event(context, scancode, key, state)
             .await
     }
+
+    async fn close_requested(&self) -> KludgineResult<CloseResponse> {
+        let component = self.interactive_component().await;
+        let component = component.read().await;
+        component.close_requested().await
+    }
 }
 
 #[async_trait]
@@ -357,23 +365,6 @@ where
     callback: Option<Callback<T::Event>>,
     interactive: bool,
     _phantom: std::marker::PhantomData<T>,
-}
-
-#[async_trait]
-pub trait NodeDataWindowExt {
-    async fn close_requested(&self) -> KludgineResult<CloseResponse>;
-}
-
-#[async_trait]
-impl<T> NodeDataWindowExt for NodeData<T>
-where
-    T: Window,
-{
-    async fn close_requested(&self) -> KludgineResult<CloseResponse> {
-        let component = self.interactive_component().await;
-        let component = component.read().await;
-        component.close_requested().await
-    }
 }
 
 #[derive(Clone, Debug)]
