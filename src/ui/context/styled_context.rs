@@ -2,7 +2,7 @@ use crate::{
     math::{Raw, Scaled, Size},
     scene::Target,
     style::Style,
-    ui::{Context, HierarchicalArena, Index, Indexable, UIState},
+    ui::{Context, HierarchicalArena, Index, Indexable, LayerIndexable, UIState},
     KludgineError, KludgineResult,
 };
 use std::{collections::HashMap, sync::Arc};
@@ -27,7 +27,7 @@ impl std::ops::DerefMut for StyledContext {
 }
 
 impl StyledContext {
-    pub(crate) fn new<I: Indexable>(
+    pub(crate) fn new<I: LayerIndexable>(
         index: I,
         scene: Target,
         effective_styles: Arc<HashMap<Index, Style<Raw>>>,

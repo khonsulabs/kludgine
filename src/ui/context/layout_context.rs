@@ -3,7 +3,8 @@ use crate::{
     scene::Target,
     style::Style,
     ui::{
-        Context, HierarchicalArena, Index, Indexable, Layout, LayoutSolver, StyledContext, UIState,
+        Context, HierarchicalArena, Index, Indexable, LayerIndex, LayerIndexable, Layout,
+        LayoutSolver, StyledContext, UILayer, UIState,
     },
     Handle, KludgineResult,
 };
@@ -47,6 +48,7 @@ impl LayoutEngine {
 
     pub(crate) async fn layout(
         arena: &HierarchicalArena,
+        layer: &UILayer,
         ui_state: &UIState,
         root: Index,
         scene: &Target,
@@ -65,11 +67,11 @@ impl LayoutEngine {
                     node_style = style_sheet.hover.merge_with(&node_style, false);
                 }
 
-                if ui_state.focused().await == Some(index) {
+                if layer.focus().await == Some(index) {
                     node_style = style_sheet.focus.merge_with(&node_style, false);
                 }
 
-                if ui_state.active().await == Some(index) {
+                if layer.active().await == Some(index) {
                     node_style = style_sheet.active.merge_with(&node_style, false);
                 }
 
@@ -94,7 +96,10 @@ impl LayoutEngine {
         while let Some(index) = found_nodes.pop_back() {
             if let Some(node) = arena.get(&index).await {
                 let mut context = StyledContext::new(
-                    index,
+                    LayerIndex {
+                        index,
+                        layer: layer.clone(),
+                    },
                     scene.clone(),
                     effective_styles.clone(),
                     arena.clone(),
@@ -109,7 +114,10 @@ impl LayoutEngine {
 
         while let Some(index) = layout_data.next_to_layout().await {
             let mut context = LayoutContext::new(
-                index,
+                LayerIndex {
+                    index,
+                    layer: layer.clone(),
+                },
                 scene.clone(),
                 effective_styles.clone(),
                 layout_data.clone(),
@@ -215,7 +223,7 @@ impl std::ops::DerefMut for LayoutContext {
 }
 
 impl LayoutContext {
-    pub(crate) fn new<I: Indexable>(
+    pub(crate) fn new<I: LayerIndexable>(
         index: I,
         scene: Target,
         effective_styles: Arc<HashMap<Index, Style<Raw>>>,

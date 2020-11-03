@@ -7,7 +7,7 @@ use crate::{
     style::{Style, StyleSheet},
     ui::{
         node::ThreadsafeAnyMap, AbsoluteBounds, Callback, Context, Entity, HierarchicalArena,
-        InteractiveComponent, Node, UIState,
+        InteractiveComponent, LayerIndex, Node, UILayer, UIState,
     },
     KludgineResult,
 };
@@ -22,6 +22,7 @@ where
     pub(crate) style_sheet: StyleSheet,
     pub(crate) interactive: bool,
     pub(crate) callback: Option<Callback<C::Event>>,
+    pub(crate) layer: UILayer,
     pub(crate) ui_state: UIState,
     pub(crate) arena: HierarchicalArena,
     pub(crate) _marker: std::marker::PhantomData<P>,
@@ -69,7 +70,10 @@ where
 
     pub fn callback<F: Fn(C::Event) -> P + Send + Sync + 'static>(mut self, callback: F) -> Self {
         let target = Context::new(
-            self.parent.unwrap(),
+            LayerIndex {
+                index: self.parent.unwrap(),
+                layer: self.layer.clone(),
+            },
             self.arena.clone(),
             self.ui_state.clone(),
             self.scene.clone(),
@@ -80,27 +84,31 @@ where
 
     pub async fn insert(mut self) -> KludgineResult<Entity<C>> {
         self.components.insert(Handle::new(self.style_sheet));
-        let index = {
+        let layer_index = {
             let node = Node::from_components::<C>(self.components, self.interactive, self.callback);
             let index = self.arena.insert(self.parent, node).await;
+            let layer_index = LayerIndex {
+                index,
+                layer: self.layer,
+            };
 
             let mut context = Context::new(
-                index,
+                layer_index.clone(),
                 self.arena.clone(),
                 self.ui_state.clone(),
                 self.scene.clone(),
             );
             self.arena
-                .get(&index)
+                .get(&layer_index.index)
                 .await
                 .unwrap()
                 .initialize(&mut context)
                 .await?;
 
-            index
+            layer_index
         };
         Ok(Entity::new(Context::new(
-            index,
+            layer_index,
             self.arena.clone(),
             self.ui_state,
             self.scene.clone(),

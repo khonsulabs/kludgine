@@ -14,25 +14,26 @@ pub use self::{
     layout_context::{LayoutContext, LayoutEngine},
     styled_context::StyledContext,
 };
+use super::{LayerIndex, LayerIndexable};
 use std::time::{Duration, Instant};
 
 #[derive(Clone, Debug)]
 pub struct Context {
-    index: Index,
+    layer_index: LayerIndex,
     arena: HierarchicalArena,
     ui_state: UIState,
     scene: Target,
 }
 
 impl Context {
-    pub(crate) fn new<I: Indexable>(
+    pub(crate) fn new<I: LayerIndexable>(
         index: I,
         arena: HierarchicalArena,
         ui_state: UIState,
         scene: Target,
     ) -> Self {
         Self {
-            index: index.index(),
+            layer_index: index.layer_index(),
             arena,
             ui_state,
             scene,
@@ -52,6 +53,7 @@ impl Context {
             scene: self.scene().clone(),
             parent: Some(parent.index()),
             interactive: true,
+            layer: self.layer_index.layer.clone(),
             ui_state: self.ui_state().clone(),
             arena: self.arena().clone(),
             style_sheet: Default::default(),
@@ -61,7 +63,11 @@ impl Context {
     }
 
     pub fn index(&self) -> Index {
-        self.index
+        self.layer_index.index
+    }
+
+    pub fn layer_index(&self) -> LayerIndex {
+        self.layer_index.clone()
     }
 
     pub fn scene(&self) -> &'_ Target {
@@ -77,11 +83,13 @@ impl Context {
     }
 
     pub async fn set_parent<I: Indexable>(&self, parent: Option<I>) {
-        self.arena.set_parent(self.index, parent).await
+        self.arena.set_parent(self.layer_index.index, parent).await
     }
 
     pub async fn add_child<I: Indexable>(&self, child: I) {
-        self.arena.set_parent(child, Some(self.index)).await
+        self.arena
+            .set_parent(child, Some(self.layer_index.index))
+            .await
     }
 
     pub async fn remove<I: Indexable>(&self, element: &I) {
@@ -89,12 +97,15 @@ impl Context {
     }
 
     pub async fn children(&self) -> Vec<Index> {
-        self.arena.children(&Some(self.index)).await
+        self.arena.children(&Some(self.layer_index.index)).await
     }
 
     pub fn clone_for<I: Indexable>(&self, index: &I) -> Self {
         Self {
-            index: index.index(),
+            layer_index: LayerIndex {
+                index: index.index(),
+                layer: self.layer_index.layer.clone(),
+            },
             arena: self.arena.clone(),
             ui_state: self.ui_state.clone(),
             scene: self.scene.clone(),
@@ -102,7 +113,7 @@ impl Context {
     }
 
     pub async fn last_layout(&self) -> Layout {
-        let node = self.arena.get(&self.index).await.unwrap();
+        let node = self.arena.get(&self.layer_index.index).await.unwrap();
         node.last_layout().await
     }
 
@@ -115,36 +126,43 @@ impl Context {
     }
 
     pub async fn activate(&self) {
-        self.ui_state.activate(self.index).await
+        self.layer_index
+            .layer
+            .activate(self.layer_index.index, &self.ui_state)
+            .await;
     }
 
     pub async fn deactivate(&self) {
-        self.ui_state.deactivate().await
+        self.layer_index.layer.deactivate(&self.ui_state).await;
     }
 
     pub async fn style_sheet(&self) -> StyleSheet {
-        let node = self.arena.get(&self.index).await.unwrap();
+        let node = self.arena.get(&self.layer_index.index).await.unwrap();
         node.style_sheet().await
     }
 
     pub async fn focus(&self) {
-        self.ui_state.focus(self.index).await
+        self.layer_index
+            .layer
+            .focus_on(Some(self.layer_index.index), &self.ui_state)
+            .await;
     }
 
     pub async fn is_focused(&self) -> bool {
-        self.ui_state
-            .focused()
+        self.layer_index
+            .layer
+            .focus()
             .await
-            .map(|focus| focus == self.index)
+            .map(|focus| focus == self.layer_index.index)
             .unwrap_or_default()
     }
 
     pub async fn blur(&self) {
-        self.ui_state.blur().await
+        self.layer_index.layer.focus_on(None, &self.ui_state).await;
     }
 
     pub async fn set_style_sheet(&self, sheet: StyleSheet) {
-        let node = self.arena.get(&self.index).await.unwrap();
+        let node = self.arena.get(&self.layer_index.index).await.unwrap();
         node.set_style_sheet(sheet).await
     }
 

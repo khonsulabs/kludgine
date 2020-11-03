@@ -80,6 +80,7 @@ mod internal_macros {
 
 pub mod application;
 pub mod color;
+mod ext;
 pub mod math;
 pub mod runtime;
 pub mod scene;
