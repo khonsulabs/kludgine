@@ -1,4 +1,4 @@
-use super::{
+use crate::{
     runtime::Runtime,
     window::{RuntimeWindow, Window, WindowCreator},
 };

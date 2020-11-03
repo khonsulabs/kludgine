@@ -17,52 +17,6 @@ impl ChainLayout {
         self.elements.push(ChainElement::new(child.into(), height));
         self
     }
-
-    // pub fn layouts<
-    //     F: Fn(&ChainElementContents, Points, LayoutMeasurement) -> (Points, HashMap<Index, (Points, Points)>),
-    // >(
-    //     &self,
-    //     full_size: Points,
-    //     content_sizes: &HashMap<Index, Size<f32, Scaled>>,
-    //     mut calculate_: F,
-    // ) {
-    //     // First loop will process defined sizes first
-    //     let mut remaining_size = full_size - defined_size;
-    //     for (length, element) in self.elements.iter().filter_map(|element| element.size.length().map(|length| (length, element))) {
-    //         let effective_size = length.min(remaining_size);
-    //         let mut measurement = LayoutMeasurement {
-    //             dimension: element.size,
-    //             size: effective_size,
-    //         };
-    //         let effective_size = callback(&element.contents, )
-    //         remaining_size -= effective_size;
-    //     }
-
-    //         let mut automatic_measurements = 0usize;
-    //         let mut defined_size = Points::default();
-    //     for (length, contents) in self.elements.iter().filter_map(|element| element.size.length().map(|length| (length, &element.contents))) {
-    //         match element.size {
-    //             Dimension::Auto => automatic_measurements += 1,
-    //             Dimension::Minimal => if let ChainElementContents::Index(index) = element.contents
-    //             None => automatic_measurements += 1,
-    //             Some(points) => defined_size += points,
-    //         }
-    //     }
-
-    //     let automatic_size = remaining_size / automatic_measurements as f32;
-
-    //     let mut x = Points::default();
-    //     for column in self.elements.iter() {
-    //         let remaining_size = full_size - x;
-    //         let mut measurement = LayoutMeasurement {
-    //             dimension: column.size,
-    //             size: column.size.length().unwrap_or(automatic_size),
-    //         };
-    //         measurement.size = measurement.size.min(remaining_size);
-
-    //         x += callback(&column.contents, x, measurement);
-    //     }
-    // }
 }
 
 #[derive(Debug)]

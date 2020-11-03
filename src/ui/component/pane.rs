@@ -4,16 +4,17 @@ use crate::{
         BackgroundColor, ColorPair, FallbackStyle, GenericStyle, Style, StyleComponent,
         UnscaledFallbackStyle, UnscaledStyleComponent,
     },
-    ui::{component::Component, Layout, StyledContext},
+    ui::{
+        component::{
+            control::{ComponentBorder, ControlBorder, ControlPadding},
+            Component, StandaloneComponent,
+        },
+        Layout, StyledContext,
+    },
     KludgineResult,
 };
 use async_trait::async_trait;
 use euclid::Scale;
-
-use super::{
-    control::{ComponentBorder, ControlBorder, ControlPadding},
-    StandaloneComponent,
-};
 
 #[derive(Debug, Clone, Default)]
 pub struct PanePadding<Unit>(pub Surround<f32, Unit>);

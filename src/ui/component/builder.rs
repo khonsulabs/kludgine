@@ -6,12 +6,11 @@ use crate::{
     prelude::Target,
     style::{Style, StyleSheet},
     ui::{
-        node::ThreadsafeAnyMap, AbsoluteBounds, Context, Entity, HierarchicalArena, Node, UIState,
+        node::ThreadsafeAnyMap, AbsoluteBounds, Callback, Context, Entity, HierarchicalArena,
+        InteractiveComponent, Node, UIState,
     },
     KludgineResult,
 };
-
-use super::{Callback, InteractiveComponent};
 
 pub struct EntityBuilder<C, P>
 where

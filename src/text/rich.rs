@@ -3,13 +3,11 @@ use std::{cmp::Ordering, ops::Range};
 use crate::{
     math::Raw,
     style::{ColorPair, FallbackStyle},
-    text::Text,
+    text::{prepared::PreparedText, wrap::TextWrap, Text},
     ui::StyledContext,
     KludgineResult,
 };
 use async_handle::Handle;
-
-use super::{prepared::PreparedText, wrap::TextWrap};
 
 #[derive(Debug, Clone)]
 pub struct RichText<TextColor> {

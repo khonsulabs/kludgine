@@ -1,13 +1,10 @@
-use std::ops::Range;
-
-use crate::style::{ColorPair, FallbackStyle};
-
-use super::{
+use crate::{
     math::{Point, Raw, Scaled},
     scene::Target,
-    style::Style,
+    style::{ColorPair, FallbackStyle, Style},
     KludgineResult,
 };
+use std::ops::Range;
 
 #[cfg(feature = "bundled-fonts-enabled")]
 pub mod bundled_fonts;

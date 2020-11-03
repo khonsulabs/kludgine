@@ -3,7 +3,10 @@ use async_handle::Handle;
 use crate::{
     scene::Target,
     style::StyleSheet,
-    ui::{Entity, HierarchicalArena, Index, Indexable, InteractiveComponent, Layout, UIState},
+    ui::{
+        node::ThreadsafeAnyMap, Entity, EntityBuilder, HierarchicalArena, Index, Indexable,
+        InteractiveComponent, Layout, UIState,
+    },
 };
 mod layout_context;
 mod styled_context;
@@ -12,8 +15,6 @@ pub use self::{
     styled_context::StyledContext,
 };
 use std::time::{Duration, Instant};
-
-use super::{node::ThreadsafeAnyMap, EntityBuilder};
 
 #[derive(Clone, Debug)]
 pub struct Context {

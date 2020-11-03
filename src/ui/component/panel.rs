@@ -4,15 +4,15 @@ use crate::{
         BackgroundColor, ColorPair, GenericStyle, UnscaledFallbackStyle, UnscaledStyleComponent,
     },
     ui::{
-        component::{Component, ControlBorder, EntityBuilder, InteractiveComponent, Pane},
+        component::{
+            Component, ComponentBorder, ControlBorder, EntityBuilder, InteractiveComponent, Pane,
+        },
         Context, Entity, Layout, StyledContext,
     },
     KludgineResult,
 };
 use async_trait::async_trait;
 use std::fmt::Debug;
-
-use super::ComponentBorder;
 
 #[async_trait]
 pub trait PanelProvider: Send + Sync + 'static {

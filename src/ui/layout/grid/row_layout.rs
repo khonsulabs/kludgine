@@ -1,5 +1,9 @@
-use super::chain_layout::{ChainElementContents, ChainElementDimensionTranslator, ChainLayout};
-use crate::math::{Dimension, Points, Scaled, Size, SizeExt, Surround};
+use crate::{
+    math::{Dimension, Points, Scaled, Size, SizeExt, Surround},
+    ui::layout::grid::chain_layout::{
+        ChainElementContents, ChainElementDimensionTranslator, ChainLayout,
+    },
+};
 use std::ops::Deref;
 
 #[derive(Debug, Default)]

@@ -6,7 +6,10 @@ use crate::{
     },
     ui::{
         component::{
-            control::{ControlBackgroundColor, ControlTextColor},
+            control::{
+                ComponentBorder, ControlBackgroundColor, ControlBorder, ControlPadding,
+                ControlTextColor,
+            },
             Component,
         },
         AbsoluteBounds, Context, ControlEvent, Entity, InteractiveComponent, Label, Layout,
@@ -17,8 +20,6 @@ use crate::{
 };
 use async_trait::async_trait;
 use euclid::Scale;
-
-use super::control::{ComponentBorder, ControlBorder, ControlPadding};
 
 #[derive(Debug, Clone, Default)]
 pub struct ButtonPadding<Unit>(pub Surround<f32, Unit>);
