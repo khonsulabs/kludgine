@@ -42,15 +42,10 @@ pub(crate) struct UIState {
 }
 
 impl UIState {
-    pub(crate) fn new(root: Index, event_sender: Sender<WindowEvent>) -> Self {
+    pub(crate) fn new(event_sender: Sender<WindowEvent>) -> Self {
         Self {
-            data: Handle::new(UIStateData::new(root, event_sender)),
+            data: Handle::new(UIStateData::new(event_sender)),
         }
-    }
-
-    async fn root(&self) -> UILayer {
-        let data = self.data.read().await;
-        data.layers[0].clone()
     }
 
     async fn top_layer(&self) -> UILayer {
@@ -132,6 +127,59 @@ impl UIState {
                 RedrawTarget::None => false,
                 RedrawTarget::Scheduled(scheduled_for) => scheduled_for < Instant::now(),
             }
+    }
+
+    pub(crate) async fn push_layer_from_index(
+        &self,
+        root: Index,
+        arena: &HierarchicalArena,
+        scene: &Scene,
+    ) -> KludgineResult<()> {
+        let layer = {
+            let mut data = self.data.write().await;
+
+            let layer = UILayer {
+                root,
+                data: Handle::new(UILayerData::default()),
+            };
+            data.layers.push(layer.clone());
+            layer
+        };
+
+        let node = arena.get(&root).await.unwrap();
+
+        node.initialize(&mut Context::new(
+            LayerIndex { layer, index: root },
+            arena.clone(),
+            self.clone(),
+            Target::from(scene.clone()),
+        ))
+        .await?;
+
+        Ok(())
+    }
+
+    async fn push_layer<C: InteractiveComponent + 'static>(
+        &self,
+        root: C,
+        arena: &HierarchicalArena,
+        scene: &Scene,
+    ) -> KludgineResult<Index> {
+        let root = arena
+            .insert(
+                None,
+                Node::new(
+                    root,
+                    Default::default(),
+                    AbsoluteBounds::default(),
+                    true,
+                    None,
+                ),
+            )
+            .await;
+
+        self.push_layer_from_index(root, arena, scene).await?;
+        Ok(root)
     }
 }
 
@@ -234,23 +282,17 @@ impl UILayer {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 struct UILayerData {
     focus: Option<Index>,
     active: Option<Index>,
 }
 
 impl UIStateData {
-    fn new(root: Index, event_sender: Sender<WindowEvent>) -> Self {
+    fn new(event_sender: Sender<WindowEvent>) -> Self {
         Self {
-            layers: vec![UILayer {
-                root,
-                data: Handle::new(UILayerData {
-                    focus: None,
-                    active: None,
-                }),
-            }],
             event_sender,
+            layers: Default::default(),
             needs_render: true,
             next_redraw_target: RedrawTarget::default(),
         }
@@ -281,18 +323,7 @@ where
         arena: HierarchicalArena,
         event_sender: Sender<WindowEvent>,
     ) -> KludgineResult<Self> {
-        let root = {
-            let node = Node::new::<C>(
-                root,
-                scene.theme().await.default_style_sheet(),
-                AbsoluteBounds::default(),
-                true,
-                None,
-            );
-
-            arena.insert(None, node).await
-        };
-        let ui_state = UIState::new(root, event_sender);
+        let ui_state = UIState::new(event_sender);
 
         let ui = Self {
             scene,
@@ -304,11 +335,7 @@ where
             mouse_button_handlers: Default::default(),
             _phantom: Default::default(),
         };
-        ui.initialize(&LayerIndex {
-            index: root,
-            layer: ui.ui_state.root().await,
-        })
-        .await?;
+        ui.ui_state.push_layer(root, &ui.arena, &ui.scene).await?;
         Ok(ui)
     }
 
@@ -609,19 +636,6 @@ where
 
     pub(crate) async fn needs_render(&self) -> bool {
         self.ui_state.needs_render().await
-    }
-
-    async fn initialize(&self, layer_index: &impl LayerIndexable) -> KludgineResult<()> {
-        let layer_index = layer_index.layer_index();
-        let node = self.arena.get(&layer_index.index).await.unwrap();
-
-        node.initialize(&mut Context::new(
-            layer_index,
-            self.arena.clone(),
-            self.ui_state.clone(),
-            Target::from(self.scene.clone()),
-        ))
-        .await
     }
 }
 

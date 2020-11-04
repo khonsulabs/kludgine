@@ -21,6 +21,7 @@ pub mod legion;
 mod pane;
 mod panel;
 mod text_field;
+mod toast;
 
 pub use self::{
     builder::EntityBuilder,
@@ -39,6 +40,7 @@ pub use self::{
         PanelProvider,
     },
     text_field::{TextField, TextFieldBackgroundColor, TextFieldBorder, TextFieldEvent},
+    toast::Toast,
 };
 
 pub struct LayoutConstraints {}

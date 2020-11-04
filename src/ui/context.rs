@@ -7,6 +7,7 @@ use crate::{
         node::ThreadsafeAnyMap, Entity, EntityBuilder, HierarchicalArena, Index, Indexable,
         InteractiveComponent, Layout, UIState,
     },
+    KludgineResult,
 };
 mod layout_context;
 mod styled_context;
@@ -123,6 +124,18 @@ impl Context {
 
     pub(crate) fn ui_state(&self) -> &'_ UIState {
         &self.ui_state
+    }
+
+    pub async fn push_layer<C: InteractiveComponent + 'static>(
+        &self,
+        layer_root: C,
+    ) -> KludgineResult<Entity<C>> {
+        let index = self
+            .ui_state
+            .push_layer(layer_root, &self.arena, &self.scene)
+            .await?;
+
+        Ok(Entity::new(self.clone_for(&index)))
     }
 
     pub async fn activate(&self) {

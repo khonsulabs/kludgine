@@ -460,10 +460,11 @@ mod tests {
         let scene = Target::from(Scene::new(Box::new(Minimal::default())));
         scene.set_internal_size(Size::new(200., 200.)).await;
         let (event_sender, _) = async_channel::unbounded();
-        let ui_state = UIState::new(root, event_sender);
+        let ui_state = UIState::new(event_sender);
+        ui_state.push_layer_from_index(root, &arena, &scene).await?;
         let engine = LayoutEngine::layout(
             &arena,
-            &ui_state.root().await,
+            &ui_state.top_layer().await,
             &ui_state,
             root,
             &scene,
