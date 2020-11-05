@@ -3,7 +3,7 @@
 extern crate kludgine;
 use std::fmt::Display;
 
-use kludgine::{prelude::*, ui::ControlBorder};
+use kludgine::prelude::*;
 use rand::{thread_rng, Rng};
 
 fn main() {
@@ -270,22 +270,18 @@ impl TicTacToe {
         Ok(())
     }
 
-    fn border_for_tile(tile: usize) -> Option<ControlBorder> {
+    fn border_for_tile(tile: usize) -> Option<ComponentBorder> {
         match tile {
-            0 | 1 | 3 | 4 => Some(ControlBorder(
+            0 | 1 | 3 | 4 => Some(
                 ComponentBorder::default()
                     .with_right(Border::new(1., Color::BLACK.into()))
                     .with_bottom(Border::new(1., Color::BLACK.into())),
-            )),
-            2 | 5 => Some(ControlBorder(
-                ComponentBorder::default().with_bottom(Border::new(1., Color::BLACK.into())),
-            )),
-            6 => Some(ControlBorder(
-                ComponentBorder::default().with_right(Border::new(1., Color::BLACK.into())),
-            )),
-            7 => Some(ControlBorder(
-                ComponentBorder::default().with_right(Border::new(1., Color::BLACK.into())),
-            )),
+            ),
+            2 | 5 => {
+                Some(ComponentBorder::default().with_bottom(Border::new(1., Color::BLACK.into())))
+            }
+            6 => Some(ComponentBorder::default().with_right(Border::new(1., Color::BLACK.into()))),
+            7 => Some(ComponentBorder::default().with_right(Border::new(1., Color::BLACK.into()))),
             8 => None,
             _ => unreachable!(),
         }

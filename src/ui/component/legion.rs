@@ -5,7 +5,6 @@ use crate::{
     scene::Target,
     shape::Shape,
     sprite::{Sprite, SpriteRotation, SpriteSource},
-    style::TextColor,
     text::Text,
     tilemap::{TileMap, TileProvider},
     ui::{Component, Context, InteractiveComponent, Layout, StyledContext},
@@ -452,7 +451,7 @@ pub enum Drawable<Unit> {
     Sprite(SpriteSource),
     Shape(Shape<Unit>),
     TileMap(LegionTileMap<Unit>),
-    Text(Text<TextColor>),
+    Text(Text),
     Custom(DrawableComponent<Unit>),
 }
 

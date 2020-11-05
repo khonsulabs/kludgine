@@ -103,7 +103,7 @@ pub(crate) struct SceneData {
     fonts: HashMap<String, Vec<Font>>,
     system_theme: SystemTheme,
     #[derivative(Debug = "ignore")]
-    theme: Arc<Box<dyn Theme>>,
+    theme: Arc<Theme>,
 }
 
 pub struct Modifiers {
@@ -123,7 +123,7 @@ impl Modifiers {
 }
 
 impl Scene {
-    pub(crate) fn new(theme: Box<dyn Theme>) -> Self {
+    pub(crate) fn new(theme: Theme) -> Self {
         Self {
             data: Handle::new(SceneData {
                 theme: Arc::new(theme),
@@ -290,7 +290,7 @@ impl Scene {
         let scene = self.data.read().await;
         let fonts = if family.eq_ignore_ascii_case("sans-serif") {
             let theme = self.theme().await;
-            scene.fonts.get(theme.default_font_family())
+            scene.fonts.get(&theme.default_font_family)
         } else {
             scene.fonts.get(family)
         };
@@ -329,7 +329,7 @@ impl Scene {
         }
     }
 
-    pub async fn theme(&self) -> Arc<Box<dyn Theme>> {
+    pub async fn theme(&self) -> Arc<Theme> {
         let scene = self.data.read().await;
         scene.theme.clone()
     }

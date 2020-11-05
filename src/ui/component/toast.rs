@@ -1,15 +1,9 @@
 use crate::{
     math::{Raw, Scaled, Size, Surround},
-    style::{
-        ColorPair, FallbackStyle, GenericStyle, Style, StyleComponent, UnscaledFallbackStyle,
-        UnscaledStyleComponent,
-    },
+    style::{theme::Selector, Style, StyleComponent},
     ui::{
-        component::{
-            Component, ComponentBorder, ControlBackgroundColor, ControlBorder, ControlPadding,
-            ControlTextColor, InteractiveComponent, Label, StandaloneComponent,
-        },
-        Context, Entity, Layout, StyledContext,
+        component::{Component, InteractiveComponent, Label, StandaloneComponent},
+        Context, Entity, StyledContext,
     },
     KludgineResult,
 };
@@ -64,6 +58,10 @@ impl<C> Component for Toast<C>
 where
     C: InteractiveComponent + 'static,
 {
+    fn classes(&self) -> Option<Vec<Selector>> {
+        Some(vec![Selector::from("toast")])
+    }
+
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         if let PendingComponent::Pending(contents) = std::mem::replace(
             &mut self.contents,
@@ -83,8 +81,9 @@ where
         context: &mut StyledContext,
         constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<Size<f32, Scaled>> {
-        let padding = ToastPadding::<Raw>::lookup(context.effective_style())
-            .unwrap_or_default()
+        let padding = context
+            .effective_style()
+            .get_or_default::<ToastPadding<Raw>>()
             .0
             / context.scene().scale_factor().await;
 
@@ -95,16 +94,7 @@ where
             + padding.minimum_size())
     }
 
-    async fn render_background(
-        &self,
-        context: &mut StyledContext,
-        layout: &Layout,
-    ) -> KludgineResult<()> {
-        self.render_standard_background::<ToastBackgroundColor, ToastBorder>(context, layout)
-            .await
-    }
-
-    // TODO override render background
+    // TODO override render background?
     // TODO implement timeout for the toast
     // TODO figure out how to let the user control toast placement?
 }
@@ -123,91 +113,5 @@ impl StyleComponent<Scaled> for ToastPadding<Scaled> {
 impl StyleComponent<Raw> for ToastPadding<Raw> {
     fn scale(&self, _scale: Scale<f32, Raw, Raw>, map: &mut Style<Raw>) {
         map.push(ToastPadding(self.0));
-    }
-}
-
-impl FallbackStyle<Scaled> for ToastPadding<Scaled> {
-    fn lookup(style: &Style<Scaled>) -> Option<Self> {
-        style
-            .get::<Self>()
-            .cloned()
-            .or_else(|| ControlPadding::<Scaled>::lookup(style).map(|cp| ToastPadding(cp.0)))
-    }
-}
-
-impl FallbackStyle<Raw> for ToastPadding<Raw> {
-    fn lookup(style: &Style<Raw>) -> Option<Self> {
-        style
-            .get::<Self>()
-            .cloned()
-            .or_else(|| ControlPadding::<Raw>::lookup(style).map(|cp| ToastPadding(cp.0)))
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct ToastBackgroundColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for ToastBackgroundColor {}
-
-impl Default for ToastBackgroundColor {
-    fn default() -> Self {
-        Self(ControlBackgroundColor::default().0)
-    }
-}
-
-impl UnscaledFallbackStyle for ToastBackgroundColor {
-    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
-        style.get::<Self>().cloned().or_else(|| {
-            ControlBackgroundColor::lookup_unscaled(style).map(|fg| ToastBackgroundColor(fg.0))
-        })
-    }
-}
-
-impl Into<ColorPair> for ToastBackgroundColor {
-    fn into(self) -> ColorPair {
-        self.0
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct ToastTextColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for ToastTextColor {}
-
-impl Default for ToastTextColor {
-    fn default() -> Self {
-        Self(ControlTextColor::default().0)
-    }
-}
-
-impl UnscaledFallbackStyle for ToastTextColor {
-    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
-        style
-            .get::<Self>()
-            .cloned()
-            .or_else(|| ControlTextColor::lookup_unscaled(style).map(|fg| ToastTextColor(fg.0)))
-    }
-}
-
-impl Into<ColorPair> for ToastTextColor {
-    fn into(self) -> ColorPair {
-        self.0
-    }
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct ToastBorder(pub ComponentBorder);
-impl UnscaledStyleComponent<Scaled> for ToastBorder {}
-
-impl UnscaledFallbackStyle for ToastBorder {
-    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
-        style
-            .get::<Self>()
-            .cloned()
-            .or_else(|| ControlBorder::lookup_unscaled(style).map(|cb| ToastBorder(cb.0)))
-    }
-}
-
-impl Into<ComponentBorder> for ToastBorder {
-    fn into(self) -> ComponentBorder {
-        self.0
     }
 }

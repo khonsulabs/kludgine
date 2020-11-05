@@ -1,7 +1,7 @@
 use crate::{
-    math::{Point, PointExt, Raw, Rect, Scaled, Size, SizeExt},
+    math::{Point, PointExt, Rect, Scaled, Size, SizeExt},
     shape::{Fill, Shape},
-    style::{BackgroundColor, ColorPair, FallbackStyle},
+    style::{theme::Selector, BackgroundColor},
     ui::{Context, Entity, Layout, LayoutSolver, LayoutSolverExt, StyledContext},
     window::{
         event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
@@ -25,21 +25,15 @@ mod toast;
 
 pub use self::{
     builder::EntityBuilder,
-    button::{Button, ButtonBackgroundColor, ButtonBorder, ButtonPadding, ButtonTextColor},
-    control::{
-        Border, ComponentBorder, ControlBackgroundColor, ControlBorder, ControlEvent,
-        ControlPadding, ControlTextColor,
-    },
+    button::{Button, ButtonPadding},
+    control::{Border, ComponentBorder, ControlEvent, ControlPadding},
     image::{
         Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
     },
-    label::{Label, LabelBackgroundColor, LabelCommand, LabelTextColor},
-    pane::{Pane, PaneBackgroundColor, PaneBorder, PanePadding},
-    panel::{
-        Panel, PanelBackgroundColor, PanelBorder, PanelCommand, PanelEvent, PanelMessage,
-        PanelProvider,
-    },
-    text_field::{TextField, TextFieldBackgroundColor, TextFieldBorder, TextFieldEvent},
+    label::{Label, LabelCommand},
+    pane::Pane,
+    panel::{Panel, PanelCommand, PanelEvent, PanelMessage, PanelProvider},
+    text_field::{TextField, TextFieldEvent},
     toast::Toast,
 };
 
@@ -48,6 +42,10 @@ pub struct LayoutConstraints {}
 #[async_trait]
 #[allow(unused_variables)]
 pub trait Component: Send + Sync {
+    fn classes(&self) -> Option<Vec<Selector>> {
+        None
+    }
+
     /// Called once the Window is opened
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         Ok(())
@@ -94,21 +92,9 @@ pub trait Component: Send + Sync {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        self.render_standard_background::<BackgroundColor, ComponentBorder>(context, layout)
-            .await
-    }
-
-    async fn render_standard_background<
-        C: Into<ColorPair> + FallbackStyle<Raw> + Clone,
-        B: Into<ComponentBorder> + FallbackStyle<Raw> + Clone,
-    >(
-        &self,
-        context: &mut StyledContext,
-        layout: &Layout,
-    ) -> KludgineResult<()> {
         let bounds = layout.bounds_without_margin();
-        if let Some(background) = C::lookup(context.effective_style()) {
-            let color_pair = background.clone().into();
+        if let Some(background) = context.effective_style().get::<BackgroundColor>() {
+            let color_pair = background.0;
             let color = color_pair.themed_color(&context.scene().system_theme().await);
 
             if color.visible() {
@@ -118,10 +104,9 @@ pub trait Component: Send + Sync {
                     .await;
             }
         }
-        if let Some(border) = B::lookup(context.effective_style()) {
-            let border = border.into();
+        if let Some(border) = context.effective_style().get::<ComponentBorder>() {
             // TODO the borders should be mitered together rather than drawn overlapping
-            if let Some(left) = border.left {
+            if let Some(left) = &border.left {
                 Shape::rect(Rect::new(
                     bounds.origin,
                     Size::from_lengths(left.width, bounds.size.height()),
@@ -133,7 +118,7 @@ pub trait Component: Send + Sync {
                 .render_at(Point::default(), context.scene())
                 .await;
             }
-            if let Some(right) = border.right {
+            if let Some(right) = &border.right {
                 Shape::rect(Rect::new(
                     Point::from_lengths(bounds.max().x() - right.width, bounds.origin.y()),
                     Size::from_lengths(right.width, bounds.size.height()),
@@ -146,7 +131,7 @@ pub trait Component: Send + Sync {
                 .render_at(Point::default(), context.scene())
                 .await;
             }
-            if let Some(top) = border.top {
+            if let Some(top) = &border.top {
                 Shape::rect(Rect::new(
                     bounds.origin,
                     Size::from_lengths(bounds.size.width(), top.width),
@@ -158,7 +143,7 @@ pub trait Component: Send + Sync {
                 .render_at(Point::default(), context.scene())
                 .await;
             }
-            if let Some(bottom) = border.bottom {
+            if let Some(bottom) = &border.bottom {
                 Shape::rect(Rect::new(
                     Point::from_lengths(bounds.origin.x(), bounds.max().y() - bottom.width),
                     Size::from_lengths(bounds.size.width(), bottom.width),

@@ -457,7 +457,7 @@ mod tests {
         arena.set_parent(leaf, Some(child)).await;
         arena.set_parent(child, Some(root)).await;
 
-        let scene = Target::from(Scene::new(Box::new(Minimal::default())));
+        let scene = Target::from(Scene::new(Minimal::default().theme()));
         scene.set_internal_size(Size::new(200., 200.)).await;
         let (event_sender, _) = async_channel::unbounded();
         let ui_state = UIState::new(event_sender);

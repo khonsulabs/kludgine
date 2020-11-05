@@ -1,6 +1,7 @@
 use crate::{
     math::{Point, Rect, Scaled, Size},
     sprite::{Sprite, SpriteRotation, SpriteSource},
+    style::theme::Selector,
     ui::{
         animation::{FloatChange, PropertyFrameManager, PropertyMutator, Transition},
         AnimatableComponent, Component, Context, ControlEvent, Entity, InteractiveComponent,
@@ -109,6 +110,10 @@ impl InteractiveComponent for Image {
 
 #[async_trait]
 impl Component for Image {
+    fn classes(&self) -> Option<Vec<Selector>> {
+        Some(vec![Selector::from("image"), Selector::from("control")])
+    }
+
     async fn update(&mut self, context: &mut Context) -> KludgineResult<()> {
         self.current_frame = match &self.options.override_frame {
             Some(override_frame) => {

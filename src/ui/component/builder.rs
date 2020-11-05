@@ -4,7 +4,10 @@ use generational_arena::Index;
 use crate::{
     math::Scaled,
     prelude::Target,
-    style::{Style, StyleSheet},
+    style::{
+        theme::{Classes, Id},
+        Style, StyleSheet,
+    },
     ui::{
         node::ThreadsafeAnyMap, AbsoluteBounds, Callback, Context, Entity, HierarchicalArena,
         InteractiveComponent, LayerIndex, Node, UILayer, UIState,
@@ -82,8 +85,20 @@ where
         self
     }
 
+    pub fn with<T: Send + Sync + 'static>(mut self, component: T) -> Self {
+        self.components.insert(component);
+        self
+    }
+
     pub async fn insert(mut self) -> KludgineResult<Entity<C>> {
-        self.components.insert(Handle::new(self.style_sheet));
+        let theme = self.scene.theme().await;
+        let theme_style = theme.stylesheet_for(
+            self.components.get::<Id>(),
+            self.components.get::<Classes>(),
+        );
+        self.components.insert(Handle::new(
+            self.style_sheet.merge_with(&theme_style, false),
+        ));
         let layer_index = {
             let node = Node::from_components::<C>(self.components, self.interactive, self.callback);
             let index = self.arena.insert(self.parent, node).await;

@@ -1,14 +1,8 @@
 use crate::{
     math::{Point, PointExt, Points, Raw, Scaled, Size, SizeExt},
-    style::{
-        Alignment, ColorPair, GenericStyle, Style, UnscaledFallbackStyle, UnscaledStyleComponent,
-        VerticalAlignment,
-    },
+    style::{theme::Selector, Alignment, Style, VerticalAlignment},
     text::{wrap::TextWrap, Text},
-    ui::{
-        component::control::ControlBorder, Component, Context, ControlBackgroundColor,
-        ControlEvent, ControlTextColor, InteractiveComponent, Layout, StyledContext,
-    },
+    ui::{Component, Context, ControlEvent, InteractiveComponent, Layout, StyledContext},
     window::event::MouseButton,
     KludgineResult,
 };
@@ -49,6 +43,10 @@ impl InteractiveComponent for Label {
 
 #[async_trait]
 impl Component for Label {
+    fn classes(&self) -> Option<Vec<Selector>> {
+        Some(vec![Selector::from("label"), Selector::from("control")])
+    }
+
     async fn update(&mut self, _context: &mut Context) -> KludgineResult<()> {
         Ok(())
     }
@@ -121,15 +119,6 @@ impl Component for Label {
         .await;
         Ok(())
     }
-
-    async fn render_background(
-        &self,
-        context: &mut StyledContext,
-        layout: &Layout,
-    ) -> KludgineResult<()> {
-        self.render_standard_background::<LabelBackgroundColor, ControlBorder>(context, layout)
-            .await
-    }
 }
 
 impl Label {
@@ -138,7 +127,7 @@ impl Label {
             value: value.to_string(),
         }
     }
-    fn create_text(&self, effective_style: &Style<Raw>) -> Text<LabelTextColor> {
+    fn create_text(&self, effective_style: &Style<Raw>) -> Text {
         Text::span(&self.value, effective_style.clone())
     }
 
@@ -148,54 +137,5 @@ impl Label {
             truncate: true,
             alignment,
         }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct LabelBackgroundColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for LabelBackgroundColor {}
-
-impl Default for LabelBackgroundColor {
-    fn default() -> Self {
-        Self(ControlBackgroundColor::default().0)
-    }
-}
-
-impl UnscaledFallbackStyle for LabelBackgroundColor {
-    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
-        style.get::<Self>().cloned().or_else(|| {
-            ControlBackgroundColor::lookup_unscaled(style).map(|fg| LabelBackgroundColor(fg.0))
-        })
-    }
-}
-
-impl Into<ColorPair> for LabelBackgroundColor {
-    fn into(self) -> ColorPair {
-        self.0
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct LabelTextColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for LabelTextColor {}
-
-impl Default for LabelTextColor {
-    fn default() -> Self {
-        Self(ControlTextColor::default().0)
-    }
-}
-
-impl UnscaledFallbackStyle for LabelTextColor {
-    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
-        style
-            .get::<Self>()
-            .cloned()
-            .or_else(|| ControlTextColor::lookup_unscaled(style).map(|fg| LabelTextColor(fg.0)))
-    }
-}
-
-impl Into<ColorPair> for LabelTextColor {
-    fn into(self) -> ColorPair {
-        self.0
     }
 }

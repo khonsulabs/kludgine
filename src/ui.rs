@@ -6,6 +6,7 @@ mod layout;
 mod node;
 mod timeout;
 
+use self::node::ThreadsafeAnyMap;
 pub use self::{
     animation::{AnimationManager, LinearTransition},
     component::*,
@@ -18,6 +19,7 @@ use crate::{
     math::{Point, Scaled},
     runtime::Runtime,
     scene::{Scene, Target},
+    style::theme::Id,
     window::event::{ElementState, Event, EventStatus, InputEvent, MouseButton, WindowEvent},
     Handle, KludgineError, KludgineResult, RequiresInitialization,
 };
@@ -165,17 +167,17 @@ impl UIState {
         arena: &HierarchicalArena,
         scene: &Scene,
     ) -> KludgineResult<Index> {
+        let mut components = ThreadsafeAnyMap::new();
+        let theme = scene.theme().await;
+        components.insert(Handle::new(root));
+        components.insert(Handle::new(Id::from("root")));
+        components.insert(Handle::new(AbsoluteBounds::default()));
+        components.insert(Handle::new(
+            theme.stylesheet_for(Some(&Id::from("root")), None),
+        ));
+
         let root = arena
-            .insert(
-                None,
-                Node::new(
-                    root,
-                    Default::default(),
-                    AbsoluteBounds::default(),
-                    true,
-                    None,
-                ),
-            )
+            .insert(None, Node::from_components::<C>(components, true, None))
             .await;
 
         self.push_layer_from_index(root, arena, scene).await?;

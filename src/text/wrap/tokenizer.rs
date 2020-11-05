@@ -1,9 +1,7 @@
-use std::marker::PhantomData;
-
 use crate::{
     math::{Pixels, Raw, Scaled},
     scene::Target,
-    style::{ColorPair, FallbackStyle, FontFamily, FontSize, FontStyle, Style, Weight},
+    style::{FontFamily, FontSize, FontStyle, ForegroundColor, Style, Weight},
     text::{font::Font, prepared::GlyphInfo, PreparedSpan, Text},
     KludgineResult,
 };
@@ -53,7 +51,7 @@ pub(crate) struct Tokenizer {
     tokens: Vec<Token>,
 }
 
-struct TokenizerState<'a, TextColor> {
+struct TokenizerState<'a> {
     style: &'a Style<Raw>,
     font: &'a Font,
     glyphs: Vec<GlyphInfo>,
@@ -61,13 +59,9 @@ struct TokenizerState<'a, TextColor> {
     lexer_state: TokenizerStatus,
     last_glyph_id: Option<GlyphId>,
     caret: Pixels,
-    phantom: PhantomData<TextColor>,
 }
 
-impl<'a, TextColor> TokenizerState<'a, TextColor>
-where
-    TextColor: Into<ColorPair> + FallbackStyle<Raw>,
-{
+impl<'a> TokenizerState<'a> {
     pub(crate) fn new(font: &'a Font, style: &'a Style<Raw>) -> Self {
         Self {
             font,
@@ -77,7 +71,6 @@ where
             chars: Default::default(),
             last_glyph_id: None,
             caret: Pixels::default(),
-            phantom: Default::default(),
         }
     }
 
@@ -92,9 +85,7 @@ where
             let current_committed_glyphs = std::mem::take(&mut self.glyphs);
 
             let font_size = style_font_size(&self.style, scale);
-            let foreground = TextColor::lookup(self.style)
-                .map(|component| component.into())
-                .unwrap_or_default();
+            let foreground = self.style.get_or_default::<ForegroundColor>().0;
             let metrics = self.font.metrics(font_size).await;
             let span = PreparedSpan::new(
                 self.font.clone(),
@@ -120,9 +111,9 @@ where
 
 impl Tokenizer {
     // Text (Vec<Span>) -> Vec<Token{ PreparedSpan, TokenKind }>
-    pub(crate) async fn prepare_spans<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
+    pub(crate) async fn prepare_spans(
         mut self,
-        text: &Text<TextColor>,
+        text: &Text,
         scene: &Target,
     ) -> KludgineResult<Vec<Token>> {
         let scale = scene.scale_factor().await;
@@ -139,7 +130,7 @@ impl Tokenizer {
             let vmetrics = font.metrics(style_font_size(&span.style, scale)).await;
             last_span_metrics = Some(vmetrics);
 
-            let mut state = TokenizerState::<TextColor>::new(&font, &span.style);
+            let mut state = TokenizerState::new(&font, &span.style);
 
             for c in span.text.chars() {
                 let source_offset = current_offset;

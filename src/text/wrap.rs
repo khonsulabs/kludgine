@@ -1,7 +1,7 @@
 use crate::{
-    math::{max_f, min_f, Pixels, PointExt, Points, Raw},
+    math::{max_f, min_f, Pixels, PointExt, Points},
     scene::Target,
-    style::{Alignment, ColorPair, FallbackStyle},
+    style::Alignment,
     text::{PreparedLine, PreparedSpan, PreparedText, Text},
     KludgineResult,
 };
@@ -122,8 +122,8 @@ impl TextWrapState {
 }
 
 impl TextWrapper {
-    pub async fn wrap<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
-        text: &Text<TextColor>,
+    pub async fn wrap(
+        text: &Text,
         scene: &Target,
         options: TextWrap,
     ) -> KludgineResult<PreparedText> {
@@ -136,10 +136,7 @@ impl TextWrapper {
         .await
     }
 
-    async fn wrap_text<TextColor: Into<ColorPair> + FallbackStyle<Raw>>(
-        mut self,
-        text: &Text<TextColor>,
-    ) -> KludgineResult<PreparedText> {
+    async fn wrap_text(mut self, text: &Text) -> KludgineResult<PreparedText> {
         let effective_scale_factor = self.scene.scale_factor().await;
         let width = self.options.max_width();
 
@@ -243,7 +240,7 @@ mod tests {
     use crate::{
         math::{Scaled, ScreenScale},
         scene::{Scene, Target},
-        style::{theme::Minimal, FontSize, Style, TextColor},
+        style::{theme::Minimal, FontSize, Style},
         text::Span,
     };
 
@@ -251,10 +248,10 @@ mod tests {
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word() {
         for &scale in &[1f32, 2.] {
-            let mut scene = Target::from(Scene::new(Box::new(Minimal::default())));
+            let mut scene = Target::from(Scene::new(Minimal::default().theme()));
             scene.set_scale_factor(ScreenScale::new(scale)).await;
             scene.register_bundled_fonts().await;
-            let wrap = Text::<TextColor>::new(vec![Span::new(
+            let wrap = Text::new(vec![Span::new(
                 "This line should wrap",
                 Style::new()
                     .with(FontSize::<Scaled>::new(12.))
@@ -281,7 +278,7 @@ mod tests {
     #[async_test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word_different_span() {
-        let scene = Target::from(Scene::new(Box::new(Minimal::default())));
+        let scene = Target::from(Scene::new(Minimal::default().theme()));
         scene.register_bundled_fonts().await;
 
         let first_style = Style::new()
@@ -294,7 +291,7 @@ mod tests {
             .effective_style(&scene)
             .await;
 
-        let wrap = Text::<TextColor>::new(vec![
+        let wrap = Text::new(vec![
             Span::new("This line should ", first_style),
             Span::new("wrap", second_style),
         ])

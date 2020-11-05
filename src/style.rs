@@ -12,7 +12,6 @@ use std::{
 mod alignment;
 mod any;
 mod colors;
-mod fallback;
 mod font_family;
 mod font_size;
 mod font_style;
@@ -21,8 +20,7 @@ mod weight;
 pub use self::{
     alignment::{Alignment, VerticalAlignment},
     any::AnyStyleComponent,
-    colors::{BackgroundColor, ColorPair, ForegroundColor, TextColor},
-    fallback::{FallbackStyle, UnscaledFallbackStyle},
+    colors::{BackgroundColor, ColorPair, ForegroundColor},
     font_family::FontFamily,
     font_size::FontSize,
     font_style::FontStyle,

@@ -112,7 +112,7 @@ impl Component for UIExample {
             .style_sheet(
                 Style::new()
                     .with(ForegroundColor(Color::new(1.0, 1.0, 1.0, 0.1).into()))
-                    .with(LabelBackgroundColor(Color::new(1.0, 0.0, 1.0, 0.5).into()))
+                    .with(BackgroundColor(Color::new(1.0, 0.0, 1.0, 0.5).into()))
                     .with(FontSize::new(72.))
                     .with(Alignment::Right),
             )

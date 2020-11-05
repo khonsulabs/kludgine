@@ -4,10 +4,7 @@ use euclid::Length;
 
 use crate::{
     math::{Point, Raw, Scale, Scaled, Surround},
-    style::{
-        BackgroundColor, ColorPair, FallbackStyle, GenericStyle, Style, StyleComponent, TextColor,
-        UnscaledFallbackStyle, UnscaledStyleComponent,
-    },
+    style::{ColorPair, Style, StyleComponent, UnscaledStyleComponent},
     window::event::MouseButton,
 };
 
@@ -17,55 +14,6 @@ pub enum ControlEvent {
         button: MouseButton,
         window_position: Point<f32, Scaled>,
     },
-}
-
-#[derive(Debug, Clone)]
-pub struct ControlBackgroundColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for ControlBackgroundColor {}
-
-impl Default for ControlBackgroundColor {
-    fn default() -> Self {
-        Self(BackgroundColor::default().0)
-    }
-}
-
-impl UnscaledFallbackStyle for ControlBackgroundColor {
-    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
-        style.get::<Self>().cloned().or_else(|| {
-            BackgroundColor::lookup_unscaled(style).map(|fg| ControlBackgroundColor(fg.0))
-        })
-    }
-}
-
-impl Into<ColorPair> for ControlBackgroundColor {
-    fn into(self) -> ColorPair {
-        self.0
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct ControlTextColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for ControlTextColor {}
-
-impl Default for ControlTextColor {
-    fn default() -> Self {
-        Self(TextColor::default().0)
-    }
-}
-
-impl UnscaledFallbackStyle for ControlTextColor {
-    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
-        style
-            .get::<Self>()
-            .cloned()
-            .or_else(|| TextColor::lookup_unscaled(style).map(|fg| ControlTextColor(fg.0)))
-    }
-}
-
-impl Into<ColorPair> for ControlTextColor {
-    fn into(self) -> ColorPair {
-        self.0
-    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -82,9 +30,6 @@ impl StyleComponent<Raw> for ControlPadding<Raw> {
         map.push(ControlPadding(self.0));
     }
 }
-
-impl FallbackStyle<Scaled> for ControlPadding<Scaled> {}
-impl FallbackStyle<Raw> for ControlPadding<Raw> {}
 
 #[derive(Debug, Clone)]
 pub struct Border {
@@ -141,28 +86,3 @@ impl ComponentBorder {
 }
 
 impl UnscaledStyleComponent<Scaled> for ComponentBorder {}
-
-impl UnscaledFallbackStyle for ComponentBorder {
-    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
-        style.get::<Self>().cloned()
-    }
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct ControlBorder(pub ComponentBorder);
-impl UnscaledStyleComponent<Scaled> for ControlBorder {}
-
-impl UnscaledFallbackStyle for ControlBorder {
-    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
-        style
-            .get::<Self>()
-            .cloned()
-            .or_else(|| ComponentBorder::lookup_unscaled(style).map(ControlBorder))
-    }
-}
-
-impl Into<ComponentBorder> for ControlBorder {
-    fn into(self) -> ComponentBorder {
-        self.0
-    }
-}

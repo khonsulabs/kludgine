@@ -1,8 +1,6 @@
 use std::{cmp::Ordering, ops::Range};
 
 use crate::{
-    math::Raw,
-    style::{ColorPair, FallbackStyle},
     text::{prepared::PreparedText, wrap::TextWrap, Text},
     ui::StyledContext,
     KludgineResult,
@@ -10,13 +8,13 @@ use crate::{
 use async_handle::Handle;
 
 #[derive(Debug, Clone)]
-pub struct RichText<TextColor> {
-    data: Handle<RichTextData<TextColor>>,
+pub struct RichText {
+    data: Handle<RichTextData>,
 }
 
 #[derive(Debug)]
-struct RichTextData<TextColor> {
-    paragraphs: Vec<Text<TextColor>>,
+struct RichTextData {
+    paragraphs: Vec<Text>,
 }
 
 pub enum ParagraphRemoval {
@@ -24,11 +22,8 @@ pub enum ParagraphRemoval {
     Keep,
 }
 
-impl<TextColor> RichText<TextColor>
-where
-    TextColor: Into<ColorPair> + FallbackStyle<Raw>,
-{
-    pub fn new(paragraphs: Vec<Text<TextColor>>) -> Self {
+impl RichText {
+    pub fn new(paragraphs: Vec<Text>) -> Self {
         Self {
             data: Handle::new(RichTextData { paragraphs }),
         }
@@ -67,7 +62,7 @@ where
         .await;
     }
 
-    pub async fn for_each_in_range<F: FnMut(&Text<TextColor>, Range<usize>)>(
+    pub async fn for_each_in_range<F: FnMut(&Text, Range<usize>)>(
         &self,
         range: Range<RichTextPosition>,
         mut callback: F,
@@ -92,7 +87,7 @@ where
     }
 
     pub async fn for_each_in_range_mut<
-        F: Fn(&mut Text<TextColor>, Range<usize>, usize) -> ParagraphRemoval,
+        F: Fn(&mut Text, Range<usize>, usize) -> ParagraphRemoval,
     >(
         &self,
         range: Range<RichTextPosition>,
@@ -186,7 +181,7 @@ where
         paragraphs.join("\n")
     }
 
-    pub async fn paragraphs(&self) -> Vec<Text<TextColor>> {
+    pub async fn paragraphs(&self) -> Vec<Text> {
         let data = self.data.read().await;
         data.paragraphs.clone()
     }
@@ -216,11 +211,10 @@ impl Ord for RichTextPosition {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::style::TextColor;
 
     #[async_test]
     async fn remove_range_one_paragraph_start() {
-        let text = RichText::<TextColor>::new(vec![Text::span("a123", Default::default())]);
+        let text = RichText::new(vec![Text::span("a123", Default::default())]);
         text.remove_range(
             RichTextPosition {
                 offset: 0,
@@ -236,7 +230,7 @@ mod tests {
 
     #[async_test]
     async fn remove_range_one_paragraph_end() {
-        let text = RichText::<TextColor>::new(vec![Text::span("123a", Default::default())]);
+        let text = RichText::new(vec![Text::span("123a", Default::default())]);
         text.remove_range(
             RichTextPosition {
                 offset: 3,
@@ -252,7 +246,7 @@ mod tests {
 
     #[async_test]
     async fn remove_range_one_paragraph_inner() {
-        let text = RichText::<TextColor>::new(vec![Text::span("1a23", Default::default())]);
+        let text = RichText::new(vec![Text::span("1a23", Default::default())]);
         text.remove_range(
             RichTextPosition {
                 offset: 1,
@@ -268,7 +262,7 @@ mod tests {
 
     #[async_test]
     async fn remove_range_multi_paragraph_cross_boundaries() {
-        let text = RichText::<TextColor>::new(vec![
+        let text = RichText::new(vec![
             Text::span("123a", Default::default()),
             Text::span("b456", Default::default()),
         ]);
@@ -287,7 +281,7 @@ mod tests {
 
     #[async_test]
     async fn remove_range_multi_paragraph_cross_multiple_boundaries() {
-        let text = RichText::<TextColor>::new(vec![
+        let text = RichText::new(vec![
             Text::span("123a", Default::default()),
             Text::span("bc", Default::default()),
             Text::span("d456", Default::default()),

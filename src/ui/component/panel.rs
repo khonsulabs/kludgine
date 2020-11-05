@@ -1,13 +1,8 @@
 use crate::{
-    math::Scaled,
-    style::{
-        BackgroundColor, ColorPair, GenericStyle, UnscaledFallbackStyle, UnscaledStyleComponent,
-    },
+    style::theme::Selector,
     ui::{
-        component::{
-            Component, ComponentBorder, ControlBorder, EntityBuilder, InteractiveComponent, Pane,
-        },
-        Context, Entity, Layout, StyledContext,
+        component::{Component, EntityBuilder, InteractiveComponent, Pane},
+        Context, Entity,
     },
     KludgineResult,
 };
@@ -73,17 +68,12 @@ impl<T: PanelProvider> Panel<T> {
 
 #[async_trait]
 impl<T: PanelProvider> Component for Panel<T> {
-    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
-        self.recreate_pane(context).await
+    fn classes(&self) -> Option<Vec<Selector>> {
+        Some(vec![Selector::from("panel"), Selector::from("control")])
     }
 
-    async fn render_background(
-        &self,
-        context: &mut StyledContext,
-        layout: &Layout,
-    ) -> KludgineResult<()> {
-        self.render_standard_background::<PanelBackgroundColor, PanelBorder>(context, layout)
-            .await
+    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
+        self.recreate_pane(context).await
     }
 }
 
@@ -134,47 +124,4 @@ pub enum PanelEvent<Event> {
 #[derive(Debug, Clone)]
 pub enum PanelMessage<Event> {
     ChildEvent(Event),
-}
-
-#[derive(Debug, Clone)]
-pub struct PanelBackgroundColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for PanelBackgroundColor {}
-
-impl Default for PanelBackgroundColor {
-    fn default() -> Self {
-        Self(BackgroundColor::default().0)
-    }
-}
-
-impl UnscaledFallbackStyle for PanelBackgroundColor {
-    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
-        style.get::<Self>().cloned().or_else(|| {
-            BackgroundColor::lookup_unscaled(style).map(|fg| PanelBackgroundColor(fg.0))
-        })
-    }
-}
-
-impl Into<ColorPair> for PanelBackgroundColor {
-    fn into(self) -> ColorPair {
-        self.0
-    }
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct PanelBorder(pub ComponentBorder);
-impl UnscaledStyleComponent<Scaled> for PanelBorder {}
-
-impl UnscaledFallbackStyle for PanelBorder {
-    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
-        style
-            .get::<Self>()
-            .cloned()
-            .or_else(|| ControlBorder::lookup_unscaled(style).map(|cb| PanelBorder(cb.0)))
-    }
-}
-
-impl Into<ComponentBorder> for PanelBorder {
-    fn into(self) -> ComponentBorder {
-        self.0
-    }
 }
