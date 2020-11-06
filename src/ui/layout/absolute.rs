@@ -135,9 +135,11 @@ impl LayoutSolver for AbsoluteLayout {
     async fn layout_within(
         &self,
         bounds: &Rect<f32, Scaled>,
-        content_size: &Size<f32, Scaled>,
+        _content_size: &Size<f32, Scaled>,
+        padding: &Surround<f32, Scaled>,
         context: &LayoutContext,
     ) -> KludgineResult<()> {
+        let bounds = padding.inset_rect(bounds);
         for (index, child_bounds) in self
             .order
             .iter()
@@ -145,35 +147,36 @@ impl LayoutSolver for AbsoluteLayout {
         {
             let mut child_context = context.clone_for(&index).await;
             let content_size = Size::from_lengths(
-                content_size.width()
+                bounds.size.width()
                     - child_bounds.left.length().unwrap_or_default()
                     - child_bounds.right.length().unwrap_or_default(),
-                content_size.height()
+                bounds.size.height()
                     - child_bounds.top.length().unwrap_or_default()
                     - child_bounds.bottom.length().unwrap_or_default(),
             );
-            let child_content_size = context
+            let (child_content_size, child_padding) = context
                 .arena()
                 .get(&index)
                 .await
                 .unwrap()
-                .content_size(
+                .content_size_with_padding(
                     child_context.styled_context(),
                     &Size::new(Some(content_size.width), Some(content_size.height)),
                 )
                 .await?;
+
             let (left, right) = Self::solve_dimension(
                 &child_bounds.left,
                 &child_bounds.right,
                 &child_bounds.width,
-                bounds.size.width(),
+                bounds.size.width() - child_padding.minimum_width(),
                 child_content_size.width(),
             );
             let (top, bottom) = Self::solve_dimension(
                 &child_bounds.top,
                 &child_bounds.bottom,
                 &child_bounds.height,
-                bounds.size.height(),
+                bounds.size.height() - child_padding.minimum_height(),
                 child_content_size.height(),
             );
 
@@ -181,8 +184,8 @@ impl LayoutSolver for AbsoluteLayout {
                 .insert_layout(
                     index,
                     Layout {
-                        bounds: *bounds,
-                        padding: Default::default(),
+                        bounds,
+                        padding: child_padding,
                         margin: Surround {
                             left,
                             top,
@@ -193,7 +196,6 @@ impl LayoutSolver for AbsoluteLayout {
                 )
                 .await;
         }
-
         Ok(())
     }
 }

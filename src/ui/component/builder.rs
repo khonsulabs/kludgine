@@ -3,9 +3,9 @@ use generational_arena::Index;
 
 use crate::{
     math::Scaled,
-    prelude::Target,
+    scene::Target,
     style::{
-        theme::{Classes, Id},
+        theme::{Classes, Id, Selector},
         Style, StyleSheet,
     },
     ui::{
@@ -19,16 +19,16 @@ pub struct EntityBuilder<C, P>
 where
     C: InteractiveComponent + 'static,
 {
-    pub(crate) components: ThreadsafeAnyMap,
-    pub(crate) scene: Target,
-    pub(crate) parent: Option<Index>,
-    pub(crate) style_sheet: StyleSheet,
-    pub(crate) interactive: bool,
-    pub(crate) callback: Option<Callback<C::Event>>,
-    pub(crate) layer: UILayer,
-    pub(crate) ui_state: UIState,
-    pub(crate) arena: HierarchicalArena,
-    pub(crate) _marker: std::marker::PhantomData<P>,
+    components: ThreadsafeAnyMap,
+    scene: Target,
+    parent: Option<Index>,
+    style_sheet: StyleSheet,
+    interactive: bool,
+    callback: Option<Callback<C::Event>>,
+    layer: UILayer,
+    ui_state: UIState,
+    arena: HierarchicalArena,
+    _marker: std::marker::PhantomData<P>,
 }
 
 impl<C, P> EntityBuilder<C, P>
@@ -36,6 +36,35 @@ where
     C: InteractiveComponent + 'static,
     P: Send + Sync + 'static,
 {
+    pub(crate) fn new(
+        parent: Option<Index>,
+        component: C,
+        scene: &Target,
+        layer: &UILayer,
+        ui_state: &UIState,
+        arena: &HierarchicalArena,
+    ) -> Self {
+        let mut components = ThreadsafeAnyMap::new();
+        if let Some(base_classes) = component.classes() {
+            components.insert(Classes(base_classes));
+        }
+
+        let component = Handle::new(component);
+        components.insert(component);
+        Self {
+            components,
+            scene: scene.clone(),
+            parent,
+            interactive: true,
+            layer: layer.clone(),
+            ui_state: ui_state.clone(),
+            arena: arena.clone(),
+            style_sheet: Default::default(),
+            callback: None,
+            _marker: Default::default(),
+        }
+    }
+
     pub fn style_sheet<S: Into<StyleSheet>>(mut self, sheet: S) -> Self {
         self.style_sheet = sheet.into();
         self
@@ -87,6 +116,16 @@ where
 
     pub fn with<T: Send + Sync + 'static>(mut self, component: T) -> Self {
         self.components.insert(component);
+        self
+    }
+
+    pub fn with_class<S: Into<Selector>>(mut self, class: S) -> Self {
+        let class = class.into();
+        if let Some(classes) = self.components.get_mut::<Classes>() {
+            classes.0.push(class);
+        } else {
+            self.components.insert(Classes::from(class));
+        }
         self
     }
 

@@ -9,7 +9,10 @@ use crate::{
         rich::{RichText, RichTextPosition},
         wrap::TextWrap,
     },
-    ui::{Component, Context, InteractiveComponent, Layout, StyledContext},
+    ui::{
+        component::ComponentPadding, Component, Context, InteractiveComponent, Layout,
+        StyledContext,
+    },
     window::event::{EventStatus, MouseButton},
     KludgineError, KludgineResult,
 };
@@ -17,8 +20,6 @@ use async_trait::async_trait;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use std::time::{Duration, Instant};
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
-
-use super::ControlPadding;
 
 static CURSOR_BLINK_MS: u64 = 500;
 
@@ -154,7 +155,7 @@ impl Component for TextField {
         let scale = context.scene().scale_factor().await;
         let padding = context
             .effective_style()
-            .get_or_default::<ControlPadding<Raw>>()
+            .get_or_default::<ComponentPadding<Raw>>()
             .0
             / scale;
 
@@ -254,7 +255,7 @@ impl Component for TextField {
         let scale = context.scene().scale_factor().await;
         let padding = context
             .effective_style()
-            .get_or_default::<ControlPadding<Raw>>()
+            .get_or_default::<ComponentPadding<Raw>>()
             .0
             / scale;
 
@@ -295,7 +296,7 @@ impl Component for TextField {
                 .style_sheet()
                 .await
                 .normal
-                .get_or_default::<ControlPadding<Scaled>>()
+                .get_or_default::<ComponentPadding<Scaled>>()
                 .0;
             let bounds = padding.inset_rect(&context.last_layout().await.inner_bounds());
 
@@ -328,7 +329,7 @@ impl Component for TextField {
                     .style_sheet()
                     .await
                     .normal
-                    .get_or_default::<ControlPadding<Scaled>>()
+                    .get_or_default::<ComponentPadding<Scaled>>()
                     .0;
                 let bounds = padding.inset_rect(&context.last_layout().await.inner_bounds());
 

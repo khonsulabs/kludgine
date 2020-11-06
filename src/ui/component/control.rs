@@ -17,17 +17,17 @@ pub enum ControlEvent {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct ControlPadding<Unit>(pub Surround<f32, Unit>);
+pub struct ComponentPadding<Unit>(pub Surround<f32, Unit>);
 
-impl StyleComponent<Scaled> for ControlPadding<Scaled> {
+impl StyleComponent<Scaled> for ComponentPadding<Scaled> {
     fn scale(&self, scale: Scale<f32, Scaled, Raw>, destination: &mut Style<Raw>) {
-        destination.push(ControlPadding(self.0 * scale))
+        destination.push(ComponentPadding(self.0 * scale))
     }
 }
 
-impl StyleComponent<Raw> for ControlPadding<Raw> {
+impl StyleComponent<Raw> for ComponentPadding<Raw> {
     fn scale(&self, _scale: Scale<f32, Raw, Raw>, map: &mut Style<Raw>) {
-        map.push(ControlPadding(self.0));
+        map.push(ComponentPadding(self.0));
     }
 }
 

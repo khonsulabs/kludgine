@@ -1,5 +1,5 @@
 use crate::{
-    math::{Point, PointExt, Rect, Scaled, Size, SizeExt},
+    math::{Point, PointExt, Raw, Rect, Scaled, Size, SizeExt, Surround},
     shape::{Fill, Shape},
     style::{theme::Selector, BackgroundColor},
     ui::{Context, Entity, Layout, LayoutSolver, LayoutSolverExt, StyledContext},
@@ -25,8 +25,8 @@ mod toast;
 
 pub use self::{
     builder::EntityBuilder,
-    button::{Button, ButtonPadding},
-    control::{Border, ComponentBorder, ControlEvent, ControlPadding},
+    button::Button,
+    control::{Border, ComponentBorder, ComponentPadding, ControlEvent},
     image::{
         Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
     },
@@ -49,6 +49,25 @@ pub trait Component: Send + Sync {
     /// Called once the Window is opened
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         Ok(())
+    }
+
+    async fn content_size_with_padding(
+        &self,
+        context: &mut StyledContext,
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<(Size<f32, Scaled>, Surround<f32, Scaled>)> {
+        let padding = context
+            .effective_style()
+            .get_or_default::<ComponentPadding<Raw>>()
+            .0
+            / context.scene().scale_factor().await;
+
+        let constraints_minus_padding = padding.inset_constraints(constraints);
+        Ok((
+            self.content_size(context, &constraints_minus_padding)
+                .await?,
+            padding,
+        ))
     }
 
     async fn content_size(

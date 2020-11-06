@@ -1,6 +1,6 @@
 use crate::{
-    math::{Raw, Scaled, Size, Surround},
-    style::{theme::Selector, Style, StyleComponent},
+    math::{Scaled, Size},
+    style::theme::Selector,
     ui::{
         component::{Component, InteractiveComponent, Label, StandaloneComponent},
         Context, Entity, StyledContext,
@@ -8,7 +8,6 @@ use crate::{
     KludgineResult,
 };
 use async_trait::async_trait;
-use euclid::Scale;
 
 pub enum PendingComponent<C> {
     Pending(C),
@@ -81,37 +80,12 @@ where
         context: &mut StyledContext,
         constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<Size<f32, Scaled>> {
-        let padding = context
-            .effective_style()
-            .get_or_default::<ToastPadding<Raw>>()
-            .0
-            / context.scene().scale_factor().await;
-
-        let contraints_minus_padding = padding.inset_constraints(constraints);
         Ok(context
-            .content_size(&self.contents.entity(), &contraints_minus_padding)
-            .await?
-            + padding.minimum_size())
+            .content_size(&self.contents.entity(), &constraints)
+            .await?)
     }
-
-    // TODO override render background?
     // TODO implement timeout for the toast
     // TODO figure out how to let the user control toast placement?
 }
 
 impl<C> StandaloneComponent for Toast<C> where C: InteractiveComponent + 'static {}
-
-#[derive(Debug, Clone, Default)]
-pub struct ToastPadding<Unit>(pub Surround<f32, Unit>);
-
-impl StyleComponent<Scaled> for ToastPadding<Scaled> {
-    fn scale(&self, scale: Scale<f32, Scaled, Raw>, destination: &mut Style<Raw>) {
-        destination.push(ToastPadding(self.0 * scale))
-    }
-}
-
-impl StyleComponent<Raw> for ToastPadding<Raw> {
-    fn scale(&self, _scale: Scale<f32, Raw, Raw>, map: &mut Style<Raw>) {
-        map.push(ToastPadding(self.0));
-    }
-}

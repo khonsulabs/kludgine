@@ -1,11 +1,9 @@
-use async_handle::Handle;
-
 use crate::{
     scene::Target,
     style::StyleSheet,
     ui::{
-        node::ThreadsafeAnyMap, Entity, EntityBuilder, HierarchicalArena, Index, Indexable,
-        InteractiveComponent, Layout, UIState,
+        Entity, EntityBuilder, HierarchicalArena, Index, Indexable, InteractiveComponent, Layout,
+        UIState,
     },
     KludgineResult,
 };
@@ -41,26 +39,23 @@ impl Context {
         }
     }
 
-    pub fn insert_new_entity<T: InteractiveComponent + 'static, I: Indexable, Message>(
+    pub fn insert_new_entity<
+        T: InteractiveComponent + 'static,
+        I: Indexable,
+        Message: Send + Sync + 'static,
+    >(
         &self,
         parent: I,
         component: T,
     ) -> EntityBuilder<T, Message> {
-        let component = Handle::new(component);
-        let mut components = ThreadsafeAnyMap::new();
-        components.insert(component);
-        EntityBuilder {
-            components,
-            scene: self.scene().clone(),
-            parent: Some(parent.index()),
-            interactive: true,
-            layer: self.layer_index.layer.clone(),
-            ui_state: self.ui_state().clone(),
-            arena: self.arena().clone(),
-            style_sheet: Default::default(),
-            callback: None,
-            _marker: Default::default(),
-        }
+        EntityBuilder::new(
+            Some(parent.index()),
+            component,
+            &self.scene,
+            &self.layer_index.layer,
+            &self.ui_state,
+            &self.arena,
+        )
     }
 
     pub fn index(&self) -> Index {
@@ -120,10 +115,6 @@ impl Context {
 
     pub(crate) fn arena(&self) -> &'_ HierarchicalArena {
         &self.arena
-    }
-
-    pub(crate) fn ui_state(&self) -> &'_ UIState {
-        &self.ui_state
     }
 
     pub async fn push_layer<C: InteractiveComponent + 'static>(

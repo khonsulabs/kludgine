@@ -139,7 +139,7 @@ impl LayoutEngine {
                 }
             };
             context
-                .layout_within(index, &computed_layout.inner_bounds())
+                .layout_within(index, &computed_layout.bounds_without_margin())
                 .await?;
 
             if let Some(node) = arena.get(&index).await {
@@ -184,6 +184,7 @@ impl LayoutEngine {
         index: &Index,
         context: &mut LayoutContext,
         bounds: &Rect<f32, Scaled>,
+        padding: &Surround<f32, Scaled>,
         content_size: &Size<f32, Scaled>,
     ) -> KludgineResult<()> {
         let solver_handle = {
@@ -192,7 +193,9 @@ impl LayoutEngine {
         };
         if let Some(solver_handle) = solver_handle {
             let solver = solver_handle.read().await;
-            solver.layout_within(bounds, content_size, context).await?;
+            solver
+                .layout_within(bounds, content_size, padding, context)
+                .await?;
         }
         Ok(())
     }
@@ -256,8 +259,8 @@ impl LayoutContext {
     ) -> KludgineResult<()> {
         let index = index.index();
         if let Some(node) = self.arena().get(&index).await {
-            let content_size = node
-                .content_size(
+            let (content_size, padding) = node
+                .content_size_with_padding(
                     self.styled_context(),
                     &Size::new(Some(bounds.size.width), Some(bounds.size.height)),
                 )
@@ -265,7 +268,13 @@ impl LayoutContext {
 
             let mut solving_context = self.clone_for(&index).await;
             self.layout
-                .solve_layout_for(&index, &mut solving_context, bounds, &content_size)
+                .solve_layout_for(
+                    &index,
+                    &mut solving_context,
+                    bounds,
+                    &padding,
+                    &content_size,
+                )
                 .await?;
         }
 

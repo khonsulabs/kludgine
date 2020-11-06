@@ -1,33 +1,14 @@
 use crate::{
-    math::{Point, Raw, Scaled, Size, Surround},
-    style::{
-        theme::{Classes, Selector},
-        Style, StyleComponent,
-    },
+    math::{Point, Scaled, Size, Surround},
+    style::{theme::Selector, Style},
     ui::{
-        component::Component, AbsoluteBounds, Context, ControlEvent, Entity, InteractiveComponent,
-        Label, StyledContext,
+        component::{Component, ComponentPadding},
+        Context, ControlEvent, Entity, InteractiveComponent, Label, StyledContext,
     },
     window::event::MouseButton,
     KludgineResult,
 };
 use async_trait::async_trait;
-use euclid::Scale;
-
-#[derive(Debug, Clone, Default)]
-pub struct ButtonPadding<Unit>(pub Surround<f32, Unit>);
-
-impl StyleComponent<Scaled> for ButtonPadding<Scaled> {
-    fn scale(&self, scale: Scale<f32, Scaled, Raw>, destination: &mut Style<Raw>) {
-        destination.push(ButtonPadding(self.0 * scale))
-    }
-}
-
-impl StyleComponent<Raw> for ButtonPadding<Raw> {
-    fn scale(&self, _scale: Scale<f32, Raw, Raw>, map: &mut Style<Raw>) {
-        map.push(ButtonPadding(self.0));
-    }
-}
 
 #[derive(Debug)]
 pub struct Button {
@@ -42,17 +23,10 @@ impl Component for Button {
     }
 
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
-        let style_sheet = context.style_sheet().await;
-
         self.label = self
             .new_entity(context, Label::new(&self.caption))
-            .with(Classes::from("button-label"))
-            .bounds(AbsoluteBounds::from(
-                style_sheet
-                    .normal
-                    .get_or_default::<ButtonPadding<Scaled>>()
-                    .0,
-            ))
+            .with_class("clear-background")
+            .style_sheet(Style::default().with(ComponentPadding::<Scaled>(Surround::default())))
             .interactive(false)
             .insert()
             .await?;
@@ -82,17 +56,10 @@ impl Component for Button {
         context: &mut StyledContext,
         constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<Size<f32, Scaled>> {
-        let padding = context
-            .effective_style()
-            .get_or_default::<ButtonPadding<Raw>>()
-            .0
-            / context.scene().scale_factor().await;
-
-        let contraints_minus_padding = padding.inset_constraints(constraints);
-        Ok(context
-            .content_size(&self.label, &contraints_minus_padding)
-            .await?
-            + padding.minimum_size())
+        let (content_size, padding) = context
+            .content_size_with_padding(&self.label, &constraints)
+            .await?;
+        Ok(content_size + padding.minimum_size())
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::{
-    math::{Point, Scaled, Size},
+    math::{Point, Scaled, Size, Surround},
     runtime::Runtime,
     style::StyleSheet,
     ui::{
@@ -39,6 +39,11 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
         context: &mut StyledContext,
         constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<Size<f32, Scaled>>;
+    async fn content_size_with_padding(
+        &self,
+        context: &mut StyledContext,
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<(Size<f32, Scaled>, Surround<f32, Scaled>)>;
 
     async fn layout(&self, context: &mut StyledContext) -> KludgineResult<Box<dyn LayoutSolver>>;
 
@@ -199,6 +204,18 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         let component = self.interactive_component().await;
         let component = component.read().await;
         component.content_size(context, constraints).await
+    }
+
+    async fn content_size_with_padding(
+        &self,
+        context: &mut StyledContext,
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<(Size<f32, Scaled>, Surround<f32, Scaled>)> {
+        let component = self.interactive_component().await;
+        let component = component.read().await;
+        component
+            .content_size_with_padding(context, constraints)
+            .await
     }
 
     async fn layout(&self, context: &mut StyledContext) -> KludgineResult<Box<dyn LayoutSolver>> {
@@ -430,6 +447,17 @@ impl Node {
     ) -> KludgineResult<Size<f32, Scaled>> {
         let component = self.component.read().await;
         component.content_size(context, constraints).await
+    }
+
+    pub async fn content_size_with_padding(
+        &self,
+        context: &mut StyledContext,
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<(Size<f32, Scaled>, Surround<f32, Scaled>)> {
+        let component = self.component.read().await;
+        component
+            .content_size_with_padding(context, constraints)
+            .await
     }
 
     pub async fn layout(

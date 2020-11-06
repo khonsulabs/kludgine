@@ -1,5 +1,5 @@
 use crate::{
-    math::{Raw, Scaled, Size},
+    math::{Raw, Scaled, Size, Surround},
     scene::Target,
     style::Style,
     ui::{Context, HierarchicalArena, Index, Indexable, LayerIndexable, UIState},
@@ -74,5 +74,21 @@ impl StyledContext {
 
         let mut context = self.clone_for(index);
         node.content_size(&mut context, constraints).await
+    }
+
+    pub async fn content_size_with_padding(
+        &self,
+        index: &impl Indexable,
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<(Size<f32, Scaled>, Surround<f32, Scaled>)> {
+        let node = self
+            .arena
+            .get(index)
+            .await
+            .ok_or(KludgineError::InvalidIndex)?;
+
+        let mut context = self.clone_for(index);
+        node.content_size_with_padding(&mut context, constraints)
+            .await
     }
 }

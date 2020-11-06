@@ -181,7 +181,7 @@ impl Theme {
     ) -> Style<Scaled> {
         let mut style = Style::default();
 
-        for rule in self.rules.iter() {
+        for rule in self.rules.iter().rev() {
             if rule.predicate.matches(id, classes, state) {
                 style = style.merge_with(&rule.style, false);
             }

@@ -247,6 +247,7 @@ impl UILayer {
         let mut data = self.data.write().await;
         data.active = None;
         data.focus = None;
+        println!("Cleared state");
     }
 
     async fn activate(&self, index: Index, state: &UIState) {
@@ -278,7 +279,7 @@ impl UILayer {
     async fn focus_on(&self, focus: Option<Index>, state: &UIState) {
         let mut data = self.data.write().await;
         if data.focus != focus {
-            data.focus = None;
+            data.focus = focus;
             state.set_needs_redraw().await;
         }
     }

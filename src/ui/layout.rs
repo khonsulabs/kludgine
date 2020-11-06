@@ -14,6 +14,7 @@ pub trait LayoutSolver: Send + Sync + std::fmt::Debug {
         &self,
         bounds: &Rect<f32, Scaled>,
         content_size: &Size<f32, Scaled>,
+        padding: &Surround<f32, Scaled>,
         context: &LayoutContext,
     ) -> KludgineResult<()>;
 }
@@ -76,6 +77,7 @@ impl LayoutSolver for NoLayout {
         &self,
         _bounds: &Rect<f32, Scaled>,
         _content_size: &Size<f32, Scaled>,
+        _padding: &Surround<f32, Scaled>,
         _context: &LayoutContext,
     ) -> KludgineResult<()> {
         Ok(())
