@@ -279,8 +279,8 @@ pub trait Component: Send + Sync {
         context: &mut Context,
         window_position: Point<f32, Scaled>,
     ) -> KludgineResult<bool> {
-        Ok(context
-            .last_layout()
+        Ok(self
+            .last_layout(context)
             .await
             .bounds_without_margin()
             .contains(window_position))
@@ -288,6 +288,10 @@ pub trait Component: Send + Sync {
 
     async fn close_requested(&self) -> KludgineResult<CloseResponse> {
         Ok(CloseResponse::Close)
+    }
+
+    async fn last_layout(&self, context: &mut Context) -> Layout {
+        context.last_layout_for(context.index()).await
     }
 }
 

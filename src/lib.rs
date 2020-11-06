@@ -138,7 +138,7 @@ pub mod prelude {
             InteractiveComponent, Label, LabelCommand, Layout, LayoutConstraints, LayoutContext,
             LayoutSolver, LayoutSolverExt, LinearTransition, Pane, Panel, PanelCommand, PanelEvent,
             PanelMessage, PanelProvider, RowLayout, StandaloneComponent, StyledContext, TextField,
-            TextFieldEvent, Timeout,
+            TextFieldEvent, Timeout, Toast,
         },
         window::{
             event::{

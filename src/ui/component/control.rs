@@ -23,11 +23,19 @@ impl StyleComponent<Scaled> for ComponentPadding<Scaled> {
     fn scale(&self, scale: Scale<f32, Scaled, Raw>, destination: &mut Style<Raw>) {
         destination.push(ComponentPadding(self.0 * scale))
     }
+
+    fn should_be_inherited(&self) -> bool {
+        false
+    }
 }
 
 impl StyleComponent<Raw> for ComponentPadding<Raw> {
     fn scale(&self, _scale: Scale<f32, Raw, Raw>, map: &mut Style<Raw>) {
         map.push(ComponentPadding(self.0));
+    }
+
+    fn should_be_inherited(&self) -> bool {
+        false
     }
 }
 
@@ -85,4 +93,8 @@ impl ComponentBorder {
     }
 }
 
-impl UnscaledStyleComponent<Scaled> for ComponentBorder {}
+impl UnscaledStyleComponent<Scaled> for ComponentBorder {
+    fn unscaled_should_be_inherited(&self) -> bool {
+        false
+    }
+}

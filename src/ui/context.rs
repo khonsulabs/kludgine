@@ -108,8 +108,8 @@ impl Context {
         }
     }
 
-    pub async fn last_layout(&self) -> Layout {
-        let node = self.arena.get(&self.layer_index.index).await.unwrap();
+    pub async fn last_layout_for<I: Indexable>(&self, entity: I) -> Layout {
+        let node = self.arena.get(&entity.index()).await.unwrap();
         node.last_layout().await
     }
 

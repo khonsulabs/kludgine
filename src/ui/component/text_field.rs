@@ -298,7 +298,7 @@ impl Component for TextField {
                 .normal
                 .get_or_default::<ComponentPadding<Scaled>>()
                 .0;
-            let bounds = padding.inset_rect(&context.last_layout().await.inner_bounds());
+            let bounds = padding.inset_rect(&self.last_layout(context).await.inner_bounds());
 
             if let Some(location) = self
                 .position_for_location(context.scene(), window_position - bounds.origin.to_vector())
@@ -331,7 +331,7 @@ impl Component for TextField {
                     .normal
                     .get_or_default::<ComponentPadding<Scaled>>()
                     .0;
-                let bounds = padding.inset_rect(&context.last_layout().await.inner_bounds());
+                let bounds = padding.inset_rect(&self.last_layout(context).await.inner_bounds());
 
                 if let Some(location) = self
                     .position_for_location(

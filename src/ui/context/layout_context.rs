@@ -3,8 +3,8 @@ use crate::{
     scene::Target,
     style::Style,
     ui::{
-        Context, HierarchicalArena, Index, Indexable, LayerIndex, LayerIndexable, Layout,
-        LayoutSolver, StyledContext, UILayer, UIState,
+        AbsoluteBounds, AbsoluteLayout, Context, HierarchicalArena, Index, Indexable, LayerIndex,
+        LayerIndexable, Layout, LayoutSolver, StyledContext, UILayer, UIState,
     },
     Handle, KludgineResult,
 };
@@ -127,15 +127,26 @@ impl LayoutEngine {
             let computed_layout = match context.layout_for(index).await {
                 Some(layout) => layout,
                 None => {
-                    let layout = Layout {
-                        bounds: Rect::new(Point::default(), scene.size().await),
-                        padding: Surround::default(),
-                        margin: Surround::default(),
-                    };
-                    layout_data
-                        .insert_layout(index, layout.clone(), false)
-                        .await;
-                    layout
+                    let node = arena.get(&index).await.unwrap();
+                    let scene_size = scene.size().await;
+                    let (content_size, padding) = node
+                        .content_size_with_padding(
+                            context.styled_context(),
+                            &Size::new(Some(scene_size.width), Some(scene_size.height)),
+                        )
+                        .await?;
+
+                    AbsoluteLayout::default()
+                        .child(&index, AbsoluteBounds::default())?
+                        .layout_within(
+                            &Rect::new(Point::default(), scene_size),
+                            &content_size,
+                            &padding,
+                            &context,
+                        )
+                        .await?;
+
+                    context.layout_for(index).await.unwrap()
                 }
             };
             context

@@ -19,7 +19,7 @@ use crate::{
     math::{Point, Scaled},
     runtime::Runtime,
     scene::{Scene, Target},
-    style::theme::Id,
+    style::theme::{Classes, Id},
     window::event::{ElementState, Event, EventStatus, InputEvent, MouseButton, WindowEvent},
     Handle, KludgineError, KludgineResult, RequiresInitialization,
 };
@@ -169,12 +169,16 @@ impl UIState {
     ) -> KludgineResult<Index> {
         let mut components = ThreadsafeAnyMap::new();
         let theme = scene.theme().await;
+        components.insert(Id::from("root"));
+        if let Some(classes) = root.classes() {
+            components.insert(Classes(classes));
+        }
+
+        let stylesheet = theme.stylesheet_for(components.get(), components.get());
+        components.insert(Handle::new(stylesheet));
+
         components.insert(Handle::new(root));
-        components.insert(Handle::new(Id::from("root")));
         components.insert(Handle::new(AbsoluteBounds::default()));
-        components.insert(Handle::new(
-            theme.stylesheet_for(Some(&Id::from("root")), None),
-        ));
 
         let root = arena
             .insert(None, Node::from_components::<C>(components, true, None))

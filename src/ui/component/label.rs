@@ -44,7 +44,7 @@ impl InteractiveComponent for Label {
 #[async_trait]
 impl Component for Label {
     fn classes(&self) -> Option<Vec<Selector>> {
-        Some(vec![Selector::from("label"), Selector::from("control")])
+        Some(vec![Selector::from("label")])
     }
 
     async fn update(&mut self, _context: &mut Context) -> KludgineResult<()> {

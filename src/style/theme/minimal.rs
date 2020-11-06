@@ -127,6 +127,24 @@ impl Minimal {
                 }))
             },
         )
+        .when(
+            |c| c.classes.contains("toast"),
+            |style| {
+                style
+                    .with(ComponentPadding(Surround::uniform(Points::new(10.))))
+                    .with(ComponentBorder::uniform(Border::new(
+                        2.,
+                        ColorPair {
+                            light_color: self.palette.light.control.background.darker(),
+                            dark_color: self.palette.dark.control.background.lighter(),
+                        },
+                    )))
+                    .with(BackgroundColor(ColorPair {
+                        light_color: self.palette.light.control.background.normal(),
+                        dark_color: self.palette.dark.control.background.normal(),
+                    }))
+            },
+        )
     }
 }
 

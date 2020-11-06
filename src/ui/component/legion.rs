@@ -164,7 +164,13 @@ where
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         let location = (window_position
-            - context.last_layout().await.inner_bounds().size.to_vector() / 2.)
+            - self
+                .last_layout(context)
+                .await
+                .inner_bounds()
+                .size
+                .to_vector()
+                / 2.)
             / self.last_camera.scale
             + self.last_camera.look_at.to_vector();
         let _ = self
@@ -181,7 +187,7 @@ where
         window_position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
-        let last_bounds = context.last_layout().await.inner_bounds();
+        let last_bounds = self.last_layout(context).await.inner_bounds();
         let location = window_position.map(|window_position| {
             (window_position - last_bounds.size.to_vector() / 2.) / self.last_camera.scale
                 + self.last_camera.look_at.to_vector()
@@ -200,7 +206,7 @@ where
         window_position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
-        let last_bounds = context.last_layout().await.inner_bounds();
+        let last_bounds = self.last_layout(context).await.inner_bounds();
         let location = window_position.map(|window_position| {
             (window_position - last_bounds.size.to_vector() / 2.) / self.last_camera.scale
                 + self.last_camera.look_at.to_vector()

@@ -43,7 +43,7 @@ impl InteractiveComponent for UIExample {
 
     async fn receive_message(
         &mut self,
-        _context: &mut Context,
+        context: &mut Context,
         message: Self::Message,
     ) -> KludgineResult<()> {
         match message {
@@ -57,6 +57,9 @@ impl InteractiveComponent for UIExample {
                 self.current_count += 1;
                 self.label
                     .send(LabelCommand::SetValue(self.current_count.to_string()))
+                    .await?;
+                context
+                    .push_layer(Toast::new(Label::new("Testing Toasting...")))
                     .await?;
             }
             Message::NewWindowClicked => {

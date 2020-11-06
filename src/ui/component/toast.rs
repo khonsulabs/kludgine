@@ -3,7 +3,7 @@ use crate::{
     style::theme::Selector,
     ui::{
         component::{Component, InteractiveComponent, Label, StandaloneComponent},
-        Context, Entity, StyledContext,
+        Context, Entity, Layout, StyledContext,
     },
     KludgineResult,
 };
@@ -80,9 +80,26 @@ where
         context: &mut StyledContext,
         constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<Size<f32, Scaled>> {
-        Ok(context
-            .content_size(&self.contents.entity(), &constraints)
-            .await?)
+        let (content_size, padding) = context
+            .content_size_with_padding(&self.contents.entity(), &constraints)
+            .await?;
+        Ok(content_size + padding.minimum_size())
+    }
+
+    // async fn render_background(
+    //     &self,
+    //     context: &mut StyledContext,
+    //     _layout: &Layout,
+    // ) -> KludgineResult<()> {
+    //     dbg!(layout);
+    //     let layout = context.last_layout_for(self.contents.entity()).await;
+    //     dbg!(layout);
+    //     Ok(())
+    // }
+
+    async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
+        dbg!(layout);
+        Ok(())
     }
     // TODO implement timeout for the toast
     // TODO figure out how to let the user control toast placement?
