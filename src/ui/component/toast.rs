@@ -86,7 +86,7 @@ where
                 let duration = duration.read().await;
                 *duration
             } else {
-                Duration::from_secs_f32(3.)
+                Duration::from_secs_f32(2.)
             });
 
         self.target_time
@@ -113,19 +113,6 @@ where
 
         Ok(())
     }
-
-    // async fn render_background(
-    //     &self,
-    //     context: &mut StyledContext,
-    //     _layout: &Layout,
-    // ) -> KludgineResult<()> {
-    //     dbg!(layout);
-    //     let layout = context.last_layout_for(self.contents.entity()).await;
-    //     dbg!(layout);
-    //     Ok(())
-    // }
-    // TODO implement timeout for the toast
-    // TODO figure out how to let the user control toast placement?
 }
 
 impl<C> StandaloneComponent for Toast<C> where C: InteractiveComponent + 'static {}
