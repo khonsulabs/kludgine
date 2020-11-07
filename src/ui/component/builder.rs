@@ -46,7 +46,7 @@ where
     ) -> Self {
         let mut components = ThreadsafeAnyMap::new();
         if let Some(base_classes) = component.classes() {
-            components.insert(Classes(base_classes));
+            components.insert(Handle::new(Classes(base_classes)));
         }
 
         let component = Handle::new(component);
@@ -115,26 +115,37 @@ where
     }
 
     pub fn with<T: Send + Sync + 'static>(mut self, component: T) -> Self {
-        self.components.insert(component);
+        self.components.insert(Handle::new(component));
         self
     }
 
-    pub fn with_class<S: Into<Selector>>(mut self, class: S) -> Self {
+    pub async fn with_class<S: Into<Selector>>(mut self, class: S) -> Self {
         let class = class.into();
-        if let Some(classes) = self.components.get_mut::<Classes>() {
+        if let Some(classes) = self.components.get::<Handle<Classes>>() {
+            let mut classes = classes.write().await;
             classes.0.push(class);
         } else {
-            self.components.insert(Classes::from(class));
+            self.components.insert(Handle::new(Classes::from(class)));
         }
         self
     }
 
     pub async fn insert(mut self) -> KludgineResult<Entity<C>> {
         let theme = self.scene.theme().await;
-        let theme_style = theme.stylesheet_for(
-            self.components.get::<Id>(),
-            self.components.get::<Classes>(),
-        );
+        let id = if let Some(id) = self.components.get::<Handle<Id>>() {
+            let id = id.read().await;
+            Some(id.clone())
+        } else {
+            None
+        };
+        let classes = if let Some(classes) = self.components.get::<Handle<Classes>>() {
+            let classes = classes.read().await;
+            Some(classes.clone())
+        } else {
+            None
+        };
+
+        let theme_style = theme.stylesheet_for(id.as_ref(), classes.as_ref());
         self.components.insert(Handle::new(
             self.style_sheet.merge_with(&theme_style, false),
         ));

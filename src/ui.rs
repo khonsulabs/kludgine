@@ -50,6 +50,19 @@ impl UIState {
         }
     }
 
+    async fn removed_element(&self, index: Index) {
+        let mut data = self.data.write().await;
+        if let Some(index) = data
+            .layers
+            .iter()
+            .enumerate()
+            .find(|(_, layer)| layer.root == index)
+            .map(|(index, _)| index)
+        {
+            data.layers.remove(index);
+        }
+    }
+
     async fn top_layer(&self) -> UILayer {
         let data = self.data.read().await;
         data.layers.last().cloned().unwrap()

@@ -26,6 +26,7 @@ impl Component for Button {
         self.label = self
             .new_entity(context, Label::new(&self.caption))
             .with_class("clear-background")
+            .await
             .style_sheet(Style::default().with(ComponentPadding::<Scaled>(Surround::default())))
             .interactive(false)
             .insert()

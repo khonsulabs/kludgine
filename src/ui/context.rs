@@ -1,3 +1,5 @@
+use async_handle::Handle;
+
 use crate::{
     scene::Target,
     style::StyleSheet,
@@ -13,7 +15,7 @@ pub use self::{
     layout_context::{LayoutContext, LayoutEngine},
     styled_context::StyledContext,
 };
-use super::{LayerIndex, LayerIndexable};
+use super::{node::NodeData, LayerIndex, LayerIndexable};
 use std::time::{Duration, Instant};
 
 #[derive(Clone, Debug)]
@@ -89,7 +91,9 @@ impl Context {
     }
 
     pub async fn remove<I: Indexable>(&self, element: &I) {
-        self.arena.remove(element).await;
+        let index = element.index();
+        self.arena.remove(&index).await;
+        self.ui_state.removed_element(index).await;
     }
 
     pub async fn children(&self) -> Vec<Index> {
@@ -180,5 +184,16 @@ impl Context {
 
     pub async fn estimate_next_frame_instant(&self, instant: Instant) {
         self.ui_state.estimate_next_frame_instant(instant).await;
+    }
+
+    pub async fn get_component_from<C: InteractiveComponent + 'static, T: Send + Sync + 'static>(
+        &self,
+        entity: Entity<C>,
+    ) -> Option<Handle<T>> {
+        let node = self.arena.get(&entity).await.unwrap();
+        let component = node.component.read().await;
+        let node = component.as_any().downcast_ref::<NodeData<C>>()?;
+
+        node.component::<T>().await
     }
 }

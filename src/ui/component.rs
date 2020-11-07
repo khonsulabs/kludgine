@@ -9,6 +9,7 @@ use crate::{
     },
     KludgineResult,
 };
+use async_handle::Handle;
 use async_trait::async_trait;
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 mod builder;
@@ -402,4 +403,23 @@ pub trait AnimatableComponent: InteractiveComponent + Sized {
     type AnimationFactory;
 
     fn new_animation_factory(target: Entity<Self>) -> Self::AnimationFactory;
+}
+
+#[async_trait]
+pub trait InteractiveComponentExt {
+    async fn component<T: Send + Sync + 'static>(&self, context: &mut Context)
+        -> Option<Handle<T>>;
+}
+
+#[async_trait]
+impl<C> InteractiveComponentExt for C
+where
+    C: InteractiveComponent + 'static,
+{
+    async fn component<T: Send + Sync + 'static>(
+        &self,
+        context: &mut Context,
+    ) -> Option<Handle<T>> {
+        context.get_component_from(context.entity::<Self>()).await
+    }
 }

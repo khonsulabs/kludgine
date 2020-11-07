@@ -1,13 +1,17 @@
+use std::time::{Duration, Instant};
+
 use crate::{
     math::{Scaled, Size},
     style::theme::Selector,
     ui::{
         component::{Component, InteractiveComponent, Label, StandaloneComponent},
-        Context, Entity, Layout, StyledContext,
+        Context, Entity, StyledContext,
     },
-    KludgineResult,
+    KludgineResult, RequiresInitialization,
 };
 use async_trait::async_trait;
+
+use super::InteractiveComponentExt;
 
 pub enum PendingComponent<C> {
     Pending(C),
@@ -29,6 +33,8 @@ where
     C: InteractiveComponent,
 {
     contents: PendingComponent<C>,
+    duration: RequiresInitialization<Duration>,
+    target_time: RequiresInitialization<Instant>,
 }
 
 impl<C> Toast<C>
@@ -38,6 +44,8 @@ where
     pub fn new(contents: C) -> Self {
         Self {
             contents: PendingComponent::Pending(contents),
+            target_time: Default::default(),
+            duration: Default::default(),
         }
     }
 
@@ -72,6 +80,18 @@ where
             unreachable!("A component should never be re-initialized");
         }
 
+        let duration = self.component::<Duration>(context).await;
+        self.duration
+            .initialize_with(if let Some(duration) = duration {
+                let duration = duration.read().await;
+                *duration
+            } else {
+                Duration::from_secs_f32(3.)
+            });
+
+        self.target_time
+            .initialize_with(Instant::now().checked_add(*self.duration).unwrap());
+
         Ok(())
     }
 
@@ -86,6 +106,14 @@ where
         Ok(content_size + padding.minimum_size())
     }
 
+    async fn update(&mut self, context: &mut Context) -> KludgineResult<()> {
+        if Instant::now() > *self.target_time {
+            context.remove(&context.index()).await;
+        }
+
+        Ok(())
+    }
+
     // async fn render_background(
     //     &self,
     //     context: &mut StyledContext,
@@ -96,11 +124,6 @@ where
     //     dbg!(layout);
     //     Ok(())
     // }
-
-    async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
-        dbg!(layout);
-        Ok(())
-    }
     // TODO implement timeout for the toast
     // TODO figure out how to let the user control toast placement?
 }
