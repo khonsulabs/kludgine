@@ -20,12 +20,12 @@ pub trait PanelProvider: Send + Sync + 'static {
         context: &mut Context,
     ) -> KludgineResult<()>;
 
-    fn new_entity<T: InteractiveComponent + 'static>(
+    async fn new_entity<T: InteractiveComponent + 'static>(
         &self,
         context: &mut Context,
         component: T,
     ) -> EntityBuilder<T, PanelMessage<Self::Event>> {
-        context.insert_new_entity(context.index(), component)
+        context.insert_new_entity(context.index(), component).await
     }
 }
 
@@ -53,7 +53,11 @@ impl<T: PanelProvider> Panel<T> {
     }
 
     async fn recreate_pane(&mut self, context: &mut Context) -> KludgineResult<()> {
-        let pane = self.new_entity(context, Pane::default()).insert().await?;
+        let pane = self
+            .new_entity(context, Pane::default())
+            .await
+            .insert()
+            .await?;
 
         let mut child_context = context.clone_for(&pane);
         self.provider

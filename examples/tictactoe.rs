@@ -102,6 +102,7 @@ impl Component for TicTacToe {
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         self.player_turn_label = self
             .new_entity(context, Label::new(""))
+            .await
             .style_sheet(
                 Style::default()
                     .with(FontSize::new(48.))
@@ -112,6 +113,7 @@ impl Component for TicTacToe {
 
         self.message_label = self
             .new_entity(context, Label::new(""))
+            .await
             .style_sheet(
                 Style::default()
                     .with(FontSize::new(48.))
@@ -131,6 +133,7 @@ impl Component for TicTacToe {
 
             self.labels[i] = self
                 .new_entity(context, Label::new(""))
+                .await
                 .style_sheet(style)
                 .callback(move |evt| GameMessage::TileClicked(i, evt))
                 .insert()

@@ -59,7 +59,12 @@ impl InteractiveComponent for UIExample {
                     .send(LabelCommand::SetValue(self.current_count.to_string()))
                     .await?;
                 context
-                    .push_layer(Toast::new(Label::new("Testing Toasting...")))
+                    .new_layer(Toast::new(Label::new("Testing Toasting...")))
+                    .bounds(AbsoluteBounds {
+                        bottom: Dimension::from_f32(64.),
+                        ..Default::default()
+                    })
+                    .insert()
                     .await?;
             }
             Message::NewWindowClicked => {
@@ -83,6 +88,7 @@ impl Component for UIExample {
         let sprite = include_aseprite_sprite!("assets/stickguy").await?;
         self.image = self
             .new_entity(context, Image::new(sprite))
+            .await
             .style_sheet(Style::new().with(BackgroundColor(Color::new(0.0, 1.0, 1.0, 1.0).into())))
             .bounds(AbsoluteBounds {
                 right: Dimension::from_f32(10.),
@@ -99,7 +105,7 @@ impl Component for UIExample {
                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt",
                     Default::default(),
                 )])),
-            )
+            ).await
             .bounds(AbsoluteBounds {
                 left: Dimension::from_f32(32.),
                 right: Dimension::from_f32(32.),
@@ -112,6 +118,7 @@ impl Component for UIExample {
 
         self.label = self
             .new_entity(context, Label::new("Test Label"))
+            .await
             .style_sheet(
                 Style::new()
                     .with(ForegroundColor(Color::new(1.0, 1.0, 1.0, 0.1).into()))
@@ -132,6 +139,7 @@ impl Component for UIExample {
 
         self.button = self
             .new_entity(context, Button::new("Press Me"))
+            .await
             .normal_style(Style::new().with(BackgroundColor(Color::ROYALBLUE.into())))
             .bounds(AbsoluteBounds {
                 bottom: Dimension::from_f32(10.),
@@ -144,6 +152,7 @@ impl Component for UIExample {
 
         self.new_window_button = self
             .new_entity(context, Button::new("New Window"))
+            .await
             .bounds(AbsoluteBounds {
                 bottom: Dimension::from_f32(10.),
                 left: Dimension::from_f32(10.),

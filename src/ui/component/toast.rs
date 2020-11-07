@@ -50,7 +50,7 @@ where
     }
 
     pub async fn open(self, context: &mut Context) -> KludgineResult<Entity<Self>> {
-        context.push_layer(self).await
+        context.new_layer(self).insert().await
     }
 }
 
@@ -75,7 +75,7 @@ where
             PendingComponent::Entity(Default::default()),
         ) {
             self.contents =
-                PendingComponent::Entity(self.new_entity(context, contents).insert().await?);
+                PendingComponent::Entity(self.new_entity(context, contents).await.insert().await?);
         } else {
             unreachable!("A component should never be re-initialized");
         }

@@ -323,12 +323,12 @@ pub trait InteractiveComponent: Component {
         )
     }
 
-    fn new_entity<T: InteractiveComponent + 'static>(
+    async fn new_entity<T: InteractiveComponent + 'static>(
         &self,
         context: &mut Context,
         component: T,
     ) -> EntityBuilder<T, Self::Message> {
-        context.insert_new_entity(context.index(), component)
+        context.insert_new_entity(context.index(), component).await
     }
 
     async fn callback(&self, context: &mut Context, message: Self::Event) {

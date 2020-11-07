@@ -3,8 +3,8 @@ use crate::{
     scene::Target,
     style::Style,
     ui::{
-        AbsoluteBounds, AbsoluteLayout, Context, HierarchicalArena, Index, Indexable, LayerIndex,
-        LayerIndexable, Layout, LayoutSolver, StyledContext, UILayer, UIState,
+        AbsoluteLayout, Context, HierarchicalArena, Index, Indexable, LayerIndex, Layout,
+        LayoutSolver, StyledContext, UILayer, UIState,
     },
     Handle, KludgineResult,
 };
@@ -137,7 +137,7 @@ impl LayoutEngine {
                         .await?;
 
                     AbsoluteLayout::default()
-                        .child(&index, AbsoluteBounds::default())?
+                        .child(&index, node.bounds().await)?
                         .layout_within(
                             &Rect::new(Point::default(), scene_size),
                             &content_size,
@@ -237,7 +237,7 @@ impl std::ops::DerefMut for LayoutContext {
 }
 
 impl LayoutContext {
-    pub(crate) fn new<I: LayerIndexable>(
+    pub(crate) fn new<I: Indexable>(
         index: I,
         scene: Target,
         effective_styles: Arc<HashMap<Index, Style<Raw>>>,

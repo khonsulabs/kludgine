@@ -25,6 +25,7 @@ use crate::{
 };
 pub use arena::{HierarchicalArena, Index};
 use async_channel::Sender;
+use async_trait::async_trait;
 use once_cell::sync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
@@ -48,6 +49,20 @@ impl UIState {
         Self {
             data: Handle::new(UIStateData::new(event_sender)),
         }
+    }
+
+    pub async fn layer_for(&self, index: Index, arena: &HierarchicalArena) -> Option<UILayer> {
+        let data = self.data.read().await;
+        for layer in data.layers.iter() {
+            let mut layer_indexes = arena.traverse(&layer.root).await;
+            while let Some(contained_index) = layer_indexes.next().await {
+                if contained_index == index {
+                    return Some(layer.clone());
+                }
+            }
+        }
+
+        None
     }
 
     async fn removed_element(&self, index: Index) {
@@ -179,7 +194,7 @@ impl UIState {
         root: C,
         arena: &HierarchicalArena,
         scene: &Scene,
-    ) -> KludgineResult<Index> {
+    ) -> KludgineResult<LayerIndex> {
         let mut components = ThreadsafeAnyMap::new();
         let theme = scene.theme().await;
         components.insert(Id::from("root"));
@@ -198,7 +213,10 @@ impl UIState {
             .await;
 
         self.push_layer_from_index(root, arena, scene).await?;
-        Ok(root)
+        Ok(LayerIndex {
+            index: root,
+            layer: self.top_layer().await,
+        })
     }
 }
 
@@ -694,8 +712,9 @@ pub trait Indexable {
     fn index(&self) -> Index;
 }
 
+#[async_trait]
 pub trait LayerIndexable {
-    fn layer_index(&self) -> LayerIndex;
+    async fn layer_index(&self) -> LayerIndex;
 }
 
 impl<C> Indexable for Entity<C> {
@@ -704,9 +723,10 @@ impl<C> Indexable for Entity<C> {
     }
 }
 
-impl<C> LayerIndexable for Entity<C> {
-    fn layer_index(&self) -> LayerIndex {
-        self.context.layer_index()
+#[async_trait]
+impl<C: Send + Sync> LayerIndexable for Entity<C> {
+    async fn layer_index(&self) -> LayerIndex {
+        self.context.layer_index().await
     }
 }
 
@@ -722,8 +742,9 @@ impl Indexable for LayerIndex {
     }
 }
 
+#[async_trait]
 impl LayerIndexable for LayerIndex {
-    fn layer_index(&self) -> LayerIndex {
+    async fn layer_index(&self) -> LayerIndex {
         self.clone()
     }
 }

@@ -25,7 +25,7 @@ where
     style_sheet: StyleSheet,
     interactive: bool,
     callback: Option<Callback<C::Event>>,
-    layer: UILayer,
+    layer: Option<UILayer>,
     ui_state: UIState,
     arena: HierarchicalArena,
     _marker: std::marker::PhantomData<P>,
@@ -40,10 +40,10 @@ where
         parent: Option<Index>,
         component: C,
         scene: &Target,
-        layer: &UILayer,
+        layer: Option<&UILayer>,
         ui_state: &UIState,
         arena: &HierarchicalArena,
-    ) -> Self {
+    ) -> EntityBuilder<C, P> {
         let mut components = ThreadsafeAnyMap::new();
         if let Some(base_classes) = component.classes() {
             components.insert(Handle::new(Classes(base_classes)));
@@ -51,12 +51,12 @@ where
 
         let component = Handle::new(component);
         components.insert(component);
-        Self {
+        EntityBuilder {
             components,
             scene: scene.clone(),
             parent,
             interactive: true,
-            layer: layer.clone(),
+            layer: layer.cloned(),
             ui_state: ui_state.clone(),
             arena: arena.clone(),
             style_sheet: Default::default(),
@@ -100,18 +100,33 @@ where
         self
     }
 
-    pub fn callback<F: Fn(C::Event) -> P + Send + Sync + 'static>(mut self, callback: F) -> Self {
+    pub fn callback<
+        F: Fn(C::Event) -> Message + Send + Sync + 'static,
+        Message: Send + Sync + 'static,
+    >(
+        self,
+        callback: F,
+    ) -> EntityBuilder<C, Message> {
+        // TODO make Message come from an Entity target, and don't use Parent here.
+        // This is needed to make sure that we can communicate between windows spawned from each other
         let target = Context::new(
-            LayerIndex {
-                index: self.parent.unwrap(),
-                layer: self.layer.clone(),
-            },
+            self.parent.unwrap(),
             self.arena.clone(),
             self.ui_state.clone(),
             self.scene.clone(),
         );
-        self.callback = Some(Callback::new(target, callback));
-        self
+        EntityBuilder {
+            components: self.components,
+            arena: self.arena,
+            callback: Some(Callback::new(target, callback)),
+            interactive: self.interactive,
+            layer: self.layer,
+            parent: self.parent,
+            scene: self.scene,
+            style_sheet: self.style_sheet,
+            ui_state: self.ui_state,
+            _marker: Default::default(),
+        }
     }
 
     pub fn with<T: Send + Sync + 'static>(mut self, component: T) -> Self {
@@ -149,13 +164,11 @@ where
         self.components.insert(Handle::new(
             self.style_sheet.merge_with(&theme_style, false),
         ));
-        let layer_index = {
-            let node = Node::from_components::<C>(self.components, self.interactive, self.callback);
-            let index = self.arena.insert(self.parent, node).await;
-            let layer_index = LayerIndex {
-                index,
-                layer: self.layer,
-            };
+
+        let node = Node::from_components::<C>(self.components, self.interactive, self.callback);
+        let index = self.arena.insert(self.parent, node).await;
+        let layer_index = if let Some(layer) = self.layer {
+            let layer_index = LayerIndex { index, layer };
 
             let mut context = Context::new(
                 layer_index.clone(),
@@ -171,7 +184,16 @@ where
                 .await?;
 
             layer_index
+        } else {
+            self.ui_state
+                .push_layer_from_index(index, &self.arena, &self.scene)
+                .await?;
+            LayerIndex {
+                index,
+                layer: self.ui_state.top_layer().await,
+            }
         };
+
         Ok(Entity::new(Context::new(
             layer_index,
             self.arena.clone(),
