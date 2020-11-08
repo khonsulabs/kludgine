@@ -4,7 +4,7 @@ use crate::{
         theme::{Palette, Theme},
         BackgroundColor, ColorPair, ForegroundColor, Style,
     },
-    ui::{Border, ComponentBorder, ComponentPadding},
+    ui::{Border, ComponentBorder, ComponentPadding, DialogButtonSpacing},
 };
 
 #[derive(Debug)]
@@ -185,6 +185,7 @@ impl Minimal {
             |c| c.classes.contains("dialog"),
             |style| {
                 style
+                    .with(DialogButtonSpacing(Points::new(10.)))
                     .with(ComponentPadding(Surround::uniform(Points::new(10.))))
                     .with(ComponentBorder::uniform(Border::new(
                         2.,

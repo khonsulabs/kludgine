@@ -1,8 +1,8 @@
 use crate::{
     color::Color,
-    math::{Dimension, Point, Points, Scaled, Size, SizeExt},
+    math::{Dimension, Point, Points, Raw, Scaled, Size, SizeExt},
     shape::{Fill, Shape},
-    style::{theme::Selector, Alignment, ColorPair, UnscaledStyleComponent},
+    style::{theme::Selector, Alignment, ColorPair, Style, StyleComponent, UnscaledStyleComponent},
     ui::{
         component::{
             pending::PendingComponent, Button, Component, ControlEvent, InteractiveComponent,
@@ -14,6 +14,7 @@ use crate::{
     KludgineResult,
 };
 use async_trait::async_trait;
+use euclid::{Length, Scale};
 use generational_arena::Index;
 use std::fmt::Debug;
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
@@ -102,7 +103,7 @@ where
     left_buttons: Vec<DialogButtonInstance<T>>,
     middle_buttons: Vec<DialogButtonInstance<T>>,
     right_buttons: Vec<DialogButtonInstance<T>>,
-    button_spacing: Points,
+    autodismiss_value: Option<Option<T>>,
     _phantom: std::marker::PhantomData<T>,
 }
 
@@ -117,7 +118,7 @@ where
             left_buttons: Vec::new(),
             middle_buttons: Vec::new(),
             right_buttons: Vec::new(),
-            button_spacing: Default::default(),
+            autodismiss_value: Default::default(),
             _phantom: Default::default(),
         }
     }
@@ -164,6 +165,14 @@ where
         // Close the dialog once any button has been pressed
         context.remove(&context.index()).await;
     }
+
+    async fn button_spacing(&self, context: &mut StyledContext) -> Length<f32, Raw> {
+        if let Some(spacing) = context.effective_style().get::<DialogButtonSpacing<Raw>>() {
+            spacing.0
+        } else {
+            Points::new(10.) * context.scene().scale_factor().await
+        }
+    }
 }
 
 impl<T> Dialog<Label, T>
@@ -207,14 +216,11 @@ where
                 .cancel()])
         };
 
-        let spacing = self.component::<DialogButtonSpacing>(context).await;
-        self.button_spacing = if let Some(spacing) = spacing {
-            let spacing = spacing.read().await;
-            *spacing
-        } else {
-            DialogButtonSpacing::default()
-        }
-        .0;
+        let autodismiss_value = self.component::<DialogAutodismiss<T>>(context).await;
+        if let Some(autodismiss_value) = autodismiss_value {
+            let autodismiss_value = autodismiss_value.read().await;
+            self.autodismiss_value = Some(autodismiss_value.0.clone());
+        };
 
         for DialogButton {
             caption,
@@ -267,11 +273,13 @@ where
             .content_size_with_padding(&self.contents.entity(), &constraints)
             .await?;
         let button_bar_layout = self.measure_buttons(context).await?;
+        let scale_factor = context.scene().scale_factor().await;
+        let button_spacing = self.button_spacing(context).await / scale_factor;
         let spacing_between_contents_and_buttons =
-            Size::from_lengths(Default::default(), self.button_spacing);
+            Size::from_lengths(Default::default(), button_spacing);
         Ok(content_size
             + padding.minimum_size()
-            + button_bar_layout.size(self.button_spacing)
+            + button_bar_layout.size(button_spacing)
             + spacing_between_contents_and_buttons)
     }
 
@@ -280,6 +288,8 @@ where
         context: &mut StyledContext,
     ) -> KludgineResult<Box<dyn LayoutSolver>> {
         let button_bar_layout = self.measure_buttons(context).await?;
+        let scale_factor = context.scene().scale_factor().await;
+        let button_spacing = self.button_spacing(context).await / scale_factor;
 
         let mut layout = AbsoluteLayout::default().child(
             &self.contents.entity(),
@@ -302,11 +312,11 @@ where
                     ..Default::default()
                 },
             )?;
-            x += button_layout.size.width() + self.button_spacing;
+            x += button_layout.size.width() + button_spacing;
         }
 
         let mut x = (context.scene().size().await.width()
-            - button_bar_layout.section_width(Alignment::Center, self.button_spacing))
+            - button_bar_layout.section_width(Alignment::Center, button_spacing))
             / 2.;
         for button_layout in &button_bar_layout.middle {
             layout = layout.child(
@@ -317,7 +327,7 @@ where
                     ..Default::default()
                 },
             )?;
-            x += button_layout.size.width() + self.button_spacing;
+            x += button_layout.size.width() + button_spacing;
         }
 
         let mut x = Points::default();
@@ -330,7 +340,7 @@ where
                     ..Default::default()
                 },
             )?;
-            x += button_layout.size.width() + self.button_spacing;
+            x += button_layout.size.width() + button_spacing;
         }
 
         layout.layout()
@@ -360,10 +370,13 @@ where
     // Dialogs intercept all clicks while they're open
     async fn hit_test(
         &self,
-        _context: &mut Context,
+        context: &mut Context,
         _window_position: Point<f32, Scaled>,
     ) -> KludgineResult<bool> {
-        // TODO offer an auto-dismiss option
+        if let Some(value) = &self.autodismiss_value {
+            self.button_clicked(value.clone(), context).await;
+        }
+
         Ok(true)
     }
 
@@ -485,13 +498,29 @@ impl<T> DialogButton<T> {
     }
 }
 
-// TOD THIS IS A STYLE
 #[derive(Debug, Clone, Copy)]
-pub struct DialogButtonSpacing(pub Points);
+pub struct DialogAutodismiss<T>(pub Option<T>);
 
-impl Default for DialogButtonSpacing {
-    fn default() -> Self {
-        DialogButtonSpacing(Points::new(10.))
+#[derive(Debug, Clone, Copy)]
+pub struct DialogButtonSpacing<Unit>(pub Length<f32, Unit>);
+
+impl StyleComponent<Scaled> for DialogButtonSpacing<Scaled> {
+    fn scale(&self, scale: Scale<f32, Scaled, Raw>, destination: &mut Style<Raw>) {
+        destination.push(DialogButtonSpacing(self.0 * scale))
+    }
+
+    fn should_be_inherited(&self) -> bool {
+        false
+    }
+}
+
+impl StyleComponent<Raw> for DialogButtonSpacing<Raw> {
+    fn scale(&self, _scale: Scale<f32, Raw, Raw>, map: &mut Style<Raw>) {
+        map.push(DialogButtonSpacing(self.0));
+    }
+
+    fn should_be_inherited(&self) -> bool {
+        false
     }
 }
 
