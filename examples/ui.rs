@@ -59,11 +59,11 @@ impl InteractiveComponent for UIExample {
                     .send(LabelCommand::SetValue(self.current_count.to_string()))
                     .await?;
                 context
-                    .new_layer(Toast::new(Label::new("Testing Toasting...")))
-                    .bounds(AbsoluteBounds {
-                        bottom: Dimension::from_f32(64.),
-                        ..Default::default()
-                    })
+                    .new_layer(Dialog::<_, ()>::new(Label::new("Testing Toasting...")))
+                    // .bounds(AbsoluteBounds {
+                    //     bottom: Dimension::from_f32(64.),
+                    //     ..Default::default()
+                    // })
                     .insert()
                     .await?;
             }

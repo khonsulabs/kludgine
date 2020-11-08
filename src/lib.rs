@@ -132,13 +132,14 @@ pub mod prelude {
         },
         ui::{
             AbsoluteBounds, AbsoluteLayout, AnimatableComponent, AnimationManager, Border, Button,
-            Callback, ColumnLayout, Component, ComponentBorder, Context, ControlEvent, Entity,
-            EntityBuilder, HierarchicalArena, Image, ImageAlphaAnimation, ImageCommand,
-            ImageFrameAnimation, ImageOptions, ImageScaling, Index, Indexable,
-            InteractiveComponent, Label, LabelCommand, Layout, LayoutConstraints, LayoutContext,
-            LayoutSolver, LayoutSolverExt, LinearTransition, Pane, Panel, PanelCommand, PanelEvent,
-            PanelMessage, PanelProvider, RowLayout, StandaloneComponent, StyledContext, TextField,
-            TextFieldEvent, Timeout, Toast,
+            Callback, ColumnLayout, Component, ComponentBorder, Context, ControlEvent, Dialog,
+            DialogButton, DialogButtonSpacing, DialogButtons, Entity, EntityBuilder,
+            HierarchicalArena, Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation,
+            ImageOptions, ImageScaling, Index, Indexable, InteractiveComponent, Label,
+            LabelCommand, Layout, LayoutConstraints, LayoutContext, LayoutSolver, LayoutSolverExt,
+            LinearTransition, Pane, Panel, PanelCommand, PanelEvent, PanelMessage, PanelProvider,
+            RowLayout, StandaloneComponent, StyledContext, TextField, TextFieldEvent, Timeout,
+            Toast,
         },
         window::{
             event::{

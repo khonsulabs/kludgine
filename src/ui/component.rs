@@ -15,12 +15,14 @@ use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 mod builder;
 mod button;
 mod control;
+mod dialog;
 mod image;
 mod label;
 #[cfg(feature = "ecs")]
 pub mod legion;
 mod pane;
 mod panel;
+mod pending;
 mod text_field;
 mod toast;
 
@@ -28,6 +30,7 @@ pub use self::{
     builder::EntityBuilder,
     button::Button,
     control::{Border, ComponentBorder, ComponentPadding, ControlEvent},
+    dialog::{Dialog, DialogButton, DialogButtonSpacing, DialogButtons},
     image::{
         Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
     },
