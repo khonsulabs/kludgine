@@ -259,12 +259,14 @@ pub trait Component: Send + Sync {
         window_position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
+        context.deactivate().await;
+
         if let Some(window_position) = window_position {
             if self.hit_test(context, window_position).await? {
                 self.clicked(context, window_position, button).await?
             }
         }
-        context.deactivate().await;
+
         Ok(())
     }
 
