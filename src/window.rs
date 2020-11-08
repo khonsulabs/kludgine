@@ -47,8 +47,8 @@ pub trait Window: InteractiveComponent + Send + Sync + 'static {
         None
     }
 
-    fn theme(&self) -> Box<dyn Theme> {
-        Box::new(Minimal::default())
+    fn theme(&self) -> Theme {
+        Minimal::default().theme()
     }
 }
 

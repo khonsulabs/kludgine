@@ -6,27 +6,30 @@ mod layout;
 mod node;
 mod timeout;
 
-pub(crate) use self::node::NodeData;
+use self::node::ThreadsafeAnyMap;
 pub use self::{
     animation::{AnimationManager, LinearTransition},
     component::*,
     context::*,
     layout::*,
-    node::{Node, NodeDataWindowExt},
+    node::Node,
     timeout::Timeout,
 };
 use crate::{
     math::{Point, Scaled},
     runtime::Runtime,
     scene::{Scene, Target},
+    style::theme::{Classes, Id},
     window::event::{ElementState, Event, EventStatus, InputEvent, MouseButton, WindowEvent},
     Handle, KludgineError, KludgineResult, RequiresInitialization,
 };
 pub use arena::{HierarchicalArena, Index};
 use async_channel::Sender;
+use async_trait::async_trait;
 use once_cell::sync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
+    hash::Hash,
     time::{Duration, Instant},
 };
 
@@ -48,40 +51,46 @@ impl UIState {
         }
     }
 
-    async fn deactivate(&self) {
+    pub async fn layer_for(&self, index: Index, arena: &HierarchicalArena) -> Option<UILayer> {
+        let data = self.data.read().await;
+        for layer in data.layers.iter() {
+            let mut layer_indexes = arena.traverse(&layer.root).await;
+            while let Some(contained_index) = layer_indexes.next().await {
+                if contained_index == index {
+                    return Some(layer.clone());
+                }
+            }
+        }
+
+        None
+    }
+
+    async fn removed_element(&self, index: Index) {
         let mut data = self.data.write().await;
-        if data.active != None {
-            data.needs_render = true;
-            data.active = None;
+        if let Some(index) = data
+            .layers
+            .iter()
+            .enumerate()
+            .find(|(_, layer)| layer.root == index)
+            .map(|(index, _)| index)
+        {
+            data.layers.remove(index);
         }
     }
 
-    async fn activate(&self, index: Index) {
-        let mut data = self.data.write().await;
-        if data.active != Some(index) {
-            data.needs_render = true;
-            data.active = Some(index);
-        }
-    }
-
-    async fn focus(&self, index: Index) {
-        let mut data = self.data.write().await;
-        data.focus = Some(index);
-    }
-
-    async fn blur(&self) {
-        let mut data = self.data.write().await;
-        data.focus = None;
-    }
-
-    async fn focused(&self) -> Option<Index> {
+    async fn top_layer(&self) -> UILayer {
         let data = self.data.read().await;
-        data.focus
+        data.layers.last().cloned().unwrap()
     }
 
-    async fn active(&self) -> Option<Index> {
+    async fn layers(&self) -> Vec<UILayer> {
         let data = self.data.read().await;
-        data.active
+        data.layers.clone()
+    }
+
+    async fn clear_layer_states(&self) {
+        let data = self.data.read().await;
+        futures::future::join_all(data.layers.iter().map(|l| l.clear_state())).await;
     }
 
     async fn set_needs_redraw(&self) {
@@ -149,6 +158,66 @@ impl UIState {
                 RedrawTarget::Scheduled(scheduled_for) => scheduled_for < Instant::now(),
             }
     }
+
+    pub(crate) async fn push_layer_from_index(
+        &self,
+        root: Index,
+        arena: &HierarchicalArena,
+        scene: &Scene,
+    ) -> KludgineResult<()> {
+        let layer = {
+            let mut data = self.data.write().await;
+
+            let layer = UILayer {
+                root,
+                data: Handle::new(UILayerData::default()),
+            };
+            data.layers.push(layer.clone());
+            layer
+        };
+
+        let node = arena.get(&root).await.unwrap();
+
+        node.initialize(&mut Context::new(
+            LayerIndex { layer, index: root },
+            arena.clone(),
+            self.clone(),
+            Target::from(scene.clone()),
+        ))
+        .await?;
+
+        Ok(())
+    }
+
+    async fn push_layer<C: InteractiveComponent + 'static>(
+        &self,
+        root: C,
+        arena: &HierarchicalArena,
+        scene: &Scene,
+    ) -> KludgineResult<LayerIndex> {
+        let mut components = ThreadsafeAnyMap::new();
+        let theme = scene.theme().await;
+        components.insert(Id::from("root"));
+        if let Some(classes) = root.classes() {
+            components.insert(Classes(classes));
+        }
+
+        let stylesheet = theme.stylesheet_for(components.get(), components.get());
+        components.insert(Handle::new(stylesheet));
+
+        components.insert(Handle::new(root));
+        components.insert(Handle::new(AbsoluteBounds::default()));
+
+        let root = arena
+            .insert(None, Node::from_components::<C>(components, true, None))
+            .await;
+
+        self.push_layer_from_index(root, arena, scene).await?;
+        Ok(LayerIndex {
+            index: root,
+            layer: self.top_layer().await,
+        })
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -196,21 +265,73 @@ impl UpdateSchedule {
 
 #[derive(Debug)]
 struct UIStateData {
-    focus: Option<Index>,
-    active: Option<Index>,
+    layers: Vec<UILayer>,
     next_redraw_target: RedrawTarget,
     needs_render: bool,
     event_sender: Sender<WindowEvent>,
 }
 
+#[derive(Debug, Clone)]
+pub struct UILayer {
+    pub root: Index,
+    data: Handle<UILayerData>,
+}
+
+impl UILayer {
+    async fn clear_state(&self) {
+        let mut data = self.data.write().await;
+        data.active = None;
+        data.focus = None;
+    }
+
+    async fn activate(&self, index: Index, state: &UIState) {
+        let mut data = self.data.write().await;
+        if data.active != Some(index) {
+            data.active = Some(index);
+            state.set_needs_redraw().await;
+        }
+    }
+
+    async fn deactivate(&self, state: &UIState) {
+        let mut data = self.data.write().await;
+        if data.active != None {
+            data.active = None;
+            state.set_needs_redraw().await;
+        }
+    }
+
+    async fn active(&self) -> Option<Index> {
+        let data = self.data.read().await;
+        data.active
+    }
+
+    async fn focus(&self) -> Option<Index> {
+        let data = self.data.read().await;
+        data.focus
+    }
+
+    async fn focus_on(&self, focus: Option<Index>, state: &UIState) {
+        let mut data = self.data.write().await;
+        if data.focus != focus {
+            data.focus = focus;
+            state.set_needs_redraw().await;
+        }
+    }
+}
+
+#[derive(Default, Debug, Clone)]
+struct UILayerData {
+    focus: Option<Index>,
+    active: Option<Index>,
+}
+
 impl UIStateData {
     fn new(event_sender: Sender<WindowEvent>) -> Self {
         Self {
-            needs_render: true,
-            focus: None,
-            active: None,
-            next_redraw_target: RedrawTarget::default(),
             event_sender,
+            layers: Default::default(),
+            needs_render: true,
+            next_redraw_target: RedrawTarget::default(),
         }
     }
 }
@@ -219,14 +340,14 @@ pub struct UserInterface<C>
 where
     C: InteractiveComponent + 'static,
 {
-    pub(crate) root: Entity<C>,
     arena: HierarchicalArena,
     ui_state: UIState,
-    mouse_button_handlers: HashMap<MouseButton, Index>,
-    hover: Option<Index>,
-    last_render_order: Vec<Index>,
+    mouse_button_handlers: HashMap<MouseButton, LayerIndex>,
+    hover: Option<LayerIndex>,
+    last_render_order: Vec<LayerIndex>,
     last_mouse_position: Option<Point<f32, Scaled>>,
     scene: Scene,
+    _phantom: std::marker::PhantomData<C>,
 }
 
 impl<C> UserInterface<C>
@@ -240,81 +361,87 @@ where
         event_sender: Sender<WindowEvent>,
     ) -> KludgineResult<Self> {
         let ui_state = UIState::new(event_sender);
-        let root = Entity::new(Context::new(
-            {
-                let node = Node::new::<C>(
-                    root,
-                    scene.theme().await.default_style_sheet(),
-                    AbsoluteBounds::default(),
-                    true,
-                    None,
-                );
-
-                arena.insert(None, node).await
-            },
-            arena.clone(),
-            ui_state.clone(),
-            Target::from(scene.clone()),
-        ));
 
         let ui = Self {
             scene,
-            root: root.clone(),
             arena,
             hover: None,
             last_render_order: Default::default(),
             ui_state,
             last_mouse_position: None,
             mouse_button_handlers: Default::default(),
+            _phantom: Default::default(),
         };
-        ui.initialize(&root).await?;
+        ui.ui_state.push_layer(root, &ui.arena, &ui.scene).await?;
         Ok(ui)
+    }
+
+    pub(crate) async fn layers(&self) -> Vec<UILayer> {
+        self.ui_state.layers().await
     }
 
     pub async fn render(&mut self) -> KludgineResult<()> {
         let scene_scale = self.scene.scale_factor().await;
-        let hovered_indicies = self.hovered_indicies().await;
-        let layouts = LayoutEngine::layout(
-            &self.arena,
-            &self.ui_state,
-            self.root.index(),
-            &Target::from(self.scene.clone()),
-            hovered_indicies,
-        )
-        .await?;
-
         self.last_render_order.clear();
-        while let Some(index) = layouts.next_to_render().await {
-            if let Some(layout) = layouts.get_layout(&index).await {
-                self.last_render_order.push(index);
-                if let Some(node) = self.arena.get(&index).await {
-                    let mut context = StyledContext::new(
+
+        for layer in self.ui_state.layers().await {
+            let hovered_indicies = self.hovered_indicies().await;
+            let layouts = LayoutEngine::layout(
+                &self.arena,
+                &layer,
+                &self.ui_state,
+                layer.root,
+                &Target::from(self.scene.clone()),
+                hovered_indicies
+                    .into_iter()
+                    .filter(|li| Handle::ptr_eq(&li.layer.data, &layer.data))
+                    .map(|li| li.index)
+                    .collect(),
+            )
+            .await?;
+
+            while let Some(index) = layouts.next_to_render().await {
+                if let Some(layout) = layouts.get_layout(&index).await {
+                    let layer_index = LayerIndex {
+                        layer: layer.clone(),
                         index,
-                        Target::from(self.scene.clone())
-                            .clipped_to((layout.inner_bounds() * scene_scale).round().to_u32()),
-                        layouts.effective_styles().await.clone(),
-                        self.arena.clone(),
-                        self.ui_state.clone(),
-                    );
-                    node.render_background(&mut context, &layout).await?;
-                    node.render(&mut context, &layout).await?;
+                    };
+                    self.last_render_order.push(layer_index.clone());
+                    if let Some(node) = self.arena.get(&index).await {
+                        let mut context = StyledContext::new(
+                            layer_index,
+                            Target::from(self.scene.clone())
+                                .clipped_to((layout.inner_bounds() * scene_scale).round().to_u32()),
+                            layouts.effective_styles().await.clone(),
+                            self.arena.clone(),
+                            self.ui_state.clone(),
+                        );
+                        node.render_background(&mut context, &layout).await?;
+                        node.render(&mut context, &layout).await?;
+                    }
                 }
             }
         }
 
         self.last_render_order.reverse();
-
         self.ui_state.clear_redraw_target().await;
 
         Ok(())
     }
 
-    async fn hovered_indicies(&mut self) -> HashSet<Index> {
+    async fn hovered_indicies(&mut self) -> HashSet<LayerIndex> {
         let mut indicies = HashSet::new();
-        let mut hovered_index = self.hover;
-        while let Some(index) = hovered_index {
-            indicies.insert(index);
-            hovered_index = self.arena.parent(index).await;
+        let mut hovered_index = self.hover.clone();
+        while let Some(layer_index) = hovered_index {
+            hovered_index = self
+                .arena
+                .parent(layer_index.index)
+                .await
+                .map(|index| LayerIndex {
+                    index,
+                    layer: layer_index.layer.clone(),
+                });
+            indicies.insert(layer_index);
         }
         indicies
     }
@@ -325,17 +452,22 @@ where
         // for each node.
         self.ui_state.initialize_redraw_target(target_fps).await;
 
-        let mut traverser = self.arena.traverse(&self.root).await;
-        while let Some(index) = traverser.next().await {
-            let mut context = Context::new(
-                index,
-                self.arena.clone(),
-                self.ui_state.clone(),
-                scene.clone(),
-            );
+        for layer in self.ui_state.layers().await {
+            let mut traverser = self.arena.traverse(&layer.root).await;
+            while let Some(index) = traverser.next().await {
+                let mut context = Context::new(
+                    LayerIndex {
+                        index,
+                        layer: layer.clone(),
+                    },
+                    self.arena.clone(),
+                    self.ui_state.clone(),
+                    scene.clone(),
+                );
 
-            if let Some(node) = self.arena.get(&index).await {
-                node.update(&mut context).await?;
+                if let Some(node) = self.arena.get(&index).await {
+                    node.update(&mut context).await?;
+                }
             }
         }
 
@@ -343,14 +475,14 @@ where
     }
 
     pub async fn receive_character(&mut self, character: char) -> KludgineResult<()> {
-        let event_target = self
-            .ui_state
-            .focused()
-            .await
-            .unwrap_or_else(|| self.root.index());
+        let top_layer = self.ui_state.top_layer().await;
+        let event_target = top_layer.focus().await.unwrap_or(top_layer.root);
         if let Some(node) = self.arena.get(&event_target).await {
             let mut context = Context::new(
-                event_target,
+                LayerIndex {
+                    index: event_target,
+                    layer: top_layer,
+                },
                 self.arena.clone(),
                 self.ui_state.clone(),
                 Target::from(self.scene.clone()),
@@ -365,10 +497,10 @@ where
             Event::MouseMoved { position } => {
                 self.last_mouse_position = position;
 
-                for (&button, &index) in self.mouse_button_handlers.iter() {
-                    if let Some(node) = self.arena.get(&index).await {
+                for (&button, layer_index) in self.mouse_button_handlers.iter() {
+                    if let Some(node) = self.arena.get(&layer_index.index).await {
                         let mut context = Context::new(
-                            index,
+                            layer_index.clone(),
                             self.arena.clone(),
                             self.ui_state.clone(),
                             Target::from(self.scene.clone()),
@@ -380,16 +512,16 @@ where
                 let starting_hovered_indicies = self.hovered_indicies().await;
                 self.hover = None;
                 if let Some(position) = position {
-                    for &index in self.last_render_order.iter() {
-                        if let Some(node) = self.arena.get(&index).await {
+                    for layer_index in self.last_render_order.iter() {
+                        if let Some(node) = self.arena.get(&layer_index.index).await {
                             let mut context = Context::new(
-                                index,
+                                layer_index.clone(),
                                 self.arena.clone(),
                                 self.ui_state.clone(),
                                 Target::from(self.scene.clone()),
                             );
                             if node.hit_test(&mut context, position).await? {
-                                self.hover = Some(index);
+                                self.hover = Some(layer_index.clone());
                                 break;
                             }
                         }
@@ -397,10 +529,10 @@ where
                 }
                 let current_hovered_indicies = self.hovered_indicies().await;
 
-                for &new_hover in current_hovered_indicies.difference(&starting_hovered_indicies) {
-                    if let Some(node) = self.arena.get(&new_hover).await {
+                for new_hover in current_hovered_indicies.difference(&starting_hovered_indicies) {
+                    if let Some(node) = self.arena.get(&new_hover.index).await {
                         let mut context = Context::new(
-                            new_hover,
+                            new_hover.clone(),
                             self.arena.clone(),
                             self.ui_state.clone(),
                             Target::from(self.scene.clone()),
@@ -409,10 +541,10 @@ where
                     }
                 }
 
-                for &new_hover in starting_hovered_indicies.difference(&current_hovered_indicies) {
-                    if let Some(node) = self.arena.get(&new_hover).await {
+                for new_hover in starting_hovered_indicies.difference(&current_hovered_indicies) {
+                    if let Some(node) = self.arena.get(&new_hover.index).await {
                         let mut context = Context::new(
-                            new_hover,
+                            new_hover.clone(),
                             self.arena.clone(),
                             self.ui_state.clone(),
                             Target::from(self.scene.clone()),
@@ -426,11 +558,11 @@ where
                 }
             }
             Event::MouseWheel { delta, touch_phase } => {
-                let mut next_to_process = self.hover;
-                while let Some(index) = next_to_process {
-                    if let Some(node) = self.arena.get(&index).await {
+                let mut next_to_process = self.hover.clone();
+                while let Some(layer_index) = next_to_process {
+                    if let Some(node) = self.arena.get(&layer_index.index).await {
                         let mut context = Context::new(
-                            index,
+                            layer_index.clone(),
                             self.arena.clone(),
                             self.ui_state.clone(),
                             Target::from(self.scene.clone()),
@@ -443,15 +575,22 @@ where
                             }
                         }
                     }
-                    next_to_process = self.arena.parent(index).await;
+                    next_to_process =
+                        self.arena
+                            .parent(layer_index.index)
+                            .await
+                            .map(|index| LayerIndex {
+                                index,
+                                layer: layer_index.layer.clone(),
+                            });
                 }
             }
             Event::MouseButton { button, state } => match state {
                 ElementState::Released => {
-                    if let Some(&index) = self.mouse_button_handlers.get(&button) {
-                        if let Some(node) = self.arena.get(&index).await {
+                    if let Some(layer_index) = self.mouse_button_handlers.get(&button) {
+                        if let Some(node) = self.arena.get(&layer_index.index).await {
                             let mut context = Context::new(
-                                index,
+                                layer_index.clone(),
                                 self.arena.clone(),
                                 self.ui_state.clone(),
                                 Target::from(self.scene.clone()),
@@ -464,16 +603,15 @@ where
                     self.mouse_button_handlers.remove(&button);
                 }
                 ElementState::Pressed => {
-                    self.ui_state.blur().await;
-                    self.ui_state.deactivate().await;
+                    self.ui_state.clear_layer_states().await;
                     self.mouse_button_handlers.remove(&button);
 
                     if let Some(last_mouse_position) = self.last_mouse_position {
-                        let mut next_to_process = self.hover;
-                        while let Some(index) = next_to_process {
-                            if let Some(node) = self.arena.get(&index).await {
+                        let mut next_to_process = self.hover.clone();
+                        while let Some(layer_index) = next_to_process {
+                            if let Some(node) = self.arena.get(&layer_index.index).await {
                                 let mut context = Context::new(
-                                    index,
+                                    layer_index.clone(),
                                     self.arena.clone(),
                                     self.ui_state.clone(),
                                     Target::from(self.scene.clone()),
@@ -483,12 +621,19 @@ where
                                         .mouse_down(&mut context, last_mouse_position, button)
                                         .await?
                                     {
-                                        self.mouse_button_handlers.insert(button, index);
+                                        self.mouse_button_handlers
+                                            .insert(button, layer_index.clone());
                                         break;
                                     }
                                 }
                             }
-                            next_to_process = self.arena.parent(index).await;
+                            next_to_process =
+                                self.arena.parent(layer_index.index).await.map(|index| {
+                                    LayerIndex {
+                                        index,
+                                        layer: layer_index.layer.clone(),
+                                    }
+                                });
                         }
                     }
                 }
@@ -498,14 +643,14 @@ where
                 state,
                 scancode,
             } => {
-                let event_target = self
-                    .ui_state
-                    .focused()
-                    .await
-                    .unwrap_or_else(|| self.root.index());
+                let top_layer = self.ui_state.top_layer().await;
+                let event_target = top_layer.focus().await.unwrap_or(top_layer.root);
                 if let Some(node) = self.arena.get(&event_target).await {
                     let mut context = Context::new(
-                        event_target,
+                        LayerIndex {
+                            index: event_target,
+                            layer: top_layer,
+                        },
                         self.arena.clone(),
                         self.ui_state.clone(),
                         Target::from(self.scene.clone()),
@@ -529,19 +674,6 @@ where
     pub(crate) async fn needs_render(&self) -> bool {
         self.ui_state.needs_render().await
     }
-
-    async fn initialize(&self, index: &impl Indexable) -> KludgineResult<()> {
-        let index = index.index();
-        let node = self.arena.get(&index).await.unwrap();
-
-        node.initialize(&mut Context::new(
-            index,
-            self.arena.clone(),
-            self.ui_state.clone(),
-            Target::from(self.scene.clone()),
-        ))
-        .await
-    }
 }
 
 impl<C> Drop for UserInterface<C>
@@ -549,10 +681,12 @@ where
     C: InteractiveComponent + 'static,
 {
     fn drop(&mut self) {
-        let root = std::mem::take(&mut self.root);
+        let ui_state = self.ui_state.clone();
         let arena = self.arena.clone();
         Runtime::spawn(async move {
-            arena.remove(&root).await;
+            for layer in ui_state.layers().await {
+                arena.remove(&layer.root).await;
+            }
         })
         .detach();
     }
@@ -577,15 +711,40 @@ pub trait Indexable {
     fn index(&self) -> Index;
 }
 
+#[async_trait]
+pub trait LayerIndexable {
+    async fn layer_index(&self) -> LayerIndex;
+}
+
 impl<C> Indexable for Entity<C> {
     fn index(&self) -> Index {
         self.context.index()
     }
 }
 
+#[async_trait]
+impl<C: Send + Sync> LayerIndexable for Entity<C> {
+    async fn layer_index(&self) -> LayerIndex {
+        self.context.layer_index().await
+    }
+}
+
 impl Indexable for Index {
     fn index(&self) -> Index {
         *self
+    }
+}
+
+impl Indexable for LayerIndex {
+    fn index(&self) -> Index {
+        self.index
+    }
+}
+
+#[async_trait]
+impl LayerIndexable for LayerIndex {
+    async fn layer_index(&self) -> LayerIndex {
+        self.clone()
     }
 }
 
@@ -654,5 +813,25 @@ impl<C> Clone for Entity<C> {
             context: self.context.clone(),
             _phantom: Default::default(),
         }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct LayerIndex {
+    pub layer: UILayer,
+    pub index: Index,
+}
+
+impl PartialEq for LayerIndex {
+    fn eq(&self, other: &LayerIndex) -> bool {
+        self.index.eq(&other.index)
+    }
+}
+
+impl Eq for LayerIndex {}
+
+impl Hash for LayerIndex {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.index.hash(state)
     }
 }

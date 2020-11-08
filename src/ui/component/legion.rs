@@ -5,7 +5,6 @@ use crate::{
     scene::Target,
     shape::Shape,
     sprite::{Sprite, SpriteRotation, SpriteSource},
-    style::TextColor,
     text::Text,
     tilemap::{TileMap, TileProvider},
     ui::{Component, Context, InteractiveComponent, Layout, StyledContext},
@@ -165,7 +164,13 @@ where
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         let location = (window_position
-            - context.last_layout().await.inner_bounds().size.to_vector() / 2.)
+            - self
+                .last_layout(context)
+                .await
+                .inner_bounds()
+                .size
+                .to_vector()
+                / 2.)
             / self.last_camera.scale
             + self.last_camera.look_at.to_vector();
         let _ = self
@@ -182,7 +187,7 @@ where
         window_position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
-        let last_bounds = context.last_layout().await.inner_bounds();
+        let last_bounds = self.last_layout(context).await.inner_bounds();
         let location = window_position.map(|window_position| {
             (window_position - last_bounds.size.to_vector() / 2.) / self.last_camera.scale
                 + self.last_camera.look_at.to_vector()
@@ -201,7 +206,7 @@ where
         window_position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
-        let last_bounds = context.last_layout().await.inner_bounds();
+        let last_bounds = self.last_layout(context).await.inner_bounds();
         let location = window_position.map(|window_position| {
             (window_position - last_bounds.size.to_vector() / 2.) / self.last_camera.scale
                 + self.last_camera.look_at.to_vector()
@@ -452,7 +457,7 @@ pub enum Drawable<Unit> {
     Sprite(SpriteSource),
     Shape(Shape<Unit>),
     TileMap(LegionTileMap<Unit>),
-    Text(Text<TextColor>),
+    Text(Text),
     Custom(DrawableComponent<Unit>),
 }
 

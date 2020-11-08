@@ -212,6 +212,7 @@ where
         &self,
         bounds: &Rect<f32, Scaled>,
         _content_size: &Size<f32, Scaled>,
+        _padding: &Surround<f32, Scaled>,
         context: &LayoutContext,
     ) -> KludgineResult<()> {
         let mut content_sizes = HashMap::new();

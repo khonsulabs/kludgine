@@ -3,7 +3,8 @@ use crate::{
     scene::Target,
     style::Style,
     ui::{
-        Context, HierarchicalArena, Index, Indexable, Layout, LayoutSolver, StyledContext, UIState,
+        AbsoluteLayout, Context, HierarchicalArena, Index, Indexable, LayerIndex, Layout,
+        LayoutSolver, StyledContext, UILayer, UIState,
     },
     Handle, KludgineResult,
 };
@@ -47,6 +48,7 @@ impl LayoutEngine {
 
     pub(crate) async fn layout(
         arena: &HierarchicalArena,
+        layer: &UILayer,
         ui_state: &UIState,
         root: Index,
         scene: &Target,
@@ -65,11 +67,11 @@ impl LayoutEngine {
                     node_style = style_sheet.hover.merge_with(&node_style, false);
                 }
 
-                if ui_state.focused().await == Some(index) {
+                if layer.focus().await == Some(index) {
                     node_style = style_sheet.focus.merge_with(&node_style, false);
                 }
 
-                if ui_state.active().await == Some(index) {
+                if layer.active().await == Some(index) {
                     node_style = style_sheet.active.merge_with(&node_style, false);
                 }
 
@@ -94,7 +96,10 @@ impl LayoutEngine {
         while let Some(index) = found_nodes.pop_back() {
             if let Some(node) = arena.get(&index).await {
                 let mut context = StyledContext::new(
-                    index,
+                    LayerIndex {
+                        index,
+                        layer: layer.clone(),
+                    },
                     scene.clone(),
                     effective_styles.clone(),
                     arena.clone(),
@@ -109,7 +114,10 @@ impl LayoutEngine {
 
         while let Some(index) = layout_data.next_to_layout().await {
             let mut context = LayoutContext::new(
-                index,
+                LayerIndex {
+                    index,
+                    layer: layer.clone(),
+                },
                 scene.clone(),
                 effective_styles.clone(),
                 layout_data.clone(),
@@ -119,19 +127,30 @@ impl LayoutEngine {
             let computed_layout = match context.layout_for(index).await {
                 Some(layout) => layout,
                 None => {
-                    let layout = Layout {
-                        bounds: Rect::new(Point::default(), scene.size().await),
-                        padding: Surround::default(),
-                        margin: Surround::default(),
-                    };
-                    layout_data
-                        .insert_layout(index, layout.clone(), false)
-                        .await;
-                    layout
+                    let node = arena.get(&index).await.unwrap();
+                    let scene_size = scene.size().await;
+                    let (content_size, padding) = node
+                        .content_size_with_padding(
+                            context.styled_context(),
+                            &Size::new(Some(scene_size.width), Some(scene_size.height)),
+                        )
+                        .await?;
+
+                    AbsoluteLayout::default()
+                        .child(&index, node.bounds().await)?
+                        .layout_within(
+                            &Rect::new(Point::default(), scene_size),
+                            &content_size,
+                            &padding,
+                            &context,
+                        )
+                        .await?;
+
+                    context.layout_for(index).await.unwrap()
                 }
             };
             context
-                .layout_within(index, &computed_layout.inner_bounds())
+                .layout_within(index, &computed_layout.bounds_without_margin())
                 .await?;
 
             if let Some(node) = arena.get(&index).await {
@@ -176,6 +195,7 @@ impl LayoutEngine {
         index: &Index,
         context: &mut LayoutContext,
         bounds: &Rect<f32, Scaled>,
+        padding: &Surround<f32, Scaled>,
         content_size: &Size<f32, Scaled>,
     ) -> KludgineResult<()> {
         let solver_handle = {
@@ -184,7 +204,9 @@ impl LayoutEngine {
         };
         if let Some(solver_handle) = solver_handle {
             let solver = solver_handle.read().await;
-            solver.layout_within(bounds, content_size, context).await?;
+            solver
+                .layout_within(bounds, content_size, padding, context)
+                .await?;
         }
         Ok(())
     }
@@ -248,8 +270,8 @@ impl LayoutContext {
     ) -> KludgineResult<()> {
         let index = index.index();
         if let Some(node) = self.arena().get(&index).await {
-            let content_size = node
-                .content_size(
+            let (content_size, padding) = node
+                .content_size_with_padding(
                     self.styled_context(),
                     &Size::new(Some(bounds.size.width), Some(bounds.size.height)),
                 )
@@ -257,7 +279,13 @@ impl LayoutContext {
 
             let mut solving_context = self.clone_for(&index).await;
             self.layout
-                .solve_layout_for(&index, &mut solving_context, bounds, &content_size)
+                .solve_layout_for(
+                    &index,
+                    &mut solving_context,
+                    bounds,
+                    &padding,
+                    &content_size,
+                )
                 .await?;
         }
 

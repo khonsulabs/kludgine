@@ -1,41 +1,44 @@
 use crate::{
-    math::{Point, PointExt, Raw, Rect, Scaled, Size, SizeExt},
+    math::{Point, PointExt, Raw, Rect, Scaled, Size, SizeExt, Surround},
     shape::{Fill, Shape},
-    style::{BackgroundColor, ColorPair, FallbackStyle},
+    style::{theme::Selector, BackgroundColor},
     ui::{Context, Entity, Layout, LayoutSolver, LayoutSolverExt, StyledContext},
-    window::event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
+    window::{
+        event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
+        CloseResponse,
+    },
     KludgineResult,
 };
+use async_handle::Handle;
 use async_trait::async_trait;
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 mod builder;
 mod button;
 mod control;
+mod dialog;
 mod image;
 mod label;
 #[cfg(feature = "ecs")]
 pub mod legion;
 mod pane;
 mod panel;
+mod pending;
 mod text_field;
+mod toast;
 
 pub use self::{
     builder::EntityBuilder,
-    button::{Button, ButtonBackgroundColor, ButtonBorder, ButtonPadding, ButtonTextColor},
-    control::{
-        Border, ComponentBorder, ControlBackgroundColor, ControlBorder, ControlEvent,
-        ControlPadding, ControlTextColor,
-    },
+    button::Button,
+    control::{Border, ComponentBorder, ComponentPadding, ControlEvent},
+    dialog::{Dialog, DialogButton, DialogButtonSpacing, DialogButtons},
     image::{
         Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
     },
-    label::{Label, LabelBackgroundColor, LabelCommand, LabelTextColor},
-    pane::{Pane, PaneBackgroundColor, PaneBorder, PanePadding},
-    panel::{
-        Panel, PanelBackgroundColor, PanelBorder, PanelCommand, PanelEvent, PanelMessage,
-        PanelProvider,
-    },
-    text_field::{TextField, TextFieldBackgroundColor, TextFieldBorder, TextFieldEvent},
+    label::{Label, LabelCommand},
+    pane::Pane,
+    panel::{Panel, PanelCommand, PanelEvent, PanelMessage, PanelProvider},
+    text_field::{TextField, TextFieldEvent},
+    toast::Toast,
 };
 
 pub struct LayoutConstraints {}
@@ -43,9 +46,32 @@ pub struct LayoutConstraints {}
 #[async_trait]
 #[allow(unused_variables)]
 pub trait Component: Send + Sync {
+    fn classes(&self) -> Option<Vec<Selector>> {
+        None
+    }
+
     /// Called once the Window is opened
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         Ok(())
+    }
+
+    async fn content_size_with_padding(
+        &self,
+        context: &mut StyledContext,
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<(Size<f32, Scaled>, Surround<f32, Scaled>)> {
+        let padding = context
+            .effective_style()
+            .get_or_default::<ComponentPadding<Raw>>()
+            .0
+            / context.scene().scale_factor().await;
+
+        let constraints_minus_padding = padding.inset_constraints(constraints);
+        Ok((
+            self.content_size(context, &constraints_minus_padding)
+                .await?,
+            padding,
+        ))
     }
 
     async fn content_size(
@@ -89,21 +115,17 @@ pub trait Component: Send + Sync {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        self.render_standard_background::<BackgroundColor, ComponentBorder>(context, layout)
-            .await
+        self.render_standard_background(context, layout).await
     }
 
-    async fn render_standard_background<
-        C: Into<ColorPair> + FallbackStyle<Raw> + Clone,
-        B: Into<ComponentBorder> + FallbackStyle<Raw> + Clone,
-    >(
+    async fn render_standard_background(
         &self,
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
         let bounds = layout.bounds_without_margin();
-        if let Some(background) = C::lookup(context.effective_style()) {
-            let color_pair = background.clone().into();
+        if let Some(background) = context.effective_style().get::<BackgroundColor>() {
+            let color_pair = background.0;
             let color = color_pair.themed_color(&context.scene().system_theme().await);
 
             if color.visible() {
@@ -113,10 +135,9 @@ pub trait Component: Send + Sync {
                     .await;
             }
         }
-        if let Some(border) = B::lookup(context.effective_style()) {
-            let border = border.into();
+        if let Some(border) = context.effective_style().get::<ComponentBorder>() {
             // TODO the borders should be mitered together rather than drawn overlapping
-            if let Some(left) = border.left {
+            if let Some(left) = &border.left {
                 Shape::rect(Rect::new(
                     bounds.origin,
                     Size::from_lengths(left.width, bounds.size.height()),
@@ -128,7 +149,7 @@ pub trait Component: Send + Sync {
                 .render_at(Point::default(), context.scene())
                 .await;
             }
-            if let Some(right) = border.right {
+            if let Some(right) = &border.right {
                 Shape::rect(Rect::new(
                     Point::from_lengths(bounds.max().x() - right.width, bounds.origin.y()),
                     Size::from_lengths(right.width, bounds.size.height()),
@@ -141,7 +162,7 @@ pub trait Component: Send + Sync {
                 .render_at(Point::default(), context.scene())
                 .await;
             }
-            if let Some(top) = border.top {
+            if let Some(top) = &border.top {
                 Shape::rect(Rect::new(
                     bounds.origin,
                     Size::from_lengths(bounds.size.width(), top.width),
@@ -153,7 +174,7 @@ pub trait Component: Send + Sync {
                 .render_at(Point::default(), context.scene())
                 .await;
             }
-            if let Some(bottom) = border.bottom {
+            if let Some(bottom) = &border.bottom {
                 Shape::rect(Rect::new(
                     Point::from_lengths(bounds.origin.x(), bounds.max().y() - bottom.width),
                     Size::from_lengths(bounds.size.width(), bottom.width),
@@ -177,7 +198,7 @@ pub trait Component: Send + Sync {
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         if self.hit_test(context, window_position).await? {
-            context.activate().await;
+            context.activate(context.layer_index().await).await;
 
             Ok(EventStatus::Processed)
         } else {
@@ -224,9 +245,9 @@ pub trait Component: Send + Sync {
         };
 
         if activate {
-            context.activate().await;
+            context.activate(context.layer_index().await).await;
         } else {
-            context.deactivate().await;
+            context.deactivate(context.layer_index().await).await;
         }
 
         Ok(())
@@ -238,12 +259,14 @@ pub trait Component: Send + Sync {
         window_position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
+        context.deactivate(context.layer_index().await).await;
+
         if let Some(window_position) = window_position {
             if self.hit_test(context, window_position).await? {
                 self.clicked(context, window_position, button).await?
             }
         }
-        context.deactivate().await;
+
         Ok(())
     }
 
@@ -270,11 +293,19 @@ pub trait Component: Send + Sync {
         context: &mut Context,
         window_position: Point<f32, Scaled>,
     ) -> KludgineResult<bool> {
-        Ok(context
-            .last_layout()
+        Ok(self
+            .last_layout(context)
             .await
             .bounds_without_margin()
             .contains(window_position))
+    }
+
+    async fn close_requested(&self) -> KludgineResult<CloseResponse> {
+        Ok(CloseResponse::Close)
+    }
+
+    async fn last_layout(&self, context: &mut Context) -> Layout {
+        context.last_layout_for(context.index()).await
     }
 }
 
@@ -305,12 +336,12 @@ pub trait InteractiveComponent: Component {
         )
     }
 
-    fn new_entity<T: InteractiveComponent + 'static>(
+    async fn new_entity<T: InteractiveComponent + 'static>(
         &self,
         context: &mut Context,
         component: T,
     ) -> EntityBuilder<T, Self::Message> {
-        context.insert_new_entity(context.index(), component)
+        context.insert_new_entity(context.index(), component).await
     }
 
     async fn callback(&self, context: &mut Context, message: Self::Event) {
@@ -385,4 +416,38 @@ pub trait AnimatableComponent: InteractiveComponent + Sized {
     type AnimationFactory;
 
     fn new_animation_factory(target: Entity<Self>) -> Self::AnimationFactory;
+}
+
+#[async_trait]
+pub trait InteractiveComponentExt: Sized {
+    async fn component<T: Send + Sync + 'static>(&self, context: &mut Context)
+        -> Option<Handle<T>>;
+    fn entity(&self, context: &mut Context) -> Entity<Self>;
+    async fn activate(&self, context: &mut Context);
+    async fn deactivate(&self, context: &mut Context);
+}
+
+#[async_trait]
+impl<C> InteractiveComponentExt for C
+where
+    C: InteractiveComponent + 'static,
+{
+    async fn component<T: Send + Sync + 'static>(
+        &self,
+        context: &mut Context,
+    ) -> Option<Handle<T>> {
+        context.get_component_from(context.entity::<Self>()).await
+    }
+
+    fn entity(&self, context: &mut Context) -> Entity<C> {
+        context.entity()
+    }
+
+    async fn activate(&self, context: &mut Context) {
+        context.activate(context.entity::<Self>()).await
+    }
+
+    async fn deactivate(&self, context: &mut Context) {
+        context.activate(context.entity::<Self>()).await
+    }
 }

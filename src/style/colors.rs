@@ -1,7 +1,7 @@
 use crate::{
     color::Color,
     math::Scaled,
-    style::{theme::SystemTheme, GenericStyle, UnscaledFallbackStyle, UnscaledStyleComponent},
+    style::{theme::SystemTheme, UnscaledStyleComponent},
 };
 use std::fmt::Debug;
 
@@ -42,8 +42,6 @@ impl Default for ForegroundColor {
     }
 }
 
-impl UnscaledFallbackStyle for ForegroundColor {}
-
 impl Into<ColorPair> for ForegroundColor {
     fn into(self) -> ColorPair {
         self.0
@@ -57,7 +55,6 @@ impl UnscaledStyleComponent<Scaled> for BackgroundColor {
         false
     }
 }
-impl UnscaledFallbackStyle for BackgroundColor {}
 
 impl Default for BackgroundColor {
     fn default() -> Self {
@@ -69,31 +66,6 @@ impl Default for BackgroundColor {
 }
 
 impl Into<ColorPair> for BackgroundColor {
-    fn into(self) -> ColorPair {
-        self.0
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct TextColor(pub ColorPair);
-impl UnscaledStyleComponent<Scaled> for TextColor {}
-
-impl Default for TextColor {
-    fn default() -> Self {
-        Self(ForegroundColor::default().0)
-    }
-}
-
-impl UnscaledFallbackStyle for TextColor {
-    fn lookup_unscaled(style: GenericStyle) -> Option<Self> {
-        style
-            .get::<Self>()
-            .cloned()
-            .or_else(|| ForegroundColor::lookup_unscaled(style).map(|fg| TextColor(fg.0)))
-    }
-}
-
-impl Into<ColorPair> for TextColor {
     fn into(self) -> ColorPair {
         self.0
     }

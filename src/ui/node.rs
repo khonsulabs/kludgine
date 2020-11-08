@@ -1,5 +1,5 @@
 use crate::{
-    math::{Point, Scaled, Size},
+    math::{Point, Scaled, Size, Surround},
     runtime::Runtime,
     style::StyleSheet,
     ui::{
@@ -8,7 +8,7 @@ use crate::{
     },
     window::{
         event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
-        CloseResponse, Window,
+        CloseResponse,
     },
     Handle, KludgineResult,
 };
@@ -39,6 +39,11 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
         context: &mut StyledContext,
         constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<Size<f32, Scaled>>;
+    async fn content_size_with_padding(
+        &self,
+        context: &mut StyledContext,
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<(Size<f32, Scaled>, Surround<f32, Scaled>)>;
 
     async fn layout(&self, context: &mut StyledContext) -> KludgineResult<Box<dyn LayoutSolver>>;
 
@@ -100,6 +105,8 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
         context: &mut Context,
         window_position: Point<f32, Scaled>,
     ) -> KludgineResult<bool>;
+
+    async fn close_requested(&self) -> KludgineResult<CloseResponse>;
 }
 
 impl dyn AnyNode {
@@ -197,6 +204,18 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         let component = self.interactive_component().await;
         let component = component.read().await;
         component.content_size(context, constraints).await
+    }
+
+    async fn content_size_with_padding(
+        &self,
+        context: &mut StyledContext,
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<(Size<f32, Scaled>, Surround<f32, Scaled>)> {
+        let component = self.interactive_component().await;
+        let component = component.read().await;
+        component
+            .content_size_with_padding(context, constraints)
+            .await
     }
 
     async fn layout(&self, context: &mut StyledContext) -> KludgineResult<Box<dyn LayoutSolver>> {
@@ -316,6 +335,12 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
             .keyboard_event(context, scancode, key, state)
             .await
     }
+
+    async fn close_requested(&self) -> KludgineResult<CloseResponse> {
+        let component = self.interactive_component().await;
+        let component = component.read().await;
+        component.close_requested().await
+    }
 }
 
 #[async_trait]
@@ -357,23 +382,6 @@ where
     callback: Option<Callback<T::Event>>,
     interactive: bool,
     _phantom: std::marker::PhantomData<T>,
-}
-
-#[async_trait]
-pub trait NodeDataWindowExt {
-    async fn close_requested(&self) -> KludgineResult<CloseResponse>;
-}
-
-#[async_trait]
-impl<T> NodeDataWindowExt for NodeData<T>
-where
-    T: Window,
-{
-    async fn close_requested(&self) -> KludgineResult<CloseResponse> {
-        let component = self.interactive_component().await;
-        let component = component.read().await;
-        component.close_requested().await
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -439,6 +447,17 @@ impl Node {
     ) -> KludgineResult<Size<f32, Scaled>> {
         let component = self.component.read().await;
         component.content_size(context, constraints).await
+    }
+
+    pub async fn content_size_with_padding(
+        &self,
+        context: &mut StyledContext,
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<(Size<f32, Scaled>, Surround<f32, Scaled>)> {
+        let component = self.component.read().await;
+        component
+            .content_size_with_padding(context, constraints)
+            .await
     }
 
     pub async fn layout(

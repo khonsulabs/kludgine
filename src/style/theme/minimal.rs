@@ -1,14 +1,10 @@
 use crate::{
-    color::Color,
-    math::{Points, Scaled, Surround},
+    math::{Points, Surround},
     style::{
         theme::{Palette, Theme},
-        BackgroundColor, ColorPair, Style, TextColor,
+        BackgroundColor, ColorPair, ForegroundColor, Style,
     },
-    ui::{
-        Border, ComponentBorder, ControlBackgroundColor, ControlPadding, LabelBackgroundColor,
-        PaneBackgroundColor, PanelBackgroundColor, TextFieldBackgroundColor, TextFieldBorder,
-    },
+    ui::{Border, ComponentBorder, ComponentPadding, DialogButtonSpacing},
 };
 
 #[derive(Debug)]
@@ -24,86 +20,191 @@ impl Minimal {
             palette,
         }
     }
+
+    pub fn theme(&self) -> Theme {
+        Theme::new(
+            self.font_family.clone(),
+            Style::default().with(ForegroundColor(ColorPair {
+                light_color: self.palette.light.control.text.normal(),
+                dark_color: self.palette.dark.control.text.normal(),
+            })),
+        )
+        // The root component draws a solid background
+        .when(
+            |c| c.id.eq("root"),
+            |style| {
+                style.with(BackgroundColor(ColorPair {
+                    light_color: self.palette.light.default.background.normal(),
+                    dark_color: self.palette.dark.default.background.normal(),
+                }))
+            },
+        )
+        // All controls have padding built into them
+        .when(
+            |c| c.classes.contains("control"),
+            |style| style.with(ComponentPadding(Surround::uniform(Points::new(10.)))),
+        )
+        // All controls that don't have a "clear-background" class will have a background color
+        .when(
+            |c| {
+                c.classes
+                    .contains("control")
+                    .and(!c.classes.contains("clear-background"))
+            },
+            |style| {
+                style.with(BackgroundColor(ColorPair {
+                    light_color: self.palette.light.control.background.normal(),
+                    dark_color: self.palette.dark.control.background.normal(),
+                }))
+            },
+        )
+        // All controls that don't have a "clear-background" class will have a background color when active
+        .when(
+            |c| {
+                c.classes
+                    .contains("control")
+                    .and(c.is_active())
+                    .and(!c.classes.contains("clear-background"))
+            },
+            |style| {
+                style.with(BackgroundColor(ColorPair {
+                    light_color: self.palette.light.control.background.darker(),
+                    dark_color: self.palette.dark.control.background.darker(),
+                }))
+            },
+        )
+        // All controls that don't have a "clear-background" class will have a background color when hovered
+        .when(
+            |c| {
+                c.classes
+                    .contains("control")
+                    .and(c.is_hovered())
+                    .and(!c.classes.contains("clear-background"))
+            },
+            |style| {
+                style.with(BackgroundColor(ColorPair {
+                    light_color: self.palette.light.control.background.lighter(),
+                    dark_color: self.palette.dark.control.background.lighter(),
+                }))
+            },
+        )
+        // "is-primary"
+        .when(
+            |c| c.classes.contains("is-primary"),
+            |style| {
+                style.with(BackgroundColor(ColorPair {
+                    light_color: self.palette.primary.normal(),
+                    dark_color: self.palette.primary.normal(),
+                }))
+            },
+        )
+        .when(
+            |c| c.classes.contains("is-primary").and(c.is_hovered()),
+            |style| {
+                style.with(BackgroundColor(ColorPair {
+                    light_color: self.palette.primary.lighter(),
+                    dark_color: self.palette.primary.lighter(),
+                }))
+            },
+        )
+        .when(
+            |c| c.classes.contains("is-primary").and(c.is_active()),
+            |style| {
+                style.with(BackgroundColor(ColorPair {
+                    light_color: self.palette.primary.darker(),
+                    dark_color: self.palette.primary.darker(),
+                }))
+            },
+        )
+        // Text input
+        .when(
+            |c| {
+                c.classes
+                    .contains("control")
+                    .and(c.classes.contains("text"))
+            },
+            |style| {
+                style.with(ComponentBorder::uniform(Border::new(
+                    2.,
+                    ColorPair {
+                        light_color: self.palette.light.control.background.darker(),
+                        dark_color: self.palette.dark.control.background.lighter(),
+                    },
+                )))
+            },
+        )
+        .when(
+            |c| {
+                c.classes
+                    .contains("control")
+                    .and(c.classes.contains("text"))
+                    .and(c.is_focused())
+            },
+            |style| {
+                style.with(ComponentBorder::uniform(Border::new(
+                    2.,
+                    self.palette.primary.normal().into(),
+                )))
+            },
+        )
+        .when(
+            |c| {
+                c.classes
+                    .contains("control")
+                    .and(c.classes.contains("text"))
+                    .and(c.is_active())
+            },
+            |style| {
+                style.with(BackgroundColor(ColorPair {
+                    light_color: self.palette.light.control.background.normal(),
+                    dark_color: self.palette.dark.control.background.normal(),
+                }))
+            },
+        )
+        // Toast
+        .when(
+            |c| c.classes.contains("toast"),
+            |style| {
+                style
+                    .with(ComponentPadding(Surround::uniform(Points::new(10.))))
+                    .with(ComponentBorder::uniform(Border::new(
+                        2.,
+                        ColorPair {
+                            light_color: self.palette.light.control.background.darker(),
+                            dark_color: self.palette.dark.control.background.lighter(),
+                        },
+                    )))
+                    .with(BackgroundColor(ColorPair {
+                        light_color: self.palette.light.control.background.normal(),
+                        dark_color: self.palette.dark.control.background.normal(),
+                    }))
+            },
+        )
+        // Dialog
+        .when(
+            |c| c.classes.contains("dialog"),
+            |style| {
+                style
+                    .with(DialogButtonSpacing(Points::new(10.)))
+                    .with(ComponentPadding(Surround::uniform(Points::new(10.))))
+                    .with(ComponentBorder::uniform(Border::new(
+                        2.,
+                        ColorPair {
+                            light_color: self.palette.light.control.background.darker(),
+                            dark_color: self.palette.dark.control.background.lighter(),
+                        },
+                    )))
+                    .with(BackgroundColor(ColorPair {
+                        light_color: self.palette.light.control.background.normal(),
+                        dark_color: self.palette.dark.control.background.normal(),
+                    }))
+            },
+        )
+    }
 }
 
 impl Default for Minimal {
     fn default() -> Self {
         Self::new("Roboto", Default::default())
-    }
-}
-
-impl Theme for Minimal {
-    fn default_font_family(&self) -> &'_ str {
-        &self.font_family
-    }
-
-    fn default_normal_style(&self) -> Style<Scaled> {
-        Style::new()
-            .with(TextColor(ColorPair {
-                light_color: self.palette.light.control.text.normal(),
-                dark_color: self.palette.dark.control.text.normal(),
-            }))
-            .with(BackgroundColor(ColorPair {
-                light_color: self.palette.light.default.background.normal(),
-                dark_color: self.palette.dark.default.background.normal(),
-            }))
-            .with(ControlBackgroundColor(ColorPair {
-                light_color: self.palette.light.control.background.normal(),
-                dark_color: self.palette.dark.control.background.normal(),
-            }))
-            .with(LabelBackgroundColor(ColorPair {
-                light_color: Color::CLEAR_WHITE,
-                dark_color: Color::CLEAR_BLACK,
-            }))
-            .with(PaneBackgroundColor(ColorPair {
-                light_color: Color::CLEAR_WHITE,
-                dark_color: Color::CLEAR_BLACK,
-            }))
-            .with(PanelBackgroundColor(ColorPair {
-                light_color: Color::CLEAR_WHITE,
-                dark_color: Color::CLEAR_BLACK,
-            }))
-            .with(ControlPadding(Surround::uniform(Points::new(10.))))
-            .with(TextFieldBorder(ComponentBorder::uniform(Border::new(
-                2.,
-                ColorPair {
-                    light_color: self.palette.light.control.background.darker(),
-                    dark_color: self.palette.dark.control.background.lighter(),
-                },
-            ))))
-    }
-
-    fn default_hover_style(&self) -> Style<Scaled> {
-        self.default_normal_style()
-            .with(ControlBackgroundColor(ColorPair {
-                light_color: self.palette.light.control.background.lighter(),
-                dark_color: self.palette.dark.control.background.lighter(),
-            }))
-            .with(ControlPadding(Surround::uniform(Points::new(10.))))
-    }
-
-    fn default_active_style(&self) -> Style<Scaled> {
-        Style::new()
-            .with(TextColor(ColorPair {
-                light_color: self.palette.light.control.text.normal(),
-                dark_color: self.palette.dark.control.background.normal(),
-            }))
-            .with(ControlBackgroundColor(ColorPair {
-                light_color: self.palette.light.control.background.darker(),
-                dark_color: self.palette.dark.control.background.darker(),
-            }))
-            .with(TextFieldBackgroundColor(ColorPair {
-                light_color: self.palette.light.control.background.normal(),
-                dark_color: self.palette.dark.control.background.normal(),
-            }))
-            .with(ControlPadding(Surround::uniform(Points::new(10.))))
-    }
-
-    fn default_focus_style(&self) -> Style<Scaled> {
-        self.default_normal_style()
-            .with(TextFieldBorder(ComponentBorder::uniform(Border::new(
-                2.,
-                self.palette.primary.normal().into(),
-            ))))
     }
 }

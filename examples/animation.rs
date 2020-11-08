@@ -38,6 +38,7 @@ impl Component for Animation {
         sprite.set_current_tag(Some("Idle")).await?;
         self.image = self
             .new_entity(context, Image::new(sprite))
+            .await
             .bounds(AbsoluteBounds {
                 left: Dimension::from_f32(30.),
                 top: Dimension::from_f32(30.),

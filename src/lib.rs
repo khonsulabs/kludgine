@@ -80,6 +80,7 @@ mod internal_macros {
 
 pub mod application;
 pub mod color;
+mod ext;
 pub mod math;
 pub mod runtime;
 pub mod scene;
@@ -116,9 +117,8 @@ pub mod prelude {
                 Theme, VariableColor,
             },
             Alignment, AnyStyleComponent, BackgroundColor, ColorPair, ComponentCollection,
-            FallbackStyle, FontFamily, FontSize, FontStyle, ForegroundColor, GenericStyle, Style,
-            StyleComponent, StyleSheet, TextColor, UnscaledFallbackStyle, UnscaledStyleComponent,
-            VerticalAlignment, Weight,
+            FontFamily, FontSize, FontStyle, ForegroundColor, GenericStyle, Style, StyleComponent,
+            StyleSheet, UnscaledStyleComponent, VerticalAlignment, Weight,
         },
         text::{
             font::Font,
@@ -132,14 +132,14 @@ pub mod prelude {
         },
         ui::{
             AbsoluteBounds, AbsoluteLayout, AnimatableComponent, AnimationManager, Border, Button,
-            ButtonPadding, Callback, ColumnLayout, Component, ComponentBorder, Context,
-            ControlEvent, Entity, EntityBuilder, HierarchicalArena, Image, ImageAlphaAnimation,
-            ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling, Index, Indexable,
-            InteractiveComponent, Label, LabelBackgroundColor, LabelCommand, LabelTextColor,
-            Layout, LayoutConstraints, LayoutContext, LayoutSolver, LayoutSolverExt,
-            LinearTransition, Pane, PaneBackgroundColor, PaneBorder, Panel, PanelBackgroundColor,
-            PanelBorder, PanelCommand, PanelEvent, PanelMessage, PanelProvider, RowLayout,
-            StandaloneComponent, StyledContext, TextField, TextFieldEvent, Timeout,
+            Callback, ColumnLayout, Component, ComponentBorder, Context, ControlEvent, Dialog,
+            DialogButton, DialogButtonSpacing, DialogButtons, Entity, EntityBuilder,
+            HierarchicalArena, Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation,
+            ImageOptions, ImageScaling, Index, Indexable, InteractiveComponent,
+            InteractiveComponentExt, Label, LabelCommand, Layout, LayoutConstraints, LayoutContext,
+            LayoutSolver, LayoutSolverExt, LinearTransition, Pane, Panel, PanelCommand, PanelEvent,
+            PanelMessage, PanelProvider, RowLayout, StandaloneComponent, StyledContext, TextField,
+            TextFieldEvent, Timeout, Toast,
         },
         window::{
             event::{

@@ -1,5 +1,5 @@
-use crate::math::{Length, PointExt, Rect, Size, Unknown, Vector};
-use euclid::Scale;
+use crate::math::{Length, Rect, Size, Unknown, Vector};
+use euclid::{Box2D, Scale};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -34,13 +34,11 @@ where
     S: std::ops::Add<Output = S> + std::ops::Sub<Output = S> + Copy,
 {
     pub fn inset_rect(&self, rect: &Rect<S, Unit>) -> Rect<S, Unit> {
-        let min = rect.min() + Vector::from_lengths(self.left, self.top);
-        let max = rect.max() - Vector::from_lengths(self.right, self.bottom);
+        let rect = rect.to_box2d();
+        let min = rect.min + Vector::from_lengths(self.left, self.top);
+        let max = rect.max - Vector::from_lengths(self.right, self.bottom);
 
-        Rect::new(
-            min,
-            Size::from_lengths(max.x() - min.x(), max.y() - min.y()),
-        )
+        Box2D::new(min, max).to_rect()
     }
 
     pub fn inset_constraints(&self, constraints: &Size<Option<S>, Unit>) -> Size<Option<S>, Unit> {
@@ -52,6 +50,22 @@ where
             .map(|height| height - self.minimum_width().get());
 
         Size::new(width, height)
+    }
+}
+
+impl<T, Unit> std::ops::Sub for Surround<T, Unit>
+where
+    T: std::ops::Sub<Output = T>,
+{
+    type Output = Surround<T, Unit>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Surround {
+            left: self.left - rhs.left,
+            right: self.right - rhs.right,
+            top: self.top - rhs.top,
+            bottom: self.bottom - rhs.bottom,
+        }
     }
 }
 

@@ -4,8 +4,8 @@ use crate::{
     scene::Target,
     style::StyleSheet,
     ui::{
-        node::ThreadsafeAnyMap, Entity, EntityBuilder, HierarchicalArena, Index, Indexable,
-        InteractiveComponent, Layout, UIState,
+        Entity, EntityBuilder, HierarchicalArena, Index, Indexable, InteractiveComponent, Layout,
+        UIState,
     },
 };
 mod layout_context;
@@ -14,6 +14,7 @@ pub use self::{
     layout_context::{LayoutContext, LayoutEngine},
     styled_context::StyledContext,
 };
+use super::{node::NodeData, LayerIndex, LayerIndexable};
 use std::time::{Duration, Instant};
 
 #[derive(Clone, Debug)]
@@ -39,29 +40,38 @@ impl Context {
         }
     }
 
-    pub fn insert_new_entity<T: InteractiveComponent + 'static, I: Indexable, Message>(
+    pub async fn insert_new_entity<
+        T: InteractiveComponent + 'static,
+        I: Indexable,
+        Message: Send + Sync + 'static,
+    >(
         &self,
         parent: I,
         component: T,
     ) -> EntityBuilder<T, Message> {
-        let component = Handle::new(component);
-        let mut components = ThreadsafeAnyMap::new();
-        components.insert(component);
-        EntityBuilder {
-            components,
-            scene: self.scene().clone(),
-            parent: Some(parent.index()),
-            interactive: true,
-            ui_state: self.ui_state().clone(),
-            arena: self.arena().clone(),
-            style_sheet: Default::default(),
-            callback: None,
-            _marker: Default::default(),
-        }
+        EntityBuilder::new(
+            Some(parent.index()),
+            component,
+            &self.scene,
+            Some(&self.layer_index().await.layer),
+            &self.ui_state,
+            &self.arena,
+        )
     }
 
     pub fn index(&self) -> Index {
         self.index
+    }
+
+    pub async fn layer_index(&self) -> LayerIndex {
+        self.ui_state
+            .layer_for(self.index, &self.arena)
+            .await
+            .map(|layer| LayerIndex {
+                index: self.index,
+                layer,
+            })
+            .expect("can't use a node that is detatched from the ui hierarchy")
     }
 
     pub fn scene(&self) -> &'_ Target {
@@ -85,7 +95,9 @@ impl Context {
     }
 
     pub async fn remove<I: Indexable>(&self, element: &I) {
-        self.arena.remove(element).await;
+        let index = element.index();
+        self.arena.remove(&index).await;
+        self.ui_state.removed_element(index).await;
     }
 
     pub async fn children(&self) -> Vec<Index> {
@@ -101,8 +113,8 @@ impl Context {
         }
     }
 
-    pub async fn last_layout(&self) -> Layout {
-        let node = self.arena.get(&self.index).await.unwrap();
+    pub async fn last_layout_for<I: Indexable>(&self, entity: I) -> Layout {
+        let node = self.arena.get(&entity.index()).await.unwrap();
         node.last_layout().await
     }
 
@@ -110,16 +122,36 @@ impl Context {
         &self.arena
     }
 
-    pub(crate) fn ui_state(&self) -> &'_ UIState {
-        &self.ui_state
+    pub fn new_layer<C: InteractiveComponent + 'static>(
+        &self,
+        layer_root: C,
+    ) -> EntityBuilder<C, ()> {
+        EntityBuilder::new(
+            None,
+            layer_root,
+            &self.scene,
+            None,
+            &self.ui_state,
+            &self.arena,
+        )
     }
 
-    pub async fn activate(&self) {
-        self.ui_state.activate(self.index).await
+    pub async fn activate<I: LayerIndexable>(&self, entity: I) {
+        entity
+            .layer_index()
+            .await
+            .layer
+            .activate(self.index, &self.ui_state)
+            .await;
     }
 
-    pub async fn deactivate(&self) {
-        self.ui_state.deactivate().await
+    pub async fn deactivate<I: LayerIndexable>(&self, entity: I) {
+        entity
+            .layer_index()
+            .await
+            .layer
+            .deactivate(&self.ui_state)
+            .await;
     }
 
     pub async fn style_sheet(&self) -> StyleSheet {
@@ -128,19 +160,29 @@ impl Context {
     }
 
     pub async fn focus(&self) {
-        self.ui_state.focus(self.index).await
+        self.layer_index()
+            .await
+            .layer
+            .focus_on(Some(self.index), &self.ui_state)
+            .await;
     }
 
     pub async fn is_focused(&self) -> bool {
-        self.ui_state
-            .focused()
+        self.layer_index()
+            .await
+            .layer
+            .focus()
             .await
             .map(|focus| focus == self.index)
             .unwrap_or_default()
     }
 
     pub async fn blur(&self) {
-        self.ui_state.blur().await
+        self.layer_index()
+            .await
+            .layer
+            .focus_on(None, &self.ui_state)
+            .await;
     }
 
     pub async fn set_style_sheet(&self, sheet: StyleSheet) {
@@ -158,5 +200,16 @@ impl Context {
 
     pub async fn estimate_next_frame_instant(&self, instant: Instant) {
         self.ui_state.estimate_next_frame_instant(instant).await;
+    }
+
+    pub async fn get_component_from<C: InteractiveComponent + 'static, T: Send + Sync + 'static>(
+        &self,
+        entity: Entity<C>,
+    ) -> Option<Handle<T>> {
+        let node = self.arena.get(&entity).await.unwrap();
+        let component = node.component.read().await;
+        let node = component.as_any().downcast_ref::<NodeData<C>>()?;
+
+        node.component::<T>().await
     }
 }
