@@ -115,6 +115,14 @@ pub trait Component: Send + Sync {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
+        self.render_standard_background(context, layout).await
+    }
+
+    async fn render_standard_background(
+        &self,
+        context: &mut StyledContext,
+        layout: &Layout,
+    ) -> KludgineResult<()> {
         let bounds = layout.bounds_without_margin();
         if let Some(background) = context.effective_style().get::<BackgroundColor>() {
             let color_pair = background.0;
@@ -409,9 +417,10 @@ pub trait AnimatableComponent: InteractiveComponent + Sized {
 }
 
 #[async_trait]
-pub trait InteractiveComponentExt {
+pub trait InteractiveComponentExt: Sized {
     async fn component<T: Send + Sync + 'static>(&self, context: &mut Context)
         -> Option<Handle<T>>;
+    fn entity(&self, context: &mut Context) -> Entity<Self>;
 }
 
 #[async_trait]
@@ -424,5 +433,9 @@ where
         context: &mut Context,
     ) -> Option<Handle<T>> {
         context.get_component_from(context.entity::<Self>()).await
+    }
+
+    fn entity(&self, context: &mut Context) -> Entity<C> {
+        context.entity()
     }
 }

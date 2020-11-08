@@ -135,7 +135,9 @@ impl Component for TicTacToe {
                 .new_entity(context, Label::new(""))
                 .await
                 .style_sheet(style)
-                .callback(move |evt| GameMessage::TileClicked(i, evt))
+                .callback(&self.entity(context), move |evt| {
+                    GameMessage::TileClicked(i, evt)
+                })
                 .insert()
                 .await?;
         }

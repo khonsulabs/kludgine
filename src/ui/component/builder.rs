@@ -10,7 +10,7 @@ use crate::{
     },
     ui::{
         node::ThreadsafeAnyMap, AbsoluteBounds, Callback, Context, Entity, HierarchicalArena,
-        InteractiveComponent, LayerIndex, Node, UILayer, UIState,
+        Indexable, InteractiveComponent, LayerIndex, Node, UILayer, UIState,
     },
     KludgineResult,
 };
@@ -101,16 +101,15 @@ where
     }
 
     pub fn callback<
-        F: Fn(C::Event) -> Message + Send + Sync + 'static,
-        Message: Send + Sync + 'static,
+        F: Fn(C::Event) -> Target::Message + Send + Sync + 'static,
+        Target: InteractiveComponent + 'static,
     >(
         self,
+        target: &Entity<Target>,
         callback: F,
-    ) -> EntityBuilder<C, Message> {
-        // TODO make Message come from an Entity target, and don't use Parent here.
-        // This is needed to make sure that we can communicate between windows spawned from each other
+    ) -> EntityBuilder<C, Target::Message> {
         let target = Context::new(
-            self.parent.unwrap(),
+            target.index(),
             self.arena.clone(),
             self.ui_state.clone(),
             self.scene.clone(),

@@ -30,6 +30,7 @@ impl Window for UIExample {}
 #[derive(Debug, Clone)]
 pub enum Message {
     ButtonClicked,
+    DialogButtonClicked(DialogChoices),
     NewWindowClicked,
     LabelClicked,
     TextFieldEvent(TextFieldEvent),
@@ -53,17 +54,32 @@ impl InteractiveComponent for UIExample {
                     .send(LabelCommand::SetValue("You clicked me".to_string()))
                     .await?;
             }
+            Message::DialogButtonClicked(clicked) => {
+                context
+                    .new_layer(Toast::text(format!(
+                        "This is a toast. You picked {:?}",
+                        clicked
+                    )))
+                    .bounds(AbsoluteBounds {
+                        bottom: Dimension::from_f32(64.),
+                        ..Default::default()
+                    })
+                    .insert()
+                    .await?;
+            }
             Message::ButtonClicked => {
                 self.current_count += 1;
                 self.label
                     .send(LabelCommand::SetValue(self.current_count.to_string()))
                     .await?;
                 context
-                    .new_layer(Dialog::<_, ()>::new(Label::new("Testing Toasting...")))
-                    // .bounds(AbsoluteBounds {
-                    //     bottom: Dimension::from_f32(64.),
-                    //     ..Default::default()
-                    // })
+                    .new_layer(Dialog::<_, DialogChoices>::text(
+                        "This is a dialog... Choose wisely.",
+                    ))
+                    .with(DialogChoices::buttons())
+                    .callback(&self.entity(context), |choice| {
+                        Message::DialogButtonClicked(choice.unwrap())
+                    })
                     .insert()
                     .await?;
             }
@@ -112,7 +128,7 @@ impl Component for UIExample {
                 top: Dimension::from_f32(32.),
                 ..Default::default()
             })
-            .callback(Message::TextFieldEvent)
+            .callback(&self.entity(context), Message::TextFieldEvent)
             .insert()
             .await?;
 
@@ -133,7 +149,7 @@ impl Component for UIExample {
                 bottom: Dimension::from_f32(64.),
                 ..Default::default()
             })
-            .callback(|_| Message::LabelClicked)
+            .callback(&self.entity(context), |_| Message::LabelClicked)
             .insert()
             .await?;
 
@@ -146,7 +162,7 @@ impl Component for UIExample {
 
                 ..Default::default()
             })
-            .callback(|_| Message::ButtonClicked)
+            .callback(&self.entity(context), |_| Message::ButtonClicked)
             .insert()
             .await?;
 
@@ -158,10 +174,38 @@ impl Component for UIExample {
                 left: Dimension::from_f32(10.),
                 ..Default::default()
             })
-            .callback(|_| Message::NewWindowClicked)
+            .callback(&self.entity(context), |_| Message::NewWindowClicked)
             .insert()
             .await?;
 
         Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum DialogChoices {
+    Agree,
+    Cancel,
+    MoreInfo,
+}
+
+impl DialogChoices {
+    fn buttons() -> DialogButtons<Self> {
+        DialogButtons(vec![
+            DialogButton::default()
+                .caption("Proceed")
+                .primary()
+                .value(Self::Agree)
+                .alignment(Alignment::Right),
+            DialogButton::default()
+                .caption("More Info")
+                .value(Self::MoreInfo)
+                .alignment(Alignment::Right),
+            DialogButton::default()
+                .caption("Cancel")
+                .cancel()
+                .value(Self::Cancel)
+                .alignment(Alignment::Left),
+        ])
     }
 }

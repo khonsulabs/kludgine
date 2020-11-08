@@ -1,13 +1,15 @@
 use crate::{
-    math::{Dimension, Points, Scaled, Size, SizeExt},
-    style::{theme::Selector, Alignment},
+    color::Color,
+    math::{Dimension, Point, Points, Scaled, Size, SizeExt},
+    shape::{Fill, Shape},
+    style::{theme::Selector, Alignment, ColorPair, UnscaledStyleComponent},
     ui::{
         component::{
             pending::PendingComponent, Button, Component, ControlEvent, InteractiveComponent,
             InteractiveComponentExt, Label,
         },
-        AbsoluteBounds, AbsoluteLayout, Context, Entity, Indexable, LayoutSolver, LayoutSolverExt,
-        StyledContext,
+        AbsoluteBounds, AbsoluteLayout, Context, Entity, Indexable, Layout, LayoutSolver,
+        LayoutSolverExt, StyledContext,
     },
     KludgineResult,
 };
@@ -154,7 +156,7 @@ impl<T> Dialog<Label, T>
 where
     T: Clone + Debug + Send + Sync + 'static,
 {
-    pub fn text(contents: String) -> Self {
+    pub fn text<S: ToString>(contents: S) -> Self {
         Self::new(Label::new(contents))
     }
 }
@@ -220,7 +222,7 @@ where
             let mut button = self
                 .new_entity(context, Button::new(caption))
                 .await
-                .callback(move |evt| {
+                .callback(&self.entity(context), move |evt| {
                     let ControlEvent::Clicked { .. } = evt;
                     DialogMessage::ButtonClicked(value.clone())
                 });
@@ -316,6 +318,37 @@ where
 
         layout.layout()
     }
+
+    async fn render_background(
+        &self,
+        context: &mut StyledContext,
+        layout: &Layout,
+    ) -> KludgineResult<()> {
+        let background = context
+            .effective_style()
+            .get_or_default::<DialogOverlayColor>();
+        let color_pair = background.0;
+        let color = color_pair.themed_color(&context.scene().system_theme().await);
+
+        if color.visible() {
+            Shape::rect(layout.bounds)
+                .fill(Fill::new(color))
+                .render_at(Point::default(), context.scene())
+                .await;
+        }
+
+        self.render_standard_background(context, layout).await
+    }
+
+    // Dialogs intercept all clicks while they're open
+    async fn hit_test(
+        &self,
+        _context: &mut Context,
+        _window_position: Point<f32, Scaled>,
+    ) -> KludgineResult<bool> {
+        // TODO offer an auto-dismiss option
+        Ok(true)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -340,6 +373,10 @@ where
     ) -> KludgineResult<()> {
         let DialogMessage::ButtonClicked(value) = message;
         self.callback(context, value).await;
+
+        // Close the dialog once any button has been pressed
+        context.remove(&context.index()).await;
+
         Ok(())
     }
 }
@@ -402,11 +439,35 @@ impl<T> DialogButton<T> {
     }
 }
 
+// TOD THIS IS A STYLE
 #[derive(Debug, Clone, Copy)]
 pub struct DialogButtonSpacing(pub Points);
 
 impl Default for DialogButtonSpacing {
     fn default() -> Self {
         DialogButtonSpacing(Points::new(5.))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct DialogOverlayColor(pub ColorPair);
+impl UnscaledStyleComponent<Scaled> for DialogOverlayColor {
+    fn unscaled_should_be_inherited(&self) -> bool {
+        false
+    }
+}
+
+impl Default for DialogOverlayColor {
+    fn default() -> Self {
+        DialogOverlayColor(ColorPair {
+            light_color: Color::new(1., 1., 1., 0.7),
+            dark_color: Color::new(0., 0., 0., 0.7),
+        })
+    }
+}
+
+impl Into<ColorPair> for DialogOverlayColor {
+    fn into(self) -> ColorPair {
+        self.0
     }
 }

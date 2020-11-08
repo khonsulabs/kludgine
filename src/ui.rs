@@ -282,7 +282,6 @@ impl UILayer {
         let mut data = self.data.write().await;
         data.active = None;
         data.focus = None;
-        println!("Cleared state");
     }
 
     async fn activate(&self, index: Index, state: &UIState) {
