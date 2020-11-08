@@ -198,7 +198,7 @@ pub trait Component: Send + Sync {
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         if self.hit_test(context, window_position).await? {
-            context.activate().await;
+            context.activate(context.layer_index().await).await;
 
             Ok(EventStatus::Processed)
         } else {
@@ -245,9 +245,9 @@ pub trait Component: Send + Sync {
         };
 
         if activate {
-            context.activate().await;
+            context.activate(context.layer_index().await).await;
         } else {
-            context.deactivate().await;
+            context.deactivate(context.layer_index().await).await;
         }
 
         Ok(())
@@ -259,7 +259,7 @@ pub trait Component: Send + Sync {
         window_position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
-        context.deactivate().await;
+        context.deactivate(context.layer_index().await).await;
 
         if let Some(window_position) = window_position {
             if self.hit_test(context, window_position).await? {
@@ -423,6 +423,8 @@ pub trait InteractiveComponentExt: Sized {
     async fn component<T: Send + Sync + 'static>(&self, context: &mut Context)
         -> Option<Handle<T>>;
     fn entity(&self, context: &mut Context) -> Entity<Self>;
+    async fn activate(&self, context: &mut Context);
+    async fn deactivate(&self, context: &mut Context);
 }
 
 #[async_trait]
@@ -439,5 +441,13 @@ where
 
     fn entity(&self, context: &mut Context) -> Entity<C> {
         context.entity()
+    }
+
+    async fn activate(&self, context: &mut Context) {
+        context.activate(context.entity::<Self>()).await
+    }
+
+    async fn deactivate(&self, context: &mut Context) {
+        context.activate(context.entity::<Self>()).await
     }
 }

@@ -16,6 +16,7 @@ use crate::{
 use async_trait::async_trait;
 use generational_arena::Index;
 use std::fmt::Debug;
+use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 
 #[derive(Default, Debug)]
 struct ButtonBarLayout {
@@ -85,16 +86,22 @@ struct ButtonLayout {
     size: Size<f32, Scaled>,
 }
 
+#[derive(Debug)]
+struct DialogButtonInstance<T> {
+    entity: Entity<Button>,
+    value: Option<T>,
+    primary: bool,
+    cancel: bool,
+}
+
 pub struct Dialog<C, T = ()>
 where
     C: InteractiveComponent,
 {
     contents: PendingComponent<C>,
-    left_buttons: Vec<Entity<Button>>,
-    middle_buttons: Vec<Entity<Button>>,
-    right_buttons: Vec<Entity<Button>>,
-    cancel_value: Option<T>,
-    primary_value: Option<T>,
+    left_buttons: Vec<DialogButtonInstance<T>>,
+    middle_buttons: Vec<DialogButtonInstance<T>>,
+    right_buttons: Vec<DialogButtonInstance<T>>,
     button_spacing: Points,
     _phantom: std::marker::PhantomData<T>,
 }
@@ -110,8 +117,6 @@ where
             left_buttons: Vec::new(),
             middle_buttons: Vec::new(),
             right_buttons: Vec::new(),
-            primary_value: None,
-            cancel_value: None,
             button_spacing: Default::default(),
             _phantom: Default::default(),
         }
@@ -126,19 +131,13 @@ where
         context: &mut StyledContext,
     ) -> KludgineResult<ButtonBarLayout> {
         let mut layout = ButtonBarLayout::default();
-        for (button, alignment) in self
-            .left_buttons
-            .iter()
-            .map(|b| (b, Alignment::Left))
-            .chain(self.middle_buttons.iter().map(|b| (b, Alignment::Center)))
-            .chain(self.right_buttons.iter().map(|b| (b, Alignment::Right)))
-        {
+        for (button, alignment) in self.all_buttons() {
             let (content_size, padding) = context
-                .content_size_with_padding(button, &Size::new(None, None))
+                .content_size_with_padding(&button.entity, &Size::new(None, None))
                 .await?;
 
             let button = ButtonLayout {
-                index: button.index(),
+                index: button.entity.index(),
                 size: content_size + padding.minimum_size(),
             };
 
@@ -149,6 +148,21 @@ where
             }
         }
         Ok(layout)
+    }
+
+    fn all_buttons(&self) -> impl Iterator<Item = (&DialogButtonInstance<T>, Alignment)> {
+        self.left_buttons
+            .iter()
+            .map(|b| (b, Alignment::Left))
+            .chain(self.middle_buttons.iter().map(|b| (b, Alignment::Center)))
+            .chain(self.right_buttons.iter().map(|b| (b, Alignment::Right)))
+    }
+
+    async fn button_clicked(&self, value: Option<T>, context: &mut Context) {
+        self.callback(context, value).await;
+
+        // Close the dialog once any button has been pressed
+        context.remove(&context.index()).await;
     }
 }
 
@@ -211,20 +225,13 @@ where
             alignment,
         } in buttons.0
         {
-            if cancel {
-                self.cancel_value = value.clone();
-            }
-
-            if primary {
-                self.primary_value = value.clone();
-            }
-
+            let value_for_callback = value.clone();
             let mut button = self
                 .new_entity(context, Button::new(caption))
                 .await
                 .callback(&self.entity(context), move |evt| {
                     let ControlEvent::Clicked { .. } = evt;
-                    DialogMessage::ButtonClicked(value.clone())
+                    DialogMessage::ButtonClicked(value_for_callback.clone())
                 });
 
             if let Some(class) = class {
@@ -235,7 +242,12 @@ where
                 button = button.with_class("is-cancel").await;
             }
 
-            let button = button.insert().await?;
+            let button = DialogButtonInstance {
+                entity: button.insert().await?,
+                value,
+                primary,
+                cancel,
+            };
             match alignment {
                 Alignment::Left => self.left_buttons.push(button),
                 Alignment::Center => self.middle_buttons.push(button),
@@ -354,6 +366,38 @@ where
         // TODO offer an auto-dismiss option
         Ok(true)
     }
+
+    async fn keyboard_event(
+        &mut self,
+        context: &mut Context,
+        _scancode: ScanCode,
+        key: Option<VirtualKeyCode>,
+        state: ElementState,
+    ) -> KludgineResult<()> {
+        if let Some(key) = key {
+            let modifiers = context.scene().modifiers_pressed().await;
+            let button = if key == VirtualKeyCode::Escape
+                || key == VirtualKeyCode::Period && modifiers.command_key()
+            {
+                self.all_buttons().find(|(b, _)| b.cancel)
+            } else if key == VirtualKeyCode::Return || key == VirtualKeyCode::NumpadEnter {
+                self.all_buttons().find(|(b, _)| b.primary)
+            } else {
+                None
+            };
+
+            if let Some((button, _)) = button {
+                if state == ElementState::Pressed {
+                    context.activate(button.entity.clone()).await;
+                } else {
+                    context.deactivate(button.entity.clone()).await;
+                    self.button_clicked(button.value.clone(), context).await;
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -377,10 +421,7 @@ where
         message: Self::Message,
     ) -> KludgineResult<()> {
         let DialogMessage::ButtonClicked(value) = message;
-        self.callback(context, value).await;
-
-        // Close the dialog once any button has been pressed
-        context.remove(&context.index()).await;
+        self.button_clicked(value, context).await;
 
         Ok(())
     }
@@ -439,7 +480,7 @@ impl<T> DialogButton<T> {
     }
 
     pub fn cancel(mut self) -> Self {
-        self.primary = true;
+        self.cancel = true;
         self
     }
 }

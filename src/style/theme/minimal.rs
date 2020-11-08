@@ -29,6 +29,7 @@ impl Minimal {
                 dark_color: self.palette.dark.control.text.normal(),
             })),
         )
+        // The root component draws a solid background
         .when(
             |c| c.id.eq("root"),
             |style| {
@@ -38,10 +39,12 @@ impl Minimal {
                 }))
             },
         )
+        // All controls have padding built into them
         .when(
             |c| c.classes.contains("control"),
             |style| style.with(ComponentPadding(Surround::uniform(Points::new(10.)))),
         )
+        // All controls that don't have a "clear-background" class will have a background color
         .when(
             |c| {
                 c.classes
@@ -55,6 +58,7 @@ impl Minimal {
                 }))
             },
         )
+        // All controls that don't have a "clear-background" class will have a background color when active
         .when(
             |c| {
                 c.classes
@@ -69,6 +73,7 @@ impl Minimal {
                 }))
             },
         )
+        // All controls that don't have a "clear-background" class will have a background color when hovered
         .when(
             |c| {
                 c.classes
@@ -83,6 +88,35 @@ impl Minimal {
                 }))
             },
         )
+        // "is-primary"
+        .when(
+            |c| c.classes.contains("is-primary"),
+            |style| {
+                style.with(BackgroundColor(ColorPair {
+                    light_color: self.palette.primary.normal(),
+                    dark_color: self.palette.primary.normal(),
+                }))
+            },
+        )
+        .when(
+            |c| c.classes.contains("is-primary").and(c.is_hovered()),
+            |style| {
+                style.with(BackgroundColor(ColorPair {
+                    light_color: self.palette.primary.lighter(),
+                    dark_color: self.palette.primary.lighter(),
+                }))
+            },
+        )
+        .when(
+            |c| c.classes.contains("is-primary").and(c.is_active()),
+            |style| {
+                style.with(BackgroundColor(ColorPair {
+                    light_color: self.palette.primary.darker(),
+                    dark_color: self.palette.primary.darker(),
+                }))
+            },
+        )
+        // Text input
         .when(
             |c| {
                 c.classes
@@ -127,6 +161,7 @@ impl Minimal {
                 }))
             },
         )
+        // Toast
         .when(
             |c| c.classes.contains("toast"),
             |style| {
@@ -145,6 +180,7 @@ impl Minimal {
                     }))
             },
         )
+        // Dialog
         .when(
             |c| c.classes.contains("dialog"),
             |style| {

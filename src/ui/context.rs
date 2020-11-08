@@ -14,7 +14,7 @@ pub use self::{
     layout_context::{LayoutContext, LayoutEngine},
     styled_context::StyledContext,
 };
-use super::{node::NodeData, LayerIndex};
+use super::{node::NodeData, LayerIndex, LayerIndexable};
 use std::time::{Duration, Instant};
 
 #[derive(Clone, Debug)]
@@ -136,16 +136,18 @@ impl Context {
         )
     }
 
-    pub async fn activate(&self) {
-        self.layer_index()
+    pub async fn activate<I: LayerIndexable>(&self, entity: I) {
+        entity
+            .layer_index()
             .await
             .layer
             .activate(self.index, &self.ui_state)
             .await;
     }
 
-    pub async fn deactivate(&self) {
-        self.layer_index()
+    pub async fn deactivate<I: LayerIndexable>(&self, entity: I) {
+        entity
+            .layer_index()
             .await
             .layer
             .deactivate(&self.ui_state)

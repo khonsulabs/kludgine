@@ -120,6 +120,13 @@ impl Modifiers {
             _ => self.control,
         }
     }
+
+    pub fn command_key(&self) -> bool {
+        match TARGET_OS {
+            OS::MacOS | OS::iOS => self.os,
+            _ => false,
+        }
+    }
 }
 
 impl Scene {
