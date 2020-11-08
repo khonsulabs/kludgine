@@ -255,7 +255,12 @@ where
             .content_size_with_padding(&self.contents.entity(), &constraints)
             .await?;
         let button_bar_layout = self.measure_buttons(context).await?;
-        Ok(content_size + padding.minimum_size() + button_bar_layout.size(self.button_spacing))
+        let spacing_between_contents_and_buttons =
+            Size::from_lengths(Default::default(), self.button_spacing);
+        Ok(content_size
+            + padding.minimum_size()
+            + button_bar_layout.size(self.button_spacing)
+            + spacing_between_contents_and_buttons)
     }
 
     async fn layout(
@@ -445,7 +450,7 @@ pub struct DialogButtonSpacing(pub Points);
 
 impl Default for DialogButtonSpacing {
     fn default() -> Self {
-        DialogButtonSpacing(Points::new(5.))
+        DialogButtonSpacing(Points::new(10.))
     }
 }
 
