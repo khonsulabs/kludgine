@@ -1,10 +1,9 @@
 use crate::{
-    math::{Point, Raw, Rect, Scaled, Size},
+    math::{Box2D, Point, Raw, Rect, Scaled, Size},
     scene::{Element, Target},
     sprite::{RenderedSprite, SpriteRotation},
     texture::Texture,
 };
-use euclid::Box2D; // TODO Expose this in crate::math
 #[derive(Debug, Clone)]
 pub struct SpriteSource {
     pub location: SpriteSourceLocation,

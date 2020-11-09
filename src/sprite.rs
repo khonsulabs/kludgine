@@ -1,9 +1,8 @@
 use crate::{
-    math::{Angle, Point, Raw, Rect, Scale, Size},
+    math::{Angle, Box2D, Point, Raw, Rect, Scale, Size},
     texture::Texture,
     Handle, KludgineError, KludgineResult,
 };
-use euclid::Box2D;
 mod batch;
 mod collection;
 mod gpu_batch;

@@ -10,7 +10,7 @@ pub type Rect<T = f32, Unit = Unknown> = euclid::Rect<T, Unit>;
 pub type Pixels = euclid::Length<f32, Raw>;
 pub type Points = euclid::Length<f32, Scaled>;
 pub type Vector<T = f32, Unit = Unknown> = euclid::Vector2D<T, Unit>;
-pub use euclid::{Length, Scale};
+pub use euclid::{Box2D, Length, Scale};
 pub type ScreenScale = Scale<f32, Scaled, Raw>;
 pub type Angle = euclid::Angle<f32>;
 

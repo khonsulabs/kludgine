@@ -230,12 +230,12 @@ impl Image {
                     ImageScaling::Fill => content_size,
                     _ => {
                         let horizontal_scale = content_size.width / size_as_points.width;
-                        let horizontal_fit = size_as_points * horizontal_scale;
                         let vertical_scale = content_size.height / size_as_points.height;
-                        let vertical_fit = size_as_points * vertical_scale;
 
                         match scaling {
                             ImageScaling::AspectFit => {
+                                let horizontal_fit = size_as_points * horizontal_scale;
+                                let vertical_fit = size_as_points * vertical_scale;
                                 if horizontal_fit.width <= content_size.width
                                     && horizontal_fit.height <= content_size.height
                                 {
@@ -246,12 +246,8 @@ impl Image {
                             }
 
                             ImageScaling::AspectFill => {
-                                todo!("This isn't right, it's the same as AspectFit")
-                                // if horizontal_fit.contains_rect(&render_bounds) {
-                                //     horizontal_fit
-                                // } else {
-                                //     vertical_fit
-                                // }
+                                let scale = horizontal_scale.max(vertical_scale);
+                                size_as_points * scale
                             }
                             ImageScaling::Fill => unreachable!(),
                         }
@@ -284,10 +280,6 @@ pub struct ImageFrameMutator {
 #[async_trait]
 impl PropertyMutator<f32> for ImageFrameMutator {
     async fn update_property(&self, value: f32) {
-        // TODO: Figure out how to get the frames for the image.
-        // We can cheat but it seems like it should be something
-        // other people could write without being internal to the
-        // crate
         let _ = self
             .image
             .send(ImageCommand::SetOverrideFrame {

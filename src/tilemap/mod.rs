@@ -1,15 +1,10 @@
-use super::{
-    math::{Point, PointExt, Scaled, Size, SizeExt},
+use crate::{
+    math::{Box2D, Length, Point, PointExt, Raw, Scale, Scaled, Size, SizeExt, Unknown},
     scene::Target,
-    sprite::{Sprite, SpriteRotation},
+    sprite::{Sprite, SpriteRotation, SpriteSource},
     KludgineResult,
 };
-use crate::{
-    math::{Raw, Unknown},
-    sprite::SpriteSource,
-};
 use async_trait::async_trait;
-use euclid::{Box2D, Length, Scale};
 use std::{
     mem,
     ops::{Deref, DerefMut},

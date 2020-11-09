@@ -1,5 +1,5 @@
 use crate::{
-    math::{Point, Size, Unknown},
+    math::{Box2D, Point, Size, Unknown},
     runtime::Runtime,
     sprite,
     window::frame::{FontUpdate, Frame, FrameCommand},
@@ -12,7 +12,6 @@ use easygpu::{
     wgpu::{FilterMode, COPY_BYTES_PER_ROW_ALIGNMENT},
 };
 use easygpu_lyon::LyonPipeline;
-use euclid::Box2D;
 use std::{collections::HashMap, sync::Arc};
 
 pub(crate) struct FrameSynchronizer {

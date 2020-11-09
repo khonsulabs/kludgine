@@ -1,5 +1,4 @@
-use crate::math::{Length, Rect, Size, Unknown, Vector};
-use euclid::{Box2D, Scale};
+use crate::math::{Box2D, Length, Rect, Scale, Size, Unknown, Vector};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -99,7 +98,6 @@ impl<S, Unit> Surround<S, Unit>
 where
     S: Copy,
 {
-    // TODO: How does this work for Surround<Dimension>?
     pub fn uniform(measurement: Length<S, Unit>) -> Self {
         Self {
             left: measurement,

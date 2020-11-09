@@ -1,9 +1,9 @@
 use crate::{
-    math::{Point, PointExt, Raw, Rect, Size, Unknown},
+    math::{Box2D, Point, PointExt, Raw, Rect, Size, Unknown},
     sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation, SpriteSourceLocation},
 };
 use easygpu::prelude::*;
-use euclid::{Box2D, Vector2D, Vector3D};
+use euclid::{Vector2D, Vector3D};
 
 pub(crate) struct GpuBatch {
     pub size: Size<u32, ScreenSpace>,
@@ -44,7 +44,6 @@ impl GpuBatch {
                 let scale_x = sprite.render_at.width() as f32 / source_bounds.size.width as f32;
                 let scale_y = sprite.render_at.height() as f32 / source_bounds.size.height as f32;
                 for location in locations {
-                    // TODO this should be easier.
                     let x = sprite.render_at.min.x + location.destination.x as f32 * scale_x;
                     let y = sprite.render_at.min.y + location.destination.y as f32 * scale_y;
                     let width = location.source.width() as f32 * scale_x;

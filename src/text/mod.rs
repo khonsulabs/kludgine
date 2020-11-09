@@ -46,7 +46,7 @@ impl Text {
     }
 
     pub async fn wrap(&self, scene: &Target, options: TextWrap) -> KludgineResult<PreparedText> {
-        TextWrapper::wrap(self, scene, options).await // TODO cache result
+        TextWrapper::wrap(self, scene, options).await
     }
 
     pub async fn render_at(

@@ -77,7 +77,11 @@ impl Component for Label {
                 inner_bounds.origin.y()
                     + (inner_bounds.size.height() - wrapped_size.height() / scale) / 2.,
             ),
-            VerticalAlignment::Bottom => todo!(),
+            VerticalAlignment::Bottom => Point::from_lengths(
+                inner_bounds.origin.x(),
+                inner_bounds.origin.y() + inner_bounds.size.height()
+                    - wrapped_size.height() / scale,
+            ),
         };
 
         wrapped
