@@ -60,10 +60,7 @@ impl InteractiveComponent for UIExample {
                         "This is a toast. You picked {:?}",
                         clicked
                     )))
-                    .bounds(AbsoluteBounds {
-                        bottom: Dimension::from_f32(64.),
-                        ..Default::default()
-                    })
+                    .bounds(AbsoluteBounds::default().with_bottom(Points::new(64.)))
                     .insert()
                     .await?;
             }
@@ -106,11 +103,11 @@ impl Component for UIExample {
             .new_entity(context, Image::new(sprite))
             .await
             .style_sheet(Style::new().with(BackgroundColor(Color::new(0.0, 1.0, 1.0, 1.0).into())))
-            .bounds(AbsoluteBounds {
-                right: Dimension::from_f32(10.),
-                bottom: Dimension::from_f32(10.),
-                ..Default::default()
-            })
+            .bounds(
+                AbsoluteBounds::default()
+                    .with_right(Points::new(10.))
+                    .with_bottom(Points::new(10.)),
+            )
             .insert()
             .await?;
 
@@ -122,12 +119,12 @@ impl Component for UIExample {
                     Default::default(),
                 )])),
             ).await
-            .bounds(AbsoluteBounds {
-                left: Dimension::from_f32(32.),
-                right: Dimension::from_f32(32.),
-                top: Dimension::from_f32(32.),
-                ..Default::default()
-            })
+            .bounds(
+                AbsoluteBounds::default()
+                    .with_left(Points::new(32.))
+                    .with_right( Points::new(32.))
+                    .with_top(Points::new(32.))
+            )
             .callback(&self.entity(context), Message::TextFieldEvent)
             .insert()
             .await?;
@@ -142,13 +139,13 @@ impl Component for UIExample {
                     .with(FontSize::new(72.))
                     .with(Alignment::Right),
             )
-            .bounds(AbsoluteBounds {
-                left: Dimension::from_f32(32.),
-                right: Dimension::from_f32(32.),
-                top: Dimension::from_f32(96.),
-                bottom: Dimension::from_f32(64.),
-                ..Default::default()
-            })
+            .bounds(
+                AbsoluteBounds::default()
+                    .with_left(Points::new(32.))
+                    .with_right(Points::new(32.))
+                    .with_top(Points::new(96.))
+                    .with_bottom(Points::new(64.)),
+            )
             .callback(&self.entity(context), |_| Message::LabelClicked)
             .insert()
             .await?;
@@ -157,11 +154,7 @@ impl Component for UIExample {
             .new_entity(context, Button::new("Press Me"))
             .await
             .normal_style(Style::new().with(BackgroundColor(Color::ROYALBLUE.into())))
-            .bounds(AbsoluteBounds {
-                bottom: Dimension::from_f32(10.),
-
-                ..Default::default()
-            })
+            .bounds(AbsoluteBounds::default().with_bottom(Points::new(10.)))
             .callback(&self.entity(context), |_| Message::ButtonClicked)
             .insert()
             .await?;
@@ -169,11 +162,11 @@ impl Component for UIExample {
         self.new_window_button = self
             .new_entity(context, Button::new("New Window"))
             .await
-            .bounds(AbsoluteBounds {
-                bottom: Dimension::from_f32(10.),
-                left: Dimension::from_f32(10.),
-                ..Default::default()
-            })
+            .bounds(
+                AbsoluteBounds::default()
+                    .with_bottom(Points::new(10.))
+                    .with_left(Points::new(10.)),
+            )
             .callback(&self.entity(context), |_| Message::NewWindowClicked)
             .insert()
             .await?;

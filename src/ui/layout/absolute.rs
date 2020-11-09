@@ -95,6 +95,36 @@ pub struct AbsoluteBounds {
 }
 
 impl AbsoluteBounds {
+    pub fn with_left<D: Into<Dimension>>(mut self, dimension: D) -> Self {
+        self.left = dimension.into();
+        self
+    }
+
+    pub fn with_right<D: Into<Dimension>>(mut self, dimension: D) -> Self {
+        self.right = dimension.into();
+        self
+    }
+
+    pub fn with_top<D: Into<Dimension>>(mut self, dimension: D) -> Self {
+        self.top = dimension.into();
+        self
+    }
+
+    pub fn with_bottom<D: Into<Dimension>>(mut self, dimension: D) -> Self {
+        self.bottom = dimension.into();
+        self
+    }
+
+    pub fn with_height<D: Into<Dimension>>(mut self, dimension: D) -> Self {
+        self.height = dimension.into();
+        self
+    }
+
+    pub fn with_width<D: Into<Dimension>>(mut self, dimension: D) -> Self {
+        self.width = dimension.into();
+        self
+    }
+
     fn validate(self) -> KludgineResult<Self> {
         if self.left.is_length() && self.right.is_length() && self.width.is_length() {
             Err(KludgineError::AbsoluteBoundsInvalidHorizontal)

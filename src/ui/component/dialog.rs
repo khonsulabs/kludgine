@@ -1,6 +1,6 @@
 use crate::{
     color::Color,
-    math::{Dimension, Point, Points, Raw, Scaled, Size, SizeExt},
+    math::{Point, Points, Raw, Scaled, Size, SizeExt},
     shape::{Fill, Shape},
     style::{theme::Selector, Alignment, ColorPair, Style, StyleComponent, UnscaledStyleComponent},
     ui::{
@@ -293,24 +293,20 @@ where
 
         let mut layout = AbsoluteLayout::default().child(
             &self.contents.entity(),
-            AbsoluteBounds {
-                left: Dimension::from_f32(0.),
-                top: Dimension::from_f32(0.),
-                right: Dimension::from_f32(0.),
-                bottom: Dimension::Length(button_bar_layout.height()),
-                ..Default::default()
-            },
+            AbsoluteBounds::default()
+                .with_left(Points::new(0.))
+                .with_top(Points::new(0.))
+                .with_right(Points::new(0.))
+                .with_bottom(button_bar_layout.height()),
         )?;
 
         let mut x = Points::default();
         for button_layout in &button_bar_layout.left {
             layout = layout.child(
                 &button_layout.index,
-                AbsoluteBounds {
-                    bottom: Dimension::from_f32(0.),
-                    left: Dimension::Length(x),
-                    ..Default::default()
-                },
+                AbsoluteBounds::default()
+                    .with_bottom(Points::new(0.))
+                    .with_left(x),
             )?;
             x += button_layout.size.width() + button_spacing;
         }
@@ -321,11 +317,9 @@ where
         for button_layout in &button_bar_layout.middle {
             layout = layout.child(
                 &button_layout.index,
-                AbsoluteBounds {
-                    bottom: Dimension::from_f32(0.),
-                    left: Dimension::Length(x),
-                    ..Default::default()
-                },
+                AbsoluteBounds::default()
+                    .with_bottom(Points::new(0.))
+                    .with_left(x),
             )?;
             x += button_layout.size.width() + button_spacing;
         }
@@ -334,11 +328,9 @@ where
         for button_layout in &button_bar_layout.right {
             layout = layout.child(
                 &button_layout.index,
-                AbsoluteBounds {
-                    bottom: Dimension::from_f32(0.),
-                    right: Dimension::Length(x),
-                    ..Default::default()
-                },
+                AbsoluteBounds::default()
+                    .with_bottom(Points::new(0.))
+                    .with_right(x),
             )?;
             x += button_layout.size.width() + button_spacing;
         }

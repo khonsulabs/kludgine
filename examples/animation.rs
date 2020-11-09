@@ -39,11 +39,11 @@ impl Component for Animation {
         self.image = self
             .new_entity(context, Image::new(sprite))
             .await
-            .bounds(AbsoluteBounds {
-                left: Dimension::from_f32(30.),
-                top: Dimension::from_f32(30.),
-                ..Default::default()
-            })
+            .bounds(
+                AbsoluteBounds::default()
+                    .with_left(Points::new(30.))
+                    .with_top(Points::new(30.)),
+            )
             .insert()
             .await?;
 
