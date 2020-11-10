@@ -14,7 +14,7 @@ pub use self::{
     layout_context::{LayoutContext, LayoutEngine},
     styled_context::StyledContext,
 };
-use super::{node::NodeData, LayerIndex, LayerIndexable};
+use super::{node::NodeData, LayerIndex, LayerIndexable, UILayer};
 use std::time::{Duration, Instant};
 
 #[derive(Clone, Debug)]
@@ -134,6 +134,14 @@ impl Context {
             &self.ui_state,
             &self.arena,
         )
+    }
+
+    pub async fn layers(&self) -> Vec<UILayer> {
+        self.ui_state.layers().await
+    }
+
+    pub async fn top_layer(&self) -> UILayer {
+        self.ui_state.top_layer().await
     }
 
     pub async fn activate<I: LayerIndexable>(&self, entity: I) {
