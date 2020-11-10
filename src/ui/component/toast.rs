@@ -3,6 +3,7 @@ use std::time::{Duration, Instant};
 use super::{pending::PendingComponent, InteractiveComponentExt};
 use crate::{
     math::{Scaled, Size},
+    runtime::Runtime,
     style::theme::Selector,
     ui::{
         component::{Component, InteractiveComponent, Label, StandaloneComponent},
@@ -19,8 +20,9 @@ static ACTIVE_TOASTS: OnceCell<Mutex<Vec<Index>>> = OnceCell::new();
 
 pub struct Toast<C>
 where
-    C: InteractiveComponent,
+    C: InteractiveComponent + 'static,
 {
+    index: Option<Index>,
     contents: PendingComponent<C>,
     duration: RequiresInitialization<Duration>,
     target_time: RequiresInitialization<Instant>,
@@ -35,6 +37,7 @@ where
             contents: PendingComponent::Pending(contents),
             target_time: Default::default(),
             duration: Default::default(),
+            index: None,
         }
     }
 }
@@ -55,6 +58,7 @@ where
     }
 
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
+        self.index = Some(context.index());
         let mut active_toasts = ACTIVE_TOASTS
             .get_or_init(|| Mutex::new(Vec::new()))
             .lock()
@@ -115,3 +119,18 @@ where
 }
 
 impl<C> StandaloneComponent for Toast<C> where C: InteractiveComponent + 'static {}
+
+impl<C> Drop for Toast<C>
+where
+    C: InteractiveComponent + 'static,
+{
+    fn drop(&mut self) {
+        if let Some(index) = self.index {
+            Runtime::spawn(async move {
+                let mut active_toasts = ACTIVE_TOASTS.get().unwrap().lock().await;
+                active_toasts.retain(|i| *i != index);
+            })
+            .detach();
+        }
+    }
+}
