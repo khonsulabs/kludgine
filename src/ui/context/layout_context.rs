@@ -127,7 +127,10 @@ impl LayoutEngine {
             let computed_layout = match context.layout_for(index).await {
                 Some(layout) => layout,
                 None => {
-                    let node = arena.get(&index).await.unwrap();
+                    let node = match arena.get(&index).await {
+                        Some(node) => node,
+                        None => continue,
+                    };
                     let scene_size = scene.size().await;
                     let (content_size, padding) = node
                         .content_size_with_padding(

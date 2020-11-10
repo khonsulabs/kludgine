@@ -1,17 +1,21 @@
 use std::time::{Duration, Instant};
 
+use super::{pending::PendingComponent, InteractiveComponentExt};
 use crate::{
     math::{Scaled, Size},
     style::theme::Selector,
     ui::{
         component::{Component, InteractiveComponent, Label, StandaloneComponent},
-        Context, Entity, StyledContext,
+        Context, StyledContext,
     },
     KludgineResult, RequiresInitialization,
 };
+use async_lock::Mutex;
 use async_trait::async_trait;
+use generational_arena::Index;
+use once_cell::sync::OnceCell;
 
-use super::{pending::PendingComponent, InteractiveComponentExt};
+static ACTIVE_TOASTS: OnceCell<Mutex<Vec<Index>>> = OnceCell::new();
 
 pub struct Toast<C>
 where
@@ -33,10 +37,6 @@ where
             duration: Default::default(),
         }
     }
-
-    pub async fn open(self, context: &mut Context) -> KludgineResult<Entity<Self>> {
-        context.new_layer(self).insert().await
-    }
 }
 
 impl Toast<Label> {
@@ -55,6 +55,20 @@ where
     }
 
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
+        let mut active_toasts = ACTIVE_TOASTS
+            .get_or_init(|| Mutex::new(Vec::new()))
+            .lock()
+            .await;
+        for toast_layer in context
+            .layers()
+            .await
+            .into_iter()
+            .filter(|l| active_toasts.contains(&l.root))
+        {
+            context.remove(&toast_layer.root).await;
+        }
+        active_toasts.push(context.index());
+
         if let PendingComponent::Pending(contents) = std::mem::replace(
             &mut self.contents,
             PendingComponent::Entity(Default::default()),
