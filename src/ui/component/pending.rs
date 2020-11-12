@@ -1,5 +1,6 @@
 use crate::ui::Entity;
 
+#[derive(Debug)]
 pub enum PendingComponent<C> {
     Pending(C),
     Entity(Entity<C>),

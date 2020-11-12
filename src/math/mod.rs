@@ -1,8 +1,9 @@
 mod dimension;
 mod length_traits;
+mod screen_traits;
 mod surround;
 
-pub use self::{dimension::*, length_traits::*, surround::*};
+pub use self::{dimension::*, length_traits::*, screen_traits::PixelAlignment, surround::*};
 
 pub type Size<T = f32, Unit = Unknown> = euclid::Size2D<T, Unit>;
 pub type Point<T = f32, Unit = Unknown> = euclid::Point2D<T, Unit>;

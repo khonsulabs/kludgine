@@ -179,10 +179,14 @@ impl SpriteSource {
         rotation: SpriteRotation<Raw>,
         alpha: f32,
     ) {
+        let bounds = Box2D::new(
+            scene.offset_point_raw(bounds.min),
+            scene.offset_point_raw(bounds.max),
+        );
         scene
             .push_element(Element::Sprite {
                 sprite: RenderedSprite::new(bounds, rotation, alpha, self.clone()),
-                clip: scene.clipping_rect(),
+                clip: scene.clip,
             })
             .await;
     }

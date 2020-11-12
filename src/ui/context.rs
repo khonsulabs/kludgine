@@ -100,8 +100,8 @@ impl Context {
         self.ui_state.removed_element(index).await;
     }
 
-    pub async fn children(&self) -> Vec<Index> {
-        self.arena.children(&Some(self.index)).await
+    pub async fn children_of<I: Indexable>(&self, parent: I) -> Vec<Index> {
+        self.arena.children(&Some(parent.index())).await
     }
 
     pub fn clone_for<I: Indexable>(&self, index: &I) -> Self {

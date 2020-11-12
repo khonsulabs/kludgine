@@ -4,7 +4,10 @@ use crate::{
         theme::{Palette, Theme},
         BackgroundColor, ColorPair, ForegroundColor, Style,
     },
-    ui::{Border, ComponentBorder, ComponentPadding, DialogButtonSpacing},
+    ui::{
+        Border, ComponentBorder, ComponentPadding, DialogButtonSpacing, ScrollbarGripColor,
+        ScrollbarSize,
+    },
 };
 
 #[derive(Debug)]
@@ -197,6 +200,18 @@ impl Minimal {
                     .with(BackgroundColor(ColorPair {
                         light_color: self.palette.light.control.background.normal(),
                         dark_color: self.palette.dark.control.background.normal(),
+                    }))
+            },
+        )
+        // Scrollbar
+        .when(
+            |c| c.classes.contains("scrollbar"),
+            |style| {
+                style
+                    .with(ScrollbarSize(Points::new(10.)))
+                    .with(ScrollbarGripColor(ColorPair {
+                        light_color: self.palette.primary.normal(),
+                        dark_color: self.palette.primary.normal(),
                     }))
             },
         )

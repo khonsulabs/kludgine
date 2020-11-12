@@ -67,13 +67,14 @@ impl PreparedText {
             let cursor_position =
                 location + Vector::from_lengths(line.alignment_offset, current_line_baseline);
             for span in line.spans.iter() {
-                let location = (cursor_position
-                    + span.location.to_vector() / effective_scale_factor)
-                    * effective_scale_factor;
+                let location = scene.offset_point_raw(
+                    (cursor_position + span.location.to_vector() / effective_scale_factor)
+                        * effective_scale_factor,
+                );
                 scene
                     .push_element(Element::Text {
                         span: span.translate(location),
-                        clip: scene.clipping_rect(),
+                        clip: scene.clip,
                     })
                     .await;
             }

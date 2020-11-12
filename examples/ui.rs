@@ -8,7 +8,7 @@ fn main() {
 #[derive(Default)]
 struct UIExample {
     image: Entity<Image>,
-    label: Entity<Label>,
+    label: Entity<Scroll<Label>>,
     button: Entity<Button>,
     text_field: Entity<TextField>,
     new_window_button: Entity<Button>,
@@ -51,7 +51,9 @@ impl InteractiveComponent for UIExample {
             Message::LabelClicked => {
                 self.current_count += 0;
                 self.label
-                    .send(LabelCommand::SetValue("You clicked me".to_string()))
+                    .send(ScrollCommand::Child(LabelCommand::SetValue(
+                        "You clicked me".to_string(),
+                    )))
                     .await?;
             }
             Message::DialogButtonClicked(clicked) => {
@@ -67,7 +69,9 @@ impl InteractiveComponent for UIExample {
             Message::ButtonClicked => {
                 self.current_count += 1;
                 self.label
-                    .send(LabelCommand::SetValue(self.current_count.to_string()))
+                    .send(ScrollCommand::Child(LabelCommand::SetValue(
+                        self.current_count.to_string(),
+                    )))
                     .await?;
                 context
                     .new_layer(Dialog::<_, DialogChoices>::text(
@@ -86,7 +90,9 @@ impl InteractiveComponent for UIExample {
             Message::TextFieldEvent(event) => {
                 if let TextFieldEvent::ValueChanged(text) = event {
                     self.label
-                        .send(LabelCommand::SetValue(text.to_string().await))
+                        .send(ScrollCommand::Child(LabelCommand::SetValue(
+                            text.to_string().await,
+                        )))
                         .await?;
                 }
             }
@@ -130,7 +136,7 @@ impl Component for UIExample {
             .await?;
 
         self.label = self
-            .new_entity(context, Label::new("Test Label"))
+            .new_entity(context, Scroll::new(Label::new("Test Label")))
             .await
             .style_sheet(
                 Style::new()
@@ -139,6 +145,10 @@ impl Component for UIExample {
                     .with(FontSize::new(72.))
                     .with(Alignment::Right),
             )
+            .with(ComponentOverflow {
+                horizontal: Overflow::Scroll, // TODO This isn't working because the Layout that is being rendered is still relative to the screen, which means the width/height is of the clipped area rather than a new rect entirely. This probably means generating hardcoded AbsoluteBounds with values filled in.
+                vertical: Overflow::Scroll,
+            })
             .bounds(
                 AbsoluteBounds::default()
                     .with_left(Points::new(32.))

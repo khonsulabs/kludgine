@@ -11,6 +11,7 @@ use crate::{
 };
 use async_handle::Handle;
 use async_trait::async_trait;
+use generational_arena::Index;
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 mod builder;
 mod button;
@@ -23,13 +24,15 @@ pub mod legion;
 mod pane;
 mod panel;
 mod pending;
+mod scroll;
+mod scrollbar;
 mod text_field;
 mod toast;
 
 pub use self::{
     builder::EntityBuilder,
     button::Button,
-    control::{Border, ComponentBorder, ComponentPadding, ControlEvent},
+    control::{Border, ComponentBorder, ComponentPadding, ContentOffset, ControlEvent},
     dialog::{Dialog, DialogButton, DialogButtonSpacing, DialogButtons},
     image::{
         Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
@@ -37,6 +40,8 @@ pub use self::{
     label::{Label, LabelCommand},
     pane::Pane,
     panel::{Panel, PanelCommand, PanelEvent, PanelMessage, PanelProvider},
+    scroll::{ComponentOverflow, Overflow, Scroll, ScrollCommand, ScrollEvent},
+    scrollbar::{Scrollbar, ScrollbarCommand, ScrollbarGripColor, ScrollbarMetrics, ScrollbarSize},
     text_field::{TextField, TextFieldEvent},
     toast::Toast,
 };
@@ -97,7 +102,14 @@ pub trait Component: Send + Sync {
         &mut self,
         context: &mut StyledContext,
     ) -> KludgineResult<Box<dyn LayoutSolver>> {
-        let children = context.children().await;
+        self.standard_layout(context).await
+    }
+
+    async fn standard_layout(
+        &mut self,
+        context: &mut StyledContext,
+    ) -> KludgineResult<Box<dyn LayoutSolver>> {
+        let children = self.children(context).await;
         if children.is_empty() {
             Layout::none().layout()
         } else {
@@ -306,6 +318,10 @@ pub trait Component: Send + Sync {
 
     async fn last_layout(&self, context: &mut Context) -> Layout {
         context.last_layout_for(context.index()).await
+    }
+
+    async fn children(&self, context: &mut Context) -> Vec<Index> {
+        context.children_of(context.index()).await
     }
 }
 

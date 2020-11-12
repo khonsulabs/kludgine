@@ -1,5 +1,5 @@
 use crate::{
-    math::{Raw, Scale, Scaled, ScreenScale, Size},
+    math::{Point, Raw, Scale, Scaled, ScreenScale, Size, Vector},
     shape::Shape,
     sprite::RenderedSprite,
     style::{
@@ -38,39 +38,56 @@ pub struct Scene {
 
 impl From<Scene> for Target {
     fn from(scene: Scene) -> Target {
-        Self::Scene(scene)
+        Self {
+            scene,
+            clip: None,
+            offset: None,
+        }
     }
 }
 
 #[derive(Clone, Debug)]
-pub enum Target {
-    Scene(Scene),
-    ClippedScene(Scene, Rect<u32, Raw>),
+pub struct Target {
+    pub scene: Scene,
+    pub clip: Option<Rect<u32, Raw>>,
+    pub offset: Option<Vector<f32, Raw>>,
 }
 
 impl Target {
-    pub fn clipping_rect(&self) -> Option<Rect<u32, Raw>> {
-        match self {
-            Self::Scene(_) => None,
-            Self::ClippedScene(_, clip) => Some(*clip),
-        }
-    }
-
-    pub fn scene(&self) -> &Scene {
-        match self {
-            Self::Scene(scene) => scene,
-            Self::ClippedScene(scene, _) => scene,
-        }
-    }
-
     pub fn clipped_to(&self, new_clip: Rect<u32, Raw>) -> Self {
-        Self::ClippedScene(
-            self.scene().clone(),
-            match self.clipping_rect() {
+        Self {
+            scene: self.scene.clone(),
+            clip: Some(match &self.clip {
                 Some(existing_clip) => existing_clip.union(&new_clip),
                 None => new_clip,
-            },
-        )
+            }),
+            offset: self.offset,
+        }
+    }
+
+    pub fn offset_by(&self, delta: Vector<f32, Raw>) -> Self {
+        Self {
+            scene: self.scene.clone(),
+            clip: self.clip,
+            offset: Some(match self.offset {
+                Some(offset) => offset + delta,
+                None => delta,
+            }),
+        }
+    }
+
+    pub async fn offset_point(&self, point: Point<f32, Scaled>) -> Point<f32, Scaled> {
+        match self.offset {
+            Some(offset) => point + offset / self.scene.scale_factor().await,
+            None => point,
+        }
+    }
+
+    pub fn offset_point_raw(&self, point: Point<f32, Raw>) -> Point<f32, Raw> {
+        match self.offset {
+            Some(offset) => point + offset,
+            None => point,
+        }
     }
 }
 
@@ -78,16 +95,13 @@ impl std::ops::Deref for Target {
     type Target = Scene;
 
     fn deref(&self) -> &Self::Target {
-        self.scene()
+        &self.scene
     }
 }
 
 impl std::ops::DerefMut for Target {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        match self {
-            Self::Scene(scene) => scene,
-            Self::ClippedScene(scene, ..) => scene,
-        }
+        &mut self.scene
     }
 }
 

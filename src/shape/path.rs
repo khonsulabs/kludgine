@@ -81,6 +81,7 @@ impl Path<Scaled> {
         scene: &Target,
     ) -> Path<Raw> {
         let effective_scale = scene.scale_factor().await;
+        let location = scene.offset_point(location).await;
         let mut events = Vec::new();
 
         for event in &self.events {

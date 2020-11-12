@@ -3,8 +3,8 @@ use crate::{
     scene::Target,
     style::Style,
     ui::{
-        AbsoluteLayout, Context, HierarchicalArena, Index, Indexable, LayerIndex, Layout,
-        LayoutSolver, StyledContext, UILayer, UIState,
+        AbsoluteLayout, HierarchicalArena, Index, Indexable, LayerIndex, Layout, LayoutSolver,
+        StyledContext, UILayer, UIState,
     },
     Handle, KludgineResult,
 };
@@ -226,7 +226,7 @@ pub struct LayoutContext {
 }
 
 impl std::ops::Deref for LayoutContext {
-    type Target = Context;
+    type Target = StyledContext;
 
     fn deref(&self) -> &Self::Target {
         &self.base
