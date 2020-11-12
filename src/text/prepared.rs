@@ -170,7 +170,8 @@ impl PreparedSpan {
 
     pub fn translate(&self, location: Point<f32, Raw>) -> Self {
         Self {
-            location,
+            // We want to ensure that we are pixel-aligned when rendering a span's start.
+            location: location.round(),
             data: self.data.clone(),
         }
     }
