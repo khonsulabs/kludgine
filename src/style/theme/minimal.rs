@@ -209,10 +209,38 @@ impl Minimal {
             |style| {
                 style
                     .with(ScrollbarSize(Points::new(10.)))
-                    .with(ScrollbarGripColor(ColorPair {
-                        light_color: self.palette.primary.normal(),
-                        dark_color: self.palette.primary.normal(),
-                    }))
+                    .with(ScrollbarGripColor(
+                        ColorPair {
+                            light_color: self.palette.primary.normal(),
+                            dark_color: self.palette.primary.normal(),
+                        }
+                        .with_alpha(0.4),
+                    ))
+            },
+        )
+        .when(
+            |c| {
+                c.classes
+                    .contains("scrollbar")
+                    .and(c.is_hovered().or(c.is_active()))
+            },
+            |style| {
+                style
+                    .with(ScrollbarSize(Points::new(10.)))
+                    .with(ScrollbarGripColor(
+                        ColorPair {
+                            light_color: self.palette.primary.normal(),
+                            dark_color: self.palette.primary.normal(),
+                        }
+                        .with_alpha(0.6),
+                    ))
+                    .with(BackgroundColor(
+                        ColorPair {
+                            light_color: self.palette.primary.normal(),
+                            dark_color: self.palette.primary.normal(),
+                        }
+                        .with_alpha(0.2),
+                    ))
             },
         )
     }

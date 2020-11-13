@@ -11,6 +11,14 @@ pub struct ColorPair {
     pub dark_color: Color,
 }
 
+impl ColorPair {
+    pub fn with_alpha(mut self, alpha: f32) -> Self {
+        self.light_color = self.light_color.with_alpha(alpha);
+        self.dark_color = self.dark_color.with_alpha(alpha);
+        self
+    }
+}
+
 impl From<Color> for ColorPair {
     fn from(color: Color) -> Self {
         Self {

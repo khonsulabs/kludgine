@@ -464,6 +464,6 @@ where
     }
 
     async fn deactivate(&self, context: &mut Context) {
-        context.activate(context.entity::<Self>()).await
+        context.deactivate(context.entity::<Self>()).await
     }
 }

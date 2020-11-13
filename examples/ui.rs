@@ -138,6 +138,10 @@ impl Component for UIExample {
         self.label = self
             .new_entity(context, Scroll::new(Label::new("Test Label")))
             .await
+            .with(ComponentOverflow {
+                horizontal: Overflow::Scroll,
+                vertical: Overflow::Scroll,
+            })
             .style_sheet(
                 Style::new()
                     .with(ForegroundColor(Color::new(1.0, 1.0, 1.0, 0.1).into()))
@@ -145,10 +149,6 @@ impl Component for UIExample {
                     .with(FontSize::new(72.))
                     .with(Alignment::Right),
             )
-            .with(ComponentOverflow {
-                horizontal: Overflow::Scroll, // TODO This isn't working because the Layout that is being rendered is still relative to the screen, which means the width/height is of the clipped area rather than a new rect entirely. This probably means generating hardcoded AbsoluteBounds with values filled in.
-                vertical: Overflow::Scroll,
-            })
             .bounds(
                 AbsoluteBounds::default()
                     .with_left(Points::new(32.))

@@ -1,16 +1,17 @@
-use std::time::{Duration, Instant};
-
-use super::{Component, InteractiveComponent};
 use crate::{
     math::{Point, PointExt, Points, Raw, Scaled, Size, SizeExt},
     prelude::EventStatus,
     shape::{Fill, Shape},
     style::{theme::Selector, ColorPair, Style, StyleComponent, UnscaledStyleComponent},
-    ui::{Context, Layout, StyledContext},
+    ui::{
+        component::{Component, InteractiveComponent, InteractiveComponentExt},
+        Context, Layout, StyledContext,
+    },
     KludgineResult,
 };
 use async_trait::async_trait;
 use euclid::{Length, Rect, Scale};
+use std::time::{Duration, Instant};
 use winit::event::MouseButton;
 
 #[derive(Debug)]
@@ -209,6 +210,7 @@ impl Component for Scrollbar {
                 up: true,
                 last_page: Instant::now(),
             });
+            self.activate(context).await;
             Ok(EventStatus::Processed)
         } else if info.mouse_location < info.grip_start + info.grip_length {
             self.mouse_state = Some(ScrollbarMouseState::Dragging {
@@ -216,6 +218,7 @@ impl Component for Scrollbar {
                 starting_mouse_location: info.mouse_location,
                 starting_grip_start: info.grip_start,
             });
+            self.activate(context).await;
             Ok(EventStatus::Processed)
         } else {
             self.page_down(context).await;
@@ -223,6 +226,7 @@ impl Component for Scrollbar {
                 up: false,
                 last_page: Instant::now(),
             });
+            self.activate(context).await;
             Ok(EventStatus::Processed)
         }
     }
@@ -283,10 +287,11 @@ impl Component for Scrollbar {
 
     async fn mouse_up(
         &mut self,
-        _context: &mut Context,
+        context: &mut Context,
         _window_position: Option<Point<f32, Scaled>>,
         _button: MouseButton,
     ) -> KludgineResult<()> {
+        self.deactivate(context).await;
         self.mouse_state = None;
         Ok(())
     }

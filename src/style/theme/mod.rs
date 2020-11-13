@@ -241,6 +241,10 @@ impl ThemeRulePredicate {
         ThemeRulePredicate::And(Box::new(self), Box::new(other))
     }
 
+    pub fn or(self, other: ThemeRulePredicate) -> ThemeRulePredicate {
+        ThemeRulePredicate::Or(Box::new(self), Box::new(other))
+    }
+
     fn matches(&self, id: Option<&Id>, classes: Option<&Classes>, state: &StyleState) -> bool {
         match self {
             ThemeRulePredicate::ClassesContains(comparison) => {
