@@ -308,6 +308,44 @@ impl LayoutSolver for ScrollLayout {
                 },
             );
 
+            let horizontal_scrollbar_size = context
+                .content_size(
+                    &self.horizontal_scrollbar,
+                    &Size::new(
+                        Some(inner_bounds.size.width),
+                        Some(inner_bounds.size.height),
+                    ),
+                )
+                .await?;
+            let vertical_scrollbar_size = context
+                .content_size(
+                    &self.vertical_scrollbar,
+                    &Size::new(
+                        Some(inner_bounds.size.width),
+                        Some(inner_bounds.size.height),
+                    ),
+                )
+                .await?;
+
+            // If we're going to show a scroll bar, increase the overflow by
+            // those widths so that the content can be scrolled past the bars
+            let overflow = (
+                overflow.0.map(|o| {
+                    if overflow.1.is_some() {
+                        o + vertical_scrollbar_size.width()
+                    } else {
+                        o
+                    }
+                }),
+                overflow.1.map(|o| {
+                    if overflow.0.is_some() {
+                        o + horizontal_scrollbar_size.height()
+                    } else {
+                        o
+                    }
+                }),
+            );
+
             let new_scroll = Vector::new(
                 self.scroll
                     .x
@@ -325,18 +363,18 @@ impl LayoutSolver for ScrollLayout {
                     *last_overflow = overflow;
 
                     self.horizontal_scrollbar
-                        .send(ScrollbarCommand::SetMetrics(overflow.0.map(|_| {
+                        .send(ScrollbarCommand::SetMetrics(overflow.0.map(|overflow| {
                             ScrollbarMetrics {
-                                content_length: calculated_content_size.width(),
+                                content_length: overflow + inner_bounds.size.width(),
                                 page_size: inner_bounds.size.width(),
                             }
                         })))
                         .await?;
 
                     self.vertical_scrollbar
-                        .send(ScrollbarCommand::SetMetrics(overflow.1.map(|_| {
+                        .send(ScrollbarCommand::SetMetrics(overflow.1.map(|overflow| {
                             ScrollbarMetrics {
-                                content_length: calculated_content_size.height(),
+                                content_length: overflow + inner_bounds.size.height(),
                                 page_size: inner_bounds.size.height(),
                             }
                         })))
@@ -359,25 +397,6 @@ impl LayoutSolver for ScrollLayout {
                     },
                 )
                 .await;
-
-            let horizontal_scrollbar_size = context
-                .content_size(
-                    &self.horizontal_scrollbar,
-                    &Size::new(
-                        Some(inner_bounds.size.width),
-                        Some(inner_bounds.size.height),
-                    ),
-                )
-                .await?;
-            let vertical_scrollbar_size = context
-                .content_size(
-                    &self.vertical_scrollbar,
-                    &Size::new(
-                        Some(inner_bounds.size.width),
-                        Some(inner_bounds.size.height),
-                    ),
-                )
-                .await?;
 
             if overflow.0.is_some() {
                 let width_correction = if overflow.1.is_some() {

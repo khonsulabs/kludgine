@@ -96,8 +96,12 @@ impl Component for Scrollbar {
                 ScrollbarOrientation::Vertical => bounds.size.height(),
             };
             let grip_length = component_length * (metrics.page_size / metrics.content_length);
-            let scroll_amount = self
-                .offset
+            let scroll_percent =
+                Points::new(self.offset.0 / (metrics.content_length.0 - metrics.page_size.0));
+            let remaining_bar = Points::new(component_length.0 - grip_length.0);
+            let scroll_amount = Points::new(scroll_percent.0 * remaining_bar.0);
+
+            let scroll_amount = scroll_amount
                 .max(Points::default())
                 .min(component_length - grip_length);
             let grip_rect = match self.orientation {
