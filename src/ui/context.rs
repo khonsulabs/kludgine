@@ -1,20 +1,18 @@
-use async_handle::Handle;
-
 use crate::{
     scene::Target,
     style::StyleSheet,
     ui::{
-        Entity, EntityBuilder, HierarchicalArena, Index, Indexable, InteractiveComponent, Layout,
-        UIState,
+        node::NodeData, Entity, EntityBuilder, HierarchicalArena, Index, Indexable,
+        InteractiveComponent, LayerIndex, LayerIndexable, Layout, UILayer, UIState,
     },
 };
+use async_handle::Handle;
 mod layout_context;
 mod styled_context;
 pub use self::{
     layout_context::{LayoutContext, LayoutEngine},
     styled_context::StyledContext,
 };
-use super::{node::NodeData, LayerIndex, LayerIndexable, UILayer};
 use std::time::{Duration, Instant};
 
 #[derive(Clone, Debug)]

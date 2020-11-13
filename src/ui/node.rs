@@ -1,11 +1,10 @@
-use super::ContentOffset;
 use crate::{
     math::{Point, Scaled, Size, Surround, Vector},
     runtime::Runtime,
     style::StyleSheet,
     ui::{
-        AbsoluteBounds, Callback, Context, InteractiveComponent, Layout, LayoutSolver,
-        StyledContext,
+        AbsoluteBounds, Callback, ContentOffset, Context, InteractiveComponent, Layout,
+        LayoutSolver, StyledContext,
     },
     window::{
         event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},

@@ -1,4 +1,8 @@
-use crate::{color::Color, math::Scaled, style::Style};
+use crate::{
+    color::Color,
+    math::Scaled,
+    style::{Style, StyleSheet},
+};
 use std::collections::HashMap;
 mod minimal;
 mod selector;
@@ -7,8 +11,6 @@ pub use self::{
     selector::{Classes, Id, Selector},
 };
 pub use winit::window::Theme as SystemTheme;
-
-use super::StyleSheet;
 
 pub enum ElementKind {
     Button,

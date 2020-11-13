@@ -1,12 +1,12 @@
-use std::time::{Duration, Instant};
-
-use super::{pending::PendingComponent, InteractiveComponentExt};
 use crate::{
     math::{Scaled, Size},
     runtime::Runtime,
     style::theme::Selector,
     ui::{
-        component::{Component, InteractiveComponent, Label, StandaloneComponent},
+        component::{
+            pending::PendingComponent, Component, InteractiveComponent, InteractiveComponentExt,
+            Label, StandaloneComponent,
+        },
         Context, StyledContext,
     },
     KludgineResult, RequiresInitialization,
@@ -15,6 +15,7 @@ use async_lock::Mutex;
 use async_trait::async_trait;
 use generational_arena::Index;
 use once_cell::sync::OnceCell;
+use std::time::{Duration, Instant};
 
 static ACTIVE_TOASTS: OnceCell<Mutex<Vec<Index>>> = OnceCell::new();
 

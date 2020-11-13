@@ -1,7 +1,6 @@
 extern crate kludgine;
-use std::time::Duration;
-
 use kludgine::prelude::*;
+use std::time::Duration;
 
 fn main() {
     SingleWindowApplication::run(SpriteSheetExample::default());

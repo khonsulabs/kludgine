@@ -1,10 +1,9 @@
 // https://en.wikipedia.org/wiki/Tic-tac-toe
 
 extern crate kludgine;
-use std::fmt::Display;
-
 use kludgine::prelude::*;
 use rand::{thread_rng, Rng};
+use std::fmt::Display;
 
 fn main() {
     SingleWindowApplication::run(TicTacToe::default());

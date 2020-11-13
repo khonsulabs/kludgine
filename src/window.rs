@@ -6,11 +6,9 @@ use crate::{
     Handle, KludgineError, KludgineResult,
 };
 use async_trait::async_trait;
-
 use crossbeam::sync::ShardedLock;
 use easygpu::prelude::*;
 use lazy_static::lazy_static;
-
 use std::collections::HashMap;
 use winit::window::{WindowBuilder as WinitWindowBuilder, WindowId};
 
