@@ -1,14 +1,14 @@
 use super::{
-    pending::PendingComponent, InteractiveComponent, InteractiveComponentExt, Scrollbar,
-    ScrollbarCommand, ScrollbarMetrics,
+    pending::PendingComponent, scrollbar::ScrollbarEvent, InteractiveComponent,
+    InteractiveComponentExt, Scrollbar, ScrollbarCommand, ScrollbarMetrics,
 };
 use crate::{
     math::{Point, PointExt, Points, Raw, Rect, Scaled, Size, SizeExt, Surround, Vector},
     prelude::EventStatus,
     style::{theme::Selector, UnscaledStyleComponent},
     ui::{
-        component::Component, AbsoluteBounds, Context, Entity, Indexable, Layout, LayoutContext,
-        LayoutSolver, LayoutSolverExt, StyledContext,
+        component::Component, Context, Entity, Indexable, Layout, LayoutContext, LayoutSolver,
+        LayoutSolverExt, StyledContext,
     },
     KludgineResult,
 };
@@ -31,6 +31,8 @@ pub enum ScrollCommand<CC> {
 #[derive(Debug, Clone)]
 pub enum ScrollMessage<E> {
     ChildEvent(E),
+    HorizontalScrollbarScrolled(Points),
+    VerticalScrollbarScrolled(Points),
 }
 
 #[derive(Debug)]
@@ -90,23 +92,19 @@ where
         self.horizontal_scrollbar = self
             .new_entity(context, Scrollbar::horizontal())
             .await
-            .bounds(
-                AbsoluteBounds::default()
-                    .with_bottom(Points::new(0.))
-                    .with_left(Points::new(0.))
-                    .with_right(Points::new(0.)),
-            )
+            .callback(&self.entity(context), |evt| {
+                let ScrollbarEvent::OffsetChanged(new_offset) = evt;
+                ScrollMessage::HorizontalScrollbarScrolled(new_offset)
+            })
             .insert()
             .await?;
         self.vertical_scrollbar = self
             .new_entity(context, Scrollbar::vertical())
             .await
-            .bounds(
-                AbsoluteBounds::default()
-                    .with_right(Points::new(0.))
-                    .with_bottom(Points::new(0.))
-                    .with_top(Points::new(0.)),
-            )
+            .callback(&self.entity(context), |evt| {
+                let ScrollbarEvent::OffsetChanged(new_offset) = evt;
+                ScrollMessage::VerticalScrollbarScrolled(new_offset)
+            })
             .insert()
             .await?;
 
@@ -144,10 +142,6 @@ where
 
         let mut status = EventStatus::Ignored;
         let overflow = self.last_overflow.read().await;
-        println!(
-            "Scroll amount: {:?}, current scroll: {:?}, current overflow: {:?}",
-            scroll_amount, self.scroll, *overflow
-        );
         if let Some(horizontal_overflow) = overflow.0 {
             if relative_ne!(scroll_amount.x, 0.) {
                 let target_scroll = (self.scroll.x() + scroll_amount.x())
@@ -211,8 +205,19 @@ where
         context: &mut Context,
         message: Self::Message,
     ) -> KludgineResult<()> {
-        let ScrollMessage::ChildEvent(message) = message;
-        self.callback(context, ScrollEvent::Child(message)).await;
+        match message {
+            ScrollMessage::ChildEvent(message) => {
+                self.callback(context, ScrollEvent::Child(message)).await;
+            }
+            ScrollMessage::HorizontalScrollbarScrolled(new_offset) => {
+                self.scroll.set_x(new_offset);
+                context.set_needs_redraw().await;
+            }
+            ScrollMessage::VerticalScrollbarScrolled(new_offset) => {
+                self.scroll.set_y(new_offset);
+                context.set_needs_redraw().await;
+            }
+        }
         Ok(())
     }
 }
@@ -294,20 +299,6 @@ impl LayoutSolver for ScrollLayout {
                     .unwrap_or_else(|| content_size_with_padding.height()),
             );
 
-            let overflow = calculated_content_size.to_vector() - inner_bounds.size.to_vector();
-            let overflow = (
-                if overflow.x > 0. {
-                    Some(overflow.x())
-                } else {
-                    None
-                },
-                if overflow.y > 0. {
-                    Some(overflow.y())
-                } else {
-                    None
-                },
-            );
-
             let horizontal_scrollbar_size = context
                 .content_size(
                     &self.horizontal_scrollbar,
@@ -327,23 +318,36 @@ impl LayoutSolver for ScrollLayout {
                 )
                 .await?;
 
-            // If we're going to show a scroll bar, increase the overflow by
-            // those widths so that the content can be scrolled past the bars
+            let scrollbar_size = Size::from_lengths(
+                vertical_scrollbar_size.width(),
+                horizontal_scrollbar_size.height(),
+            );
+            let effective_scrollbar_size = Size::from_lengths(
+                if calculated_content_size.height() > inner_bounds.size.height() {
+                    scrollbar_size.width()
+                } else {
+                    Points::default()
+                },
+                if calculated_content_size.width() > inner_bounds.size.width() {
+                    scrollbar_size.height()
+                } else {
+                    Points::default()
+                },
+            );
+
+            let inner_content_size = inner_bounds.size - effective_scrollbar_size;
+            let overflow = calculated_content_size - inner_content_size;
             let overflow = (
-                overflow.0.map(|o| {
-                    if overflow.1.is_some() {
-                        o + vertical_scrollbar_size.width()
-                    } else {
-                        o
-                    }
-                }),
-                overflow.1.map(|o| {
-                    if overflow.0.is_some() {
-                        o + horizontal_scrollbar_size.height()
-                    } else {
-                        o
-                    }
-                }),
+                if overflow.width > 0. {
+                    Some(overflow.width())
+                } else {
+                    None
+                },
+                if overflow.height > 0. {
+                    Some(overflow.height())
+                } else {
+                    None
+                },
             );
 
             let new_scroll = Vector::new(
@@ -365,8 +369,10 @@ impl LayoutSolver for ScrollLayout {
                     self.horizontal_scrollbar
                         .send(ScrollbarCommand::SetMetrics(overflow.0.map(|overflow| {
                             ScrollbarMetrics {
-                                content_length: overflow + inner_bounds.size.width(),
-                                page_size: inner_bounds.size.width(),
+                                content_length: overflow
+                                    + inner_content_size.width()
+                                    + effective_scrollbar_size.width(),
+                                page_size: inner_content_size.width(),
                             }
                         })))
                         .await?;
@@ -374,8 +380,10 @@ impl LayoutSolver for ScrollLayout {
                     self.vertical_scrollbar
                         .send(ScrollbarCommand::SetMetrics(overflow.1.map(|overflow| {
                             ScrollbarMetrics {
-                                content_length: overflow + inner_bounds.size.height(),
-                                page_size: inner_bounds.size.height(),
+                                content_length: overflow
+                                    + inner_content_size.height()
+                                    + effective_scrollbar_size.width(),
+                                page_size: inner_content_size.height(),
                             }
                         })))
                         .await?;
@@ -388,9 +396,14 @@ impl LayoutSolver for ScrollLayout {
                     Layout {
                         bounds: Rect::new(
                             inner_bounds.origin,
-                            calculated_content_size.max(inner_bounds.size),
+                            (calculated_content_size + effective_scrollbar_size)
+                                .max(inner_content_size),
                         ),
-                        margin: Default::default(),
+                        margin: Surround {
+                            right: effective_scrollbar_size.width(),
+                            bottom: effective_scrollbar_size.height(),
+                            ..Default::default()
+                        },
                         padding,
                         content_offset: Some(-new_scroll),
                         clip_to: inner_bounds,
