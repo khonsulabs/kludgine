@@ -5,8 +5,8 @@ use crate::{
         BackgroundColor, ColorPair, ForegroundColor, Style,
     },
     ui::{
-        Border, ComponentBorder, ComponentPadding, DialogButtonSpacing, ScrollbarGripColor,
-        ScrollbarSize,
+        Border, ComponentBorder, ComponentPadding, DialogButtonSpacing, ScrollGutterColor,
+        ScrollbarGripColor, ScrollbarSize,
     },
 };
 
@@ -203,6 +203,31 @@ impl Minimal {
                     }))
             },
         )
+        // Scroll
+        .when(
+            |c| c.classes.contains("scroll"),
+            |style| {
+                style.with(ScrollGutterColor(
+                    ColorPair {
+                        light_color: self.palette.primary.normal(),
+                        dark_color: self.palette.primary.normal(),
+                    }
+                    .with_alpha(0.2),
+                ))
+            },
+        )
+        .when(
+            |c| c.classes.contains("scroll").and(c.is_hovered()),
+            |style| {
+                style.with(ScrollGutterColor(
+                    ColorPair {
+                        light_color: self.palette.primary.normal(),
+                        dark_color: self.palette.primary.normal(),
+                    }
+                    .with_alpha(0.4),
+                ))
+            },
+        )
         // Scrollbar
         .when(
             |c| c.classes.contains("scrollbar"),
@@ -232,14 +257,7 @@ impl Minimal {
                             light_color: self.palette.primary.normal(),
                             dark_color: self.palette.primary.normal(),
                         }
-                        .with_alpha(0.6),
-                    ))
-                    .with(BackgroundColor(
-                        ColorPair {
-                            light_color: self.palette.primary.normal(),
-                            dark_color: self.palette.primary.normal(),
-                        }
-                        .with_alpha(0.2),
+                        .with_alpha(0.8),
                     ))
             },
         )

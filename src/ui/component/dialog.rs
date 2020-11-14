@@ -2,7 +2,10 @@ use crate::{
     color::Color,
     math::{Point, Points, Raw, Scaled, Size, SizeExt},
     shape::{Fill, Shape},
-    style::{theme::Selector, Alignment, ColorPair, Style, StyleComponent, UnscaledStyleComponent},
+    style::{
+        theme::Selector, Alignment, BackgroundColor, ColorPair, Style, StyleComponent,
+        UnscaledStyleComponent,
+    },
     ui::{
         component::{
             pending::PendingComponent, Button, Component, ControlEvent, InteractiveComponent,
@@ -18,6 +21,8 @@ use euclid::{Length, Scale};
 use generational_arena::Index;
 use std::fmt::Debug;
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
+
+use super::ComponentBorder;
 
 #[derive(Default, Debug)]
 struct ButtonBarLayout {
@@ -356,7 +361,8 @@ where
                 .await;
         }
 
-        self.render_standard_background(context, layout).await
+        self.render_standard_background::<BackgroundColor, ComponentBorder>(context, layout)
+            .await
     }
 
     // Dialogs intercept all clicks while they're open

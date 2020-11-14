@@ -1,7 +1,8 @@
 use crate::{
     math::{Point, PointExt, Points, Raw, Rect, Scaled, Size, SizeExt, Surround, Vector},
     prelude::EventStatus,
-    style::{theme::Selector, UnscaledStyleComponent},
+    shape::{Fill, Shape},
+    style::{theme::Selector, ColorPair, UnscaledStyleComponent},
     ui::{
         component::{
             pending::PendingComponent, scrollbar::ScrollbarEvent, Component, InteractiveComponent,
@@ -18,6 +19,7 @@ use async_trait::async_trait;
 use generational_arena::Index;
 use std::fmt::Debug;
 use winit::event::{MouseScrollDelta, TouchPhase};
+mod gutter;
 
 #[derive(Debug, Clone)]
 pub enum ScrollEvent<E> {
@@ -41,10 +43,17 @@ where
     C: InteractiveComponent + 'static,
 {
     contents: PendingComponent<C>,
-    last_overflow: Handle<(Option<Points>, Option<Points>)>,
+    render_info: Handle<RenderInfo>,
     scroll: Vector<f32, Scaled>,
     horizontal_scrollbar: Entity<Scrollbar>,
     vertical_scrollbar: Entity<Scrollbar>,
+    gutter: Entity<gutter::Gutter>,
+}
+
+#[derive(Default, Debug)]
+struct RenderInfo {
+    overflow: (Option<Points>, Option<Points>),
+    effective_scrollbar_size: Size<f32, Scaled>,
 }
 
 impl<C> Scroll<C>
@@ -54,10 +63,11 @@ where
     pub fn new(component: C) -> Self {
         Self {
             contents: PendingComponent::Pending(component),
-            last_overflow: Handle::new((None, None)),
+            render_info: Handle::default(),
             scroll: Default::default(),
             horizontal_scrollbar: Default::default(),
             vertical_scrollbar: Default::default(),
+            gutter: Default::default(),
         }
     }
 }
@@ -108,6 +118,12 @@ where
             .insert()
             .await?;
 
+        self.gutter = self
+            .new_entity(context, gutter::Gutter)
+            .await
+            .insert()
+            .await?;
+
         Ok(())
     }
 
@@ -116,11 +132,12 @@ where
         _context: &mut StyledContext,
     ) -> KludgineResult<Box<dyn LayoutSolver>> {
         ScrollLayout {
-            last_overflow: self.last_overflow.clone(),
+            render_info: self.render_info.clone(),
             contents: self.contents.entity().index(),
             scroll: self.scroll,
             horizontal_scrollbar: self.horizontal_scrollbar.clone(),
             vertical_scrollbar: self.vertical_scrollbar.clone(),
+            gutter: self.gutter.clone(),
         }
         .layout()
     }
@@ -141,8 +158,8 @@ where
         };
 
         let mut status = EventStatus::Ignored;
-        let overflow = self.last_overflow.read().await;
-        if let Some(horizontal_overflow) = overflow.0 {
+        let render_info = self.render_info.read().await;
+        if let Some(horizontal_overflow) = render_info.overflow.0 {
             if relative_ne!(scroll_amount.x, 0.) {
                 let target_scroll = (self.scroll.x() + scroll_amount.x())
                     .min(horizontal_overflow)
@@ -158,7 +175,7 @@ where
             }
         }
 
-        if let Some(vertical_overflow) = overflow.1 {
+        if let Some(vertical_overflow) = render_info.overflow.1 {
             if relative_ne!(scroll_amount.y, 0.) {
                 let target_scroll = (self.scroll.y() + scroll_amount.y())
                     .min(vertical_overflow)
@@ -250,11 +267,12 @@ impl UnscaledStyleComponent<Scaled> for ComponentOverflow {}
 
 #[derive(Debug)]
 struct ScrollLayout {
-    last_overflow: Handle<(Option<Points>, Option<Points>)>,
+    render_info: Handle<RenderInfo>,
     contents: Index,
     scroll: Vector<f32, Scaled>,
     horizontal_scrollbar: Entity<Scrollbar>,
     vertical_scrollbar: Entity<Scrollbar>,
+    gutter: Entity<gutter::Gutter>,
 }
 
 #[async_trait]
@@ -350,6 +368,20 @@ impl LayoutSolver for ScrollLayout {
                 },
             );
 
+            // The above logic could have caused an edge case where one scrollbar needs to be shown, and the presence of that scrollbar causes the other scollbar to become visible. To avoid this edge case, we now trust overflow for containing the truth of whether a scrollbar will be shown.
+            let effective_scrollbar_size = Size::from_lengths(
+                if overflow.0.is_some() {
+                    scrollbar_size.width()
+                } else {
+                    Points::default()
+                },
+                if overflow.1.is_some() {
+                    scrollbar_size.height()
+                } else {
+                    Points::default()
+                },
+            );
+
             let new_scroll = Vector::new(
                 self.scroll
                     .x
@@ -362,9 +394,10 @@ impl LayoutSolver for ScrollLayout {
             );
 
             {
-                let mut last_overflow = self.last_overflow.write().await;
-                if *last_overflow != overflow {
-                    *last_overflow = overflow;
+                let mut render_info = self.render_info.write().await;
+                if render_info.overflow != overflow {
+                    render_info.effective_scrollbar_size = effective_scrollbar_size;
+                    render_info.overflow = overflow;
 
                     self.horizontal_scrollbar
                         .send(ScrollbarCommand::SetMetrics(overflow.0.map(|overflow| {
@@ -468,7 +501,35 @@ impl LayoutSolver for ScrollLayout {
                     )
                     .await;
             }
+
+            if effective_scrollbar_size.area() > 0. {
+                let bounds = dbg!(Rect::new(
+                    inner_bounds.max() - effective_scrollbar_size,
+                    effective_scrollbar_size,
+                ));
+                context
+                    .insert_layout(
+                        self.gutter.index(),
+                        Layout {
+                            clip_to: bounds,
+                            bounds,
+                            ..Default::default()
+                        },
+                    )
+                    .await;
+            }
         }
         Ok(())
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct ScrollGutterColor(pub ColorPair);
+
+impl Into<ColorPair> for ScrollGutterColor {
+    fn into(self) -> ColorPair {
+        self.0
+    }
+}
+
+impl UnscaledStyleComponent<Scaled> for ScrollGutterColor {}

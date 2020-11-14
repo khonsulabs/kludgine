@@ -139,9 +139,9 @@ pub mod prelude {
             InteractiveComponent, InteractiveComponentExt, Label, LabelCommand, Layout,
             LayoutConstraints, LayoutContext, LayoutSolver, LayoutSolverExt, LinearTransition,
             Overflow, Pane, Panel, PanelCommand, PanelEvent, PanelMessage, PanelProvider,
-            RowLayout, Scroll, ScrollCommand, ScrollEvent, Scrollbar, ScrollbarCommand,
-            ScrollbarGripColor, ScrollbarMetrics, ScrollbarSize, StandaloneComponent,
-            StyledContext, TextField, TextFieldEvent, Timeout, Toast,
+            RowLayout, Scroll, ScrollCommand, ScrollEvent, ScrollGutterColor, Scrollbar,
+            ScrollbarCommand, ScrollbarGripColor, ScrollbarMetrics, ScrollbarSize,
+            StandaloneComponent, StyledContext, TextField, TextFieldEvent, Timeout, Toast,
         },
         window::{
             event::{

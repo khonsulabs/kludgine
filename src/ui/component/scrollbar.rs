@@ -14,6 +14,8 @@ use euclid::{Length, Rect, Scale};
 use std::time::{Duration, Instant};
 use winit::event::MouseButton;
 
+use super::{ComponentBorder, ScrollGutterColor};
+
 #[derive(Debug)]
 pub struct Scrollbar {
     orientation: ScrollbarOrientation,
@@ -185,7 +187,8 @@ impl Component for Scrollbar {
         layout: &Layout,
     ) -> KludgineResult<()> {
         if self.metrics.is_some() {
-            self.render_standard_background(context, layout).await?;
+            self.render_standard_background::<ScrollGutterColor, ComponentBorder>(context, layout)
+                .await?;
         }
 
         Ok(())
@@ -342,6 +345,12 @@ pub enum ScrollbarEvent {
 pub struct ScrollbarGripColor(pub ColorPair);
 
 impl UnscaledStyleComponent<Scaled> for ScrollbarGripColor {}
+
+impl Into<ColorPair> for ScrollbarGripColor {
+    fn into(self) -> ColorPair {
+        self.0
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct ScrollbarSize<Unit>(pub Length<f32, Unit>);
