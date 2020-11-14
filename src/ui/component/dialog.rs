@@ -2,11 +2,14 @@ use crate::{
     color::Color,
     math::{Point, Points, Raw, Scaled, Size, SizeExt},
     shape::{Fill, Shape},
-    style::{theme::Selector, Alignment, ColorPair, Style, StyleComponent, UnscaledStyleComponent},
+    style::{
+        theme::Selector, Alignment, BackgroundColor, ColorPair, Style, StyleComponent,
+        UnscaledStyleComponent,
+    },
     ui::{
         component::{
-            pending::PendingComponent, Button, Component, ControlEvent, InteractiveComponent,
-            InteractiveComponentExt, Label,
+            pending::PendingComponent, Button, Component, ComponentBorder, ControlEvent,
+            InteractiveComponent, InteractiveComponentExt, Label,
         },
         AbsoluteBounds, AbsoluteLayout, Context, Entity, Indexable, Layout, LayoutSolver,
         LayoutSolverExt, StyledContext,
@@ -356,7 +359,8 @@ where
                 .await;
         }
 
-        self.render_standard_background(context, layout).await
+        self.render_standard_background::<BackgroundColor, ComponentBorder>(context, layout)
+            .await
     }
 
     // Dialogs intercept all clicks while they're open

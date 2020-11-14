@@ -1,20 +1,18 @@
-use async_handle::Handle;
-
 use crate::{
     scene::Target,
     style::StyleSheet,
     ui::{
-        Entity, EntityBuilder, HierarchicalArena, Index, Indexable, InteractiveComponent, Layout,
-        UIState,
+        node::NodeData, Entity, EntityBuilder, HierarchicalArena, Index, Indexable,
+        InteractiveComponent, LayerIndex, LayerIndexable, Layout, UILayer, UIState,
     },
 };
+use async_handle::Handle;
 mod layout_context;
 mod styled_context;
 pub use self::{
     layout_context::{LayoutContext, LayoutEngine},
     styled_context::StyledContext,
 };
-use super::{node::NodeData, LayerIndex, LayerIndexable, UILayer};
 use std::time::{Duration, Instant};
 
 #[derive(Clone, Debug)]
@@ -100,8 +98,8 @@ impl Context {
         self.ui_state.removed_element(index).await;
     }
 
-    pub async fn children(&self) -> Vec<Index> {
-        self.arena.children(&Some(self.index)).await
+    pub async fn children_of<I: Indexable>(&self, parent: I) -> Vec<Index> {
+        self.arena.children(&Some(parent.index())).await
     }
 
     pub fn clone_for<I: Indexable>(&self, index: &I) -> Self {

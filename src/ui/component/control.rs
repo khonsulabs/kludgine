@@ -1,12 +1,10 @@
-use std::fmt::Debug;
-
-use euclid::Length;
-
 use crate::{
-    math::{Point, Raw, Scale, Scaled, Surround},
+    math::{Point, Raw, Scale, Scaled, Surround, Vector},
     style::{ColorPair, Style, StyleComponent, UnscaledStyleComponent},
     window::event::MouseButton,
 };
+use euclid::Length;
+use std::fmt::Debug;
 
 #[derive(Clone, Debug)]
 pub enum ControlEvent {
@@ -98,3 +96,6 @@ impl UnscaledStyleComponent<Scaled> for ComponentBorder {
         false
     }
 }
+
+#[derive(Debug, Clone, Default)]
+pub struct ContentOffset(pub Vector<f32, Scaled>);

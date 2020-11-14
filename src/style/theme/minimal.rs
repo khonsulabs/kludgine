@@ -4,7 +4,10 @@ use crate::{
         theme::{Palette, Theme},
         BackgroundColor, ColorPair, ForegroundColor, Style,
     },
-    ui::{Border, ComponentBorder, ComponentPadding, DialogButtonSpacing},
+    ui::{
+        Border, ComponentBorder, ComponentPadding, DialogButtonSpacing, ScrollGutterColor,
+        ScrollbarGripColor, ScrollbarSize,
+    },
 };
 
 #[derive(Debug)]
@@ -198,6 +201,64 @@ impl Minimal {
                         light_color: self.palette.light.control.background.normal(),
                         dark_color: self.palette.dark.control.background.normal(),
                     }))
+            },
+        )
+        // Scroll
+        .when(
+            |c| c.classes.contains("scroll"),
+            |style| {
+                style.with(ScrollGutterColor(
+                    ColorPair {
+                        light_color: self.palette.primary.normal(),
+                        dark_color: self.palette.primary.normal(),
+                    }
+                    .with_alpha(0.2),
+                ))
+            },
+        )
+        .when(
+            |c| c.classes.contains("scroll").and(c.is_hovered()),
+            |style| {
+                style.with(ScrollGutterColor(
+                    ColorPair {
+                        light_color: self.palette.primary.normal(),
+                        dark_color: self.palette.primary.normal(),
+                    }
+                    .with_alpha(0.4),
+                ))
+            },
+        )
+        // Scrollbar
+        .when(
+            |c| c.classes.contains("scrollbar"),
+            |style| {
+                style
+                    .with(ScrollbarSize(Points::new(10.)))
+                    .with(ScrollbarGripColor(
+                        ColorPair {
+                            light_color: self.palette.primary.normal(),
+                            dark_color: self.palette.primary.normal(),
+                        }
+                        .with_alpha(0.4),
+                    ))
+            },
+        )
+        .when(
+            |c| {
+                c.classes
+                    .contains("scrollbar")
+                    .and(c.is_hovered().or(c.is_active()))
+            },
+            |style| {
+                style
+                    .with(ScrollbarSize(Points::new(10.)))
+                    .with(ScrollbarGripColor(
+                        ColorPair {
+                            light_color: self.palette.primary.normal(),
+                            dark_color: self.palette.primary.normal(),
+                        }
+                        .with_alpha(0.8),
+                    ))
             },
         )
     }

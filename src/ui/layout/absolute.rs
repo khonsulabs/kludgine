@@ -184,11 +184,11 @@ impl LayoutSolver for AbsoluteLayout {
                     - child_bounds.top.length().unwrap_or_default()
                     - child_bounds.bottom.length().unwrap_or_default(),
             );
-            let (child_content_size, child_padding) = context
-                .arena()
-                .get(&index)
-                .await
-                .unwrap()
+            let node = match context.arena().get(&index).await {
+                Some(node) => node,
+                None => continue,
+            };
+            let (child_content_size, child_padding) = node
                 .content_size_with_padding(
                     child_context.styled_context(),
                     &Size::new(Some(content_size.width), Some(content_size.height)),
@@ -210,18 +210,22 @@ impl LayoutSolver for AbsoluteLayout {
                 child_content_size.height(),
             );
 
+            let content_offset = node.content_offset().await;
+            let margin = Surround {
+                left,
+                top,
+                right,
+                bottom,
+            };
             context
                 .insert_layout(
                     index,
                     Layout {
+                        clip_to: margin.inset_rect(&bounds),
                         bounds,
+                        content_offset,
                         padding: child_padding,
-                        margin: Surround {
-                            left,
-                            top,
-                            right,
-                            bottom,
-                        },
+                        margin,
                     },
                 )
                 .await;

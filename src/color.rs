@@ -93,6 +93,11 @@ impl Color {
     pub fn visible(&self) -> bool {
         !relative_eq!(self.0.a, 0.)
     }
+
+    pub fn with_alpha(mut self, alpha: f32) -> Self {
+        self.0.a = alpha;
+        self
+    }
 }
 
 impl Color {

@@ -1,6 +1,3 @@
-use easygpu::transform::ScreenSpace;
-use euclid::Rect;
-
 use crate::{
     math::{Raw, Size},
     scene::{Element, Target},
@@ -8,6 +5,8 @@ use crate::{
     text::{font::LoadedFont, prepared::PreparedSpan},
     texture::Texture,
 };
+use easygpu::transform::ScreenSpace;
+use euclid::Rect;
 use std::{
     collections::{HashMap, HashSet},
     time::Instant,

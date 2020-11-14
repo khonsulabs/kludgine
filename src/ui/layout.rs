@@ -2,7 +2,7 @@ mod absolute;
 mod grid;
 pub use self::{absolute::*, grid::*};
 use crate::{
-    math::{Point, Rect, Scaled, Size, Surround},
+    math::{Point, Rect, Scaled, Size, Surround, Vector},
     ui::LayoutContext,
     KludgineResult,
 };
@@ -24,12 +24,15 @@ pub struct Layout {
     pub bounds: Rect<f32, Scaled>,
     pub padding: Surround<f32, Scaled>,
     pub margin: Surround<f32, Scaled>,
+    pub content_offset: Option<Vector<f32, Scaled>>,
+    pub clip_to: Rect<f32, Scaled>,
 }
 
 impl Layout {
     pub fn none() -> NoLayout {
         NoLayout::default()
     }
+
     pub fn absolute() -> AbsoluteLayout {
         AbsoluteLayout::default()
     }

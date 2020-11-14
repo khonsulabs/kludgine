@@ -1,6 +1,3 @@
-use async_handle::Handle;
-use generational_arena::Index;
-
 use crate::{
     math::Scaled,
     scene::Target,
@@ -14,6 +11,8 @@ use crate::{
     },
     KludgineResult,
 };
+use async_handle::Handle;
+use generational_arena::Index;
 
 pub struct EntityBuilder<C, P>
 where

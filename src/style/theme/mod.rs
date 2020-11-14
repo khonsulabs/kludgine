@@ -1,4 +1,8 @@
-use crate::{color::Color, math::Scaled, style::Style};
+use crate::{
+    color::Color,
+    math::Scaled,
+    style::{Style, StyleSheet},
+};
 use std::collections::HashMap;
 mod minimal;
 mod selector;
@@ -7,8 +11,6 @@ pub use self::{
     selector::{Classes, Id, Selector},
 };
 pub use winit::window::Theme as SystemTheme;
-
-use super::StyleSheet;
 
 pub enum ElementKind {
     Button,
@@ -239,6 +241,10 @@ pub enum ThemeRulePredicate {
 impl ThemeRulePredicate {
     pub fn and(self, other: ThemeRulePredicate) -> ThemeRulePredicate {
         ThemeRulePredicate::And(Box::new(self), Box::new(other))
+    }
+
+    pub fn or(self, other: ThemeRulePredicate) -> ThemeRulePredicate {
+        ThemeRulePredicate::Or(Box::new(self), Box::new(other))
     }
 
     fn matches(&self, id: Option<&Id>, classes: Option<&Classes>, state: &StyleState) -> bool {

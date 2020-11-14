@@ -172,7 +172,7 @@ impl FrameRenderer {
                     let texture = self.renderer.texture(Size::new(512, 512)); // TODO font texture should be configurable
                     let sampler = self
                         .renderer
-                        .sampler(FilterMode::Nearest, FilterMode::Nearest);
+                        .sampler(FilterMode::Linear, FilterMode::Linear);
 
                     let binding = self
                         .sprite_pipeline
@@ -187,14 +187,15 @@ impl FrameRenderer {
                 for _ in 0..rect.height() {
                     for _ in 0..rect.width() {
                         let p = pixel_iterator.next().unwrap();
-                        pixels.push(*p);
-                        pixels.push(*p);
-                        pixels.push(*p);
+                        pixels.push(255);
+                        pixels.push(255);
+                        pixels.push(255);
                         pixels.push(*p);
                     }
 
                     pixels.resize_with(size_for_aligned_copy(pixels.len()), Default::default);
                 }
+
                 let pixels = Rgba8::align(&pixels);
                 self.renderer.submit(&[Op::Transfer {
                     f: loaded_font.texture.as_ref().unwrap(),

@@ -168,7 +168,9 @@ where
                         *index,
                         Layout {
                             bounds: *bounds,
+                            clip_to: element_bounds,
                             margin,
+                            content_offset: None,
                             padding: Default::default(),
                         },
                     );
@@ -217,7 +219,7 @@ where
     ) -> KludgineResult<()> {
         let mut content_sizes = HashMap::new();
         let constraints = Size::new(Some(bounds.size.width), Some(bounds.size.height));
-        for child in context.children().await {
+        for child in context.children_of(context.index()).await {
             let mut child_context = context.clone_for(&child).await;
             let child_content_size = context
                 .arena()

@@ -1,11 +1,10 @@
-use std::{cmp::Ordering, ops::Range};
-
 use crate::{
     text::{prepared::PreparedText, wrap::TextWrap, Text},
     ui::StyledContext,
     KludgineResult,
 };
 use async_handle::Handle;
+use std::{cmp::Ordering, ops::Range};
 
 #[derive(Debug, Clone)]
 pub struct RichText {

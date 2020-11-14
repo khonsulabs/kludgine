@@ -408,10 +408,14 @@ where
                     };
                     self.last_render_order.push(layer_index.clone());
                     if let Some(node) = self.arena.get(&index).await {
+                        let mut target = Target::from(self.scene.clone())
+                            .clipped_to((layout.clip_to * scene_scale).round().to_u32());
+                        if let Some(offset) = layout.content_offset {
+                            target = target.offset_by(offset * scene_scale);
+                        }
                         let mut context = StyledContext::new(
                             layer_index,
-                            Target::from(self.scene.clone())
-                                .clipped_to((layout.inner_bounds() * scene_scale).round().to_u32()),
+                            target,
                             layouts.effective_styles().await.clone(),
                             self.arena.clone(),
                             self.ui_state.clone(),

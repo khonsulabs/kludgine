@@ -1,10 +1,10 @@
 use crate::{
-    math::{Point, Scaled, Size, Surround},
+    math::{Point, Scaled, Size, Surround, Vector},
     runtime::Runtime,
     style::StyleSheet,
     ui::{
-        AbsoluteBounds, Callback, Context, InteractiveComponent, Layout, LayoutSolver,
-        StyledContext,
+        AbsoluteBounds, Callback, ContentOffset, Context, InteractiveComponent, Layout,
+        LayoutSolver, StyledContext,
     },
     window::{
         event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
@@ -29,6 +29,8 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
     async fn set_bounds(&self, bounds: AbsoluteBounds);
     async fn set_layout(&self, layout: Layout);
     async fn get_layout(&self) -> Layout;
+    async fn content_offset(&self) -> Option<Vector<f32, Scaled>>;
+    async fn set_content_offset(&self, offset: Option<Vector<f32, Scaled>>);
     async fn receive_message(&self, context: &Context, message: Box<dyn Any + Send + Sync>);
 
     // Component methods without mutable self
@@ -176,6 +178,23 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
             bounds.clone()
         } else {
             Layout::default()
+        }
+    }
+
+    async fn content_offset(&self) -> Option<Vector<f32, Scaled>> {
+        if let Some(offset) = self.component::<ContentOffset>().await {
+            let offset = offset.read().await;
+            Some(offset.0)
+        } else {
+            None
+        }
+    }
+
+    async fn set_content_offset(&self, offset: Option<Vector<f32, Scaled>>) {
+        if let Some(offset) = offset {
+            self.insert_component(ContentOffset(offset)).await;
+        } else {
+            self.remove_component::<ContentOffset>().await;
         }
     }
 
@@ -366,6 +385,12 @@ impl<T: InteractiveComponent + 'static> NodeData<T> {
         let mut anymap = self.components.write().await;
         anymap.insert(Handle::new(component))
     }
+
+    pub async fn remove_component<C: Send + Sync + 'static>(&self) -> Option<Handle<C>> {
+        let mut anymap = self.components.write().await;
+        anymap.remove::<Handle<C>>()
+    }
+
     pub async fn interactive_component(&self) -> Handle<T> {
         self.component().await.unwrap()
     }
@@ -591,5 +616,15 @@ impl Node {
     pub async fn last_layout(&self) -> Layout {
         let component = self.component.read().await;
         component.get_layout().await
+    }
+
+    pub async fn content_offset(&self) -> Option<Vector<f32, Scaled>> {
+        let component = self.component.read().await;
+        component.content_offset().await
+    }
+
+    pub async fn set_content_offset(&self, offset: Option<Vector<f32, Scaled>>) {
+        let component = self.component.read().await;
+        component.set_content_offset(offset).await
     }
 }

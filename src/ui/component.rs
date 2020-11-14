@@ -1,7 +1,7 @@
 use crate::{
     math::{Point, PointExt, Raw, Rect, Scaled, Size, SizeExt, Surround},
     shape::{Fill, Shape},
-    style::{theme::Selector, BackgroundColor},
+    style::{theme::Selector, BackgroundColor, ColorPair, StyleComponent},
     ui::{Context, Entity, Layout, LayoutSolver, LayoutSolverExt, StyledContext},
     window::{
         event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
@@ -11,6 +11,7 @@ use crate::{
 };
 use async_handle::Handle;
 use async_trait::async_trait;
+use generational_arena::Index;
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 mod builder;
 mod button;
@@ -23,13 +24,15 @@ pub mod legion;
 mod pane;
 mod panel;
 mod pending;
+mod scroll;
+mod scrollbar;
 mod text_field;
 mod toast;
 
 pub use self::{
     builder::EntityBuilder,
     button::Button,
-    control::{Border, ComponentBorder, ComponentPadding, ControlEvent},
+    control::{Border, ComponentBorder, ComponentPadding, ContentOffset, ControlEvent},
     dialog::{Dialog, DialogButton, DialogButtonSpacing, DialogButtons},
     image::{
         Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
@@ -37,6 +40,8 @@ pub use self::{
     label::{Label, LabelCommand},
     pane::Pane,
     panel::{Panel, PanelCommand, PanelEvent, PanelMessage, PanelProvider},
+    scroll::{ComponentOverflow, Overflow, Scroll, ScrollCommand, ScrollEvent, ScrollGutterColor},
+    scrollbar::{Scrollbar, ScrollbarCommand, ScrollbarGripColor, ScrollbarMetrics, ScrollbarSize},
     text_field::{TextField, TextFieldEvent},
     toast::Toast,
 };
@@ -97,7 +102,14 @@ pub trait Component: Send + Sync {
         &mut self,
         context: &mut StyledContext,
     ) -> KludgineResult<Box<dyn LayoutSolver>> {
-        let children = context.children().await;
+        self.standard_layout(context).await
+    }
+
+    async fn standard_layout(
+        &mut self,
+        context: &mut StyledContext,
+    ) -> KludgineResult<Box<dyn LayoutSolver>> {
+        let children = self.children(context).await;
         if children.is_empty() {
             Layout::none().layout()
         } else {
@@ -115,17 +127,22 @@ pub trait Component: Send + Sync {
         context: &mut StyledContext,
         layout: &Layout,
     ) -> KludgineResult<()> {
-        self.render_standard_background(context, layout).await
+        self.render_standard_background::<BackgroundColor, ComponentBorder>(context, layout)
+            .await
     }
 
-    async fn render_standard_background(
+    async fn render_standard_background<Background, Border>(
         &self,
         context: &mut StyledContext,
         layout: &Layout,
-    ) -> KludgineResult<()> {
+    ) -> KludgineResult<()>
+    where
+        Background: StyleComponent<Raw> + Clone + Into<ColorPair>,
+        Border: StyleComponent<Raw> + Clone + Into<ComponentBorder>,
+    {
         let bounds = layout.bounds_without_margin();
-        if let Some(background) = context.effective_style().get::<BackgroundColor>() {
-            let color_pair = background.0;
+        if let Some(background) = context.effective_style().get::<Background>() {
+            let color_pair = background.clone().into();
             let color = color_pair.themed_color(&context.scene().system_theme().await);
 
             if color.visible() {
@@ -135,7 +152,8 @@ pub trait Component: Send + Sync {
                     .await;
             }
         }
-        if let Some(border) = context.effective_style().get::<ComponentBorder>() {
+        if let Some(border) = context.effective_style().get::<Border>() {
+            let border = border.clone().into();
             // TODO the borders should be mitered together rather than drawn overlapping
             if let Some(left) = &border.left {
                 Shape::rect(Rect::new(
@@ -307,6 +325,10 @@ pub trait Component: Send + Sync {
     async fn last_layout(&self, context: &mut Context) -> Layout {
         context.last_layout_for(context.index()).await
     }
+
+    async fn children(&self, context: &mut Context) -> Vec<Index> {
+        context.children_of(context.index()).await
+    }
 }
 
 #[async_trait]
@@ -448,6 +470,6 @@ where
     }
 
     async fn deactivate(&self, context: &mut Context) {
-        context.activate(context.entity::<Self>()).await
+        context.deactivate(context.entity::<Self>()).await
     }
 }
