@@ -1,6 +1,8 @@
-use super::ScrollGutterColor;
 use crate::{
-    ui::{Component, ComponentBorder, Layout, StandaloneComponent, StyledContext},
+    ui::{
+        component::scroll::ScrollGutterColor, Component, ComponentBorder, Layout,
+        StandaloneComponent, StyledContext,
+    },
     KludgineResult,
 };
 use async_trait::async_trait;

@@ -4,7 +4,10 @@ use crate::{
     shape::{Fill, Shape},
     style::{theme::Selector, ColorPair, Style, StyleComponent, UnscaledStyleComponent},
     ui::{
-        component::{Component, InteractiveComponent, InteractiveComponentExt},
+        component::{
+            Component, ComponentBorder, InteractiveComponent, InteractiveComponentExt,
+            ScrollGutterColor,
+        },
         Context, Layout, StyledContext,
     },
     KludgineResult,
@@ -13,8 +16,6 @@ use async_trait::async_trait;
 use euclid::{Length, Rect, Scale};
 use std::time::{Duration, Instant};
 use winit::event::MouseButton;
-
-use super::{ComponentBorder, ScrollGutterColor};
 
 #[derive(Debug)]
 pub struct Scrollbar {

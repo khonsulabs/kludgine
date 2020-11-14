@@ -8,8 +8,8 @@ use crate::{
     },
     ui::{
         component::{
-            pending::PendingComponent, Button, Component, ControlEvent, InteractiveComponent,
-            InteractiveComponentExt, Label,
+            pending::PendingComponent, Button, Component, ComponentBorder, ControlEvent,
+            InteractiveComponent, InteractiveComponentExt, Label,
         },
         AbsoluteBounds, AbsoluteLayout, Context, Entity, Indexable, Layout, LayoutSolver,
         LayoutSolverExt, StyledContext,
@@ -21,8 +21,6 @@ use euclid::{Length, Scale};
 use generational_arena::Index;
 use std::fmt::Debug;
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
-
-use super::ComponentBorder;
 
 #[derive(Default, Debug)]
 struct ButtonBarLayout {

@@ -1,7 +1,6 @@
 use crate::{
     math::{Point, PointExt, Points, Raw, Rect, Scaled, Size, SizeExt, Surround, Vector},
     prelude::EventStatus,
-    shape::{Fill, Shape},
     style::{theme::Selector, ColorPair, UnscaledStyleComponent},
     ui::{
         component::{
