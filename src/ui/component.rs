@@ -17,10 +17,12 @@ mod builder;
 mod button;
 mod control;
 mod dialog;
+mod grid;
 mod image;
 mod label;
 #[cfg(feature = "ecs")]
 pub mod legion;
+mod list;
 mod pane;
 mod panel;
 mod pending;
@@ -34,10 +36,12 @@ pub use self::{
     button::Button,
     control::{Border, ComponentBorder, ComponentPadding, ContentOffset, ControlEvent},
     dialog::{Dialog, DialogButton, DialogButtonSpacing, DialogButtons},
+    grid::{Grid, GridCommand, GridEvent},
     image::{
         Image, ImageAlphaAnimation, ImageCommand, ImageFrameAnimation, ImageOptions, ImageScaling,
     },
     label::{Label, LabelCommand},
+    list::{List, ListCommand, ListEvent},
     pane::Pane,
     panel::{Panel, PanelCommand, PanelEvent, PanelMessage, PanelProvider},
     scroll::{ComponentOverflow, Overflow, Scroll, ScrollCommand, ScrollEvent, ScrollGutterColor},
