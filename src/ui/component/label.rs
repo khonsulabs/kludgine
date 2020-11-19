@@ -123,6 +123,22 @@ impl Component for Label {
         .await;
         Ok(())
     }
+
+    async fn hit_test(
+        &self,
+        context: &mut Context,
+        window_position: Point<f32, Scaled>,
+    ) -> KludgineResult<bool> {
+        if self.has_callback(context).await {
+            Ok(self
+                .last_layout(context)
+                .await
+                .inner_bounds()
+                .contains(window_position))
+        } else {
+            Ok(false)
+        }
+    }
 }
 
 impl Label {

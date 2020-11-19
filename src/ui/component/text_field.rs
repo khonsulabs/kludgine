@@ -634,7 +634,7 @@ impl TextField {
 
     async fn notify_changed(&self, context: &mut Context) {
         self.callback(context, TextFieldEvent::ValueChanged(self.text.clone()))
-            .await
+            .await;
     }
 
     async fn notify_selection_changed(&self, context: &mut Context) {
@@ -645,7 +645,7 @@ impl TextField {
                 end: self.cursor.end,
             },
         )
-        .await
+        .await;
     }
 
     pub async fn set_selection(
