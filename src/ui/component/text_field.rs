@@ -266,8 +266,8 @@ impl Component for TextField {
             .prepared_text(
                 context,
                 &Size::new(
-                    contraints_minus_padding.width.unwrap_or_else(|| f32::MAX),
-                    contraints_minus_padding.height.unwrap_or_else(|| f32::MAX),
+                    contraints_minus_padding.width.unwrap_or(f32::MAX),
+                    contraints_minus_padding.height.unwrap_or(f32::MAX),
                 ),
             )
             .await?

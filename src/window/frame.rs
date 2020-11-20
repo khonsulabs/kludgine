@@ -11,7 +11,7 @@ use std::{
     collections::{HashMap, HashSet},
     time::Instant,
 };
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub(crate) struct Frame {
     pub started_at: Option<Instant>,
     pub updated_at: Option<Instant>,
@@ -22,6 +22,7 @@ pub(crate) struct Frame {
     pub(crate) pending_font_updates: Vec<FontUpdate>,
 }
 
+#[derive(Debug)]
 pub(crate) struct FontUpdate {
     pub font_id: u64,
     pub rect: rusttype::Rect<u32>,
@@ -76,6 +77,10 @@ impl FrameBatch {
 }
 
 impl Frame {
+    #[cfg_attr(
+        feature = "tracing",
+        instrument(name = "Frame::update", level = "trace", skip(self, scene))
+    )]
     pub async fn update(&mut self, scene: &Target) {
         self.started_at = Some(scene.now().await);
         self.commands.clear();
@@ -233,6 +238,7 @@ impl Frame {
     }
 }
 
+#[derive(Debug)]
 pub(crate) enum FrameCommand {
     LoadTexture(Texture),
     DrawBatch(sprite::Batch),

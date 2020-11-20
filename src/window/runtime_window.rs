@@ -326,6 +326,10 @@ impl RuntimeWindow {
             .unwrap_or_default();
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        instrument(name = "RuntimeWindow::process_event", level = "trace", skip(self))
+    )]
     pub(crate) fn process_event(&mut self, event: &WinitWindowEvent) {
         match event {
             WinitWindowEvent::CloseRequested => {

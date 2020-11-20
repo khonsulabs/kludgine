@@ -98,8 +98,8 @@ impl Component for Label {
         let text = self.create_text(context.effective_style());
         let wrapping = self.wrapping(
             &Size::new(
-                constraints.width.unwrap_or_else(|| f32::MAX),
-                constraints.height.unwrap_or_else(|| f32::MAX),
+                constraints.width.unwrap_or(f32::MAX),
+                constraints.height.unwrap_or(f32::MAX),
             ),
             context.effective_style().get_or_default::<Alignment>(),
         );

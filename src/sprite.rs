@@ -285,7 +285,7 @@ impl Sprite {
                 let animations = sprite.animations.handle.read().await;
                 let animation = animations
                     .get(&new_tag)
-                    .ok_or_else(|| KludgineError::InvalidSpriteTag)?;
+                    .ok_or(KludgineError::InvalidSpriteTag)?;
                 animation.mode.default_direction()
             };
             sprite.current_frame = 0;

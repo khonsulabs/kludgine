@@ -380,6 +380,10 @@ where
         self.ui_state.layers().await
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        instrument(name = "UserInterface::render", level = "trace", skip(self))
+    )]
     pub async fn render(&mut self) -> KludgineResult<()> {
         let scene_scale = self.scene.scale_factor().await;
         self.last_render_order.clear();
@@ -450,6 +454,10 @@ where
         indicies
     }
 
+    #[cfg_attr(
+        feature = "tracing",
+        instrument(name = "UserInterface::update", level = "trace", skip(self, scene))
+    )]
     pub async fn update(&mut self, scene: &Target, target_fps: Option<u16>) -> KludgineResult<()> {
         // Loop twice, once to allow all the pending messages to be exhausted across all
         // nodes. Then after all messages have been processed, trigger the update method
@@ -697,7 +705,7 @@ where
 }
 
 #[derive(Debug)]
-pub struct Entity<C> {
+pub struct Entity<C: ?Sized> {
     context: RequiresInitialization<Context>,
     _phantom: std::marker::PhantomData<C>,
 }

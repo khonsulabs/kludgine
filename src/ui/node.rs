@@ -13,7 +13,6 @@ use crate::{
     Handle, KludgineResult,
 };
 use async_trait::async_trait;
-use derivative::Derivative;
 use std::any::Any;
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 

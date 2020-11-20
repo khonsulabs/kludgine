@@ -9,8 +9,10 @@ use crate::{
 use async_trait::async_trait;
 use std::fmt::Debug;
 
+use super::InteractiveComponentExt;
+
 #[async_trait]
-pub trait PanelProvider: Send + Sync + 'static {
+pub trait PanelProvider: Send + Sync + Sized + 'static {
     type Index: Eq + Clone + Debug + Send + Sync;
     type Event: Clone + Debug + Send + Sync;
 
@@ -18,14 +20,19 @@ pub trait PanelProvider: Send + Sync + 'static {
         &mut self,
         index: &Self::Index,
         context: &mut Context,
+        panel: &Entity<Panel<Self>>,
     ) -> KludgineResult<()>;
 
     async fn new_entity<T: InteractiveComponent + 'static>(
         &self,
         context: &mut Context,
         component: T,
-    ) -> EntityBuilder<T, PanelMessage<Self::Event>> {
+    ) -> EntityBuilder<T, ()> {
         context.insert_new_entity(context.index(), component).await
+    }
+
+    fn entity(&self, context: &mut Context) -> Entity<Pane> {
+        context.entity()
     }
 }
 
@@ -61,7 +68,11 @@ impl<T: PanelProvider> Panel<T> {
 
         let mut child_context = context.clone_for(&pane);
         self.provider
-            .initialize_panel(&self.current_index, &mut child_context)
+            .initialize_panel(
+                &self.current_index,
+                &mut child_context,
+                &self.entity(context),
+            )
             .await?;
 
         self.set_pane(pane, context).await;

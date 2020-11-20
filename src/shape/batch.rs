@@ -2,7 +2,7 @@ use crate::{math::Raw, shape::Shape, KludgineResult};
 use easygpu::prelude::*;
 use easygpu_lyon::ShapeBuilder;
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct Batch {
     shapes: Vec<Shape<Raw>>,
 }

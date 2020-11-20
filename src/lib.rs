@@ -1,10 +1,16 @@
 #![deny(clippy::all)]
 #![allow(clippy::map_entry)]
-use thiserror::Error;
+
+#[macro_use]
+extern crate derivative;
 
 #[cfg(test)]
 #[macro_use]
 extern crate futures_await_test;
+
+#[cfg(feature = "tracing")]
+#[macro_use]
+extern crate tracing;
 
 // Re-exports
 pub use async_handle::Handle;
@@ -12,6 +18,8 @@ pub use async_trait::async_trait;
 pub use clipboard;
 pub use easygpu;
 pub use winit;
+
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum KludgineError {

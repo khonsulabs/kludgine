@@ -3,6 +3,7 @@ use crate::{
     sprite::RenderedSprite,
 };
 
+#[derive(Debug)]
 pub(crate) struct Batch {
     pub size: Size<u32>,
     pub clipping_rect: Option<Rect<u32, Raw>>,

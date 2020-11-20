@@ -1,4 +1,8 @@
-use crate::{math::Pixels, style::{Weight, FontStyle}, Handle};
+use crate::{
+    math::Pixels,
+    style::{FontStyle, Weight},
+    Handle,
+};
 use crossbeam::atomic::AtomicCell;
 use easygpu::prelude::*;
 use lazy_static::lazy_static;
@@ -93,8 +97,11 @@ pub(crate) struct FontData {
     pub(crate) font: rusttype::Font<'static>,
 }
 
+#[derive(Derivative)]
+#[derivative(Debug)]
 pub(crate) struct LoadedFont {
     pub font: Font,
+    #[derivative(Debug = "ignore")]
     pub cache: gpu_cache::Cache<'static>,
     pub(crate) binding: Option<BindingGroup>,
     pub(crate) texture: Option<Texture>,
