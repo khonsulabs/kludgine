@@ -135,8 +135,9 @@ impl Component for TextField {
     fn classes(&self) -> Option<Vec<Selector>> {
         Some(vec![
             Selector::from("text"),
-            Selector::from("input"),
-            Selector::from("control"),
+            Selector::from("focusable"),
+            Selector::from("control-background"),
+            Selector::from("padded-control"),
         ])
     }
 

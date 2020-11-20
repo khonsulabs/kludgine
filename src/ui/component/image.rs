@@ -111,7 +111,11 @@ impl InteractiveComponent for Image {
 #[async_trait]
 impl Component for Image {
     fn classes(&self) -> Option<Vec<Selector>> {
-        Some(vec![Selector::from("image"), Selector::from("control")])
+        Some(vec![
+            Selector::from("image"),
+            Selector::from("control-background"),
+            Selector::from("padded-control"),
+        ])
     }
 
     async fn update(&mut self, context: &mut Context) -> KludgineResult<()> {

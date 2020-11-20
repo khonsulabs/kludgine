@@ -42,18 +42,12 @@ impl Minimal {
                 }))
             },
         )
-        // All controls have padding built into them
         .when(
-            |c| c.classes.contains("control"),
+            |c| c.classes.contains("padded-control"),
             |style| style.with(ComponentPadding(Surround::uniform(Points::new(10.)))),
         )
-        // All controls that don't have a "clear-background" class will have a background color
         .when(
-            |c| {
-                c.classes
-                    .contains("control")
-                    .and(!c.classes.contains("clear-background"))
-            },
+            |c| c.classes.contains("control-background"),
             |style| {
                 style.with(BackgroundColor(ColorPair {
                     light_color: self.palette.light.control.background.normal(),
@@ -61,13 +55,12 @@ impl Minimal {
                 }))
             },
         )
-        // All controls that don't have a "clear-background" class will have a background color when active
         .when(
             |c| {
                 c.classes
-                    .contains("control")
+                    .contains("control-background")
+                    .and(!c.classes.contains("focusable"))
                     .and(c.is_active())
-                    .and(!c.classes.contains("clear-background"))
             },
             |style| {
                 style.with(BackgroundColor(ColorPair {
@@ -76,14 +69,8 @@ impl Minimal {
                 }))
             },
         )
-        // All controls that don't have a "clear-background" class will have a background color when hovered
         .when(
-            |c| {
-                c.classes
-                    .contains("control")
-                    .and(c.is_hovered())
-                    .and(!c.classes.contains("clear-background"))
-            },
+            |c| c.classes.contains("control-background").and(c.is_hovered()),
             |style| {
                 style.with(BackgroundColor(ColorPair {
                     light_color: self.palette.light.control.background.lighter(),
@@ -121,11 +108,7 @@ impl Minimal {
         )
         // Text input
         .when(
-            |c| {
-                c.classes
-                    .contains("control")
-                    .and(c.classes.contains("text"))
-            },
+            |c| c.classes.contains("focusable"),
             |style| {
                 style.with(ComponentBorder::uniform(Border::new(
                     2.,
@@ -137,31 +120,12 @@ impl Minimal {
             },
         )
         .when(
-            |c| {
-                c.classes
-                    .contains("control")
-                    .and(c.classes.contains("text"))
-                    .and(c.is_focused())
-            },
+            |c| c.classes.contains("focusable").and(c.is_focused()),
             |style| {
                 style.with(ComponentBorder::uniform(Border::new(
                     2.,
                     self.palette.primary.normal().into(),
                 )))
-            },
-        )
-        .when(
-            |c| {
-                c.classes
-                    .contains("control")
-                    .and(c.classes.contains("text"))
-                    .and(c.is_active())
-            },
-            |style| {
-                style.with(BackgroundColor(ColorPair {
-                    light_color: self.palette.light.control.background.normal(),
-                    dark_color: self.palette.dark.control.background.normal(),
-                }))
             },
         )
         // Toast

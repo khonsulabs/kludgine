@@ -10,7 +10,7 @@ pub struct Pane {}
 #[async_trait]
 impl Component for Pane {
     fn classes(&self) -> Option<Vec<Selector>> {
-        Some(vec![Selector::from("pane"), Selector::from("control")])
+        Some(vec![Selector::from("pane")])
     }
 }
 

@@ -107,7 +107,7 @@ pub struct ScrollbarMetrics {
 #[async_trait]
 impl Component for Scrollbar {
     fn classes(&self) -> Option<Vec<Selector>> {
-        Some(vec![Selector::from("scrollbar")]) // TODO this should be a control but it's not padded
+        Some(vec![Selector::from("scrollbar")])
     }
     async fn content_size(
         &self,

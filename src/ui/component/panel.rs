@@ -84,7 +84,7 @@ impl<T: PanelProvider> Panel<T> {
 #[async_trait]
 impl<T: PanelProvider> Component for Panel<T> {
     fn classes(&self) -> Option<Vec<Selector>> {
-        Some(vec![Selector::from("panel"), Selector::from("control")])
+        Some(vec![Selector::from("panel")])
     }
 
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {

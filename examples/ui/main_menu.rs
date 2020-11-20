@@ -10,7 +10,7 @@ pub enum MainMenuMessage {
 
 #[derive(Clone, Debug, Hash, Eq, PartialEq)]
 pub enum MainMenuOptions {
-    Hello,
+    Old,
 }
 
 #[async_trait]
@@ -20,7 +20,11 @@ impl Component for MainMenu {
             context,
             Scroll::new(
                 Grid::rows()
-                    .cell(MainMenuOptions::Hello, Button::new("Hi"), Dimension::Auto)
+                    .cell(
+                        MainMenuOptions::Old,
+                        Button::new("Open Old Testbed"),
+                        Dimension::Auto,
+                    )
                     .build(),
             ),
         )
@@ -46,7 +50,13 @@ impl InteractiveComponent for MainMenu {
         let MainMenuMessage::ButtonEvent(event) = message;
         let ScrollEvent::Child(event) = event;
         match event.key {
-            MainMenuOptions::Hello => println!("Yep"),
+            MainMenuOptions::Old => {
+                Runtime::open_window(
+                    crate::old::UIExample::get_window_builder(),
+                    crate::old::UIExample::default(),
+                )
+                .await
+            }
         }
         Ok(())
     }

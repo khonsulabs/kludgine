@@ -19,7 +19,11 @@ pub struct Button {
 #[async_trait]
 impl Component for Button {
     fn classes(&self) -> Option<Vec<Selector>> {
-        Some(vec![Selector::from("button"), Selector::from("control")])
+        Some(vec![
+            Selector::from("button"),
+            Selector::from("control-background"),
+            Selector::from("padded-control"),
+        ])
     }
 
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
