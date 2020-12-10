@@ -15,7 +15,7 @@ jobs:
         run: |
           cargo clippy
           cargo test --all-features
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.GAC_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.GAC_SECRET_KEY }}
-          SCCACHE_BUCKET: khonsulabs-gac
+        # env:
+        #   AWS_ACCESS_KEY_ID: ${{ secrets.GAC_ACCESS_KEY_ID }}
+        #   AWS_SECRET_ACCESS_KEY: ${{ secrets.GAC_SECRET_KEY }}
+        #   SCCACHE_BUCKET: khonsulabs-gac
