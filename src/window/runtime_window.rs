@@ -424,7 +424,7 @@ impl RuntimeWindow {
                 .unwrap_or_default(),
             WinitWindowEvent::ThemeChanged(theme) => self
                 .event_sender
-                .try_send(WindowEvent::SystemThemeChanged(theme.clone()))
+                .try_send(WindowEvent::SystemThemeChanged(*theme))
                 .unwrap_or_default(),
             _ => {}
         }

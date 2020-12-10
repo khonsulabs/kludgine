@@ -162,7 +162,7 @@ impl Scene {
 
     pub async fn system_theme(&self) -> SystemTheme {
         let scene = self.data.read().await;
-        scene.system_theme.clone()
+        scene.system_theme
     }
 
     pub(crate) async fn set_system_theme(&self, system_theme: SystemTheme) {

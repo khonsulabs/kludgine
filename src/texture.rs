@@ -24,7 +24,7 @@ pub struct Texture {
 
 impl Texture {
     pub fn new(image: DynamicImage) -> Self {
-        let image = image.to_rgba();
+        let image = image.to_rgba8();
         let id = GLOBAL_ID_CELL.fetch_add(1);
         Self {
             id,
