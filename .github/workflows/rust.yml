@@ -14,7 +14,7 @@ jobs:
       - name: Run clippy
         run: |
           cargo clippy
-          cargo test --all-features
+          cargo test --all-features --verbose
         # env:
         #   AWS_ACCESS_KEY_ID: ${{ secrets.GAC_ACCESS_KEY_ID }}
         #   AWS_SECRET_ACCESS_KEY: ${{ secrets.GAC_SECRET_KEY }}
