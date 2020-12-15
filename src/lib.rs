@@ -198,6 +198,10 @@ impl<T> RequiresInitialization<T> {
     pub fn unwrap(self) -> T {
         self.0.unwrap()
     }
+
+    pub fn valid(&self) -> bool {
+        self.0.is_some()
+    }
 }
 
 impl<T> Default for RequiresInitialization<T> {

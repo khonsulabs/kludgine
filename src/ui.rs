@@ -767,6 +767,10 @@ impl<C> Entity<C> {
             _phantom: Default::default(),
         }
     }
+
+    pub fn valid(&self) -> bool {
+        self.context.valid()
+    }
 }
 
 impl<C> Entity<C>
