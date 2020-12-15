@@ -28,7 +28,7 @@ impl Component for MainMenu {
                     .build(),
             ),
         )
-        .await
+        .await?
         .callback(&self.entity(context), MainMenuMessage::ButtonEvent)
         .insert()
         .await?;

@@ -5,6 +5,7 @@ use crate::{
         node::NodeData, Entity, EntityBuilder, HierarchicalArena, Index, Indexable,
         InteractiveComponent, LayerIndex, LayerIndexable, Layout, UILayer, UIState,
     },
+    KludgineError, KludgineResult,
 };
 use async_handle::Handle;
 mod layout_context;
@@ -46,22 +47,22 @@ impl Context {
         &self,
         parent: I,
         component: T,
-    ) -> EntityBuilder<T, Message> {
-        EntityBuilder::new(
+    ) -> KludgineResult<EntityBuilder<T, Message>> {
+        Ok(EntityBuilder::new(
             Some(parent.index()),
             component,
             &self.scene,
-            Some(&self.layer_index().await.layer),
+            Some(&self.layer_index().await?.layer),
             &self.ui_state,
             &self.arena,
-        )
+        ))
     }
 
     pub fn index(&self) -> Index {
         self.index
     }
 
-    pub async fn layer_index(&self) -> LayerIndex {
+    pub async fn layer_index(&self) -> KludgineResult<LayerIndex> {
         self.ui_state
             .layer_for(self.index, &self.arena)
             .await
@@ -69,7 +70,7 @@ impl Context {
                 index: self.index,
                 layer,
             })
-            .expect("can't use a node that is detatched from the ui hierarchy")
+            .ok_or(KludgineError::ComponentRemovedFromHierarchy)
     }
 
     pub fn scene(&self) -> &'_ Target {
@@ -142,22 +143,24 @@ impl Context {
         self.ui_state.top_layer().await
     }
 
-    pub async fn activate<I: LayerIndexable>(&self, entity: I) {
+    pub async fn activate<I: LayerIndexable>(&self, entity: I) -> KludgineResult<()> {
         entity
             .layer_index()
-            .await
+            .await?
             .layer
             .activate(self.index, &self.ui_state)
             .await;
+        Ok(())
     }
 
-    pub async fn deactivate<I: LayerIndexable>(&self, entity: I) {
+    pub async fn deactivate<I: LayerIndexable>(&self, entity: I) -> KludgineResult<()> {
         entity
             .layer_index()
-            .await
+            .await?
             .layer
             .deactivate(&self.ui_state)
             .await;
+        Ok(())
     }
 
     pub async fn style_sheet(&self) -> StyleSheet {
@@ -165,30 +168,33 @@ impl Context {
         node.style_sheet().await
     }
 
-    pub async fn focus(&self) {
+    pub async fn focus(&self) -> KludgineResult<()> {
         self.layer_index()
-            .await
+            .await?
             .layer
             .focus_on(Some(self.index), &self.ui_state)
             .await;
+        Ok(())
     }
 
-    pub async fn is_focused(&self) -> bool {
-        self.layer_index()
-            .await
+    pub async fn is_focused(&self) -> KludgineResult<bool> {
+        Ok(self
+            .layer_index()
+            .await?
             .layer
             .focus()
             .await
             .map(|focus| focus == self.index)
-            .unwrap_or_default()
+            .unwrap_or_default())
     }
 
-    pub async fn blur(&self) {
+    pub async fn blur(&self) -> KludgineResult<()> {
         self.layer_index()
-            .await
+            .await?
             .layer
             .focus_on(None, &self.ui_state)
             .await;
+        Ok(())
     }
 
     pub async fn set_style_sheet(&self, sheet: StyleSheet) {
@@ -212,7 +218,7 @@ impl Context {
         &self,
         entity: Entity<C>,
     ) -> Option<Handle<T>> {
-        let node = self.arena.get(&entity).await.unwrap();
+        let node = self.arena.get(&entity).await?;
         let component = node.component.read().await;
         let node = component.as_any().downcast_ref::<NodeData<C>>()?;
 

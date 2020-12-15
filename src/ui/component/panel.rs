@@ -27,7 +27,7 @@ pub trait PanelProvider: Send + Sync + Sized + 'static {
         &self,
         context: &mut Context,
         component: T,
-    ) -> EntityBuilder<T, ()> {
+    ) -> KludgineResult<EntityBuilder<T, ()>> {
         context.insert_new_entity(context.index(), component).await
     }
 
@@ -62,7 +62,7 @@ impl<T: PanelProvider> Panel<T> {
     async fn recreate_pane(&mut self, context: &mut Context) -> KludgineResult<()> {
         let pane = self
             .new_entity(context, Pane::default())
-            .await
+            .await?
             .insert()
             .await?;
 

@@ -23,6 +23,8 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum KludgineError {
+    #[error("an entity was used after being removed from the component hierarchy")]
+    ComponentRemovedFromHierarchy,
     #[error("error sending a WindowMessage to a Window: {0}")]
     InternalWindowMessageSendError(String),
     #[error("error reading image: {0}")]
@@ -54,6 +56,24 @@ pub enum KludgineError {
     #[error("other error: {0}")]
     Other(#[from] anyhow::Error),
 }
+
+trait KludgineResultExt {
+    fn filter_invalid_component_references(self) -> Self;
+}
+
+impl<T> KludgineResultExt for KludgineResult<T>
+where
+    T: Default,
+{
+    fn filter_invalid_component_references(self) -> Self {
+        match self {
+            Ok(v) => Ok(v),
+            Err(KludgineError::ComponentRemovedFromHierarchy) => Ok(T::default()),
+            Err(err) => Err(err),
+        }
+    }
+}
+
 /// Alias for [`Result<T,E>`] where `E` is [`KludgineError`]
 ///
 /// [`Result<T,E>`]: http://doc.rust-lang.org/std/result/enum.Result.html

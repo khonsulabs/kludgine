@@ -87,7 +87,7 @@ where
         ) {
             self.contents = PendingComponent::Entity(
                 self.new_entity(context, contents)
-                    .await
+                    .await?
                     .callback(&self.entity(context), |e: C::Event| {
                         ScrollMessage::ChildEvent(e)
                     })
@@ -100,7 +100,7 @@ where
 
         self.horizontal_scrollbar = self
             .new_entity(context, Scrollbar::horizontal())
-            .await
+            .await?
             .callback(&self.entity(context), |evt| {
                 let ScrollbarEvent::OffsetChanged(new_offset) = evt;
                 ScrollMessage::HorizontalScrollbarScrolled(new_offset)
@@ -109,7 +109,7 @@ where
             .await?;
         self.vertical_scrollbar = self
             .new_entity(context, Scrollbar::vertical())
-            .await
+            .await?
             .callback(&self.entity(context), |evt| {
                 let ScrollbarEvent::OffsetChanged(new_offset) = evt;
                 ScrollMessage::VerticalScrollbarScrolled(new_offset)
@@ -119,7 +119,7 @@ where
 
         self.gutter = self
             .new_entity(context, gutter::Gutter)
-            .await
+            .await?
             .insert()
             .await?;
 

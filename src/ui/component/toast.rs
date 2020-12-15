@@ -79,7 +79,7 @@ where
             PendingComponent::Entity(Default::default()),
         ) {
             self.contents =
-                PendingComponent::Entity(self.new_entity(context, contents).await.insert().await?);
+                PendingComponent::Entity(self.new_entity(context, contents).await?.insert().await?);
         } else {
             unreachable!("A component should never be re-initialized");
         }

@@ -29,7 +29,7 @@ impl Component for Button {
     async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
         self.label = self
             .new_entity(context, Label::new(&self.caption))
-            .await
+            .await?
             .with_class("clear-background")
             .await
             .style_sheet(Style::default().with(ComponentPadding::<Scaled>(Surround::default())))

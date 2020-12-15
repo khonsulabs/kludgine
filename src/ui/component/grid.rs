@@ -169,7 +169,7 @@ where
                         children.push(
                             key.clone(),
                             self.new_entity(context, component)
-                                .await
+                                .await?
                                 .callback(&self.entity(context), move |event| {
                                     GridMessage::ChildEvent(GridEvent {
                                         key: key.clone(),

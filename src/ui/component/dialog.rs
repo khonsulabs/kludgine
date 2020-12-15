@@ -203,7 +203,7 @@ where
             PendingComponent::Entity(Default::default()),
         ) {
             self.contents =
-                PendingComponent::Entity(self.new_entity(context, contents).await.insert().await?);
+                PendingComponent::Entity(self.new_entity(context, contents).await?.insert().await?);
         } else {
             unreachable!("A component should never be re-initialized");
         }
@@ -237,7 +237,7 @@ where
             let value_for_callback = value.clone();
             let mut button = self
                 .new_entity(context, Button::new(caption))
-                .await
+                .await?
                 .callback(&self.entity(context), move |evt| {
                     let ControlEvent::Clicked { .. } = evt;
                     DialogMessage::ButtonClicked(value_for_callback.clone())
@@ -397,9 +397,9 @@ where
 
             if let Some((button, _)) = button {
                 if state == ElementState::Pressed {
-                    context.activate(button.entity.clone()).await;
+                    context.activate(button.entity.clone()).await?;
                 } else {
-                    context.deactivate(button.entity.clone()).await;
+                    context.deactivate(button.entity.clone()).await?;
                     self.button_clicked(button.value.clone(), context).await;
                 }
             }

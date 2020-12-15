@@ -10,7 +10,7 @@ use crate::{
         event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
         CloseResponse,
     },
-    Handle, KludgineResult,
+    Handle, KludgineResult, KludgineResultExt,
 };
 use async_trait::async_trait;
 use std::any::Any;
@@ -204,7 +204,11 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         let mut context = context.clone();
         Runtime::spawn(async move {
             let mut component = component_handle.write().await;
-            let _ = component.receive_message(&mut context, message).await;
+            component
+                .receive_message(&mut context, message)
+                .await
+                .filter_invalid_component_references()
+                .unwrap();
         })
         .detach();
     }

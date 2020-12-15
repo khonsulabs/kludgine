@@ -9,7 +9,7 @@ use crate::{
         event::{EventStatus, MouseButton, MouseScrollDelta, TouchPhase},
         CloseResponse,
     },
-    KludgineResult,
+    KludgineError, KludgineResult,
 };
 use async_handle::Handle;
 use async_trait::async_trait;
@@ -119,7 +119,11 @@ pub trait Component: Send + Sync {
         } else {
             let mut layout = Layout::absolute();
             for child in children {
-                let node = context.arena().get(&child).await.unwrap();
+                let node = context
+                    .arena()
+                    .get(&child)
+                    .await
+                    .ok_or(KludgineError::ComponentRemovedFromHierarchy)?;
                 layout = layout.child(&child, node.bounds().await)?;
             }
             layout.layout()
@@ -220,7 +224,7 @@ pub trait Component: Send + Sync {
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         if self.hit_test(context, window_position).await? {
-            context.activate(context.layer_index().await).await;
+            context.activate(context.layer_index().await?).await?;
 
             Ok(EventStatus::Processed)
         } else {
@@ -267,9 +271,9 @@ pub trait Component: Send + Sync {
         };
 
         if activate {
-            context.activate(context.layer_index().await).await;
+            context.activate(context.layer_index().await?).await?;
         } else {
-            context.deactivate(context.layer_index().await).await;
+            context.deactivate(context.layer_index().await?).await?;
         }
 
         Ok(())
@@ -281,7 +285,7 @@ pub trait Component: Send + Sync {
         window_position: Option<Point<f32, Scaled>>,
         button: MouseButton,
     ) -> KludgineResult<()> {
-        context.deactivate(context.layer_index().await).await;
+        context.deactivate(context.layer_index().await?).await?;
 
         if let Some(window_position) = window_position {
             if self.hit_test(context, window_position).await? {
@@ -366,7 +370,7 @@ pub trait InteractiveComponent: Component {
         &self,
         context: &mut Context,
         component: T,
-    ) -> EntityBuilder<T, Self::Message> {
+    ) -> KludgineResult<EntityBuilder<T, Self::Message>> {
         context.insert_new_entity(context.index(), component).await
     }
 
@@ -460,8 +464,8 @@ pub trait InteractiveComponentExt: Sized {
     async fn component<T: Send + Sync + 'static>(&self, context: &mut Context)
         -> Option<Handle<T>>;
     fn entity(&self, context: &mut Context) -> Entity<Self>;
-    async fn activate(&self, context: &mut Context);
-    async fn deactivate(&self, context: &mut Context);
+    async fn activate(&self, context: &mut Context) -> KludgineResult<()>;
+    async fn deactivate(&self, context: &mut Context) -> KludgineResult<()>;
 }
 
 #[async_trait]
@@ -480,11 +484,11 @@ where
         context.entity()
     }
 
-    async fn activate(&self, context: &mut Context) {
+    async fn activate(&self, context: &mut Context) -> KludgineResult<()> {
         context.activate(context.entity::<Self>()).await
     }
 
-    async fn deactivate(&self, context: &mut Context) {
+    async fn deactivate(&self, context: &mut Context) -> KludgineResult<()> {
         context.deactivate(context.entity::<Self>()).await
     }
 }

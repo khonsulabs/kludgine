@@ -1,7 +1,7 @@
 use crate::{
     math::{Dimension, Point, Points, Rect, Scaled, Size, Surround},
     ui::{Layout, LayoutContext, LayoutSolver},
-    KludgineResult,
+    KludgineError, KludgineResult,
 };
 use async_trait::async_trait;
 use generational_arena::Index;
@@ -225,7 +225,7 @@ where
                 .arena()
                 .get(&child)
                 .await
-                .unwrap()
+                .ok_or(KludgineError::ComponentRemovedFromHierarchy)?
                 .content_size(child_context.styled_context(), &constraints)
                 .await?;
             content_sizes.insert(child, child_content_size);

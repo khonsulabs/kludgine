@@ -39,7 +39,7 @@ where
         {
             Ok(context
                 .insert_new_entity::<_, _, ()>(context.index(), contents)
-                .await
+                .await?
                 .insert()
                 .await?
                 .index())

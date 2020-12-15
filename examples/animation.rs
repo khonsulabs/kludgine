@@ -38,7 +38,7 @@ impl Component for Animation {
         sprite.set_current_tag(Some("Idle")).await?;
         self.image = self
             .new_entity(context, Image::new(sprite))
-            .await
+            .await?
             .bounds(
                 AbsoluteBounds::default()
                     .with_left(Points::new(30.))

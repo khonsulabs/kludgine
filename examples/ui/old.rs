@@ -102,7 +102,7 @@ impl Component for UIExample {
         let sprite = include_aseprite_sprite!("../assets/stickguy").await?;
         self.image = self
             .new_entity(context, Image::new(sprite))
-            .await
+            .await?
             .style_sheet(Style::new().with(BackgroundColor(Color::new(0.0, 1.0, 1.0, 1.0).into())))
             .bounds(
                 AbsoluteBounds::default()
@@ -119,7 +119,7 @@ impl Component for UIExample {
                     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt",
                     Default::default(),
                 )])),
-            ).await
+            ).await?
             .bounds(
                 AbsoluteBounds::default()
                     .with_left(Points::new(32.))
@@ -132,7 +132,7 @@ impl Component for UIExample {
 
         self.label = self
             .new_entity(context, Scroll::new(Label::new("Test Label")))
-            .await
+            .await?
             .with(ComponentOverflow {
                 horizontal: Overflow::Scroll,
                 vertical: Overflow::Scroll,
@@ -157,7 +157,7 @@ impl Component for UIExample {
 
         self.button = self
             .new_entity(context, Button::new("Press Me"))
-            .await
+            .await?
             .normal_style(Style::new().with(BackgroundColor(Color::ROYALBLUE.into())))
             .bounds(AbsoluteBounds::default().with_bottom(Points::new(10.)))
             .callback(&self.entity(context), |_| Message::ButtonClicked)
@@ -166,7 +166,7 @@ impl Component for UIExample {
 
         self.new_window_button = self
             .new_entity(context, Button::new("New Window"))
-            .await
+            .await?
             .bounds(
                 AbsoluteBounds::default()
                     .with_bottom(Points::new(10.))

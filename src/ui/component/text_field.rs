@@ -142,7 +142,7 @@ impl Component for TextField {
     }
 
     async fn update(&mut self, context: &mut Context) -> KludgineResult<()> {
-        if context.is_focused().await {
+        if context.is_focused().await? {
             if let Some(duration) = self.cursor.blink_state.update() {
                 context.estimate_next_frame(duration).await;
             } else {
@@ -226,7 +226,7 @@ impl Component for TextField {
                     }
                 }
             }
-        } else if context.is_focused().await && self.cursor.blink_state.visible {
+        } else if context.is_focused().await? && self.cursor.blink_state.visible {
             if let Some(cursor_location) = self
                 .character_rect_for_position(context.scene(), self.cursor.start)
                 .await
@@ -290,7 +290,7 @@ impl Component for TextField {
         button: MouseButton,
     ) -> KludgineResult<EventStatus> {
         if button == MouseButton::Left {
-            context.focus().await;
+            context.focus().await?;
             self.cursor.blink_state.force_on();
 
             let padding = context

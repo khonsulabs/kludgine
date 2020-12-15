@@ -9,7 +9,7 @@ use crate::{
         node::ThreadsafeAnyMap, AbsoluteBounds, Callback, Context, Entity, HierarchicalArena,
         Indexable, InteractiveComponent, LayerIndex, Node, UILayer, UIState,
     },
-    KludgineResult,
+    KludgineError, KludgineResult,
 };
 use async_handle::Handle;
 use generational_arena::Index;
@@ -177,7 +177,7 @@ where
             self.arena
                 .get(&layer_index.index)
                 .await
-                .unwrap()
+                .ok_or(KludgineError::ComponentRemovedFromHierarchy)?
                 .initialize(&mut context)
                 .await?;
 

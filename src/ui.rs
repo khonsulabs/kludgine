@@ -21,7 +21,7 @@ use crate::{
     scene::{Scene, Target},
     style::theme::{Classes, Id},
     window::event::{ElementState, Event, EventStatus, InputEvent, MouseButton, WindowEvent},
-    Handle, KludgineError, KludgineResult, RequiresInitialization,
+    Handle, KludgineError, KludgineResult, KludgineResultExt, RequiresInitialization,
 };
 pub use arena::{HierarchicalArena, Index};
 use async_channel::Sender;
@@ -725,7 +725,7 @@ pub trait Indexable {
 
 #[async_trait]
 pub trait LayerIndexable {
-    async fn layer_index(&self) -> LayerIndex;
+    async fn layer_index(&self) -> KludgineResult<LayerIndex>;
 }
 
 impl<C> Indexable for Entity<C> {
@@ -736,7 +736,7 @@ impl<C> Indexable for Entity<C> {
 
 #[async_trait]
 impl<C: Send + Sync> LayerIndexable for Entity<C> {
-    async fn layer_index(&self) -> LayerIndex {
+    async fn layer_index(&self) -> KludgineResult<LayerIndex> {
         self.context.layer_index().await
     }
 }
@@ -755,8 +755,8 @@ impl Indexable for LayerIndex {
 
 #[async_trait]
 impl LayerIndexable for LayerIndex {
-    async fn layer_index(&self) -> LayerIndex {
-        self.clone()
+    async fn layer_index(&self) -> KludgineResult<LayerIndex> {
+        Ok(self.clone())
     }
 }
 
@@ -783,6 +783,7 @@ where
                     component
                         .receive_command(&mut context, command)
                         .await
+                        .filter_invalid_component_references()
                         .unwrap()
                 })
                 .detach();
