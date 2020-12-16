@@ -1,6 +1,6 @@
 use crate::{
     math::{Dimension, Point, Points, Rect, Scaled, Size, Surround},
-    ui::{Layout, LayoutContext, LayoutSolver},
+    ui::{Layout, LayoutContext, LayoutSolver, StyledContext},
     KludgineError, KludgineResult,
 };
 use async_trait::async_trait;
@@ -46,12 +46,36 @@ where
     }
 }
 
+#[async_trait]
 pub trait ChainElementDynamicContents: Send + Sync + Debug {
     fn layouts_within_bounds(
         &self,
         bounds: &Rect<f32, Scaled>,
         content_sizes: &HashMap<Index, Size<f32, Scaled>>,
     ) -> (Rect<f32, Scaled>, HashMap<Index, Layout>);
+
+    async fn layouts_for_bounds(
+        &self,
+        bounds: &Rect<f32, Scaled>,
+        context: &StyledContext,
+    ) -> KludgineResult<(Rect<f32, Scaled>, HashMap<Index, Layout>)> {
+        let mut content_sizes = HashMap::new();
+        let constraints = Size::new(Some(bounds.size.width), Some(bounds.size.height));
+        for child in context.children_of(context.index()).await {
+            let mut child_context = context.clone_for(&child);
+            let (child_content_size, child_padding) = context
+                .arena()
+                .get(&child)
+                .await
+                .ok_or(KludgineError::ComponentRemovedFromHierarchy)?
+                .content_size_with_padding(&mut child_context, &constraints)
+                .await?;
+            let child_content_size = child_content_size + child_padding.minimum_size();
+            content_sizes.insert(child, child_content_size);
+        }
+
+        Ok(self.layouts_within_bounds(bounds, &content_sizes))
+    }
 }
 
 impl ChainElement {
@@ -217,23 +241,9 @@ where
         _padding: &Surround<f32, Scaled>,
         context: &LayoutContext,
     ) -> KludgineResult<()> {
-        let mut content_sizes = HashMap::new();
-        let constraints = Size::new(Some(bounds.size.width), Some(bounds.size.height));
-        for child in context.children_of(context.index()).await {
-            let mut child_context = context.clone_for(&child).await;
-            let (child_content_size, child_padding) = context
-                .arena()
-                .get(&child)
-                .await
-                .ok_or(KludgineError::ComponentRemovedFromHierarchy)?
-                .content_size_with_padding(child_context.styled_context(), &constraints)
-                .await?;
-            let child_content_size = child_content_size + child_padding.minimum_size();
-            content_sizes.insert(child, child_content_size);
-        }
-
         let layouts = self
-            .layouts_within_bounds(bounds, &content_sizes)
+            .layouts_for_bounds(bounds, context)
+            .await?
             .1
             .into_iter()
             .map(|(child, layout)| context.insert_layout(child, layout))

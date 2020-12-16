@@ -2,7 +2,9 @@ mod chain_layout;
 mod column_layout;
 mod row_layout;
 
-pub use self::{column_layout::ColumnLayout, row_layout::RowLayout};
+pub use self::{
+    chain_layout::ChainElementDynamicContents, column_layout::ColumnLayout, row_layout::RowLayout,
+};
 
 #[cfg(test)]
 mod tests {
