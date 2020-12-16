@@ -155,7 +155,7 @@ impl Component for TextField {
     async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         let scale = context.scene().scale_factor().await;
         let padding = context
-            .effective_style()
+            .effective_style()?
             .get_or_default::<ComponentPadding<Raw>>()
             .0
             / scale;
@@ -255,7 +255,7 @@ impl Component for TextField {
     ) -> KludgineResult<Size<f32, Scaled>> {
         let scale = context.scene().scale_factor().await;
         let padding = context
-            .effective_style()
+            .effective_style()?
             .get_or_default::<ComponentPadding<Raw>>()
             .0
             / scale;
@@ -526,7 +526,7 @@ impl TextField {
                 context,
                 self.wrapping(
                     constraints,
-                    context.effective_style().get_or_default::<Alignment>(),
+                    context.effective_style()?.get_or_default::<Alignment>(),
                 ),
             )
             .await

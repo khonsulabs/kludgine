@@ -11,7 +11,7 @@ use crate::{
         renderer::{FrameRenderer, FrameSynchronizer},
         CloseResponse, Renderer, Window, WindowMessage, WINDOWS, WINDOW_CHANNELS,
     },
-    KludgineError, KludgineResult,
+    KludgineError, KludgineResult, KludgineResultExt,
 };
 use crossbeam::atomic::AtomicCell;
 use easygpu::prelude::*;
@@ -185,7 +185,10 @@ impl RuntimeWindow {
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         loop {
-            while let Some(event) = match Self::next_window_event(&mut event_receiver, &ui).await {
+            while let Some(event) = match Self::next_window_event(&mut event_receiver, &ui)
+                .await
+                .filter_invalid_component_references()
+            {
                 Ok(event) => event,
                 Err(_) => return Ok(()),
             } {
@@ -221,10 +224,14 @@ impl RuntimeWindow {
                             }
                         }
 
-                        ui.process_input(input).await?;
+                        ui.process_input(input)
+                            .await
+                            .filter_invalid_component_references()?;
                     }
                     WindowEvent::ReceiveCharacter(character) => {
-                        ui.receive_character(character).await?;
+                        ui.receive_character(character)
+                            .await
+                            .filter_invalid_component_references()?;
                     }
                     WindowEvent::RedrawRequested => {
                         ui.request_redraw().await;
@@ -237,7 +244,9 @@ impl RuntimeWindow {
                 let modifiers = scene.modifiers_pressed().await;
                 if modifiers.primary_modifier()
                     && scene.key_pressed(VirtualKeyCode::W).await
-                    && Self::request_window_close(id, &ui).await?
+                    && Self::request_window_close(id, &ui)
+                        .await
+                        .filter_invalid_component_references()?
                 {
                     return Ok(());
                 }
@@ -246,10 +255,12 @@ impl RuntimeWindow {
             if scene.size().await.area() > 0.0 {
                 scene.start_frame().await;
 
-                ui.update(&Target::from(scene.clone()), target_fps).await?;
+                ui.update(&Target::from(scene.clone()), target_fps)
+                    .await
+                    .filter_invalid_component_references()?;
 
                 if ui.needs_render().await {
-                    ui.render().await?;
+                    ui.render().await.filter_invalid_component_references()?;
 
                     let mut frame = frame_synchronizer.take().await;
                     frame.update(&Target::from(scene.clone())).await;

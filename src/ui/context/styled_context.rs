@@ -57,8 +57,11 @@ impl StyledContext {
         }
     }
 
-    pub fn effective_style(&self) -> &'_ Style<Raw> {
-        &self.effective_styles.get(&self.index()).unwrap()
+    pub fn effective_style(&self) -> KludgineResult<&'_ Style<Raw>> {
+        Ok(self
+            .effective_styles
+            .get(&self.index())
+            .ok_or(KludgineError::ComponentRemovedFromHierarchy)?)
     }
 
     pub async fn content_size(

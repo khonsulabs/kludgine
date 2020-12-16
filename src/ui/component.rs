@@ -70,7 +70,7 @@ pub trait Component: Send + Sync {
         constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<(Size<f32, Scaled>, Surround<f32, Scaled>)> {
         let padding = context
-            .effective_style()
+            .effective_style()?
             .get_or_default::<ComponentPadding<Raw>>()
             .0
             / context.scene().scale_factor().await;
@@ -149,7 +149,7 @@ pub trait Component: Send + Sync {
         Border: StyleComponent<Raw> + Clone + Into<ComponentBorder>,
     {
         let bounds = layout.bounds_without_margin();
-        if let Some(background) = context.effective_style().get::<Background>() {
+        if let Some(background) = context.effective_style()?.get::<Background>() {
             let color_pair = background.clone().into();
             let color = color_pair.themed_color(&context.scene().system_theme().await);
 
@@ -160,7 +160,7 @@ pub trait Component: Send + Sync {
                     .await;
             }
         }
-        if let Some(border) = context.effective_style().get::<Border>() {
+        if let Some(border) = context.effective_style()?.get::<Border>() {
             let border = border.clone().into();
             // TODO the borders should be mitered together rather than drawn overlapping
             if let Some(left) = &border.left {

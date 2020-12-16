@@ -115,7 +115,7 @@ impl Component for Scrollbar {
         constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<Size<f32, Scaled>> {
         let size = context
-            .effective_style()
+            .effective_style()?
             .get::<ScrollbarSize<Raw>>()
             .unwrap()
             .0
@@ -134,13 +134,13 @@ impl Component for Scrollbar {
     async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
         if let Some(metrics) = &self.metrics {
             let size = context
-                .effective_style()
+                .effective_style()?
                 .get::<ScrollbarSize<Raw>>()
                 .unwrap()
                 .0
                 / context.scene().scale_factor().await;
             let grip_color = context
-                .effective_style()
+                .effective_style()?
                 .get::<ScrollbarGripColor>()
                 .unwrap()
                 .0;

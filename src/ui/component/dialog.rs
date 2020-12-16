@@ -169,12 +169,18 @@ where
         context.remove(&context.index()).await;
     }
 
-    async fn button_spacing(&self, context: &mut StyledContext) -> Length<f32, Raw> {
-        if let Some(spacing) = context.effective_style().get::<DialogButtonSpacing<Raw>>() {
-            spacing.0
-        } else {
-            Points::new(10.) * context.scene().scale_factor().await
-        }
+    async fn button_spacing(
+        &self,
+        context: &mut StyledContext,
+    ) -> KludgineResult<Length<f32, Raw>> {
+        let spacing =
+            if let Some(spacing) = context.effective_style()?.get::<DialogButtonSpacing<Raw>>() {
+                spacing.0
+            } else {
+                Points::new(10.) * context.scene().scale_factor().await
+            };
+
+        Ok(spacing)
     }
 }
 
@@ -277,7 +283,7 @@ where
             .await?;
         let button_bar_layout = self.measure_buttons(context).await?;
         let scale_factor = context.scene().scale_factor().await;
-        let button_spacing = self.button_spacing(context).await / scale_factor;
+        let button_spacing = self.button_spacing(context).await? / scale_factor;
         let spacing_between_contents_and_buttons =
             Size::from_lengths(Default::default(), button_spacing);
         Ok(content_size
@@ -292,7 +298,7 @@ where
     ) -> KludgineResult<Box<dyn LayoutSolver>> {
         let button_bar_layout = self.measure_buttons(context).await?;
         let scale_factor = context.scene().scale_factor().await;
-        let button_spacing = self.button_spacing(context).await / scale_factor;
+        let button_spacing = self.button_spacing(context).await? / scale_factor;
 
         let mut layout = AbsoluteLayout::default().child(
             &self.contents.entity(),
@@ -347,7 +353,7 @@ where
         layout: &Layout,
     ) -> KludgineResult<()> {
         let background = context
-            .effective_style()
+            .effective_style()?
             .get_or_default::<DialogOverlayColor>();
         let color_pair = background.0;
         let color = color_pair.themed_color(&context.scene().system_theme().await);

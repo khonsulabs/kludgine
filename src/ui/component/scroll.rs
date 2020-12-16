@@ -141,6 +141,25 @@ where
         .layout()
     }
 
+    async fn content_size(
+        &self,
+        context: &mut StyledContext,
+        constraints: &Size<Option<f32>, Scaled>,
+    ) -> KludgineResult<Size<f32, Scaled>> {
+        let (content_size, padding) = context
+            .content_size_with_padding(&self.contents.entity(), &constraints)
+            .await?;
+        let child_size = content_size + padding.minimum_size();
+        Ok(Size::new(
+            child_size
+                .width
+                .min(constraints.width.unwrap_or(child_size.width)),
+            child_size
+                .height
+                .min(constraints.height.unwrap_or(child_size.height)),
+        ))
+    }
+
     async fn mouse_wheel(
         &mut self,
         context: &mut Context,
@@ -284,7 +303,7 @@ impl LayoutSolver for ScrollLayout {
         context: &LayoutContext,
     ) -> KludgineResult<()> {
         let overflow = context
-            .effective_style()
+            .effective_style()?
             .get_or_default::<ComponentOverflow>();
         let inner_bounds = padding.inset_rect(bounds);
 
@@ -502,10 +521,10 @@ impl LayoutSolver for ScrollLayout {
             }
 
             if effective_scrollbar_size.area() > 0. {
-                let bounds = dbg!(Rect::new(
+                let bounds = Rect::new(
                     inner_bounds.max() - effective_scrollbar_size,
                     effective_scrollbar_size,
-                ));
+                );
                 context
                     .insert_layout(
                         self.gutter.index(),

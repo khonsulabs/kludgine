@@ -55,20 +55,20 @@ impl Component for Label {
         let inner_bounds = layout.inner_bounds();
         let scale = context.scene().scale_factor().await;
 
-        let text = self.create_text(context.effective_style());
+        let text = self.create_text(context.effective_style()?);
         let wrapped = text
             .wrap(
                 context.scene(),
                 self.wrapping(
                     &inner_bounds.size,
-                    context.effective_style().get_or_default::<Alignment>(),
+                    context.effective_style()?.get_or_default::<Alignment>(),
                 ),
             )
             .await?;
         let wrapped_size = wrapped.size().await;
 
         let vertical_alignment = context
-            .effective_style()
+            .effective_style()?
             .get_or_default::<VerticalAlignment>();
         let location = match vertical_alignment {
             VerticalAlignment::Top => inner_bounds.origin,
@@ -95,13 +95,13 @@ impl Component for Label {
         context: &mut StyledContext,
         constraints: &Size<Option<f32>, Scaled>,
     ) -> KludgineResult<Size<f32, Scaled>> {
-        let text = self.create_text(context.effective_style());
+        let text = self.create_text(context.effective_style()?);
         let wrapping = self.wrapping(
             &Size::new(
                 constraints.width.unwrap_or(f32::MAX),
                 constraints.height.unwrap_or(f32::MAX),
             ),
-            context.effective_style().get_or_default::<Alignment>(),
+            context.effective_style()?.get_or_default::<Alignment>(),
         );
         let wrapped_size = text.wrap(context.scene(), wrapping).await?.size().await;
         Ok(wrapped_size / context.scene().scale_factor().await)

@@ -221,13 +221,14 @@ where
         let constraints = Size::new(Some(bounds.size.width), Some(bounds.size.height));
         for child in context.children_of(context.index()).await {
             let mut child_context = context.clone_for(&child).await;
-            let child_content_size = context
+            let (child_content_size, child_padding) = context
                 .arena()
                 .get(&child)
                 .await
                 .ok_or(KludgineError::ComponentRemovedFromHierarchy)?
-                .content_size(child_context.styled_context(), &constraints)
+                .content_size_with_padding(child_context.styled_context(), &constraints)
                 .await?;
+            let child_content_size = child_content_size + child_padding.minimum_size();
             content_sizes.insert(child, child_content_size);
         }
 
