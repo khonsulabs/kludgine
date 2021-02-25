@@ -32,8 +32,8 @@ serialization = ["serde", "euclid/serde", "palette/serializing"]
 instrumentation = ["tracing", "tracing-futures"]
 
 [dependencies]
-easygpu = { version = "0.0.3" }
-easygpu-lyon = { version = "0.0.3" }
+easygpu = { version = "0.0.4" }
+easygpu-lyon = { version = "0.0.4" }
 lyon_tessellation = "0.16"
 winit = "0.24"
 image = ">=0.23.12"
