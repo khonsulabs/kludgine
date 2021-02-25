@@ -23,7 +23,7 @@ use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 
 static CURSOR_BLINK_MS: u64 = 500;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct TextField {
     text: RichText,
     prepared: Option<Vec<PreparedText>>,

@@ -6,7 +6,7 @@ use crate::{
 use async_handle::Handle;
 use std::{cmp::Ordering, ops::Range};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct RichText {
     data: Handle<RichTextData>,
 }
@@ -14,6 +14,14 @@ pub struct RichText {
 #[derive(Debug)]
 struct RichTextData {
     paragraphs: Vec<Text>,
+}
+
+impl Default for RichTextData {
+    fn default() -> Self {
+        Self {
+            paragraphs: vec![Text::default()],
+        }
+    }
 }
 
 pub enum ParagraphRemoval {

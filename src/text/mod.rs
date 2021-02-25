@@ -16,7 +16,7 @@ use font::*;
 use prepared::*;
 use wrap::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Span {
     pub text: String,
     pub style: Style<Raw>,
@@ -34,6 +34,14 @@ impl Span {
 #[derive(Debug, Clone)]
 pub struct Text {
     spans: Vec<Span>,
+}
+
+impl Default for Text {
+    fn default() -> Self {
+        Self {
+            spans: vec![Span::default()],
+        }
+    }
 }
 
 impl Text {
