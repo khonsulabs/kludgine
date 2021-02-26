@@ -71,8 +71,7 @@ impl RuntimeWindow {
                 app_window,
             )
             .await
-        })
-        .detach();
+        });
 
         {
             let mut channels = WINDOW_CHANNELS.write().await;
@@ -216,15 +215,15 @@ impl RuntimeWindow {
                             ..
                         } = input.event
                         {
-                                let mut scene = scene.data.write().await;
-                                match state {
-                                    ElementState::Pressed => {
-                                        scene.pressed_keys.insert(key);
-                                    }
-                                    ElementState::Released => {
-                                        scene.pressed_keys.remove(&key);
-                                    }
+                            let mut scene = scene.data.write().await;
+                            match state {
+                                ElementState::Pressed => {
+                                    scene.pressed_keys.insert(key);
                                 }
+                                ElementState::Released => {
+                                    scene.pressed_keys.remove(&key);
+                                }
+                            }
                         }
 
                         ui.process_input(input)

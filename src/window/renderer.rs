@@ -102,7 +102,7 @@ impl FrameRenderer {
 
         let frame_renderer =
             FrameRenderer::new(renderer, renderer_synchronizer, keep_running, initial_size);
-        Runtime::spawn(frame_renderer.render_loop()).detach();
+        Runtime::spawn(frame_renderer.render_loop());
 
         client_synchronizer
     }

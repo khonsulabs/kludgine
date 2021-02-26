@@ -209,8 +209,7 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
                 .await
                 .filter_invalid_component_references()
                 .unwrap();
-        })
-        .detach();
+        });
     }
 
     async fn initialize(&self, context: &mut Context) -> KludgineResult<()> {
@@ -373,8 +372,7 @@ impl<T: InteractiveComponent + 'static> CallbackSender for NodeData<T> {
         if let Some(callback) = self.callback.clone() {
             Runtime::spawn(async move {
                 callback.invoke(output).await;
-            })
-            .detach();
+            });
             true
         } else {
             false

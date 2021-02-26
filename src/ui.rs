@@ -699,8 +699,7 @@ where
             for layer in ui_state.layers().await {
                 arena.remove(&layer.root).await;
             }
-        })
-        .detach();
+        });
     }
 }
 
@@ -789,8 +788,7 @@ where
                         .await
                         .filter_invalid_component_references()
                         .unwrap()
-                })
-                .detach();
+                });
 
                 Ok(())
             } else {

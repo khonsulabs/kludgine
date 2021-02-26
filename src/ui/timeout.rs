@@ -42,8 +42,7 @@ where
                 }
                 .unwrap();
                 let _ = target.send(command).await;
-            })
-            .detach();
+            });
         } else {
             // There is already a task waiting to send the value, just replace it with the newest value.
             *pending_send = Some(command);

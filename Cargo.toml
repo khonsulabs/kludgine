@@ -20,7 +20,9 @@ repository = "https://github.com/khonsulabs/kludgine"
 all-features = true
 
 [features]
-default = ["bundled-fonts", "ecs"]
+default = ["bundled-fonts", "ecs", "smol-rt"]
+tokio-rt = ["tokio"]
+smol-rt = ["smol"]
 # Enable all bundled fonts. All bundled fonts are licensed under the Apache License 2.0.
 # For more information, see here: https://github.com/khonsulabs/kludgine/tree/master/fonts/README.md
 bundled-fonts = ["bundled-fonts-roboto"]
@@ -53,11 +55,11 @@ async-channel = "1"
 async-rwlock = "1"
 async-handle = "0.1"
 async-lock = "2"
-smol = "1"
+smol = { version = "1", optional = true }
 smol-timeout = "0.6"
 easy-parallel = "3"
 async-trait = "0.1"
-futures = { version = "0.3", features = ["thread-pool"] }
+futures = { version = "0.3" }
 futures-timer = "3"
 derivative = "2"
 euclid = "0.22"
@@ -68,6 +70,7 @@ anymap = "0.12"
 clipboard = "0.5"
 tracing = { version = "0.1", optional = true }
 tracing-futures = { version = "0.2", optional = true }
+tokio = { version = "1.0", features = ["full"], optional = true }
 
 [dev-dependencies]
 rand = "0.7"

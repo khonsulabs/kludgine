@@ -130,8 +130,7 @@ where
             Runtime::spawn(async move {
                 let mut active_toasts = ACTIVE_TOASTS.get().unwrap().lock().await;
                 active_toasts.retain(|i| *i != index);
-            })
-            .detach();
+            });
         }
     }
 }

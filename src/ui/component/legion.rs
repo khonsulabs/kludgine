@@ -544,8 +544,7 @@ fn render_custom_drawable<Unit: Sized + Send + Sync + 'static>(
 ) {
     let update_component = component.clone();
     let elapsed = *elapsed;
-    Runtime::spawn(async move { update_component.drawable.update(elapsed).await.unwrap() })
-        .detach();
+    Runtime::spawn(async move { update_component.drawable.update(elapsed).await.unwrap() });
 
     let mut drawable = RenderedDrawable::new(Drawable::Custom(component.clone()))
         .with_center(*location - camera.look_at.to_vector())
@@ -796,8 +795,7 @@ pub trait LegionSystemsThread: Sized {
             let _ = canvas_for_task
                 .send(CanvasCommand::ReceiveSystemsHandle(handle_for_canvas))
                 .await;
-        })
-        .detach();
+        });
 
         let scene = scene.clone();
         std::thread::spawn(move || {
