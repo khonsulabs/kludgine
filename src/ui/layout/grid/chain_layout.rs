@@ -76,6 +76,29 @@ pub trait ChainElementDynamicContents: Send + Sync + Debug {
 
         Ok(self.layouts_within_bounds(bounds, &content_sizes))
     }
+
+    async fn content_size(
+        &self,
+        constraints: &Size<Option<f32>, Scaled>,
+        last_layout: Layout,
+        context: &StyledContext,
+    ) -> KludgineResult<Size<f32, Scaled>> {
+        let last_layout = last_layout.inner_bounds();
+        let (layout_rect, _) = self
+            .layouts_for_bounds(
+                &Rect::new(
+                    Point::default(),
+                    Size::new(
+                        constraints.width.unwrap_or(last_layout.size.width),
+                        constraints.width.unwrap_or(last_layout.size.width),
+                    ),
+                ),
+                context,
+            )
+            .await?;
+
+        Ok(layout_rect.size)
+    }
 }
 
 impl ChainElement {
