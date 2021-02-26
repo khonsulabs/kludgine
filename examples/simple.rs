@@ -29,7 +29,7 @@ impl StandaloneComponent for Simple {}
 impl Component for Simple {
     async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
         let texture = Texture::load("examples/assets/k.png")?;
-        self.source_sprite = Some(SpriteSource::entire_texture(texture).await);
+        self.source_sprite = Some(SpriteSource::entire_texture(texture));
         Ok(())
     }
 

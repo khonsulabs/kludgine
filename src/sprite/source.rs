@@ -95,7 +95,7 @@ impl SpriteSource {
         Self::joined(locations, texture)
     }
 
-    pub async fn entire_texture(texture: Texture) -> Self {
+    pub fn entire_texture(texture: Texture) -> Self {
         Self::new(Rect::new(Point::default(), texture.size()), texture)
     }
 

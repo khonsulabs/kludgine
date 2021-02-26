@@ -210,8 +210,12 @@ impl RuntimeWindow {
                         }
                     }
                     WindowEvent::Input(input) => {
-                        if let Event::Keyboard { key, state, .. } = input.event {
-                            if let Some(key) = key {
+                        if let Event::Keyboard {
+                            key: Some(key),
+                            state,
+                            ..
+                        } = input.event
+                        {
                                 let mut scene = scene.data.write().await;
                                 match state {
                                     ElementState::Pressed => {
@@ -221,7 +225,6 @@ impl RuntimeWindow {
                                         scene.pressed_keys.remove(&key);
                                     }
                                 }
-                            }
                         }
 
                         ui.process_input(input)

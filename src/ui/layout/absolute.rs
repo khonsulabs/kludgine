@@ -247,7 +247,7 @@ mod tests {
     }
 
     #[test]
-    fn solve_dimension_tests() -> KludgineResult<()> {
+    fn solve_dimension_tests() {
         // start.auto end.auto length.auto
         assert_dimension_eq!(
             AbsoluteLayout::solve_dimension(
@@ -367,12 +367,10 @@ mod tests {
             ),
             (45., 45.)
         );
-
-        Ok(())
     }
 
     #[test]
-    fn validate_tests() -> KludgineResult<()> {
+    fn validate_tests() {
         AbsoluteBounds {
             bottom: Dimension::from_f32(1.),
             height: Dimension::from_f32(1.),
@@ -389,8 +387,6 @@ mod tests {
         }
         .validate()
         .expect_err("Invalid Horizontal Bounds");
-
-        Ok(())
     }
 
     #[async_test]
