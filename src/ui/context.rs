@@ -16,6 +16,8 @@ pub use self::{
 };
 use std::time::{Duration, Instant};
 
+use super::AbsoluteBounds;
+
 #[derive(Clone, Debug)]
 pub struct Context {
     index: Index,
@@ -200,6 +202,11 @@ impl Context {
     pub async fn set_style_sheet(&self, sheet: StyleSheet) {
         let node = self.arena.get(&self.index).await.unwrap();
         node.set_style_sheet(sheet).await
+    }
+
+    pub async fn set_bounds_for<I: Indexable>(&self, index: I, bounds: AbsoluteBounds) {
+        let node = self.arena.get(&index.index()).await.unwrap();
+        node.set_bounds(bounds).await
     }
 
     pub async fn set_needs_redraw(&self) {

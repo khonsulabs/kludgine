@@ -314,6 +314,14 @@ pub trait Component: Send + Sync {
         Ok(EventStatus::Ignored)
     }
 
+    async fn mouse_moved(
+        &mut self,
+        context: &mut Context,
+        position: Option<Point<f32, Scaled>>,
+    ) -> KludgineResult<()> {
+        Ok(())
+    }
+
     async fn hit_test(
         &self,
         context: &mut Context,

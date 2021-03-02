@@ -101,6 +101,12 @@ pub(crate) trait AnyNode: CallbackSender + std::fmt::Debug + Send + Sync {
 
     async fn unhovered(&self, context: &mut Context) -> KludgineResult<()>;
 
+    async fn mouse_moved(
+        &self,
+        context: &mut Context,
+        position: Option<Point<f32, Scaled>>,
+    ) -> KludgineResult<()>;
+
     async fn hit_test(
         &self,
         context: &mut Context,
@@ -312,6 +318,16 @@ impl<T: InteractiveComponent + 'static> AnyNode for NodeData<T> {
         component.mouse_wheel(context, delta, touch_phase).await
     }
 
+    async fn mouse_moved(
+        &self,
+        context: &mut Context,
+        position: Option<Point<f32, Scaled>>,
+    ) -> KludgineResult<()> {
+        let component = self.interactive_component().await;
+        let mut component = component.write().await;
+        component.mouse_moved(context, position).await
+    }
+
     async fn hit_test(
         &self,
         context: &mut Context,
@@ -472,6 +488,11 @@ impl Node {
         component.bounds().await
     }
 
+    pub async fn set_bounds(&self, bounds: AbsoluteBounds) {
+        let component = self.component.read().await;
+        component.set_bounds(bounds).await
+    }
+
     pub async fn set_style_sheet(&self, sheet: StyleSheet) {
         let component = self.component.read().await;
         component.set_style_sheet(sheet).await
@@ -577,6 +598,15 @@ impl Node {
     ) -> KludgineResult<()> {
         let component = self.component.read().await;
         component.mouse_up(context, position, button).await
+    }
+
+    pub async fn mouse_moved(
+        &self,
+        context: &mut Context,
+        position: Option<Point<f32, Scaled>>,
+    ) -> KludgineResult<()> {
+        let component = self.component.read().await;
+        component.mouse_moved(context, position).await
     }
 
     pub async fn receive_character(
