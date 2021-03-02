@@ -26,6 +26,7 @@ use crate::{
 pub use arena::{HierarchicalArena, Index};
 use async_channel::Sender;
 use async_trait::async_trait;
+use euclid::Rect;
 use once_cell::sync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
@@ -388,6 +389,8 @@ where
         let scene_scale = self.scene.scale_factor().await;
         self.last_render_order.clear();
 
+        let scene_size = self.scene.size().await * scene_scale;
+
         for layer in self.ui_state.layers().await {
             let hovered_indicies = self.hovered_indicies().await;
             let layouts = LayoutEngine::layout(
@@ -412,20 +415,29 @@ where
                     };
                     self.last_render_order.push(layer_index.clone());
                     if let Some(node) = self.arena.get(&index).await {
-                        let mut target = Target::from(self.scene.clone())
-                            .clipped_to((layout.clip_to * scene_scale).round().to_u32());
-                        if let Some(offset) = layout.content_offset {
-                            target = target.offset_by(offset * scene_scale);
+                        // To be able to cast to a u32, we need to ensure we have no negative coordinates
+                        // We are doing this by intersecting the clip rect with the window's rectangle before
+                        // attemting the cast.
+                        if let Some(clip_rect) = (layout.clip_to * scene_scale)
+                            .round()
+                            .intersection(&Rect::new(Default::default(), scene_size))
+                            .map(|r| r.try_cast())
+                            .flatten()
+                        {
+                            let mut target = Target::from(self.scene.clone()).clipped_to(clip_rect);
+                            if let Some(offset) = layout.content_offset {
+                                target = target.offset_by(offset * scene_scale);
+                            }
+                            let mut context = StyledContext::new(
+                                layer_index,
+                                target,
+                                layouts.effective_styles().await.clone(),
+                                self.arena.clone(),
+                                self.ui_state.clone(),
+                            );
+                            node.render_background(&mut context, &layout).await?;
+                            node.render(&mut context, &layout).await?;
                         }
-                        let mut context = StyledContext::new(
-                            layer_index,
-                            target,
-                            layouts.effective_styles().await.clone(),
-                            self.arena.clone(),
-                            self.ui_state.clone(),
-                        );
-                        node.render_background(&mut context, &layout).await?;
-                        node.render(&mut context, &layout).await?;
                     }
                 }
             }
@@ -562,6 +574,18 @@ where
                             Target::from(self.scene.clone()),
                         );
                         node.unhovered(&mut context).await?;
+                    }
+                }
+
+                for hover in &current_hovered_indicies {
+                    if let Some(node) = self.arena.get(&hover.index).await {
+                        let mut context = Context::new(
+                            hover.clone(),
+                            self.arena.clone(),
+                            self.ui_state.clone(),
+                            Target::from(self.scene.clone()),
+                        );
+                        node.mouse_moved(&mut context, position).await?;
                     }
                 }
 
