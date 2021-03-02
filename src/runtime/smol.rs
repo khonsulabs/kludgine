@@ -1,17 +1,6 @@
-use crate::{
-    application::Application,
-    style::theme::SystemTheme,
-    window::{RuntimeWindow, Window, WindowBuilder},
-    KludgineResult,
-};
-use crossbeam::{
-    channel::{unbounded, Receiver, Sender, TryRecvError},
-    sync::ShardedLock,
-};
+use crossbeam::sync::ShardedLock;
 use futures::future::Future;
 use lazy_static::lazy_static;
-use platforms::target::{OS, TARGET_OS};
-use std::time::Duration;
 
 lazy_static! {
     pub(crate) static ref GLOBAL_THREAD_POOL: ShardedLock<Option<smol::Executor<'static>>> =
