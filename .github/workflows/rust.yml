@@ -7,18 +7,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      - name: Install x11 dependencies for Kludgine
+        run: |
+          sudo apt-get install -yqq \
+            libxcb-render-util0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev
+
       - name: Run clippy
         run: |
           cargo clippy
+      - name: Run unit tests
           cargo test --all-features --verbose
   coverage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install x11 dependencies for Kludgine
+        run: |
+          sudo apt-get install -yqq \
+            libxcb-render-util0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev
+
       - name: Install code coverage requirements
         run: |
-          rustup add llvm-tools-preview
+          rustup component add llvm-tools-preview
           rustup install nightly
           curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
 
