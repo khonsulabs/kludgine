@@ -483,6 +483,9 @@ impl TextField {
             }
         }
 
+        // Prevent a warning when compiling without clipboard support
+        drop(context);
+
         Ok(())
     }
 
@@ -502,6 +505,9 @@ impl TextField {
 
             return Ok(true);
         }
+
+        // Prevent a warning when compiling without clipboard support
+        drop(context);
 
         Ok(false)
     }
