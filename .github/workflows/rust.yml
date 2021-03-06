@@ -3,19 +3,36 @@ name: Tests
 on: [push]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-    container:
-      image: khonsulabs/build-rust:latest
-      options: "--security-opt seccomp=unconfined"
-
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Run clippy
         run: |
           cargo clippy
           cargo test --all-features --verbose
-        # env:
-        #   AWS_ACCESS_KEY_ID: ${{ secrets.GAC_ACCESS_KEY_ID }}
-        #   AWS_SECRET_ACCESS_KEY: ${{ secrets.GAC_SECRET_KEY }}
-        #   SCCACHE_BUCKET: khonsulabs-gac
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install code coverage requirements
+        run: |
+          rustup add llvm-tools-preview
+          rustup install nightly
+          curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
+
+      - name: Run code coverage
+        run: |
+          cargo +nightly test --all-features
+
+          zip -0 ccov.zip `find . \( -name "kludgine*.gc*" \) -print`;
+          rm -rf target
+
+          ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" --ignore "/target" -o lcov.info;
+          bash <(curl -s https://codecov.io/bash) -f lcov.info;
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          CARGO_INCREMENTAL: 0
+          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests" # TODO: https://github.com/alexcrichton/proc-macro2/issues/218
+          RUSTDOCFLAGS: "-Cpanic=abort"
