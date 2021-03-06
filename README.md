@@ -51,4 +51,4 @@ This is a bit nebulous but examples include:
 
 This is being developed by and for [Khonsu Labs](https://khonsulabs.com/) partially as a learning experience. I hope it will be useful to others eventually.
 
-This code is [licensed](./LICENSE.txt) under the [MIT](https://opensource.org/licenses/MIT) license. This code will eventually be dual-licensed under the Apache License v2.0. If this is an issue for you comment [on this issue](https://github.com/khonsulabs/kludgine/issues/30), and I will prioritize it.
+This code is dual-licensed under the [MIT License](./LICENSE-MIT) and [Apache License 2.0](./LICENSE-APACHE). Fonts in this repository are not included by default, and are [solely llicensed under the Apache License 2.0](./fonts/README.md).
