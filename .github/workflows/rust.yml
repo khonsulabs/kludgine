@@ -3,6 +3,32 @@ name: Tests
 on: [push]
 
 jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Rust
+        uses: hecrj/setup-rust-action@v1
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/.crates.toml
+            ~/.cargo/.crates2.json
+            ~/.cargo/bin/cargo-audit
+          key: cargo-audit
+      - name: Install cargo-audit
+        run: cargo -v install cargo-audit
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ matrix.branch }}
+      - name: Audit
+        run: |
+          cargo audit -D warnings --ignore RUSTSEC-2020-0016 --ignore RUSTSEC-2021-0019
+          echo '::warning::Ignoring alert for xcb dependency of arboard https://github.com/khonsulabs/kludgine/issues/46'
+          echo '::warning::Ignoring alert for net2 dependency of winit https://github.com/khonsulabs/kludgine/issues/47'
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -24,6 +50,7 @@ jobs:
       - name: Run tokio unit tests
         run: |
           cargo test --no-default-features --features="tokio-rt"
+
   coverage:
     runs-on: ubuntu-latest
     steps:
