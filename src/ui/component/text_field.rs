@@ -14,10 +14,9 @@ use crate::{
         StyledContext,
     },
     window::event::{EventStatus, MouseButton},
-    KludgineError, KludgineResult,
+    KludgineResult,
 };
 use async_trait::async_trait;
-use copypasta::{ClipboardContext, ClipboardProvider};
 use std::time::{Duration, Instant};
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 
@@ -430,27 +429,15 @@ impl Component for TextField {
                     }
                     VirtualKeyCode::V => {
                         if context.scene().modifiers_pressed().await.primary_modifier() {
-                            let mut clipboard = ClipboardContext::new()
-                                .map_err(|err| KludgineError::Clipboard(err.to_string()))?;
-
-                            // Convert Result to Option to get rid of the Box<dyn Error> before the await
-                            let pasted = clipboard.get_contents().ok();
-                            if let Some(pasted) = pasted {
-                                self.replace_selection(&pasted, context).await;
-                            }
+                            self.paste(context).await?;
                         }
                     }
                     VirtualKeyCode::X | VirtualKeyCode::C => {
-                        if context.scene().modifiers_pressed().await.primary_modifier() {
-                            let mut clipboard = ClipboardContext::new()
-                                .map_err(|err| KludgineError::Clipboard(err.to_string()))?;
-
-                            let selected = self.selected_string().await;
-                            if key == VirtualKeyCode::X {
-                                self.replace_selection("", context).await;
-                            }
-
-                            let _ = clipboard.set_contents(selected);
+                        if context.scene().modifiers_pressed().await.primary_modifier()
+                            && self.copy(context).await?
+                            && key == VirtualKeyCode::X
+                        {
+                            self.replace_selection("", context).await;
                         }
                     }
                     _ => {}
@@ -479,6 +466,44 @@ impl TextField {
             truncate: true,
             alignment,
         }
+    }
+
+    /// pastes text from the clipboard into the field
+    ///
+    /// If feature `clipboard` isn't enabled, this function will return Ok(()).
+    async fn paste(&mut self, context: &mut Context) -> KludgineResult<()> {
+        #[cfg(feature = "clipboard")]
+        {
+            let mut clipboard = arboard::Clipboard::new()?;
+
+            // Convert Result to Option to get rid of the Box<dyn Error> before the await
+            let pasted = clipboard.get_text().ok();
+            if let Some(pasted) = pasted {
+                self.replace_selection(&pasted, context).await;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// copies the selected text to the clipboard.
+    ///
+    /// Returns whether text was successfully written to the clipboard. If
+    /// feature `clipboard` isn't enabled, this function will always return
+    /// Ok(false)
+    async fn copy(&mut self, context: &mut Context) -> KludgineResult<bool> {
+        #[cfg(feature = "clipboard")]
+        {
+            let mut clipboard = arboard::Clipboard::new()?;
+
+            let selected = self.selected_string().await;
+
+            clipboard.set_text(selected)?;
+
+            return Ok(true);
+        }
+
+        Ok(false)
     }
 
     pub async fn replace_selection(&mut self, replacement: &str, context: &mut Context) {

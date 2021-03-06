@@ -13,9 +13,10 @@ extern crate futures_await_test;
 extern crate tracing;
 
 // Re-exports
+#[cfg(feature = "clipboard")]
+pub use arboard;
 pub use async_handle::Handle;
 pub use async_trait::async_trait;
-pub use copypasta;
 pub use easygpu;
 pub use winit;
 
@@ -45,8 +46,10 @@ pub enum KludgineError {
     FontFamilyNotFound(String),
     #[error("argument is out of bounds")]
     OutOfBounds,
+
+    #[cfg(feature = "clipboard")]
     #[error("clipboard error: {0}")]
-    Clipboard(String),
+    Clipboard(#[from] arboard::Error),
 
     #[error("specify at most 2 of the dimensions top, bottom, and height. (e.g., top and bottom, but not height")]
     AbsoluteBoundsInvalidVertical,

@@ -275,7 +275,7 @@ impl Component for Scrollbar {
                                 let new_grip_start = starting_grip_start + delta;
                                 let remaining_bar = info.total_length - info.grip_length;
                                 let scrollable_amount =
-                                    (metrics.content_length.0 - metrics.page_size.0);
+                                    metrics.content_length.0 - metrics.page_size.0;
                                 let offset_per_bar_pixel = scrollable_amount / remaining_bar.0;
                                 let offset = (new_grip_start - info.origin) * offset_per_bar_pixel;
                                 self.set_offset(offset, context).await;
