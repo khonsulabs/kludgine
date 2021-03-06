@@ -18,9 +18,12 @@ jobs:
       - name: Run clippy
         run: |
           cargo clippy
-      - name: Run unit tests
+      - name: Run default features unit tests
         run: |
-          cargo test --all-features --verbose
+          cargo test
+      - name: Run tokio unit tests
+        run: |
+          cargo test --no-default-features --features="tokio-rt"
   coverage:
     runs-on: ubuntu-latest
     steps:
@@ -41,7 +44,7 @@ jobs:
 
       - name: Run code coverage
         run: |
-          cargo +nightly test --all-features
+          cargo +nightly test
 
           zip -0 ccov.zip `find . \( -name "kludgine*.gc*" \) -print`;
           rm -rf target
