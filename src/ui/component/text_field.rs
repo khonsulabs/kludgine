@@ -434,7 +434,7 @@ impl Component for TextField {
                     }
                     VirtualKeyCode::X | VirtualKeyCode::C => {
                         if context.scene().modifiers_pressed().await.primary_modifier()
-                            && self.copy(context).await?
+                            && self.copy().await?
                             && key == VirtualKeyCode::X
                         {
                             self.replace_selection("", context).await;
@@ -471,6 +471,7 @@ impl TextField {
     /// pastes text from the clipboard into the field
     ///
     /// If feature `clipboard` isn't enabled, this function will return Ok(()).
+    #[allow(unused_variables)] // when clipboard is disabled, `context` is unused
     async fn paste(&mut self, context: &mut Context) -> KludgineResult<()> {
         #[cfg(feature = "clipboard")]
         {
@@ -491,7 +492,7 @@ impl TextField {
     /// Returns whether text was successfully written to the clipboard. If
     /// feature `clipboard` isn't enabled, this function will always return
     /// Ok(false)
-    async fn copy(&mut self, context: &mut Context) -> KludgineResult<bool> {
+    async fn copy(&mut self) -> KludgineResult<bool> {
         #[cfg(feature = "clipboard")]
         {
             let mut clipboard = arboard::Clipboard::new()?;
@@ -499,11 +500,9 @@ impl TextField {
             let selected = self.selected_string().await;
 
             clipboard.set_text(selected)?;
-
-            return Ok(true);
         }
 
-        Ok(false)
+        return Ok(true);
     }
 
     pub async fn replace_selection(&mut self, replacement: &str, context: &mut Context) {
