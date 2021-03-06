@@ -17,7 +17,7 @@ use crate::{
     KludgineError, KludgineResult,
 };
 use async_trait::async_trait;
-use clipboard::{ClipboardContext, ClipboardProvider};
+use copypasta::{ClipboardContext, ClipboardProvider};
 use std::time::{Duration, Instant};
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 

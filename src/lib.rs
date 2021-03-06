@@ -15,7 +15,7 @@ extern crate tracing;
 // Re-exports
 pub use async_handle::Handle;
 pub use async_trait::async_trait;
-pub use clipboard;
+pub use copypasta;
 pub use easygpu;
 pub use winit;
 
