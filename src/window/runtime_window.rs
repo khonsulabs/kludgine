@@ -1,7 +1,7 @@
 use crate::{
     math::{Pixels, Point, ScreenScale, Size},
     prelude::Scene,
-    runtime::Runtime,
+    runtime::{Runtime, WINDOWS},
     scene::Target,
     style::theme::SystemTheme,
     ui::{global_arena, UserInterface},
@@ -9,7 +9,7 @@ use crate::{
         event::{ElementState, Event, InputEvent, VirtualKeyCode, WindowEvent},
         frame::Frame,
         renderer::{FrameRenderer, FrameSynchronizer},
-        CloseResponse, Renderer, Window, WindowMessage, WINDOWS, WINDOW_CHANNELS,
+        CloseResponse, Renderer, Window, WindowMessage, WINDOW_CHANNELS,
     },
     KludgineError, KludgineResult, KludgineResultExt,
 };
@@ -18,47 +18,62 @@ use easygpu::prelude::*;
 use futures::executor::block_on;
 use smol_timeout::TimeoutExt;
 use std::{sync::Arc, time::Instant};
-use winit::{
-    event::{Event as WinitEvent, WindowEvent as WinitWindowEvent},
-    window::{Window as WinitWindow, WindowId},
-};
+use winit::{event::WindowEvent as WinitWindowEvent, window::WindowId};
 
 pub(crate) struct RuntimeWindow {
-    window: winit::window::Window,
+    pub window_id: WindowId,
+    pub keep_running: Arc<AtomicCell<bool>>,
     receiver: async_channel::Receiver<WindowMessage>,
     event_sender: async_channel::Sender<WindowEvent>,
     last_known_size: Size,
     last_known_scale_factor: ScreenScale,
-    keep_running: Arc<AtomicCell<bool>>,
+}
+
+pub(crate) struct RuntimeWindowConfig {
+    window_id: WindowId,
+    renderer: Renderer,
+    initial_size: Size<u32, ScreenSpace>,
+    scale_factor: f32,
+}
+
+impl RuntimeWindowConfig {
+    pub fn new(window: &winit::window::Window) -> Self {
+        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+        let renderer = Runtime::block_on(Renderer::new(&instance, window))
+            .expect("Error creating renderer for window");
+        Self {
+            window_id: window.id(),
+            renderer,
+            initial_size: Size::new(window.inner_size().width, window.inner_size().height),
+            scale_factor: window.scale_factor() as f32,
+        }
+    }
 }
 
 impl RuntimeWindow {
     pub(crate) async fn open<T>(
-        window_receiver: async_channel::Receiver<WinitWindow>,
+        window_receiver: async_channel::Receiver<RuntimeWindowConfig>,
         initial_system_theme: SystemTheme,
         app_window: T,
     ) where
         T: Window + Sized + 'static,
     {
-        let window = window_receiver
+        let RuntimeWindowConfig {
+            window_id,
+            renderer,
+            initial_size,
+            scale_factor,
+        } = window_receiver
             .recv()
             .await
             .expect("Error receiving winit::window");
-        let window_id = window.id();
-        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
-        let renderer = Renderer::new(&instance, &window)
-            .await
-            .expect("Error creating renderer for window");
 
         let (message_sender, message_receiver) = async_channel::unbounded();
         let (event_sender, event_receiver) = async_channel::unbounded();
 
         let keep_running = Arc::new(AtomicCell::new(true));
-        let mut frame_synchronizer = FrameRenderer::run(
-            renderer,
-            keep_running.clone(),
-            Size::new(window.inner_size().width, window.inner_size().height),
-        );
+        let mut frame_synchronizer =
+            FrameRenderer::run(renderer, keep_running.clone(), initial_size);
         let window_event_sender = event_sender.clone();
         Runtime::spawn(async move {
             frame_synchronizer.relinquish(Frame::default()).await;
@@ -78,15 +93,13 @@ impl RuntimeWindow {
             channels.insert(window_id, message_sender);
         }
 
-        let size = window.inner_size();
-        let size = Size::new(size.width as f32, size.height as f32);
         let mut runtime_window = Self {
             receiver: message_receiver,
-            last_known_size: size,
+            last_known_size: initial_size.to_f32().cast_unit(),
             keep_running,
             event_sender,
-            last_known_scale_factor: ScreenScale::new(window.scale_factor() as f32),
-            window,
+            last_known_scale_factor: ScreenScale::new(scale_factor),
+            window_id,
         };
         runtime_window.notify_size_changed();
 
@@ -299,34 +312,12 @@ impl RuntimeWindow {
         channels.len()
     }
 
-    pub(crate) fn process_events(event: &WinitEvent<()>) {
-        let mut windows = WINDOWS.write().unwrap();
-
-        if let WinitEvent::WindowEvent { window_id, event } = event {
-            if let Some(window) = windows.get_mut(&window_id) {
-                window.process_event(event);
-            }
-        } else if let WinitEvent::RedrawRequested(window_id) = event {
-            if let Some(window) = windows.get_mut(&window_id) {
-                window.request_redraw();
-            }
-        }
-
-        {
-            for window in windows.values_mut() {
-                window.receive_messages();
-            }
-        }
-
-        windows.retain(|_, w| w.keep_running.load());
-    }
-
     pub(crate) fn receive_messages(&mut self) {
         while let Ok(request) = self.receiver.try_recv() {
             match request {
                 WindowMessage::Close => {
                     let mut channels = block_on(WINDOW_CHANNELS.write());
-                    channels.remove(&self.window.id());
+                    channels.remove(&self.window_id);
                     self.keep_running.store(false);
                 }
             }

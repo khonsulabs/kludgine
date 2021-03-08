@@ -56,7 +56,6 @@ async-channel = "1"
 async-rwlock = "1"
 async-handle = "0.1"
 async-lock = "2"
-smol = { version = "1", optional = true }
 smol-timeout = "0.6"
 easy-parallel = "3"
 async-trait = "0.1"
@@ -64,13 +63,17 @@ futures = { version = "0.3" }
 futures-timer = "3"
 derivative = "2"
 euclid = "0.22"
+raw-window-handle = "0.3"
 legion = { version = "0.3", optional = true }
 sorted-vec = { version = "0.5", optional = true }
 serde = { version = "1", optional = true, features = ["derive"] }
 anymap = "0.12"
 arboard = { version = "1.1", optional = true }
+
 tracing = { version = "0.1", optional = true }
 tracing-futures = { version = "0.2", optional = true }
+
+smol = { version = "1", optional = true }
 tokio = { version = "1.0", features = ["full"], optional = true }
 
 [dev-dependencies]

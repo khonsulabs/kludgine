@@ -1,18 +1,21 @@
 use crate::{
     application::Application,
     style::theme::SystemTheme,
-    window::{RuntimeWindow, Window, WindowBuilder},
+    window::{RuntimeWindow, RuntimeWindowConfig, Window, WindowBuilder},
     KludgineResult,
 };
-use crossbeam::channel::{unbounded, Receiver, Sender, TryRecvError};
+use crossbeam::{
+    channel::{unbounded, Receiver, Sender, TryRecvError},
+    sync::ShardedLock,
+};
 use futures::future::Future;
 use platforms::target::{OS, TARGET_OS};
-use std::time::Duration;
-
+use std::{collections::HashMap, time::Duration};
+use winit::{event::Event, window::WindowId};
 pub(crate) enum RuntimeRequest {
     OpenWindow {
         builder: WindowBuilder,
-        window_sender: async_channel::Sender<winit::window::Window>,
+        window_sender: async_channel::Sender<RuntimeWindowConfig>,
     },
     Quit,
 }
@@ -155,7 +158,7 @@ impl EventProcessor for Runtime {
                 }
             }
         }
-        RuntimeWindow::process_events(&event);
+        self.process_window_events(&event);
 
         if let winit::event::Event::NewEvents(winit::event::StartCause::Init) = event {
             self.event_sender
@@ -171,6 +174,7 @@ impl EventProcessor for Runtime {
 pub struct Runtime {
     request_receiver: Receiver<RuntimeRequest>,
     event_sender: Sender<RuntimeEvent>,
+    windows: HashMap<WindowId, winit::window::Window>,
 }
 
 impl Runtime {
@@ -186,44 +190,33 @@ impl Runtime {
         Self {
             request_receiver,
             event_sender,
+            windows: HashMap::new(),
         }
     }
 
     fn internal_open_window(
-        &self,
-        window_sender: async_channel::Sender<winit::window::Window>,
+        &mut self,
+        window_sender: async_channel::Sender<RuntimeWindowConfig>,
         builder: WindowBuilder,
         event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
     ) {
         let builder: winit::window::WindowBuilder = builder.into();
         let winit_window = builder.build(&event_loop).unwrap();
         window_sender
-            .try_send(winit_window)
-            .expect("Couldn't send winit window");
+            .try_send(RuntimeWindowConfig::new(&winit_window))
+            .unwrap();
+        self.windows.insert(winit_window.id(), winit_window);
     }
 
     fn should_run_in_exclusive_mode() -> bool {
         matches!(TARGET_OS, OS::Android | OS::iOS)
     }
 
-    pub fn run<T, F>(self, initial_window: WindowBuilder, window: F) -> !
+    pub fn run<T, F>(mut self, initial_window: WindowBuilder, window: F) -> !
     where
         T: Window + Sized + 'static,
         F: Future<Output = T> + Send + Sync + 'static,
     {
-        // Install the global event handler, and also ensure we aren't trying to initialize two runtimes
-        // This is necessary because EventLoop::run requires the function/closure passed to have a `static
-        // lifetime for valid reasons. Every approach at using only local variables I could not solve, so
-        // we wrap it in a mutex. This abstraction also wraps it in dynamic dispatch, because we can't have
-        // a generic-type static variable.
-        {
-            let mut event_handler = GLOBAL_EVENT_HANDLER
-                .lock()
-                .expect("Error locking global event handler");
-            assert!(event_handler.is_none());
-            *event_handler = Some(Box::new(self));
-        }
-
         let event_loop = winit::event_loop::EventLoop::new();
         let initial_system_theme = initial_window
             .initial_system_theme
@@ -246,12 +239,29 @@ impl Runtime {
         let window = Runtime::block_on(window);
         let initial_window = initial_window.build(&event_loop).unwrap();
         let (window_sender, window_receiver) = async_channel::bounded(1);
-        window_sender.try_send(initial_window).unwrap();
+        window_sender
+            .try_send(RuntimeWindowConfig::new(&initial_window))
+            .unwrap();
+
         Runtime::block_on(RuntimeWindow::open(
             window_receiver,
             initial_system_theme,
             window,
         ));
+        self.windows.insert(initial_window.id(), initial_window);
+
+        // Install the global event handler, and also ensure we aren't trying to initialize two runtimes
+        // This is necessary because EventLoop::run requires the function/closure passed to have a `static
+        // lifetime for valid reasons. Every approach at using only local variables I could not solve, so
+        // we wrap it in a mutex. This abstraction also wraps it in dynamic dispatch, because we can't have
+        // a generic-type static variable.
+        {
+            let mut event_handler = GLOBAL_EVENT_HANDLER
+                .lock()
+                .expect("Error locking global event handler");
+            assert!(event_handler.is_none());
+            *event_handler = Some(Box::new(self));
+        }
         event_loop.run(move |event, event_loop, control_flow| {
             let mut event_handler_guard = GLOBAL_EVENT_HANDLER
                 .lock()
@@ -284,6 +294,35 @@ impl Runtime {
 
         RuntimeWindow::open(window_receiver, initial_system_theme, window).await;
     }
+
+    fn process_window_events(&mut self, event: &Event<()>) {
+        let mut windows = WINDOWS.write().unwrap();
+
+        if let Event::WindowEvent { window_id, event } = event {
+            if let Some(window) = windows.get_mut(&window_id) {
+                window.process_event(event);
+            }
+        } else if let Event::RedrawRequested(window_id) = event {
+            if let Some(window) = windows.get_mut(&window_id) {
+                window.request_redraw();
+            }
+        }
+
+        {
+            for window in windows.values_mut() {
+                window.receive_messages();
+            }
+        }
+
+        windows.retain(|_, w| {
+            if !w.keep_running.load() {
+                self.windows.remove(&w.window_id);
+                false
+            } else {
+                true
+            }
+        });
+    }
 }
 
 fn initialize_async_runtime() {
@@ -291,4 +330,9 @@ fn initialize_async_runtime() {
     smol::initialize();
     #[cfg(feature = "tokio-rt")]
     tokio::initialize();
+}
+
+lazy_static! {
+    pub(crate) static ref WINDOWS: ShardedLock<HashMap<WindowId, RuntimeWindow>> =
+        ShardedLock::new(HashMap::new());
 }

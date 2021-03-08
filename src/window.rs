@@ -6,7 +6,6 @@ use crate::{
     Handle, KludgineError, KludgineResult,
 };
 use async_trait::async_trait;
-use crossbeam::sync::ShardedLock;
 use easygpu::prelude::*;
 use lazy_static::lazy_static;
 use std::collections::HashMap;
@@ -17,7 +16,7 @@ pub(crate) mod frame;
 mod renderer;
 mod runtime_window;
 
-pub(crate) use runtime_window::RuntimeWindow;
+pub(crate) use runtime_window::{RuntimeWindow, RuntimeWindowConfig};
 
 pub use winit::window::Icon;
 
@@ -224,12 +223,6 @@ lazy_static! {
     static ref WINDOW_CHANNELS: Handle<HashMap<WindowId, async_channel::Sender<WindowMessage>>> =
         Handle::new(HashMap::new());
 }
-
-lazy_static! {
-    static ref WINDOWS: ShardedLock<HashMap<WindowId, RuntimeWindow>> =
-        ShardedLock::new(HashMap::new());
-}
-
 pub(crate) enum WindowMessage {
     Close,
 }
