@@ -51,6 +51,7 @@ pub trait EventProcessor: Send + Sync {
         control_flow: &mut winit::event_loop::ControlFlow,
     );
 }
+
 lazy_static! {
     pub(crate) static ref GLOBAL_RUNTIME_SENDER: Mutex<Option<Sender<RuntimeRequest>>> =
         Mutex::new(None);
@@ -270,10 +271,6 @@ impl Runtime {
             .try_send(RuntimeWindowConfig::new(&initial_window))
             .unwrap();
 
-        // This must be a blocking operation because if the event loop starts without
-        // the RuntimeWindow::count() being updated, the SingleWindowApplication will exit.
-        // This could be refactored to having a flag set after the initial window opens,
-        // but that also feels ugly.
         Runtime::spawn(async move {
             let window = window.await;
             RuntimeWindow::open(window_receiver, initial_system_theme, window).await;
