@@ -15,6 +15,7 @@ use std::{collections::HashMap, time::Duration};
 use winit::{event::Event, window::WindowId};
 
 pub(crate) enum RuntimeRequest {
+    #[cfg(feature = "multiwindow")]
     OpenWindow {
         builder: WindowBuilder,
         window_sender: async_channel::Sender<RuntimeWindowConfig>,
@@ -145,6 +146,7 @@ where
 }
 
 impl EventProcessor for Runtime {
+    #[cfg_attr(not(feature = "multiwindow"), allow(unused_variables))] // event_loop is unused if this feature isn't specified
     fn process_event(
         &mut self,
         event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
@@ -153,6 +155,7 @@ impl EventProcessor for Runtime {
     ) {
         while let Ok(request) = self.request_receiver.try_recv() {
             match request {
+                #[cfg(feature = "multiwindow")]
                 RuntimeRequest::OpenWindow {
                     window_sender,
                     builder,
@@ -204,6 +207,7 @@ impl Runtime {
         }
     }
 
+    #[cfg(feature = "multiwindow")]
     fn internal_open_window(
         &mut self,
         window_sender: async_channel::Sender<RuntimeWindowConfig>,
@@ -216,11 +220,8 @@ impl Runtime {
             .try_send(RuntimeWindowConfig::new(&winit_window))
             .unwrap();
 
-        #[cfg(feature = "multiwindow")]
-        {
-            let mut windows = WINIT_WINDOWS.write().unwrap();
-            windows.insert(winit_window.id(), winit_window);
-        }
+        let mut windows = WINIT_WINDOWS.write().unwrap();
+        windows.insert(winit_window.id(), winit_window);
     }
 
     fn should_run_in_exclusive_mode() -> bool {

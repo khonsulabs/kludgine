@@ -181,7 +181,7 @@ pub mod prelude {
                 DeviceId, ElementState, Event, EventStatus, InputEvent, MouseButton,
                 MouseScrollDelta, ScanCode, TouchPhase, VirtualKeyCode,
             },
-            OpenableWindow, Window, WindowBuilder, WindowCreator,
+            Window, WindowBuilder, WindowCreator,
         },
         Handle, KludgineError, KludgineResult, RequiresInitialization,
     };
@@ -190,6 +190,9 @@ pub mod prelude {
 
     #[cfg(feature = "bundled-fonts-enabled")]
     pub use super::text::bundled_fonts;
+
+    #[cfg(feature = "multiwindow")]
+    pub use super::window::OpenableWindow;
 }
 
 pub struct RequiresInitialization<T>(Option<T>);

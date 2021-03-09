@@ -1,6 +1,5 @@
 use crate::{
     math::{Scaled, Size},
-    runtime::Runtime,
     style::theme::{Minimal, SystemTheme, Theme},
     ui::InteractiveComponent,
     Handle, KludgineError, KludgineResult,
@@ -204,18 +203,20 @@ impl Into<WinitWindowBuilder> for WindowBuilder {
     }
 }
 
+#[cfg(feature = "multiwindow")]
 #[async_trait]
 pub trait OpenableWindow {
     async fn open(window: Self);
 }
 
+#[cfg(feature = "multiwindow")]
 #[async_trait]
 impl<T> OpenableWindow for T
 where
     T: Window + WindowCreator,
 {
     async fn open(window: Self) {
-        Runtime::open_window(Self::get_window_builder(), window).await
+        crate::runtime::Runtime::open_window(Self::get_window_builder(), window).await
     }
 }
 
