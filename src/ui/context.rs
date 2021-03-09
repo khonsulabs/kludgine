@@ -14,7 +14,8 @@ pub use self::{
     layout_context::{LayoutContext, LayoutEngine},
     styled_context::StyledContext,
 };
-use std::time::{Duration, Instant};
+use instant::Instant;
+use std::time::Duration;
 
 use super::AbsoluteBounds;
 

@@ -17,7 +17,8 @@ use crate::{
     KludgineResult,
 };
 use async_trait::async_trait;
-use std::time::{Duration, Instant};
+use instant::Instant;
+use std::time::Duration;
 use winit::event::{ElementState, ScanCode, VirtualKeyCode};
 
 static CURSOR_BLINK_MS: u64 = 500;
@@ -97,7 +98,8 @@ impl BlinkState {
             self.change_at = Self::next_blink();
         }
 
-        self.change_at.checked_duration_since(now)
+        // TODO add checked_duration_since to the crate Instant
+        Some(self.change_at.duration_since(now))
     }
 }
 

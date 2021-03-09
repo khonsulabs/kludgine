@@ -14,8 +14,9 @@ use crate::{
 use async_lock::Mutex;
 use async_trait::async_trait;
 use generational_arena::Index;
+use instant::Instant;
 use once_cell::sync::OnceCell;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 static ACTIVE_TOASTS: OnceCell<Mutex<Vec<Index>>> = OnceCell::new();
 

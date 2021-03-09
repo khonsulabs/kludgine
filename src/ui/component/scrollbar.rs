@@ -14,7 +14,8 @@ use crate::{
 };
 use async_trait::async_trait;
 use euclid::{Length, Rect, Scale};
-use std::time::{Duration, Instant};
+use instant::Instant;
+use std::time::Duration;
 use winit::event::MouseButton;
 
 #[derive(Debug)]

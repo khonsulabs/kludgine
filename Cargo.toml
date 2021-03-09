@@ -20,9 +20,10 @@ repository = "https://github.com/khonsulabs/kludgine"
 all-features = true
 
 [features]
-default = ["bundled-fonts", "ecs", "smol-rt", "clipboard"]
+default = ["bundled-fonts", "ecs", "smol-rt", "clipboard", "multiwindow"]
+multiwindow = []
 tokio-rt = ["tokio"]
-smol-rt = ["smol"]
+smol-rt = ["smol", "smol-timeout"]
 clipboard = ["arboard"]
 # Enable all bundled fonts. All bundled fonts are licensed under the Apache License 2.0.
 # For more information, see here: https://github.com/khonsulabs/kludgine/tree/master/fonts/README.md
@@ -35,12 +36,12 @@ serialization = ["serde", "euclid/serde", "palette/serializing"]
 instrumentation = ["tracing", "tracing-futures"]
 
 [dependencies]
-easygpu = { version = "0.0.4" }
-easygpu-lyon = { version = "0.0.4" }
-lyon_tessellation = "0.16"
 winit = "0.24"
-image = ">=0.23.12"
 crossbeam = "0.8"
+easygpu = "0.0.6"
+easygpu-lyon = "0.0.6"
+lyon_tessellation = "0.16"
+image = ">=0.23.12"
 lazy_static = "1"
 thiserror = "1.0"
 anyhow = "1.0"
@@ -56,25 +57,33 @@ async-channel = "1"
 async-rwlock = "1"
 async-handle = "0.1"
 async-lock = "2"
-smol-timeout = "0.6"
 easy-parallel = "3"
 async-trait = "0.1"
-futures = { version = "0.3" }
+futures = "0.3"
 futures-timer = "3"
 derivative = "2"
 euclid = "0.22"
-raw-window-handle = "0.3"
 legion = { version = "0.3", optional = true }
 sorted-vec = { version = "0.5", optional = true }
 serde = { version = "1", optional = true, features = ["derive"] }
 anymap = "0.12"
 arboard = { version = "1.1", optional = true }
+instant = "0.1.9"
+bytemuck = { version = "1", features = ["derive"] }
 
 tracing = { version = "0.1", optional = true }
 tracing-futures = { version = "0.2", optional = true }
 
+smol-timeout = { version = "0.6", optional = true }
 smol = { version = "1", optional = true }
 tokio = { version = "1.0", features = ["full"], optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+winit = { version = "0.24", default-features = false, features = ["web-sys"] } 
+wasm-bindgen-futures = "0.4" 
+js-sys = "0.3" 
+web-sys = { version = "0.3", features = ["Window", "Element", "Document"] } 
+wasm-bindgen = "0.2.69" # needs to match wgpu's version
 
 [dev-dependencies]
 rand = "0.7"

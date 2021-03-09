@@ -1,6 +1,7 @@
 extern crate kludgine;
+use instant::Instant;
 use kludgine::prelude::*;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 fn main() {
     SingleWindowApplication::run(Animation::default());

@@ -1,6 +1,6 @@
 use crate::math::{Angle, Point, Raw};
+use bytemuck::{Pod, Zeroable};
 use easygpu::prelude::*;
-use euclid::{Vector2D, Vector3D};
 use std::ops::Deref;
 
 /// A pipeline for rendering shapes.
@@ -9,19 +9,19 @@ pub struct Pipeline {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Pod, Zeroable)]
 /// The uniforms for the shader.
 pub struct Uniforms {
     /// The orthographic projection matrix
-    pub ortho: ScreenTransformation<f32>,
+    pub ortho: [f32; 16],
     /// The transformation matrix
-    pub transform: ScreenTransformation<f32>,
+    pub transform: [f32; 16],
 }
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Pod, Zeroable)]
 pub struct Vertex {
-    pub position: Vector3D<f32, ScreenSpace>,
-    pub uv: Vector2D<f32, ScreenSpace>,
+    pub position: [f32; 3],
+    pub uv: [f32; 2],
     pub color: Rgba8,
 }
 
@@ -30,12 +30,12 @@ impl Vertex {
         if let Some(angle) = angle {
             let origin = origin.to_vector();
             let rotation2d = euclid::Rotation2D::new(angle);
-            let position = Point::new(self.position.x, self.position.y);
+            let position = Point::new(self.position[0], self.position[1]);
             let relative_position = position - origin;
             let rotated = rotation2d.transform_point(relative_position) + origin;
 
-            self.position.x = rotated.x;
-            self.position.y = rotated.y;
+            self.position[0] = rotated.x;
+            self.position[1] = rotated.y;
 
             self
         } else {
@@ -90,8 +90,8 @@ impl<'a> AbstractPipeline<'a> for Pipeline {
     }
 
     fn setup(pipeline: easygpu::pipeline::Pipeline, dev: &Device) -> Self {
-        let transform = ScreenTransformation::identity();
-        let ortho = ScreenTransformation::identity();
+        let transform = ScreenTransformation::identity().to_array();
+        let ortho = ScreenTransformation::identity().to_array();
         let uniforms = dev.create_uniform_buffer(&[self::Uniforms { ortho, transform }]);
         let bindings = dev.create_binding_group(&pipeline.layout.sets[0], &[&uniforms]);
 
@@ -108,7 +108,8 @@ impl<'a> AbstractPipeline<'a> for Pipeline {
         &'a self,
         ortho: ScreenTransformation<f32>,
     ) -> Option<(&'a UniformBuffer, Vec<self::Uniforms>)> {
-        let transform = ScreenTransformation::identity();
+        let ortho = ortho.to_array();
+        let transform = ScreenTransformation::identity().to_array();
         Some((&self.uniforms, vec![self::Uniforms { transform, ortho }]))
     }
 }

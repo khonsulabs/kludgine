@@ -3,7 +3,6 @@ use crate::{
     sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation, SpriteSourceLocation},
 };
 use easygpu::prelude::*;
-use euclid::{Vector2D, Vector3D};
 
 pub(crate) struct GpuBatch {
     pub size: Size<u32, ScreenSpace>,
@@ -62,11 +61,11 @@ impl GpuBatch {
 
     pub fn vertex(&self, src: Point<f32, Unknown>, dest: Point<f32, Raw>, color: Rgba8) -> Vertex {
         Vertex {
-            position: Vector3D::new(dest.x, dest.y, 0.),
-            uv: Vector2D::new(
+            position: [dest.x, dest.y, 0.],
+            uv: [
                 src.x / self.size.width as f32,
                 src.y / self.size.height as f32,
-            ),
+            ],
             color,
         }
     }

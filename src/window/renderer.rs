@@ -148,11 +148,9 @@ impl FrameRenderer {
             -1.,
             1.,
         );
-        self.renderer
-            .update_pipeline(&self.shape_pipeline, ortho, &mut frame);
+        self.renderer.update_pipeline(&self.shape_pipeline, ortho);
 
-        self.renderer
-            .update_pipeline(&self.sprite_pipeline, ortho, &mut frame);
+        self.renderer.update_pipeline(&self.sprite_pipeline, ortho);
 
         {
             let mut render_commands = Vec::new();

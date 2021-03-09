@@ -27,11 +27,12 @@ pub use arena::{HierarchicalArena, Index};
 use async_channel::Sender;
 use async_trait::async_trait;
 use euclid::Rect;
+use instant::Instant;
 use once_cell::sync::OnceCell;
 use std::{
     collections::{HashMap, HashSet},
     hash::Hash,
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 static UI: OnceCell<HierarchicalArena> = OnceCell::new();

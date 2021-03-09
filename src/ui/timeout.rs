@@ -1,4 +1,5 @@
 use crate::{
+    delay::Delay,
     runtime::Runtime,
     ui::{Entity, InteractiveComponent},
     Handle,
@@ -35,7 +36,7 @@ where
             let target = self.target.clone();
             let pending_send = self.pending_send.clone();
             Runtime::spawn(async move {
-                futures_timer::Delay::new(duration).await;
+                Delay::new(duration).await;
                 let command = {
                     let mut pending_send = pending_send.write().await;
                     pending_send.take()

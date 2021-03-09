@@ -111,6 +111,7 @@ mod internal_macros {
 
 pub mod application;
 pub mod color;
+mod delay;
 mod ext;
 pub mod math;
 pub mod runtime;

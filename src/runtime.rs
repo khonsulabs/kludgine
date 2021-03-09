@@ -1,7 +1,8 @@
 use crate::{
     application::Application,
+    delay::Delay,
     style::theme::SystemTheme,
-    window::{RuntimeWindow, RuntimeWindowConfig, Window, WindowBuilder},
+    window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig, Window, WindowBuilder},
     KludgineResult,
 };
 use crossbeam::{
@@ -12,6 +13,7 @@ use futures::future::Future;
 use platforms::target::{OS, TARGET_OS};
 use std::{collections::HashMap, time::Duration};
 use winit::{event::Event, window::WindowId};
+
 pub(crate) enum RuntimeRequest {
     OpenWindow {
         builder: WindowBuilder,
@@ -63,6 +65,9 @@ mod smol;
 
 #[cfg(feature = "tokio-rt")]
 mod tokio;
+
+#[cfg(target_arch = "wasm32")]
+mod web_sys;
 
 pub struct ApplicationRuntime<App> {
     app: App,
@@ -133,7 +138,7 @@ where
                 RuntimeRequest::Quit.send().await?;
                 return Ok(());
             }
-            futures_timer::Delay::new(Duration::from_millis(100)).await;
+            Delay::new(Duration::from_millis(100)).await;
         }
     }
 }
@@ -174,7 +179,12 @@ impl EventProcessor for Runtime {
 pub struct Runtime {
     request_receiver: Receiver<RuntimeRequest>,
     event_sender: Sender<RuntimeEvent>,
-    windows: HashMap<WindowId, winit::window::Window>,
+}
+
+#[cfg(feature = "multiwindow")]
+lazy_static! {
+    pub(crate) static ref WINIT_WINDOWS: ShardedLock<HashMap<WindowId, winit::window::Window>> =
+        ShardedLock::new(HashMap::new());
 }
 
 impl Runtime {
@@ -190,7 +200,6 @@ impl Runtime {
         Self {
             request_receiver,
             event_sender,
-            windows: HashMap::new(),
         }
     }
 
@@ -205,14 +214,19 @@ impl Runtime {
         window_sender
             .try_send(RuntimeWindowConfig::new(&winit_window))
             .unwrap();
-        self.windows.insert(winit_window.id(), winit_window);
+
+        #[cfg(feature = "multiwindow")]
+        {
+            let mut windows = WINIT_WINDOWS.write().unwrap();
+            windows.insert(winit_window.id(), winit_window);
+        }
     }
 
     fn should_run_in_exclusive_mode() -> bool {
         matches!(TARGET_OS, OS::Android | OS::iOS)
     }
 
-    pub fn run<T, F>(mut self, initial_window: WindowBuilder, window: F) -> !
+    pub fn run<T, F>(self, initial_window: WindowBuilder, window: F) -> !
     where
         T: Window + Sized + 'static,
         F: Future<Output = T> + Send + Sync + 'static,
@@ -236,19 +250,40 @@ impl Runtime {
                 winit::window::Fullscreen::Exclusive(exclusive_mode.unwrap()),
             ));
         }
-        let window = Runtime::block_on(window);
         let initial_window = initial_window.build(&event_loop).unwrap();
+        #[cfg(target_arch = "wasm32")]
+        {
+            use winit::platform::web::WindowExtWebSys;
+            // On wasm, append the canvas to the document body
+            ::web_sys::window()
+                .and_then(|win| win.document())
+                .and_then(|doc| doc.body())
+                .and_then(|body| {
+                    body.append_child(&::web_sys::Element::from(initial_window.canvas()))
+                        .ok()
+                })
+                .expect("couldn't append canvas to document body");
+        }
+
         let (window_sender, window_receiver) = async_channel::bounded(1);
         window_sender
             .try_send(RuntimeWindowConfig::new(&initial_window))
             .unwrap();
 
-        Runtime::block_on(RuntimeWindow::open(
-            window_receiver,
-            initial_system_theme,
-            window,
-        ));
-        self.windows.insert(initial_window.id(), initial_window);
+        // This must be a blocking operation because if the event loop starts without
+        // the RuntimeWindow::count() being updated, the SingleWindowApplication will exit.
+        // This could be refactored to having a flag set after the initial window opens,
+        // but that also feels ugly.
+        Runtime::spawn(async move {
+            let window = window.await;
+            RuntimeWindow::open(window_receiver, initial_system_theme, window).await;
+        });
+
+        #[cfg(feature = "multiwindow")]
+        {
+            let mut windows = WINIT_WINDOWS.write().unwrap();
+            windows.insert(initial_window.id(), initial_window);
+        }
 
         // Install the global event handler, and also ensure we aren't trying to initialize two runtimes
         // This is necessary because EventLoop::run requires the function/closure passed to have a `static
@@ -275,6 +310,7 @@ impl Runtime {
         });
     }
 
+    #[cfg(feature = "multiwindow")]
     pub async fn open_window<T>(builder: WindowBuilder, window: T)
     where
         T: Window + Sized,
@@ -314,14 +350,23 @@ impl Runtime {
             }
         }
 
-        windows.retain(|_, w| {
-            if !w.keep_running.load() {
-                self.windows.remove(&w.window_id);
-                false
-            } else {
-                true
+        if opened_first_window() {
+            #[cfg(not(feature = "multiwindow"))]
+            windows.retain(|_, w| w.keep_running.load());
+
+            #[cfg(feature = "multiwindow")]
+            {
+                let mut winit_windows = WINIT_WINDOWS.write().unwrap();
+                windows.retain(|id, w| {
+                    if w.keep_running.load() {
+                        true
+                    } else {
+                        winit_windows.remove(&id);
+                        false
+                    }
+                });
             }
-        });
+        }
     }
 }
 

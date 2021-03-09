@@ -1,10 +1,13 @@
-use crossbeam::sync::ShardedLock;
+use std::time::Duration;
+
 use futures::future::Future;
 use lazy_static::lazy_static;
+use smol_timeout::TimeoutExt;
+use std::sync::RwLock;
 
 lazy_static! {
-    pub(crate) static ref GLOBAL_THREAD_POOL: ShardedLock<Option<smol::Executor<'static>>> =
-        ShardedLock::new(None);
+    pub(crate) static ref GLOBAL_THREAD_POOL: RwLock<Option<smol::Executor<'static>>> =
+        RwLock::new(None);
 }
 
 pub fn initialize() {
@@ -48,5 +51,12 @@ impl super::Runtime {
         future: Fut,
     ) -> R {
         futures::executor::block_on(future)
+    }
+
+    pub async fn timeout<F: Future<Output = T>, T: Send>(
+        future: F,
+        duration: Duration,
+    ) -> Option<T> {
+        future.timeout(duration).await
     }
 }

@@ -16,8 +16,8 @@ use crate::{
 use crossbeam::atomic::AtomicCell;
 use easygpu::prelude::*;
 use futures::executor::block_on;
-use smol_timeout::TimeoutExt;
-use std::{sync::Arc, time::Instant};
+use once_cell::sync::OnceCell;
+use std::sync::Arc;
 use winit::{event::WindowEvent as WinitWindowEvent, window::WindowId};
 
 pub(crate) struct RuntimeWindow {
@@ -31,23 +31,34 @@ pub(crate) struct RuntimeWindow {
 
 pub(crate) struct RuntimeWindowConfig {
     window_id: WindowId,
-    renderer: Renderer,
+    instance: wgpu::Instance,
+    surface: wgpu::Surface,
     initial_size: Size<u32, ScreenSpace>,
     scale_factor: f32,
 }
 
 impl RuntimeWindowConfig {
     pub fn new(window: &winit::window::Window) -> Self {
-        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
-        let renderer = Runtime::block_on(Renderer::new(&instance, window))
-            .expect("Error creating renderer for window");
+        let instance = wgpu::Instance::new(wgpu::BackendBit::all());
+        let surface = unsafe { instance.create_surface(window) };
         Self {
             window_id: window.id(),
-            renderer,
+            instance,
+            surface,
             initial_size: Size::new(window.inner_size().width, window.inner_size().height),
             scale_factor: window.scale_factor() as f32,
         }
     }
+}
+
+static OPENED_FIRST_WINDOW: OnceCell<()> = OnceCell::new();
+
+pub(crate) fn opened_first_window() -> bool {
+    OPENED_FIRST_WINDOW.get().is_some()
+}
+
+fn set_opened_first_window() {
+    OPENED_FIRST_WINDOW.get_or_init(|| ());
 }
 
 impl RuntimeWindow {
@@ -60,13 +71,18 @@ impl RuntimeWindow {
     {
         let RuntimeWindowConfig {
             window_id,
-            renderer,
+            instance,
+            surface,
             initial_size,
             scale_factor,
         } = window_receiver
             .recv()
             .await
             .expect("Error receiving winit::window");
+
+        let renderer = Renderer::new(surface, &instance)
+            .await
+            .expect("Error creating renderer for window");
 
         let (message_sender, message_receiver) = async_channel::unbounded();
         let (event_sender, event_receiver) = async_channel::unbounded();
@@ -105,6 +121,8 @@ impl RuntimeWindow {
 
         let mut windows = WINDOWS.write().unwrap();
         windows.insert(window_id, runtime_window);
+
+        set_opened_first_window();
     }
 
     async fn request_window_close<T>(id: WindowId, ui: &UserInterface<T>) -> KludgineResult<bool>
@@ -153,28 +171,40 @@ impl RuntimeWindow {
     where
         T: Window,
     {
-        let needs_render = ui.needs_render().await;
-        let next_redraw_target = ui.next_redraw_target().await;
-        if needs_render {
+        #[cfg(target_arch = "wasm32")]
+        {
+            // On wasm, the browser is controlling our async runtime, and we don't have a good way to do a Timeout-style function
+            // This shouldn't have any noticable effects, because the browser will throttle frames for us automatically
+            // We could refactor to trigger redraws separately from winit, in which case we could properly use the frame update logic
             Self::next_window_event_non_blocking(event_receiver)
-        } else if let Some(redraw_at) = next_redraw_target.next_update_instant() {
-            let timeout_target = redraw_at.timeout_target();
-            let remaining_time = timeout_target
-                .map(|t| t.checked_duration_since(Instant::now()))
-                .flatten();
-            if let Some(remaining_time) = remaining_time {
-                match Self::next_window_event_blocking(event_receiver)
-                    .timeout(remaining_time)
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let next_redraw_target = ui.next_redraw_target().await;
+            if ui.needs_render().await {
+                Self::next_window_event_non_blocking(event_receiver)
+            } else if let Some(redraw_at) = next_redraw_target.next_update_instant() {
+                let timeout_target = redraw_at.timeout_target();
+                let remaining_time = timeout_target
+                    .map(|t| t.checked_duration_since(instant::Instant::now()))
+                    .flatten();
+                if let Some(remaining_time) = remaining_time {
+                    match Runtime::timeout(
+                        Self::next_window_event_blocking(event_receiver),
+                        remaining_time,
+                    )
                     .await
-                {
-                    Some(event) => event,
-                    None => Ok(None),
+                    {
+                        Some(event) => event,
+                        None => Ok(None),
+                    }
+                } else {
+                    Self::next_window_event_non_blocking(event_receiver)
                 }
             } else {
-                Self::next_window_event_non_blocking(event_receiver)
+                Self::next_window_event_blocking(event_receiver).await
             }
-        } else {
-            Self::next_window_event_blocking(event_receiver).await
         }
     }
 
@@ -308,8 +338,13 @@ impl RuntimeWindow {
     }
 
     pub(crate) async fn count() -> usize {
-        let channels = WINDOW_CHANNELS.read().await;
-        channels.len()
+        if opened_first_window() {
+            let channels = WINDOW_CHANNELS.read().await;
+            channels.len()
+        } else {
+            // If our first window hasn't opened, return a count of 1. This will happen in a single-threaded environment because RuntimeWindow::open is spawned, not blocked_on.
+            1
+        }
     }
 
     pub(crate) fn receive_messages(&mut self) {

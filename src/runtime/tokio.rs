@@ -1,10 +1,11 @@
-use crossbeam::sync::ShardedLock;
 use futures::future::Future;
 use lazy_static::lazy_static;
+use std::sync::RwLock;
+use std::time::Duration;
 
 lazy_static! {
-    pub(crate) static ref GLOBAL_THREAD_POOL: ShardedLock<Option<tokio::runtime::Runtime>> =
-        ShardedLock::new(None);
+    pub(crate) static ref GLOBAL_THREAD_POOL: RwLock<Option<tokio::runtime::Runtime>> =
+        RwLock::new(None);
 }
 
 pub fn initialize() {
@@ -31,5 +32,12 @@ impl super::Runtime {
         let guard = GLOBAL_THREAD_POOL.read().expect("Error getting runtime");
         let executor = guard.as_ref().unwrap();
         executor.block_on(future)
+    }
+
+    pub async fn timeout<F: Future<Output = T>, T: Send>(
+        future: F,
+        duration: Duration,
+    ) -> Option<T> {
+        tokio::time::timeout(duration, future).await.ok()
     }
 }

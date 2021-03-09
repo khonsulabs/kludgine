@@ -16,7 +16,7 @@ pub(crate) mod frame;
 mod renderer;
 mod runtime_window;
 
-pub(crate) use runtime_window::{RuntimeWindow, RuntimeWindowConfig};
+pub(crate) use runtime_window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig};
 
 pub use winit::window::Icon;
 
