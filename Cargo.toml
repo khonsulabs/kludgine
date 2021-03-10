@@ -38,8 +38,8 @@ instrumentation = ["tracing", "tracing-futures"]
 [dependencies]
 winit = "0.24"
 crossbeam = "0.8"
-easygpu = "0.0.7"
-easygpu-lyon = "0.0.7"
+easygpu = "0.0.8"
+easygpu-lyon = "0.0.8"
 lyon_tessellation = "0.16"
 image = ">=0.23.12"
 lazy_static = "1"

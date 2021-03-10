@@ -85,9 +85,9 @@ where
         keep_running: Arc<AtomicCell<bool>>,
         initial_size: Size<u32, ScreenSpace>,
     ) -> Self {
-        let swap_chain = renderer.swap_chain(initial_size, PresentMode::Vsync);
-        let shape_pipeline = renderer.pipeline(Blending::default());
-        let sprite_pipeline = renderer.pipeline(Blending::default());
+        let swap_chain = renderer.swap_chain(initial_size, PresentMode::Vsync, T::sampler_format());
+        let shape_pipeline = renderer.pipeline(Blending::default(), T::sampler_format());
+        let sprite_pipeline = renderer.pipeline(Blending::default(), T::sampler_format());
         Self {
             renderer,
             keep_running,
@@ -136,7 +136,9 @@ where
         }
 
         if self.swap_chain.size != frame_size {
-            self.swap_chain = self.renderer.swap_chain(frame_size, PresentMode::Vsync);
+            self.swap_chain =
+                self.renderer
+                    .swap_chain(frame_size, PresentMode::Vsync, T::sampler_format());
         }
 
         let output = match self.swap_chain.next_texture() {

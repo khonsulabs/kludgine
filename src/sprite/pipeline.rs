@@ -132,6 +132,10 @@ pub trait VertexShaderSource {
     fn shader() -> &'static [u8];
 
     fn texture_format() -> TextureFormat;
+
+    fn sampler_format() -> TextureFormat {
+        <Self::Lyon as easygpu_lyon::VertexShaderSource>::sampler_format()
+    }
 }
 
 pub struct Srgb;
