@@ -8,11 +8,16 @@ mod collection;
 mod gpu_batch;
 mod pipeline;
 mod sheet;
+#[cfg(target_arch = "wasm32")]
+pub(crate) use self::pipeline::Normal;
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) use self::pipeline::Srgb;
 pub(crate) use self::{
     batch::Batch,
     gpu_batch::{BatchBuffers, GpuBatch},
-    pipeline::Pipeline,
+    pipeline::{Pipeline, VertexShaderSource},
 };
+
 mod source;
 pub use self::{collection::*, sheet::*, source::*};
 use std::{collections::HashMap, iter::IntoIterator, sync::Arc, time::Duration};

@@ -61,6 +61,11 @@ fn set_opened_first_window() {
     OPENED_FIRST_WINDOW.get_or_init(|| ());
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+type Format = crate::sprite::Srgb;
+#[cfg(target_arch = "wasm32")]
+type Format = crate::sprite::Normal;
+
 impl RuntimeWindow {
     pub(crate) async fn open<T>(
         window_receiver: async_channel::Receiver<RuntimeWindowConfig>,
@@ -89,7 +94,7 @@ impl RuntimeWindow {
 
         let keep_running = Arc::new(AtomicCell::new(true));
         let mut frame_synchronizer =
-            FrameRenderer::run(renderer, keep_running.clone(), initial_size);
+            FrameRenderer::<Format>::run(renderer, keep_running.clone(), initial_size);
         let window_event_sender = event_sender.clone();
         Runtime::spawn(async move {
             frame_synchronizer.relinquish(Frame::default()).await;

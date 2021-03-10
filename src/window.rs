@@ -12,7 +12,7 @@ use winit::window::{WindowBuilder as WinitWindowBuilder, WindowId};
 
 pub mod event;
 pub(crate) mod frame;
-mod renderer;
+pub(crate) mod renderer;
 mod runtime_window;
 
 pub(crate) use runtime_window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig};

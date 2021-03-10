@@ -1,11 +1,12 @@
 use crate::math::{Angle, Point, Raw};
 use bytemuck::{Pod, Zeroable};
-use easygpu::prelude::*;
-use std::ops::Deref;
+use easygpu::{prelude::*, wgpu::TextureFormat};
+use std::{marker::PhantomData, ops::Deref};
 
 /// A pipeline for rendering shapes.
-pub struct Pipeline {
+pub struct Pipeline<T> {
     core: PipelineCore,
+    _phantom: PhantomData<T>,
 }
 
 #[repr(C)]
@@ -44,7 +45,7 @@ impl Vertex {
     }
 }
 
-impl Pipeline {
+impl<T> Pipeline<T> {
     pub fn binding(
         &self,
         renderer: &Renderer,
@@ -57,7 +58,10 @@ impl Pipeline {
     }
 }
 
-impl<'a> AbstractPipeline<'a> for Pipeline {
+impl<'a, T> AbstractPipeline<'a> for Pipeline<T>
+where
+    T: VertexShaderSource,
+{
     type PrepareContext = ScreenTransformation<f32>;
     type Uniforms = self::Uniforms;
 
@@ -84,7 +88,7 @@ impl<'a> AbstractPipeline<'a> for Pipeline {
                     },
                 ]),
             ],
-            vertex_shader: include_bytes!("shaders/sprite.vert.spv"),
+            vertex_shader: T::shader(),
             fragment_shader: include_bytes!("shaders/sprite.frag.spv"),
         }
     }
@@ -101,6 +105,7 @@ impl<'a> AbstractPipeline<'a> for Pipeline {
                 uniforms,
                 bindings,
             },
+            _phantom: PhantomData::default(),
         }
     }
 
@@ -114,9 +119,44 @@ impl<'a> AbstractPipeline<'a> for Pipeline {
     }
 }
 
-impl Deref for Pipeline {
+impl<T> Deref for Pipeline<T> {
     type Target = PipelineCore;
     fn deref(&self) -> &Self::Target {
         &self.core
+    }
+}
+
+pub trait VertexShaderSource {
+    type Lyon: easygpu_lyon::VertexShaderSource + Send + Sync;
+
+    fn shader() -> &'static [u8];
+
+    fn texture_format() -> TextureFormat;
+}
+
+pub struct Srgb;
+pub struct Normal;
+
+impl VertexShaderSource for Srgb {
+    type Lyon = easygpu_lyon::Srgb;
+
+    fn shader() -> &'static [u8] {
+        include_bytes!("shaders/sprite-srgb.vert.spv")
+    }
+
+    fn texture_format() -> TextureFormat {
+        TextureFormat::Rgba8UnormSrgb
+    }
+}
+
+impl VertexShaderSource for Normal {
+    type Lyon = easygpu_lyon::Normal;
+
+    fn shader() -> &'static [u8] {
+        include_bytes!("shaders/sprite.vert.spv")
+    }
+
+    fn texture_format() -> TextureFormat {
+        TextureFormat::Rgba8Unorm
     }
 }

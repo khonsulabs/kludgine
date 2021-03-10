@@ -1,7 +1,7 @@
 use crate::{
     math::{Box2D, Point, Size, Unknown},
     runtime::Runtime,
-    sprite,
+    sprite::{self, VertexShaderSource},
     window::frame::{FontUpdate, Frame, FrameCommand},
     KludgineResult,
 };
@@ -51,13 +51,16 @@ impl FrameSynchronizer {
     }
 }
 
-pub(crate) struct FrameRenderer {
+pub(crate) struct FrameRenderer<T>
+where
+    T: VertexShaderSource,
+{
     keep_running: Arc<AtomicCell<bool>>,
     renderer: Renderer,
     swap_chain: SwapChain,
     frame_synchronizer: FrameSynchronizer,
-    sprite_pipeline: sprite::Pipeline,
-    shape_pipeline: LyonPipeline,
+    sprite_pipeline: sprite::Pipeline<T>,
+    shape_pipeline: LyonPipeline<T::Lyon>,
     gpu_state: Mutex<GpuState>,
 }
 
@@ -72,7 +75,10 @@ enum RenderCommand {
     Shapes(easygpu_lyon::Shape),
 }
 
-impl FrameRenderer {
+impl<T> FrameRenderer<T>
+where
+    T: VertexShaderSource + Send + Sync + 'static,
+{
     fn new(
         renderer: Renderer,
         frame_synchronizer: FrameSynchronizer,
@@ -101,7 +107,7 @@ impl FrameRenderer {
         let (client_synchronizer, renderer_synchronizer) = FrameSynchronizer::pair();
 
         let frame_renderer =
-            FrameRenderer::new(renderer, renderer_synchronizer, keep_running, initial_size);
+            FrameRenderer::<T>::new(renderer, renderer_synchronizer, keep_running, initial_size);
         Runtime::spawn(frame_renderer.render_loop());
 
         client_synchronizer
@@ -167,7 +173,9 @@ impl FrameRenderer {
             {
                 let mut loaded_font = engine_frame.fonts.get_mut(font_id).unwrap();
                 if loaded_font.texture.is_none() {
-                    let texture = self.renderer.texture(Size::new(512, 512)); // TODO font texture should be configurable
+                    let texture = self
+                        .renderer
+                        .texture(Size::new(512, 512), T::texture_format()); // TODO font texture should be configurable
                     let sampler = self
                         .renderer
                         .sampler(FilterMode::Linear, FilterMode::Linear);
@@ -236,7 +244,10 @@ impl FrameRenderer {
                                 let pixels = Rgba8::align(&pixels);
 
                                 (
-                                    self.renderer.texture(Size::new(w, h).cast::<u32>()),
+                                    self.renderer.texture(
+                                        Size::new(w, h).cast::<u32>(),
+                                        T::texture_format(),
+                                    ),
                                     pixels.to_owned(),
                                     texture.id,
                                 )

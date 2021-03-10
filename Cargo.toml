@@ -38,8 +38,8 @@ instrumentation = ["tracing", "tracing-futures"]
 [dependencies]
 winit = "0.24"
 crossbeam = "0.8"
-easygpu = "0.0.6"
-easygpu-lyon = "0.0.6"
+easygpu = "0.0.7"
+easygpu-lyon = "0.0.7"
 lyon_tessellation = "0.16"
 image = ">=0.23.12"
 lazy_static = "1"
@@ -96,6 +96,7 @@ required-features = ["bundled-fonts-roboto"]
 [[example]]
 name = "ui"
 required-features = ["bundled-fonts-roboto"]
-# [patch.crates-io]
-# easygpu = { path = "../easygpu" }
-# easygpu-lyon = { path = "../easygpu-lyon" }
+
+[patch.crates-io]
+easygpu = { path = "../easygpu" }
+easygpu-lyon = { path = "../easygpu-lyon" }
