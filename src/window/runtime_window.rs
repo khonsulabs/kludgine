@@ -39,7 +39,8 @@ pub(crate) struct RuntimeWindowConfig {
 
 impl RuntimeWindowConfig {
     pub fn new(window: &winit::window::Window) -> Self {
-        let instance = wgpu::Instance::new(wgpu::BackendBit::all());
+        // TODO in wasm, we need to explicity enable GL, but since wasm isn't possible right now, we're just hardcoding primary
+        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
         let surface = unsafe { instance.create_surface(window) };
         Self {
             window_id: window.id(),
