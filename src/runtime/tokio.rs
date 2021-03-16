@@ -12,7 +12,10 @@ pub fn initialize() {
     let mut pool_guard = GLOBAL_THREAD_POOL
         .write()
         .expect("Error locking global thread pool");
-    assert!(pool_guard.is_none());
+    if pool_guard.is_some() {
+        return;
+    }
+
     let executor = tokio::runtime::Runtime::new().unwrap();
     *pool_guard = Some(executor);
 }

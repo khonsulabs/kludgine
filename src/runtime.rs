@@ -192,11 +192,15 @@ lazy_static! {
 }
 
 impl Runtime {
+    pub fn initialize() {
+        initialize_async_runtime();
+    }
+
     pub fn new<App>(app: App) -> Self
     where
         App: Application + 'static,
     {
-        initialize_async_runtime();
+        Self::initialize();
 
         let app_runtime = ApplicationRuntime { app };
         let (request_receiver, event_sender) = app_runtime.launch();
