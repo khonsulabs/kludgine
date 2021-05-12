@@ -240,7 +240,7 @@ mod tests {
     use crate::{
         math::{Scaled, ScreenScale},
         scene::{Scene, Target},
-        style::{theme::Minimal, FontSize, Style},
+        style::{FontSize, Style},
         text::Span,
     };
 
@@ -248,7 +248,7 @@ mod tests {
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word() {
         for &scale in &[1f32, 2.] {
-            let mut scene = Target::from(Scene::new(Minimal::default().theme()));
+            let mut scene = Target::from(Scene::new());
             scene.set_scale_factor(ScreenScale::new(scale)).await;
             scene.register_bundled_fonts().await;
             let wrap = Text::new(vec![Span::new(
@@ -278,7 +278,7 @@ mod tests {
     #[async_test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
     async fn wrap_one_word_different_span() {
-        let scene = Target::from(Scene::new(Minimal::default().theme()));
+        let scene = Target::from(Scene::new());
         scene.register_bundled_fonts().await;
 
         let first_style = Style::new()

@@ -1,23 +1,26 @@
 use crate::{
     math::{Scaled, Size},
-    style::theme::{Minimal, SystemTheme, Theme},
-    ui::InteractiveComponent,
+    scene::Target,
     Handle, KludgineError, KludgineResult,
 };
 use async_trait::async_trait;
 use easygpu::prelude::*;
 use lazy_static::lazy_static;
 use std::collections::HashMap;
-use winit::window::{WindowBuilder as WinitWindowBuilder, WindowId};
+use winit::window::{Theme, WindowBuilder as WinitWindowBuilder, WindowId};
 
 pub mod event;
 pub(crate) mod frame;
+pub(crate) mod open;
 pub(crate) mod renderer;
 mod runtime_window;
 
+pub use open::OpenWindow;
 pub(crate) use runtime_window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig};
 
 pub use winit::window::Icon;
+
+use self::event::InputEvent;
 
 /// How to react to a request to close a window
 pub enum CloseResponse {
@@ -29,11 +32,21 @@ pub enum CloseResponse {
 
 /// Trait to implement a Window
 #[async_trait]
-pub trait Window: InteractiveComponent + Send + Sync + 'static {
+pub trait Window: Send + Sync + 'static {
     /// The window was requested to be closed, most likely from the Close Button. Override
     /// this implementation if you want logic in place to prevent a window from closing.
-    async fn close_requested(&self) -> KludgineResult<CloseResponse> {
+    async fn close_requested(&mut self) -> KludgineResult<CloseResponse> {
         Ok(CloseResponse::Close)
+    }
+
+    /// The window has received an input event.
+    async fn process_input(&mut self, _input: InputEvent) -> KludgineResult<()> {
+        Ok(())
+    }
+
+    /// A text input was received.
+    async fn receive_character(&mut self, _character: char) -> KludgineResult<()> {
+        Ok(())
     }
 
     /// Specify a target frames per second, which will force your window
@@ -43,8 +56,12 @@ pub trait Window: InteractiveComponent + Send + Sync + 'static {
         None
     }
 
-    fn theme(&self) -> Theme {
-        Minimal::default().theme()
+    async fn render(&mut self, _scene: &Target) -> KludgineResult<()> {
+        Ok(())
+    }
+
+    async fn update(&mut self, _scene: &Target) -> KludgineResult<()> {
+        Ok(())
     }
 }
 
@@ -94,8 +111,8 @@ pub trait WindowCreator: Window {
         false
     }
 
-    fn initial_system_theme() -> SystemTheme {
-        SystemTheme::Light
+    fn initial_system_theme() -> Theme {
+        Theme::Light
     }
 }
 
@@ -109,7 +126,7 @@ pub struct WindowBuilder {
     transparent: Option<bool>,
     decorations: Option<bool>,
     always_on_top: Option<bool>,
-    pub(crate) initial_system_theme: Option<SystemTheme>,
+    pub(crate) initial_system_theme: Option<Theme>,
     icon: Option<winit::window::Icon>,
 }
 
@@ -159,45 +176,45 @@ impl WindowBuilder {
         self
     }
 
-    pub fn with_initial_system_theme(mut self, system_theme: SystemTheme) -> Self {
+    pub fn with_initial_system_theme(mut self, system_theme: Theme) -> Self {
         self.initial_system_theme = Some(system_theme);
         self
     }
 }
 
-impl Into<WinitWindowBuilder> for WindowBuilder {
-    fn into(self) -> WinitWindowBuilder {
-        let mut builder = WinitWindowBuilder::new();
-        if let Some(title) = self.title {
+impl From<WindowBuilder> for WinitWindowBuilder {
+    fn from(wb: WindowBuilder) -> Self {
+        let mut builder = Self::new();
+        if let Some(title) = wb.title {
             builder = builder.with_title(title);
         }
-        if let Some(size) = self.size {
+        if let Some(size) = wb.size {
             builder =
                 builder.with_inner_size(winit::dpi::Size::Physical(winit::dpi::PhysicalSize {
                     width: size.width,
                     height: size.height,
                 }));
         }
-        if let Some(resizable) = self.resizable {
+        if let Some(resizable) = wb.resizable {
             builder = builder.with_resizable(resizable);
         }
-        if let Some(maximized) = self.maximized {
+        if let Some(maximized) = wb.maximized {
             builder = builder.with_maximized(maximized);
         }
-        if let Some(visible) = self.visible {
+        if let Some(visible) = wb.visible {
             builder = builder.with_visible(visible);
         }
-        if let Some(transparent) = self.transparent {
+        if let Some(transparent) = wb.transparent {
             builder = builder.with_transparent(transparent);
         }
-        if let Some(decorations) = self.decorations {
+        if let Some(decorations) = wb.decorations {
             builder = builder.with_decorations(decorations);
         }
-        if let Some(always_on_top) = self.always_on_top {
+        if let Some(always_on_top) = wb.always_on_top {
             builder = builder.with_always_on_top(always_on_top);
         }
 
-        builder = builder.with_window_icon(self.icon);
+        builder = builder.with_window_icon(wb.icon);
 
         builder
     }

@@ -36,31 +36,31 @@ pub enum PathEvent<S> {
     },
 }
 
-impl Into<LyonPathEvent> for PathEvent<Raw> {
-    fn into(self) -> LyonPathEvent {
-        match self {
-            Self::Begin { at } => LyonPathEvent::Begin { at: at.cast_unit() },
-            Self::Line { from, to } => LyonPathEvent::Line {
+impl From<PathEvent<Raw>> for LyonPathEvent {
+    fn from(event: PathEvent<Raw>) -> Self {
+        match event {
+            PathEvent::Begin { at } => Self::Begin { at: at.cast_unit() },
+            PathEvent::Line { from, to } => Self::Line {
                 from: from.cast_unit(),
                 to: to.cast_unit(),
             },
-            Self::Quadratic { from, ctrl, to } => LyonPathEvent::Quadratic {
+            PathEvent::Quadratic { from, ctrl, to } => Self::Quadratic {
                 from: from.cast_unit(),
                 ctrl: ctrl.cast_unit(),
                 to: to.cast_unit(),
             },
-            Self::Cubic {
+            PathEvent::Cubic {
                 from,
                 ctrl1,
                 ctrl2,
                 to,
-            } => LyonPathEvent::Cubic {
+            } => Self::Cubic {
                 from: from.cast_unit(),
                 ctrl1: ctrl1.cast_unit(),
                 ctrl2: ctrl2.cast_unit(),
                 to: to.cast_unit(),
             },
-            Self::End { last, first, close } => LyonPathEvent::End {
+            PathEvent::End { last, first, close } => Self::End {
                 last: last.cast_unit(),
                 first: first.cast_unit(),
                 close,

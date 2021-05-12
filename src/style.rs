@@ -15,7 +15,6 @@ mod colors;
 mod font_family;
 mod font_size;
 mod font_style;
-pub mod theme;
 mod weight;
 pub use self::{
     alignment::{Alignment, VerticalAlignment},

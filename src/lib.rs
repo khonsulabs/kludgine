@@ -12,9 +12,6 @@ extern crate futures_await_test;
 #[macro_use]
 extern crate tracing;
 
-// Re-exports
-#[cfg(feature = "clipboard")]
-pub use arboard;
 pub use async_handle::Handle;
 pub use async_trait::async_trait;
 pub use easygpu;
@@ -46,10 +43,6 @@ pub enum KludgineError {
     FontFamilyNotFound(String),
     #[error("argument is out of bounds")]
     OutOfBounds,
-
-    #[cfg(feature = "clipboard")]
-    #[error("clipboard error: {0}")]
-    Clipboard(#[from] arboard::Error),
 
     #[error("specify at most 2 of the dimensions top, bottom, and height. (e.g., top and bottom, but not height")]
     AbsoluteBoundsInvalidVertical,
@@ -122,7 +115,6 @@ pub mod style;
 pub mod text;
 pub mod texture;
 pub mod tilemap;
-pub mod ui;
 pub mod window;
 
 /// Convenience module that exports the public interface of Kludgine
@@ -144,10 +136,6 @@ pub mod prelude {
             SpriteSourceSublocation,
         },
         style::{
-            theme::{
-                ColorGroup, ElementKind, Intent, Minimal, Palette, PaletteShade, SystemTheme,
-                Theme, VariableColor,
-            },
             Alignment, AnyStyleComponent, BackgroundColor, ColorPair, ComponentCollection,
             FontFamily, FontSize, FontStyle, ForegroundColor, GenericStyle, Style, StyleComponent,
             StyleSheet, UnscaledStyleComponent, VerticalAlignment, Weight,
@@ -161,20 +149,6 @@ pub mod prelude {
         texture::Texture,
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,
-        },
-        ui::{
-            AbsoluteBounds, AbsoluteLayout, AnimatableComponent, AnimationManager, Border, Button,
-            Callback, ChainElementDynamicContents, ColumnLayout, Component, ComponentBorder,
-            ComponentOverflow, ContentOffset, Context, ControlEvent, Dialog, DialogButton,
-            DialogButtonSpacing, DialogButtons, Entity, EntityBuilder, Grid, GridCommand,
-            GridEvent, HierarchicalArena, Image, ImageAlphaAnimation, ImageCommand,
-            ImageFrameAnimation, ImageOptions, ImageScaling, Index, Indexable,
-            InteractiveComponent, InteractiveComponentExt, Label, LabelCommand, Layout,
-            LayoutConstraints, LayoutContext, LayoutSolver, LayoutSolverExt, LinearTransition,
-            Overflow, Pane, Panel, PanelCommand, PanelEvent, PanelMessage, PanelProvider,
-            RowLayout, Scroll, ScrollCommand, ScrollEvent, ScrollGutterColor, Scrollbar,
-            ScrollbarCommand, ScrollbarGripColor, ScrollbarMetrics, ScrollbarSize,
-            StandaloneComponent, StyledContext, TextField, TextFieldEvent, Timeout, Toast,
         },
         window::{
             event::{

@@ -2,10 +2,7 @@ use crate::{
     math::{Point, Raw, Scale, Scaled, ScreenScale, Size, Vector},
     shape::Shape,
     sprite::RenderedSprite,
-    style::{
-        theme::{SystemTheme, Theme},
-        FontStyle, Weight,
-    },
+    style::{FontStyle, Weight},
     text::{font::Font, prepared::PreparedSpan},
     Handle, KludgineError, KludgineResult,
 };
@@ -13,10 +10,9 @@ use euclid::Rect;
 use platforms::target::{OS, TARGET_OS};
 use std::{
     collections::{HashMap, HashSet},
-    sync::Arc,
     time::{Duration, Instant},
 };
-use winit::event::VirtualKeyCode;
+use winit::{event::VirtualKeyCode, window::Theme};
 
 #[derive(Debug)]
 pub(crate) enum Element {
@@ -105,8 +101,7 @@ impl std::ops::DerefMut for Target {
     }
 }
 
-#[derive(derivative::Derivative)]
-#[derivative(Debug)]
+#[derive(Debug)]
 pub(crate) struct SceneData {
     pub pressed_keys: HashSet<VirtualKeyCode>,
     scale_factor: ScreenScale,
@@ -115,9 +110,7 @@ pub(crate) struct SceneData {
     now: Option<Instant>,
     elapsed: Option<Duration>,
     fonts: HashMap<String, Vec<Font>>,
-    system_theme: SystemTheme,
-    #[derivative(Debug = "ignore")]
-    theme: Arc<Theme>,
+    system_theme: Theme,
 }
 
 pub struct Modifiers {
@@ -144,10 +137,9 @@ impl Modifiers {
 }
 
 impl Scene {
-    pub(crate) fn new(theme: Theme) -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             data: Handle::new(SceneData {
-                theme: Arc::new(theme),
                 scale_factor: Scale::identity(),
                 size: Size::default(),
                 pressed_keys: HashSet::new(),
@@ -155,17 +147,17 @@ impl Scene {
                 elapsed: None,
                 elements: Vec::new(),
                 fonts: HashMap::new(),
-                system_theme: SystemTheme::Light,
+                system_theme: Theme::Light,
             }),
         }
     }
 
-    pub async fn system_theme(&self) -> SystemTheme {
+    pub async fn system_theme(&self) -> Theme {
         let scene = self.data.read().await;
         scene.system_theme
     }
 
-    pub(crate) async fn set_system_theme(&self, system_theme: SystemTheme) {
+    pub(crate) async fn set_system_theme(&self, system_theme: Theme) {
         let mut scene = self.data.write().await;
         scene.system_theme = system_theme;
     }
@@ -309,12 +301,7 @@ impl Scene {
         style: FontStyle,
     ) -> KludgineResult<Font> {
         let scene = self.data.read().await;
-        let fonts = if family.eq_ignore_ascii_case("sans-serif") {
-            let theme = self.theme().await;
-            scene.fonts.get(&theme.default_font_family)
-        } else {
-            scene.fonts.get(family)
-        };
+        let fonts = scene.fonts.get(family);
 
         match fonts {
             Some(fonts) => {
@@ -348,10 +335,5 @@ impl Scene {
             }
             None => Err(KludgineError::FontFamilyNotFound(family.to_owned())),
         }
-    }
-
-    pub async fn theme(&self) -> Arc<Theme> {
-        let scene = self.data.read().await;
-        scene.theme.clone()
     }
 }

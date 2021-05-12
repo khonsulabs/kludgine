@@ -29,9 +29,15 @@ impl<U: Component> From<Srgb<U>> for Color {
     }
 }
 
-impl Into<Srgba> for Color {
-    fn into(self) -> Srgba {
-        Srgba::new(self.0.r, self.0.g, self.0.b, self.0.a)
+impl From<Color> for Srgba {
+    fn from(color: Color) -> Self {
+        Self::new(color.0.r, color.0.g, color.0.b, color.0.a)
+    }
+}
+
+impl From<Color> for Rgba {
+    fn from(color: Color) -> Self {
+        color.0
     }
 }
 
@@ -41,15 +47,9 @@ impl From<Rgba> for Color {
     }
 }
 
-impl Into<Rgba> for Color {
-    fn into(self) -> Rgba {
-        self.0
-    }
-}
-
-impl Into<Rgba8> for Color {
-    fn into(self) -> Rgba8 {
-        self.0.into()
+impl From<Color> for Rgba8 {
+    fn from(color: Color) -> Self {
+        color.0.into()
     }
 }
 

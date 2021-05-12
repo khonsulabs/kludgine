@@ -1,7 +1,6 @@
 use crate::{
     application::Application,
     delay::Delay,
-    style::theme::SystemTheme,
     window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig, Window, WindowBuilder},
     KludgineResult,
 };
@@ -12,7 +11,10 @@ use crossbeam::{
 use futures::future::Future;
 use platforms::target::{OS, TARGET_OS};
 use std::{collections::HashMap, time::Duration};
-use winit::{event::Event, window::WindowId};
+use winit::{
+    event::Event,
+    window::{Theme, WindowId},
+};
 
 pub(crate) enum RuntimeRequest {
     #[cfg(feature = "multiwindow")]
@@ -241,7 +243,7 @@ impl Runtime {
         let initial_system_theme = initial_window
             .initial_system_theme
             .clone()
-            .unwrap_or(SystemTheme::Light);
+            .unwrap_or(Theme::Light);
         let mut initial_window: winit::window::WindowBuilder = initial_window.into();
 
         if Self::should_run_in_exclusive_mode() {
@@ -318,10 +320,7 @@ impl Runtime {
         T: Window + Sized,
     {
         let (window_sender, window_receiver) = async_channel::bounded(1);
-        let initial_system_theme = builder
-            .initial_system_theme
-            .clone()
-            .unwrap_or(SystemTheme::Light);
+        let initial_system_theme = builder.initial_system_theme.clone().unwrap_or(Theme::Light);
         RuntimeRequest::OpenWindow {
             builder,
             window_sender,

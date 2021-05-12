@@ -2,9 +2,6 @@ use crate::{
     math::{Pixels, Point, ScreenScale, Size},
     prelude::Scene,
     runtime::{Runtime, WINDOWS},
-    scene::Target,
-    style::theme::SystemTheme,
-    ui::{global_arena, UserInterface},
     window::{
         event::{ElementState, Event, InputEvent, VirtualKeyCode, WindowEvent},
         frame::Frame,
@@ -18,7 +15,12 @@ use easygpu::prelude::*;
 use futures::executor::block_on;
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
-use winit::{event::WindowEvent as WinitWindowEvent, window::WindowId};
+use winit::{
+    event::WindowEvent as WinitWindowEvent,
+    window::{Theme, WindowId},
+};
+
+use super::OpenWindow;
 
 pub(crate) struct RuntimeWindow {
     pub window_id: WindowId,
@@ -70,7 +72,7 @@ type Format = crate::sprite::Normal;
 impl RuntimeWindow {
     pub(crate) async fn open<T>(
         window_receiver: async_channel::Receiver<RuntimeWindowConfig>,
-        initial_system_theme: SystemTheme,
+        initial_system_theme: Theme,
         app_window: T,
     ) where
         T: Window + Sized + 'static,
@@ -131,16 +133,12 @@ impl RuntimeWindow {
         set_opened_first_window();
     }
 
-    async fn request_window_close<T>(id: WindowId, ui: &UserInterface<T>) -> KludgineResult<bool>
+    async fn request_window_close<T>(id: WindowId, window: &OpenWindow<T>) -> KludgineResult<bool>
     where
         T: Window,
     {
-        for layer in ui.layers().await {
-            let root_node = global_arena().get(&layer.root).await.unwrap();
-            let component = root_node.component.read().await;
-            if let CloseResponse::RemainOpen = component.close_requested().await? {
-                return Ok(false);
-            }
+        if let CloseResponse::RemainOpen = window.request_close().await? {
+            return Ok(false);
         }
 
         WindowMessage::Close.send_to(id).await?;
@@ -172,7 +170,7 @@ impl RuntimeWindow {
 
     async fn next_window_event<T>(
         event_receiver: &mut async_channel::Receiver<WindowEvent>,
-        ui: &UserInterface<T>,
+        window: &OpenWindow<T>,
     ) -> KludgineResult<Option<WindowEvent>>
     where
         T: Window,
@@ -187,8 +185,8 @@ impl RuntimeWindow {
 
         #[cfg(not(target_arch = "wasm32"))]
         {
-            let next_redraw_target = ui.next_redraw_target().await;
-            if ui.needs_render().await {
+            let next_redraw_target = window.next_redraw_target().await;
+            if window.needs_render().await {
                 Self::next_window_event_non_blocking(event_receiver)
             } else if let Some(redraw_at) = next_redraw_target.next_update_instant() {
                 let timeout_target = redraw_at.timeout_target();
@@ -214,26 +212,26 @@ impl RuntimeWindow {
         }
     }
 
-    async fn window_loop<T>(
+    async fn window_loop<T: Window>(
         id: WindowId,
         mut frame_synchronizer: FrameSynchronizer,
         event_sender: async_channel::Sender<WindowEvent>,
         mut event_receiver: async_channel::Receiver<WindowEvent>,
-        initial_system_theme: SystemTheme,
+        initial_system_theme: Theme,
         window: T,
     ) -> KludgineResult<()>
     where
         T: Window,
     {
-        let mut scene = Scene::new(window.theme());
+        let mut scene = Scene::new();
         scene.set_system_theme(initial_system_theme).await;
         let target_fps = window.target_fps();
-        let mut ui =
-            UserInterface::new(window, scene.clone(), global_arena().clone(), event_sender).await?;
+        let window = OpenWindow::new(window, event_sender, scene.clone());
+
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         loop {
-            while let Some(event) = match Self::next_window_event(&mut event_receiver, &ui)
+            while let Some(event) = match Self::next_window_event(&mut event_receiver, &window)
                 .await
                 .filter_invalid_component_references()
             {
@@ -244,7 +242,7 @@ impl RuntimeWindow {
                     WindowEvent::WakeUp => {}
                     WindowEvent::SystemThemeChanged(system_theme) => {
                         scene.set_system_theme(system_theme).await;
-                        ui.request_redraw().await;
+                        window.set_needs_redraw().await;
                     }
                     WindowEvent::Resize { size, scale_factor } => {
                         scene
@@ -253,7 +251,7 @@ impl RuntimeWindow {
                         scene.set_scale_factor(scale_factor).await;
                     }
                     WindowEvent::CloseRequested => {
-                        if Self::request_window_close(id, &ui).await? {
+                        if Self::request_window_close(id, &window).await? {
                             return Ok(());
                         }
                     }
@@ -275,17 +273,13 @@ impl RuntimeWindow {
                             }
                         }
 
-                        ui.process_input(input)
-                            .await
-                            .filter_invalid_component_references()?;
+                        window.process_input(input).await?;
                     }
                     WindowEvent::ReceiveCharacter(character) => {
-                        ui.receive_character(character)
-                            .await
-                            .filter_invalid_component_references()?;
+                        window.receive_character(character).await?;
                     }
                     WindowEvent::RedrawRequested => {
-                        ui.request_redraw().await;
+                        window.set_needs_redraw().await;
                     }
                 }
             }
@@ -295,7 +289,7 @@ impl RuntimeWindow {
                 let modifiers = scene.modifiers_pressed().await;
                 if modifiers.primary_modifier()
                     && scene.key_pressed(VirtualKeyCode::W).await
-                    && Self::request_window_close(id, &ui)
+                    && Self::request_window_close(id, &window)
                         .await
                         .filter_invalid_component_references()?
                 {
@@ -306,15 +300,13 @@ impl RuntimeWindow {
             if scene.size().await.area() > 0.0 {
                 scene.start_frame().await;
 
-                ui.update(&Target::from(scene.clone()), target_fps)
-                    .await
-                    .filter_invalid_component_references()?;
+                window.update(target_fps).await?;
 
-                if ui.needs_render().await {
-                    ui.render().await.filter_invalid_component_references()?;
+                if window.needs_render().await {
+                    window.render().await?;
 
                     let mut frame = frame_synchronizer.take().await;
-                    frame.update(&Target::from(scene.clone())).await;
+                    frame.update(&scene).await;
                     frame_synchronizer.relinquish(frame).await;
                 }
             }
@@ -326,7 +318,7 @@ impl RuntimeWindow {
         frame_synchronizer: FrameSynchronizer,
         event_sender: async_channel::Sender<WindowEvent>,
         event_receiver: async_channel::Receiver<WindowEvent>,
-        initial_system_theme: SystemTheme,
+        initial_system_theme: Theme,
         window: T,
     ) where
         T: Window,

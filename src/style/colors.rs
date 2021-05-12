@@ -1,9 +1,7 @@
-use crate::{
-    color::Color,
-    math::Scaled,
-    style::{theme::SystemTheme, UnscaledStyleComponent},
-};
+use crate::{color::Color, math::Scaled, style::UnscaledStyleComponent};
+
 use std::fmt::Debug;
+use winit::window::Theme;
 
 #[derive(Debug, Clone, Default, Copy)]
 pub struct ColorPair {
@@ -29,10 +27,10 @@ impl From<Color> for ColorPair {
 }
 
 impl ColorPair {
-    pub fn themed_color(&self, system_theme: &SystemTheme) -> Color {
+    pub fn themed_color(&self, system_theme: &Theme) -> Color {
         match system_theme {
-            SystemTheme::Light => self.light_color,
-            SystemTheme::Dark => self.dark_color,
+            Theme::Light => self.light_color,
+            Theme::Dark => self.dark_color,
         }
     }
 }
@@ -50,9 +48,9 @@ impl Default for ForegroundColor {
     }
 }
 
-impl Into<ColorPair> for ForegroundColor {
-    fn into(self) -> ColorPair {
-        self.0
+impl From<ForegroundColor> for ColorPair {
+    fn from(color: ForegroundColor) -> Self {
+        color.0
     }
 }
 
@@ -73,8 +71,8 @@ impl Default for BackgroundColor {
     }
 }
 
-impl Into<ColorPair> for BackgroundColor {
-    fn into(self) -> ColorPair {
-        self.0
+impl From<BackgroundColor> for ColorPair {
+    fn from(color: BackgroundColor) -> Self {
+        color.0
     }
 }

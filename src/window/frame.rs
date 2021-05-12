@@ -1,6 +1,6 @@
 use crate::{
     math::{Raw, Size},
-    scene::{Element, Target},
+    scene::{Element, Scene},
     shape, sprite,
     text::{font::LoadedFont, prepared::PreparedSpan},
     texture::Texture,
@@ -81,7 +81,7 @@ impl Frame {
         feature = "tracing",
         instrument(name = "Frame::update", level = "trace", skip(self, scene))
     )]
-    pub async fn update(&mut self, scene: &Target) {
+    pub async fn update(&mut self, scene: &Scene) {
         self.started_at = Some(scene.now().await);
         self.commands.clear();
 
@@ -185,7 +185,7 @@ impl Frame {
         None
     }
 
-    async fn cache_glyphs(&mut self, scene: &Target) {
+    async fn cache_glyphs(&mut self, scene: &Scene) {
         let mut referenced_fonts = HashSet::new();
         let scene = scene.data.read().await;
         for text in scene

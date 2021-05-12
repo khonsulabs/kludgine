@@ -1,6 +1,6 @@
 use crate::{
+    scene::Target,
     text::{prepared::PreparedText, wrap::TextWrap, Text},
-    ui::StyledContext,
     KludgineResult,
 };
 use async_handle::Handle;
@@ -134,13 +134,13 @@ impl RichText {
 
     pub async fn prepare(
         &self,
-        context: &mut StyledContext,
+        scene: &Target,
         wrapping: TextWrap,
     ) -> KludgineResult<Vec<PreparedText>> {
         let data = self.data.read().await;
         let mut prepared = Vec::new();
         for paragraph in data.paragraphs.iter() {
-            prepared.push(paragraph.wrap(context.scene(), wrapping.clone()).await?);
+            prepared.push(paragraph.wrap(scene, wrapping.clone()).await?);
         }
         Ok(prepared)
     }

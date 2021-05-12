@@ -46,19 +46,19 @@ impl From<ttf_parser::Weight> for Weight {
     }
 }
 
-impl Into<ttf_parser::Weight> for Weight {
-    fn into(self) -> ttf_parser::Weight {
-        match self {
-            Weight::Thin => ttf_parser::Weight::Thin,
-            Weight::ExtraLight => ttf_parser::Weight::ExtraLight,
-            Weight::Light => ttf_parser::Weight::Light,
-            Weight::Normal => ttf_parser::Weight::Normal,
-            Weight::Medium => ttf_parser::Weight::Medium,
-            Weight::SemiBold => ttf_parser::Weight::SemiBold,
-            Weight::Bold => ttf_parser::Weight::Bold,
-            Weight::ExtraBold => ttf_parser::Weight::ExtraBold,
-            Weight::Black => ttf_parser::Weight::Black,
-            Weight::Other(value) => ttf_parser::Weight::Other(value),
+impl From<Weight> for ttf_parser::Weight {
+    fn from(weight: Weight) -> Self {
+        match weight {
+            Weight::Thin => Self::Thin,
+            Weight::ExtraLight => Self::ExtraLight,
+            Weight::Light => Self::Light,
+            Weight::Normal => Self::Normal,
+            Weight::Medium => Self::Medium,
+            Weight::SemiBold => Self::SemiBold,
+            Weight::Bold => Self::Bold,
+            Weight::ExtraBold => Self::ExtraBold,
+            Weight::Black => Self::Black,
+            Weight::Other(value) => Self::Other(value),
         }
     }
 }
