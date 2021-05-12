@@ -14,14 +14,10 @@ impl WindowCreator for Shapes {
     }
 }
 
-impl Window for Shapes {}
-
-impl StandaloneComponent for Shapes {}
-
 #[async_trait]
-impl Component for Shapes {
-    async fn render(&mut self, context: &mut StyledContext, layout: &Layout) -> KludgineResult<()> {
-        let center = layout.bounds_without_margin().center();
+impl Window for Shapes {
+    async fn render(&mut self, scene: &Target) -> KludgineResult<()> {
+        let center = Rect::new(Point::default(), scene.size().await).center();
 
         Shape::polygon(vec![
             Point::new(-100., -100.),
@@ -29,12 +25,12 @@ impl Component for Shapes {
             Point::new(100., -100.),
         ])
         .fill(Fill::new(Color::GREEN))
-        .render_at(center, context.scene())
+        .render_at(center, scene)
         .await;
 
         Shape::circle(Point::new(0., 0.), Points::new(25.))
             .fill(Fill::new(Color::RED))
-            .render_at(center, context.scene())
+            .render_at(center, scene)
             .await;
 
         Ok(())
