@@ -76,8 +76,7 @@ where
             let mut x_pos = tile_size.width() * min_x as f32 + location.x();
             if let Some(stagger) = &self.stagger {
                 if y % 2 == 0 {
-                    x_pos =
-                        x_pos - Length::<f32, Scaled>::new(stagger.width as f32) * effective_scale;
+                    x_pos -= Length::<f32, Scaled>::new(stagger.width as f32) * effective_scale;
                 }
             }
             let next_y = y_pos + tile_size.height();

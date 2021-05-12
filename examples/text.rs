@@ -16,31 +16,33 @@ impl WindowCreator for TextExample {
 #[async_trait]
 impl Window for TextExample {
     async fn render(&mut self, scene: &Target) -> KludgineResult<()> {
-        let mut spans = Vec::new();
-        spans.push(Span::new(
-            "Wrapping ",
-            Style::new()
-                .with(ForegroundColor(Color::RED.into()))
-                .with(FontSize::new(120.))
-                .effective_style(scene)
-                .await,
-        ));
-        spans.push(Span::new(
-            "rapped ",
-            Style::new()
-                .with(ForegroundColor(Color::WHITE.into()))
-                .with(FontSize::new(60.))
-                .effective_style(scene)
-                .await,
-        ));
-        spans.push(Span::new(
-            "Words to live by",
-            Style::new()
-                .with(ForegroundColor(Color::BLUE.into()))
-                .with(FontSize::new(120.))
-                .effective_style(scene)
-                .await,
-        ));
+        #![allow(clippy::eval_order_dependence)] // false clippy warning for internal async/await code
+        let spans = vec![
+            Span::new(
+                "Wrapping ",
+                Style::new()
+                    .with(ForegroundColor(Color::RED.into()))
+                    .with(FontSize::new(120.))
+                    .effective_style(scene)
+                    .await,
+            ),
+            Span::new(
+                "rapped ",
+                Style::new()
+                    .with(ForegroundColor(Color::WHITE.into()))
+                    .with(FontSize::new(60.))
+                    .effective_style(scene)
+                    .await,
+            ),
+            Span::new(
+                "Words to live by",
+                Style::new()
+                    .with(ForegroundColor(Color::BLUE.into()))
+                    .with(FontSize::new(120.))
+                    .effective_style(scene)
+                    .await,
+            ),
+        ];
 
         Text::new(spans)
             .render_at(
