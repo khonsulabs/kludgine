@@ -16,14 +16,13 @@ impl WindowCreator for Isometric {
     }
 }
 static MAP_SIZE: u32 = 100;
-
-impl Window for Isometric {}
-
-impl StandaloneComponent for Isometric {}
-
 #[async_trait]
-impl Component for Isometric {
-    async fn initialize(&mut self, _context: &mut Context) -> KludgineResult<()> {
+impl Window for Isometric {
+    async fn initialize(
+        &mut self,
+        _scene: &Target,
+        _window: &OpenWindow<Self>,
+    ) -> KludgineResult<()> {
         self.load_assets().await?;
         // self.zoom = 1.0;
         // self.x = MAP_SIZE as f32 * 32.0 / 2.0;
@@ -31,13 +30,9 @@ impl Component for Isometric {
         Ok(())
     }
 
-    async fn render(
-        &mut self,
-        context: &mut StyledContext,
-        _layout: &Layout,
-    ) -> KludgineResult<()> {
+    async fn render(&mut self, scene: &Target) -> KludgineResult<()> {
         let map = self.map.as_ref().unwrap();
-        map.draw(context.scene(), Point::default()).await?;
+        map.draw(scene, Point::default()).await?;
 
         Ok(())
     }
@@ -52,6 +47,7 @@ impl Isometric {
             Size::new(126, 62),
             Size::new(MAP_SIZE, MAP_SIZE),
         );
+        // TODO this isn't actually working
         map.set_stagger(Size::new(63, 31));
         for x in 0..MAP_SIZE {
             for y in 0..MAP_SIZE {

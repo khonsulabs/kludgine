@@ -23,12 +23,17 @@ impl Window for Simple {
         Some(60)
     }
 
-    async fn update(&mut self, scene: &Target) -> KludgineResult<()> {
-        if self.source_sprite.is_none() {
-            let texture = Texture::load("examples/assets/k.png")?;
-            self.source_sprite = Some(SpriteSource::entire_texture(texture));
-        }
+    async fn initialize(
+        &mut self,
+        _scene: &Target,
+        _window: &OpenWindow<Self>,
+    ) -> KludgineResult<()> {
+        let texture = Texture::load("examples/assets/k.png")?;
+        self.source_sprite = Some(SpriteSource::entire_texture(texture));
+        Ok(())
+    }
 
+    async fn update(&mut self, scene: &Target, _window: &OpenWindow<Self>) -> KludgineResult<()> {
         if let Some(elapsed) = scene.elapsed().await {
             self.rotation_angle += Angle::radians(elapsed.as_secs_f32());
         }

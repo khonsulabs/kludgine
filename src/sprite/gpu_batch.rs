@@ -195,9 +195,11 @@ pub(crate) struct BatchBuffers {
 
 impl Draw for BatchBuffers {
     fn draw<'a, 'b>(&'a self, binding: &'a BindingGroup, pass: &'b mut wgpu::RenderPass<'a>) {
-        pass.set_binding(binding, &[]);
-        pass.set_easy_vertex_buffer(&self.vertices);
-        pass.set_easy_index_buffer(&self.indices);
-        pass.draw_indexed(0..self.index_count as u32, 0, 0..1);
+        if self.index_count > 0 {
+            pass.set_binding(binding, &[]);
+            pass.set_easy_vertex_buffer(&self.vertices);
+            pass.set_easy_index_buffer(&self.indices);
+            pass.draw_indexed(0..self.index_count as u32, 0, 0..1);
+        }
     }
 }

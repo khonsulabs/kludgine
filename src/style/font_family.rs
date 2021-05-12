@@ -4,7 +4,7 @@ pub struct FontFamily(pub String);
 impl UnscaledStyleComponent<Scaled> for FontFamily {}
 impl Default for FontFamily {
     fn default() -> Self {
-        Self("sans-serif".to_owned())
+        Self("Roboto".to_owned())
     }
 }
 

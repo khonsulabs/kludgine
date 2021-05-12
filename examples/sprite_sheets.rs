@@ -7,7 +7,10 @@ fn main() {
 }
 
 #[derive(Default)]
-struct SpriteSheetExample {}
+struct SpriteSheetExample {
+    sprite: Option<Sprite>,
+    current_frame: Option<SpriteSource>,
+}
 
 impl WindowCreator for SpriteSheetExample {
     fn window_title() -> String {
@@ -29,13 +32,13 @@ enum StickGuy {
     WalkLeft3,
 }
 
-impl Window for SpriteSheetExample {}
-
-impl StandaloneComponent for SpriteSheetExample {}
-
 #[async_trait]
-impl Component for SpriteSheetExample {
-    async fn initialize(&mut self, context: &mut Context) -> KludgineResult<()> {
+impl Window for SpriteSheetExample {
+    async fn initialize(
+        &mut self,
+        _scene: &Target,
+        _window: &OpenWindow<Self>,
+    ) -> KludgineResult<()> {
         let texture = include_texture!("assets/stickguy.png")?;
         let sheet = SpriteSheet::new(
             texture,
@@ -110,11 +113,41 @@ impl Component for SpriteSheetExample {
         ));
         let sprite = Sprite::from(animations);
         sprite.set_current_tag(Some("Idle".to_string())).await?;
-        self.new_entity(context, Image::new(sprite))
-            .await?
-            .style_sheet(Style::new().with(BackgroundColor(Color::GREEN.into())))
-            .insert()
-            .await?;
+        self.sprite = Some(sprite);
+
+        Ok(())
+    }
+
+    async fn update(&mut self, scene: &Target, window: &OpenWindow<Self>) -> KludgineResult<()>
+    where
+        Self: Sized,
+    {
+        let sprite = self.sprite.as_ref().unwrap();
+        // Update the current frame.
+        self.current_frame = Some(sprite.get_frame(scene.elapsed().await).await?);
+        // Tell the window when this sprite will need to redraw  new frame.
+        if let Some(duration) = sprite.remaining_frame_duration().await? {
+            window.estimate_next_frame(duration).await;
+        } else {
+            window.set_needs_redraw().await;
+        }
+
+        Ok(())
+    }
+
+    async fn render(&mut self, scene: &Target) -> KludgineResult<()> {
+        Shape::rect(Rect::new(Point::default(), scene.size().await))
+            .fill(Fill::new(Color::WHITE))
+            .render_at(Point::default(), scene)
+            .await;
+
+        let sprite = self.current_frame.as_ref().unwrap();
+        let bounds = Rect::new(Point::default(), scene.size().await);
+
+        sprite
+            .render_at(scene, bounds.center(), SpriteRotation::default())
+            .await;
+
         Ok(())
     }
 }

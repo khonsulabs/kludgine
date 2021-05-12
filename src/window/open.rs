@@ -114,12 +114,19 @@ impl<T: Window> OpenWindow<T> {
 
     pub(crate) async fn process_input(&self, input: InputEvent) -> KludgineResult<()> {
         let mut window = self.window.lock().await;
-        window.process_input(input).await
+        window.process_input(input, self).await
     }
 
     pub(crate) async fn receive_character(&self, character: char) -> KludgineResult<()> {
         let mut window = self.window.lock().await;
-        window.receive_character(character).await
+        window.receive_character(character, self).await
+    }
+
+    pub(crate) async fn initialize(&self) -> KludgineResult<()> {
+        let mut window = self.window.lock().await;
+        window.initialize(&self.scene, self).await?;
+
+        Ok(())
     }
 
     pub(crate) async fn render(&self) -> KludgineResult<()> {
@@ -135,7 +142,7 @@ impl<T: Window> OpenWindow<T> {
         self.initialize_redraw_target(target_fps).await;
 
         let mut window = self.window.lock().await;
-        window.update(&self.scene).await
+        window.update(&self.scene, self).await
     }
 }
 

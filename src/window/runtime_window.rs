@@ -228,6 +228,8 @@ impl RuntimeWindow {
         let target_fps = window.target_fps();
         let window = OpenWindow::new(window, event_sender, scene.clone());
 
+        window.initialize().await?;
+
         #[cfg(feature = "bundled-fonts-enabled")]
         scene.register_bundled_fonts().await;
         loop {

@@ -86,10 +86,6 @@ futures-await-test = "0.3"
 name = "text"
 required-features = ["bundled-fonts-roboto"]
 
-[[example]]
-name = "ui"
-required-features = ["bundled-fonts-roboto"]
-
-# [patch.crates-io] # must be commented out for CI to succeed
-# easygpu = { path = "../easygpu" }
-# easygpu-lyon = { path = "../easygpu-lyon" }
+[patch.crates-io] # must be commented out for CI to succeed
+easygpu = { path = "../easygpu" }
+easygpu-lyon = { path = "../easygpu-lyon" }

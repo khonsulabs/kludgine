@@ -155,7 +155,7 @@ pub mod prelude {
                 DeviceId, ElementState, Event, EventStatus, InputEvent, MouseButton,
                 MouseScrollDelta, ScanCode, TouchPhase, VirtualKeyCode,
             },
-            Window, WindowBuilder, WindowCreator,
+            OpenWindow, Window, WindowBuilder, WindowCreator,
         },
         Handle, KludgineError, KludgineResult, RequiresInitialization,
     };

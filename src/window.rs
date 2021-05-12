@@ -33,6 +33,16 @@ pub enum CloseResponse {
 /// Trait to implement a Window
 #[async_trait]
 pub trait Window: Send + Sync + 'static {
+    async fn initialize(
+        &mut self,
+        _scene: &Target,
+        _window: &OpenWindow<Self>,
+    ) -> KludgineResult<()>
+    where
+        Self: Sized,
+    {
+        Ok(())
+    }
     /// The window was requested to be closed, most likely from the Close Button. Override
     /// this implementation if you want logic in place to prevent a window from closing.
     async fn close_requested(&mut self) -> KludgineResult<CloseResponse> {
@@ -40,12 +50,26 @@ pub trait Window: Send + Sync + 'static {
     }
 
     /// The window has received an input event.
-    async fn process_input(&mut self, _input: InputEvent) -> KludgineResult<()> {
+    async fn process_input(
+        &mut self,
+        _input: InputEvent,
+        _window: &OpenWindow<Self>,
+    ) -> KludgineResult<()>
+    where
+        Self: Sized,
+    {
         Ok(())
     }
 
     /// A text input was received.
-    async fn receive_character(&mut self, _character: char) -> KludgineResult<()> {
+    async fn receive_character(
+        &mut self,
+        _character: char,
+        _window: &OpenWindow<Self>,
+    ) -> KludgineResult<()>
+    where
+        Self: Sized,
+    {
         Ok(())
     }
 
@@ -60,7 +84,10 @@ pub trait Window: Send + Sync + 'static {
         Ok(())
     }
 
-    async fn update(&mut self, _scene: &Target) -> KludgineResult<()> {
+    async fn update(&mut self, _scene: &Target, _window: &OpenWindow<Self>) -> KludgineResult<()>
+    where
+        Self: Sized,
+    {
         Ok(())
     }
 }
