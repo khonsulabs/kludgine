@@ -374,7 +374,7 @@ impl Runtime {
 fn initialize_async_runtime() {
     #[cfg(feature = "smol-rt")]
     smol::initialize();
-    #[cfg(feature = "tokio-rt")]
+    #[cfg(all(feature = "tokio-rt", not(feature = "smol-rt")))]
     tokio::initialize();
 }
 

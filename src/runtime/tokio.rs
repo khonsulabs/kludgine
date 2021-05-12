@@ -1,3 +1,5 @@
+#![cfg(not(feature = "smol-rt"))]
+
 use futures::future::Future;
 use lazy_static::lazy_static;
 use std::sync::RwLock;
