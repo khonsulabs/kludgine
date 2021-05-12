@@ -44,7 +44,7 @@ impl Isometric {
         let sprite = Sprite::single_frame(texture).await;
 
         let mut map = PersistentTileMap::persistent_with_size(
-            Size::new(126, 62),
+            Size::new(126, 79),
             Size::new(MAP_SIZE, MAP_SIZE),
         );
         // TODO this isn't actually working

@@ -5,6 +5,7 @@ use crate::{
     KludgineResult,
 };
 use async_trait::async_trait;
+use euclid::Rect;
 use std::{
     mem,
     ops::{Deref, DerefMut},
@@ -15,15 +16,15 @@ use std::{
 #[derive(Debug)]
 pub struct TileMap<P> {
     provider: P,
-    tile_size: Size<u32>,
-    stagger: Option<Size<u32>>,
+    tile_size: Size<u32, Scaled>,
+    stagger: Option<Size<u32, Scaled>>,
 }
 
 impl<P> TileMap<P>
 where
     P: TileProvider,
 {
-    pub fn new(tile_size: Size<u32>, provider: P) -> Self {
+    pub fn new(tile_size: Size<u32, Scaled>, provider: P) -> Self {
         Self {
             tile_size,
             provider,
@@ -31,7 +32,7 @@ where
         }
     }
 
-    pub fn set_stagger(&mut self, stagger: Size<u32>) {
+    pub fn set_stagger(&mut self, stagger: Size<u32, Scaled>) {
         self.stagger = Some(stagger);
     }
 
@@ -68,25 +69,26 @@ where
         let mut render_calls = Vec::new();
         let effective_scale = scene.scale_factor().await;
         let tile_size = tile_size * effective_scale;
+        let render_size = self.tile_size.to_f32() * Scale::new(effective_scale.0 * scale.0);
         let location = location * effective_scale;
         let mut y_pos = tile_size.height() * min_y as f32 + location.y();
         for y in min_y..(min_y + tiles_high) {
             let mut x_pos = tile_size.width() * min_x as f32 + location.x();
+            if let Some(stagger) = &self.stagger {
+                if y % 2 == 0 {
+                    x_pos =
+                        x_pos - Length::<f32, Scaled>::new(stagger.width as f32) * effective_scale;
+                }
+            }
             let next_y = y_pos + tile_size.height();
             for x in min_x..(min_x + tiles_wide) {
                 let next_x = x_pos + tile_size.width();
-                render_calls.push(
-                    self.draw_one_tile(
-                        Point::new(x, y),
-                        Box2D::new(
-                            Point::from_lengths(x_pos, y_pos),
-                            Point::from_lengths(next_x, next_y),
-                        )
-                        .round(),
-                        scene,
-                        elapsed,
-                    ),
-                );
+                render_calls.push(self.draw_one_tile(
+                    Point::new(x, y),
+                    Rect::new(Point::from_lengths(x_pos, y_pos), render_size).to_box2d(),
+                    scene,
+                    elapsed,
+                ));
                 x_pos = next_x;
             }
             y_pos = next_y;
@@ -234,7 +236,7 @@ impl PersistentTileProvider {
 pub type PersistentTileMap = TileMap<PersistentTileProvider>;
 
 pub trait PersistentMap {
-    fn persistent_with_size(tile_size: Size<u32>, map_size: Size<u32>) -> Self;
+    fn persistent_with_size(tile_size: Size<u32, Scaled>, map_size: Size<u32>) -> Self;
 
     fn set<I: Into<TileSprite>>(&mut self, location: Point<u32>, sprite: Option<I>);
 }
@@ -246,7 +248,7 @@ impl PersistentMap for PersistentTileMap {
     ///
     /// * `tile_size`: THe dimensions of each tile
     /// * `map_size`: The size of the map, in number of tiles
-    fn persistent_with_size(tile_size: Size<u32>, map_size: Size<u32>) -> Self {
+    fn persistent_with_size(tile_size: Size<u32, Scaled>, map_size: Size<u32>) -> Self {
         TileMap::new(tile_size, PersistentTileProvider::blank(map_size))
     }
 
