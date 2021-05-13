@@ -36,8 +36,8 @@ instrumentation = ["tracing", "tracing-futures"]
 [dependencies]
 winit = "0.24"
 crossbeam = "0.8"
-easygpu = "0.0.9"
-easygpu-lyon = "0.0.9"
+easygpu = "0.0.10"
+easygpu-lyon = "0.0.10"
 lyon_tessellation = "0.16"
 image = ">=0.23.12"
 lazy_static = "1"
@@ -86,6 +86,6 @@ futures-await-test = "0.3"
 name = "text"
 required-features = ["bundled-fonts-roboto"]
 
-[patch.crates-io] # must be commented out for CI to succeed
-easygpu = { path = "../easygpu" }
-easygpu-lyon = { path = "../easygpu-lyon" }
+# [patch.crates-io] # must be commented out for CI to succeed
+# easygpu = { path = "../easygpu" }
+# easygpu-lyon = { path = "../easygpu-lyon" }
