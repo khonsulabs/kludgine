@@ -1,6 +1,7 @@
 use approx::relative_eq;
 use easygpu::color::{Rgba, Rgba8};
 use palette::{rgb::Srgba, Component, Shade, Srgb};
+use stylecs::ColorPair;
 
 #[derive(Default, Clone, Debug, Copy, PartialEq)]
 pub struct Color(Rgba);
@@ -26,6 +27,16 @@ impl<U: Component> From<Srgb<U>> for Color {
             b: color.blue,
             a: 1.,
         })
+    }
+}
+
+impl From<Color> for ColorPair {
+    fn from(c: Color) -> Self {
+        let srgba = Srgba::from(c);
+        ColorPair {
+            light_color: srgba,
+            dark_color: srgba,
+        }
     }
 }
 

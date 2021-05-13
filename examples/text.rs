@@ -16,31 +16,28 @@ impl WindowCreator for TextExample {
 #[async_trait]
 impl Window for TextExample {
     async fn render(&mut self, scene: &Target) -> KludgineResult<()> {
-        #![allow(clippy::eval_order_dependence)] // false clippy warning for internal async/await code
+        let scale = scene.scale_factor().await;
         let spans = vec![
             Span::new(
                 "Wrapping ",
                 Style::new()
                     .with(ForegroundColor(Color::RED.into()))
                     .with(FontSize::new(120.))
-                    .effective_style(scene)
-                    .await,
+                    .to_screen_scale(scale),
             ),
             Span::new(
                 "rapped ",
                 Style::new()
                     .with(ForegroundColor(Color::WHITE.into()))
                     .with(FontSize::new(60.))
-                    .effective_style(scene)
-                    .await,
+                    .to_screen_scale(scale),
             ),
             Span::new(
                 "Words to live by",
                 Style::new()
                     .with(ForegroundColor(Color::BLUE.into()))
                     .with(FontSize::new(120.))
-                    .effective_style(scene)
-                    .await,
+                    .to_screen_scale(scale),
             ),
         ];
 

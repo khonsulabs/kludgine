@@ -533,11 +533,20 @@ pub(crate) struct RenderedSpriteData {
     pub source: SpriteSource,
 }
 
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug)]
 pub struct SpriteRotation<Unit> {
     pub angle: Option<Angle>,
     /// The location to rotate the sprite around. If not specified, the center of the sprite is used.
     pub screen_location: Option<Point<f32, Unit>>,
+}
+
+impl<Unit> Default for SpriteRotation<Unit> {
+    fn default() -> Self {
+        Self {
+            angle: None,
+            screen_location: None,
+        }
+    }
 }
 
 impl<Unit> SpriteRotation<Unit> {

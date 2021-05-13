@@ -183,10 +183,7 @@ pub struct PathBuilder<S> {
     close: bool,
 }
 
-impl<S> PathBuilder<S>
-where
-    S: Copy,
-{
+impl<S> PathBuilder<S> {
     pub fn new(start_at: Endpoint<S>) -> Self {
         let events = vec![PathEvent::Begin { at: start_at }];
         Self {

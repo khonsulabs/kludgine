@@ -2,12 +2,12 @@ use crate::{
     color::Color,
     math::{Pixels, Point, Points, Raw, Scaled, ScreenScale, Size, SizeExt, Vector},
     scene::{Element, Target},
-    style::Alignment,
     text::Font,
     KludgineResult,
 };
 use futures::future::join_all;
 use std::sync::Arc;
+use stylecs::Alignment;
 
 #[derive(Default, Debug, Clone)]
 pub struct PreparedText {

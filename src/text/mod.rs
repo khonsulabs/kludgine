@@ -1,10 +1,10 @@
 use crate::{
     math::{Point, Raw, Scaled},
     scene::Target,
-    style::Style,
     KludgineResult,
 };
 use std::ops::Range;
+use stylecs::Style;
 
 #[cfg(feature = "bundled-fonts-enabled")]
 pub mod bundled_fonts;

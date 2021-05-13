@@ -15,15 +15,12 @@ pub use euclid::{Box2D, Length, Scale};
 pub type ScreenScale = Scale<f32, Scaled, Raw>;
 pub type Angle = euclid::Angle<f32>;
 
+pub type Raw = stylecs::Pixels;
+pub type Scaled = stylecs::Points;
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Raw;
-#[derive(Clone, Copy, Debug, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Scaled;
 #[derive(Clone, Copy, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Unknown;

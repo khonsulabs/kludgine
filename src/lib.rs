@@ -111,7 +111,6 @@ pub mod runtime;
 pub mod scene;
 pub mod shape;
 pub mod sprite;
-pub mod style;
 pub mod text;
 pub mod texture;
 pub mod tilemap;
@@ -135,11 +134,6 @@ pub mod prelude {
             SpriteFrame, SpriteMap, SpriteRotation, SpriteSheet, SpriteSource,
             SpriteSourceSublocation,
         },
-        style::{
-            Alignment, AnyStyleComponent, BackgroundColor, ColorPair, ComponentCollection,
-            FontFamily, FontSize, FontStyle, ForegroundColor, GenericStyle, Style, StyleComponent,
-            StyleSheet, UnscaledStyleComponent, VerticalAlignment, Weight,
-        },
         text::{
             font::Font,
             rich::{RichText, RichTextPosition},
@@ -160,6 +154,11 @@ pub mod prelude {
         Handle, KludgineError, KludgineResult, RequiresInitialization,
     };
     pub use async_trait::async_trait;
+    pub use stylecs::{
+        Alignment, AnyStyleComponent, BackgroundColor, ColorPair, ComponentCollection, FontFamily,
+        FontSize, FontStyle, ForegroundColor, GenericStyle, Style, StyleComponent, StyleSheet,
+        UnscaledStyleComponent, VerticalAlignment, Weight,
+    };
     pub use winit::event::*;
 
     #[cfg(feature = "bundled-fonts-enabled")]

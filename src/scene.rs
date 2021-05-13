@@ -2,7 +2,6 @@ use crate::{
     math::{Point, Raw, Scale, Scaled, ScreenScale, Size, Vector},
     shape::Shape,
     sprite::RenderedSprite,
-    style::{FontStyle, Weight},
     text::{font::Font, prepared::PreparedSpan},
     Handle, KludgineError, KludgineResult,
 };
@@ -12,6 +11,7 @@ use std::{
     collections::{HashMap, HashSet},
     time::{Duration, Instant},
 };
+use stylecs::{FontStyle, Weight};
 use winit::{event::VirtualKeyCode, window::Theme};
 
 #[derive(Debug)]

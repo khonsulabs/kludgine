@@ -1,12 +1,13 @@
 use crate::{
+    color::Color,
     math::{Pixels, Raw, Scaled},
     scene::Target,
-    style::{FontFamily, FontSize, FontStyle, ForegroundColor, Style, Weight},
     text::{font::Font, prepared::GlyphInfo, PreparedSpan, Text},
     KludgineResult,
 };
 use euclid::Length;
 use rusttype::{GlyphId, Scale};
+use stylecs::{FontFamily, FontSize, FontStyle, ForegroundColor, Style, Weight};
 
 #[derive(Debug)]
 pub(crate) enum Token {
@@ -90,7 +91,10 @@ impl<'a> TokenizerState<'a> {
             let span = PreparedSpan::new(
                 self.font.clone(),
                 font_size,
-                foreground.themed_color(&scene.system_theme().await),
+                Color::from(foreground.themed_color(&match scene.system_theme().await {
+                    winit::window::Theme::Light => stylecs::SystemTheme::Light,
+                    winit::window::Theme::Dark => stylecs::SystemTheme::Dark,
+                })),
                 self.caret,
                 std::mem::take(&mut self.chars),
                 current_committed_glyphs,

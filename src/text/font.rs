@@ -1,12 +1,9 @@
-use crate::{
-    math::Pixels,
-    style::{FontStyle, Weight},
-    Handle,
-};
+use crate::{math::Pixels, Handle};
 use crossbeam::atomic::AtomicCell;
 use easygpu::prelude::*;
 use lazy_static::lazy_static;
 use rusttype::{gpu_cache, Scale};
+use stylecs::{FontStyle, Weight};
 
 lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicCell<u64> = AtomicCell::new(0);
@@ -58,7 +55,7 @@ impl Font {
     pub async fn weight(&self) -> Weight {
         let font = self.handle.read().await;
         match &font.font {
-            rusttype::Font::Ref(f) => f.weight().into(),
+            rusttype::Font::Ref(f) => convert_ttf_weight_to_stylecs(f.weight()),
             _ => Weight::Normal,
         }
     }
@@ -117,3 +114,38 @@ impl LoadedFont {
         }
     }
 }
+
+fn convert_ttf_weight_to_stylecs(weight: ttf_parser::Weight) -> stylecs::Weight {
+    match weight {
+        ttf_parser::Weight::Thin => stylecs::Weight::Thin,
+        ttf_parser::Weight::ExtraLight => stylecs::Weight::ExtraLight,
+        ttf_parser::Weight::Light => stylecs::Weight::Light,
+        ttf_parser::Weight::Normal => stylecs::Weight::Normal,
+        ttf_parser::Weight::Medium => stylecs::Weight::Medium,
+        ttf_parser::Weight::SemiBold => stylecs::Weight::SemiBold,
+        ttf_parser::Weight::Bold => stylecs::Weight::Bold,
+        ttf_parser::Weight::ExtraBold => stylecs::Weight::ExtraBold,
+        ttf_parser::Weight::Black => stylecs::Weight::Black,
+        ttf_parser::Weight::Other(value) => stylecs::Weight::Other(value),
+    }
+}
+// impl From<ttf_parser::Weight> for Weight {
+//     fn from(weight: ttf_parser::Weight) -> Self {
+// }
+
+// impl From<Weight> for ttf_parser::Weight {
+//     fn from(weight: Weight) -> Self {
+//         match weight {
+//             Weight::Thin => Self::Thin,
+//             Weight::ExtraLight => Self::ExtraLight,
+//             Weight::Light => Self::Light,
+//             Weight::Normal => Self::Normal,
+//             Weight::Medium => Self::Medium,
+//             Weight::SemiBold => Self::SemiBold,
+//             Weight::Bold => Self::Bold,
+//             Weight::ExtraBold => Self::ExtraBold,
+//             Weight::Black => Self::Black,
+//             Weight::Other(value) => Self::Other(value),
+//         }
+//     }
+// }

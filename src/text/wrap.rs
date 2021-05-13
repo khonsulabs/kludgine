@@ -1,11 +1,11 @@
 use crate::{
     math::{max_f, min_f, Pixels, PointExt, Points},
     scene::Target,
-    style::Alignment,
     text::{PreparedLine, PreparedSpan, PreparedText, Text},
     KludgineResult,
 };
 use approx::relative_eq;
+use stylecs::Alignment;
 
 mod measured;
 mod tokenizer;
@@ -240,9 +240,9 @@ mod tests {
     use crate::{
         math::{Scaled, ScreenScale},
         scene::{Scene, Target},
-        style::{FontSize, Style},
         text::Span,
     };
+    use stylecs::{FontSize, Style};
 
     #[async_test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
@@ -255,8 +255,7 @@ mod tests {
                 "This line should wrap",
                 Style::new()
                     .with(FontSize::<Scaled>::new(12.))
-                    .effective_style(&scene)
-                    .await,
+                    .to_screen_scale(ScreenScale::new(scale)),
             )])
             .wrap(
                 &scene,
@@ -283,13 +282,11 @@ mod tests {
 
         let first_style = Style::new()
             .with(FontSize::<Scaled>::new(12.))
-            .effective_style(&scene)
-            .await;
+            .to_screen_scale(scene.scale_factor().await);
 
         let second_style = Style::new()
             .with(FontSize::<Scaled>::new(10.))
-            .effective_style(&scene)
-            .await;
+            .to_screen_scale(scene.scale_factor().await);
 
         let wrap = Text::new(vec![
             Span::new("This line should ", first_style),
