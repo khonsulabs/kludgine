@@ -13,47 +13,11 @@ use easygpu_lyon::LyonPipeline;
 use crate::{
     math::{Box2D, Point, Size, Unknown},
     runtime::RuntimeRequest,
+    scene::SceneEvent,
     sprite::{self, VertexShaderSource},
     window::frame::{FontUpdate, Frame, FrameCommand},
     KludgineResult,
 };
-
-pub(crate) struct FrameSynchronizer {
-    receiver: flume::Receiver<Frame>,
-    sender: flume::Sender<Frame>,
-}
-
-impl FrameSynchronizer {
-    pub fn pair() -> (FrameSynchronizer, FrameSynchronizer) {
-        let (a_sender, a_receiver) = flume::bounded(1);
-        let (b_sender, b_receiver) = flume::bounded(1);
-
-        let a_synchronizer = FrameSynchronizer {
-            sender: b_sender,
-            receiver: a_receiver,
-        };
-        let b_synchronizer = FrameSynchronizer {
-            sender: a_sender,
-            receiver: b_receiver,
-        };
-
-        (a_synchronizer, b_synchronizer)
-    }
-
-    pub fn take(&mut self) -> Frame {
-        // Ignoring the error because if the sender/receiver is disconnected
-        // the window is closing and we should just ignore the error and let
-        // it close.
-        self.receiver.recv().unwrap_or_default()
-    }
-
-    pub fn relinquish(&mut self, frame: Frame) {
-        // Ignoring the error because if the sender/receiver is disconnected
-        // the window is closing and we should just ignore the error and let
-        // it close.
-        self.sender.send(frame).unwrap_or_default();
-    }
-}
 
 pub(crate) struct FrameRenderer<T>
 where
@@ -62,10 +26,10 @@ where
     keep_running: Arc<AtomicCell<bool>>,
     renderer: Renderer,
     swap_chain: SwapChain,
-    frame_synchronizer: FrameSynchronizer,
     sprite_pipeline: sprite::Pipeline<T>,
     shape_pipeline: LyonPipeline<T::Lyon>,
     gpu_state: Mutex<GpuState>,
+    scene_event_receiver: flume::Receiver<SceneEvent>,
 }
 
 #[derive(Default)]
@@ -85,8 +49,8 @@ where
 {
     fn new(
         renderer: Renderer,
-        frame_synchronizer: FrameSynchronizer,
         keep_running: Arc<AtomicCell<bool>>,
+        scene_event_receiver: flume::Receiver<SceneEvent>,
         initial_size: Size<u32, ScreenSpace>,
     ) -> Self {
         let swap_chain = renderer.swap_chain(initial_size, PresentMode::Vsync, T::sampler_format());
@@ -96,31 +60,31 @@ where
             renderer,
             keep_running,
             swap_chain,
-            frame_synchronizer,
             sprite_pipeline,
             shape_pipeline,
+            scene_event_receiver,
             gpu_state: Mutex::new(GpuState::default()),
         }
     }
 
+    /// Launches a thread that renders the results of the window-loop
+    /// generating frames.
     pub fn run(
         renderer: Renderer,
         keep_running: Arc<AtomicCell<bool>>,
+        scene_event_receiver: flume::Receiver<SceneEvent>,
         initial_size: Size<u32, ScreenSpace>,
-    ) -> FrameSynchronizer {
-        let (client_synchronizer, renderer_synchronizer) = FrameSynchronizer::pair();
-
+    ) {
         let frame_renderer =
-            FrameRenderer::<T>::new(renderer, renderer_synchronizer, keep_running, initial_size);
+            FrameRenderer::<T>::new(renderer, keep_running, scene_event_receiver, initial_size);
         std::thread::Builder::new()
             .name(String::from("kludgine-frame-renderer"))
             .spawn(move || frame_renderer.render_loop())
             .unwrap();
-
-        client_synchronizer
     }
 
     fn render_loop(mut self) {
+        let mut frame = Frame::default();
         loop {
             if !self.keep_running.load() {
                 // This drop prevents a segfault on exit per
@@ -129,15 +93,10 @@ where
                 RuntimeRequest::WindowClosed.send().unwrap();
                 return;
             }
-            self.render().expect("Error rendering window");
+            frame.update(&self.scene_event_receiver);
+            self.render_frame(&mut frame)
+                .expect("Error rendering window");
         }
-    }
-
-    pub fn render(&mut self) -> KludgineResult<()> {
-        let mut engine_frame = self.frame_synchronizer.take();
-        let result = self.render_frame(&mut engine_frame);
-        self.frame_synchronizer.relinquish(engine_frame);
-        result
     }
 
     fn render_frame(&mut self, engine_frame: &mut Frame) -> KludgineResult<()> {
@@ -351,16 +310,6 @@ where
                                     batch.finish(&self.renderer),
                                 ));
                             }
-
-                            // pass.set_easy_pipeline(&self.sprite_pipeline);
-                            // pass.easy_draw(
-                            //     &buffer,
-                            //     loaded_font_data
-                            //         .binding
-                            //         .as_ref()
-                            //         .expect("Empty binding on texture"),
-                            // );
-                            // }
                         }
                     }
                 }

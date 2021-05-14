@@ -16,7 +16,6 @@ use crate::{
     scene::SceneEvent,
     window::{
         event::{ElementState, Event, InputEvent, VirtualKeyCode, WindowEvent},
-        frame::Frame,
         renderer::FrameRenderer,
         CloseResponse, Renderer, Window, WindowMessage, WINDOW_CHANNELS,
     },
@@ -97,6 +96,7 @@ impl RuntimeWindow {
         let window_event_sender = event_sender.clone();
         let (scene_event_sender, scene_event_receiver) = flume::unbounded();
 
+        // Each window has its own thread/task operating its core update/render lifecycle.
         std::thread::Builder::new()
             .name(String::from("kludgine-window-loop"))
             .spawn(move || {
@@ -111,25 +111,18 @@ impl RuntimeWindow {
             })
             .unwrap();
 
-        std::thread::Builder::new()
-            .name(String::from("kludgine-frame-synchronizer"))
-            .spawn(move || {
-                let renderer = Runtime::block_on(async move {
-                    Renderer::new(surface, &instance)
-                        .await
-                        .expect("Error creating renderer for window")
-                });
+        let renderer = Runtime::block_on(async move {
+            Renderer::new(surface, &instance)
+                .await
+                .expect("Error creating renderer for window")
+        });
 
-                let mut frame_synchronizer =
-                    FrameRenderer::<Format>::run(renderer, task_keep_running.clone(), initial_size);
-                frame_synchronizer.relinquish(Frame::default());
-                while task_keep_running.load() {
-                    let mut frame = frame_synchronizer.take();
-                    frame.update(&scene_event_receiver);
-                    frame_synchronizer.relinquish(frame);
-                }
-            })
-            .unwrap();
+        FrameRenderer::<Format>::run(
+            renderer,
+            task_keep_running,
+            scene_event_receiver,
+            initial_size,
+        );
 
         {
             let mut channels = WINDOW_CHANNELS.lock().unwrap();
