@@ -5,7 +5,6 @@ use crate::{
     text::Font,
     KludgineResult,
 };
-use futures::future::join_all;
 use std::sync::Arc;
 use stylecs::Alignment;
 
@@ -15,9 +14,9 @@ pub struct PreparedText {
 }
 
 impl PreparedText {
-    pub async fn size(&self) -> Size<f32, Raw> {
-        let line_sizes = join_all(self.lines.iter().map(|line| line.size())).await;
-        let (width, height) = line_sizes.into_iter().fold(
+    pub fn size(&self) -> Size<f32, Raw> {
+        let line_sizes = self.lines.iter().map(|line| line.size());
+        let (width, height) = line_sizes.fold(
             (Pixels::default(), Pixels::default()),
             |(width, height), line_size| {
                 (width.max(line_size.width()), height + line_size.height())
@@ -26,13 +25,18 @@ impl PreparedText {
         Size::from_lengths(width, height)
     }
 
-    pub(crate) async fn align(
+    #[allow(clippy::needless_collect)] // The collect gets id of the borrow.
+    pub(crate) fn align(
         &mut self,
         alignment: Alignment,
         width: Points,
         effective_scale: ScreenScale,
     ) {
-        let line_sizes = join_all(self.lines.iter().map(|line| line.size())).await;
+        let line_sizes = self
+            .lines
+            .iter()
+            .map(|line| line.size())
+            .collect::<Vec<_>>();
 
         for (i, size) in line_sizes.into_iter().enumerate() {
             match alignment {
@@ -50,14 +54,14 @@ impl PreparedText {
         }
     }
 
-    pub async fn render(
+    pub fn render(
         &self,
-        scene: &Target,
+        scene: &Target<'_>,
         location: Point<f32, Scaled>,
         offset_baseline: bool,
     ) -> KludgineResult<Points> {
         let mut current_line_baseline = Points::new(0.);
-        let effective_scale_factor = scene.scale_factor().await;
+        let effective_scale_factor = scene.scale_factor();
 
         for (line_index, line) in self.lines.iter().enumerate() {
             if offset_baseline || line_index > 0 {
@@ -71,12 +75,10 @@ impl PreparedText {
                     (cursor_position + span.location.to_vector() / effective_scale_factor)
                         * effective_scale_factor,
                 );
-                scene
-                    .push_element(Element::Text {
-                        span: span.translate(location),
-                        clip: scene.clip,
-                    })
-                    .await;
+                scene.push_element(Element::Text {
+                    span: span.translate(location),
+                    clip: scene.clip,
+                });
             }
             current_line_baseline += (metrics.line_gap - metrics.descent) / effective_scale_factor;
         }
@@ -120,7 +122,7 @@ pub struct PreparedLine {
 }
 
 impl PreparedLine {
-    pub async fn size(&self) -> Size<f32, Raw> {
+    pub fn size(&self) -> Size<f32, Raw> {
         if self.spans.is_empty() {
             return Size::from_lengths(Pixels::default(), self.height());
         }
@@ -177,8 +179,8 @@ impl PreparedSpan {
         }
     }
 
-    pub(crate) async fn metrics(&self) -> rusttype::VMetrics {
-        self.data.font.metrics(self.data.size).await
+    pub(crate) fn metrics(&self) -> rusttype::VMetrics {
+        self.data.font.metrics(self.data.size)
     }
 }
 

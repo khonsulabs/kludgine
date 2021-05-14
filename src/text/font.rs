@@ -1,4 +1,6 @@
-use crate::{math::Pixels, Handle};
+use std::sync::Arc;
+
+use crate::math::Pixels;
 use crossbeam::atomic::AtomicCell;
 use easygpu::prelude::*;
 use lazy_static::lazy_static;
@@ -20,8 +22,7 @@ macro_rules! include_font {
 /// Font provides TrueType Font rendering
 #[derive(Clone, Debug)]
 pub struct Font {
-    pub(crate) id: u64,
-    pub(crate) handle: Handle<FontData>,
+    pub(crate) handle: Arc<FontData>,
 }
 
 impl Font {
@@ -29,41 +30,36 @@ impl Font {
         let font = rusttype::Font::try_from_bytes(bytes)?;
         let id = GLOBAL_ID_CELL.fetch_add(1);
         Some(Font {
-            id,
-            handle: Handle::new(FontData { font, id }),
+            handle: Arc::new(FontData { font, id }),
         })
     }
 
-    pub async fn id(&self) -> u64 {
-        let font = self.handle.read().await;
-        font.id
+    pub fn id(&self) -> u64 {
+        self.handle.id
     }
 
-    pub async fn metrics(&self, size: Pixels) -> rusttype::VMetrics {
-        let font = self.handle.read().await;
-        font.font.v_metrics(rusttype::Scale::uniform(size.get()))
+    pub fn metrics(&self, size: Pixels) -> rusttype::VMetrics {
+        self.handle
+            .font
+            .v_metrics(rusttype::Scale::uniform(size.get()))
     }
 
-    pub async fn family(&self) -> Option<String> {
-        let font = self.handle.read().await;
-        match &font.font {
+    pub fn family(&self) -> Option<String> {
+        match &self.handle.font {
             rusttype::Font::Ref(f) => f.family_name(),
             _ => None,
         }
     }
 
-    pub async fn weight(&self) -> Weight {
-        let font = self.handle.read().await;
-        match &font.font {
+    pub fn weight(&self) -> Weight {
+        match &self.handle.font {
             rusttype::Font::Ref(f) => convert_ttf_weight_to_stylecs(f.weight()),
             _ => Weight::Normal,
         }
     }
 
-    pub async fn style(&self) -> FontStyle {
-        let font = self.handle.read().await;
-
-        match &font.font {
+    pub fn style(&self) -> FontStyle {
+        match &self.handle.font {
             rusttype::Font::Ref(f) => {
                 if f.is_italic() {
                     FontStyle::Italic
@@ -77,14 +73,12 @@ impl Font {
         }
     }
 
-    pub async fn glyph(&self, c: char) -> rusttype::Glyph<'static> {
-        let font = self.handle.read().await;
-        font.font.glyph(c)
+    pub fn glyph(&self, c: char) -> rusttype::Glyph<'static> {
+        self.handle.font.glyph(c)
     }
 
-    pub async fn pair_kerning(&self, size: f32, a: rusttype::GlyphId, b: rusttype::GlyphId) -> f32 {
-        let font = self.handle.read().await;
-        font.font.pair_kerning(Scale::uniform(size), a, b)
+    pub fn pair_kerning(&self, size: f32, a: rusttype::GlyphId, b: rusttype::GlyphId) -> f32 {
+        self.handle.font.pair_kerning(Scale::uniform(size), a, b)
     }
 }
 

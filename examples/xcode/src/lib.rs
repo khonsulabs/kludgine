@@ -24,7 +24,6 @@ impl WindowCreator for OrthoTiles {
 
 static MAP_SIZE: u32 = 100;
 
-#[async_trait]
 impl Window for OrthoTiles {
     async fn initialize(&mut self) -> KludgineResult<()> {
         self.load_assets()?;

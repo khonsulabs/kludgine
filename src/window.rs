@@ -1,12 +1,14 @@
 use crate::{
     math::{Scaled, Size},
     scene::Target,
-    Handle, KludgineError, KludgineResult,
+    KludgineError, KludgineResult,
 };
-use async_trait::async_trait;
 use easygpu::prelude::*;
 use lazy_static::lazy_static;
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 use winit::window::{Theme, WindowBuilder as WinitWindowBuilder, WindowId};
 
 pub mod event;
@@ -15,7 +17,7 @@ pub(crate) mod open;
 pub(crate) mod renderer;
 mod runtime_window;
 
-pub use open::OpenWindow;
+pub use open::{OpenWindow, RedrawStatus};
 pub(crate) use runtime_window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig};
 
 pub use winit::window::Icon;
@@ -31,13 +33,8 @@ pub enum CloseResponse {
 }
 
 /// Trait to implement a Window
-#[async_trait]
 pub trait Window: Send + Sync + 'static {
-    async fn initialize(
-        &mut self,
-        _scene: &Target,
-        _window: &OpenWindow<Self>,
-    ) -> KludgineResult<()>
+    fn initialize(&mut self, _scene: &Target<'_>) -> KludgineResult<()>
     where
         Self: Sized,
     {
@@ -45,15 +42,15 @@ pub trait Window: Send + Sync + 'static {
     }
     /// The window was requested to be closed, most likely from the Close Button. Override
     /// this implementation if you want logic in place to prevent a window from closing.
-    async fn close_requested(&mut self) -> KludgineResult<CloseResponse> {
+    fn close_requested(&mut self) -> KludgineResult<CloseResponse> {
         Ok(CloseResponse::Close)
     }
 
     /// The window has received an input event.
-    async fn process_input(
+    fn process_input(
         &mut self,
         _input: InputEvent,
-        _window: &OpenWindow<Self>,
+        _status: &mut RedrawStatus,
     ) -> KludgineResult<()>
     where
         Self: Sized,
@@ -62,10 +59,10 @@ pub trait Window: Send + Sync + 'static {
     }
 
     /// A text input was received.
-    async fn receive_character(
+    fn receive_character(
         &mut self,
         _character: char,
-        _window: &OpenWindow<Self>,
+        _status: &mut RedrawStatus,
     ) -> KludgineResult<()>
     where
         Self: Sized,
@@ -80,11 +77,11 @@ pub trait Window: Send + Sync + 'static {
         None
     }
 
-    async fn render(&mut self, _scene: &Target) -> KludgineResult<()> {
+    fn render(&mut self, _scene: &Target<'_>) -> KludgineResult<()> {
         Ok(())
     }
 
-    async fn update(&mut self, _scene: &Target, _window: &OpenWindow<Self>) -> KludgineResult<()>
+    fn update(&mut self, _scene: &Target<'_>, _status: &mut RedrawStatus) -> KludgineResult<()>
     where
         Self: Sized,
     {
@@ -248,34 +245,32 @@ impl From<WindowBuilder> for WinitWindowBuilder {
 }
 
 #[cfg(feature = "multiwindow")]
-#[async_trait]
 pub trait OpenableWindow {
-    async fn open(window: Self);
+    fn open(window: Self);
 }
 
 #[cfg(feature = "multiwindow")]
-#[async_trait]
 impl<T> OpenableWindow for T
 where
     T: Window + WindowCreator,
 {
-    async fn open(window: Self) {
-        crate::runtime::Runtime::open_window(Self::get_window_builder(), window).await
+    fn open(window: Self) {
+        crate::runtime::Runtime::open_window(Self::get_window_builder(), window)
     }
 }
 
 lazy_static! {
-    static ref WINDOW_CHANNELS: Handle<HashMap<WindowId, async_channel::Sender<WindowMessage>>> =
-        Handle::new(HashMap::new());
+    static ref WINDOW_CHANNELS: Arc<Mutex<HashMap<WindowId, flume::Sender<WindowMessage>>>> =
+        Arc::default();
 }
 pub(crate) enum WindowMessage {
     Close,
 }
 
 impl WindowMessage {
-    pub async fn send_to(self, id: WindowId) -> KludgineResult<()> {
+    pub fn send_to(self, id: WindowId) -> KludgineResult<()> {
         let sender = {
-            let mut channels = WINDOW_CHANNELS.write().await;
+            let mut channels = WINDOW_CHANNELS.lock().unwrap();
             if let Some(sender) = channels.get_mut(&id) {
                 sender.clone()
             } else {
@@ -285,7 +280,7 @@ impl WindowMessage {
             }
         };
 
-        sender.send(self).await.unwrap_or_default();
+        sender.send(self).unwrap_or_default();
         Ok(())
     }
 }

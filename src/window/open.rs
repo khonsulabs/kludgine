@@ -1,7 +1,6 @@
 use std::time::{Duration, Instant};
 
-use async_channel::Sender;
-use async_lock::Mutex;
+use flume::Sender;
 
 use crate::{
     scene::{Scene, Target},
@@ -14,135 +13,148 @@ use super::{
 };
 
 pub struct OpenWindow<T: Window> {
-    window: Mutex<T>,
-    redraw_status: Mutex<RedrawStatus>,
-    event_sender: Sender<WindowEvent>,
-    scene: Target,
+    window: T,
+    pub(crate) redraw_status: RedrawStatus,
+    scene: Scene,
 }
 
-struct RedrawStatus {
+pub struct RedrawStatus {
     next_redraw_target: RedrawTarget,
     needs_render: bool,
+    event_sender: Sender<WindowEvent>,
+}
+impl RedrawStatus {
+    pub fn set_needs_redraw(&mut self) {
+        if !self.needs_render {
+            self.needs_render = true;
+            let _ = self.event_sender.send(WindowEvent::WakeUp);
+        }
+    }
+
+    pub fn estimate_next_frame(&mut self, duration: Duration) {
+        self.estimate_next_frame_instant(Instant::now().checked_add(duration).unwrap());
+    }
+
+    pub fn estimate_next_frame_instant(&mut self, instant: Instant) {
+        match self.next_redraw_target {
+            RedrawTarget::Never | RedrawTarget::None => {
+                self.next_redraw_target = RedrawTarget::Scheduled(instant);
+            }
+            RedrawTarget::Scheduled(existing_instant) => {
+                if instant < existing_instant {
+                    self.next_redraw_target = RedrawTarget::Scheduled(instant);
+                }
+            }
+        }
+    }
 }
 
 impl<T: Window> OpenWindow<T> {
     pub(crate) fn new(window: T, event_sender: Sender<WindowEvent>, scene: Scene) -> Self {
         Self {
-            window: Mutex::new(window),
-            event_sender,
-            scene: Target {
-                scene,
-                clip: None,
-                offset: None,
-            },
-            redraw_status: Mutex::new(RedrawStatus {
+            window,
+            scene,
+            redraw_status: RedrawStatus {
                 needs_render: true,
                 next_redraw_target: RedrawTarget::None,
-            }),
-        }
-    }
-    pub async fn set_needs_redraw(&self) {
-        let mut redraw_status = self.redraw_status.lock().await;
-        if !redraw_status.needs_render {
-            redraw_status.needs_render = true;
-            let _ = self.event_sender.send(WindowEvent::WakeUp).await;
+                event_sender,
+            },
         }
     }
 
-    pub(crate) async fn clear_redraw_target(&self) {
-        let mut redraw_status = self.redraw_status.lock().await;
-        redraw_status.needs_render = false;
-        redraw_status.next_redraw_target = RedrawTarget::None;
+    pub(crate) fn clear_redraw_target(&mut self) {
+        self.redraw_status.needs_render = false;
+        self.redraw_status.next_redraw_target = RedrawTarget::None;
     }
 
-    pub(crate) async fn initialize_redraw_target(&self, target_fps: Option<u16>) {
-        let mut redraw_status = self.redraw_status.lock().await;
-        if let RedrawTarget::None = redraw_status.next_redraw_target {
+    pub(crate) fn initialize_redraw_target(&mut self, target_fps: Option<u16>) {
+        if let RedrawTarget::None = self.redraw_status.next_redraw_target {
             match target_fps {
                 Some(fps) => {
-                    redraw_status.next_redraw_target = RedrawTarget::Scheduled(
+                    self.redraw_status.next_redraw_target = RedrawTarget::Scheduled(
                         Instant::now()
                             .checked_add(Duration::from_secs_f32(1. / fps as f32))
                             .unwrap(),
                     );
                 }
                 None => {
-                    redraw_status.next_redraw_target = RedrawTarget::Never;
+                    self.redraw_status.next_redraw_target = RedrawTarget::Never;
                 }
             }
         }
     }
 
-    pub async fn estimate_next_frame(&self, duration: Duration) {
-        self.estimate_next_frame_instant(Instant::now().checked_add(duration).unwrap())
-            .await;
+    pub(crate) fn next_redraw_target(&self) -> RedrawTarget {
+        self.redraw_status.next_redraw_target
     }
 
-    pub async fn estimate_next_frame_instant(&self, instant: Instant) {
-        let mut redraw_status = self.redraw_status.lock().await;
-        match redraw_status.next_redraw_target {
-            RedrawTarget::Never | RedrawTarget::None => {
-                redraw_status.next_redraw_target = RedrawTarget::Scheduled(instant);
-            }
-            RedrawTarget::Scheduled(existing_instant) => {
-                if instant < existing_instant {
-                    redraw_status.next_redraw_target = RedrawTarget::Scheduled(instant);
-                }
-            }
-        }
-    }
-
-    pub(crate) async fn next_redraw_target(&self) -> RedrawTarget {
-        let redraw_status = self.redraw_status.lock().await;
-        redraw_status.next_redraw_target
-    }
-
-    pub async fn needs_render(&self) -> bool {
-        let redraw_status = self.redraw_status.lock().await;
-        redraw_status.needs_render
-            || match redraw_status.next_redraw_target {
+    pub fn needs_render(&self) -> bool {
+        self.redraw_status.needs_render
+            || match self.redraw_status.next_redraw_target {
                 RedrawTarget::Never => false,
                 RedrawTarget::None => false,
                 RedrawTarget::Scheduled(scheduled_for) => scheduled_for < Instant::now(),
             }
     }
 
-    pub(crate) async fn request_close(&self) -> KludgineResult<CloseResponse> {
-        let mut window = self.window.lock().await;
-        window.close_requested().await
+    pub(crate) fn request_close(&mut self) -> KludgineResult<CloseResponse> {
+        self.window.close_requested()
     }
 
-    pub(crate) async fn process_input(&self, input: InputEvent) -> KludgineResult<()> {
-        let mut window = self.window.lock().await;
-        window.process_input(input, self).await
+    pub(crate) fn process_input(&mut self, input: InputEvent) -> KludgineResult<()> {
+        self.window.process_input(input, &mut self.redraw_status)
     }
 
-    pub(crate) async fn receive_character(&self, character: char) -> KludgineResult<()> {
-        let mut window = self.window.lock().await;
-        window.receive_character(character, self).await
+    pub(crate) fn receive_character(&mut self, character: char) -> KludgineResult<()> {
+        self.window
+            .receive_character(character, &mut self.redraw_status)
     }
 
-    pub(crate) async fn initialize(&self) -> KludgineResult<()> {
-        let mut window = self.window.lock().await;
-        window.initialize(&self.scene, self).await?;
+    pub(crate) fn initialize(&mut self) -> KludgineResult<()> {
+        self.window.initialize(&Target {
+            scene: &self.scene,
+            clip: None,
+            offset: None,
+        })?;
 
         Ok(())
     }
 
-    pub(crate) async fn render(&self) -> KludgineResult<()> {
-        let mut window = self.window.lock().await;
-        window.render(&self.scene).await?;
+    pub(crate) fn render(&mut self) -> KludgineResult<()> {
+        self.window.render(&Target {
+            scene: &self.scene,
+            clip: None,
+            offset: None,
+        })?;
 
-        self.clear_redraw_target().await;
+        self.clear_redraw_target();
 
         Ok(())
     }
 
-    pub(crate) async fn update(&self, target_fps: Option<u16>) -> KludgineResult<()> {
-        self.initialize_redraw_target(target_fps).await;
+    pub(crate) fn update(&mut self, target_fps: Option<u16>) -> KludgineResult<()> {
+        self.initialize_redraw_target(target_fps);
 
-        let mut window = self.window.lock().await;
-        window.update(&self.scene, self).await
+        self.window.update(
+            &Target {
+                scene: &self.scene,
+                clip: None,
+                offset: None,
+            },
+            &mut self.redraw_status,
+        )
+    }
+
+    pub(crate) fn scene(&self) -> Target<'_> {
+        Target {
+            scene: &self.scene,
+            clip: None,
+            offset: None,
+        }
+    }
+
+    pub(crate) fn scene_mut(&mut self) -> &'_ mut Scene {
+        &mut self.scene
     }
 }
 

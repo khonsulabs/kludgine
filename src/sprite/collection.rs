@@ -1,26 +1,17 @@
 use crate::sprite::{SpriteSheet, SpriteSource};
-use async_handle::Handle;
-use async_trait::async_trait;
 use std::{collections::HashMap, fmt::Debug, hash::Hash};
 
 #[derive(Debug, Clone)]
 pub struct SpriteMap<T> {
-    data: Handle<SpriteMapData<T>>,
+    sprites: HashMap<T, SpriteSource>,
 }
 
 impl<T> Default for SpriteMap<T> {
     fn default() -> Self {
         SpriteMap {
-            data: Handle::new(SpriteMapData {
-                sprites: HashMap::new(),
-            }),
+            sprites: HashMap::default(),
         }
     }
-}
-
-#[derive(Debug, Clone)]
-struct SpriteMapData<T> {
-    sprites: HashMap<T, SpriteSource>,
 }
 
 impl<T> SpriteMap<T>
@@ -28,28 +19,25 @@ where
     T: Debug + Eq + Hash,
 {
     pub fn new(sprites: HashMap<T, SpriteSource>) -> Self {
-        Self {
-            data: Handle::new(SpriteMapData { sprites }),
-        }
+        Self { sprites }
     }
 
-    pub async fn from_foreign_sheet<O: Clone + Debug + Eq + Hash, F: Fn(O) -> T>(
+    pub fn from_foreign_sheet<O: Clone + Debug + Eq + Hash, F: Fn(O) -> T>(
         sheet: SpriteSheet<O>,
         converter: F,
     ) -> Self {
-        let map = Self::default();
-        map.add_foreign_sheet(sheet, converter).await;
+        let mut map = Self::default();
+        map.add_foreign_sheet(sheet, converter);
         map
     }
 
-    pub async fn add_foreign_sheet<O: Clone + Debug + Eq + Hash, F: Fn(O) -> T>(
-        &self,
+    pub fn add_foreign_sheet<O: Clone + Debug + Eq + Hash, F: Fn(O) -> T>(
+        &mut self,
         sheet: SpriteSheet<O>,
         converter: F,
     ) {
-        let mut data = self.data.write().await;
-        for (tile, sprite) in sheet.all_sprites().await {
-            data.sprites.insert(converter(tile), sprite);
+        for (tile, sprite) in sheet.all_sprites() {
+            self.sprites.insert(converter(tile), sprite);
         }
     }
 }
@@ -58,37 +46,34 @@ impl<T> SpriteMap<T>
 where
     T: Clone + Debug + Eq + Hash,
 {
-    pub async fn add_sheet(&self, sheet: SpriteSheet<T>) {
-        self.add_foreign_sheet(sheet, |a| a).await
+    pub fn add_sheet(&mut self, sheet: SpriteSheet<T>) {
+        self.add_foreign_sheet(sheet, |a| a)
     }
 
-    pub async fn keys(&self) -> Vec<T> {
-        let data = self.data.read().await;
-        data.sprites.keys().cloned().collect()
+    pub fn keys(&self) -> Vec<&'_ T> {
+        self.sprites.keys().collect()
     }
 }
 
-#[async_trait]
 pub trait SpriteCollection<T>
 where
     T: Send + Sync,
 {
-    async fn sprite(&self, tile: &T) -> Option<SpriteSource>;
+    fn sprite(&self, tile: &T) -> Option<SpriteSource>;
 
-    async fn sprites(&self, tiles: &[T]) -> Vec<SpriteSource> {
-        let sprite_futures = tiles.iter().map(|t| self.sprite(t)).collect::<Vec<_>>();
-        let results = futures::future::join_all(sprite_futures).await;
-        results.into_iter().map(|r| r.unwrap()).collect()
+    fn sprites(&self, tiles: &[T]) -> Vec<SpriteSource> {
+        tiles
+            .iter()
+            .map(|t| self.sprite(t).unwrap())
+            .collect::<Vec<_>>()
     }
 }
 
-#[async_trait]
 impl<T> SpriteCollection<T> for SpriteMap<T>
 where
     T: Send + Sync + Eq + Hash,
 {
-    async fn sprite(&self, tile: &T) -> Option<SpriteSource> {
-        let data = self.data.read().await;
-        data.sprites.get(tile).cloned()
+    fn sprite(&self, tile: &T) -> Option<SpriteSource> {
+        self.sprites.get(tile).cloned()
     }
 }

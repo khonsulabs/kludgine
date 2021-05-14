@@ -3,7 +3,7 @@ use crate::{
     shape::Shape,
     sprite::RenderedSprite,
     text::{font::Font, prepared::PreparedSpan},
-    Handle, KludgineError, KludgineResult,
+    KludgineError, KludgineResult,
 };
 use euclid::Rect;
 use platforms::target::{OS, TARGET_OS};
@@ -27,13 +27,26 @@ pub(crate) enum Element {
     Shape(Shape<Raw>),
 }
 
-#[derive(Clone, Debug)]
-pub struct Scene {
-    pub(crate) data: Handle<SceneData>,
+pub(crate) enum SceneEvent {
+    Render(Element),
+    EndFrame,
+    BeginFrame { size: Size<f32, Raw> },
 }
 
-impl From<Scene> for Target {
-    fn from(scene: Scene) -> Target {
+#[derive(Debug)]
+pub struct Scene {
+    pub pressed_keys: HashSet<VirtualKeyCode>,
+    scale_factor: ScreenScale,
+    size: Size<f32, Raw>,
+    event_sender: flume::Sender<SceneEvent>,
+    now: Option<Instant>,
+    elapsed: Option<Duration>,
+    fonts: HashMap<String, Vec<Font>>,
+    system_theme: Theme,
+}
+
+impl<'a> From<&'a Scene> for Target<'a> {
+    fn from(scene: &'a Scene) -> Target<'a> {
         Self {
             scene,
             clip: None,
@@ -43,16 +56,16 @@ impl From<Scene> for Target {
 }
 
 #[derive(Clone, Debug)]
-pub struct Target {
-    pub scene: Scene,
+pub struct Target<'a> {
+    pub scene: &'a Scene,
     pub clip: Option<Rect<u32, Raw>>,
     pub offset: Option<Vector<f32, Raw>>,
 }
 
-impl Target {
+impl<'a> Target<'a> {
     pub fn clipped_to(&self, new_clip: Rect<u32, Raw>) -> Self {
         Self {
-            scene: self.scene.clone(),
+            scene: self.scene,
             clip: Some(match &self.clip {
                 Some(existing_clip) => existing_clip.union(&new_clip),
                 None => new_clip,
@@ -63,7 +76,7 @@ impl Target {
 
     pub fn offset_by(&self, delta: Vector<f32, Raw>) -> Self {
         Self {
-            scene: self.scene.clone(),
+            scene: self.scene,
             clip: self.clip,
             offset: Some(match self.offset {
                 Some(offset) => offset + delta,
@@ -72,9 +85,9 @@ impl Target {
         }
     }
 
-    pub async fn offset_point(&self, point: Point<f32, Scaled>) -> Point<f32, Scaled> {
+    pub fn offset_point(&self, point: Point<f32, Scaled>) -> Point<f32, Scaled> {
         match self.offset {
-            Some(offset) => point + offset / self.scene.scale_factor().await,
+            Some(offset) => point + offset / self.scene.scale_factor(),
             None => point,
         }
     }
@@ -87,30 +100,12 @@ impl Target {
     }
 }
 
-impl std::ops::Deref for Target {
+impl<'a> std::ops::Deref for Target<'a> {
     type Target = Scene;
 
     fn deref(&self) -> &Self::Target {
         &self.scene
     }
-}
-
-impl std::ops::DerefMut for Target {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.scene
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct SceneData {
-    pub pressed_keys: HashSet<VirtualKeyCode>,
-    scale_factor: ScreenScale,
-    size: Size<f32, Raw>,
-    pub(crate) elements: Vec<Element>,
-    now: Option<Instant>,
-    elapsed: Option<Duration>,
-    fonts: HashMap<String, Vec<Font>>,
-    system_theme: Theme,
 }
 
 pub struct Modifiers {
@@ -137,171 +132,140 @@ impl Modifiers {
 }
 
 impl Scene {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(event_sender: flume::Sender<SceneEvent>) -> Self {
         Self {
-            data: Handle::new(SceneData {
-                scale_factor: Scale::identity(),
-                size: Size::default(),
-                pressed_keys: HashSet::new(),
-                now: None,
-                elapsed: None,
-                elements: Vec::new(),
-                fonts: HashMap::new(),
-                system_theme: Theme::Light,
-            }),
+            event_sender,
+            scale_factor: Scale::identity(),
+            size: Size::default(),
+            pressed_keys: HashSet::new(),
+            now: None,
+            elapsed: None,
+            fonts: HashMap::new(),
+            system_theme: Theme::Light,
         }
     }
 
-    pub async fn system_theme(&self) -> Theme {
-        let scene = self.data.read().await;
-        scene.system_theme
+    pub fn system_theme(&self) -> Theme {
+        self.system_theme
     }
 
-    pub(crate) async fn set_system_theme(&self, system_theme: Theme) {
-        let mut scene = self.data.write().await;
-        scene.system_theme = system_theme;
+    pub(crate) fn set_system_theme(&mut self, system_theme: Theme) {
+        self.system_theme = system_theme;
     }
 
-    pub(crate) async fn push_element(&self, element: Element) {
-        let mut scene = self.data.write().await;
-        scene.elements.push(element);
+    pub(crate) fn push_element(&self, element: Element) {
+        let _ = self.event_sender.send(SceneEvent::Render(element));
     }
 
-    pub(crate) async fn set_internal_size(&self, size: Size<f32, Raw>) {
-        let mut scene = self.data.write().await;
-        scene.size = size;
+    pub(crate) fn set_internal_size(&mut self, size: Size<f32, Raw>) {
+        self.size = size;
     }
 
-    pub(crate) async fn internal_size(&self) -> Size<f32, Raw> {
-        let scene = self.data.read().await;
-        scene.size
+    // pub(crate) async fn internal_size(&self) -> Size<f32, Raw> {
+    //     let scene = self.data.read().await;
+    //     scene.size
+    // }
+
+    pub(crate) fn set_scale_factor(&mut self, scale_factor: ScreenScale) {
+        self.scale_factor = scale_factor;
     }
 
-    pub(crate) async fn set_scale_factor(&mut self, scale_factor: ScreenScale) {
-        let mut scene = self.data.write().await;
-        scene.scale_factor = scale_factor;
+    pub fn scale_factor(&self) -> ScreenScale {
+        self.scale_factor
     }
 
-    pub async fn scale_factor(&self) -> ScreenScale {
-        let scene = self.data.read().await;
-        scene.scale_factor
+    pub fn keys_pressed(&self) -> HashSet<VirtualKeyCode> {
+        self.pressed_keys.clone()
     }
 
-    pub async fn keys_pressed(&self) -> HashSet<VirtualKeyCode> {
-        let scene = self.data.read().await;
-        scene.pressed_keys.clone()
+    pub fn key_pressed(&self, key: VirtualKeyCode) -> bool {
+        self.pressed_keys.contains(&key)
     }
 
-    pub async fn key_pressed(&self, key: VirtualKeyCode) -> bool {
-        let scene = self.data.read().await;
-        scene.pressed_keys.contains(&key)
-    }
-
-    pub async fn any_key_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
-        let scene = self.data.read().await;
+    pub fn any_key_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
         for key in keys {
-            if scene.pressed_keys.contains(key) {
+            if self.pressed_keys.contains(key) {
                 return true;
             }
         }
         false
     }
 
-    pub async fn modifiers_pressed(&self) -> Modifiers {
-        let (control, alt, shift, os) = futures::join!(
-            self.any_key_pressed(&[VirtualKeyCode::RControl, VirtualKeyCode::LControl]),
-            self.any_key_pressed(&[VirtualKeyCode::RAlt, VirtualKeyCode::LAlt]),
-            self.any_key_pressed(&[VirtualKeyCode::LShift, VirtualKeyCode::RShift]),
-            self.any_key_pressed(&[VirtualKeyCode::RWin, VirtualKeyCode::LWin])
-        );
+    pub fn modifiers_pressed(&self) -> Modifiers {
         Modifiers {
-            control,
-            alt,
-            shift,
-            os,
+            control: self.any_key_pressed(&[VirtualKeyCode::RControl, VirtualKeyCode::LControl]),
+            alt: self.any_key_pressed(&[VirtualKeyCode::RAlt, VirtualKeyCode::LAlt]),
+            shift: self.any_key_pressed(&[VirtualKeyCode::LShift, VirtualKeyCode::RShift]),
+            os: self.any_key_pressed(&[VirtualKeyCode::RWin, VirtualKeyCode::LWin]),
         }
     }
 
-    pub(crate) async fn start_frame(&mut self) {
-        let mut scene = self.data.write().await;
-        let last_start = scene.now;
-        scene.now = Some(Instant::now());
-        scene.elapsed = match last_start {
-            Some(last_start) => scene.now.unwrap().checked_duration_since(last_start),
+    pub(crate) fn start_frame(&mut self) {
+        let last_start = self.now;
+        self.now = Some(Instant::now());
+        self.elapsed = match last_start {
+            Some(last_start) => self.now.unwrap().checked_duration_since(last_start),
             None => None,
         };
-        scene.elements.clear();
+        let _ = self
+            .event_sender
+            .send(SceneEvent::BeginFrame { size: self.size });
     }
 
-    pub async fn size(&self) -> Size<f32, Scaled> {
-        let scene = self.data.read().await;
-        scene.size / scene.scale_factor
+    pub(crate) fn end_frame(&self) {
+        let _ = self.event_sender.send(SceneEvent::EndFrame);
     }
 
-    pub async fn now(&self) -> Instant {
-        let scene = self.data.read().await;
-        scene.now.expect("now() called without starting a frame")
+    pub fn size(&self) -> Size<f32, Scaled> {
+        self.size / self.scale_factor
     }
 
-    pub async fn elapsed(&self) -> Option<Duration> {
-        let scene = self.data.read().await;
-        scene.elapsed
+    pub fn now(&self) -> Instant {
+        self.now.expect("now() called without starting a frame")
     }
 
-    pub async fn is_initial_frame(&self) -> bool {
-        let scene = self.data.read().await;
-        scene.elapsed.is_none()
+    pub fn elapsed(&self) -> Option<Duration> {
+        self.elapsed
     }
 
-    pub async fn register_font(&self, font: &Font) {
-        let family = font.family().await.expect("Unable to register VecFonts");
-        let mut scene = self.data.write().await;
-        scene
-            .fonts
+    pub fn is_initial_frame(&self) -> bool {
+        self.elapsed.is_none()
+    }
+
+    pub fn register_font(&mut self, font: &Font) {
+        let family = font.family().expect("Unable to register VecFonts");
+        self.fonts
             .entry(family)
             .and_modify(|fonts| fonts.push(font.clone()))
             .or_insert_with(|| vec![font.clone()]);
     }
 
     #[cfg(feature = "bundled-fonts-enabled")]
-    pub(crate) async fn register_bundled_fonts(&self) {
+    pub(crate) fn register_bundled_fonts(&mut self) {
         #[cfg(feature = "bundled-fonts-roboto")]
         {
-            self.register_font(&crate::text::bundled_fonts::ROBOTO)
-                .await;
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_ITALIC)
-                .await;
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_BLACK)
-                .await;
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_BLACK_ITALIC)
-                .await;
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_BOLD)
-                .await;
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_BOLD_ITALIC)
-                .await;
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_LIGHT)
-                .await;
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_LIGHT_ITALIC)
-                .await;
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_MEDIUM)
-                .await;
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_MEDIUM_ITALIC)
-                .await;
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_THIN)
-                .await;
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_THIN_ITALIC)
-                .await;
+            self.register_font(&crate::text::bundled_fonts::ROBOTO);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_ITALIC);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_BLACK);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_BLACK_ITALIC);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_BOLD);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_BOLD_ITALIC);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_LIGHT);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_LIGHT_ITALIC);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_MEDIUM);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_MEDIUM_ITALIC);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_THIN);
+            self.register_font(&crate::text::bundled_fonts::ROBOTO_THIN_ITALIC);
         }
     }
 
-    pub async fn lookup_font(
+    pub fn lookup_font(
         &self,
         family: &str,
         weight: Weight,
         style: FontStyle,
     ) -> KludgineResult<Font> {
-        let scene = self.data.read().await;
-        let fonts = scene.fonts.get(family);
+        let fonts = self.fonts.get(family);
 
         match fonts {
             Some(fonts) => {
@@ -309,8 +273,8 @@ impl Scene {
                 let mut closest_weight = None;
 
                 for font in fonts.iter() {
-                    let font_weight = font.weight().await;
-                    let font_style = font.style().await;
+                    let font_weight = font.weight();
+                    let font_style = font.style();
 
                     if font_weight == weight && font_style == style {
                         return Ok(font.clone());
@@ -319,8 +283,7 @@ impl Scene {
                         // But if no font matches the style, we should pick the weight that matches
                         // best in another style.
                         let style_multiplier = if font_style == style { 1 } else { 10 };
-                        let delta = (font.weight().await.to_number() as i32
-                            - weight.to_number() as i32)
+                        let delta = (font.weight().to_number() as i32 - weight.to_number() as i32)
                             .abs()
                             * style_multiplier;
 

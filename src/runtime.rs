@@ -1,16 +1,14 @@
 use crate::{
     application::Application,
-    delay::Delay,
     window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig, Window, WindowBuilder},
     KludgineResult,
 };
 use crossbeam::{
-    channel::{unbounded, Receiver, Sender, TryRecvError},
+    channel::{unbounded, Receiver, Sender},
     sync::ShardedLock,
 };
-use futures::future::Future;
 use platforms::target::{OS, TARGET_OS};
-use std::{collections::HashMap, time::Duration};
+use std::collections::HashMap;
 use winit::{
     event::Event,
     window::{Theme, WindowId},
@@ -20,13 +18,14 @@ pub(crate) enum RuntimeRequest {
     #[cfg(feature = "multiwindow")]
     OpenWindow {
         builder: WindowBuilder,
-        window_sender: async_channel::Sender<RuntimeWindowConfig>,
+        window_sender: flume::Sender<RuntimeWindowConfig>,
     },
+    WindowClosed,
     Quit,
 }
 
 impl RuntimeRequest {
-    pub async fn send(self) -> KludgineResult<()> {
+    pub fn send(self) -> KludgineResult<()> {
         let sender: Sender<RuntimeRequest> = {
             let guard = GLOBAL_RUNTIME_SENDER.lock().expect("Error locking mutex");
             match *guard {
@@ -39,8 +38,10 @@ impl RuntimeRequest {
     }
 }
 
+#[derive(Debug)]
 pub(crate) enum RuntimeEvent {
     Running,
+    WindowClosed,
 }
 
 use lazy_static::lazy_static;
@@ -96,54 +97,51 @@ where
             assert!(global_receiver.is_none());
             *global_receiver = Some(event_receiver);
         }
-        Runtime::spawn(self.async_main());
+
+        std::thread::Builder::new()
+            .name(String::from("kludgine-app"))
+            .spawn(move || self.async_main())
+            .unwrap();
 
         (request_receiver, event_sender)
     }
 
-    async fn async_main(mut self)
+    fn async_main(mut self)
     where
         App: Application + 'static,
     {
-        self.app.initialize().await;
+        self.app.initialize();
 
         self.run()
-            .await
             .expect("Error encountered running application loop");
     }
 
-    async fn run(mut self) -> KludgineResult<()>
+    fn run(mut self) -> KludgineResult<()>
     where
         App: Application + 'static,
     {
         let mut running = false;
-        loop {
-            while let Some(event) = {
-                let mut guard = GLOBAL_RUNTIME_RECEIVER
-                    .lock()
-                    .expect("Error locking runtime reciver");
-                let event_receiver = guard.as_mut().expect("Receiver was not set");
-                match event_receiver.try_recv() {
-                    Ok(event) => Some(event),
-                    Err(err) => match err {
-                        TryRecvError::Empty => None,
-                        TryRecvError::Disconnected => return Ok(()),
-                    },
+        let event_receiver = {
+            let guard = GLOBAL_RUNTIME_RECEIVER
+                .lock()
+                .expect("Error locking runtime reciver");
+            guard.as_ref().expect("Receiver was not set").clone()
+        };
+        while let Some(event) = event_receiver.recv().ok() {
+            match event {
+                RuntimeEvent::Running => {
+                    running = true;
                 }
-            } {
-                match event {
-                    RuntimeEvent::Running => {
-                        running = true;
-                    }
-                }
+                RuntimeEvent::WindowClosed => {}
             }
 
-            if running && self.app.should_exit().await {
-                RuntimeRequest::Quit.send().await?;
-                return Ok(());
+            if running && self.app.should_exit() {
+                RuntimeRequest::Quit.send()?;
+                break;
             }
-            Delay::new(Duration::from_millis(100)).await;
         }
+
+        Ok(())
     }
 }
 
@@ -166,6 +164,11 @@ impl EventProcessor for Runtime {
                 }
                 RuntimeRequest::Quit => {
                     std::process::exit(0); // TODO There is a bug in winit when destructing https://github.com/rust-windowing/winit/blob/ad7d4939a8be2e0d9436d43d0351e2f7599a4237/src/platform_impl/macos/app_state.rs#L344
+                }
+                RuntimeRequest::WindowClosed => {
+                    self.event_sender
+                        .send(RuntimeEvent::WindowClosed)
+                        .unwrap_or_default();
                 }
             }
         }
@@ -216,7 +219,7 @@ impl Runtime {
     #[cfg(feature = "multiwindow")]
     fn internal_open_window(
         &mut self,
-        window_sender: async_channel::Sender<RuntimeWindowConfig>,
+        window_sender: flume::Sender<RuntimeWindowConfig>,
         builder: WindowBuilder,
         event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
     ) {
@@ -234,10 +237,9 @@ impl Runtime {
         matches!(TARGET_OS, OS::Android | OS::iOS)
     }
 
-    pub fn run<T, F>(self, initial_window: WindowBuilder, window: F) -> !
+    pub fn run<T>(self, initial_window: WindowBuilder, window: T) -> !
     where
         T: Window + Sized + 'static,
-        F: Future<Output = T> + Send + Sync + 'static,
     {
         let event_loop = winit::event_loop::EventLoop::new();
         let initial_system_theme = initial_window
@@ -272,16 +274,12 @@ impl Runtime {
                 })
                 .expect("couldn't append canvas to document body");
         }
-
-        let (window_sender, window_receiver) = async_channel::bounded(1);
+        let (window_sender, window_receiver) = flume::bounded(1);
         window_sender
-            .try_send(RuntimeWindowConfig::new(&initial_window))
+            .send(RuntimeWindowConfig::new(&initial_window))
             .unwrap();
 
-        Runtime::spawn(async move {
-            let window = window.await;
-            RuntimeWindow::open(window_receiver, initial_system_theme, window).await;
-        });
+        RuntimeWindow::open(window_receiver, initial_system_theme, window);
 
         #[cfg(feature = "multiwindow")]
         {
@@ -315,21 +313,20 @@ impl Runtime {
     }
 
     #[cfg(feature = "multiwindow")]
-    pub async fn open_window<T>(builder: WindowBuilder, window: T)
+    pub fn open_window<T>(builder: WindowBuilder, window: T)
     where
         T: Window + Sized,
     {
-        let (window_sender, window_receiver) = async_channel::bounded(1);
+        let (window_sender, window_receiver) = flume::bounded(1);
         let initial_system_theme = builder.initial_system_theme.clone().unwrap_or(Theme::Light);
         RuntimeRequest::OpenWindow {
             builder,
             window_sender,
         }
         .send()
-        .await
         .unwrap_or_default();
 
-        RuntimeWindow::open(window_receiver, initial_system_theme, window).await;
+        RuntimeWindow::open(window_receiver, initial_system_theme, window);
     }
 
     fn process_window_events(&mut self, event: &Event<()>) {

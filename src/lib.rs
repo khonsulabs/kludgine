@@ -4,16 +4,10 @@
 #[macro_use]
 extern crate derivative;
 
-#[cfg(test)]
-#[macro_use]
-extern crate futures_await_test;
-
 #[cfg(feature = "tracing")]
 #[macro_use]
 extern crate tracing;
 
-pub use async_handle::Handle;
-pub use async_trait::async_trait;
 pub use easygpu;
 pub use winit;
 
@@ -149,11 +143,10 @@ pub mod prelude {
                 DeviceId, ElementState, Event, EventStatus, InputEvent, MouseButton,
                 MouseScrollDelta, ScanCode, TouchPhase, VirtualKeyCode,
             },
-            OpenWindow, Window, WindowBuilder, WindowCreator,
+            OpenWindow, RedrawStatus, Window, WindowBuilder, WindowCreator,
         },
-        Handle, KludgineError, KludgineResult, RequiresInitialization,
+        KludgineError, KludgineResult, RequiresInitialization,
     };
-    pub use async_trait::async_trait;
     pub use stylecs::{
         Alignment, AnyStyleComponent, BackgroundColor, ColorPair, ComponentCollection, FontFamily,
         FontSize, FontStyle, ForegroundColor, GenericStyle, Style, StyleComponent, StyleSheet,

@@ -7,7 +7,7 @@ mod implementation {
 
     impl Delay {
         pub async fn new(duration: Duration) {
-            let (tx, rx) = async_channel::bounded(1);
+            let (tx, rx) = flume::bounded(1);
 
             // TODO was having trouble getting gloo_timers working, it seems very heavy. This seems to be an OK alternative
             {

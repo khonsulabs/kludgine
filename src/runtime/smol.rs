@@ -25,7 +25,7 @@ pub fn initialize() {
 
     // Launch a thread pool
     std::thread::spawn(|| {
-        let (signal, shutdown) = async_channel::unbounded::<()>();
+        let (signal, shutdown) = flume::unbounded::<()>();
 
         easy_parallel::Parallel::new()
             // Run four executor threads.
@@ -33,13 +33,13 @@ pub fn initialize() {
                 futures::executor::block_on(async {
                     let guard = GLOBAL_THREAD_POOL.read().unwrap();
                     let executor = guard.as_ref().unwrap();
-                    executor.run(shutdown.recv()).await
+                    executor.run(shutdown.recv_async()).await
                 })
             })
             // Run the main future on the current thread.
             .finish(|| {});
 
-        signal.close();
+        drop(signal);
     });
 }
 

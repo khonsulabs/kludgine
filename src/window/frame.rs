@@ -1,25 +1,63 @@
 use crate::{
     math::{Raw, Size},
-    scene::{Element, Scene},
+    scene::{Element, SceneEvent},
     shape, sprite,
     text::{font::LoadedFont, prepared::PreparedSpan},
     texture::Texture,
 };
 use easygpu::transform::ScreenSpace;
 use euclid::Rect;
-use std::{
-    collections::{HashMap, HashSet},
-    time::Instant,
-};
+use std::collections::{HashMap, HashSet};
 #[derive(Default, Debug)]
 pub(crate) struct Frame {
-    pub started_at: Option<Instant>,
-    pub updated_at: Option<Instant>,
     pub size: Size<f32, ScreenSpace>,
     pub commands: Vec<FrameCommand>,
     pub(crate) textures: HashMap<u64, Texture>,
     pub(crate) fonts: HashMap<u64, LoadedFont>,
     pub(crate) pending_font_updates: Vec<FontUpdate>,
+    receiver: FrameReceiver,
+}
+
+#[derive(Default, Debug)]
+struct FrameReceiver {
+    size: Size<f32, ScreenSpace>,
+    elements: Vec<Element>,
+}
+
+impl FrameReceiver {
+    pub fn get_latest_frame(&mut self, receiver: &flume::Receiver<SceneEvent>) -> Vec<Element> {
+        // Receive a frame, blocking until we get an EndFrame
+        while let Ok(evt) = receiver.recv() {
+            if self.process_scene_event(evt) {
+                // New frame
+                break;
+            }
+        }
+        let mut latest_frame = std::mem::replace(&mut self.elements, Vec::new());
+        // Receive any pending events in a non-blocking fashion. We only want to render the frame we have the most recent information for
+        while let Ok(evt) = receiver.try_recv() {
+            if self.process_scene_event(evt) {
+                // New frame
+                latest_frame = std::mem::replace(&mut self.elements, Vec::new());
+            }
+        }
+        latest_frame
+    }
+
+    fn process_scene_event(&mut self, event: SceneEvent) -> bool {
+        match event {
+            SceneEvent::BeginFrame { size } => {
+                self.size = size.cast_unit();
+                false
+            }
+            SceneEvent::Render(element) => {
+                self.elements.push(element);
+                false
+            }
+
+            SceneEvent::EndFrame => true,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -79,22 +117,20 @@ impl FrameBatch {
 impl Frame {
     #[cfg_attr(
         feature = "tracing",
-        instrument(name = "Frame::update", level = "trace", skip(self, scene))
+        instrument(name = "Frame::update", level = "trace", skip(self, event_receiver))
     )]
-    pub async fn update(&mut self, scene: &Scene) {
-        self.started_at = Some(scene.now().await);
+    pub fn update(&mut self, event_receiver: &flume::Receiver<SceneEvent>) {
+        let elements = self.receiver.get_latest_frame(event_receiver);
+        self.size = self.receiver.size;
         self.commands.clear();
 
-        self.cache_glyphs(scene).await;
-
-        self.size = scene.internal_size().await.cast_unit();
+        self.cache_glyphs(&elements);
 
         let mut referenced_texture_ids = HashSet::new();
 
         let mut current_texture_id: Option<u64> = None;
         let mut current_batch: Option<FrameBatch> = None;
-        let scene = scene.data.read().await;
-        for element in scene.elements.iter() {
+        for element in &elements {
             match element {
                 Element::Sprite {
                     sprite: sprite_handle,
@@ -170,8 +206,6 @@ impl Frame {
         for id in dead_texture_ids {
             self.textures.remove(&id);
         }
-
-        self.updated_at = Some(Instant::now());
     }
 
     fn commit_batch(&mut self, batch: Option<FrameBatch>) -> Option<FrameBatch> {
@@ -185,11 +219,9 @@ impl Frame {
         None
     }
 
-    async fn cache_glyphs(&mut self, scene: &Scene) {
+    fn cache_glyphs(&mut self, elements: &[Element]) {
         let mut referenced_fonts = HashSet::new();
-        let scene = scene.data.read().await;
-        for text in scene
-            .elements
+        for text in elements
             .iter()
             .map(|e| match &e {
                 Element::Text { span, .. } => Some(span),
@@ -198,14 +230,12 @@ impl Frame {
             .filter(|e| e.is_some())
             .map(|e| e.unwrap())
         {
-            referenced_fonts.insert(text.data.font.id().await);
+            referenced_fonts.insert(text.data.font.id());
 
             for glyph_info in text.data.glyphs.iter() {
-                let font = text.data.font.handle.read().await;
-
                 let loaded_font = self
                     .fonts
-                    .entry(font.id)
+                    .entry(text.data.font.id())
                     .or_insert_with(|| LoadedFont::new(&text.data.font));
                 loaded_font.cache.queue_glyph(0, glyph_info.glyph.clone());
             }
@@ -223,7 +253,7 @@ impl Frame {
 
         let mut updates = Vec::new();
         for font in self.fonts.values_mut() {
-            let font_id = font.font.id;
+            let font_id = font.font.id();
             font.cache
                 .cache_queued(|rect, data| {
                     updates.push(FontUpdate {

@@ -50,12 +50,8 @@ ttf-parser = "0.6"
 once_cell = "1"
 approx = "0.4"
 palette = "0.5"
-async-channel = "1"
-async-rwlock = "1"
-async-handle = "0.1"
-async-lock = "2"
+flume = "0.10"
 easy-parallel = { version = "3", optional = true }
-async-trait = "0.1"
 futures = "0.3"
 futures-timer = "3"
 derivative = "2"
@@ -91,5 +87,5 @@ required-features = ["bundled-fonts-roboto"]
 # easygpu = { path = "../easygpu" }
 # easygpu-lyon = { path = "../easygpu-lyon" }
 
-[patch."https://github.com/khonsulabs/stylecs.git"]
-stylecs = { path = "../stylecs" }
+# [patch."https://github.com/khonsulabs/stylecs.git"]
+# stylecs = { path = "../stylecs" }

@@ -1,7 +1,7 @@
 use crate::{
     math::{Angle, Box2D, Point, Raw, Rect, Scale, Size},
     texture::Texture,
-    Handle, KludgineError, KludgineResult,
+    KludgineError, KludgineResult,
 };
 mod batch;
 mod collection;
@@ -24,17 +24,15 @@ use std::{collections::HashMap, iter::IntoIterator, sync::Arc, time::Duration};
 
 #[macro_export]
 macro_rules! include_aseprite_sprite {
-    ($path:expr) => {
-        async {
-            let image_bytes = std::include_bytes!(concat!($path, ".png"));
-            match Texture::from_bytes(image_bytes) {
-                Ok(texture) => {
-                    Sprite::load_aseprite_json(include_str!(concat!($path, ".json")), texture).await
-                }
-                Err(err) => Err(err),
+    ($path:expr) => {{
+        let image_bytes = std::include_bytes!(concat!($path, ".png"));
+        match Texture::from_bytes(image_bytes) {
+            Ok(texture) => {
+                Sprite::load_aseprite_json(include_str!(concat!($path, ".json")), texture)
             }
+            Err(err) => Err(err),
         }
-    };
+    }};
 }
 
 #[derive(Debug, Clone)]
@@ -61,11 +59,6 @@ enum AnimationDirection {
 
 #[derive(Debug, Clone)]
 pub struct Sprite {
-    pub(crate) handle: Handle<SpriteData>,
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct SpriteData {
     title: Option<String>,
     elapsed_since_frame_change: Duration,
     current_tag: Option<String>,
@@ -83,38 +76,34 @@ impl From<SpriteAnimations> for Sprite {
 impl Sprite {
     pub fn new(title: Option<String>, animations: SpriteAnimations) -> Self {
         Self {
-            handle: Handle::new(SpriteData {
-                title,
-                animations,
-                current_frame: 0,
-                current_tag: None,
-                elapsed_since_frame_change: Duration::from_millis(0),
-                current_animation_direction: AnimationDirection::Forward,
-            }),
+            title,
+            animations,
+            current_frame: 0,
+            current_tag: None,
+            elapsed_since_frame_change: Duration::from_millis(0),
+            current_animation_direction: AnimationDirection::Forward,
         }
     }
 
     /// For merging multiple Sprites that have no tags within them
-    pub async fn merged<'a, S: Into<String>, I: IntoIterator<Item = (S, Self)>>(source: I) -> Self {
+    pub fn merged<S: Into<String>, I: IntoIterator<Item = (S, Self)>>(source: I) -> Self {
         let mut combined = HashMap::new();
         let mut title = None;
         for (name, sprite) in source {
-            let handle = sprite.handle.read().await;
-            let animations = handle.animations.handle.read().await;
-            combined.insert(Some(name.into()), animations[&None].clone());
-            title = title.or_else(|| handle.title.clone());
+            combined.insert(
+                Some(name.into()),
+                sprite
+                    .animations
+                    .frames_for(&Option::<&str>::None)
+                    .unwrap()
+                    .clone(),
+            );
+            title = title.or_else(|| sprite.title.clone());
         }
         Self::new(title, SpriteAnimations::new(combined))
     }
 
-    pub async fn new_instance(&self) -> Self {
-        let data = self.handle.read().await;
-        Self {
-            handle: Handle::new(data.clone()),
-        }
-    }
-
-    pub async fn single_frame(texture: Texture) -> Self {
+    pub fn single_frame(texture: Texture) -> Self {
         let size = texture.size();
         let source = SpriteSource::new(Rect::new(Point::default(), size.cast_unit()), texture);
         let mut frames = HashMap::new();
@@ -138,7 +127,7 @@ impl Sprite {
     /// For the JSON data, use the Hash export option (default), and use either spaces or underscores (_)
     /// inbetween the fields in the name. Ensure `{frame}` is the last field in the name before the extension.
     /// E.g., `{tag}_{frame}.{extension}`
-    pub async fn load_aseprite_json(raw_json: &str, texture: Texture) -> KludgineResult<Self> {
+    pub fn load_aseprite_json(raw_json: &str, texture: Texture) -> KludgineResult<Self> {
         let json = json::parse(raw_json)?;
 
         // Validate the data
@@ -282,58 +271,52 @@ impl Sprite {
         Ok(Sprite::new(title, SpriteAnimations::new(animations)))
     }
 
-    pub async fn set_current_tag<S: Into<String>>(&self, tag: Option<S>) -> KludgineResult<()> {
+    pub fn set_current_tag<S: Into<String>>(&mut self, tag: Option<S>) -> KludgineResult<()> {
         let new_tag = tag.map(|t| t.into());
-        let mut sprite = self.handle.write().await;
-        if sprite.current_tag != new_tag {
-            sprite.current_animation_direction = {
-                let animations = sprite.animations.handle.read().await;
-                let animation = animations
+        if self.current_tag != new_tag {
+            self.current_animation_direction = {
+                let animation = self
+                    .animations
+                    .animations
                     .get(&new_tag)
                     .ok_or(KludgineError::InvalidSpriteTag)?;
                 animation.mode.default_direction()
             };
-            sprite.current_frame = 0;
-            sprite.current_tag = new_tag;
+            self.current_frame = 0;
+            self.current_tag = new_tag;
         }
 
         Ok(())
     }
 
-    pub async fn current_tag(&self) -> Option<String> {
-        let sprite = self.handle.read().await;
-        sprite.current_tag.clone()
+    pub fn current_tag(&self) -> Option<&'_ str> {
+        self.current_tag.as_deref()
     }
 
-    pub async fn get_frame(&self, elapsed: Option<Duration>) -> KludgineResult<SpriteSource> {
-        let mut sprite = self.handle.write().await;
+    pub fn get_frame(&mut self, elapsed: Option<Duration>) -> KludgineResult<SpriteSource> {
         if let Some(elapsed) = elapsed {
-            sprite.elapsed_since_frame_change += elapsed;
+            self.elapsed_since_frame_change += elapsed;
 
-            let current_frame_duration = sprite.with_current_frame(|frame| frame.duration).await?;
+            let current_frame_duration = self.with_current_frame(|frame| frame.duration)?;
             if let Some(frame_duration) = current_frame_duration {
-                if sprite.elapsed_since_frame_change > frame_duration {
-                    sprite.elapsed_since_frame_change = Duration::from_nanos(
-                        (sprite.elapsed_since_frame_change.as_nanos() % frame_duration.as_nanos())
+                if self.elapsed_since_frame_change > frame_duration {
+                    self.elapsed_since_frame_change = Duration::from_nanos(
+                        (self.elapsed_since_frame_change.as_nanos() % frame_duration.as_nanos())
                             as u64,
                     );
-                    sprite.advance_frame().await?;
+                    self.advance_frame()?;
                 }
             }
         }
 
-        Ok(sprite
-            .with_current_frame(|frame| frame.source.clone())
-            .await?)
+        self.with_current_frame(|frame| frame.source.clone())
     }
 
-    pub async fn remaining_frame_duration(&self) -> KludgineResult<Option<Duration>> {
-        let sprite = self.handle.read().await;
-
-        let duration = match sprite.with_current_frame(|frame| frame.duration).await? {
+    pub fn remaining_frame_duration(&self) -> KludgineResult<Option<Duration>> {
+        let duration = match self.with_current_frame(|frame| frame.duration)? {
             Some(frame_duration) => Some(
                 frame_duration
-                    .checked_sub(sprite.elapsed_since_frame_change)
+                    .checked_sub(self.elapsed_since_frame_change)
                     .unwrap_or_default(),
             ),
             None => None,
@@ -342,15 +325,12 @@ impl Sprite {
         Ok(duration)
     }
 
-    pub async fn animations(&self) -> SpriteAnimations {
-        let handle = self.handle.read().await;
-        handle.animations.clone()
+    pub fn animations(&self) -> &'_ SpriteAnimations {
+        &self.animations
     }
 
-    pub async fn bounds(&self) -> Option<Rect<u32>> {
-        let handle = self.handle.read().await;
-        let animations = handle.animations.handle.read().await;
-        if let Some(animation) = animations.values().next() {
+    pub fn bounds(&self) -> Option<Rect<u32>> {
+        if let Some(animation) = self.animations.animations.values().next() {
             if let Some(frame) = animation.frames.first() {
                 return Some(frame.source.location.bounds());
             }
@@ -358,27 +338,25 @@ impl Sprite {
         None
     }
 
-    pub async fn size(&self) -> Option<Size<u32>> {
-        let handle = self.handle.read().await;
-        let animations = handle.animations.handle.read().await;
-        if let Some(animation) = animations.values().next() {
+    pub fn size(&self) -> Option<Size<u32>> {
+        if let Some(animation) = self.animations.animations.values().next() {
             if let Some(frame) = animation.frames.first() {
                 return Some(frame.source.location.size());
             }
         }
         None
     }
-}
 
-impl SpriteData {
-    async fn advance_frame(&mut self) -> KludgineResult<()> {
-        self.current_frame = self.next_frame().await?;
+    fn advance_frame(&mut self) -> KludgineResult<()> {
+        self.current_frame = self.next_frame()?;
         Ok(())
     }
-    async fn next_frame(&mut self) -> KludgineResult<usize> {
+
+    fn next_frame(&mut self) -> KludgineResult<usize> {
         let starting_frame = self.current_frame as i32;
-        let frames = self.animations.handle.read().await;
-        let animation = frames
+        let animation = self
+            .animations
+            .animations
             .get(&self.current_tag)
             .ok_or(KludgineError::InvalidSpriteTag)?;
 
@@ -413,12 +391,13 @@ impl SpriteData {
         })
     }
 
-    async fn with_current_frame<F, R>(&self, f: F) -> KludgineResult<R>
+    fn with_current_frame<F, R>(&self, f: F) -> KludgineResult<R>
     where
         F: Fn(&SpriteFrame) -> R,
     {
-        let frames = self.animations.handle.read().await;
-        let animation = frames
+        let animation = self
+            .animations
+            .animations
             .get(&self.current_tag)
             .ok_or(KludgineError::InvalidSpriteTag)?;
 
@@ -428,19 +407,18 @@ impl SpriteData {
 
 #[derive(Clone, Debug)]
 pub struct SpriteAnimations {
-    handle: Handle<HashMap<Option<String>, SpriteAnimation>>,
+    animations: Arc<HashMap<Option<String>, SpriteAnimation>>,
 }
 
 impl SpriteAnimations {
     pub fn new(animations: HashMap<Option<String>, SpriteAnimation>) -> Self {
         Self {
-            handle: Handle::new(animations),
+            animations: Arc::new(animations),
         }
     }
 
-    pub async fn frames_for(&self, tag: &Option<impl ToString>) -> Option<SpriteAnimation> {
-        let handle = self.handle.read().await;
-        handle.get(&tag.as_ref().map(|s| s.to_string())).cloned()
+    pub fn frames_for(&self, tag: &Option<impl ToString>) -> Option<&'_ SpriteAnimation> {
+        self.animations.get(&tag.as_ref().map(|s| s.to_string()))
     }
 }
 

@@ -69,7 +69,7 @@ impl SpriteSource {
     }
 
     /// All SpriteSources must be from the same texture, and must have a square number of sprites
-    pub async fn joined_square<I: IntoIterator<Item = SpriteSource>>(sources: I) -> Self {
+    pub fn joined_square<I: IntoIterator<Item = SpriteSource>>(sources: I) -> Self {
         let sources: Vec<_> = sources.into_iter().collect();
         let sprites_wide = (sources.len() as f32).sqrt() as usize;
         assert!(sprites_wide * sprites_wide == sources.len()); // check for square
@@ -99,38 +99,36 @@ impl SpriteSource {
         Self::new(Rect::new(Point::default(), texture.size()), texture)
     }
 
-    pub async fn render_at(
+    pub fn render_at(
         &self,
-        scene: &Target,
+        scene: &Target<'_>,
         location: Point<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
         self.render_at_with_alpha(scene, location, rotation, 1.)
-            .await
     }
 
-    pub async fn render_within(
+    pub fn render_within(
         &self,
-        scene: &Target,
+        scene: &Target<'_>,
         bounds: Rect<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
-        self.render_with_alpha(scene, bounds, rotation, 1.).await
+        self.render_with_alpha(scene, bounds, rotation, 1.)
     }
 
-    pub async fn render_within_box(
+    pub fn render_within_box(
         &self,
-        scene: &Target,
+        scene: &Target<'_>,
         bounds: Box2D<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
         self.render_with_alpha_in_box(scene, bounds, rotation, 1.)
-            .await
     }
 
-    pub async fn render_at_with_alpha(
+    pub fn render_at_with_alpha(
         &self,
-        scene: &Target,
+        scene: &Target<'_>,
         location: Point<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
@@ -141,40 +139,37 @@ impl SpriteSource {
             rotation,
             alpha,
         )
-        .await
     }
 
-    pub async fn render_with_alpha(
+    pub fn render_with_alpha(
         &self,
-        scene: &Target,
+        scene: &Target<'_>,
         bounds: Rect<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
     ) {
         self.render_with_alpha_in_box(scene, bounds.to_box2d(), rotation, alpha)
-            .await
     }
 
-    pub async fn render_with_alpha_in_box(
+    pub fn render_with_alpha_in_box(
         &self,
-        scene: &Target,
+        scene: &Target<'_>,
         bounds: Box2D<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
     ) {
-        let effective_scale = scene.scale_factor().await;
+        let effective_scale = scene.scale_factor();
         self.render_raw_with_alpha_in_box(
             scene,
             bounds * effective_scale,
             rotation * effective_scale,
             alpha,
         )
-        .await
     }
 
-    pub async fn render_raw_with_alpha_in_box(
+    pub fn render_raw_with_alpha_in_box(
         &self,
-        scene: &Target,
+        scene: &Target<'_>,
         bounds: Box2D<f32, Raw>,
         rotation: SpriteRotation<Raw>,
         alpha: f32,
@@ -183,11 +178,9 @@ impl SpriteSource {
             scene.offset_point_raw(bounds.min),
             scene.offset_point_raw(bounds.max),
         );
-        scene
-            .push_element(Element::Sprite {
-                sprite: RenderedSprite::new(bounds, rotation, alpha, self.clone()),
-                clip: scene.clip,
-            })
-            .await;
+        scene.push_element(Element::Sprite {
+            sprite: RenderedSprite::new(bounds, rotation, alpha, self.clone()),
+            clip: scene.clip,
+        });
     }
 }

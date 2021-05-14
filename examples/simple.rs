@@ -17,42 +17,35 @@ impl WindowCreator for Simple {
     }
 }
 
-#[async_trait]
 impl Window for Simple {
     fn target_fps(&self) -> Option<u16> {
         Some(60)
     }
 
-    async fn initialize(
-        &mut self,
-        _scene: &Target,
-        _window: &OpenWindow<Self>,
-    ) -> KludgineResult<()> {
+    fn initialize(&mut self, _scene: &Target<'_>) -> KludgineResult<()> {
         let texture = Texture::load("examples/assets/k.png")?;
         self.source_sprite = Some(SpriteSource::entire_texture(texture));
         Ok(())
     }
 
-    async fn update(&mut self, scene: &Target, _window: &OpenWindow<Self>) -> KludgineResult<()> {
-        if let Some(elapsed) = scene.elapsed().await {
+    fn update(&mut self, scene: &Target<'_>, _status: &mut RedrawStatus) -> KludgineResult<()> {
+        if let Some(elapsed) = scene.elapsed() {
             self.rotation_angle += Angle::radians(elapsed.as_secs_f32());
         }
 
         Ok(())
     }
 
-    async fn render(&mut self, scene: &Target) -> KludgineResult<()> {
+    fn render(&mut self, scene: &Target<'_>) -> KludgineResult<()> {
         let sprite = self.source_sprite.as_ref().unwrap();
 
-        let bounds = Rect::new(Point::default(), scene.size().await);
+        let bounds = Rect::new(Point::default(), scene.size());
 
-        sprite
-            .render_at(
-                scene,
-                bounds.center(),
-                SpriteRotation::around_center(self.rotation_angle),
-            )
-            .await;
+        sprite.render_at(
+            scene,
+            bounds.center(),
+            SpriteRotation::around_center(self.rotation_angle),
+        );
 
         Ok(())
     }

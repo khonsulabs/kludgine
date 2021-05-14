@@ -4,7 +4,6 @@ use crate::{
     sprite::{Sprite, SpriteRotation, SpriteSource},
     KludgineResult,
 };
-use async_trait::async_trait;
 use euclid::Rect;
 use std::{
     mem,
@@ -36,13 +35,13 @@ where
         self.stagger = Some(stagger);
     }
 
-    pub async fn draw(&self, scene: &Target, location: Point<f32, Scaled>) -> KludgineResult<()> {
-        self.draw_scaled(scene, location, Scale::identity()).await
+    pub fn draw(&mut self, scene: &Target<'_>, location: Point<f32, Scaled>) -> KludgineResult<()> {
+        self.draw_scaled(scene, location, Scale::identity())
     }
 
-    pub async fn draw_scaled(
-        &self,
-        scene: &Target,
+    pub fn draw_scaled(
+        &mut self,
+        scene: &Target<'_>,
         location: Point<f32, Scaled>,
         scale: Scale<f32, Unknown, Scaled>,
     ) -> KludgineResult<()> {
@@ -58,16 +57,15 @@ where
         let min_y = (-location.y / tile_size.height).floor() as i32;
         let extra_x = tile_size.width() - Length::new(1.);
         let extra_y = tile_size.height() - Length::new(1.);
-        let scene_size = scene.size().await;
+        let scene_size = scene.size();
         let total_width = scene_size.width() + extra_x;
         let total_height = scene_size.height() + extra_y;
         let tiles_wide = (total_width / tile_size.width as f32).get().ceil() as i32;
         let tiles_high = (total_height / tile_size.height as f32).get().ceil() as i32;
 
-        let elapsed = scene.elapsed().await;
+        let elapsed = scene.elapsed();
 
-        let mut render_calls = Vec::new();
-        let effective_scale = scene.scale_factor().await;
+        let effective_scale = scene.scale_factor();
         let tile_size = tile_size * effective_scale;
         let render_size = self.tile_size.to_f32() * Scale::new(effective_scale.0 * scale.0);
         let location = location * effective_scale;
@@ -82,92 +80,115 @@ where
             let next_y = y_pos + tile_size.height();
             for x in min_x..(min_x + tiles_wide) {
                 let next_x = x_pos + tile_size.width();
-                render_calls.push(self.draw_one_tile(
+                self.draw_one_tile(
                     Point::new(x, y),
                     Rect::new(Point::from_lengths(x_pos, y_pos), render_size).to_box2d(),
                     scene,
                     elapsed,
-                ));
+                )?;
                 x_pos = next_x;
             }
             y_pos = next_y;
         }
 
-        let _ = futures::future::join_all(render_calls)
-            .await
-            .into_iter()
-            .collect::<Result<_, _>>()?;
-
         Ok(())
     }
 
-    async fn draw_one_tile(
-        &self,
+    fn draw_one_tile(
+        &mut self,
         tile: Point<i32>,
         destination: Box2D<f32, Raw>,
-        scene: &Target,
+        scene: &Target<'_>,
         elapsed: Option<Duration>,
     ) -> KludgineResult<()> {
-        if let Some(tile) = self.provider.get_tile(tile).await {
-            let sprite = tile.sprite.get_frame(elapsed).await?;
-            sprite
-                .render_raw_with_alpha_in_box(scene, destination, SpriteRotation::default(), 1.)
-                .await;
+        if let Some(mut tile) = self.provider.get_tile(tile) {
+            let sprite = tile.sprite.get_frame(elapsed)?;
+            sprite.render_raw_with_alpha_in_box(scene, destination, SpriteRotation::default(), 1.);
         }
         Ok(())
     }
 }
 
 /// TileProvider is how a TileMap retrieves tiles to render
-#[async_trait]
 pub trait TileProvider {
-    async fn get_tile(&self, location: Point<i32>) -> Option<Tile>;
+    fn get_tile(&mut self, location: Point<i32>) -> Option<Tile<'_>>;
 }
 
-#[derive(Debug, Clone)]
-pub enum TileSprite {
-    Sprite(Sprite),
+#[derive(Debug)]
+pub enum TileSprite<'a> {
+    Sprite(&'a mut Sprite),
     SpriteSource(SpriteSource),
 }
 
-impl From<Sprite> for TileSprite {
-    fn from(sprite: Sprite) -> Self {
+impl<'a> From<&'a mut Sprite> for TileSprite<'a> {
+    fn from(sprite: &'a mut Sprite) -> Self {
         Self::Sprite(sprite)
     }
 }
 
-impl From<SpriteSource> for TileSprite {
+impl<'a> From<SpriteSource> for TileSprite<'a> {
     fn from(sprite: SpriteSource) -> Self {
         Self::SpriteSource(sprite)
     }
 }
 
-impl TileSprite {
-    pub async fn get_frame(&self, elapsed: Option<Duration>) -> KludgineResult<SpriteSource> {
+impl<'a> TileSprite<'a> {
+    pub fn get_frame(&mut self, elapsed: Option<Duration>) -> KludgineResult<SpriteSource> {
         match self {
-            TileSprite::Sprite(sprite) => sprite.get_frame(elapsed).await,
+            TileSprite::Sprite(sprite) => sprite.get_frame(elapsed),
             TileSprite::SpriteSource(source) => Ok(source.clone()),
         }
     }
 }
 
 /// A Tile represents a sprite at an integer offset on the map
-#[derive(Debug, Clone)]
-pub struct Tile {
+#[derive(Debug)]
+pub struct Tile<'a> {
     pub location: Point<i32>,
-    pub sprite: TileSprite,
+    pub sprite: TileSprite<'a>,
 }
 
 /// Provides a simple interface for tile maps that have specific bounds
 #[derive(Debug)]
 pub struct PersistentTileProvider {
-    tiles: Vec<Option<Tile>>,
+    tiles: Vec<Option<PersistentTileSource>>,
     dimensions: Size<u32>,
 }
 
-#[async_trait]
+#[derive(Debug)]
+pub enum PersistentTileSource {
+    Sprite(Sprite),
+    SpriteSource(SpriteSource),
+}
+
+impl From<Sprite> for PersistentTileSource {
+    fn from(sprite: Sprite) -> Self {
+        Self::Sprite(sprite)
+    }
+}
+
+impl<'a> From<SpriteSource> for PersistentTileSource {
+    fn from(sprite: SpriteSource) -> Self {
+        Self::SpriteSource(sprite)
+    }
+}
+
+impl PersistentTileSource {
+    fn as_tile(&mut self, location: Point<i32>) -> Tile<'_> {
+        Tile {
+            location,
+            sprite: match self {
+                PersistentTileSource::Sprite(sprite) => TileSprite::Sprite(sprite),
+                PersistentTileSource::SpriteSource(source) => {
+                    TileSprite::SpriteSource(source.clone())
+                }
+            },
+        }
+    }
+}
+
 impl TileProvider for PersistentTileProvider {
-    async fn get_tile(&self, location: Point<i32>) -> Option<Tile> {
+    fn get_tile(&mut self, location: Point<i32>) -> Option<Tile<'_>> {
         if location.x < 0
             || location.y < 0
             || location.x >= self.dimensions.width as i32
@@ -176,9 +197,10 @@ impl TileProvider for PersistentTileProvider {
             return None;
         }
 
+        let index = self.point_to_index(Point::new(location.x as u32, location.y as u32));
         self.tiles
-            .get(self.point_to_index(Point::new(location.x as u32, location.y as u32)))
-            .and_then(|tile| tile.clone())
+            .get_mut(index)
+            .and_then(|tile| tile.as_mut().map(|t| t.as_tile(location)))
     }
 }
 
@@ -191,39 +213,24 @@ impl PersistentTileProvider {
         Self::new(size, tiles)
     }
 
-    pub fn new<S: Into<TileSprite>>(dimensions: Size<u32>, tiles: Vec<Option<S>>) -> Self {
+    pub fn new<S: Into<PersistentTileSource>>(
+        dimensions: Size<u32>,
+        tiles: Vec<Option<S>>,
+    ) -> Self {
         let tiles = tiles
             .into_iter()
-            .enumerate()
-            .map(|(index, sprite)| {
-                sprite.map(|sprite| {
-                    let dimensions = dimensions.cast::<i32>();
-                    let index = index as i32;
-                    let y = index / dimensions.width;
-
-                    Tile {
-                        location: Point::new(index - y * dimensions.width, y),
-                        sprite: sprite.into(),
-                    }
-                })
-            })
+            .map(|sprite| sprite.map(|sprite| sprite.into()))
             .collect();
         Self { tiles, dimensions }
     }
 
-    pub fn set<I: Into<TileSprite>>(
+    pub fn set<I: Into<PersistentTileSource>>(
         &mut self,
         location: Point<u32>,
         sprite: Option<I>,
-    ) -> Option<Tile> {
+    ) -> Option<PersistentTileSource> {
         let index = self.point_to_index(location);
-        mem::replace(
-            &mut self.tiles[index],
-            sprite.map(|sprite| Tile {
-                location: Point::new(location.x as i32, location.y as i32),
-                sprite: sprite.into(),
-            }),
-        )
+        mem::replace(&mut self.tiles[index], sprite.map(|sprite| sprite.into()))
     }
 
     fn point_to_index(&self, location: Point<u32>) -> usize {
@@ -237,7 +244,7 @@ pub type PersistentTileMap = TileMap<PersistentTileProvider>;
 pub trait PersistentMap {
     fn persistent_with_size(tile_size: Size<u32, Scaled>, map_size: Size<u32>) -> Self;
 
-    fn set<I: Into<TileSprite>>(&mut self, location: Point<u32>, sprite: Option<I>);
+    fn set<I: Into<PersistentTileSource>>(&mut self, location: Point<u32>, sprite: Option<I>);
 }
 
 impl PersistentMap for PersistentTileMap {
@@ -251,7 +258,7 @@ impl PersistentMap for PersistentTileMap {
         TileMap::new(tile_size, PersistentTileProvider::blank(map_size))
     }
 
-    fn set<I: Into<TileSprite>>(&mut self, location: Point<u32>, sprite: Option<I>) {
+    fn set<I: Into<PersistentTileSource>>(&mut self, location: Point<u32>, sprite: Option<I>) {
         self.provider.set(location, sprite.map(|s| s.into()));
     }
 }

@@ -105,7 +105,7 @@ impl TextMeasureState {
 }
 
 impl MeasuredText {
-    pub async fn new(text: &Text, scene: &Target) -> KludgineResult<Self> {
+    pub fn new(text: &Text, scene: &Target<'_>) -> KludgineResult<Self> {
         let mut state = TextMeasureState {
             no_text_metrics: None,
             current_group: None,
@@ -114,7 +114,7 @@ impl MeasuredText {
         };
 
         // Tokens -> "Words" (groups of characters, and where the breaks would happen)
-        for token in Tokenizer::default().prepare_spans(text, scene).await? {
+        for token in Tokenizer::default().prepare_spans(text, scene)? {
             state.push_token(token);
         }
 

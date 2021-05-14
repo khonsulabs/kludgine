@@ -53,39 +53,38 @@ impl Text {
         Self { spans }
     }
 
-    pub async fn wrap(&self, scene: &Target, options: TextWrap) -> KludgineResult<PreparedText> {
-        TextWrapper::wrap(self, scene, options).await
+    pub fn wrap(&self, scene: &Target<'_>, options: TextWrap) -> KludgineResult<PreparedText> {
+        TextWrapper::wrap(self, scene, options)
     }
 
-    pub async fn render_at(
+    pub fn render_at(
         &self,
-        scene: &Target,
+        scene: &Target<'_>,
         location: Point<f32, Scaled>,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
-        self.render_core(scene, location, true, wrapping).await
+        self.render_core(scene, location, true, wrapping)
     }
 
-    pub async fn render_baseline_at(
+    pub fn render_baseline_at(
         &self,
-        scene: &Target,
+        scene: &Target<'_>,
         location: Point<f32, Scaled>,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
-        self.render_core(scene, location, false, wrapping).await
+        self.render_core(scene, location, false, wrapping)
     }
 
-    async fn render_core(
+    fn render_core(
         &self,
-        scene: &Target,
+        scene: &Target<'_>,
         location: Point<f32, Scaled>,
         offset_baseline: bool,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
-        let prepared_text = self.wrap(scene, wrapping).await?;
+        let prepared_text = self.wrap(scene, wrapping)?;
         prepared_text
             .render(scene, location, offset_baseline)
-            .await
             .map(|_| ())
     }
 

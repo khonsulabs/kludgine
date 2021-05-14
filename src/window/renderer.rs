@@ -1,28 +1,29 @@
 use crate::{
     math::{Box2D, Point, Size, Unknown},
-    runtime::Runtime,
     sprite::{self, VertexShaderSource},
     window::frame::{FontUpdate, Frame, FrameCommand},
     KludgineResult,
 };
-use async_lock::Mutex;
 use crossbeam::atomic::AtomicCell;
 use easygpu::{
     prelude::*,
     wgpu::{FilterMode, COPY_BYTES_PER_ROW_ALIGNMENT},
 };
 use easygpu_lyon::LyonPipeline;
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 pub(crate) struct FrameSynchronizer {
-    receiver: async_channel::Receiver<Frame>,
-    sender: async_channel::Sender<Frame>,
+    receiver: flume::Receiver<Frame>,
+    sender: flume::Sender<Frame>,
 }
 
 impl FrameSynchronizer {
     pub fn pair() -> (FrameSynchronizer, FrameSynchronizer) {
-        let (a_sender, a_receiver) = async_channel::bounded(1);
-        let (b_sender, b_receiver) = async_channel::bounded(1);
+        let (a_sender, a_receiver) = flume::bounded(1);
+        let (b_sender, b_receiver) = flume::bounded(1);
 
         let a_synchronizer = FrameSynchronizer {
             sender: b_sender,
@@ -36,18 +37,18 @@ impl FrameSynchronizer {
         (a_synchronizer, b_synchronizer)
     }
 
-    pub async fn take(&mut self) -> Frame {
+    pub fn take(&mut self) -> Frame {
         // Ignoring the error because if the sender/receiver is disconnected
         // the window is closing and we should just ignore the error and let
         // it close.
-        self.receiver.recv().await.unwrap_or_default()
+        self.receiver.recv().unwrap_or_default()
     }
 
-    pub async fn relinquish(&mut self, frame: Frame) {
+    pub fn relinquish(&mut self, frame: Frame) {
         // Ignoring the error because if the sender/receiver is disconnected
         // the window is closing and we should just ignore the error and let
         // it close.
-        self.sender.send(frame).await.unwrap_or_default();
+        self.sender.send(frame).unwrap_or_default();
     }
 }
 
@@ -108,28 +109,31 @@ where
 
         let frame_renderer =
             FrameRenderer::<T>::new(renderer, renderer_synchronizer, keep_running, initial_size);
-        Runtime::spawn(frame_renderer.render_loop());
+        std::thread::Builder::new()
+            .name(String::from("kludgine-frame-renderer"))
+            .spawn(move || frame_renderer.render_loop())
+            .unwrap();
 
         client_synchronizer
     }
 
-    async fn render_loop(mut self) {
+    fn render_loop(mut self) {
         loop {
             if !self.keep_running.load() {
                 return;
             }
-            self.render().await.expect("Error rendering window");
+            self.render().expect("Error rendering window");
         }
     }
 
-    pub async fn render(&mut self) -> KludgineResult<()> {
-        let mut engine_frame = self.frame_synchronizer.take().await;
-        let result = self.render_frame(&mut engine_frame).await;
-        self.frame_synchronizer.relinquish(engine_frame).await;
+    pub fn render(&mut self) -> KludgineResult<()> {
+        let mut engine_frame = self.frame_synchronizer.take();
+        let result = self.render_frame(&mut engine_frame);
+        self.frame_synchronizer.relinquish(engine_frame);
         result
     }
 
-    async fn render_frame(&mut self, engine_frame: &mut Frame) -> KludgineResult<()> {
+    fn render_frame(&mut self, engine_frame: &mut Frame) -> KludgineResult<()> {
         let frame_size = engine_frame.size.cast::<u32>();
         if frame_size.width == 0 || frame_size.height == 0 {
             return Ok(());
@@ -288,7 +292,7 @@ where
                         // prepared_shape.draw(&mut pass);
                     }
                     FrameCommand::DrawText { text, clip } => {
-                        if let Some(loaded_font) = engine_frame.fonts.get(&text.data.font.id) {
+                        if let Some(loaded_font) = engine_frame.fonts.get(&text.data.font.id()) {
                             if let Some(texture) = loaded_font.texture.as_ref() {
                                 let mut batch =
                                     sprite::GpuBatch::new(texture.size, clip.map(|r| r.to_box2d()));
@@ -331,7 +335,7 @@ where
                                     );
                                 }
                                 render_commands.push(RenderCommand::FontBuffer(
-                                    loaded_font.font.id,
+                                    loaded_font.font.id(),
                                     batch.finish(&self.renderer),
                                 ));
                             }

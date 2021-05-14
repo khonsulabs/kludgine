@@ -75,10 +75,10 @@ impl<'a> TokenizerState<'a> {
         }
     }
 
-    async fn emit_token_if_needed(
+    fn emit_token_if_needed(
         &mut self,
         scale: euclid::Scale<f32, Scaled, Raw>,
-        scene: &Target,
+        scene: &Target<'_>,
     ) -> Option<Token> {
         if self.glyphs.is_empty() {
             None
@@ -87,11 +87,11 @@ impl<'a> TokenizerState<'a> {
 
             let font_size = style_font_size(&self.style, scale);
             let foreground = self.style.get_or_default::<ForegroundColor>().0;
-            let metrics = self.font.metrics(font_size).await;
+            let metrics = self.font.metrics(font_size);
             let span = PreparedSpan::new(
                 self.font.clone(),
                 font_size,
-                Color::from(foreground.themed_color(&match scene.system_theme().await {
+                Color::from(foreground.themed_color(&match scene.system_theme() {
                     winit::window::Theme::Light => stylecs::SystemTheme::Light,
                     winit::window::Theme::Dark => stylecs::SystemTheme::Dark,
                 })),
@@ -115,23 +115,21 @@ impl<'a> TokenizerState<'a> {
 
 impl Tokenizer {
     // Text (Vec<Span>) -> Vec<Token{ PreparedSpan, TokenKind }>
-    pub(crate) async fn prepare_spans(
+    pub(crate) fn prepare_spans(
         mut self,
         text: &Text,
-        scene: &Target,
+        scene: &Target<'_>,
     ) -> KludgineResult<Vec<Token>> {
-        let scale = scene.scale_factor().await;
+        let scale = scene.scale_factor();
         let mut current_offset = 0usize;
         let mut last_span_metrics = None;
         for span in text.spans.iter() {
-            let font = scene
-                .lookup_font(
-                    &span.style.get_or_default::<FontFamily>().0,
-                    span.style.get_or_default::<Weight>(),
-                    span.style.get_or_default::<FontStyle>(),
-                )
-                .await?;
-            let vmetrics = font.metrics(style_font_size(&span.style, scale)).await;
+            let font = scene.lookup_font(
+                &span.style.get_or_default::<FontFamily>().0,
+                span.style.get_or_default::<Weight>(),
+                span.style.get_or_default::<FontStyle>(),
+            )?;
+            let vmetrics = font.metrics(style_font_size(&span.style, scale));
             last_span_metrics = Some(vmetrics);
 
             let mut state = TokenizerState::new(&font, &span.style);
@@ -153,23 +151,20 @@ impl Tokenizer {
                     };
 
                     if new_lexer_state != state.lexer_state {
-                        if let Some(token) = state.emit_token_if_needed(scale, scene).await {
+                        if let Some(token) = state.emit_token_if_needed(scale, scene) {
                             self.tokens.push(token);
                         }
                     }
 
                     state.lexer_state = new_lexer_state;
 
-                    let base_glyph = font.glyph(c).await;
+                    let base_glyph = font.glyph(c);
                     if let Some(id) = state.last_glyph_id.take() {
-                        state.caret += Pixels::new(
-                            font.pair_kerning(
-                                style_font_size(&span.style, scale).get(),
-                                id,
-                                base_glyph.id(),
-                            )
-                            .await,
-                        );
+                        state.caret += Pixels::new(font.pair_kerning(
+                            style_font_size(&span.style, scale).get(),
+                            id,
+                            base_glyph.id(),
+                        ));
                     }
                     state.last_glyph_id = Some(base_glyph.id());
                     let glyph = base_glyph
@@ -185,7 +180,7 @@ impl Tokenizer {
                 }
             }
 
-            if let Some(token) = state.emit_token_if_needed(scale, scene).await {
+            if let Some(token) = state.emit_token_if_needed(scale, scene) {
                 self.tokens.push(token);
             }
         }

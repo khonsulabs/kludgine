@@ -75,13 +75,13 @@ pub struct Path<S> {
 }
 
 impl Path<Scaled> {
-    pub(crate) async fn translate_and_convert_to_device(
+    pub(crate) fn translate_and_convert_to_device(
         &self,
         location: Point<f32, Scaled>,
-        scene: &Target,
+        scene: &Target<'_>,
     ) -> Path<Raw> {
-        let effective_scale = scene.scale_factor().await;
-        let location = scene.offset_point(location).await;
+        let effective_scale = scene.scale_factor();
+        let location = scene.offset_point(location);
         let mut events = Vec::new();
 
         for event in &self.events {

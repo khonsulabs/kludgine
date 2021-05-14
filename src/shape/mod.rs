@@ -80,21 +80,20 @@ where
 }
 
 impl Shape<Scaled> {
-    pub async fn render_at(&self, location: Point<f32, Scaled>, scene: &Target) {
-        let translated = self.convert_from_user_to_device(location, scene).await;
-        scene.push_element(Element::Shape(translated)).await
+    pub fn render_at(&self, location: Point<f32, Scaled>, scene: &Target<'_>) {
+        let translated = self.convert_from_user_to_device(location, scene);
+        scene.push_element(Element::Shape(translated))
     }
 
-    async fn convert_from_user_to_device(
+    fn convert_from_user_to_device(
         &self,
         location: Point<f32, Scaled>,
-        scene: &Target,
+        scene: &Target<'_>,
     ) -> Shape<Raw> {
         Shape {
             geometry: self
                 .geometry
-                .translate_and_convert_to_device(location, scene)
-                .await,
+                .translate_and_convert_to_device(location, scene),
             fill: self.fill.clone(),
             stroke: self.stroke.clone(),
         }

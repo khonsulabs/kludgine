@@ -11,12 +11,12 @@ pub(crate) struct Circle<S> {
 }
 
 impl Circle<Scaled> {
-    pub(crate) async fn translate_and_convert_to_device(
+    pub(crate) fn translate_and_convert_to_device(
         &self,
         location: Point<f32, Scaled>,
-        scene: &Target,
+        scene: &Target<'_>,
     ) -> Circle<Raw> {
-        let effective_scale = scene.scale_factor().await;
+        let effective_scale = scene.scale_factor();
         let center = (location + self.center.to_vector()) * effective_scale;
         let radius = self.radius * effective_scale;
         Circle { center, radius }

@@ -11,9 +11,9 @@ mod measured;
 mod tokenizer;
 pub(crate) use self::{measured::*, tokenizer::*};
 
-pub struct TextWrapper {
+pub struct TextWrapper<'a> {
     options: TextWrap,
-    scene: Target,
+    scene: &'a Target<'a>,
     prepared_text: PreparedText,
 }
 
@@ -33,10 +33,10 @@ struct TextWrapState {
 }
 
 impl TextWrapState {
-    async fn push_group(&mut self, group: SpanGroup) {
+    fn push_group(&mut self, group: SpanGroup) {
         if let SpanGroup::EndOfLine(metrics) = &group {
             self.update_vmetrics(*metrics);
-            self.new_line().await;
+            self.new_line();
         } else {
             let spans = group.spans();
             let total_width = spans
@@ -55,7 +55,7 @@ impl TextWrapState {
                         // TODO Split the group if it can't fit on a single line
                         // For now, just render it anyways.
                     } else {
-                        self.new_line().await;
+                        self.new_line();
                     }
                 }
             }
@@ -75,13 +75,13 @@ impl TextWrapState {
         }
     }
 
-    async fn position_span(&mut self, span: &mut PreparedSpan) {
+    fn position_span(&mut self, span: &mut PreparedSpan) {
         let width = span.data.width;
         span.location.set_x(self.current_span_offset);
         self.current_span_offset += width;
     }
 
-    async fn new_line(&mut self) {
+    fn new_line(&mut self) {
         // Remove any whitespace from the end of the line
         while matches!(self.current_groups.last(), Some(SpanGroup::Whitespace(_))) {
             self.current_groups.pop();
@@ -96,8 +96,8 @@ impl TextWrapState {
 
         self.current_span_offset = Pixels::default();
         for span in spans.iter_mut() {
-            self.update_vmetrics(span.metrics().await);
-            self.position_span(span).await
+            self.update_vmetrics(span.metrics());
+            self.position_span(span);
         }
 
         if let Some(metrics) = self.current_vmetrics.take() {
@@ -112,35 +112,34 @@ impl TextWrapState {
         self.current_groups.clear();
     }
 
-    async fn finish(mut self) -> Vec<PreparedLine> {
+    fn finish(mut self) -> Vec<PreparedLine> {
         if !self.current_groups.is_empty() || self.lines.is_empty() {
-            self.new_line().await;
+            self.new_line();
         }
 
         self.lines
     }
 }
 
-impl TextWrapper {
-    pub async fn wrap(
+impl<'a> TextWrapper<'a> {
+    pub fn wrap(
         text: &Text,
-        scene: &Target,
+        scene: &'a Target<'a>,
         options: TextWrap,
     ) -> KludgineResult<PreparedText> {
         TextWrapper {
             options,
-            scene: scene.clone(),
+            scene,
             prepared_text: PreparedText::default(),
         }
         .wrap_text(text)
-        .await
     }
 
-    async fn wrap_text(mut self, text: &Text) -> KludgineResult<PreparedText> {
-        let effective_scale_factor = self.scene.scale_factor().await;
+    fn wrap_text(mut self, text: &Text) -> KludgineResult<PreparedText> {
+        let effective_scale_factor = self.scene.scale_factor();
         let width = self.options.max_width();
 
-        let measured = MeasuredText::new(text, &self.scene).await?;
+        let measured = MeasuredText::new(text, &self.scene)?;
 
         let mut state = TextWrapState {
             width: width.map(|w| w * effective_scale_factor),
@@ -153,10 +152,10 @@ impl TextWrapper {
         match measured.info {
             MeasuredTextInfo::Groups(groups) => {
                 for group in groups {
-                    state.push_group(group).await;
+                    state.push_group(group);
                 }
 
-                self.prepared_text.lines = state.finish().await;
+                self.prepared_text.lines = state.finish();
             }
             MeasuredTextInfo::NoText(metrics) => {
                 self.prepared_text.lines.push(PreparedLine {
@@ -170,8 +169,7 @@ impl TextWrapper {
         if let Some(alignment) = self.options.alignment() {
             if let Some(max_width) = self.options.max_width() {
                 self.prepared_text
-                    .align(alignment, max_width, effective_scale_factor)
-                    .await;
+                    .align(alignment, max_width, effective_scale_factor);
             }
         }
 
@@ -244,13 +242,15 @@ mod tests {
     };
     use stylecs::{FontSize, Style};
 
-    #[async_test]
+    #[test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
-    async fn wrap_one_word() {
+    fn wrap_one_word() {
         for &scale in &[1f32, 2.] {
-            let mut scene = Target::from(Scene::new());
-            scene.set_scale_factor(ScreenScale::new(scale)).await;
-            scene.register_bundled_fonts().await;
+            let (sender, _) = flume::unbounded();
+            let mut scene = Scene::new(sender);
+            scene.set_scale_factor(ScreenScale::new(scale));
+            scene.register_bundled_fonts();
+            let scene = Target::from(&scene);
             let wrap = Text::new(vec![Span::new(
                 "This line should wrap",
                 Style::new()
@@ -265,7 +265,6 @@ mod tests {
                     alignment: Alignment::Left,
                 },
             )
-            .await
             .expect("Error wrapping text");
             assert_eq!(wrap.lines.len(), 2);
             assert_eq!(wrap.lines[0].spans.len(), 5); // "this"," ","line"," ","should"
@@ -274,19 +273,21 @@ mod tests {
         }
     }
 
-    #[async_test]
+    #[test]
     /// This test should have "This line should " be on the first line and "wrap" on the second
-    async fn wrap_one_word_different_span() {
-        let scene = Target::from(Scene::new());
-        scene.register_bundled_fonts().await;
+    fn wrap_one_word_different_span() {
+        let (sender, _) = flume::unbounded();
+        let mut scene = Scene::new(sender);
+        scene.register_bundled_fonts();
+        let scene = Target::from(&scene);
 
         let first_style = Style::new()
             .with(FontSize::<Scaled>::new(12.))
-            .to_screen_scale(scene.scale_factor().await);
+            .to_screen_scale(scene.scale_factor());
 
         let second_style = Style::new()
             .with(FontSize::<Scaled>::new(10.))
-            .to_screen_scale(scene.scale_factor().await);
+            .to_screen_scale(scene.scale_factor());
 
         let wrap = Text::new(vec![
             Span::new("This line should ", first_style),
@@ -300,7 +301,6 @@ mod tests {
                 alignment: Alignment::Left,
             },
         )
-        .await
         .expect("Error wrapping text");
         assert_eq!(wrap.lines.len(), 2);
         assert_eq!(wrap.lines[0].spans.len(), 5);

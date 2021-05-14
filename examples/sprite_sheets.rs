@@ -32,13 +32,8 @@ enum StickGuy {
     WalkLeft3,
 }
 
-#[async_trait]
 impl Window for SpriteSheetExample {
-    async fn initialize(
-        &mut self,
-        _scene: &Target,
-        _window: &OpenWindow<Self>,
-    ) -> KludgineResult<()> {
+    fn initialize(&mut self, _scene: &Target<'_>) -> KludgineResult<()> {
         let texture = include_texture!("assets/stickguy.png")?;
         let sheet = SpriteSheet::new(
             texture,
@@ -55,8 +50,7 @@ impl Window for SpriteSheetExample {
                 StickGuy::WalkLeft2,
                 StickGuy::WalkLeft3,
             ],
-        )
-        .await;
+        );
         let idle = SpriteAnimation::new(
             sheet
                 .sprites(vec![
@@ -65,7 +59,6 @@ impl Window for SpriteSheetExample {
                     StickGuy::Idle3,
                     StickGuy::Idle4,
                 ])
-                .await
                 .into_iter()
                 .map(|source| SpriteFrame {
                     source,
@@ -81,7 +74,6 @@ impl Window for SpriteSheetExample {
                     StickGuy::WalkLeft2,
                     StickGuy::WalkLeft3,
                 ])
-                .await
                 .into_iter()
                 .map(|source| SpriteFrame {
                     source,
@@ -97,7 +89,6 @@ impl Window for SpriteSheetExample {
                     StickGuy::WalkRight2,
                     StickGuy::WalkRight3,
                 ])
-                .await
                 .into_iter()
                 .map(|source| SpriteFrame {
                     source,
@@ -111,42 +102,36 @@ impl Window for SpriteSheetExample {
             Some("WalkLeft".to_string()) => walk_left,
             Some("WalkRight".to_string()) => walk_right,
         ));
-        let sprite = Sprite::from(animations);
-        sprite.set_current_tag(Some("Idle".to_string())).await?;
+        let mut sprite = Sprite::from(animations);
+        sprite.set_current_tag(Some("Idle".to_string()))?;
         self.sprite = Some(sprite);
 
         Ok(())
     }
 
-    async fn update(&mut self, scene: &Target, window: &OpenWindow<Self>) -> KludgineResult<()>
-    where
-        Self: Sized,
-    {
-        let sprite = self.sprite.as_ref().unwrap();
+    fn update(&mut self, scene: &Target<'_>, status: &mut RedrawStatus) -> KludgineResult<()> {
+        let sprite = self.sprite.as_mut().unwrap();
         // Update the current frame.
-        self.current_frame = Some(sprite.get_frame(scene.elapsed().await).await?);
+        self.current_frame = Some(sprite.get_frame(scene.elapsed())?);
         // Tell the window when this sprite will need to redraw  new frame.
-        if let Some(duration) = sprite.remaining_frame_duration().await? {
-            window.estimate_next_frame(duration).await;
+        if let Some(duration) = sprite.remaining_frame_duration()? {
+            status.estimate_next_frame(duration);
         } else {
-            window.set_needs_redraw().await;
+            status.set_needs_redraw();
         }
 
         Ok(())
     }
 
-    async fn render(&mut self, scene: &Target) -> KludgineResult<()> {
-        Shape::rect(Rect::new(Point::default(), scene.size().await))
+    fn render(&mut self, scene: &Target<'_>) -> KludgineResult<()> {
+        Shape::rect(Rect::new(Point::default(), scene.size()))
             .fill(Fill::new(Color::WHITE))
-            .render_at(Point::default(), scene)
-            .await;
+            .render_at(Point::default(), scene);
 
         let sprite = self.current_frame.as_ref().unwrap();
-        let bounds = Rect::new(Point::default(), scene.size().await);
+        let bounds = Rect::new(Point::default(), scene.size());
 
-        sprite
-            .render_at(scene, bounds.center(), SpriteRotation::default())
-            .await;
+        sprite.render_at(scene, bounds.center(), SpriteRotation::default());
 
         Ok(())
     }

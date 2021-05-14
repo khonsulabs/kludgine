@@ -13,10 +13,9 @@ impl WindowCreator for TextExample {
     }
 }
 
-#[async_trait]
 impl Window for TextExample {
-    async fn render(&mut self, scene: &Target) -> KludgineResult<()> {
-        let scale = scene.scale_factor().await;
+    fn render(&mut self, scene: &Target<'_>) -> KludgineResult<()> {
+        let scale = scene.scale_factor();
         let spans = vec![
             Span::new(
                 "Wrapping ",
@@ -41,16 +40,14 @@ impl Window for TextExample {
             ),
         ];
 
-        Text::new(spans)
-            .render_at(
-                scene,
-                Point::new(0.0, 120.0),
-                TextWrap::SingleLine {
-                    max_width: scene.size().await.width(),
-                    truncate: false,
-                    alignment: Alignment::Left,
-                },
-            )
-            .await
+        Text::new(spans).render_at(
+            scene,
+            Point::new(0.0, 120.0),
+            TextWrap::SingleLine {
+                max_width: scene.size().width(),
+                truncate: false,
+                alignment: Alignment::Left,
+            },
+        )
     }
 }

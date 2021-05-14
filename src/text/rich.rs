@@ -3,20 +3,18 @@ use crate::{
     text::{prepared::PreparedText, wrap::TextWrap, Text},
     KludgineResult,
 };
-use async_handle::Handle;
-use std::{cmp::Ordering, ops::Range};
-
-#[derive(Debug, Clone, Default)]
-pub struct RichText {
-    data: Handle<RichTextData>,
-}
+use std::{
+    cmp::Ordering,
+    fmt::{Display, Write},
+    ops::Range,
+};
 
 #[derive(Debug)]
-struct RichTextData {
+pub struct RichText {
     paragraphs: Vec<Text>,
 }
 
-impl Default for RichTextData {
+impl Default for RichText {
     fn default() -> Self {
         Self {
             paragraphs: vec![Text::default()],
@@ -31,12 +29,10 @@ pub enum ParagraphRemoval {
 
 impl RichText {
     pub fn new(paragraphs: Vec<Text>) -> Self {
-        Self {
-            data: Handle::new(RichTextData { paragraphs }),
-        }
+        Self { paragraphs }
     }
 
-    pub async fn remove_range(&self, range: Range<RichTextPosition>) {
+    pub fn remove_range(&mut self, range: Range<RichTextPosition>) {
         assert!(range.start <= range.end);
 
         self.for_each_in_range_mut(range.clone(), |text, text_range, paragraph_index| {
@@ -46,37 +42,33 @@ impl RichText {
             } else {
                 ParagraphRemoval::Keep
             }
-        })
-        .await;
+        });
 
         // If the range spanned paragraphs, the inner paragraphs will be removed but we need to
         // merge the first and last paragraphs
         if range.start.paragraph != range.end.paragraph {
-            let mut data = self.data.write().await;
-            let mut paragraph_to_merge = data.paragraphs.remove(range.start.paragraph + 1);
-            data.paragraphs[range.start.paragraph]
+            let mut paragraph_to_merge = self.paragraphs.remove(range.start.paragraph + 1);
+            self.paragraphs[range.start.paragraph]
                 .spans
                 .append(&mut paragraph_to_merge.spans);
         }
     }
 
-    pub async fn insert_str(&self, location: RichTextPosition, value: &str) {
+    pub fn insert_str(&mut self, location: RichTextPosition, value: &str) {
         self.for_each_in_range_mut(location..location, |text, text_range, _| {
             text.insert_str(text_range.start, value);
 
             ParagraphRemoval::Keep
-        })
-        .await;
+        });
     }
 
-    pub async fn for_each_in_range<F: FnMut(&Text, Range<usize>)>(
+    pub fn for_each_in_range<F: FnMut(&Text, Range<usize>)>(
         &self,
         range: Range<RichTextPosition>,
         mut callback: F,
     ) {
-        let data = self.data.read().await;
         for paragraph_index in range.start.paragraph..(range.end.paragraph + 1) {
-            if let Some(paragraph) = data.paragraphs.get(paragraph_index) {
+            if let Some(paragraph) = self.paragraphs.get(paragraph_index) {
                 let start = if range.start.paragraph == paragraph_index {
                     range.start.offset
                 } else {
@@ -93,18 +85,15 @@ impl RichText {
         }
     }
 
-    pub async fn for_each_in_range_mut<
-        F: Fn(&mut Text, Range<usize>, usize) -> ParagraphRemoval,
-    >(
-        &self,
+    pub fn for_each_in_range_mut<F: Fn(&mut Text, Range<usize>, usize) -> ParagraphRemoval>(
+        &mut self,
         range: Range<RichTextPosition>,
         callback: F,
     ) {
-        let mut data = self.data.write().await;
         let mut paragraphs_to_remove = Vec::new();
 
         for paragraph_index in range.start.paragraph..(range.end.paragraph + 1) {
-            if let Some(paragraph) = data.paragraphs.get_mut(paragraph_index) {
+            if let Some(paragraph) = self.paragraphs.get_mut(paragraph_index) {
                 let start = if range.start.paragraph == paragraph_index {
                     range.start.offset
                 } else {
@@ -128,28 +117,26 @@ impl RichText {
         // Remove in reverse order to ensure that indexes don't change while removing
         paragraphs_to_remove.reverse();
         for paragraph_index in paragraphs_to_remove {
-            data.paragraphs.remove(paragraph_index);
+            self.paragraphs.remove(paragraph_index);
         }
     }
 
-    pub async fn prepare(
+    pub fn prepare(
         &self,
-        scene: &Target,
+        scene: &Target<'_>,
         wrapping: TextWrap,
     ) -> KludgineResult<Vec<PreparedText>> {
-        let data = self.data.read().await;
         let mut prepared = Vec::new();
-        for paragraph in data.paragraphs.iter() {
-            prepared.push(paragraph.wrap(scene, wrapping.clone()).await?);
+        for paragraph in self.paragraphs.iter() {
+            prepared.push(paragraph.wrap(scene, wrapping.clone())?);
         }
         Ok(prepared)
     }
 
-    pub async fn position_after(&self, mut position: RichTextPosition) -> RichTextPosition {
-        let data = self.data.read().await;
+    pub fn position_after(&self, mut position: RichTextPosition) -> RichTextPosition {
         let next_offset = position.offset + 1;
-        if next_offset > data.paragraphs[position.paragraph].len() {
-            if data.paragraphs.len() > position.paragraph + 1 {
+        if next_offset > self.paragraphs[position.paragraph].len() {
+            if self.paragraphs.len() > position.paragraph + 1 {
                 todo!("Need to support multiple paragraphs")
             }
         } else {
@@ -158,7 +145,7 @@ impl RichText {
         position
     }
 
-    pub async fn position_before(&self, mut position: RichTextPosition) -> RichTextPosition {
+    pub fn position_before(&self, mut position: RichTextPosition) -> RichTextPosition {
         if position.offset == 0 {
             if position.paragraph > 0 {
                 todo!("Need to support multiple paragraphs")
@@ -170,27 +157,28 @@ impl RichText {
         position
     }
 
-    pub async fn end(&self) -> RichTextPosition {
-        let data = self.data.read().await;
+    pub fn end(&self) -> RichTextPosition {
         RichTextPosition {
-            paragraph: data.paragraphs.len() - 1,
-            offset: data.paragraphs.last().unwrap().len(),
+            paragraph: self.paragraphs.len() - 1,
+            offset: self.paragraphs.last().unwrap().len(),
         }
     }
 
-    pub async fn to_string(&self) -> String {
-        let data = self.data.read().await;
-        let mut paragraphs = Vec::with_capacity(data.paragraphs.len());
-        for paragraph in data.paragraphs.iter() {
-            paragraphs.push(paragraph.to_string());
-        }
-
-        paragraphs.join("\n")
+    pub fn paragraphs(&self) -> &'_ Vec<Text> {
+        &self.paragraphs
     }
+}
 
-    pub async fn paragraphs(&self) -> Vec<Text> {
-        let data = self.data.read().await;
-        data.paragraphs.clone()
+impl Display for RichText {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for (index, paragraph) in self.paragraphs.iter().enumerate() {
+            if index > 0 {
+                f.write_char('\n')?;
+            }
+
+            f.write_str(&paragraph.to_string())?;
+        }
+        Ok(())
     }
 }
 
@@ -219,9 +207,9 @@ impl Ord for RichTextPosition {
 mod tests {
     use super::*;
 
-    #[async_test]
-    async fn remove_range_one_paragraph_start() {
-        let text = RichText::new(vec![Text::span("a123", Default::default())]);
+    #[test]
+    fn remove_range_one_paragraph_start() {
+        let mut text = RichText::new(vec![Text::span("a123", Default::default())]);
         text.remove_range(
             RichTextPosition {
                 offset: 0,
@@ -230,14 +218,13 @@ mod tests {
                 offset: 1,
                 paragraph: 0,
             },
-        )
-        .await;
-        assert_eq!(text.to_string().await, "123");
+        );
+        assert_eq!(text.to_string(), "123");
     }
 
-    #[async_test]
-    async fn remove_range_one_paragraph_end() {
-        let text = RichText::new(vec![Text::span("123a", Default::default())]);
+    #[test]
+    fn remove_range_one_paragraph_end() {
+        let mut text = RichText::new(vec![Text::span("123a", Default::default())]);
         text.remove_range(
             RichTextPosition {
                 offset: 3,
@@ -246,14 +233,13 @@ mod tests {
                 offset: 4,
                 paragraph: 0,
             },
-        )
-        .await;
-        assert_eq!(text.to_string().await, "123");
+        );
+        assert_eq!(text.to_string(), "123");
     }
 
-    #[async_test]
-    async fn remove_range_one_paragraph_inner() {
-        let text = RichText::new(vec![Text::span("1a23", Default::default())]);
+    #[test]
+    fn remove_range_one_paragraph_inner() {
+        let mut text = RichText::new(vec![Text::span("1a23", Default::default())]);
         text.remove_range(
             RichTextPosition {
                 offset: 1,
@@ -262,14 +248,13 @@ mod tests {
                 offset: 2,
                 paragraph: 0,
             },
-        )
-        .await;
-        assert_eq!(text.to_string().await, "123");
+        );
+        assert_eq!(text.to_string(), "123");
     }
 
-    #[async_test]
-    async fn remove_range_multi_paragraph_cross_boundaries() {
-        let text = RichText::new(vec![
+    #[test]
+    fn remove_range_multi_paragraph_cross_boundaries() {
+        let mut text = RichText::new(vec![
             Text::span("123a", Default::default()),
             Text::span("b456", Default::default()),
         ]);
@@ -281,14 +266,13 @@ mod tests {
                 offset: 1,
                 paragraph: 1,
             },
-        )
-        .await;
-        assert_eq!(text.to_string().await, "123456");
+        );
+        assert_eq!(text.to_string(), "123456");
     }
 
-    #[async_test]
-    async fn remove_range_multi_paragraph_cross_multiple_boundaries() {
-        let text = RichText::new(vec![
+    #[test]
+    fn remove_range_multi_paragraph_cross_multiple_boundaries() {
+        let mut text = RichText::new(vec![
             Text::span("123a", Default::default()),
             Text::span("bc", Default::default()),
             Text::span("d456", Default::default()),
@@ -301,8 +285,7 @@ mod tests {
                 offset: 1,
                 paragraph: 2,
             },
-        )
-        .await;
-        assert_eq!(text.to_string().await, "123456");
+        );
+        assert_eq!(text.to_string(), "123456");
     }
 }

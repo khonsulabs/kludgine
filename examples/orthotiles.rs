@@ -21,58 +21,52 @@ impl WindowCreator for OrthoTiles {
 
 static MAP_SIZE: u32 = 100;
 
-#[async_trait]
 impl Window for OrthoTiles {
     fn target_fps(&self) -> Option<u16> {
         Some(60)
     }
-    async fn initialize(
-        &mut self,
-        _scene: &Target,
-        _window: &OpenWindow<Self>,
-    ) -> KludgineResult<()> {
-        self.load_assets().await?;
+    fn initialize(&mut self, _scene: &Target<'_>) -> KludgineResult<()> {
+        self.load_assets()?;
         self.zoom = 1.0;
         // self.position.x = MAP_SIZE as f32 * 32.0 / 2.0;
         // self.position.y = self.position.x;
         Ok(())
     }
 
-    async fn update(&mut self, scene: &Target, _window: &OpenWindow<Self>) -> KludgineResult<()> {
-        let stickguy = self.stickguy.as_ref().unwrap();
+    fn update(&mut self, scene: &Target<'_>, _status: &mut RedrawStatus) -> KludgineResult<()> {
+        let stickguy = self.stickguy.as_mut().unwrap();
         // Our default animation is Idle
         let mut animation = "Idle";
-        if scene.keys_pressed().await.contains(&VirtualKeyCode::Right) {
+        if scene.keys_pressed().contains(&VirtualKeyCode::Right) {
             animation = "WalkRight";
-            self.position.x += 32.0 * scene.elapsed().await.unwrap_or_default().as_secs_f32();
-        } else if scene.keys_pressed().await.contains(&VirtualKeyCode::Left) {
+            self.position.x += 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
+        } else if scene.keys_pressed().contains(&VirtualKeyCode::Left) {
             animation = "WalkLeft";
-            self.position.x -= 32.0 * scene.elapsed().await.unwrap_or_default().as_secs_f32();
+            self.position.x -= 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
         }
 
-        if scene.keys_pressed().await.contains(&VirtualKeyCode::Up) {
-            self.position.y -= 32.0 * scene.elapsed().await.unwrap_or_default().as_secs_f32();
-        } else if scene.keys_pressed().await.contains(&VirtualKeyCode::Down) {
-            self.position.y += 32.0 * scene.elapsed().await.unwrap_or_default().as_secs_f32();
+        if scene.keys_pressed().contains(&VirtualKeyCode::Up) {
+            self.position.y -= 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
+        } else if scene.keys_pressed().contains(&VirtualKeyCode::Down) {
+            self.position.y += 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
         }
-        stickguy.set_current_tag(Some(animation)).await?;
+        stickguy.set_current_tag(Some(animation))?;
 
         Ok(())
     }
 
-    async fn render(&mut self, scene: &Target) -> KludgineResult<()> {
-        let center = scene.size().await.to_vector().to_point() / 2.0;
-        let map = self.map.as_ref().unwrap();
+    fn render(&mut self, scene: &Target<'_>) -> KludgineResult<()> {
+        let center = scene.size().to_vector().to_point() / 2.0;
+        let map = self.map.as_mut().unwrap();
         map.draw_scaled(
             &scene,
             center - self.position.to_vector() * self.zoom,
             Scale::new(self.zoom),
-        )
-        .await?;
+        )?;
 
         // Draw the stickguy with the current frame of animation
-        let stickguy = self.stickguy.as_ref().unwrap();
-        let sprite = stickguy.get_frame(scene.elapsed().await).await?;
+        let stickguy = self.stickguy.as_mut().unwrap();
+        let sprite = stickguy.get_frame(scene.elapsed())?;
 
         // Calculate the zoomed size
         let rendered_size = (sprite.location.size().to_f32().to_vector() * self.zoom)
@@ -80,17 +74,15 @@ impl Window for OrthoTiles {
             .cast_unit();
         let rendered_bounds = Rect::new(center - rendered_size / 2., rendered_size);
 
-        sprite
-            .render_within(&scene, rendered_bounds, SpriteRotation::default())
-            .await;
+        sprite.render_within(&scene, rendered_bounds, SpriteRotation::default());
 
         Ok(())
     }
 
-    async fn process_input(
+    fn process_input(
         &mut self,
         input: InputEvent,
-        window: &OpenWindow<Self>,
+        status: &mut RedrawStatus,
     ) -> KludgineResult<()> {
         if let Event::MouseWheel { delta, .. } = input.event {
             let zoom_amount = match delta {
@@ -98,16 +90,16 @@ impl Window for OrthoTiles {
                 MouseScrollDelta::PixelDelta(point) => point.y as f32,
             };
             self.zoom = (self.zoom + zoom_amount / 100.0).min(10.0).max(0.2);
-            window.set_needs_redraw().await;
+            status.set_needs_redraw();
         }
         Ok(())
     }
 }
 
 impl OrthoTiles {
-    async fn load_assets(&mut self) -> KludgineResult<()> {
-        let sprite = include_aseprite_sprite!("assets/grass").await?;
-        sprite.set_current_tag(Some("Swaying")).await?;
+    fn load_assets(&mut self) -> KludgineResult<()> {
+        let mut sprite = include_aseprite_sprite!("assets/grass")?;
+        sprite.set_current_tag(Some("Swaying"))?;
 
         let mut map = PersistentTileMap::persistent_with_size(
             Size::new(32, 32),
@@ -115,13 +107,13 @@ impl OrthoTiles {
         );
         for x in 0..MAP_SIZE {
             for y in 0..MAP_SIZE {
-                map.set(Point::new(x, y), Some(sprite.new_instance().await));
+                map.set(Point::new(x, y), Some(sprite.clone()));
             }
         }
 
         self.map = Some(map);
 
-        self.stickguy = Some(include_aseprite_sprite!("assets/stickguy").await?);
+        self.stickguy = Some(include_aseprite_sprite!("assets/stickguy")?);
         Ok(())
     }
 }

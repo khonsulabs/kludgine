@@ -14,10 +14,9 @@ impl WindowCreator for Shapes {
     }
 }
 
-#[async_trait]
 impl Window for Shapes {
-    async fn render(&mut self, scene: &Target) -> KludgineResult<()> {
-        let center = Rect::new(Point::default(), scene.size().await).center();
+    fn render(&mut self, scene: &Target<'_>) -> KludgineResult<()> {
+        let center = Rect::new(Point::default(), scene.size()).center();
 
         Shape::polygon(vec![
             Point::new(-100., -100.),
@@ -25,13 +24,11 @@ impl Window for Shapes {
             Point::new(100., -100.),
         ])
         .fill(Fill::new(Color::GREEN))
-        .render_at(center, scene)
-        .await;
+        .render_at(center, scene);
 
         Shape::circle(Point::new(0., 0.), Points::new(25.))
             .fill(Fill::new(Color::RED))
-            .render_at(center, scene)
-            .await;
+            .render_at(center, scene);
 
         Ok(())
     }
