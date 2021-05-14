@@ -9,6 +9,7 @@ use easygpu::{
     wgpu::{FilterMode, COPY_BYTES_PER_ROW_ALIGNMENT},
 };
 use easygpu_lyon::LyonPipeline;
+use instant::Duration;
 
 use crate::{
     math::{Box2D, Point, Size, Unknown},
@@ -123,6 +124,9 @@ where
     fn render_loop(mut self) {
         loop {
             if !self.keep_running.load() {
+                // This drop prevents a segfault on exit per
+                // https://github.com/gfx-rs/wgpu-rs/issues/911
+                drop(self);
                 RuntimeRequest::WindowClosed.send().unwrap();
                 return;
             }
