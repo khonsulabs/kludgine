@@ -121,9 +121,9 @@ impl RuntimeWindow {
                 });
 
                 let mut frame_synchronizer =
-                    FrameRenderer::<Format>::run(renderer, task_keep_running, initial_size);
+                    FrameRenderer::<Format>::run(renderer, task_keep_running.clone(), initial_size);
                 frame_synchronizer.relinquish(Frame::default());
-                loop {
+                while task_keep_running.load() {
                     let mut frame = frame_synchronizer.take();
                     frame.update(&scene_event_receiver);
                     frame_synchronizer.relinquish(frame);
@@ -279,10 +279,11 @@ impl RuntimeWindow {
                             .set_internal_size(Size::new(size.width as f32, size.height as f32));
                         window.scene_mut().set_scale_factor(scale_factor);
                     }
-                    WindowEvent::CloseRequested =>
+                    WindowEvent::CloseRequested => {
                         if Self::request_window_close(id, &mut window)? {
                             return Ok(());
-                        },
+                        }
+                    }
                     WindowEvent::Input(input) => {
                         if let Event::Keyboard {
                             key: Some(key),
@@ -376,7 +377,6 @@ impl RuntimeWindow {
                     let mut channels = WINDOW_CHANNELS.lock().unwrap();
                     channels.remove(&self.window_id);
                     self.keep_running.store(false);
-                    RuntimeRequest::WindowClosed.send().unwrap()
                 }
             }
         }
