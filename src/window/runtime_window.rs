@@ -12,7 +12,7 @@ use super::OpenWindow;
 use crate::{
     math::{Pixels, Point, ScreenScale, Size},
     prelude::Scene,
-    runtime::{Runtime, RuntimeRequest, WINDOWS},
+    runtime::{Runtime, WINDOWS},
     scene::SceneEvent,
     window::{
         event::{ElementState, Event, InputEvent, VirtualKeyCode, WindowEvent},

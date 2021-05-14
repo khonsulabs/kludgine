@@ -9,7 +9,6 @@ use easygpu::{
     wgpu::{FilterMode, COPY_BYTES_PER_ROW_ALIGNMENT},
 };
 use easygpu_lyon::LyonPipeline;
-use instant::Duration;
 
 use crate::{
     math::{Box2D, Point, Size, Unknown},
