@@ -166,7 +166,8 @@ impl EventProcessor for Runtime {
                     self.internal_open_window(window_sender, builder, event_loop);
                 }
                 RuntimeRequest::Quit => {
-                    std::process::exit(0); // TODO There is a bug in winit when destructing https://github.com/rust-windowing/winit/blob/ad7d4939a8be2e0d9436d43d0351e2f7599a4237/src/platform_impl/macos/app_state.rs#L344
+                    *control_flow = winit::event_loop::ControlFlow::Exit;
+                    return;
                 }
                 RuntimeRequest::WindowClosed => {
                     self.event_sender
@@ -356,7 +357,10 @@ impl Runtime {
 
         if opened_first_window() {
             #[cfg(not(feature = "multiwindow"))]
-            windows.retain(|_, w| w.keep_running.load());
+            {
+                let old_count = windows.len();
+                windows.retain(|_, w| w.keep_running.load());
+            }
 
             #[cfg(feature = "multiwindow")]
             {
@@ -369,7 +373,7 @@ impl Runtime {
                         false
                     }
                 });
-            }
+            };
         }
     }
 }

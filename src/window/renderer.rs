@@ -12,6 +12,7 @@ use easygpu_lyon::LyonPipeline;
 
 use crate::{
     math::{Box2D, Point, Size, Unknown},
+    runtime::RuntimeRequest,
     sprite::{self, VertexShaderSource},
     window::frame::{FontUpdate, Frame, FrameCommand},
     KludgineResult,
@@ -122,6 +123,7 @@ where
     fn render_loop(mut self) {
         loop {
             if !self.keep_running.load() {
+                RuntimeRequest::WindowClosed.send().unwrap();
                 return;
             }
             self.render().expect("Error rendering window");
