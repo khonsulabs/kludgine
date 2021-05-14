@@ -1,8 +1,9 @@
-use crate::math::{Point, Scaled, ScreenScale, Size};
 pub use winit::event::{
     DeviceId, ElementState, MouseButton, MouseScrollDelta, ScanCode, TouchPhase, VirtualKeyCode,
 };
 use winit::window::Theme;
+
+use crate::math::{Point, Scaled, ScreenScale, Size};
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum EventStatus {

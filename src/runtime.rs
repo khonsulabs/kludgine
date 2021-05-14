@@ -1,17 +1,19 @@
-use crate::{
-    application::Application,
-    window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig, Window, WindowBuilder},
-    KludgineResult,
-};
+use std::collections::HashMap;
+
 use crossbeam::{
     channel::{unbounded, Receiver, Sender},
     sync::ShardedLock,
 };
 use platforms::target::{OS, TARGET_OS};
-use std::collections::HashMap;
 use winit::{
     event::Event,
     window::{Theme, WindowId},
+};
+
+use crate::{
+    application::Application,
+    window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig, Window, WindowBuilder},
+    KludgineResult,
 };
 
 pub(crate) enum RuntimeRequest {
@@ -44,8 +46,9 @@ pub(crate) enum RuntimeEvent {
     WindowClosed,
 }
 
-use lazy_static::lazy_static;
 use std::sync::Mutex;
+
+use lazy_static::lazy_static;
 
 pub trait EventProcessor: Send + Sync {
     fn process_event(
@@ -184,7 +187,8 @@ impl EventProcessor for Runtime {
     }
 }
 
-/// Runtime is designed to consume the main thread. For cross-platform compatibility, ensure that you call Runtime::run from thee main thread.
+/// Runtime is designed to consume the main thread. For cross-platform
+/// compatibility, ensure that you call Runtime::run from thee main thread.
 pub struct Runtime {
     request_receiver: Receiver<RuntimeRequest>,
     event_sender: Sender<RuntimeEvent>,
@@ -252,7 +256,8 @@ impl Runtime {
             let mut exclusive_mode = None;
             for monitor in event_loop.available_monitors() {
                 for mode in monitor.video_modes() {
-                    exclusive_mode = Some(mode); // TODO pick the best mode, not the last
+                    exclusive_mode = Some(mode); // TODO pick the best mode, not
+                                                 // the last
                 }
             }
 
@@ -287,11 +292,12 @@ impl Runtime {
             windows.insert(initial_window.id(), initial_window);
         }
 
-        // Install the global event handler, and also ensure we aren't trying to initialize two runtimes
-        // This is necessary because EventLoop::run requires the function/closure passed to have a `static
-        // lifetime for valid reasons. Every approach at using only local variables I could not solve, so
-        // we wrap it in a mutex. This abstraction also wraps it in dynamic dispatch, because we can't have
-        // a generic-type static variable.
+        // Install the global event handler, and also ensure we aren't trying to
+        // initialize two runtimes This is necessary because EventLoop::run requires the
+        // function/closure passed to have a `static lifetime for valid reasons. Every
+        // approach at using only local variables I could not solve, so we wrap it in a
+        // mutex. This abstraction also wraps it in dynamic dispatch, because we can't
+        // have a generic-type static variable.
         {
             let mut event_handler = GLOBAL_EVENT_HANDLER
                 .lock()

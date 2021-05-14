@@ -1,12 +1,13 @@
-use crate::{
-    scene::Target,
-    text::{prepared::PreparedText, wrap::TextWrap, Text},
-    KludgineResult,
-};
 use std::{
     cmp::Ordering,
     fmt::{Display, Write},
     ops::Range,
+};
+
+use crate::{
+    scene::Target,
+    text::{prepared::PreparedText, wrap::TextWrap, Text},
+    KludgineResult,
 };
 
 #[derive(Debug)]
@@ -44,8 +45,8 @@ impl RichText {
             }
         });
 
-        // If the range spanned paragraphs, the inner paragraphs will be removed but we need to
-        // merge the first and last paragraphs
+        // If the range spanned paragraphs, the inner paragraphs will be removed but we
+        // need to merge the first and last paragraphs
         if range.start.paragraph != range.end.paragraph {
             let mut paragraph_to_merge = self.paragraphs.remove(range.start.paragraph + 1);
             self.paragraphs[range.start.paragraph]

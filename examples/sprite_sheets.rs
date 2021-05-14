@@ -1,6 +1,7 @@
 extern crate kludgine;
-use kludgine::prelude::*;
 use std::time::Duration;
+
+use kludgine::prelude::*;
 
 fn main() {
     SingleWindowApplication::run(SpriteSheetExample::default());
@@ -35,22 +36,18 @@ enum StickGuy {
 impl Window for SpriteSheetExample {
     fn initialize(&mut self, _scene: &Target<'_>) -> KludgineResult<()> {
         let texture = include_texture!("assets/stickguy.png")?;
-        let sheet = SpriteSheet::new(
-            texture,
-            Size::new(32, 32),
-            vec![
-                StickGuy::Idle1,
-                StickGuy::Idle2,
-                StickGuy::Idle3,
-                StickGuy::Idle4,
-                StickGuy::WalkRight1,
-                StickGuy::WalkRight2,
-                StickGuy::WalkRight3,
-                StickGuy::WalkLeft1,
-                StickGuy::WalkLeft2,
-                StickGuy::WalkLeft3,
-            ],
-        );
+        let sheet = SpriteSheet::new(texture, Size::new(32, 32), vec![
+            StickGuy::Idle1,
+            StickGuy::Idle2,
+            StickGuy::Idle3,
+            StickGuy::Idle4,
+            StickGuy::WalkRight1,
+            StickGuy::WalkRight2,
+            StickGuy::WalkRight3,
+            StickGuy::WalkLeft1,
+            StickGuy::WalkLeft2,
+            StickGuy::WalkLeft3,
+        ]);
         let idle = SpriteAnimation::new(
             sheet
                 .sprites(vec![

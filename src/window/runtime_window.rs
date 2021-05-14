@@ -1,3 +1,14 @@
+use std::{sync::Arc, time::Duration};
+
+use crossbeam::atomic::AtomicCell;
+use easygpu::prelude::*;
+use once_cell::sync::OnceCell;
+use winit::{
+    event::WindowEvent as WinitWindowEvent,
+    window::{Theme, WindowId},
+};
+
+use super::OpenWindow;
 use crate::{
     math::{Pixels, Point, ScreenScale, Size},
     prelude::Scene,
@@ -11,16 +22,6 @@ use crate::{
     },
     KludgineError, KludgineResult, KludgineResultExt,
 };
-use crossbeam::atomic::AtomicCell;
-use easygpu::prelude::*;
-use once_cell::sync::OnceCell;
-use std::{sync::Arc, time::Duration};
-use winit::{
-    event::WindowEvent as WinitWindowEvent,
-    window::{Theme, WindowId},
-};
-
-use super::OpenWindow;
 
 pub(crate) struct RuntimeWindow {
     pub window_id: WindowId,
@@ -41,7 +42,8 @@ pub(crate) struct RuntimeWindowConfig {
 
 impl RuntimeWindowConfig {
     pub fn new(window: &winit::window::Window) -> Self {
-        // TODO in wasm, we need to explicity enable GL, but since wasm isn't possible right now, we're just hardcoding primary
+        // TODO in wasm, we need to explicity enable GL, but since wasm isn't possible
+        // right now, we're just hardcoding primary
         let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
         let surface = unsafe { instance.create_surface(window) };
         Self {
@@ -207,9 +209,11 @@ impl RuntimeWindow {
     {
         #[cfg(target_arch = "wasm32")]
         {
-            // On wasm, the browser is controlling our async runtime, and we don't have a good way to do a Timeout-style function
-            // This shouldn't have any noticable effects, because the browser will throttle frames for us automatically
-            // We could refactor to trigger redraws separately from winit, in which case we could properly use the frame update logic
+            // On wasm, the browser is controlling our async runtime, and we don't have a
+            // good way to do a Timeout-style function This shouldn't have any noticable
+            // effects, because the browser will throttle frames for us automatically
+            // We could refactor to trigger redraws separately from winit, in which case we
+            // could properly use the frame update logic
             Self::next_window_event_non_blocking(event_receiver)
         }
 
@@ -275,11 +279,10 @@ impl RuntimeWindow {
                             .set_internal_size(Size::new(size.width as f32, size.height as f32));
                         window.scene_mut().set_scale_factor(scale_factor);
                     }
-                    WindowEvent::CloseRequested => {
+                    WindowEvent::CloseRequested =>
                         if Self::request_window_close(id, &mut window)? {
                             return Ok(());
-                        }
-                    }
+                        },
                     WindowEvent::Input(input) => {
                         if let Event::Keyboard {
                             key: Some(key),
@@ -359,7 +362,9 @@ impl RuntimeWindow {
             let channels = WINDOW_CHANNELS.lock().unwrap();
             channels.len()
         } else {
-            // If our first window hasn't opened, return a count of 1. This will happen in a single-threaded environment because RuntimeWindow::open is spawned, not blocked_on.
+            // If our first window hasn't opened, return a count of 1. This will happen in a
+            // single-threaded environment because RuntimeWindow::open is spawned, not
+            // blocked_on.
             1
         }
     }

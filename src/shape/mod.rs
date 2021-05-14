@@ -5,15 +5,16 @@ mod geometry;
 mod path;
 mod stroke;
 
+use circle::Circle;
+use euclid::{Length, Scale};
+use geometry::ShapeGeometry;
+
 pub use self::{batch::*, fill::*, path::*, stroke::*};
 use crate::{
     math::{Point, Raw, Rect, Scaled},
     scene::{Element, Target},
     KludgineResult,
 };
-use circle::Circle;
-use euclid::{Length, Scale};
-use geometry::ShapeGeometry;
 
 #[derive(Default, Clone, Debug)]
 pub struct Shape<S> {
@@ -108,6 +109,7 @@ impl Shape<Raw> {
 
 impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for Shape<Src> {
     type Output = Shape<Dst>;
+
     fn mul(self, scale: Scale<f32, Src, Dst>) -> Self::Output {
         Self::Output {
             geometry: self.geometry * scale,

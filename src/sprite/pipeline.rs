@@ -1,7 +1,9 @@
-use crate::math::{Angle, Point, Raw};
+use std::{marker::PhantomData, ops::Deref};
+
 use bytemuck::{Pod, Zeroable};
 use easygpu::{prelude::*, wgpu::TextureFormat};
-use std::{marker::PhantomData, ops::Deref};
+
+use crate::math::{Angle, Point, Raw};
 
 /// A pipeline for rendering shapes.
 pub struct Pipeline<T> {
@@ -121,6 +123,7 @@ where
 
 impl<T> Deref for Pipeline<T> {
     type Target = PipelineCore;
+
     fn deref(&self) -> &Self::Target {
         &self.core
     }

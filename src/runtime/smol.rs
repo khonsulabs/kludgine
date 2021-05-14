@@ -1,9 +1,8 @@
-use std::time::Duration;
+use std::{sync::RwLock, time::Duration};
 
 use futures::future::Future;
 use lazy_static::lazy_static;
 use smol_timeout::TimeoutExt;
-use std::sync::RwLock;
 
 lazy_static! {
     pub(crate) static ref GLOBAL_THREAD_POOL: RwLock<Option<smol::Executor<'static>>> =

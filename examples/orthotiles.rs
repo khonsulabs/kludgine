@@ -25,6 +25,7 @@ impl Window for OrthoTiles {
     fn target_fps(&self) -> Option<u16> {
         Some(60)
     }
+
     fn initialize(&mut self, _scene: &Target<'_>) -> KludgineResult<()> {
         self.load_assets()?;
         self.zoom = 1.0;

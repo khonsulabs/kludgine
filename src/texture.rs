@@ -1,8 +1,10 @@
-use crate::{math::Size, window::Icon, KludgineResult};
+use std::{path::Path, sync::Arc};
+
 use crossbeam::atomic::AtomicCell;
 use image::{DynamicImage, RgbaImage};
 use lazy_static::lazy_static;
-use std::{path::Path, sync::Arc};
+
+use crate::{math::Size, window::Icon, KludgineResult};
 
 lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicCell<u64> = AtomicCell::new(0);

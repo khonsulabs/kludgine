@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
-use crate::math::Pixels;
 use crossbeam::atomic::AtomicCell;
 use easygpu::prelude::*;
 use lazy_static::lazy_static;
 use rusttype::{gpu_cache, Scale};
 use stylecs::{FontStyle, Weight};
+
+use crate::math::Pixels;
 
 lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicCell<u64> = AtomicCell::new(0);
@@ -60,15 +61,14 @@ impl Font {
 
     pub fn style(&self) -> FontStyle {
         match &self.handle.font {
-            rusttype::Font::Ref(f) => {
+            rusttype::Font::Ref(f) =>
                 if f.is_italic() {
                     FontStyle::Italic
                 } else if f.is_oblique() {
                     FontStyle::Oblique
                 } else {
                     FontStyle::Regular
-                }
-            }
+                },
             _ => FontStyle::Regular,
         }
     }

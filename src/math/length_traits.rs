@@ -42,12 +42,15 @@ where
     fn x(&self) -> Length<S, U> {
         Length::new(self.x)
     }
+
     fn y(&self) -> Length<S, U> {
         Length::new(self.y)
     }
+
     fn set_x(&mut self, x: Length<S, U>) {
         self.x = x.get()
     }
+
     fn set_y(&mut self, y: Length<S, U>) {
         self.y = y.get()
     }
@@ -60,12 +63,15 @@ where
     fn x(&self) -> Length<S, U> {
         Length::new(self.x)
     }
+
     fn y(&self) -> Length<S, U> {
         Length::new(self.y)
     }
+
     fn set_x(&mut self, x: Length<S, U>) {
         self.x = x.get()
     }
+
     fn set_y(&mut self, y: Length<S, U>) {
         self.y = y.get()
     }

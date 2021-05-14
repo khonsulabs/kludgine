@@ -58,6 +58,7 @@ impl Circle<Raw> {
 
 impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for Circle<Src> {
     type Output = Circle<Dst>;
+
     fn mul(self, scale: Scale<f32, Src, Dst>) -> Self::Output {
         Self::Output {
             center: self.center * scale,

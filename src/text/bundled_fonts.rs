@@ -11,10 +11,12 @@
 //!
 //! To enable a single font, look at the documentation of the font in question.
 //!
-//! WHen enabled, the Scene object's font library is initialized with all bundled fonts that are enabled.
+//! WHen enabled, the Scene object's font library is initialized with all
+//! bundled fonts that are enabled.
+
+use lazy_static::lazy_static;
 
 use crate::{include_font, text::font::Font};
-use lazy_static::lazy_static;
 
 lazy_static! {
     /// Roboto Regular font, licensed under APL 2.0, feature flag `bundled-fonts-roboto`

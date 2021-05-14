@@ -1,9 +1,10 @@
+use std::{collections::HashMap, fmt::Debug, hash::Hash, sync::Arc};
+
 use crate::{
     math::{Point, Rect, Size},
     sprite::{SpriteCollection, SpriteMap, SpriteSource},
     texture::Texture,
 };
-use std::{collections::HashMap, fmt::Debug, hash::Hash, sync::Arc};
 
 #[derive(Debug, Clone)]
 pub struct SpriteSheet<T>

@@ -1,3 +1,7 @@
+use std::sync::Arc;
+
+use stylecs::Alignment;
+
 use crate::{
     color::Color,
     math::{Pixels, Point, Points, Raw, Scaled, ScreenScale, Size, SizeExt, Vector},
@@ -5,8 +9,6 @@ use crate::{
     text::Font,
     KludgineResult,
 };
-use std::sync::Arc;
-use stylecs::Alignment;
 
 #[derive(Default, Debug, Clone)]
 pub struct PreparedText {

@@ -1,6 +1,7 @@
-use crate::math::{Length, Scaled};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+
+use crate::math::{Length, Scaled};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -29,6 +30,7 @@ impl<Unit> Dimension<Unit> {
             Dimension::Length(_) => false,
         }
     }
+
     pub fn is_length(&self) -> bool {
         !self.is_auto()
     }

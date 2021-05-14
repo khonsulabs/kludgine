@@ -1,10 +1,12 @@
+use std::ops::Range;
+
+use stylecs::Style;
+
 use crate::{
     math::{Point, Raw, Scaled},
     scene::Target,
     KludgineResult,
 };
-use std::ops::Range;
-use stylecs::Style;
 
 #[cfg(feature = "bundled-fonts-enabled")]
 pub mod bundled_fonts;
@@ -161,7 +163,8 @@ impl Text {
     fn cleanup_spans(&mut self) {
         if self.is_empty() {
             // If we have no actual text in this, keep the first span and dump the rest
-            // Doing this operation separately allows the other branch to be a simple retain operation
+            // Doing this operation separately allows the other branch to be a simple retain
+            // operation
             self.spans.resize_with(1, || unreachable!())
         } else {
             self.spans.retain(|span| !span.text.is_empty());

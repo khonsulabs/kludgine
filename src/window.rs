@@ -1,15 +1,17 @@
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
+
+use easygpu::prelude::*;
+use lazy_static::lazy_static;
+use winit::window::{Theme, WindowBuilder as WinitWindowBuilder, WindowId};
+
 use crate::{
     math::{Scaled, Size},
     scene::Target,
     KludgineError, KludgineResult,
 };
-use easygpu::prelude::*;
-use lazy_static::lazy_static;
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
-use winit::window::{Theme, WindowBuilder as WinitWindowBuilder, WindowId};
 
 pub mod event;
 pub(crate) mod frame;
@@ -19,7 +21,6 @@ mod runtime_window;
 
 pub use open::{OpenWindow, RedrawStatus};
 pub(crate) use runtime_window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig};
-
 pub use winit::window::Icon;
 
 use self::event::InputEvent;
@@ -40,8 +41,9 @@ pub trait Window: Send + Sync + 'static {
     {
         Ok(())
     }
-    /// The window was requested to be closed, most likely from the Close Button. Override
-    /// this implementation if you want logic in place to prevent a window from closing.
+    /// The window was requested to be closed, most likely from the Close
+    /// Button. Override this implementation if you want logic in place to
+    /// prevent a window from closing.
     fn close_requested(&mut self) -> KludgineResult<CloseResponse> {
         Ok(CloseResponse::Close)
     }

@@ -19,17 +19,17 @@ pub(crate) use self::{
 };
 
 mod source;
-pub use self::{collection::*, sheet::*, source::*};
 use std::{collections::HashMap, iter::IntoIterator, sync::Arc, time::Duration};
+
+pub use self::{collection::*, sheet::*, source::*};
 
 #[macro_export]
 macro_rules! include_aseprite_sprite {
     ($path:expr) => {{
         let image_bytes = std::include_bytes!(concat!($path, ".png"));
         match Texture::from_bytes(image_bytes) {
-            Ok(texture) => {
-                Sprite::load_aseprite_json(include_str!(concat!($path, ".json")), texture)
-            }
+            Ok(texture) =>
+                Sprite::load_aseprite_json(include_str!(concat!($path, ".json")), texture),
             Err(err) => Err(err),
         }
     }};
@@ -124,8 +124,9 @@ impl Sprite {
 
     /// Loads [Aseprite](https://www.aseprite.org/) JSON export format, when using the correct settings
     ///
-    /// For the JSON data, use the Hash export option (default), and use either spaces or underscores (_)
-    /// inbetween the fields in the name. Ensure `{frame}` is the last field in the name before the extension.
+    /// For the JSON data, use the Hash export option (default), and use either
+    /// spaces or underscores (_) inbetween the fields in the name. Ensure
+    /// `{frame}` is the last field in the name before the extension.
     /// E.g., `{tag}_{frame}.{extension}`
     pub fn load_aseprite_json(raw_json: &str, texture: Texture) -> KludgineResult<Self> {
         let json = json::parse(raw_json)?;
@@ -167,11 +168,10 @@ impl Sprite {
 
             let duration = match frame["duration"].as_u64() {
                 Some(millis) => Duration::from_millis(millis),
-                None => {
+                None =>
                     return Err(KludgineError::SpriteParseError(
                         "invalid aseprite json: invalid duration".to_owned(),
-                    ))
-                }
+                    )),
             };
 
             let frame = Rect::new(
@@ -203,13 +203,10 @@ impl Sprite {
 
             let source = SpriteSource::new(frame, texture.clone());
 
-            frames.insert(
-                frame_number,
-                SpriteFrame {
-                    duration: Some(duration),
-                    source,
-                },
-            );
+            frames.insert(frame_number, SpriteFrame {
+                duration: Some(duration),
+                source,
+            });
         }
 
         let mut animations = HashMap::new();
@@ -507,7 +504,8 @@ pub(crate) struct RenderedSpriteData {
 #[derive(Copy, Clone, Debug)]
 pub struct SpriteRotation<Unit> {
     pub angle: Option<Angle>,
-    /// The location to rotate the sprite around. If not specified, the center of the sprite is used.
+    /// The location to rotate the sprite around. If not specified, the center
+    /// of the sprite is used.
     pub screen_location: Option<Point<f32, Unit>>,
 }
 

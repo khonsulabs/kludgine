@@ -1,3 +1,13 @@
+use std::{
+    collections::{HashMap, HashSet},
+    time::{Duration, Instant},
+};
+
+use euclid::Rect;
+use platforms::target::{OS, TARGET_OS};
+use stylecs::{FontStyle, Weight};
+use winit::{event::VirtualKeyCode, window::Theme};
+
 use crate::{
     math::{Point, Raw, Scale, Scaled, ScreenScale, Size, Vector},
     shape::Shape,
@@ -5,14 +15,6 @@ use crate::{
     text::{font::Font, prepared::PreparedSpan},
     KludgineError, KludgineResult,
 };
-use euclid::Rect;
-use platforms::target::{OS, TARGET_OS};
-use std::{
-    collections::{HashMap, HashSet},
-    time::{Duration, Instant},
-};
-use stylecs::{FontStyle, Weight};
-use winit::{event::VirtualKeyCode, window::Theme};
 
 #[derive(Debug)]
 pub(crate) enum Element {

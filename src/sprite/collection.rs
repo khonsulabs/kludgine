@@ -1,5 +1,6 @@
-use crate::sprite::{SpriteSheet, SpriteSource};
 use std::{collections::HashMap, fmt::Debug, hash::Hash};
+
+use crate::sprite::{SpriteSheet, SpriteSource};
 
 #[derive(Debug, Clone)]
 pub struct SpriteMap<T> {

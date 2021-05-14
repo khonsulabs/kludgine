@@ -1,9 +1,9 @@
 #![cfg(not(feature = "smol-rt"))]
 
+use std::{sync::RwLock, time::Duration};
+
 use futures::future::Future;
 use lazy_static::lazy_static;
-use std::sync::RwLock;
-use std::time::Duration;
 
 lazy_static! {
     pub(crate) static ref GLOBAL_THREAD_POOL: RwLock<Option<tokio::runtime::Runtime>> =

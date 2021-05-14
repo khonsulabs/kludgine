@@ -1,6 +1,7 @@
-use crate::math::{Box2D, Length, Rect, Scale, Size, Unknown, Vector};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+
+use crate::math::{Box2D, Length, Rect, Scale, Size, Unknown, Vector};
 
 #[derive(Copy, Clone, PartialEq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

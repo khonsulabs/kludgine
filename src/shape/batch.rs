@@ -1,6 +1,7 @@
-use crate::{math::Raw, shape::Shape, KludgineResult};
 use easygpu::prelude::*;
 use easygpu_lyon::ShapeBuilder;
+
+use crate::{math::Raw, shape::Shape, KludgineResult};
 
 #[derive(Debug, Default, Clone)]
 pub struct Batch {

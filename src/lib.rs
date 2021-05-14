@@ -8,9 +8,8 @@ extern crate derivative;
 extern crate tracing;
 
 pub use easygpu;
-pub use winit;
-
 use thiserror::Error;
+pub use winit;
 
 #[derive(Error, Debug)]
 pub enum KludgineError {
@@ -37,9 +36,15 @@ pub enum KludgineError {
     #[error("argument is out of bounds")]
     OutOfBounds,
 
-    #[error("specify at most 2 of the dimensions top, bottom, and height. (e.g., top and bottom, but not height")]
+    #[error(
+        "specify at most 2 of the dimensions top, bottom, and height. (e.g., top and bottom, but \
+         not height"
+    )]
     AbsoluteBoundsInvalidVertical,
-    #[error("specify at most 2 of the dimensions left, right, and width. (e.g., left and right, but not width)")]
+    #[error(
+        "specify at most 2 of the dimensions left, right, and width. (e.g., left and right, but \
+         not width)"
+    )]
     AbsoluteBoundsInvalidHorizontal,
 
     #[error("other error: {0}")]
@@ -111,6 +116,17 @@ pub mod window;
 
 /// Convenience module that exports the public interface of Kludgine
 pub mod prelude {
+    pub use stylecs::{
+        Alignment, AnyStyleComponent, BackgroundColor, ColorPair, ComponentCollection, FontFamily,
+        FontSize, FontStyle, ForegroundColor, GenericStyle, Style, StyleComponent, StyleSheet,
+        UnscaledStyleComponent, VerticalAlignment, Weight,
+    };
+    pub use winit::event::*;
+
+    #[cfg(feature = "bundled-fonts-enabled")]
+    pub use super::text::bundled_fonts;
+    #[cfg(feature = "multiwindow")]
+    pub use super::window::OpenableWindow;
     pub use super::{
         application::{Application, SingleWindowApplication},
         color::Color,
@@ -146,18 +162,6 @@ pub mod prelude {
         },
         KludgineError, KludgineResult, RequiresInitialization,
     };
-    pub use stylecs::{
-        Alignment, AnyStyleComponent, BackgroundColor, ColorPair, ComponentCollection, FontFamily,
-        FontSize, FontStyle, ForegroundColor, GenericStyle, Style, StyleComponent, StyleSheet,
-        UnscaledStyleComponent, VerticalAlignment, Weight,
-    };
-    pub use winit::event::*;
-
-    #[cfg(feature = "bundled-fonts-enabled")]
-    pub use super::text::bundled_fonts;
-
-    #[cfg(feature = "multiwindow")]
-    pub use super::window::OpenableWindow;
 }
 
 pub struct RequiresInitialization<T>(Option<T>);

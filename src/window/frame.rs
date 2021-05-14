@@ -1,3 +1,8 @@
+use std::collections::{HashMap, HashSet};
+
+use easygpu::transform::ScreenSpace;
+use euclid::Rect;
+
 use crate::{
     math::{Raw, Size},
     scene::{Element, SceneEvent},
@@ -5,9 +10,6 @@ use crate::{
     text::{font::LoadedFont, prepared::PreparedSpan},
     texture::Texture,
 };
-use easygpu::transform::ScreenSpace;
-use euclid::Rect;
-use std::collections::{HashMap, HashSet};
 #[derive(Default, Debug)]
 pub(crate) struct Frame {
     pub size: Size<f32, ScreenSpace>,
@@ -34,7 +36,8 @@ impl FrameReceiver {
             }
         }
         let mut latest_frame = std::mem::replace(&mut self.elements, Vec::new());
-        // Receive any pending events in a non-blocking fashion. We only want to render the frame we have the most recent information for
+        // Receive any pending events in a non-blocking fashion. We only want to render
+        // the frame we have the most recent information for
         while let Ok(evt) = receiver.try_recv() {
             if self.process_scene_event(evt) {
                 // New frame
@@ -263,7 +266,10 @@ impl Frame {
                         data: data.to_vec(),
                     })
                 })
-                .expect("Error caching font"); // TODO Change this to a graceful failure that spams the console but doesn't crash
+                .expect("Error caching font"); // TODO Change this to a graceful
+                                               // failure that
+                                               // spams the console but doesn't
+                                               // crash
         }
         self.pending_font_updates.extend(updates);
     }

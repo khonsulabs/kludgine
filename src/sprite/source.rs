@@ -68,7 +68,8 @@ impl SpriteSource {
         }
     }
 
-    /// All SpriteSources must be from the same texture, and must have a square number of sprites
+    /// All SpriteSources must be from the same texture, and must have a square
+    /// number of sprites
     pub fn joined_square<I: IntoIterator<Item = SpriteSource>>(sources: I) -> Self {
         let sources: Vec<_> = sources.into_iter().collect();
         let sprites_wide = (sources.len() as f32).sqrt() as usize;

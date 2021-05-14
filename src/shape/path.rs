@@ -1,10 +1,11 @@
+use lyon_tessellation::path::{builder::PathBuilder as _, PathEvent as LyonPathEvent};
+
 use crate::{
     math::{Point, Raw, Scale, Scaled, ScreenScale},
     scene::Target,
     shape::{Fill, Stroke},
     KludgineError, KludgineResult,
 };
-use lyon_tessellation::path::{builder::PathBuilder as _, PathEvent as LyonPathEvent};
 
 pub type Endpoint<S> = Point<f32, S>;
 pub type ControlPoint<S> = Point<f32, S>;
@@ -85,7 +86,8 @@ impl Path<Scaled> {
         let mut events = Vec::new();
 
         for event in &self.events {
-            // There's a bug with async-local variables and this analysis. There is no cross-dependency on any of these parameters.
+            // There's a bug with async-local variables and this analysis. There is no
+            // cross-dependency on any of these parameters.
             #[allow(clippy::eval_order_dependence)]
             events.push(match event {
                 PathEvent::Begin { at } => PathEvent::Begin {
@@ -246,6 +248,7 @@ impl<S> PathBuilder<S> {
 
 impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for Path<Src> {
     type Output = Path<Dst>;
+
     fn mul(self, scale: Scale<f32, Src, Dst>) -> Self::Output {
         Self::Output {
             events: self.events.into_iter().map(|event| event * scale).collect(),
@@ -255,6 +258,7 @@ impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for Path<Src> {
 
 impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for PathEvent<Src> {
     type Output = PathEvent<Dst>;
+
     fn mul(self, scale: Scale<f32, Src, Dst>) -> Self::Output {
         match self {
             PathEvent::Begin { at } => Self::Output::Begin { at: at * scale },

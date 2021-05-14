@@ -1,5 +1,4 @@
 use futures::future::Future;
-
 use wasm_bindgen::JsValue;
 
 impl super::Runtime {

@@ -1,6 +1,7 @@
 #[cfg(target_arch = "wasm32")]
 mod implementation {
     use std::time::Duration;
+
     use wasm_bindgen::{prelude::*, JsCast};
 
     pub struct Delay;
@@ -9,7 +10,8 @@ mod implementation {
         pub async fn new(duration: Duration) {
             let (tx, rx) = flume::bounded(1);
 
-            // TODO was having trouble getting gloo_timers working, it seems very heavy. This seems to be an OK alternative
+            // TODO was having trouble getting gloo_timers working, it seems very heavy.
+            // This seems to be an OK alternative
             {
                 let closure = Closure::once_into_js(move || {
                     tx.try_send(()).unwrap();

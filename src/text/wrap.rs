@@ -1,11 +1,12 @@
+use approx::relative_eq;
+use stylecs::Alignment;
+
 use crate::{
     math::{max_f, min_f, Pixels, PointExt, Points},
     scene::Target,
     text::{PreparedLine, PreparedSpan, PreparedText, Text},
     KludgineResult,
 };
-use approx::relative_eq;
-use stylecs::Alignment;
 
 mod measured;
 mod tokenizer;
@@ -234,16 +235,18 @@ impl TextWrap {
 
 #[cfg(all(test, feature = "bundled-fonts"))]
 mod tests {
+    use stylecs::{FontSize, Style};
+
     use super::*;
     use crate::{
         math::{Scaled, ScreenScale},
         scene::{Scene, Target},
         text::Span,
     };
-    use stylecs::{FontSize, Style};
 
     #[test]
-    /// This test should have "This line should " be on the first line and "wrap" on the second
+    /// This test should have "This line should " be on the first line and
+    /// "wrap" on the second
     fn wrap_one_word() {
         for &scale in &[1f32, 2.] {
             let (sender, _) = flume::unbounded();
@@ -257,14 +260,11 @@ mod tests {
                     .with(FontSize::<Scaled>::new(12.))
                     .to_screen_scale(ScreenScale::new(scale)),
             )])
-            .wrap(
-                &scene,
-                TextWrap::MultiLine {
-                    width: Points::new(80.0),
-                    height: Points::new(f32::MAX),
-                    alignment: Alignment::Left,
-                },
-            )
+            .wrap(&scene, TextWrap::MultiLine {
+                width: Points::new(80.0),
+                height: Points::new(f32::MAX),
+                alignment: Alignment::Left,
+            })
             .expect("Error wrapping text");
             assert_eq!(wrap.lines.len(), 2);
             assert_eq!(wrap.lines[0].spans.len(), 5); // "this"," ","line"," ","should"
@@ -274,7 +274,8 @@ mod tests {
     }
 
     #[test]
-    /// This test should have "This line should " be on the first line and "wrap" on the second
+    /// This test should have "This line should " be on the first line and
+    /// "wrap" on the second
     fn wrap_one_word_different_span() {
         let (sender, _) = flume::unbounded();
         let mut scene = Scene::new(sender);
@@ -293,14 +294,11 @@ mod tests {
             Span::new("This line should ", first_style),
             Span::new("wrap", second_style),
         ])
-        .wrap(
-            &scene,
-            TextWrap::MultiLine {
-                width: Points::new(80.0),
-                height: Points::new(f32::MAX),
-                alignment: Alignment::Left,
-            },
-        )
+        .wrap(&scene, TextWrap::MultiLine {
+            width: Points::new(80.0),
+            height: Points::new(f32::MAX),
+            alignment: Alignment::Left,
+        })
         .expect("Error wrapping text");
         assert_eq!(wrap.lines.len(), 2);
         assert_eq!(wrap.lines[0].spans.len(), 5);

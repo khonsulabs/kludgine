@@ -112,9 +112,6 @@ impl Color {
 }
 
 impl Color {
-    pub const CLEAR_WHITE: Color = Color::new(1., 1., 1., 0.);
-    pub const CLEAR_BLACK: Color = Color::new(0., 0., 0., 0.);
-
     // CSS-name derived constants
     pub const ALICEBLUE: Color = Color::new(240. / 255., 248. / 255., 1., 1.);
     pub const ANTIQUEWHITE: Color = Color::new(250. / 255., 235. / 255., 215. / 255., 1.);
@@ -132,6 +129,8 @@ impl Color {
     pub const CADETBLUE: Color = Color::new(95. / 255., 158. / 255., 160. / 255., 1.);
     pub const CHARTREUSE: Color = Color::new(127. / 255., 1., 0., 1.);
     pub const CHOCOLATE: Color = Color::new(210. / 255., 105. / 255., 30. / 255., 1.);
+    pub const CLEAR_BLACK: Color = Color::new(0., 0., 0., 0.);
+    pub const CLEAR_WHITE: Color = Color::new(1., 1., 1., 0.);
     pub const CORAL: Color = Color::new(1., 127. / 255., 80. / 255., 1.);
     pub const CORNFLOWERBLUE: Color = Color::new(100. / 255., 149. / 255., 237. / 255., 1.);
     pub const CORNSILK: Color = Color::new(1., 248. / 255., 220. / 255., 1.);
@@ -170,9 +169,9 @@ impl Color {
     pub const GOLD: Color = Color::new(1., 215. / 255., 0., 1.);
     pub const GOLDENROD: Color = Color::new(218. / 255., 165. / 255., 32. / 255., 1.);
     pub const GRAY: Color = Color::new(128. / 255., 128. / 255., 128. / 255., 1.);
-    pub const GREY: Color = Color::new(128. / 255., 128. / 255., 128. / 255., 1.);
     pub const GREEN: Color = Color::new(0., 128. / 255., 0., 1.);
     pub const GREENYELLOW: Color = Color::new(173. / 255., 1., 47. / 255., 1.);
+    pub const GREY: Color = Color::new(128. / 255., 128. / 255., 128. / 255., 1.);
     pub const HONEYDEW: Color = Color::new(240. / 255., 1., 240. / 255., 1.);
     pub const HOTPINK: Color = Color::new(1., 105. / 255., 180. / 255., 1.);
     pub const INDIANRED: Color = Color::new(205. / 255., 92. / 255., 92. / 255., 1.);

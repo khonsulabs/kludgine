@@ -40,14 +40,10 @@ impl Window for TextExample {
             ),
         ];
 
-        Text::new(spans).render_at(
-            scene,
-            Point::new(0.0, 120.0),
-            TextWrap::SingleLine {
-                max_width: scene.size().width(),
-                truncate: false,
-                alignment: Alignment::Left,
-            },
-        )
+        Text::new(spans).render_at(scene, Point::new(0.0, 120.0), TextWrap::SingleLine {
+            max_width: scene.size().width(),
+            truncate: false,
+            alignment: Alignment::Left,
+        })
     }
 }

@@ -1,3 +1,7 @@
+use euclid::Length;
+use rusttype::{GlyphId, Scale};
+use stylecs::{FontFamily, FontSize, FontStyle, ForegroundColor, Style, Weight};
+
 use crate::{
     color::Color,
     math::{Pixels, Raw, Scaled},
@@ -5,9 +9,6 @@ use crate::{
     text::{font::Font, prepared::GlyphInfo, PreparedSpan, Text},
     KludgineResult,
 };
-use euclid::Length;
-use rusttype::{GlyphId, Scale};
-use stylecs::{FontFamily, FontSize, FontStyle, ForegroundColor, Style, Weight};
 
 #[derive(Debug)]
 pub(crate) enum Token {

@@ -1,14 +1,16 @@
+use std::{
+    mem,
+    ops::{Deref, DerefMut},
+    time::Duration,
+};
+
+use euclid::Rect;
+
 use crate::{
     math::{Box2D, Length, Point, PointExt, Raw, Scale, Scaled, Size, SizeExt, Unknown},
     scene::Target,
     sprite::{Sprite, SpriteRotation, SpriteSource},
     KludgineResult,
-};
-use euclid::Rect;
-use std::{
-    mem,
-    ops::{Deref, DerefMut},
-    time::Duration,
 };
 
 /// TileMap renders tiles retrieved from a TileProvider
@@ -179,9 +181,8 @@ impl PersistentTileSource {
             location,
             sprite: match self {
                 PersistentTileSource::Sprite(sprite) => TileSprite::Sprite(sprite),
-                PersistentTileSource::SpriteSource(source) => {
-                    TileSprite::SpriteSource(source.clone())
-                }
+                PersistentTileSource::SpriteSource(source) =>
+                    TileSprite::SpriteSource(source.clone()),
             },
         }
     }

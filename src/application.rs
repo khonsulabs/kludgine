@@ -1,8 +1,9 @@
+use std::marker::PhantomData;
+
 use crate::{
     runtime::Runtime,
     window::{RuntimeWindow, Window, WindowCreator},
 };
-use std::marker::PhantomData;
 
 pub trait Application: Sized + Send + Sync {
     fn initialize(&mut self) {}

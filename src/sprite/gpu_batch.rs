@@ -1,8 +1,9 @@
+use easygpu::prelude::*;
+
 use crate::{
     math::{Box2D, Point, PointExt, Raw, Rect, Size, Unknown},
     sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation, SpriteSourceLocation},
 };
-use easygpu::prelude::*;
 
 pub(crate) struct GpuBatch {
     pub size: Size<u32, ScreenSpace>,
@@ -90,10 +91,14 @@ impl GpuBatch {
             {
                 if let Some(clipped_destination) = dest.intersection(&clip.to_f32()) {
                     if rotation.angle.is_some() {
-                        // To properly apply clipping on a rotated quad requires tessellating the remaining polygon, and
-                        // the easygpu-lyon layer doesn't support uv coordinate extrapolation at this moment. We could use
-                        // lyon directly to generate these vertexes.
-                        eprintln!("Kludgine Error: Need to implement partial occlusion for sprites. Not clipping.");
+                        // To properly apply clipping on a rotated quad requires tessellating the
+                        // remaining polygon, and the easygpu-lyon layer doesn't support uv
+                        // coordinate extrapolation at this moment. We could use lyon directly to
+                        // generate these vertexes.
+                        eprintln!(
+                            "Kludgine Error: Need to implement partial occlusion for sprites. Not \
+                             clipping."
+                        );
                     } else {
                         // Adjust the src box based on how much was clipped
                         let source_size = src.size();

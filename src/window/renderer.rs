@@ -1,18 +1,20 @@
-use crate::{
-    math::{Box2D, Point, Size, Unknown},
-    sprite::{self, VertexShaderSource},
-    window::frame::{FontUpdate, Frame, FrameCommand},
-    KludgineResult,
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
 };
+
 use crossbeam::atomic::AtomicCell;
 use easygpu::{
     prelude::*,
     wgpu::{FilterMode, COPY_BYTES_PER_ROW_ALIGNMENT},
 };
 use easygpu_lyon::LyonPipeline;
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
+
+use crate::{
+    math::{Box2D, Point, Size, Unknown},
+    sprite::{self, VertexShaderSource},
+    window::frame::{FontUpdate, Frame, FrameCommand},
+    KludgineResult,
 };
 
 pub(crate) struct FrameSynchronizer {
@@ -147,7 +149,8 @@ where
 
         let output = match self.swap_chain.next_texture() {
             Ok(texture) => texture,
-            Err(wgpu::SwapChainError::Outdated) => return Ok(()), // Ignore outdated, we'll draw next time.
+            Err(wgpu::SwapChainError::Outdated) => return Ok(()), /* Ignore outdated, we'll draw */
+            // next time.
             Err(err) => panic!("Unrecoverable error on swap chain {:?}", err),
         };
         let mut frame = self.renderer.frame();
@@ -301,9 +304,13 @@ where
                                         loaded_font.cache.rect_for(0, &g.glyph).ok().flatten()
                                     })
                                 {
-                                    // This is one section that feels like a kludge. gpu_cache is storing the textures upside down like normal
-                                    // but easywgpu is automatically flipping textures. Easygpu's texture isn't exactly the best compatibility with this process
-                                    // because gpu_cache also produces data that is 1 byte per pixel, and we have to expand it when we're updating the texture
+                                    // This is one section that feels like a kludge. gpu_cache is
+                                    // storing the textures upside down like normal but easywgpu is
+                                    // automatically flipping textures. Easygpu's texture isn't
+                                    // exactly the best compatibility with this process
+                                    // because gpu_cache also produces data that is 1 byte per
+                                    // pixel, and we have to expand it when we're updating the
+                                    // texture
                                     let source = Box2D::<_, Unknown>::new(
                                         Point::new(
                                             uv_rect.min.x * 512.0,

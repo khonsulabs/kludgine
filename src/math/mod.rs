@@ -43,8 +43,9 @@ pub(crate) fn min_f(a: f32, b: f32) -> f32 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use approx::assert_relative_eq;
+
+    use super::*;
 
     #[test]
     fn min_max_tests() {
