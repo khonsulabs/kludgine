@@ -156,6 +156,7 @@ impl Frame {
                         referenced_texture_ids.insert(texture.id);
 
                         // Load the texture if needed
+                        #[allow(clippy::map_entry)]
                         if !self.textures.contains_key(&texture.id) {
                             self.textures
                                 .insert(texture.id, sprite.source.texture.clone());

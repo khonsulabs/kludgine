@@ -164,9 +164,9 @@ impl PreparedSpan {
                 size,
                 color,
                 width,
+                characters,
                 glyphs,
                 metrics,
-                characters,
             }),
         }
     }

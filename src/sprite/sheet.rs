@@ -84,9 +84,9 @@ impl<T: Debug + Eq + Hash> SpriteSheetData<T> {
         }
 
         Self {
+            tile_size,
             dimensions,
             sprites,
-            tile_size,
         }
     }
 }

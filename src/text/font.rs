@@ -30,7 +30,7 @@ impl Font {
         let font = rusttype::Font::try_from_bytes(bytes)?;
         let id = GLOBAL_ID_CELL.fetch_add(1);
         Some(Font {
-            handle: Arc::new(FontData { font, id }),
+            handle: Arc::new(FontData { id, font }),
         })
     }
 

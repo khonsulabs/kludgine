@@ -102,8 +102,8 @@ where
         Self {
             core: PipelineCore {
                 pipeline,
-                uniforms,
                 bindings,
+                uniforms,
             },
             _phantom: PhantomData::default(),
         }
@@ -115,7 +115,7 @@ where
     ) -> Option<(&'a UniformBuffer, Vec<self::Uniforms>)> {
         let ortho = ortho.to_array();
         let transform = ScreenTransformation::identity().to_array();
-        Some((&self.uniforms, vec![self::Uniforms { transform, ortho }]))
+        Some((&self.uniforms, vec![self::Uniforms { ortho, transform }]))
     }
 }
 

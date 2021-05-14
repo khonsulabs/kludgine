@@ -145,10 +145,7 @@ impl Sprite {
             ));
         }
 
-        let title = match meta["image"].as_str() {
-            Some(image) => Some(image.to_owned()),
-            None => None,
-        };
+        let title = meta["image"].as_str().map(str::to_owned);
 
         let mut frames = HashMap::new();
         for (name, frame) in json["frames"].entries() {
@@ -229,10 +226,7 @@ impl Sprite {
                 ));
             };
 
-            let name = match tag["name"].as_str() {
-                Some(s) => Some(s.to_owned()),
-                None => None,
-            };
+            let name = tag["name"].as_str().map(str::to_owned);
 
             let start_frame = tag["from"].as_usize().ok_or_else(|| {
                 KludgineError::SpriteParseError(
@@ -313,14 +307,13 @@ impl Sprite {
     }
 
     pub fn remaining_frame_duration(&self) -> KludgineResult<Option<Duration>> {
-        let duration = match self.with_current_frame(|frame| frame.duration)? {
-            Some(frame_duration) => Some(
+        let duration = self
+            .with_current_frame(|frame| frame.duration)?
+            .map(|frame_duration| {
                 frame_duration
                     .checked_sub(self.elapsed_since_frame_change)
-                    .unwrap_or_default(),
-            ),
-            None => None,
-        };
+                    .unwrap_or_default()
+            });
 
         Ok(duration)
     }

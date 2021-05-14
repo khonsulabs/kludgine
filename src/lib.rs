@@ -1,5 +1,4 @@
-#![deny(clippy::all)]
-#![allow(clippy::map_entry)]
+#![warn(clippy::all)]
 
 #[macro_use]
 extern crate derivative;
