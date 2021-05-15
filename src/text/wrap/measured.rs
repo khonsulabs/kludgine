@@ -105,7 +105,7 @@ impl TextMeasureState {
 }
 
 impl MeasuredText {
-    pub fn new(text: &Text, scene: &Target<'_>) -> KludgineResult<Self> {
+    pub fn new(text: &Text, scene: &Target) -> KludgineResult<Self> {
         let mut state = TextMeasureState {
             no_text_metrics: None,
             current_group: None,

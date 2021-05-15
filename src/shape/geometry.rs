@@ -31,14 +31,16 @@ impl ShapeGeometry<Scaled> {
     pub(crate) fn translate_and_convert_to_device(
         &self,
         location: Point<f32, Scaled>,
-        scene: &Target<'_>,
+        scene: &Target,
     ) -> ShapeGeometry<Raw> {
         match self {
             Self::Empty => ShapeGeometry::Empty,
-            Self::Path(path) =>
-                ShapeGeometry::Path(path.translate_and_convert_to_device(location, scene)),
-            Self::Circle(circle) =>
-                ShapeGeometry::Circle(circle.translate_and_convert_to_device(location, scene)),
+            Self::Path(path) => {
+                ShapeGeometry::Path(path.translate_and_convert_to_device(location, scene))
+            }
+            Self::Circle(circle) => {
+                ShapeGeometry::Circle(circle.translate_and_convert_to_device(location, scene))
+            }
         }
     }
 }

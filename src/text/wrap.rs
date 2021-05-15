@@ -14,7 +14,7 @@ pub(crate) use self::{measured::*, tokenizer::*};
 
 pub struct TextWrapper<'a> {
     options: TextWrap,
-    scene: &'a Target<'a>,
+    scene: &'a Target,
     prepared_text: PreparedText,
 }
 
@@ -123,11 +123,7 @@ impl TextWrapState {
 }
 
 impl<'a> TextWrapper<'a> {
-    pub fn wrap(
-        text: &Text,
-        scene: &'a Target<'a>,
-        options: TextWrap,
-    ) -> KludgineResult<PreparedText> {
+    pub fn wrap(text: &Text, scene: &'a Target, options: TextWrap) -> KludgineResult<PreparedText> {
         TextWrapper {
             options,
             scene,
@@ -235,6 +231,8 @@ impl TextWrap {
 
 #[cfg(all(test, feature = "bundled-fonts"))]
 mod tests {
+    use std::sync::Arc;
+
     use stylecs::{FontSize, Style};
 
     use super::*;
@@ -253,18 +251,21 @@ mod tests {
             let mut scene = Scene::new(sender);
             scene.set_scale_factor(ScreenScale::new(scale));
             scene.register_bundled_fonts();
-            let scene = Target::from(&scene);
+            let scene = Target::from(Arc::new(scene));
             let wrap = Text::new(vec![Span::new(
                 "This line should wrap",
                 Style::new()
                     .with(FontSize::<Scaled>::new(12.))
                     .to_screen_scale(ScreenScale::new(scale)),
             )])
-            .wrap(&scene, TextWrap::MultiLine {
-                width: Points::new(80.0),
-                height: Points::new(f32::MAX),
-                alignment: Alignment::Left,
-            })
+            .wrap(
+                &scene,
+                TextWrap::MultiLine {
+                    width: Points::new(80.0),
+                    height: Points::new(f32::MAX),
+                    alignment: Alignment::Left,
+                },
+            )
             .expect("Error wrapping text");
             assert_eq!(wrap.lines.len(), 2);
             assert_eq!(wrap.lines[0].spans.len(), 5); // "this"," ","line"," ","should"
@@ -280,7 +281,7 @@ mod tests {
         let (sender, _) = flume::unbounded();
         let mut scene = Scene::new(sender);
         scene.register_bundled_fonts();
-        let scene = Target::from(&scene);
+        let scene = Target::from(Arc::new(scene));
 
         let first_style = Style::new()
             .with(FontSize::<Scaled>::new(12.))
@@ -294,11 +295,14 @@ mod tests {
             Span::new("This line should ", first_style),
             Span::new("wrap", second_style),
         ])
-        .wrap(&scene, TextWrap::MultiLine {
-            width: Points::new(80.0),
-            height: Points::new(f32::MAX),
-            alignment: Alignment::Left,
-        })
+        .wrap(
+            &scene,
+            TextWrap::MultiLine {
+                width: Points::new(80.0),
+                height: Points::new(f32::MAX),
+                alignment: Alignment::Left,
+            },
+        )
         .expect("Error wrapping text");
         assert_eq!(wrap.lines.len(), 2);
         assert_eq!(wrap.lines[0].spans.len(), 5);

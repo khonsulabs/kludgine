@@ -55,13 +55,13 @@ impl Text {
         Self { spans }
     }
 
-    pub fn wrap(&self, scene: &Target<'_>, options: TextWrap) -> KludgineResult<PreparedText> {
+    pub fn wrap(&self, scene: &Target, options: TextWrap) -> KludgineResult<PreparedText> {
         TextWrapper::wrap(self, scene, options)
     }
 
     pub fn render_at(
         &self,
-        scene: &Target<'_>,
+        scene: &Target,
         location: Point<f32, Scaled>,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
@@ -70,7 +70,7 @@ impl Text {
 
     pub fn render_baseline_at(
         &self,
-        scene: &Target<'_>,
+        scene: &Target,
         location: Point<f32, Scaled>,
         wrapping: TextWrap,
     ) -> KludgineResult<()> {
@@ -79,7 +79,7 @@ impl Text {
 
     fn render_core(
         &self,
-        scene: &Target<'_>,
+        scene: &Target,
         location: Point<f32, Scaled>,
         offset_baseline: bool,
         wrapping: TextWrap,

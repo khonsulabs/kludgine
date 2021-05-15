@@ -34,20 +34,24 @@ enum StickGuy {
 }
 
 impl Window for SpriteSheetExample {
-    fn initialize(&mut self, _scene: &Target<'_>) -> KludgineResult<()> {
+    fn initialize(&mut self, _scene: &Target) -> KludgineResult<()> {
         let texture = include_texture!("assets/stickguy.png")?;
-        let sheet = SpriteSheet::new(texture, Size::new(32, 32), vec![
-            StickGuy::Idle1,
-            StickGuy::Idle2,
-            StickGuy::Idle3,
-            StickGuy::Idle4,
-            StickGuy::WalkRight1,
-            StickGuy::WalkRight2,
-            StickGuy::WalkRight3,
-            StickGuy::WalkLeft1,
-            StickGuy::WalkLeft2,
-            StickGuy::WalkLeft3,
-        ]);
+        let sheet = SpriteSheet::new(
+            texture,
+            Size::new(32, 32),
+            vec![
+                StickGuy::Idle1,
+                StickGuy::Idle2,
+                StickGuy::Idle3,
+                StickGuy::Idle4,
+                StickGuy::WalkRight1,
+                StickGuy::WalkRight2,
+                StickGuy::WalkRight3,
+                StickGuy::WalkLeft1,
+                StickGuy::WalkLeft2,
+                StickGuy::WalkLeft3,
+            ],
+        );
         let idle = SpriteAnimation::new(
             sheet
                 .sprites(vec![
@@ -106,7 +110,7 @@ impl Window for SpriteSheetExample {
         Ok(())
     }
 
-    fn update(&mut self, scene: &Target<'_>, status: &mut RedrawStatus) -> KludgineResult<()> {
+    fn update(&mut self, scene: &Target, status: &mut RedrawStatus) -> KludgineResult<()> {
         let sprite = self.sprite.as_mut().unwrap();
         // Update the current frame.
         self.current_frame = Some(sprite.get_frame(scene.elapsed())?);
@@ -120,7 +124,7 @@ impl Window for SpriteSheetExample {
         Ok(())
     }
 
-    fn render(&mut self, scene: &Target<'_>) -> KludgineResult<()> {
+    fn render(&mut self, scene: &Target) -> KludgineResult<()> {
         Shape::rect(Rect::new(Point::default(), scene.size()))
             .fill(Fill::new(Color::WHITE))
             .render_at(Point::default(), scene);

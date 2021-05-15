@@ -14,7 +14,7 @@ impl WindowCreator for TextExample {
 }
 
 impl Window for TextExample {
-    fn render(&mut self, scene: &Target<'_>) -> KludgineResult<()> {
+    fn render(&mut self, scene: &Target) -> KludgineResult<()> {
         let scale = scene.scale_factor();
         let spans = vec![
             Span::new(
@@ -40,10 +40,14 @@ impl Window for TextExample {
             ),
         ];
 
-        Text::new(spans).render_at(scene, Point::new(0.0, 120.0), TextWrap::SingleLine {
-            max_width: scene.size().width(),
-            truncate: false,
-            alignment: Alignment::Left,
-        })
+        Text::new(spans).render_at(
+            scene,
+            Point::new(0.0, 120.0),
+            TextWrap::SingleLine {
+                max_width: scene.size().width(),
+                truncate: false,
+                alignment: Alignment::Left,
+            },
+        )
     }
 }

@@ -58,7 +58,7 @@ impl PreparedText {
 
     pub fn render(
         &self,
-        scene: &Target<'_>,
+        scene: &Target,
         location: Point<f32, Scaled>,
         offset_baseline: bool,
     ) -> KludgineResult<Points> {

@@ -22,13 +22,13 @@ impl Window for Simple {
         Some(60)
     }
 
-    fn initialize(&mut self, _scene: &Target<'_>) -> KludgineResult<()> {
+    fn initialize(&mut self, _scene: &Target) -> KludgineResult<()> {
         let texture = Texture::load("examples/assets/k.png")?;
         self.source_sprite = Some(SpriteSource::entire_texture(texture));
         Ok(())
     }
 
-    fn update(&mut self, scene: &Target<'_>, _status: &mut RedrawStatus) -> KludgineResult<()> {
+    fn update(&mut self, scene: &Target, _status: &mut RedrawStatus) -> KludgineResult<()> {
         if let Some(elapsed) = scene.elapsed() {
             self.rotation_angle += Angle::radians(elapsed.as_secs_f32());
         }
@@ -36,7 +36,7 @@ impl Window for Simple {
         Ok(())
     }
 
-    fn render(&mut self, scene: &Target<'_>) -> KludgineResult<()> {
+    fn render(&mut self, scene: &Target) -> KludgineResult<()> {
         let sprite = self.source_sprite.as_ref().unwrap();
 
         let bounds = Rect::new(Point::default(), scene.size());

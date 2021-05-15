@@ -14,7 +14,7 @@ impl Circle<Scaled> {
     pub(crate) fn translate_and_convert_to_device(
         &self,
         location: Point<f32, Scaled>,
-        scene: &Target<'_>,
+        scene: &Target,
     ) -> Circle<Raw> {
         let effective_scale = scene.scale_factor();
         let center = (location + self.center.to_vector()) * effective_scale;

@@ -35,7 +35,7 @@ pub enum CloseResponse {
 
 /// Trait to implement a Window
 pub trait Window: Send + Sync + 'static {
-    fn initialize(&mut self, _scene: &Target<'_>) -> KludgineResult<()>
+    fn initialize(&mut self, _scene: &Target) -> KludgineResult<()>
     where
         Self: Sized,
     {
@@ -79,11 +79,11 @@ pub trait Window: Send + Sync + 'static {
         None
     }
 
-    fn render(&mut self, _scene: &Target<'_>) -> KludgineResult<()> {
+    fn render(&mut self, _scene: &Target) -> KludgineResult<()> {
         Ok(())
     }
 
-    fn update(&mut self, _scene: &Target<'_>, _status: &mut RedrawStatus) -> KludgineResult<()>
+    fn update(&mut self, _scene: &Target, _status: &mut RedrawStatus) -> KludgineResult<()>
     where
         Self: Sized,
     {

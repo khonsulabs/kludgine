@@ -79,7 +79,7 @@ impl<'a> TokenizerState<'a> {
     fn emit_token_if_needed(
         &mut self,
         scale: euclid::Scale<f32, Scaled, Raw>,
-        scene: &Target<'_>,
+        scene: &Target,
     ) -> Option<Token> {
         if self.glyphs.is_empty() {
             None
@@ -119,7 +119,7 @@ impl Tokenizer {
     pub(crate) fn prepare_spans(
         mut self,
         text: &Text,
-        scene: &Target<'_>,
+        scene: &Target,
     ) -> KludgineResult<Vec<Token>> {
         let scale = scene.scale_factor();
         let mut current_offset = 0usize;

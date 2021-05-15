@@ -122,11 +122,7 @@ impl RichText {
         }
     }
 
-    pub fn prepare(
-        &self,
-        scene: &Target<'_>,
-        wrapping: TextWrap,
-    ) -> KludgineResult<Vec<PreparedText>> {
+    pub fn prepare(&self, scene: &Target, wrapping: TextWrap) -> KludgineResult<Vec<PreparedText>> {
         let mut prepared = Vec::new();
         for paragraph in self.paragraphs.iter() {
             prepared.push(paragraph.wrap(scene, wrapping.clone())?);

@@ -37,13 +37,13 @@ where
         self.stagger = Some(stagger);
     }
 
-    pub fn draw(&mut self, scene: &Target<'_>, location: Point<f32, Scaled>) -> KludgineResult<()> {
+    pub fn draw(&mut self, scene: &Target, location: Point<f32, Scaled>) -> KludgineResult<()> {
         self.draw_scaled(scene, location, Scale::identity())
     }
 
     pub fn draw_scaled(
         &mut self,
-        scene: &Target<'_>,
+        scene: &Target,
         location: Point<f32, Scaled>,
         scale: Scale<f32, Unknown, Scaled>,
     ) -> KludgineResult<()> {
@@ -100,7 +100,7 @@ where
         &mut self,
         tile: Point<i32>,
         destination: Box2D<f32, Raw>,
-        scene: &Target<'_>,
+        scene: &Target,
         elapsed: Option<Duration>,
     ) -> KludgineResult<()> {
         if let Some(mut tile) = self.provider.get_tile(tile) {
@@ -181,8 +181,9 @@ impl PersistentTileSource {
             location,
             sprite: match self {
                 PersistentTileSource::Sprite(sprite) => TileSprite::Sprite(sprite),
-                PersistentTileSource::SpriteSource(source) =>
-                    TileSprite::SpriteSource(source.clone()),
+                PersistentTileSource::SpriteSource(source) => {
+                    TileSprite::SpriteSource(source.clone())
+                }
             },
         }
     }

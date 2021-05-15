@@ -1,5 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
+    sync::Arc,
     time::{Duration, Instant},
 };
 
@@ -47,8 +48,8 @@ pub struct Scene {
     system_theme: Theme,
 }
 
-impl<'a> From<&'a Scene> for Target<'a> {
-    fn from(scene: &'a Scene) -> Target<'a> {
+impl From<Arc<Scene>> for Target {
+    fn from(scene: Arc<Scene>) -> Target {
         Self {
             scene,
             clip: None,
@@ -58,16 +59,16 @@ impl<'a> From<&'a Scene> for Target<'a> {
 }
 
 #[derive(Clone, Debug)]
-pub struct Target<'a> {
-    pub scene: &'a Scene,
+pub struct Target {
+    pub scene: Arc<Scene>,
     pub clip: Option<Rect<u32, Raw>>,
     pub offset: Option<Vector<f32, Raw>>,
 }
 
-impl<'a> Target<'a> {
+impl Target {
     pub fn clipped_to(&self, new_clip: Rect<u32, Raw>) -> Self {
         Self {
-            scene: self.scene,
+            scene: self.scene.clone(),
             clip: Some(match &self.clip {
                 Some(existing_clip) => existing_clip.union(&new_clip),
                 None => new_clip,
@@ -78,7 +79,7 @@ impl<'a> Target<'a> {
 
     pub fn offset_by(&self, delta: Vector<f32, Raw>) -> Self {
         Self {
-            scene: self.scene,
+            scene: self.scene.clone(),
             clip: self.clip,
             offset: Some(match self.offset {
                 Some(offset) => offset + delta,
@@ -89,7 +90,7 @@ impl<'a> Target<'a> {
 
     pub fn offset_point(&self, point: Point<f32, Scaled>) -> Point<f32, Scaled> {
         match self.offset {
-            Some(offset) => point + offset / self.scene.scale_factor(),
+            Some(offset) => point + offset / self.scale_factor(),
             None => point,
         }
     }
@@ -102,11 +103,11 @@ impl<'a> Target<'a> {
     }
 }
 
-impl<'a> std::ops::Deref for Target<'a> {
+impl std::ops::Deref for Target {
     type Target = Scene;
 
     fn deref(&self) -> &Self::Target {
-        &self.scene
+        self.scene.as_ref()
     }
 }
 

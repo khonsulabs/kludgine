@@ -17,7 +17,7 @@ impl WindowCreator for Isometric {
 }
 static MAP_SIZE: u32 = 100;
 impl Window for Isometric {
-    fn initialize(&mut self, _scene: &Target<'_>) -> KludgineResult<()> {
+    fn initialize(&mut self, _scene: &Target) -> KludgineResult<()> {
         self.load_assets()?;
         // self.zoom = 1.0;
         // self.x = MAP_SIZE as f32 * 32.0 / 2.0;
@@ -25,7 +25,7 @@ impl Window for Isometric {
         Ok(())
     }
 
-    fn render(&mut self, scene: &Target<'_>) -> KludgineResult<()> {
+    fn render(&mut self, scene: &Target) -> KludgineResult<()> {
         let map = self.map.as_mut().unwrap();
         map.draw(scene, Point::default())?;
 

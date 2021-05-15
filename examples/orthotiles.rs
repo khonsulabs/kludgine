@@ -26,7 +26,7 @@ impl Window for OrthoTiles {
         Some(60)
     }
 
-    fn initialize(&mut self, _scene: &Target<'_>) -> KludgineResult<()> {
+    fn initialize(&mut self, _scene: &Target) -> KludgineResult<()> {
         self.load_assets()?;
         self.zoom = 1.0;
         // self.position.x = MAP_SIZE as f32 * 32.0 / 2.0;
@@ -34,7 +34,7 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    fn update(&mut self, scene: &Target<'_>, _status: &mut RedrawStatus) -> KludgineResult<()> {
+    fn update(&mut self, scene: &Target, _status: &mut RedrawStatus) -> KludgineResult<()> {
         let stickguy = self.stickguy.as_mut().unwrap();
         // Our default animation is Idle
         let mut animation = "Idle";
@@ -56,7 +56,7 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    fn render(&mut self, scene: &Target<'_>) -> KludgineResult<()> {
+    fn render(&mut self, scene: &Target) -> KludgineResult<()> {
         let center = scene.size().to_vector().to_point() / 2.0;
         let map = self.map.as_mut().unwrap();
         map.draw_scaled(

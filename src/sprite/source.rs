@@ -102,7 +102,7 @@ impl SpriteSource {
 
     pub fn render_at(
         &self,
-        scene: &Target<'_>,
+        scene: &Target,
         location: Point<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
@@ -111,7 +111,7 @@ impl SpriteSource {
 
     pub fn render_within(
         &self,
-        scene: &Target<'_>,
+        scene: &Target,
         bounds: Rect<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
@@ -120,7 +120,7 @@ impl SpriteSource {
 
     pub fn render_within_box(
         &self,
-        scene: &Target<'_>,
+        scene: &Target,
         bounds: Box2D<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
@@ -129,7 +129,7 @@ impl SpriteSource {
 
     pub fn render_at_with_alpha(
         &self,
-        scene: &Target<'_>,
+        scene: &Target,
         location: Point<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
@@ -144,7 +144,7 @@ impl SpriteSource {
 
     pub fn render_with_alpha(
         &self,
-        scene: &Target<'_>,
+        scene: &Target,
         bounds: Rect<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
@@ -154,7 +154,7 @@ impl SpriteSource {
 
     pub fn render_with_alpha_in_box(
         &self,
-        scene: &Target<'_>,
+        scene: &Target,
         bounds: Box2D<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
@@ -170,7 +170,7 @@ impl SpriteSource {
 
     pub fn render_raw_with_alpha_in_box(
         &self,
-        scene: &Target<'_>,
+        scene: &Target,
         bounds: Box2D<f32, Raw>,
         rotation: SpriteRotation<Raw>,
         alpha: f32,

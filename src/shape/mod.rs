@@ -81,7 +81,7 @@ where
 }
 
 impl Shape<Scaled> {
-    pub fn render_at(&self, location: Point<f32, Scaled>, scene: &Target<'_>) {
+    pub fn render_at(&self, location: Point<f32, Scaled>, scene: &Target) {
         let translated = self.convert_from_user_to_device(location, scene);
         scene.push_element(Element::Shape(translated))
     }
@@ -89,7 +89,7 @@ impl Shape<Scaled> {
     fn convert_from_user_to_device(
         &self,
         location: Point<f32, Scaled>,
-        scene: &Target<'_>,
+        scene: &Target,
     ) -> Shape<Raw> {
         Shape {
             geometry: self

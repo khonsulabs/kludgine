@@ -79,7 +79,7 @@ impl Path<Scaled> {
     pub(crate) fn translate_and_convert_to_device(
         &self,
         location: Point<f32, Scaled>,
-        scene: &Target<'_>,
+        scene: &Target,
     ) -> Path<Raw> {
         let effective_scale = scene.scale_factor();
         let location = scene.offset_point(location);

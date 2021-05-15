@@ -1,4 +1,7 @@
-use std::time::{Duration, Instant};
+use std::{
+    sync::Arc,
+    time::{Duration, Instant},
+};
 
 use flume::Sender;
 
@@ -14,7 +17,7 @@ use crate::{
 pub struct OpenWindow<T: Window> {
     window: T,
     pub(crate) redraw_status: RedrawStatus,
-    scene: Scene,
+    scene: Arc<Scene>,
 }
 
 pub struct RedrawStatus {
@@ -39,10 +42,11 @@ impl RedrawStatus {
             RedrawTarget::Never | RedrawTarget::None => {
                 self.next_redraw_target = RedrawTarget::Scheduled(instant);
             }
-            RedrawTarget::Scheduled(existing_instant) =>
+            RedrawTarget::Scheduled(existing_instant) => {
                 if instant < existing_instant {
                     self.next_redraw_target = RedrawTarget::Scheduled(instant);
-                },
+                }
+            }
         }
     }
 }
@@ -51,7 +55,7 @@ impl<T: Window> OpenWindow<T> {
     pub(crate) fn new(window: T, event_sender: Sender<WindowEvent>, scene: Scene) -> Self {
         Self {
             window,
-            scene,
+            scene: Arc::new(scene),
             redraw_status: RedrawStatus {
                 needs_render: true,
                 next_redraw_target: RedrawTarget::None,
@@ -110,7 +114,7 @@ impl<T: Window> OpenWindow<T> {
 
     pub(crate) fn initialize(&mut self) -> KludgineResult<()> {
         self.window.initialize(&Target {
-            scene: &self.scene,
+            scene: self.scene.clone(),
             clip: None,
             offset: None,
         })?;
@@ -120,7 +124,7 @@ impl<T: Window> OpenWindow<T> {
 
     pub(crate) fn render(&mut self) -> KludgineResult<()> {
         self.window.render(&Target {
-            scene: &self.scene,
+            scene: self.scene.clone(),
             clip: None,
             offset: None,
         })?;
@@ -135,7 +139,7 @@ impl<T: Window> OpenWindow<T> {
 
         self.window.update(
             &Target {
-                scene: &self.scene,
+                scene: self.scene.clone(),
                 clip: None,
                 offset: None,
             },
@@ -143,16 +147,17 @@ impl<T: Window> OpenWindow<T> {
         )
     }
 
-    pub(crate) fn scene(&self) -> Target<'_> {
+    pub(crate) fn scene(&self) -> Target {
         Target {
-            scene: &self.scene,
+            scene: self.scene.clone(),
             clip: None,
             offset: None,
         }
     }
 
     pub(crate) fn scene_mut(&mut self) -> &'_ mut Scene {
-        &mut self.scene
+        Arc::get_mut(&mut self.scene)
+            .expect("Unable to lock scene. Users should not store any references to `Target`")
     }
 }
 
@@ -188,12 +193,13 @@ impl UpdateSchedule {
     pub fn timeout_target(&self) -> Option<Instant> {
         match self {
             UpdateSchedule::Now => None,
-            UpdateSchedule::Scheduled(scheduled_for) =>
+            UpdateSchedule::Scheduled(scheduled_for) => {
                 if &Instant::now() > scheduled_for {
                     None
                 } else {
                     Some(*scheduled_for)
-                },
+                }
+            }
         }
     }
 }
