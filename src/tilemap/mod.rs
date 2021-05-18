@@ -181,9 +181,8 @@ impl PersistentTileSource {
             location,
             sprite: match self {
                 PersistentTileSource::Sprite(sprite) => TileSprite::Sprite(sprite),
-                PersistentTileSource::SpriteSource(source) => {
-                    TileSprite::SpriteSource(source.clone())
-                }
+                PersistentTileSource::SpriteSource(source) =>
+                    TileSprite::SpriteSource(source.clone()),
             },
         }
     }

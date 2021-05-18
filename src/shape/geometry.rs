@@ -35,12 +35,10 @@ impl ShapeGeometry<Scaled> {
     ) -> ShapeGeometry<Raw> {
         match self {
             Self::Empty => ShapeGeometry::Empty,
-            Self::Path(path) => {
-                ShapeGeometry::Path(path.translate_and_convert_to_device(location, scene))
-            }
-            Self::Circle(circle) => {
-                ShapeGeometry::Circle(circle.translate_and_convert_to_device(location, scene))
-            }
+            Self::Path(path) =>
+                ShapeGeometry::Path(path.translate_and_convert_to_device(location, scene)),
+            Self::Circle(circle) =>
+                ShapeGeometry::Circle(circle.translate_and_convert_to_device(location, scene)),
         }
     }
 }

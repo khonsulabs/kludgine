@@ -42,11 +42,10 @@ impl RedrawStatus {
             RedrawTarget::Never | RedrawTarget::None => {
                 self.next_redraw_target = RedrawTarget::Scheduled(instant);
             }
-            RedrawTarget::Scheduled(existing_instant) => {
+            RedrawTarget::Scheduled(existing_instant) =>
                 if instant < existing_instant {
                     self.next_redraw_target = RedrawTarget::Scheduled(instant);
-                }
-            }
+                },
         }
     }
 }
@@ -193,13 +192,12 @@ impl UpdateSchedule {
     pub fn timeout_target(&self) -> Option<Instant> {
         match self {
             UpdateSchedule::Now => None,
-            UpdateSchedule::Scheduled(scheduled_for) => {
+            UpdateSchedule::Scheduled(scheduled_for) =>
                 if &Instant::now() > scheduled_for {
                     None
                 } else {
                     Some(*scheduled_for)
-                }
-            }
+                },
         }
     }
 }

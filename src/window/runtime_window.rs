@@ -96,7 +96,8 @@ impl RuntimeWindow {
         let window_event_sender = event_sender.clone();
         let (scene_event_sender, scene_event_receiver) = flume::unbounded();
 
-        // Each window has its own thread/task operating its core update/render lifecycle.
+        // Each window has its own thread/task operating its core update/render
+        // lifecycle.
         std::thread::Builder::new()
             .name(String::from("kludgine-window-loop"))
             .spawn(move || {
@@ -246,9 +247,6 @@ impl RuntimeWindow {
         let mut scene = Scene::new(scene_event_sender);
         scene.set_system_theme(initial_system_theme);
 
-        #[cfg(feature = "bundled-fonts-enabled")]
-        scene.register_bundled_fonts();
-
         let target_fps = window.target_fps();
         let mut window = OpenWindow::new(window, event_sender, scene);
 
@@ -272,11 +270,10 @@ impl RuntimeWindow {
                             .set_internal_size(Size::new(size.width as f32, size.height as f32));
                         window.scene_mut().set_scale_factor(scale_factor);
                     }
-                    WindowEvent::CloseRequested => {
+                    WindowEvent::CloseRequested =>
                         if Self::request_window_close(id, &mut window)? {
                             return Ok(());
-                        }
-                    }
+                        },
                     WindowEvent::Input(input) => {
                         if let Event::Keyboard {
                             key: Some(key),

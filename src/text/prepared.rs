@@ -1,93 +1,12 @@
 use std::sync::Arc;
 
-use stylecs::Alignment;
-
 use crate::{
     color::Color,
-    math::{Pixels, Point, Points, Raw, Scaled, ScreenScale, Size, SizeExt, Vector},
+    math::{Pixels, Point, Raw, Scaled},
     scene::{Element, Target},
     text::Font,
     KludgineResult,
 };
-
-#[derive(Default, Debug, Clone)]
-pub struct PreparedText {
-    pub lines: Vec<PreparedLine>,
-}
-
-impl PreparedText {
-    pub fn size(&self) -> Size<f32, Raw> {
-        let line_sizes = self.lines.iter().map(|line| line.size());
-        let (width, height) = line_sizes.fold(
-            (Pixels::default(), Pixels::default()),
-            |(width, height), line_size| {
-                (width.max(line_size.width()), height + line_size.height())
-            },
-        );
-        Size::from_lengths(width, height)
-    }
-
-    #[allow(clippy::needless_collect)] // The collect gets id of the borrow.
-    pub(crate) fn align(
-        &mut self,
-        alignment: Alignment,
-        width: Points,
-        effective_scale: ScreenScale,
-    ) {
-        let line_sizes = self
-            .lines
-            .iter()
-            .map(|line| line.size())
-            .collect::<Vec<_>>();
-
-        for (i, size) in line_sizes.into_iter().enumerate() {
-            match alignment {
-                Alignment::Left => {
-                    self.lines[i].alignment_offset = Points::default();
-                }
-                Alignment::Center => {
-                    self.lines[i].alignment_offset =
-                        (width - (size.width() / effective_scale)) / 2.;
-                }
-                Alignment::Right => {
-                    self.lines[i].alignment_offset = width - size.width() / effective_scale;
-                }
-            }
-        }
-    }
-
-    pub fn render(
-        &self,
-        scene: &Target,
-        location: Point<f32, Scaled>,
-        offset_baseline: bool,
-    ) -> KludgineResult<Points> {
-        let mut current_line_baseline = Points::new(0.);
-        let effective_scale_factor = scene.scale_factor();
-
-        for (line_index, line) in self.lines.iter().enumerate() {
-            if offset_baseline || line_index > 0 {
-                current_line_baseline += line.metrics.ascent / effective_scale_factor;
-            }
-            let metrics = line.metrics;
-            let cursor_position =
-                location + Vector::from_lengths(line.alignment_offset, current_line_baseline);
-            for span in line.spans.iter() {
-                let location = scene.offset_point_raw(
-                    (cursor_position + span.location.to_vector() / effective_scale_factor)
-                        * effective_scale_factor,
-                );
-                scene.push_element(Element::Text {
-                    span: span.translate(location),
-                    clip: scene.clip,
-                });
-            }
-            current_line_baseline += (metrics.line_gap - metrics.descent) / effective_scale_factor;
-        }
-
-        Ok(current_line_baseline)
-    }
-}
 
 #[derive(Copy, Clone, Debug)]
 pub struct VMetrics {
@@ -113,33 +32,6 @@ impl VMetrics {
 
     pub fn height(&self) -> Pixels {
         self.ascent - self.descent
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct PreparedLine {
-    pub spans: Vec<PreparedSpan>,
-    pub metrics: VMetrics,
-    pub alignment_offset: Points,
-}
-
-impl PreparedLine {
-    pub fn size(&self) -> Size<f32, Raw> {
-        if self.spans.is_empty() {
-            return Size::from_lengths(Pixels::default(), self.height());
-        }
-
-        let width = self
-            .spans
-            .iter()
-            .map(|s| s.data.width)
-            .fold(Pixels::default(), |sum, s| sum + s);
-
-        Size::from_lengths(width, self.height())
-    }
-
-    pub fn height(&self) -> Pixels {
-        self.metrics.line_height()
     }
 }
 
@@ -181,8 +73,26 @@ impl PreparedSpan {
         }
     }
 
-    pub(crate) fn metrics(&self) -> rusttype::VMetrics {
+    pub fn metrics(&self) -> rusttype::VMetrics {
         self.data.font.metrics(self.data.size)
+    }
+
+    pub fn render_baseline_at(
+        &self,
+        scene: &Target,
+        location: Point<f32, Scaled>,
+    ) -> KludgineResult<()> {
+        let effective_scale_factor = scene.scale_factor();
+
+        let location = scene.offset_point_raw(
+            (location + self.location.to_vector() / effective_scale_factor)
+                * effective_scale_factor,
+        );
+        scene.push_element(Element::Text {
+            span: self.translate(location),
+            clip: scene.clip,
+        });
+        Ok(())
     }
 }
 

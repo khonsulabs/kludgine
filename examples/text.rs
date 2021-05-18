@@ -1,5 +1,5 @@
 extern crate kludgine;
-use kludgine::prelude::*;
+use kludgine::{prelude::*, text::bundled_fonts::ROBOTO};
 
 fn main() {
     SingleWindowApplication::run(TextExample {});
@@ -15,39 +15,13 @@ impl WindowCreator for TextExample {
 
 impl Window for TextExample {
     fn render(&mut self, scene: &Target) -> KludgineResult<()> {
-        let scale = scene.scale_factor();
-        let spans = vec![
-            Span::new(
-                "Wrapping ",
-                Style::new()
-                    .with(ForegroundColor(Color::RED.into()))
-                    .with(FontSize::new(120.))
-                    .to_screen_scale(scale),
-            ),
-            Span::new(
-                "rapped ",
-                Style::new()
-                    .with(ForegroundColor(Color::WHITE.into()))
-                    .with(FontSize::new(60.))
-                    .to_screen_scale(scale),
-            ),
-            Span::new(
-                "Words to live by",
-                Style::new()
-                    .with(ForegroundColor(Color::BLUE.into()))
-                    .with(FontSize::new(120.))
-                    .to_screen_scale(scale),
-            ),
-        ];
-
-        Text::new(spans).render_at(
+        Text::prepare(
+            "Hello, World!",
+            &ROBOTO,
+            Points::new(64.),
+            Color::BISQUE,
             scene,
-            Point::new(0.0, 120.0),
-            TextWrap::SingleLine {
-                max_width: scene.size().width(),
-                truncate: false,
-                alignment: Alignment::Left,
-            },
         )
+        .render_baseline_at(scene, Point::new(64., 64.))
     }
 }

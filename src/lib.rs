@@ -116,11 +116,6 @@ pub mod window;
 
 /// Convenience module that exports the public interface of Kludgine
 pub mod prelude {
-    pub use stylecs::{
-        Alignment, AnyStyleComponent, BackgroundColor, ColorPair, ComponentCollection, FontFamily,
-        FontSize, FontStyle, ForegroundColor, GenericStyle, Style, StyleComponent, StyleSheet,
-        UnscaledStyleComponent, VerticalAlignment, Weight,
-    };
     pub use winit::event::*;
 
     #[cfg(feature = "bundled-fonts-enabled")]
@@ -143,12 +138,7 @@ pub mod prelude {
             SpriteFrame, SpriteMap, SpriteRotation, SpriteSheet, SpriteSource,
             SpriteSourceSublocation,
         },
-        text::{
-            font::Font,
-            rich::{RichText, RichTextPosition},
-            wrap::TextWrap,
-            Span, Text,
-        },
+        text::{font::Font, prepared::PreparedSpan, Text},
         texture::Texture,
         tilemap::{
             PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,

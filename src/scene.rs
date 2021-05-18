@@ -6,7 +6,6 @@ use std::{
 
 use euclid::Rect;
 use platforms::target::{OS, TARGET_OS};
-use stylecs::{FontStyle, Weight};
 use winit::{event::VirtualKeyCode, window::Theme};
 
 use crate::{
@@ -14,7 +13,6 @@ use crate::{
     shape::Shape,
     sprite::RenderedSprite,
     text::{font::Font, prepared::PreparedSpan},
-    KludgineError, KludgineResult,
 };
 
 #[derive(Debug)]
@@ -235,71 +233,53 @@ impl Scene {
         self.elapsed.is_none()
     }
 
-    pub fn register_font(&mut self, font: &Font) {
-        let family = font.family().expect("Unable to register VecFonts");
-        self.fonts
-            .entry(family)
-            .and_modify(|fonts| fonts.push(font.clone()))
-            .or_insert_with(|| vec![font.clone()]);
-    }
+    // pub fn register_font(&mut self, font: &Font) {
+    //     let family = font.family().expect("Unable to register VecFonts");
+    //     self.fonts
+    //         .entry(family)
+    //         .and_modify(|fonts| fonts.push(font.clone()))
+    //         .or_insert_with(|| vec![font.clone()]);
+    // }
 
-    #[cfg(feature = "bundled-fonts-enabled")]
-    pub(crate) fn register_bundled_fonts(&mut self) {
-        #[cfg(feature = "bundled-fonts-roboto")]
-        {
-            self.register_font(&crate::text::bundled_fonts::ROBOTO);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_ITALIC);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_BLACK);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_BLACK_ITALIC);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_BOLD);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_BOLD_ITALIC);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_LIGHT);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_LIGHT_ITALIC);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_MEDIUM);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_MEDIUM_ITALIC);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_THIN);
-            self.register_font(&crate::text::bundled_fonts::ROBOTO_THIN_ITALIC);
-        }
-    }
+    // pub fn lookup_font(
+    //     &self,
+    //     family: &str,
+    //     weight: Weight,
+    //     style: FontStyle,
+    // ) -> KludgineResult<Font> {
+    //     let fonts = self.fonts.get(family);
 
-    pub fn lookup_font(
-        &self,
-        family: &str,
-        weight: Weight,
-        style: FontStyle,
-    ) -> KludgineResult<Font> {
-        let fonts = self.fonts.get(family);
+    //     match fonts {
+    //         Some(fonts) => {
+    //             let mut closest_font = None;
+    //             let mut closest_weight = None;
 
-        match fonts {
-            Some(fonts) => {
-                let mut closest_font = None;
-                let mut closest_weight = None;
+    //             for font in fonts.iter() {
+    //                 let font_weight = font.weight();
+    //                 let font_style = font.style();
 
-                for font in fonts.iter() {
-                    let font_weight = font.weight();
-                    let font_style = font.style();
+    //                 if font_weight == weight && font_style == style {
+    //                     return Ok(font.clone());
+    //                 } else {
+    //                     // If it's not the right style, we want to heavily
+    // penalize the score                     // But if no font matches the
+    // style, we should pick the weight that matches                     // best
+    // in another style.                     let style_multiplier = if
+    // font_style == style { 1 } else { 10 };                     let delta =
+    // (font.weight().to_number() as i32 - weight.to_number() as i32)
+    //                         .abs()
+    //                         * style_multiplier;
 
-                    if font_weight == weight && font_style == style {
-                        return Ok(font.clone());
-                    } else {
-                        // If it's not the right style, we want to heavily penalize the score
-                        // But if no font matches the style, we should pick the weight that matches
-                        // best in another style.
-                        let style_multiplier = if font_style == style { 1 } else { 10 };
-                        let delta = (font.weight().to_number() as i32 - weight.to_number() as i32)
-                            .abs()
-                            * style_multiplier;
+    //                     if closest_weight.is_none() || closest_weight.unwrap() >
+    // delta {                         closest_weight = Some(delta);
+    //                         closest_font = Some(font.clone());
+    //                     }
+    //                 }
+    //             }
 
-                        if closest_weight.is_none() || closest_weight.unwrap() > delta {
-                            closest_weight = Some(delta);
-                            closest_font = Some(font.clone());
-                        }
-                    }
-                }
-
-                closest_font.ok_or_else(|| KludgineError::FontFamilyNotFound(family.to_owned()))
-            }
-            None => Err(KludgineError::FontFamilyNotFound(family.to_owned())),
-        }
-    }
+    //             closest_font.ok_or_else(||
+    // KludgineError::FontFamilyNotFound(family.to_owned()))         }
+    //         None => Err(KludgineError::FontFamilyNotFound(family.to_owned())),
+    //     }
+    // }
 }

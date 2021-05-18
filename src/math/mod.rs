@@ -24,37 +24,3 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Unknown;
-
-pub(crate) fn max_f(a: f32, b: f32) -> f32 {
-    if a > b {
-        a
-    } else {
-        b
-    }
-}
-
-pub(crate) fn min_f(a: f32, b: f32) -> f32 {
-    if a < b {
-        a
-    } else {
-        b
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use approx::assert_relative_eq;
-
-    use super::*;
-
-    #[test]
-    fn min_max_tests() {
-        assert_relative_eq!(min_f(0.0, 1.0), 0.0);
-        assert_relative_eq!(min_f(1.0, 0.0), 0.0);
-        assert_relative_eq!(min_f(0.0, 0.0), 0.0);
-
-        assert_relative_eq!(max_f(0.0, 1.0), 1.0);
-        assert_relative_eq!(max_f(1.0, 0.0), 1.0);
-        assert_relative_eq!(max_f(0.0, 0.0), 0.0);
-    }
-}
