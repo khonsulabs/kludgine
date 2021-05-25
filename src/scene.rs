@@ -68,7 +68,7 @@ impl Target {
         Self {
             scene: self.scene.clone(),
             clip: Some(match &self.clip {
-                Some(existing_clip) => existing_clip.union(&new_clip),
+                Some(existing_clip) => existing_clip.intersection(&new_clip).unwrap_or_default(),
                 None => new_clip,
             }),
             offset: self.offset,
