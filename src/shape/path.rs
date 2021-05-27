@@ -70,9 +70,50 @@ impl From<PathEvent<Raw>> for LyonPathEvent {
     }
 }
 
+impl<U> PathEvent<U> {
+    pub fn cast_unit<V>(self) -> PathEvent<V> {
+        match self {
+            Self::Begin { at } => PathEvent::Begin { at: at.cast_unit() },
+            Self::Line { from, to } => PathEvent::Line {
+                from: from.cast_unit(),
+                to: to.cast_unit(),
+            },
+            Self::Quadratic { from, ctrl, to } => PathEvent::Quadratic {
+                from: from.cast_unit(),
+                ctrl: ctrl.cast_unit(),
+                to: to.cast_unit(),
+            },
+            Self::Cubic {
+                from,
+                ctrl1,
+                ctrl2,
+                to,
+            } => PathEvent::Cubic {
+                from: from.cast_unit(),
+                ctrl1: ctrl1.cast_unit(),
+                ctrl2: ctrl2.cast_unit(),
+                to: to.cast_unit(),
+            },
+            Self::End { last, first, close } => PathEvent::End {
+                last: last.cast_unit(),
+                first: first.cast_unit(),
+                close,
+            },
+        }
+    }
+}
+
 #[derive(Default, Debug, Clone)]
 pub struct Path<S> {
     events: Vec<PathEvent<S>>,
+}
+
+impl<U> Path<U> {
+    pub fn cast_unit<V>(self) -> Path<V> {
+        Path {
+            events: self.events.into_iter().map(|e| e.cast_unit()).collect(),
+        }
+    }
 }
 
 impl Path<Scaled> {

@@ -10,6 +10,15 @@ pub(crate) struct Circle<S> {
     pub radius: Length<f32, S>,
 }
 
+impl<U> Circle<U> {
+    pub fn cast_unit<V>(self) -> Circle<V> {
+        Circle {
+            center: self.center.cast_unit(),
+            radius: self.radius.cast_unit(),
+        }
+    }
+}
+
 impl Circle<Scaled> {
     pub(crate) fn translate_and_convert_to_device(
         &self,

@@ -78,6 +78,14 @@ where
         self.stroke = Some(stroke);
         self
     }
+
+    pub fn cast_unit<U>(self) -> Shape<U> {
+        Shape {
+            geometry: self.geometry.cast_unit(),
+            fill: self.fill,
+            stroke: self.stroke,
+        }
+    }
 }
 
 impl Shape<Scaled> {

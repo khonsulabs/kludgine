@@ -59,7 +59,6 @@ euclid = "0.22"
 serde = { version = "1", optional = true, features = ["derive"] }
 instant = "0.1.9"
 bytemuck = { version = "1", features = ["derive"] }
-stylecs = { git = "https://github.com/khonsulabs/stylecs.git", branch = "main" }
 
 tracing = { version = "0.1", optional = true }
 tracing-futures = { version = "0.2", optional = true }
@@ -86,6 +85,3 @@ required-features = ["bundled-fonts-roboto"]
 # [patch.crates-io] # must be commented out for CI to succeed
 # easygpu = { path = "../easygpu" }
 # easygpu-lyon = { path = "../easygpu-lyon" }
-
-# [patch."https://github.com/khonsulabs/stylecs.git"]
-# stylecs = { path = "../stylecs" }

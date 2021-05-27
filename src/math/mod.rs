@@ -15,8 +15,13 @@ pub use euclid::{Box2D, Length, Scale};
 pub type ScreenScale = Scale<f32, Scaled, Raw>;
 pub type Angle = euclid::Angle<f32>;
 
-pub type Raw = stylecs::Pixels;
-pub type Scaled = stylecs::Points;
+/// A unit representing physical pixels on a display.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Raw;
+
+/// A unit representing [Desktop publishing points/PostScript points](https://en.wikipedia.org/wiki/Point_(typography)#Desktop_publishing_point). Measurements in this scale are equal to 1/72 of an [imperial inch](https://en.wikipedia.org/wiki/Inch).
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Scaled;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};

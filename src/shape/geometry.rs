@@ -12,6 +12,16 @@ pub(crate) enum ShapeGeometry<S> {
     Circle(Circle<S>),
 }
 
+impl<U> ShapeGeometry<U> {
+    pub fn cast_unit<V>(self) -> ShapeGeometry<V> {
+        match self {
+            Self::Empty => ShapeGeometry::Empty,
+            Self::Path(path) => ShapeGeometry::Path(path.cast_unit()),
+            Self::Circle(circle) => ShapeGeometry::Circle(circle.cast_unit()),
+        }
+    }
+}
+
 impl ShapeGeometry<Raw> {
     pub fn build(
         &self,
