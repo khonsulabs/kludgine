@@ -1,4 +1,3 @@
-extern crate kludgine;
 use kludgine::{prelude::*, text::bundled_fonts::ROBOTO};
 
 fn main() {

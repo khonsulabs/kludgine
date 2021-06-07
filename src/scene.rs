@@ -16,7 +16,7 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub(crate) enum Element {
+pub enum Element {
     Sprite {
         sprite: RenderedSprite,
         clip: Option<Rect<u32, Raw>>,
@@ -28,7 +28,7 @@ pub(crate) enum Element {
     Shape(Shape<Raw>),
 }
 
-pub(crate) enum SceneEvent {
+pub enum SceneEvent {
     Render(Element),
     EndFrame,
     BeginFrame { size: Size<f32, Raw> },
@@ -53,6 +53,12 @@ impl From<Arc<Scene>> for Target {
             clip: None,
             offset: None,
         }
+    }
+}
+
+impl From<Scene> for Target {
+    fn from(scene: Scene) -> Target {
+        Self::from(Arc::new(scene))
     }
 }
 
@@ -99,6 +105,10 @@ impl Target {
             None => point,
         }
     }
+
+    pub fn scene_mut(&mut self) -> Option<&mut Scene> {
+        Arc::get_mut(&mut self.scene)
+    }
 }
 
 impl std::ops::Deref for Target {
@@ -133,7 +143,7 @@ impl Modifiers {
 }
 
 impl Scene {
-    pub(crate) fn new(event_sender: flume::Sender<SceneEvent>) -> Self {
+    pub fn new(event_sender: flume::Sender<SceneEvent>) -> Self {
         Self {
             event_sender,
             scale_factor: Scale::identity(),
@@ -158,7 +168,7 @@ impl Scene {
         let _ = self.event_sender.send(SceneEvent::Render(element));
     }
 
-    pub(crate) fn set_internal_size(&mut self, size: Size<f32, Raw>) {
+    pub fn set_internal_size(&mut self, size: Size<f32, Raw>) {
         self.size = size;
     }
 
@@ -201,7 +211,7 @@ impl Scene {
         }
     }
 
-    pub(crate) fn start_frame(&mut self) {
+    pub fn start_frame(&mut self) {
         let last_start = self.now;
         self.now = Some(Instant::now());
         self.elapsed = match last_start {
@@ -213,7 +223,7 @@ impl Scene {
             .send(SceneEvent::BeginFrame { size: self.size });
     }
 
-    pub(crate) fn end_frame(&self) {
+    pub fn end_frame(&self) {
         let _ = self.event_sender.send(SceneEvent::EndFrame);
     }
 

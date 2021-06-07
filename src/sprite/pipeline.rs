@@ -3,6 +3,7 @@ use std::{marker::PhantomData, ops::Deref};
 use bytemuck::{Pod, Zeroable};
 use easygpu::{prelude::*, wgpu::TextureFormat};
 
+use super::{Normal, Srgb};
 use crate::math::{Angle, Point, Raw};
 
 /// A pipeline for rendering shapes.
@@ -140,9 +141,6 @@ pub trait VertexShaderSource {
         <Self::Lyon as easygpu_lyon::VertexShaderSource>::sampler_format()
     }
 }
-
-pub struct Srgb;
-pub struct Normal;
 
 impl VertexShaderSource for Srgb {
     type Lyon = easygpu_lyon::Srgb;

@@ -3,3 +3,4 @@ target/
 .vscode/
 Cargo.lock
 *.xcuserdatad/
+test.png

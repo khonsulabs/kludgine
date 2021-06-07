@@ -1,4 +1,3 @@
-extern crate kludgine;
 use std::time::Duration;
 
 use kludgine::prelude::*;

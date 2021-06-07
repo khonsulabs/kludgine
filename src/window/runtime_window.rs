@@ -12,11 +12,11 @@ use super::OpenWindow;
 use crate::{
     math::{Pixels, Point, ScreenScale, Size},
     prelude::Scene,
+    renderer::FrameRenderer,
     runtime::{Runtime, WINDOWS},
     scene::SceneEvent,
     window::{
         event::{ElementState, Event, InputEvent, VirtualKeyCode, WindowEvent},
-        renderer::FrameRenderer,
         CloseResponse, Renderer, Window, WindowMessage, WINDOW_CHANNELS,
     },
     KludgineError, KludgineResult, KludgineResultExt,
@@ -113,17 +113,12 @@ impl RuntimeWindow {
             .unwrap();
 
         let renderer = Runtime::block_on(async move {
-            Renderer::new(surface, &instance)
+            Renderer::for_surface(surface, &instance)
                 .await
                 .expect("Error creating renderer for window")
         });
 
-        FrameRenderer::<Format>::run(
-            renderer,
-            task_keep_running,
-            scene_event_receiver,
-            initial_size,
-        );
+        FrameRenderer::<Format>::run(renderer, task_keep_running, scene_event_receiver);
 
         {
             let mut channels = WINDOW_CHANNELS.lock().unwrap();

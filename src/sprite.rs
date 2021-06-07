@@ -8,10 +8,6 @@ mod collection;
 mod gpu_batch;
 mod pipeline;
 mod sheet;
-#[cfg(target_arch = "wasm32")]
-pub(crate) use self::pipeline::Normal;
-#[cfg(not(target_arch = "wasm32"))]
-pub(crate) use self::pipeline::Srgb;
 pub(crate) use self::{
     batch::Batch,
     gpu_batch::{BatchBuffers, GpuBatch},
@@ -471,7 +467,7 @@ impl SpriteFrameBuilder {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct RenderedSprite {
+pub struct RenderedSprite {
     pub(crate) data: Arc<RenderedSpriteData>,
 }
 
@@ -544,3 +540,6 @@ impl<A, B> std::ops::Mul<Scale<f32, A, B>> for SpriteRotation<A> {
         }
     }
 }
+
+pub struct Srgb;
+pub struct Normal;

@@ -1,4 +1,3 @@
-extern crate kludgine;
 use kludgine::prelude::*;
 
 fn main() {

@@ -105,10 +105,13 @@ pub mod color;
 mod delay;
 mod ext;
 pub mod math;
+pub mod renderer;
 pub mod runtime;
 pub mod scene;
 pub mod shape;
 pub mod sprite;
+#[cfg(test)]
+mod tests;
 pub mod text;
 pub mod texture;
 pub mod tilemap;

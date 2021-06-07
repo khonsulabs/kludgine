@@ -1,31 +1,38 @@
 use std::{
     collections::HashMap,
+    num::NonZeroU32,
     sync::{Arc, Mutex},
 };
 
 use crossbeam::atomic::AtomicCell;
 use easygpu::{
     prelude::*,
-    wgpu::{FilterMode, COPY_BYTES_PER_ROW_ALIGNMENT},
+    wgpu::{Buffer, Extent3d, FilterMode, Origin3d, TextureUsage, COPY_BYTES_PER_ROW_ALIGNMENT},
 };
 use easygpu_lyon::LyonPipeline;
+use futures::FutureExt;
+use image::DynamicImage;
+use instant::Duration;
 
 use crate::{
+    delay,
     math::{Box2D, Point, Size, Unknown},
     runtime::RuntimeRequest,
     scene::SceneEvent,
     sprite::{self, VertexShaderSource},
-    window::frame::{FontUpdate, Frame, FrameCommand},
     KludgineResult,
 };
 
-pub(crate) struct FrameRenderer<T>
+pub mod frame;
+use frame::{FontUpdate, Frame, FrameCommand};
+
+pub struct FrameRenderer<T>
 where
     T: VertexShaderSource,
 {
     keep_running: Arc<AtomicCell<bool>>,
     renderer: Renderer,
-    swap_chain: SwapChain,
+    destination: Destination,
     sprite_pipeline: sprite::Pipeline<T>,
     shape_pipeline: LyonPipeline<T::Lyon>,
     gpu_state: Mutex<GpuState>,
@@ -35,6 +42,40 @@ where
 #[derive(Default)]
 struct GpuState {
     textures: HashMap<u64, BindingGroup>,
+}
+
+enum Destination {
+    Uninitialized,
+    SwapChain(SwapChain),
+    Texture {
+        color: Texture,
+        depth: DepthBuffer,
+        output: Buffer,
+    },
+}
+
+enum Output<'a> {
+    SwapChain(SwapChainTexture<'a>),
+    Texture {
+        color: &'a Texture,
+        depth: &'a DepthBuffer,
+    },
+}
+
+impl<'a> RenderTarget for Output<'a> {
+    fn color_target(&self) -> &wgpu::TextureView {
+        match self {
+            Output::SwapChain(swap) => swap.color_target(),
+            Output::Texture { color, .. } => &color.view,
+        }
+    }
+
+    fn zdepth_target(&self) -> &wgpu::TextureView {
+        match self {
+            Output::SwapChain(swap) => swap.zdepth_target(),
+            Output::Texture { depth, .. } => &depth.texture.view,
+        }
+    }
 }
 
 enum RenderCommand {
@@ -51,15 +92,13 @@ where
         renderer: Renderer,
         keep_running: Arc<AtomicCell<bool>>,
         scene_event_receiver: flume::Receiver<SceneEvent>,
-        initial_size: Size<u32, ScreenSpace>,
     ) -> Self {
-        let swap_chain = renderer.swap_chain(initial_size, PresentMode::Vsync, T::sampler_format());
         let shape_pipeline = renderer.pipeline(Blending::default(), T::sampler_format());
         let sprite_pipeline = renderer.pipeline(Blending::default(), T::sampler_format());
         Self {
             renderer,
             keep_running,
-            swap_chain,
+            destination: Destination::Uninitialized,
             sprite_pipeline,
             shape_pipeline,
             scene_event_receiver,
@@ -67,20 +106,79 @@ where
         }
     }
 
-    /// Launches a thread that renders the results of the window-loop
-    /// generating frames.
+    /// Launches a thread that renders the results of the `SceneEvent`s.
     pub fn run(
         renderer: Renderer,
         keep_running: Arc<AtomicCell<bool>>,
         scene_event_receiver: flume::Receiver<SceneEvent>,
-        initial_size: Size<u32, ScreenSpace>,
     ) {
-        let frame_renderer =
-            FrameRenderer::<T>::new(renderer, keep_running, scene_event_receiver, initial_size);
+        let frame_renderer = Self::new(renderer, keep_running, scene_event_receiver);
         std::thread::Builder::new()
             .name(String::from("kludgine-frame-renderer"))
             .spawn(move || frame_renderer.render_loop())
             .unwrap();
+    }
+
+    /// Launches a thread that renders the results of the `SceneEvent`s.
+    pub async fn render_one_frame(
+        renderer: Renderer,
+        scene_event_receiver: flume::Receiver<SceneEvent>,
+    ) -> KludgineResult<DynamicImage> {
+        let mut frame_renderer = Self::new(renderer, Arc::default(), scene_event_receiver);
+        let mut frame = Frame::default();
+        frame.update(&frame_renderer.scene_event_receiver);
+        frame_renderer.render_frame(&mut frame)?;
+        if let Destination::Texture { output, .. } = frame_renderer.destination {
+            let data = output.slice(..);
+            let mut map_async = Box::pin(data.map_async(wgpu::MapMode::Read).fuse());
+            let wgpu_device = frame_renderer.renderer.device.wgpu;
+            let mut poll_loop = Box::pin(
+                async move {
+                    loop {
+                        wgpu_device.poll(wgpu::Maintain::Poll);
+                        delay::Delay::new(Duration::from_millis(1)).await;
+                    }
+                }
+                .fuse(),
+            );
+            while futures::select! {
+                _ = map_async => false,
+                _ = poll_loop => true,
+            } {}
+
+            let bytes = data.get_mapped_range().to_vec();
+
+            let frame_size = frame.size.cast::<usize>();
+            let bytes_per_row = size_for_aligned_copy(frame_size.width * 4);
+            Ok(image::DynamicImage::ImageBgra8(
+                if bytes_per_row == frame_size.width * 4 {
+                    image::ImageBuffer::from_vec(
+                        frame_size.width as u32,
+                        frame_size.height as u32,
+                        bytes,
+                    )
+                    .unwrap()
+                } else {
+                    image::ImageBuffer::from_fn(
+                        frame_size.width as u32,
+                        frame_size.height as u32,
+                        move |x, y| {
+                            let offset = y as usize * bytes_per_row + x as usize * 4;
+                            // TODO this is swizzling assuming BGRA, but if we get to webgl, this is
+                            // likely going to be RGBA
+                            image::Bgra([
+                                bytes[offset],
+                                bytes[offset + 1],
+                                bytes[offset + 2],
+                                bytes[offset + 3],
+                            ])
+                        },
+                    )
+                },
+            ))
+        } else {
+            panic!("render_one_frame only works with an offscreen renderer")
+        }
     }
 
     fn render_loop(mut self) {
@@ -99,30 +197,94 @@ where
         }
     }
 
+    fn create_destination(renderer: &Renderer, frame_size: Size<u32, ScreenSpace>) -> Destination {
+        if renderer.device.surface.is_some() {
+            Destination::SwapChain(renderer.swap_chain(
+                frame_size,
+                PresentMode::Vsync,
+                T::sampler_format(),
+            ))
+        } else {
+            let color = renderer.texture(
+                frame_size,
+                T::sampler_format(),
+                TextureUsage::SAMPLED
+                    | TextureUsage::COPY_DST
+                    | TextureUsage::COPY_SRC
+                    | TextureUsage::RENDER_ATTACHMENT,
+            );
+            let depth = renderer.device.create_zbuffer(frame_size);
+            let output = renderer.device.wgpu.create_buffer(&wgpu::BufferDescriptor {
+                label: Some("output buffer"),
+                size: buffer_size(frame_size) as u64,
+                usage: wgpu::BufferUsage::COPY_DST | wgpu::BufferUsage::MAP_READ,
+                mapped_at_creation: false,
+            });
+            Destination::Texture {
+                color,
+                depth,
+                output,
+            }
+        }
+    }
+
     fn render_frame(&mut self, engine_frame: &mut Frame) -> KludgineResult<()> {
         let frame_size = engine_frame.size.cast::<u32>();
         if frame_size.width == 0 || frame_size.height == 0 {
             return Ok(());
         }
 
-        if self.swap_chain.size != frame_size {
-            self.swap_chain =
-                self.renderer
-                    .swap_chain(frame_size, PresentMode::Vsync, T::sampler_format());
-        }
+        let output = match &mut self.destination {
+            Destination::Uninitialized => {
+                self.destination = Self::create_destination(&self.renderer, frame_size);
+                return self.render_frame(engine_frame);
+            }
+            Destination::SwapChain(swap_chain) => {
+                if swap_chain.size != frame_size {
+                    *swap_chain = self.renderer.swap_chain(
+                        frame_size,
+                        PresentMode::Vsync,
+                        T::sampler_format(),
+                    );
+                }
 
-        let output = match self.swap_chain.next_texture() {
-            Ok(texture) => texture,
-            Err(wgpu::SwapChainError::Outdated) => return Ok(()), /* Ignore outdated, we'll draw */
-            // next time.
-            Err(err) => panic!("Unrecoverable error on swap chain {:?}", err),
+                let output = match swap_chain.next_texture() {
+                    Ok(texture) => texture,
+                    Err(wgpu::SwapChainError::Outdated) => return Ok(()), /* Ignore outdated,
+                                                                            * we'll draw */
+                    // next time.
+                    Err(err) => panic!("Unrecoverable error on swap chain {:?}", err),
+                };
+                Output::SwapChain(output)
+            }
+            Destination::Texture {
+                color,
+                depth,
+                output,
+            } => {
+                if color.size != frame_size {
+                    if let Destination::Texture {
+                        color: new_color,
+                        depth: new_depth,
+                        output: new_output,
+                    } = Self::create_destination(&self.renderer, frame_size)
+                    {
+                        *color = new_color;
+                        *depth = new_depth;
+                        *output = new_output;
+                    } else {
+                        unreachable!()
+                    }
+                }
+                Output::Texture { color, depth }
+            }
         };
         let mut frame = self.renderer.frame();
 
         let ortho = ScreenTransformation::ortho(
             0.,
-            output.size.width as f32,
-            output.size.height as f32,
+            frame_size.width as f32,
+            frame_size.height as f32,
             0.,
             -1.,
             1.,
@@ -146,9 +308,11 @@ where
             {
                 let mut loaded_font = engine_frame.fonts.get_mut(font_id).unwrap();
                 if loaded_font.texture.is_none() {
-                    let texture = self
-                        .renderer
-                        .texture(Size::new(512, 512), T::texture_format()); // TODO font texture should be configurable
+                    let texture = self.renderer.texture(
+                        Size::new(512, 512),
+                        T::texture_format(),
+                        TextureUsage::SAMPLED | TextureUsage::COPY_DST,
+                    ); // TODO font texture should be configurable
                     let sampler = self
                         .renderer
                         .sampler(FilterMode::Linear, FilterMode::Linear);
@@ -220,6 +384,7 @@ where
                                     self.renderer.texture(
                                         Size::new(w, h).cast::<u32>(),
                                         T::texture_format(),
+                                        TextureUsage::SAMPLED | TextureUsage::COPY_DST,
                                     ),
                                     pixels.to_owned(),
                                     texture.id,
@@ -341,6 +506,31 @@ where
             }
         }
 
+        if let Destination::Texture { output, color, .. } = &self.destination {
+            frame.encoder_mut().copy_texture_to_buffer(
+                wgpu::ImageCopyTexture {
+                    texture: &color.wgpu,
+                    mip_level: 0,
+                    origin: Origin3d::ZERO,
+                },
+                wgpu::ImageCopyBuffer {
+                    buffer: output,
+                    layout: wgpu::ImageDataLayout {
+                        offset: 0,
+                        bytes_per_row: NonZeroU32::new(size_for_aligned_copy(
+                            frame_size.width as usize * 4,
+                        ) as u32),
+                        rows_per_image: NonZeroU32::new(frame_size.height as u32),
+                    },
+                },
+                Extent3d {
+                    width: frame_size.width,
+                    height: frame_size.height,
+                    depth_or_array_layers: 1,
+                },
+            );
+        }
+
         self.renderer.present(frame);
 
         Ok(())
@@ -351,4 +541,8 @@ fn size_for_aligned_copy(bytes: usize) -> usize {
     let chunks =
         (bytes + COPY_BYTES_PER_ROW_ALIGNMENT as usize - 1) / COPY_BYTES_PER_ROW_ALIGNMENT as usize;
     chunks * COPY_BYTES_PER_ROW_ALIGNMENT as usize
+}
+
+fn buffer_size(size: Size<u32, ScreenSpace>) -> usize {
+    size_for_aligned_copy(size.width as usize * 4) * size.height as usize
 }
