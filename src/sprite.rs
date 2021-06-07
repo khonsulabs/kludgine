@@ -428,8 +428,6 @@ pub struct SpriteFrame {
 
 pub struct SpriteFrameBuilder {
     source: SpriteSource,
-    tag: Option<String>,
-    tag_frame: Option<usize>,
     duration: Option<Duration>,
 }
 
@@ -437,20 +435,8 @@ impl SpriteFrameBuilder {
     pub fn new(source: SpriteSource) -> Self {
         Self {
             source,
-            tag: None,
-            tag_frame: None,
             duration: None,
         }
-    }
-
-    pub fn with_tag<S: Into<String>>(mut self, tag: S) -> Self {
-        self.tag = Some(tag.into());
-        self
-    }
-
-    pub fn with_tag_frame(mut self, frame: usize) -> Self {
-        self.tag_frame = Some(frame);
-        self
     }
 
     pub fn with_duration(mut self, duration: Duration) -> Self {
