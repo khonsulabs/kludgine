@@ -21,23 +21,23 @@ fn compile_shaders() -> Result<(), devx_cmd::Error> {
     println!("Building sprite fragment shader");
     run!(
         "glslc",
-        "kludgine/src/sprite/shaders/sprite.frag",
+        "core/src/sprite/shaders/sprite.frag",
         "-o",
-        "kludgine/src/sprite/shaders/sprite.frag.spv",
+        "core/src/sprite/shaders/sprite.frag.spv",
     )?;
     println!("Building sprite vertex shader");
     run!(
         "glslc",
-        "kludgine/src/sprite/shaders/sprite.vert",
+        "core/src/sprite/shaders/sprite.vert",
         "-o",
-        "kludgine/src/sprite/shaders/sprite.vert.spv",
+        "core/src/sprite/shaders/sprite.vert.spv",
     )?;
     println!("Building sprite SRGB vertex shader");
     run!(
         "glslc",
-        "kludgine/src/sprite/shaders/sprite-srgb.vert",
+        "core/src/sprite/shaders/sprite-srgb.vert",
         "-o",
-        "kludgine/src/sprite/shaders/sprite-srgb.vert.spv",
+        "core/src/sprite/shaders/sprite-srgb.vert.spv",
     )?;
 
     Ok(())

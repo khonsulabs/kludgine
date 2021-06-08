@@ -2,7 +2,6 @@ use crate::{
     math::{Point, Raw, Scale, Scaled},
     scene::Target,
     shape::{circle::Circle, Fill, Path, Stroke},
-    KludgineResult,
 };
 
 #[derive(Clone, Debug)]
@@ -28,7 +27,7 @@ impl ShapeGeometry<Raw> {
         builder: &mut easygpu_lyon::ShapeBuilder,
         stroke: &Option<Stroke>,
         fill: &Option<Fill>,
-    ) -> KludgineResult<()> {
+    ) -> crate::Result<()> {
         match self {
             Self::Empty => Ok(()),
             Self::Path(path) => path.build(builder, stroke, fill),

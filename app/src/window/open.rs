@@ -3,15 +3,14 @@ use std::{
     time::{Duration, Instant},
 };
 
-use flume::Sender;
+use kludgine_core::{
+    flume::Sender,
+    scene::{Scene, Target},
+};
 
 use super::{
     event::{InputEvent, WindowEvent},
     CloseResponse, Window,
-};
-use crate::{
-    scene::{Scene, Target},
-    KludgineResult,
 };
 
 pub struct OpenWindow<T: Window> {
@@ -98,20 +97,20 @@ impl<T: Window> OpenWindow<T> {
             }
     }
 
-    pub(crate) fn request_close(&mut self) -> KludgineResult<CloseResponse> {
+    pub(crate) fn request_close(&mut self) -> crate::Result<CloseResponse> {
         self.window.close_requested()
     }
 
-    pub(crate) fn process_input(&mut self, input: InputEvent) -> KludgineResult<()> {
+    pub(crate) fn process_input(&mut self, input: InputEvent) -> crate::Result<()> {
         self.window.process_input(input, &mut self.redraw_status)
     }
 
-    pub(crate) fn receive_character(&mut self, character: char) -> KludgineResult<()> {
+    pub(crate) fn receive_character(&mut self, character: char) -> crate::Result<()> {
         self.window
             .receive_character(character, &mut self.redraw_status)
     }
 
-    pub(crate) fn initialize(&mut self) -> KludgineResult<()> {
+    pub(crate) fn initialize(&mut self) -> crate::Result<()> {
         self.window.initialize(&Target {
             scene: self.scene.clone(),
             clip: None,
@@ -121,7 +120,7 @@ impl<T: Window> OpenWindow<T> {
         Ok(())
     }
 
-    pub(crate) fn render(&mut self) -> KludgineResult<()> {
+    pub(crate) fn render(&mut self) -> crate::Result<()> {
         self.window.render(&Target {
             scene: self.scene.clone(),
             clip: None,
@@ -133,7 +132,7 @@ impl<T: Window> OpenWindow<T> {
         Ok(())
     }
 
-    pub(crate) fn update(&mut self, target_fps: Option<u16>) -> KludgineResult<()> {
+    pub(crate) fn update(&mut self, target_fps: Option<u16>) -> crate::Result<()> {
         self.initialize_redraw_target(target_fps);
 
         self.window.update(

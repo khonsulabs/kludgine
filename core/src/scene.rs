@@ -160,7 +160,7 @@ impl Scene {
         self.system_theme
     }
 
-    pub(crate) fn set_system_theme(&mut self, system_theme: Theme) {
+    pub fn set_system_theme(&mut self, system_theme: Theme) {
         self.system_theme = system_theme;
     }
 
@@ -177,7 +177,7 @@ impl Scene {
     //     scene.size
     // }
 
-    pub(crate) fn set_scale_factor(&mut self, scale_factor: ScreenScale) {
+    pub fn set_scale_factor(&mut self, scale_factor: ScreenScale) {
         self.scale_factor = scale_factor;
     }
 

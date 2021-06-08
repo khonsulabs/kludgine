@@ -1,13 +1,19 @@
-use std::{path::Path, sync::Arc};
+use std::{
+    path::Path,
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc,
+    },
+};
 
-use crossbeam::atomic::AtomicCell;
 use image::{DynamicImage, RgbaImage};
 use lazy_static::lazy_static;
+use winit::window::Icon;
 
-use crate::{math::Size, window::Icon, KludgineResult};
+use crate::math::Size;
 
 lazy_static! {
-    static ref GLOBAL_ID_CELL: AtomicCell<u64> = AtomicCell::new(0);
+    static ref GLOBAL_ID_CELL: AtomicU64 = AtomicU64::new(0);
 }
 
 #[macro_export]
@@ -27,20 +33,20 @@ pub struct Texture {
 impl Texture {
     pub fn new(image: DynamicImage) -> Self {
         let image = image.to_rgba8();
-        let id = GLOBAL_ID_CELL.fetch_add(1);
+        let id = GLOBAL_ID_CELL.fetch_add(1, Ordering::SeqCst);
         Self {
             id,
             image: Arc::new(image),
         }
     }
 
-    pub fn load<P: AsRef<Path>>(from_path: P) -> KludgineResult<Self> {
+    pub fn load<P: AsRef<Path>>(from_path: P) -> crate::Result<Self> {
         let img = image::open(from_path)?;
 
         Ok(Self::new(img))
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> KludgineResult<Self> {
+    pub fn from_bytes(bytes: &[u8]) -> crate::Result<Self> {
         let img = image::load_from_memory(bytes)?;
 
         Ok(Self::new(img))

@@ -1,9 +1,10 @@
-pub use winit::event::{
+pub use kludgine_core::winit::event::{
     DeviceId, ElementState, MouseButton, MouseScrollDelta, ScanCode, TouchPhase, VirtualKeyCode,
 };
-use winit::window::Theme;
-
-use crate::math::{Point, Scaled, ScreenScale, Size};
+use kludgine_core::{
+    math::{Point, Scaled, ScreenScale, Size},
+    winit::window::Theme,
+};
 
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum EventStatus {

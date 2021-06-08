@@ -3,15 +3,19 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use easygpu::prelude::*;
-use lazy_static::lazy_static;
-use winit::window::{Theme, WindowBuilder as WinitWindowBuilder, WindowId};
-
-use crate::{
+use kludgine_core::{
+    easygpu::prelude::*,
+    flume,
     math::{Scaled, Size},
     scene::Target,
-    KludgineError, KludgineResult,
+    winit::{
+        self,
+        window::{Theme, WindowBuilder as WinitWindowBuilder, WindowId},
+    },
 };
+use lazy_static::lazy_static;
+
+use crate::Error;
 
 pub mod event;
 pub(crate) mod open;
@@ -33,7 +37,7 @@ pub enum CloseResponse {
 
 /// Trait to implement a Window
 pub trait Window: Send + Sync + 'static {
-    fn initialize(&mut self, _scene: &Target) -> KludgineResult<()>
+    fn initialize(&mut self, _scene: &Target) -> crate::Result<()>
     where
         Self: Sized,
     {
@@ -42,16 +46,12 @@ pub trait Window: Send + Sync + 'static {
     /// The window was requested to be closed, most likely from the Close
     /// Button. Override this implementation if you want logic in place to
     /// prevent a window from closing.
-    fn close_requested(&mut self) -> KludgineResult<CloseResponse> {
+    fn close_requested(&mut self) -> crate::Result<CloseResponse> {
         Ok(CloseResponse::Close)
     }
 
     /// The window has received an input event.
-    fn process_input(
-        &mut self,
-        _input: InputEvent,
-        _status: &mut RedrawStatus,
-    ) -> KludgineResult<()>
+    fn process_input(&mut self, _input: InputEvent, _status: &mut RedrawStatus) -> crate::Result<()>
     where
         Self: Sized,
     {
@@ -63,7 +63,7 @@ pub trait Window: Send + Sync + 'static {
         &mut self,
         _character: char,
         _status: &mut RedrawStatus,
-    ) -> KludgineResult<()>
+    ) -> crate::Result<()>
     where
         Self: Sized,
     {
@@ -77,11 +77,11 @@ pub trait Window: Send + Sync + 'static {
         None
     }
 
-    fn render(&mut self, _scene: &Target) -> KludgineResult<()> {
+    fn render(&mut self, _scene: &Target) -> crate::Result<()> {
         Ok(())
     }
 
-    fn update(&mut self, _scene: &Target, _status: &mut RedrawStatus) -> KludgineResult<()>
+    fn update(&mut self, _scene: &Target, _status: &mut RedrawStatus) -> crate::Result<()>
     where
         Self: Sized,
     {
@@ -268,13 +268,13 @@ pub(crate) enum WindowMessage {
 }
 
 impl WindowMessage {
-    pub fn send_to(self, id: WindowId) -> KludgineResult<()> {
+    pub fn send_to(self, id: WindowId) -> crate::Result<()> {
         let sender = {
             let mut channels = WINDOW_CHANNELS.lock().unwrap();
             if let Some(sender) = channels.get_mut(&id) {
                 sender.clone()
             } else {
-                return Err(KludgineError::InternalWindowMessageSendError(
+                return Err(Error::InternalWindowMessageSendError(
                     "Channel not found for id".to_owned(),
                 ));
             }

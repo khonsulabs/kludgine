@@ -1,19 +1,22 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::atomic::Ordering};
 
 use crossbeam::{
     channel::{unbounded, Receiver, Sender},
     sync::ShardedLock,
 };
-use platforms::target::{OS, TARGET_OS};
-use winit::{
-    event::Event,
-    window::{Theme, WindowId},
+use kludgine_core::{
+    flume,
+    winit::{
+        self,
+        event::Event,
+        window::{Theme, WindowId},
+    },
 };
+use platforms::target::{OS, TARGET_OS};
 
 use crate::{
     application::Application,
     window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig, Window, WindowBuilder},
-    KludgineResult,
 };
 
 pub(crate) enum RuntimeRequest {
@@ -27,7 +30,7 @@ pub(crate) enum RuntimeRequest {
 }
 
 impl RuntimeRequest {
-    pub fn send(self) -> KludgineResult<()> {
+    pub fn send(self) -> crate::Result<()> {
         let sender: Sender<RuntimeRequest> = {
             let guard = GLOBAL_RUNTIME_SENDER.lock().expect("Error locking mutex");
             match *guard {
@@ -48,7 +51,7 @@ pub(crate) enum RuntimeEvent {
 
 use std::sync::Mutex;
 
-use lazy_static::lazy_static;
+use kludgine_core::lazy_static::lazy_static;
 
 pub trait EventProcessor: Send + Sync {
     fn process_event(
@@ -119,7 +122,7 @@ where
             .expect("Error encountered running application loop");
     }
 
-    fn run(mut self) -> KludgineResult<()>
+    fn run(mut self) -> crate::Result<()>
     where
         App: Application + 'static,
     {
@@ -366,7 +369,7 @@ impl Runtime {
             {
                 let mut winit_windows = WINIT_WINDOWS.write().unwrap();
                 windows.retain(|id, w| {
-                    if w.keep_running.load() {
+                    if w.keep_running.load(Ordering::SeqCst) {
                         true
                     } else {
                         winit_windows.remove(&id);

@@ -1,30 +1,39 @@
-use std::{sync::Arc, time::Duration};
-
-use crossbeam::atomic::AtomicCell;
-use easygpu::prelude::*;
-use once_cell::sync::OnceCell;
-use winit::{
-    event::WindowEvent as WinitWindowEvent,
-    window::{Theme, WindowId},
+use std::{
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    time::{Duration, Instant},
 };
+
+use kludgine_core::{
+    easygpu::prelude::*,
+    flume,
+    math::{Pixels, Point, ScreenScale, Size},
+    renderer::FrameRenderer,
+    scene::{Scene, SceneEvent},
+    winit::{
+        self,
+        event::WindowEvent as WinitWindowEvent,
+        window::{Theme, WindowId},
+    },
+};
+use once_cell::sync::OnceCell;
+use tracing::instrument;
 
 use super::OpenWindow;
 use crate::{
-    math::{Pixels, Point, ScreenScale, Size},
-    prelude::Scene,
-    renderer::FrameRenderer,
-    runtime::{Runtime, WINDOWS},
-    scene::SceneEvent,
+    runtime::{Runtime, RuntimeRequest, WINDOWS},
     window::{
         event::{ElementState, Event, InputEvent, VirtualKeyCode, WindowEvent},
         CloseResponse, Renderer, Window, WindowMessage, WINDOW_CHANNELS,
     },
-    KludgineError, KludgineResult, KludgineResultExt,
+    Error,
 };
 
 pub(crate) struct RuntimeWindow {
     pub window_id: WindowId,
-    pub keep_running: Arc<AtomicCell<bool>>,
+    pub keep_running: Arc<AtomicBool>,
     receiver: flume::Receiver<WindowMessage>,
     event_sender: flume::Sender<WindowEvent>,
     last_known_size: Size,
@@ -66,9 +75,9 @@ fn set_opened_first_window() {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-type Format = crate::sprite::Srgb;
+type Format = kludgine_core::sprite::Srgb;
 #[cfg(target_arch = "wasm32")]
-type Format = crate::sprite::Normal;
+type Format = kludgine_core::sprite::Normal;
 
 impl RuntimeWindow {
     pub(crate) fn open<T>(
@@ -91,7 +100,7 @@ impl RuntimeWindow {
         let (message_sender, message_receiver) = flume::unbounded();
         let (event_sender, event_receiver) = flume::unbounded();
 
-        let keep_running = Arc::new(AtomicCell::new(true));
+        let keep_running = Arc::new(AtomicBool::new(true));
         let task_keep_running = keep_running.clone();
         let window_event_sender = event_sender.clone();
         let (scene_event_sender, scene_event_receiver) = flume::unbounded();
@@ -118,7 +127,9 @@ impl RuntimeWindow {
                 .expect("Error creating renderer for window")
         });
 
-        FrameRenderer::<Format>::run(renderer, task_keep_running, scene_event_receiver);
+        FrameRenderer::<Format>::run(renderer, task_keep_running, scene_event_receiver, || {
+            RuntimeRequest::WindowClosed.send().unwrap();
+        });
 
         {
             let mut channels = WINDOW_CHANNELS.lock().unwrap();
@@ -141,7 +152,7 @@ impl RuntimeWindow {
         set_opened_first_window();
     }
 
-    fn request_window_close<T>(id: WindowId, window: &mut OpenWindow<T>) -> KludgineResult<bool>
+    fn request_window_close<T>(id: WindowId, window: &mut OpenWindow<T>) -> crate::Result<bool>
     where
         T: Window,
     {
@@ -155,22 +166,22 @@ impl RuntimeWindow {
 
     fn next_window_event_non_blocking(
         event_receiver: &mut flume::Receiver<WindowEvent>,
-    ) -> KludgineResult<Option<WindowEvent>> {
+    ) -> crate::Result<Option<WindowEvent>> {
         match event_receiver.try_recv() {
             Ok(event) => Ok(Some(event)),
             Err(flume::TryRecvError::Empty) => Ok(None),
-            Err(flume::TryRecvError::Disconnected) => Err(
-                KludgineError::InternalWindowMessageSendError("Window channel closed".to_owned()),
-            ),
+            Err(flume::TryRecvError::Disconnected) => Err(Error::InternalWindowMessageSendError(
+                "Window channel closed".to_owned(),
+            )),
         }
     }
 
     fn next_window_event_blocking(
         event_receiver: &mut flume::Receiver<WindowEvent>,
-    ) -> KludgineResult<Option<WindowEvent>> {
+    ) -> crate::Result<Option<WindowEvent>> {
         match event_receiver.recv() {
             Ok(event) => Ok(Some(event)),
-            Err(_) => Err(KludgineError::InternalWindowMessageSendError(
+            Err(_) => Err(Error::InternalWindowMessageSendError(
                 "Window channel closed".to_owned(),
             )),
         }
@@ -179,11 +190,11 @@ impl RuntimeWindow {
     fn next_window_event_timeout(
         event_receiver: &mut flume::Receiver<WindowEvent>,
         wait_for: Duration,
-    ) -> KludgineResult<Option<WindowEvent>> {
+    ) -> crate::Result<Option<WindowEvent>> {
         match event_receiver.recv_timeout(wait_for) {
             Ok(event) => Ok(Some(event)),
             Err(flume::RecvTimeoutError::Timeout) => Ok(None),
-            Err(_) => Err(KludgineError::InternalWindowMessageSendError(
+            Err(_) => Err(Error::InternalWindowMessageSendError(
                 "Window channel closed".to_owned(),
             )),
         }
@@ -192,7 +203,7 @@ impl RuntimeWindow {
     fn next_window_event<T>(
         event_receiver: &mut flume::Receiver<WindowEvent>,
         window: &OpenWindow<T>,
-    ) -> KludgineResult<Option<WindowEvent>>
+    ) -> crate::Result<Option<WindowEvent>>
     where
         T: Window,
     {
@@ -214,7 +225,7 @@ impl RuntimeWindow {
             } else if let Some(redraw_at) = next_redraw_target.next_update_instant() {
                 let timeout_target = redraw_at.timeout_target();
                 let remaining_time = timeout_target
-                    .map(|t| t.checked_duration_since(instant::Instant::now()))
+                    .map(|t| t.checked_duration_since(Instant::now()))
                     .flatten();
                 if let Some(remaining_time) = remaining_time {
                     Self::next_window_event_timeout(event_receiver, remaining_time)
@@ -235,7 +246,7 @@ impl RuntimeWindow {
         mut event_receiver: flume::Receiver<WindowEvent>,
         initial_system_theme: Theme,
         window: T,
-    ) -> KludgineResult<()>
+    ) -> crate::Result<()>
     where
         T: Window,
     {
@@ -247,9 +258,7 @@ impl RuntimeWindow {
 
         window.initialize()?;
         loop {
-            while let Some(event) = match Self::next_window_event(&mut event_receiver, &window)
-                .filter_invalid_component_references()
-            {
+            while let Some(event) = match Self::next_window_event(&mut event_receiver, &window) {
                 Ok(event) => event,
                 Err(_) => return Ok(()),
             } {
@@ -302,8 +311,7 @@ impl RuntimeWindow {
                 let modifiers = window.scene().modifiers_pressed();
                 if modifiers.primary_modifier()
                     && window.scene().key_pressed(VirtualKeyCode::W)
-                    && Self::request_window_close(id, &mut window)
-                        .filter_invalid_component_references()?
+                    && Self::request_window_close(id, &mut window)?
                 {
                     return Ok(());
                 }
@@ -361,7 +369,7 @@ impl RuntimeWindow {
                 WindowMessage::Close => {
                     let mut channels = WINDOW_CHANNELS.lock().unwrap();
                     channels.remove(&self.window_id);
-                    self.keep_running.store(false);
+                    self.keep_running.store(false, Ordering::SeqCst);
                 }
             }
         }
@@ -373,10 +381,7 @@ impl RuntimeWindow {
             .unwrap_or_default();
     }
 
-    #[cfg_attr(
-        feature = "tracing",
-        instrument(name = "RuntimeWindow::process_event", level = "trace", skip(self))
-    )]
+    #[instrument(name = "RuntimeWindow::process_event", level = "trace", skip(self))]
     pub(crate) fn process_event(&mut self, event: &WinitWindowEvent) {
         match event {
             WinitWindowEvent::CloseRequested => {

@@ -5,7 +5,6 @@ use crate::{
     math::{Pixels, Point, Raw, Scaled},
     scene::{Element, Target},
     text::Font,
-    KludgineResult,
 };
 
 #[derive(Copy, Clone, Debug)]
@@ -81,7 +80,7 @@ impl PreparedSpan {
         &self,
         scene: &Target,
         location: Point<f32, Scaled>,
-    ) -> KludgineResult<()> {
+    ) -> crate::Result<()> {
         let effective_scale_factor = scene.scale_factor();
 
         let location = scene.offset_point_raw(

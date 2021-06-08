@@ -4,13 +4,11 @@ use std::{
     time::Duration,
 };
 
-use euclid::Rect;
-
-use crate::{
+use kludgine_core::{
+    euclid::Rect,
     math::{Box2D, Length, Point, PointExt, Raw, Scale, Scaled, Size, SizeExt, Unknown},
     scene::Target,
     sprite::{Sprite, SpriteRotation, SpriteSource},
-    KludgineResult,
 };
 
 /// TileMap renders tiles retrieved from a TileProvider
@@ -37,7 +35,11 @@ where
         self.stagger = Some(stagger);
     }
 
-    pub fn draw(&mut self, scene: &Target, location: Point<f32, Scaled>) -> KludgineResult<()> {
+    pub fn draw(
+        &mut self,
+        scene: &Target,
+        location: Point<f32, Scaled>,
+    ) -> kludgine_core::Result<()> {
         self.draw_scaled(scene, location, Scale::identity())
     }
 
@@ -46,7 +48,7 @@ where
         scene: &Target,
         location: Point<f32, Scaled>,
         scale: Scale<f32, Unknown, Scaled>,
-    ) -> KludgineResult<()> {
+    ) -> kludgine_core::Result<()> {
         let tile_height = if let Some(stagger) = &self.stagger {
             stagger.height
         } else {
@@ -102,7 +104,7 @@ where
         destination: Box2D<f32, Raw>,
         scene: &Target,
         elapsed: Option<Duration>,
-    ) -> KludgineResult<()> {
+    ) -> kludgine_core::Result<()> {
         if let Some(mut tile) = self.provider.get_tile(tile) {
             let sprite = tile.sprite.get_frame(elapsed)?;
             sprite.render_raw_with_alpha_in_box(scene, destination, SpriteRotation::default(), 1.);
@@ -135,7 +137,7 @@ impl<'a> From<SpriteSource> for TileSprite<'a> {
 }
 
 impl<'a> TileSprite<'a> {
-    pub fn get_frame(&mut self, elapsed: Option<Duration>) -> KludgineResult<SpriteSource> {
+    pub fn get_frame(&mut self, elapsed: Option<Duration>) -> kludgine_core::Result<SpriteSource> {
         match self {
             TileSprite::Sprite(sprite) => sprite.get_frame(elapsed),
             TileSprite::SpriteSource(source) => Ok(source.clone()),

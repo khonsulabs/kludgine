@@ -1,6 +1,11 @@
-use std::sync::Arc;
+use std::{
+    fmt::Debug,
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc,
+    },
+};
 
-use crossbeam::atomic::AtomicCell;
 use easygpu::prelude::*;
 use lazy_static::lazy_static;
 use rusttype::{gpu_cache, Scale};
@@ -8,7 +13,7 @@ use rusttype::{gpu_cache, Scale};
 use crate::math::Pixels;
 
 lazy_static! {
-    static ref GLOBAL_ID_CELL: AtomicCell<u64> = AtomicCell::new(0);
+    static ref GLOBAL_ID_CELL: AtomicU64 = AtomicU64::new(0);
 }
 
 #[macro_export]
@@ -28,7 +33,7 @@ pub struct Font {
 impl Font {
     pub fn try_from_bytes(bytes: &'static [u8]) -> Option<Font> {
         let font = rusttype::Font::try_from_bytes(bytes)?;
-        let id = GLOBAL_ID_CELL.fetch_add(1);
+        let id = GLOBAL_ID_CELL.fetch_add(1, Ordering::SeqCst);
         Some(Font {
             handle: Arc::new(FontData { id, font }),
         })
@@ -66,14 +71,21 @@ pub(crate) struct FontData {
     pub(crate) font: rusttype::Font<'static>,
 }
 
-#[derive(Derivative)]
-#[derivative(Debug)]
 pub(crate) struct LoadedFont {
     pub font: Font,
-    #[derivative(Debug = "ignore")]
     pub cache: gpu_cache::Cache<'static>,
     pub(crate) binding: Option<BindingGroup>,
     pub(crate) texture: Option<Texture>,
+}
+
+impl Debug for LoadedFont {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("LoadedFont")
+            .field("font", &self.font)
+            .field("binding", &self.binding)
+            .field("texture", &self.texture)
+            .finish()
+    }
 }
 
 impl LoadedFont {

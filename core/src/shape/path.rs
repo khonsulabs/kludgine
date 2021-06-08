@@ -4,7 +4,7 @@ use crate::{
     math::{Point, Raw, Scale, Scaled, ScreenScale},
     scene::Target,
     shape::{Fill, Stroke},
-    KludgineError, KludgineResult,
+    Error,
 };
 
 pub type Endpoint<S> = Point<f32, S>;
@@ -180,20 +180,20 @@ impl Path<Raw> {
         builder: &mut easygpu_lyon::ShapeBuilder,
         stroke: &Option<Stroke>,
         fill: &Option<Fill>,
-    ) -> KludgineResult<()> {
+    ) -> crate::Result<()> {
         let path = self.as_lyon();
         if let Some(fill) = fill {
             builder.default_color = fill.color.rgba();
             builder
                 .fill(&path, &fill.options)
-                .map_err(KludgineError::TessellationError)?;
+                .map_err(Error::TessellationError)?;
         }
 
         if let Some(stroke) = stroke {
             builder.default_color = stroke.color.rgba();
             builder
                 .stroke(&path, &stroke.options)
-                .map_err(KludgineError::TessellationError)?;
+                .map_err(Error::TessellationError)?;
         }
 
         Ok(())

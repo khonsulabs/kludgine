@@ -13,7 +13,6 @@ pub use self::{batch::*, fill::*, path::*, stroke::*};
 use crate::{
     math::{Point, Raw, Rect, Scaled},
     scene::{Element, Target},
-    KludgineResult,
 };
 
 #[derive(Default, Clone, Debug)]
@@ -110,7 +109,7 @@ impl Shape<Scaled> {
 }
 
 impl Shape<Raw> {
-    pub(crate) fn build(&self, builder: &mut easygpu_lyon::ShapeBuilder) -> KludgineResult<()> {
+    pub(crate) fn build(&self, builder: &mut easygpu_lyon::ShapeBuilder) -> crate::Result<()> {
         self.geometry.build(builder, &self.stroke, &self.fill)
     }
 }

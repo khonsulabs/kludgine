@@ -1,10 +1,12 @@
 use std::{
     collections::HashMap,
     num::NonZeroU32,
-    sync::{Arc, Mutex},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex,
+    },
 };
 
-use crossbeam::atomic::AtomicCell;
 use easygpu::{
     prelude::*,
     wgpu::{Buffer, Extent3d, FilterMode, Origin3d, TextureUsage, COPY_BYTES_PER_ROW_ALIGNMENT},
@@ -17,10 +19,8 @@ use instant::Duration;
 use crate::{
     delay,
     math::{Box2D, Point, Size, Unknown},
-    runtime::RuntimeRequest,
     scene::SceneEvent,
     sprite::{self, VertexShaderSource},
-    KludgineResult,
 };
 
 pub mod frame;
@@ -30,7 +30,8 @@ pub struct FrameRenderer<T>
 where
     T: VertexShaderSource,
 {
-    keep_running: Arc<AtomicCell<bool>>,
+    keep_running: Arc<AtomicBool>,
+    shutdown: Option<Box<dyn ShutdownCallback>>,
     renderer: Renderer,
     destination: Destination,
     sprite_pipeline: sprite::Pipeline<T>,
@@ -90,7 +91,7 @@ where
 {
     fn new(
         renderer: Renderer,
-        keep_running: Arc<AtomicCell<bool>>,
+        keep_running: Arc<AtomicBool>,
         scene_event_receiver: flume::Receiver<SceneEvent>,
     ) -> Self {
         let shape_pipeline = renderer.pipeline(Blending::default(), T::sampler_format());
@@ -102,17 +103,20 @@ where
             sprite_pipeline,
             shape_pipeline,
             scene_event_receiver,
+            shutdown: None,
             gpu_state: Mutex::new(GpuState::default()),
         }
     }
 
     /// Launches a thread that renders the results of the `SceneEvent`s.
-    pub fn run(
+    pub fn run<F: ShutdownCallback>(
         renderer: Renderer,
-        keep_running: Arc<AtomicCell<bool>>,
+        keep_running: Arc<AtomicBool>,
         scene_event_receiver: flume::Receiver<SceneEvent>,
+        shutdown_callback: F,
     ) {
-        let frame_renderer = Self::new(renderer, keep_running, scene_event_receiver);
+        let mut frame_renderer = Self::new(renderer, keep_running, scene_event_receiver);
+        frame_renderer.shutdown = Some(Box::new(shutdown_callback));
         std::thread::Builder::new()
             .name(String::from("kludgine-frame-renderer"))
             .spawn(move || frame_renderer.render_loop())
@@ -123,7 +127,7 @@ where
     pub async fn render_one_frame(
         renderer: Renderer,
         scene_event_receiver: flume::Receiver<SceneEvent>,
-    ) -> KludgineResult<DynamicImage> {
+    ) -> crate::Result<DynamicImage> {
         let mut frame_renderer = Self::new(renderer, Arc::default(), scene_event_receiver);
         let mut frame = Frame::default();
         frame.update(&frame_renderer.scene_event_receiver);
@@ -164,8 +168,6 @@ where
                         frame_size.height as u32,
                         move |x, y| {
                             let offset = y as usize * bytes_per_row + x as usize * 4;
-                            // TODO this is swizzling assuming BGRA, but if we get to webgl, this is
-                            // likely going to be RGBA
                             image::Bgra([
                                 bytes[offset],
                                 bytes[offset + 1],
@@ -184,11 +186,14 @@ where
     fn render_loop(mut self) {
         let mut frame = Frame::default();
         loop {
-            if !self.keep_running.load() {
-                // This drop prevents a segfault on exit per
-                // https://github.com/gfx-rs/wgpu-rs/issues/911
+            if !self.keep_running.load(Ordering::SeqCst) {
+                // This drop prevents a segfault on exit per. The shutdown method must be called
+                // after self is dropped. https://github.com/gfx-rs/wgpu-rs/issues/911
+                let shutdown = self.shutdown.take();
                 drop(self);
-                RuntimeRequest::WindowClosed.send().unwrap();
+                if let Some(mut shutdown) = shutdown {
+                    shutdown.shutdown();
+                }
                 return;
             }
             frame.update(&self.scene_event_receiver);
@@ -228,7 +233,7 @@ where
         }
     }
 
-    fn render_frame(&mut self, engine_frame: &mut Frame) -> KludgineResult<()> {
+    fn render_frame(&mut self, engine_frame: &mut Frame) -> crate::Result<()> {
         let frame_size = engine_frame.size.cast::<u32>();
         if frame_size.width == 0 || frame_size.height == 0 {
             return Ok(());
@@ -545,4 +550,17 @@ fn size_for_aligned_copy(bytes: usize) -> usize {
 
 fn buffer_size(size: Size<u32, ScreenSpace>) -> usize {
     size_for_aligned_copy(size.width as usize * 4) * size.height as usize
+}
+
+pub trait ShutdownCallback: Send + Sync + 'static {
+    fn shutdown(&mut self);
+}
+
+impl<F> ShutdownCallback for F
+where
+    F: FnMut() + Send + Sync + 'static,
+{
+    fn shutdown(&mut self) {
+        self()
+    }
 }

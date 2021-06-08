@@ -93,7 +93,7 @@ impl Window for SpriteSheetExample {
                 .collect(),
             AnimationMode::PingPong,
         );
-        let animations = SpriteAnimations::new(kludgine::hash_map!(
+        let animations = SpriteAnimations::new(maplit::hashmap!(
             Some("Idle".to_string()) => idle,
             Some("WalkLeft".to_string()) => walk_left,
             Some("WalkRight".to_string()) => walk_right,

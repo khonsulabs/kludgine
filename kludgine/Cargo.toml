@@ -20,65 +20,37 @@ repository = "https://github.com/khonsulabs/kludgine"
 all-features = true
 
 [features]
-default = ["bundled-fonts", "smol-rt", "multiwindow"]
-multiwindow = []
-tokio-rt = ["tokio"]
-smol-rt = ["smol", "smol-timeout", "easy-parallel"]
+default = ["bundled-fonts", "smol-rt", "app", "multiwindow"]
+app = ["kludgine-app"]
+multiwindow = ["kludgine-app/multiwindow"]
+tokio-rt = ["kludgine-app/tokio"]
+smol-rt = ["kludgine-app/smol-rt"]
 # Enable all bundled fonts. All bundled fonts are licensed under the Apache License 2.0.
 # For more information, see here: https://github.com/khonsulabs/kludgine/tree/master/fonts/README.md
-bundled-fonts = ["bundled-fonts-roboto"]
-bundled-fonts-roboto = ["bundled-fonts-enabled"]
-# Internal feature that exports the bundled_fonts module
-bundled-fonts-enabled = []
-serialization = ["serde", "euclid/serde", "palette/serializing"]
-instrumentation = ["tracing", "tracing-futures"]
+bundled-fonts = ["kludgine-core/bundled-fonts", "bundled-fonts-roboto"]
+bundled-fonts-roboto = ["kludgine-core/bundled-fonts-roboto"]
+serialization = ["kludgine-core/serialization"]
 
 [dependencies]
-winit = "0.25"
-crossbeam = "0.8"
-easygpu = "0.0.11"
-easygpu-lyon = "0.0.11"
-lyon_tessellation = "0.16"
-image = ">=0.23.12"
-lazy_static = "1"
-thiserror = "1.0"
-anyhow = "1.0"
-rusttype = { version = "0.9", features = ["gpu_cache"] }
-json = "0.12"
-platforms = "1"
-ttf-parser = "0.6"
-once_cell = "1"
-approx = "0.4"
-palette = "0.5"
-flume = "0.10"
-easy-parallel = { version = "3", optional = true }
-futures = "0.3"
-futures-timer = "3"
-derivative = "2"
-euclid = "0.22"
-serde = { version = "1", optional = true, features = ["derive"] }
-instant = "0.1.9"
-bytemuck = { version = "1", features = ["derive"] }
+kludgine-core = { path = "../core" }
+kludgine-app = { path = "../app", optional = true }
+cfg-if = "1"
 
-tracing = { version = "0.1", optional = true }
-tracing-futures = { version = "0.2", optional = true }
-
-smol-timeout = { version = "0.6", optional = true }
-smol = { version = "1", optional = true }
-tokio = { version = "1.0", features = ["full"], optional = true }
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-winit = { version = "0.25", default-features = false, features = ["web-sys"] }
-wasm-bindgen-futures = "0.4"
-js-sys = "0.3"
-web-sys = { version = "0.3", features = ["Window", "Element", "Document"] }
-wasm-bindgen = "0.2.74" # needs to match wgpu's version
+# [target.'cfg(target_arch = "wasm32")'.dependencies]
+# wasm-bindgen-futures = "0.4"
+# js-sys = "0.3"
+# web-sys = { version = "0.3", features = ["Window", "Element", "Document"] }
+# wasm-bindgen = "0.2.74" # needs to match wgpu's version
 
 [dev-dependencies]
 rand = "0.7"
-futures-await-test = "0.3"
 tokio = { version = "1.0", features = ["full"] }
+maplit = "1"
 
 [[example]]
 name = "text"
-required-features = ["bundled-fonts-roboto"]
+required-features = ["bundled-fonts-roboto", "app"]
+
+[[example]]
+name = "orthotiles"
+required-features = ["app"]

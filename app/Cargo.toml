@@ -1,0 +1,32 @@
+[package]
+name = "kludgine-app"
+version = "0.1.0"
+authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
+edition = "2018"
+
+[features]
+default = ["smol-rt", "multiwindow"]
+multiwindow = []
+tokio-rt = ["tokio"]
+smol-rt = ["smol", "smol-timeout", "easy-parallel"]
+
+[dependencies]
+kludgine-core = { path = "../core" }
+
+tracing = { version = "0.1" }
+tracing-futures = { version = "0.2" }
+
+smol-timeout = { version = "0.6", optional = true }
+smol = { version = "1", optional = true }
+easy-parallel = { version = "3", optional = true }
+tokio = { version = "1.0", features = ["full"], optional = true }
+
+once_cell = "1"
+lazy_static = "1"
+platforms = "1"
+thiserror = "1"
+anyhow = "1.0"
+futures = "0.3"
+
+# Sharded lock
+crossbeam = "0.8"

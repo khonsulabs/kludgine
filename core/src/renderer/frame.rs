@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 
 use easygpu::transform::ScreenSpace;
 use euclid::Rect;
+use tracing::instrument;
 
 use crate::{
     math::{Raw, Size},
@@ -118,10 +119,7 @@ impl FrameBatch {
 }
 
 impl Frame {
-    #[cfg_attr(
-        feature = "tracing",
-        instrument(name = "Frame::update", level = "trace", skip(self, event_receiver))
-    )]
+    #[instrument(name = "Frame::update", level = "trace", skip(self, event_receiver))]
     pub fn update(&mut self, event_receiver: &flume::Receiver<SceneEvent>) {
         let elements = self.receiver.get_latest_frame(event_receiver);
         self.size = self.receiver.size;

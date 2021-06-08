@@ -3,8 +3,9 @@
 // rendered texture were exposed directly, it would make Kludgine's rendering be
 // buffered but still all handled on the GPU.
 
-use kludgine::{
+use kludgine::core::{
     easygpu::{renderer::Renderer, wgpu},
+    flume,
     prelude::*,
     renderer::FrameRenderer,
 };
@@ -46,9 +47,10 @@ async fn main() {
 
     target.scene_mut().unwrap().end_frame();
 
-    let image = FrameRenderer::<kludgine::sprite::Srgb>::render_one_frame(renderer, scene_receiver)
-        .await
-        .expect("Error rendering offscreen");
+    let image =
+        FrameRenderer::<kludgine::core::sprite::Srgb>::render_one_frame(renderer, scene_receiver)
+            .await
+            .expect("Error rendering offscreen");
     let image = image.to_rgba8();
     image.save("test.png").unwrap();
 }

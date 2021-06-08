@@ -2,7 +2,7 @@ use crate::{
     math::{Length, Point, Raw, Scale, Scaled},
     scene::Target,
     shape::{Fill, Stroke},
-    KludgineError, KludgineResult,
+    Error,
 };
 #[derive(Clone, Debug)]
 pub(crate) struct Circle<S> {
@@ -38,7 +38,7 @@ impl Circle<Raw> {
         builder: &mut easygpu_lyon::ShapeBuilder,
         stroke: &Option<Stroke>,
         fill: &Option<Fill>,
-    ) -> KludgineResult<()> {
+    ) -> crate::Result<()> {
         if let Some(fill) = fill {
             builder.default_color = fill.color.rgba();
             lyon_tessellation::basic_shapes::fill_circle(
@@ -47,7 +47,7 @@ impl Circle<Raw> {
                 &fill.options,
                 builder,
             )
-            .map_err(KludgineError::TessellationError)?;
+            .map_err(Error::TessellationError)?;
         }
 
         if let Some(stroke) = stroke {
@@ -58,7 +58,7 @@ impl Circle<Raw> {
                 &stroke.options,
                 builder,
             )
-            .map_err(KludgineError::TessellationError)?;
+            .map_err(Error::TessellationError)?;
         }
 
         Ok(())

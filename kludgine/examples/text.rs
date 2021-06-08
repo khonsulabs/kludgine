@@ -1,4 +1,4 @@
-use kludgine::{prelude::*, text::bundled_fonts::ROBOTO};
+use kludgine::{core::text::bundled_fonts::ROBOTO, prelude::*};
 
 fn main() {
     SingleWindowApplication::run(TextExample {});
@@ -21,6 +21,7 @@ impl Window for TextExample {
             Color::BISQUE,
             scene,
         )
-        .render_baseline_at(scene, Point::new(64., 64.))
+        .render_baseline_at(scene, Point::new(64., 64.))?;
+        Ok(())
     }
 }
