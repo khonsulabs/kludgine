@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["kludgine"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"enum\" href=\"kludgine/window/event/enum.EventStatus.html\" title=\"enum kludgine::window::event::EventStatus\">EventStatus</a>","synthetic":false,"types":["kludgine::window::event::EventStatus"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

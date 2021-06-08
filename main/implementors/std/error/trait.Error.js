@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["kludgine"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/std/error/trait.Error.html\" title=\"trait std::error::Error\">Error</a> for <a class=\"enum\" href=\"kludgine/enum.KludgineError.html\" title=\"enum kludgine::KludgineError\">KludgineError</a>","synthetic":false,"types":["kludgine::KludgineError"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

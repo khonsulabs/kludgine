@@ -1,0 +1,4 @@
+var N = null;var sourcesIndex = {};
+sourcesIndex["kludgine"] = {"name":"","dirs":[{"name":"ext","files":["mod.rs","vec.rs"]},{"name":"math","files":["dimension.rs","length_traits.rs","mod.rs","screen_traits.rs","surround.rs"]},{"name":"renderer","files":["frame.rs"]},{"name":"runtime","files":["smol.rs"]},{"name":"shape","files":["batch.rs","circle.rs","fill.rs","geometry.rs","mod.rs","path.rs","stroke.rs"]},{"name":"sprite","files":["batch.rs","collection.rs","gpu_batch.rs","pipeline.rs","sheet.rs","source.rs"]},{"name":"text","files":["bundled_fonts.rs","font.rs","mod.rs","prepared.rs"]},{"name":"tilemap","files":["mod.rs"]},{"name":"window","files":["event.rs","open.rs","runtime_window.rs"]}],"files":["application.rs","color.rs","delay.rs","lib.rs","renderer.rs","runtime.rs","scene.rs","sprite.rs","texture.rs","window.rs"]};
+sourcesIndex["xtask"] = {"name":"","files":["main.rs"]};
+createSourceSidebar();
