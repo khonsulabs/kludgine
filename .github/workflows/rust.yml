@@ -52,6 +52,36 @@ jobs:
         run: |
           cargo test --no-default-features --features="tokio-rt"
 
+  docs:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install x11 dependencies for Kludgine
+        run: |
+          sudo apt-get update -y -qq
+          sudo add-apt-repository ppa:kisak/kisak-mesa -y
+          sudo apt-get install -yqq \
+            libxcb-render-util0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            mesa-vulkan-drivers
+            
+      - name: Generate Docs
+        run: |
+          cargo doc --no-deps --all-features
+
+      - name: Deploy Docs
+        uses: JamesIves/github-pages-deploy-action@releases/v4
+        with:
+          branch: gh-pages
+          folder: target/doc/
+          git-config-name: kl-botsu
+          git-config-email: botsu@khonsulabs.com
+          target-folder: /main/
+          clean: true
+
   coverage:
     runs-on: ubuntu-latest
     steps:

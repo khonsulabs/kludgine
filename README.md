@@ -2,7 +2,11 @@
 
 A 2d rendering engine for the [Rust](https://rust-lang.org/) language.
 
-![Rust](https://github.com/khonsulabs/kludgine/workflows/Tests/badge.svg) [![codecov](https://codecov.io/gh/khonsulabs/kludgine/branch/main/graph/badge.svg)](https://codecov.io/gh/khonsulabs/kludgine)
+![Kludgine is considered experimental](https://img.shields.io/badge/status-experimental-blueviolet)
+[![crate version](https://img.shields.io/crates/v/kludgine.svg)](https://crates.io/crates/kludgine)
+[![Live Build Status](https://img.shields.io/github/workflow/status/khonsulabs/kludgine/Tests/main)](https://github.com/khonsulabs/kludgine/actions?query=workflow:Tests)
+[![HTML Coverage Report for `main` branch](https://khonsulabs.github.io/kludgine/coverage/badge.svg)](https://khonsulabs.github.io/kludgine/coverage/)
+[![Documentation for `main` branch](https://img.shields.io/badge/docs-main-informational)](https://khonsulabs.github.io/kludgine/main/kludgine/)
 
 Kludgine is named in a way to hopefully be ironic in nature, but it's being designed and written by a developer that is fairly new to modern graphics programming and rust. Thus, it is probably a [kludge](https://en.wikipedia.org/wiki/Kludge).
 
