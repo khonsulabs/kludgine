@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error",""]],"macro":[["include_aseprite_sprite",""],["include_font",""],["include_texture",""]],"mod":[["color",""],["math",""],["prelude",""],["renderer",""],["scene",""],["shape",""],["sprite",""],["text",""],["texture",""]],"type":[["Result","Alias for [`std::result::Result`] where the eroor type is [`Error`]."]]});

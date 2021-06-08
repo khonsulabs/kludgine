@@ -77,23 +77,23 @@
     <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Building sprite fragment shader&quot;</span>);
     <span class="macro">run</span><span class="macro">!</span>(
         <span class="string">&quot;glslc&quot;</span>,
-        <span class="string">&quot;kludgine/src/sprite/shaders/sprite.frag&quot;</span>,
+        <span class="string">&quot;core/src/sprite/shaders/sprite.frag&quot;</span>,
         <span class="string">&quot;-o&quot;</span>,
-        <span class="string">&quot;kludgine/src/sprite/shaders/sprite.frag.spv&quot;</span>,
+        <span class="string">&quot;core/src/sprite/shaders/sprite.frag.spv&quot;</span>,
     )<span class="question-mark">?</span>;
     <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Building sprite vertex shader&quot;</span>);
     <span class="macro">run</span><span class="macro">!</span>(
         <span class="string">&quot;glslc&quot;</span>,
-        <span class="string">&quot;kludgine/src/sprite/shaders/sprite.vert&quot;</span>,
+        <span class="string">&quot;core/src/sprite/shaders/sprite.vert&quot;</span>,
         <span class="string">&quot;-o&quot;</span>,
-        <span class="string">&quot;kludgine/src/sprite/shaders/sprite.vert.spv&quot;</span>,
+        <span class="string">&quot;core/src/sprite/shaders/sprite.vert.spv&quot;</span>,
     )<span class="question-mark">?</span>;
     <span class="macro">println</span><span class="macro">!</span>(<span class="string">&quot;Building sprite SRGB vertex shader&quot;</span>);
     <span class="macro">run</span><span class="macro">!</span>(
         <span class="string">&quot;glslc&quot;</span>,
-        <span class="string">&quot;kludgine/src/sprite/shaders/sprite-srgb.vert&quot;</span>,
+        <span class="string">&quot;core/src/sprite/shaders/sprite-srgb.vert&quot;</span>,
         <span class="string">&quot;-o&quot;</span>,
-        <span class="string">&quot;kludgine/src/sprite/shaders/sprite-srgb.vert.spv&quot;</span>,
+        <span class="string">&quot;core/src/sprite/shaders/sprite-srgb.vert.spv&quot;</span>,
     )<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(())

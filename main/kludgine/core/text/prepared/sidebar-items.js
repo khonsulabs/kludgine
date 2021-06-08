@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["GlyphInfo",""],["PreparedSpan",""],["PreparedSpanData",""],["VMetrics",""]]});
