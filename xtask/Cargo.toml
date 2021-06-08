@@ -1,0 +1,22 @@
+[package]
+name = "xtask"
+version = "0.1.0"
+authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
+edition = "2018"
+description = "Build-related tasks"
+repository = "https://github.com/khonsulabs/kludgine"
+license = "MIT OR Apache-2.0"
+keywords = ["gamedev", "graphics", "gui", "wgpu"]
+categories = [
+    "gui",
+    "graphics",
+    "rendering::engine",
+    "game-engines",
+    "asynchronous",
+]
+readme = "../README.md"
+
+[dependencies]
+devx-cmd = "0.3"
+structopt = "0.3"
+khonsu-tools = { git = "https://github.com/khonsulabs/khonsu-tools.git", branch = "main" }

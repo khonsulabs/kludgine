@@ -70,20 +70,20 @@ jobs:
       - name: Install code coverage requirements
         run: |
           rustup component add llvm-tools-preview
-          rustup install nightly
+          rustup install nightly-2021-03-25
           curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-linux-x86_64.tar.bz2 | tar jxf -
 
       - name: Run code coverage
         run: |
-          cargo +nightly test
+          PATH=".:$PATH" cargo xtask generate-code-coverage-report
 
-          zip -0 ccov.zip `find . \( -name "kludgine*.gc*" \) -print`;
-          rm -rf target
-
-          ./grcov ccov.zip -s . -t lcov --llvm --branch --ignore-not-existing --ignore "/*" --ignore "/target" -o lcov.info;
-          bash <(curl -s https://codecov.io/bash) -f lcov.info;
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-          CARGO_INCREMENTAL: 0
-          RUSTFLAGS: "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests" # TODO: https://github.com/alexcrichton/proc-macro2/issues/218
-          RUSTDOCFLAGS: "-Cpanic=abort"
+      - name: Deploy Docs
+        if: github.ref == 'refs/heads/main'
+        uses: JamesIves/github-pages-deploy-action@releases/v4
+        with:
+          branch: gh-pages
+          folder: coverage/
+          git-config-name: kl-botsu
+          git-config-email: botsu@khonsulabs.com
+          target-folder: /coverage/
+          clean: true
