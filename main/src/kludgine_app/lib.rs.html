@@ -48,6 +48,9 @@
 <span id="45">45</span>
 <span id="46">46</span>
 <span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Application and window handling.</span>
 
@@ -69,28 +72,31 @@
     <span class="ident">clippy</span>::<span class="ident">cast_possible_truncation</span>,
     <span class="ident">clippy</span>::<span class="ident">cast_precision_loss</span>,
     <span class="ident">clippy</span>::<span class="ident">mut_mut</span>, <span class="comment">// false alarm on futures::select!</span>
-    <span class="ident">missing_docs</span>,
 )]</span>
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">application</span>;
+<span class="kw">mod</span> <span class="ident">application</span>;
 <span class="kw">mod</span> <span class="ident">error</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">runtime</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">window</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">error</span>::<span class="ident">Error</span>;
+<span class="kw">mod</span> <span class="ident">runtime</span>;
+<span class="kw">mod</span> <span class="ident">window</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;multiwindow&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">window</span>::<span class="ident">OpenableWindow</span>;
 
+<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::{
+    <span class="ident">application</span>::{<span class="ident">Application</span>, <span class="ident">SingleWindowApplication</span>},
+    <span class="ident">error</span>::<span class="ident">Error</span>,
+    <span class="ident">runtime</span>::<span class="ident">Runtime</span>,
+    <span class="ident">window</span>::{<span class="ident">event</span>, <span class="ident">RedrawStatus</span>, <span class="ident">Window</span>, <span class="ident">WindowBuilder</span>, <span class="ident">WindowCreator</span>},
+};
+
+<span class="doccomment">/// A collection of commonly used exports provided by this crate.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">prelude</span> {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;multiwindow&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">window</span>::<span class="ident">OpenableWindow</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::{
-        <span class="ident">application</span>::{<span class="ident">Application</span>, <span class="ident">SingleWindowApplication</span>},
-        <span class="ident">runtime</span>::<span class="ident">Runtime</span>,
-        <span class="ident">window</span>::{
-            <span class="ident">event</span>::{
-                <span class="ident">DeviceId</span>, <span class="ident">ElementState</span>, <span class="ident">Event</span>, <span class="ident">EventStatus</span>, <span class="ident">InputEvent</span>, <span class="ident">MouseButton</span>,
-                <span class="ident">MouseScrollDelta</span>, <span class="ident">ScanCode</span>, <span class="ident">TouchPhase</span>, <span class="ident">VirtualKeyCode</span>,
-            },
-            <span class="ident">OpenWindow</span>, <span class="ident">RedrawStatus</span>, <span class="ident">Window</span>, <span class="ident">WindowBuilder</span>, <span class="ident">WindowCreator</span>,
+        <span class="ident">event</span>::{
+            <span class="ident">DeviceId</span>, <span class="ident">ElementState</span>, <span class="ident">Event</span>, <span class="ident">EventStatus</span>, <span class="ident">InputEvent</span>, <span class="ident">MouseButton</span>, <span class="ident">MouseScrollDelta</span>,
+            <span class="ident">ScanCode</span>, <span class="ident">TouchPhase</span>, <span class="ident">VirtualKeyCode</span>,
         },
+        <span class="ident">Application</span>, <span class="ident">Error</span>, <span class="ident">RedrawStatus</span>, <span class="ident">Runtime</span>, <span class="ident">SingleWindowApplication</span>, <span class="ident">Window</span>, <span class="ident">WindowBuilder</span>,
+        <span class="ident">WindowCreator</span>,
     };
 }
 

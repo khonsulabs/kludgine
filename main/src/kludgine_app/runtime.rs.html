@@ -394,6 +394,8 @@
 <span id="391">391</span>
 <span id="392">392</span>
 <span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections</span>::<span class="ident">HashMap</span>,
@@ -415,7 +417,7 @@
     <span class="ident">window</span>::{<span class="ident">opened_first_window</span>, <span class="ident">RuntimeWindow</span>, <span class="ident">RuntimeWindowConfig</span>, <span class="ident">Window</span>, <span class="ident">WindowBuilder</span>},
 };
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">RuntimeRequest</span> {
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RuntimeRequest</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;multiwindow&quot;</span>)]</span>
     <span class="ident">OpenWindow</span> {
         <span class="ident">builder</span>: <span class="ident">WindowBuilder</span>,
@@ -440,7 +442,7 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">RuntimeEvent</span> {
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RuntimeEvent</span> {
     <span class="ident">Running</span>,
     <span class="ident">WindowClosed</span>,
 }
@@ -459,12 +461,11 @@
 }
 
 <span class="macro">lazy_static</span><span class="macro">!</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">GLOBAL_RUNTIME_SENDER</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">flume</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">RuntimeRequest</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
+    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">GLOBAL_RUNTIME_SENDER</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">flume</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">RuntimeRequest</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
         <span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>);
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">GLOBAL_RUNTIME_RECEIVER</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">flume</span>::<span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">RuntimeEvent</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
+    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">GLOBAL_RUNTIME_RECEIVER</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">flume</span>::<span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">RuntimeEvent</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
         <span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>);
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">GLOBAL_EVENT_HANDLER</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">EventProcessor</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
-        <span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>);
+    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">GLOBAL_EVENT_HANDLER</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">EventProcessor</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>);
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;smol-rt&quot;</span>)]</span>
@@ -597,15 +598,17 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;multiwindow&quot;</span>)]</span>
 <span class="macro">lazy_static</span><span class="macro">!</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">WINIT_WINDOWS</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">WindowId</span>, <span class="ident">winit</span>::<span class="ident">window</span>::<span class="ident">Window</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
+    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">WINIT_WINDOWS</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">WindowId</span>, <span class="ident">winit</span>::<span class="ident">window</span>::<span class="ident">Window</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
         <span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">HashMap</span>::<span class="ident">new</span>());
 }
 
 <span class="kw">impl</span> <span class="ident">Runtime</span> {
+    <span class="doccomment">/// Initializes the managed async runtime.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">initialize</span>() {
         <span class="ident">initialize_async_runtime</span>();
     }
 
+    <span class="doccomment">/// Returns a new runtime for `app`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">App</span><span class="op">&gt;</span>(<span class="ident">app</span>: <span class="ident">App</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
     <span class="kw">where</span>
         <span class="ident">App</span>: <span class="ident">Application</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
@@ -641,6 +644,7 @@
         <span class="macro">matches</span><span class="macro">!</span>(<span class="ident">TARGET_OS</span>, <span class="ident">OS</span>::<span class="ident">Android</span> <span class="op">|</span> <span class="ident">OS</span>::<span class="ident">iOS</span>)
     }
 
+    <span class="doccomment">/// Executes the runtime&#39;s event loop.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">initial_window</span>: <span class="ident">WindowBuilder</span>, <span class="ident">window</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="op">!</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">Window</span> <span class="op">+</span> <span class="ident">Sized</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
@@ -718,6 +722,7 @@
         });
     }
 
+    <span class="doccomment">/// Opens a [`Window`]. Requires feature `multiwindow`.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;multiwindow&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open_window</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">builder</span>: <span class="ident">WindowBuilder</span>, <span class="ident">window</span>: <span class="ident">T</span>)
     <span class="kw">where</span>
@@ -785,8 +790,7 @@
 }
 
 <span class="macro">lazy_static</span><span class="macro">!</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">WINDOWS</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">WindowId</span>, <span class="ident">RuntimeWindow</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
-        <span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">HashMap</span>::<span class="ident">new</span>());
+    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">WINDOWS</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">WindowId</span>, <span class="ident">RuntimeWindow</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">HashMap</span>::<span class="ident">new</span>());
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="kludgine_app" data-search-js="../../search-index.js"></div>

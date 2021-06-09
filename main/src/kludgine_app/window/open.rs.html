@@ -202,6 +202,16 @@
 <span id="199">199</span>
 <span id="200">200</span>
 <span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">sync</span>::<span class="ident">Arc</span>,
@@ -224,12 +234,17 @@
     <span class="ident">scene</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Scene</span><span class="op">&gt;</span>,
 }
 
+<span class="doccomment">/// Tracks when a window should be redrawn. Allows for rendering a frame</span>
+<span class="doccomment">/// immediately as well as scheduling a refresh in the future.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RedrawStatus</span> {
     <span class="ident">next_redraw_target</span>: <span class="ident">RedrawTarget</span>,
     <span class="ident">needs_render</span>: <span class="ident">bool</span>,
     <span class="ident">event_sender</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
 }
+
 <span class="kw">impl</span> <span class="ident">RedrawStatus</span> {
+    <span class="doccomment">/// Triggers a redraw as soon as possible. Any estimated frame instants will</span>
+    <span class="doccomment">/// be ignored.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_needs_redraw</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">needs_render</span> {
             <span class="self">self</span>.<span class="ident">needs_render</span> <span class="op">=</span> <span class="bool-val">true</span>;
@@ -237,10 +252,15 @@
         }
     }
 
+    <span class="doccomment">/// Estimates the next redraw instant by adding `duration` to</span>
+    <span class="doccomment">/// `Instant::now()`. If this is later than the current estimate, it</span>
+    <span class="doccomment">/// will be ignored.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">estimate_next_frame</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">duration</span>: <span class="ident">Duration</span>) {
         <span class="self">self</span>.<span class="ident">estimate_next_frame_instant</span>(<span class="ident">Instant</span>::<span class="ident">now</span>().<span class="ident">checked_add</span>(<span class="ident">duration</span>).<span class="ident">unwrap</span>());
     }
 
+    <span class="doccomment">/// Estimates the next redraw instant. If `instant` is later than the</span>
+    <span class="doccomment">/// current estimate, it will be ignored.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">estimate_next_frame_instant</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">instant</span>: <span class="ident">Instant</span>) {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">next_redraw_target</span> {
             <span class="ident">RedrawTarget</span>::<span class="ident">Never</span> <span class="op">|</span> <span class="ident">RedrawTarget</span>::<span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
