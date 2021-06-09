@@ -26,19 +26,21 @@
 <span id="23">23</span>
 <span id="24">24</span>
 <span id="25">25</span>
+<span id="26">26</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">easygpu</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">easygpu_lyon</span>::<span class="ident">ShapeBuilder</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">math</span>::<span class="ident">Raw</span>, <span class="ident">shape</span>::<span class="ident">Shape</span>};
 
+<span class="doccomment">/// A batch of shapes that can be rendered together.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Batch</span> {
     <span class="ident">shapes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Raw</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Batch</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">shape</span>: <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Raw</span><span class="op">&gt;</span>) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">shape</span>: <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Raw</span><span class="op">&gt;</span>) {
         <span class="self">self</span>.<span class="ident">shapes</span>.<span class="ident">push</span>(<span class="ident">shape</span>)
     }
 

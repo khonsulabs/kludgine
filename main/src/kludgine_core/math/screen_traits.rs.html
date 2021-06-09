@@ -35,12 +35,32 @@
 <span id="32">32</span>
 <span id="33">33</span>
 <span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">ScreenScale</span>;
 
+<span class="doccomment">/// Methods that help convert imprecise scaled units to whole number pixels.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PixelAlignment</span> {
+    <span class="doccomment">/// Converts `self` into [`Raw`](super::Raw) units, executes</span>
+    <span class="doccomment">/// [`euclid::num::Round::round()`], and converts back to</span>
+    <span class="doccomment">/// [`Scaled`](super::Scaled) units.</span>
     <span class="kw">fn</span> <span class="ident">pixel_rounded</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="ident">ScreenScale</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
+    <span class="doccomment">/// Converts `self` into [`Raw`](super::Raw) units, executes</span>
+    <span class="doccomment">/// [`euclid::num::Ceil::ceil()`], and converts back to</span>
+    <span class="doccomment">/// [`Scaled`](super::Scaled) units.</span>
     <span class="kw">fn</span> <span class="ident">pixel_expanded</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="ident">ScreenScale</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
+    <span class="doccomment">/// Converts `self` into [`Raw`](super::Raw) units, executes</span>
+    <span class="doccomment">/// [`euclid::num::Floor::floor()`], and converts back to</span>
+    <span class="doccomment">/// [`Scaled`](super::Scaled) units.</span>
     <span class="kw">fn</span> <span class="ident">pixel_constrained</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="ident">ScreenScale</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
 }
 

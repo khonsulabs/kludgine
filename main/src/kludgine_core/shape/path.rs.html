@@ -342,6 +342,42 @@
 <span id="339">339</span>
 <span id="340">340</span>
 <span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">lyon_tessellation</span>::<span class="ident">path</span>::{<span class="ident">builder</span>::<span class="ident">PathBuilder</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">PathEvent</span> <span class="kw">as</span> <span class="ident">LyonPathEvent</span>};
 
@@ -352,32 +388,53 @@
     <span class="ident">Error</span>,
 };
 
+<span class="doccomment">/// A point on a [`Path`].</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">S</span><span class="op">&gt;</span>;
+<span class="doccomment">/// A control point used to create curves.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ControlPoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">S</span><span class="op">&gt;</span>;
 
+<span class="doccomment">/// An entry in a [`Path`].</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Begins a path. Must be at the start.</span>
     <span class="ident">Begin</span> {
+        <span class="doccomment">/// The location to begin at.</span>
         <span class="ident">at</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
     },
+    <span class="doccomment">/// A straight line segment.</span>
     <span class="ident">Line</span> {
+        <span class="doccomment">/// The origin of the line.</span>
         <span class="ident">from</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// The end location of the line.</span>
         <span class="ident">to</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
     },
+    <span class="doccomment">/// A quadratic curve (one control point).</span>
     <span class="ident">Quadratic</span> {
+        <span class="doccomment">/// The origin of the curve.</span>
         <span class="ident">from</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// The control point for the curve.</span>
         <span class="ident">ctrl</span>: <span class="ident">ControlPoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// The end location of the curve.</span>
         <span class="ident">to</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
     },
+    <span class="doccomment">/// A cubic curve (two control points).</span>
     <span class="ident">Cubic</span> {
+        <span class="doccomment">/// The origin of the curve.</span>
         <span class="ident">from</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// The first control point for the curve.</span>
         <span class="ident">ctrl1</span>: <span class="ident">ControlPoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// The second control point for the curve.</span>
         <span class="ident">ctrl2</span>: <span class="ident">ControlPoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// The end location of the curve.</span>
         <span class="ident">to</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
     },
+    <span class="doccomment">/// Ends the path. Must be the last entry.</span>
     <span class="ident">End</span> {
+        <span class="doccomment">/// The end location of the path.</span>
         <span class="ident">last</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// The start location of the path.</span>
         <span class="ident">first</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+        <span class="doccomment">/// Whether the path should be closed.</span>
         <span class="ident">close</span>: <span class="ident">bool</span>,
     },
 }
@@ -416,6 +473,8 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span> <span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Returns the path event with the new unit. Does not alter the underlying</span>
+    <span class="doccomment">/// coordinate data.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cast_unit</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
@@ -449,12 +508,15 @@
     }
 }
 
+<span class="doccomment">/// A geometric shape defined by a path.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Path</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="ident">events</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span> <span class="ident">Path</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Returns the path with the new unit. Does not alter the underlying</span>
+    <span class="doccomment">/// coordinate data.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cast_unit</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Path</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span> {
         <span class="ident">Path</span> {
@@ -522,7 +584,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Path</span><span class="op">&lt;</span><span class="ident">Raw</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">build</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">easygpu_lyon</span>::<span class="ident">ShapeBuilder</span>,
         <span class="ident">stroke</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stroke</span><span class="op">&gt;</span>,
@@ -566,6 +628,7 @@
     }
 }
 
+<span class="doccomment">/// Builds a [`Path`].</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PathBuilder</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="ident">path</span>: <span class="ident">Path</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
     <span class="ident">start_at</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
@@ -574,6 +637,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="ident">PathBuilder</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Creates a new path with the initial position `start_at`.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">start_at</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">events</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">PathEvent</span>::<span class="ident">Begin</span> { <span class="ident">at</span>: <span class="ident">start_at</span> }];
@@ -585,6 +649,7 @@
         }
     }
 
+    <span class="doccomment">/// Returns the built path.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Path</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">path</span>.<span class="ident">events</span>.<span class="ident">push</span>(<span class="ident">PathEvent</span>::<span class="ident">End</span> {
@@ -595,6 +660,7 @@
         <span class="self">self</span>.<span class="ident">path</span>
     }
 
+    <span class="doccomment">/// Create a straight line from the current location to `end_at`.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">line_to</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">end_at</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">path</span>.<span class="ident">events</span>.<span class="ident">push</span>(<span class="ident">PathEvent</span>::<span class="ident">Line</span> {
@@ -605,6 +671,8 @@
         <span class="self">self</span>
     }
 
+    <span class="doccomment">/// Create a quadratic curve from the current location to `end_at` using</span>
+    <span class="doccomment">/// `control` as the curve&#39;s control point.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">quadratic_curve_to</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">control</span>: <span class="ident">ControlPoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">end_at</span>: <span class="ident">Endpoint</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">path</span>.<span class="ident">events</span>.<span class="ident">push</span>(<span class="ident">PathEvent</span>::<span class="ident">Quadratic</span> {
@@ -616,6 +684,8 @@
         <span class="self">self</span>
     }
 
+    <span class="doccomment">/// Create a cubic curve from the current location to `end_at` using</span>
+    <span class="doccomment">/// `control1` and `control2` as the curve&#39;s control points.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cubic_curve_to</span>(
         <span class="kw-2">mut</span> <span class="self">self</span>,
@@ -633,6 +703,8 @@
         <span class="self">self</span>
     }
 
+    <span class="doccomment">/// Closes the path, connecting the current location to the shape&#39;s starting</span>
+    <span class="doccomment">/// location.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">close</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">close</span> <span class="op">=</span> <span class="bool-val">true</span>;

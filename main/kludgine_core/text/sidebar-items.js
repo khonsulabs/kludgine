@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["bundled_fonts","Feature-flag enabled fonts that are licensed under APL 2.0"],["font",""],["prepared",""]],"struct":[["Text",""]]});
+initSidebarItems({"enum":[["Text","Text rendering functionality"]],"mod":[["bundled_fonts","Feature-flag enabled fonts that are licensed under APL 2.0"],["prepared","Types for handling perpared text."]],"struct":[["Font","Font provides TrueType Font rendering"]]});

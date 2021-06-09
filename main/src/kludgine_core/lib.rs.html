@@ -104,7 +104,6 @@
     <span class="ident">clippy</span>::<span class="ident">cast_possible_truncation</span>,
     <span class="ident">clippy</span>::<span class="ident">cast_precision_loss</span>,
     <span class="ident">clippy</span>::<span class="ident">mut_mut</span>, <span class="comment">// false alarm on futures::select!</span>
-    <span class="ident">missing_docs</span>,
 )]</span>
 
 <span class="kw">mod</span> <span class="ident">color</span>;
@@ -140,14 +139,15 @@
     <span class="ident">frame_renderer</span>::{<span class="ident">FrameRenderer</span>, <span class="ident">ShutdownCallback</span>},
 };
 
+<span class="doccomment">/// A collection of commonly used exports provided by this crate.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">prelude</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;bundled-fonts-enabled&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">text</span>::<span class="ident">bundled_fonts</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::{
         <span class="ident">include_aseprite_sprite</span>, <span class="ident">include_font</span>, <span class="ident">include_texture</span>,
         <span class="ident">math</span>::{
-            <span class="ident">Angle</span>, <span class="ident">Dimension</span>, <span class="ident">Length</span>, <span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">PointExt</span>, <span class="ident">Points</span>, <span class="ident">Raw</span>, <span class="ident">Rect</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>,
-            <span class="ident">ScreenScale</span>, <span class="ident">Size</span>, <span class="ident">SizeExt</span>, <span class="ident">Surround</span>, <span class="ident">Unknown</span>, <span class="ident">Vector</span>,
+            <span class="ident">Angle</span>, <span class="ident">Length</span>, <span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">PointExt</span>, <span class="ident">Points</span>, <span class="ident">Raw</span>, <span class="ident">Rect</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>, <span class="ident">ScreenScale</span>,
+            <span class="ident">Size</span>, <span class="ident">SizeExt</span>, <span class="ident">Unknown</span>, <span class="ident">Vector</span>,
         },
         <span class="ident">scene</span>::{<span class="ident">Scene</span>, <span class="ident">Target</span>},
         <span class="ident">shape</span>::<span class="kw-2">*</span>,

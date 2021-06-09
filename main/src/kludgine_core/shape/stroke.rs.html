@@ -33,19 +33,29 @@
 <span id="30">30</span>
 <span id="31">31</span>
 <span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">euclid</span>::<span class="ident">Length</span>;
 <span class="kw">use</span> <span class="ident">lyon_tessellation</span>::<span class="ident">StrokeOptions</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">color</span>::<span class="ident">Color</span>, <span class="ident">math</span>::<span class="ident">Scaled</span>};
 
+<span class="doccomment">/// A shape stroke (outline) options.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Stroke</span> {
+    <span class="doccomment">/// The color to stroke the shape&#39;s with.</span>
     <span class="kw">pub</span> <span class="ident">color</span>: <span class="ident">Color</span>,
+    <span class="doccomment">/// The options for drawing the stroke.</span>
     <span class="kw">pub</span> <span class="ident">options</span>: <span class="ident">StrokeOptions</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Stroke</span> {
+    <span class="doccomment">/// Creates a new instance using `color` with default options.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">color</span>: <span class="ident">Color</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
@@ -54,12 +64,14 @@
         }
     }
 
+    <span class="doccomment">/// Builder-style function. Sets `options` and return self.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">with_options</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">options</span>: <span class="ident">StrokeOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">options</span> <span class="op">=</span> <span class="ident">options</span>;
         <span class="self">self</span>
     }
 
+    <span class="doccomment">/// Builder-style function. Sets `options.line_width` and return self.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">line_width</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Length</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">width</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">line_width</span> <span class="op">=</span> <span class="ident">width</span>.<span class="ident">into</span>().<span class="ident">get</span>();

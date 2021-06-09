@@ -79,13 +79,28 @@
 <span id="76">76</span>
 <span id="77">77</span>
 <span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">math</span>::{<span class="ident">Length</span>, <span class="ident">Point</span>, <span class="ident">Size</span>, <span class="ident">Vector</span>};
 
+<span class="doccomment">/// Extension trait for [`Size`].</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SizeExt</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">U</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Returns the width as a [`Length`].</span>
     <span class="kw">fn</span> <span class="ident">width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Length</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">U</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Returns the height as a [`Length`].</span>
     <span class="kw">fn</span> <span class="ident">height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Length</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">U</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Sets the width from a [`Length`].</span>
     <span class="kw">fn</span> <span class="ident">set_width</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">width</span>: <span class="ident">Length</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">U</span><span class="op">&gt;</span>);
+    <span class="doccomment">/// Sets the height from a [`Length`].</span>
     <span class="kw">fn</span> <span class="ident">set_height</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">height</span>: <span class="ident">Length</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">U</span><span class="op">&gt;</span>);
 }
 
@@ -110,10 +125,15 @@
     }
 }
 
+<span class="doccomment">/// Extension trait for [`Point`].</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PointExt</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">U</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Returns x as a [`Length`].</span>
     <span class="kw">fn</span> <span class="ident">x</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Length</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">U</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Returns y as a [`Length`].</span>
     <span class="kw">fn</span> <span class="ident">y</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Length</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">U</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Sets x from a [`Length`].</span>
     <span class="kw">fn</span> <span class="ident">set_x</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">x</span>: <span class="ident">Length</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">U</span><span class="op">&gt;</span>);
+    <span class="doccomment">/// Sets y from a [`Length`].</span>
     <span class="kw">fn</span> <span class="ident">set_y</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">y</span>: <span class="ident">Length</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">U</span><span class="op">&gt;</span>);
 }
 

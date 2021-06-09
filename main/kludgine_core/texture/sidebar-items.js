@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Texture",""]]});
+initSidebarItems({"struct":[["Texture","An image that can be used as a sprite. Cheap to clone."]]});
