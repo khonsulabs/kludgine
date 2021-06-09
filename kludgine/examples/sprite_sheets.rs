@@ -61,8 +61,8 @@ impl Window for SpriteSheetExample {
                     duration: Some(Duration::from_millis(500)),
                 })
                 .collect(),
-            AnimationMode::Forward,
-        );
+        )
+        .with_mode(AnimationMode::Forward);
         let walk_left = SpriteAnimation::new(
             sheet
                 .sprites(vec![
@@ -76,8 +76,8 @@ impl Window for SpriteSheetExample {
                     duration: Some(Duration::from_millis(200)),
                 })
                 .collect(),
-            AnimationMode::PingPong,
-        );
+        )
+        .with_mode(AnimationMode::PingPong);
         let walk_right = SpriteAnimation::new(
             sheet
                 .sprites(vec![
@@ -91,8 +91,8 @@ impl Window for SpriteSheetExample {
                     duration: Some(Duration::from_millis(200)),
                 })
                 .collect(),
-            AnimationMode::PingPong,
-        );
+        )
+        .with_mode(AnimationMode::PingPong);
         let animations = SpriteAnimations::new(maplit::hashmap!(
             Some("Idle".to_string()) => idle,
             Some("WalkLeft".to_string()) => walk_left,

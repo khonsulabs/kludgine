@@ -16,6 +16,7 @@ lazy_static! {
     static ref GLOBAL_ID_CELL: AtomicU64 = AtomicU64::new(0);
 }
 
+/// Embeds a font into your executable.
 #[macro_export]
 macro_rules! include_font {
     ($path:expr) => {{
@@ -31,6 +32,7 @@ pub struct Font {
 }
 
 impl Font {
+    /// Try to load a font from `bytes`.
     #[must_use]
     pub fn try_from_bytes(bytes: &'static [u8]) -> Option<Self> {
         let font = rusttype::Font::try_from_bytes(bytes)?;
@@ -40,11 +42,14 @@ impl Font {
         })
     }
 
+    /// Returns the unique ID of the font. This ID depends on load order, and is
+    /// not from the font data.
     #[must_use]
     pub fn id(&self) -> u64 {
         self.handle.id
     }
 
+    /// Measures the vertical metrics for a given size.
     #[must_use]
     pub fn metrics(&self, size: Pixels) -> rusttype::VMetrics {
         self.handle
@@ -52,6 +57,7 @@ impl Font {
             .v_metrics(rusttype::Scale::uniform(size.get()))
     }
 
+    /// Returns the name of the font's family, if available.
     #[must_use]
     pub fn family(&self) -> Option<String> {
         match &self.handle.font {
@@ -61,23 +67,28 @@ impl Font {
     }
 
     #[must_use]
-    pub fn glyph(&self, c: char) -> rusttype::Glyph<'static> {
+    pub(crate) fn glyph(&self, c: char) -> rusttype::Glyph<'static> {
         self.handle.font.glyph(c)
     }
 
     #[must_use]
-    pub fn pair_kerning(&self, size: f32, a: rusttype::GlyphId, b: rusttype::GlyphId) -> f32 {
+    pub(crate) fn pair_kerning(
+        &self,
+        size: f32,
+        a: rusttype::GlyphId,
+        b: rusttype::GlyphId,
+    ) -> f32 {
         self.handle.font.pair_kerning(Scale::uniform(size), a, b)
     }
 }
 
 #[derive(Debug)]
-pub(crate) struct FontData {
+pub struct FontData {
     pub(crate) id: u64,
     pub(crate) font: rusttype::Font<'static>,
 }
 
-pub(crate) struct LoadedFont {
+pub struct LoadedFont {
     pub font: Font,
     pub cache: gpu_cache::Cache<'static>,
     pub(crate) binding: Option<BindingGroup>,

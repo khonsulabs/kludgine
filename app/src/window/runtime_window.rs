@@ -270,7 +270,7 @@ impl RuntimeWindow {
                     WindowEvent::Resize { size, scale_factor } => {
                         window
                             .scene_mut()
-                            .set_internal_size(Size::new(size.width as f32, size.height as f32));
+                            .set_size(Size::new(size.width as f32, size.height as f32));
                         window.scene_mut().set_scale_factor(scale_factor);
                     }
                     WindowEvent::CloseRequested =>
@@ -286,10 +286,10 @@ impl RuntimeWindow {
                         {
                             match state {
                                 ElementState::Pressed => {
-                                    window.scene_mut().pressed_keys.insert(key);
+                                    window.scene_mut().keys_pressed.insert(key);
                                 }
                                 ElementState::Released => {
-                                    window.scene_mut().pressed_keys.remove(&key);
+                                    window.scene_mut().keys_pressed.remove(&key);
                                 }
                             }
                         }
@@ -309,7 +309,7 @@ impl RuntimeWindow {
             {
                 let modifiers = window.scene().modifiers_pressed();
                 if modifiers.primary_modifier()
-                    && window.scene().key_pressed(VirtualKeyCode::W)
+                    && window.scene().keys_pressed.contains(&VirtualKeyCode::W)
                     && Self::request_window_close(id, &mut window)?
                 {
                     return Ok(());

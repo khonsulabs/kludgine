@@ -7,32 +7,53 @@ use crate::{
     Error,
 };
 
+/// A point on a [`Path`].
 pub type Endpoint<S> = Point<f32, S>;
+/// A control point used to create curves.
 pub type ControlPoint<S> = Point<f32, S>;
 
+/// An entry in a [`Path`].
 #[derive(Debug, Clone, Copy)]
 pub enum PathEvent<S> {
+    /// Begins a path. Must be at the start.
     Begin {
+        /// The location to begin at.
         at: Endpoint<S>,
     },
+    /// A straight line segment.
     Line {
+        /// The origin of the line.
         from: Endpoint<S>,
+        /// The end location of the line.
         to: Endpoint<S>,
     },
+    /// A quadratic curve (one control point).
     Quadratic {
+        /// The origin of the curve.
         from: Endpoint<S>,
+        /// The control point for the curve.
         ctrl: ControlPoint<S>,
+        /// The end location of the curve.
         to: Endpoint<S>,
     },
+    /// A cubic curve (two control points).
     Cubic {
+        /// The origin of the curve.
         from: Endpoint<S>,
+        /// The first control point for the curve.
         ctrl1: ControlPoint<S>,
+        /// The second control point for the curve.
         ctrl2: ControlPoint<S>,
+        /// The end location of the curve.
         to: Endpoint<S>,
     },
+    /// Ends the path. Must be the last entry.
     End {
+        /// The end location of the path.
         last: Endpoint<S>,
+        /// The start location of the path.
         first: Endpoint<S>,
+        /// Whether the path should be closed.
         close: bool,
     },
 }
@@ -71,6 +92,8 @@ impl From<PathEvent<Raw>> for LyonPathEvent {
 }
 
 impl<U> PathEvent<U> {
+    /// Returns the path event with the new unit. Does not alter the underlying
+    /// coordinate data.
     #[must_use]
     pub fn cast_unit<V>(self) -> PathEvent<V> {
         match self {
@@ -104,12 +127,15 @@ impl<U> PathEvent<U> {
     }
 }
 
+/// A geometric shape defined by a path.
 #[derive(Default, Debug, Clone)]
 pub struct Path<S> {
     events: Vec<PathEvent<S>>,
 }
 
 impl<U> Path<U> {
+    /// Returns the path with the new unit. Does not alter the underlying
+    /// coordinate data.
     #[must_use]
     pub fn cast_unit<V>(self) -> Path<V> {
         Path {
@@ -177,7 +203,7 @@ impl Path<Scaled> {
 }
 
 impl Path<Raw> {
-    pub fn build(
+    pub(crate) fn build(
         &self,
         builder: &mut easygpu_lyon::ShapeBuilder,
         stroke: &Option<Stroke>,
@@ -221,6 +247,7 @@ where
     }
 }
 
+/// Builds a [`Path`].
 pub struct PathBuilder<S> {
     path: Path<S>,
     start_at: Endpoint<S>,
@@ -229,6 +256,7 @@ pub struct PathBuilder<S> {
 }
 
 impl<S> PathBuilder<S> {
+    /// Creates a new path with the initial position `start_at`.
     #[must_use]
     pub fn new(start_at: Endpoint<S>) -> Self {
         let events = vec![PathEvent::Begin { at: start_at }];
@@ -240,6 +268,7 @@ impl<S> PathBuilder<S> {
         }
     }
 
+    /// Returns the built path.
     #[must_use]
     pub fn build(mut self) -> Path<S> {
         self.path.events.push(PathEvent::End {
@@ -250,6 +279,7 @@ impl<S> PathBuilder<S> {
         self.path
     }
 
+    /// Create a straight line from the current location to `end_at`.
     #[must_use]
     pub fn line_to(mut self, end_at: Endpoint<S>) -> Self {
         self.path.events.push(PathEvent::Line {
@@ -260,6 +290,8 @@ impl<S> PathBuilder<S> {
         self
     }
 
+    /// Create a quadratic curve from the current location to `end_at` using
+    /// `control` as the curve's control point.
     #[must_use]
     pub fn quadratic_curve_to(mut self, control: ControlPoint<S>, end_at: Endpoint<S>) -> Self {
         self.path.events.push(PathEvent::Quadratic {
@@ -271,6 +303,8 @@ impl<S> PathBuilder<S> {
         self
     }
 
+    /// Create a cubic curve from the current location to `end_at` using
+    /// `control1` and `control2` as the curve's control points.
     #[must_use]
     pub fn cubic_curve_to(
         mut self,
@@ -288,6 +322,8 @@ impl<S> PathBuilder<S> {
         self
     }
 
+    /// Closes the path, connecting the current location to the shape's starting
+    /// location.
     #[must_use]
     pub const fn close(mut self) -> Self {
         self.close = true;

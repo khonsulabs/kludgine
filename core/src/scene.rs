@@ -15,28 +15,45 @@ use crate::{
     text::{font::Font, prepared::PreparedSpan},
 };
 
+/// An individual render instruction.
 #[derive(Debug)]
 pub enum Element {
+    /// A rendered sprite.
     Sprite {
+        /// The sprite being rendered.
         sprite: RenderedSprite,
+        /// The current clipping rect.
         clip: Option<Rect<u32, Raw>>,
     },
+    /// A rendered span of text.
     Text {
+        /// The span being rendered.
         span: PreparedSpan,
+        /// The current clipping rect.
         clip: Option<Rect<u32, Raw>>,
     },
+    /// A rendered shape.
     Shape(Shape<Raw>),
 }
 
+/// An event instructing how to render frames.
 pub enum SceneEvent {
+    /// Begin a new frame with the given size.
+    BeginFrame {
+        /// The frame size to render.
+        size: Size<f32, Raw>,
+    },
+    /// Render an element.
     Render(Element),
+    /// Finish the current frame.
     EndFrame,
-    BeginFrame { size: Size<f32, Raw> },
 }
 
+/// The main rendering destination, usually interacted with through [`Target`].
 #[derive(Debug)]
 pub struct Scene {
-    pub pressed_keys: HashSet<VirtualKeyCode>,
+    /// The virtual key codes curently depressed.
+    pub keys_pressed: HashSet<VirtualKeyCode>,
     scale_factor: ScreenScale,
     size: Size<f32, Raw>,
     event_sender: flume::Sender<SceneEvent>,
@@ -62,14 +79,21 @@ impl From<Scene> for Target {
     }
 }
 
+/// A render target
 #[derive(Clone, Debug)]
 pub struct Target {
+    /// The scene to draw into.
     pub scene: Arc<Scene>,
+    /// The curent clipping rect. All drawing calls will be clipped to this
+    /// area.
     pub clip: Option<Rect<u32, Raw>>,
+    /// The current offset (translation) of drawing calls.
     pub offset: Option<Vector<f32, Raw>>,
 }
 
 impl Target {
+    /// Returns a new [`Target`] with the intersection of `new_clip` an the
+    /// current `clip`, if any. The scene and offset are cloned.
     #[must_use]
     pub fn clipped_to(&self, new_clip: Rect<u32, Raw>) -> Self {
         Self {
@@ -82,6 +106,8 @@ impl Target {
         }
     }
 
+    /// Returns a new [`Target`] offset by `delta` from the current `offset`, if
+    /// any. The scene and clipping rect are cloned.
     #[must_use]
     pub fn offset_by(&self, delta: Vector<f32, Raw>) -> Self {
         Self {
@@ -94,6 +120,7 @@ impl Target {
         }
     }
 
+    /// Translates `point` by the current `offset`, if any.
     #[must_use]
     pub fn offset_point(&self, point: Point<f32, Scaled>) -> Point<f32, Scaled> {
         match self.offset {
@@ -102,6 +129,7 @@ impl Target {
         }
     }
 
+    /// Translates `point` by the current `offset`, if any.
     #[must_use]
     pub fn offset_point_raw(&self, point: Point<f32, Raw>) -> Point<f32, Raw> {
         match self.offset {
@@ -110,6 +138,8 @@ impl Target {
         }
     }
 
+    /// Returns the scene as a mutable reference. Will only succeed if no other
+    /// references exist. Not intended for use inside of `kludgine-app`.
     #[must_use]
     pub fn scene_mut(&mut self) -> Option<&mut Scene> {
         Arc::get_mut(&mut self.scene)
@@ -124,40 +154,53 @@ impl std::ops::Deref for Target {
     }
 }
 
+/// The state of keyboard modifier keys.
 #[allow(clippy::struct_excessive_bools)]
 pub struct Modifiers {
+    /// If true, a control key is currently depressed.
     pub control: bool,
+    /// If true, an alt key is currently depressed.
     pub alt: bool,
-    pub os: bool,
+    /// If true, an "Operating System key" is currently depressed. For most
+    /// keyboards, this is the Windows key or the Command/Apple key.
+    pub operating_system: bool,
+    /// If true, a shift key is currently depressed.
     pub shift: bool,
 }
 
 impl Modifiers {
+    /// Returns true if the primary modifier of the current OS is depressed. For
+    /// Mac and iOS, this returns `operating_system`. For all other OSes, this
+    /// returns `control`.
     #[must_use]
     pub const fn primary_modifier(&self) -> bool {
         match TARGET_OS {
-            OS::MacOS | OS::iOS => self.os,
+            OS::MacOS | OS::iOS => self.operating_system,
             _ => self.control,
         }
     }
 
+    /// Returns true if the command key/Apple key is pressed. This only returns
+    /// true if `operating_system` key is true and the current operating system
+    /// is Mac or iOS.
     #[must_use]
     pub const fn command_key(&self) -> bool {
         match TARGET_OS {
-            OS::MacOS | OS::iOS => self.os,
+            OS::MacOS | OS::iOS => self.operating_system,
             _ => false,
         }
     }
 }
 
 impl Scene {
+    /// Returns a new Scene that emits [`SceneEvent`]s to `event_sender`.
     #[must_use]
     pub fn new(event_sender: flume::Sender<SceneEvent>) -> Self {
         Self {
             event_sender,
             scale_factor: Scale::identity(),
             size: Size::default(),
-            pressed_keys: HashSet::new(),
+            keys_pressed: HashSet::new(),
             now: None,
             elapsed: None,
             fonts: HashMap::new(),
@@ -165,11 +208,13 @@ impl Scene {
         }
     }
 
+    /// Returns the currently set [`Theme`].
     #[must_use]
     pub const fn system_theme(&self) -> Theme {
         self.system_theme
     }
 
+    /// Sets the [`Theme`].
     pub fn set_system_theme(&mut self, system_theme: Theme) {
         self.system_theme = system_theme;
     }
@@ -178,54 +223,45 @@ impl Scene {
         drop(self.event_sender.send(SceneEvent::Render(element)));
     }
 
-    pub fn set_internal_size(&mut self, size: Size<f32, Raw>) {
+    /// Sets the size of the scene.
+    pub fn set_size(&mut self, size: Size<f32, Raw>) {
         self.size = size;
     }
 
-    // pub(crate) async fn internal_size(&self) -> Size<f32, Raw> {
-    //     let scene = self.data.read().await;
-    //     scene.size
-    // }
-
+    /// Sets the DPI scale.
     pub fn set_scale_factor(&mut self, scale_factor: ScreenScale) {
         self.scale_factor = scale_factor;
     }
 
+    /// Returns the current [`ScreenScale`].
     #[must_use]
     pub const fn scale_factor(&self) -> ScreenScale {
         self.scale_factor
     }
 
-    #[must_use]
-    pub fn keys_pressed(&self) -> HashSet<VirtualKeyCode> {
-        self.pressed_keys.clone()
-    }
-
-    #[must_use]
-    pub fn key_pressed(&self, key: VirtualKeyCode) -> bool {
-        self.pressed_keys.contains(&key)
-    }
-
+    /// Returns true if any of `keys` are currently pressed.
     #[must_use]
     pub fn any_key_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
         for key in keys {
-            if self.pressed_keys.contains(key) {
+            if self.keys_pressed.contains(key) {
                 return true;
             }
         }
         false
     }
 
+    /// Returns the currently depressed modifier keys.
     #[must_use]
     pub fn modifiers_pressed(&self) -> Modifiers {
         Modifiers {
             control: self.any_key_pressed(&[VirtualKeyCode::RControl, VirtualKeyCode::LControl]),
             alt: self.any_key_pressed(&[VirtualKeyCode::RAlt, VirtualKeyCode::LAlt]),
             shift: self.any_key_pressed(&[VirtualKeyCode::LShift, VirtualKeyCode::RShift]),
-            os: self.any_key_pressed(&[VirtualKeyCode::RWin, VirtualKeyCode::LWin]),
+            operating_system: self.any_key_pressed(&[VirtualKeyCode::RWin, VirtualKeyCode::LWin]),
         }
     }
 
+    /// Begins a new frame with the current size.
     pub fn start_frame(&mut self) {
         let last_start = self.now;
         self.now = Some(Instant::now());
@@ -239,25 +275,30 @@ impl Scene {
         );
     }
 
+    /// Ends the current frame, allowing it to be rendered.
     pub fn end_frame(&self) {
         drop(self.event_sender.send(SceneEvent::EndFrame));
     }
 
+    /// Returns the current size of the scene in [`Scaled`] units.
     #[must_use]
     pub fn size(&self) -> Size<f32, Scaled> {
         self.size / self.scale_factor
     }
 
+    /// Returns the [`Instant`] when the frame began.
     #[must_use]
     pub fn now(&self) -> Instant {
         self.now.expect("now() called without starting a frame")
     }
 
+    /// Returns the elapsed [`Duration`] since the scene was created.
     #[must_use]
     pub const fn elapsed(&self) -> Option<Duration> {
         self.elapsed
     }
 
+    /// Returns true if this is the first frame being rendered.
     #[must_use]
     pub const fn is_initial_frame(&self) -> bool {
         self.elapsed.is_none()

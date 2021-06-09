@@ -15,6 +15,7 @@ use crate::{
     scene::{Element, Target},
 };
 
+/// A 2d shape.
 #[derive(Default, Clone, Debug)]
 pub struct Shape<S> {
     geometry: ShapeGeometry<S>,
@@ -26,6 +27,7 @@ impl<S> Shape<S>
 where
     S: Copy + Default,
 {
+    /// Returns a rectangle.
     pub fn rect(rect: impl Into<Rect<f32, S>>) -> Self {
         let rect = rect.into();
         let path = PathBuilder::new(Point::new(rect.min_x(), rect.min_y()))
@@ -42,6 +44,7 @@ where
         }
     }
 
+    /// Returns a circle with `center` and `radius`.
     #[must_use]
     pub fn circle(center: Point<f32, S>, radius: Length<f32, S>) -> Self {
         Self {
@@ -51,6 +54,7 @@ where
         }
     }
 
+    /// Returns a closed polygon created with `points`.
     #[must_use]
     pub fn polygon(points: impl IntoIterator<Item = Point<f32, S>>) -> Self {
         let mut points = points.into_iter();
@@ -70,18 +74,22 @@ where
         }
     }
 
+    /// Builder-style function. Set `fill` and returns self.
     #[must_use]
     pub fn fill(mut self, fill: Fill) -> Self {
         self.fill = Some(fill);
         self
     }
 
+    /// Builder-style function. Set `stroke` and returns self.
     #[must_use]
     pub fn stroke(mut self, stroke: Stroke) -> Self {
         self.stroke = Some(stroke);
         self
     }
 
+    /// Returns the shape with the geometry casted to the unit provided. This
+    /// does not change the underlying shape data at all.
     #[must_use]
     pub fn cast_unit<U>(self) -> Shape<U> {
         Shape {
@@ -93,6 +101,7 @@ where
 }
 
 impl Shape<Scaled> {
+    /// Renders the shape at `location` within `scene`.
     pub fn render_at(&self, location: Point<f32, Scaled>, scene: &Target) {
         let translated = self.convert_from_user_to_device(location, scene);
         scene.push_element(Element::Shape(translated))

@@ -23,9 +23,10 @@ use crate::{
     sprite::{self, VertexShaderSource},
 };
 
-pub mod frame;
+mod frame;
 use frame::{FontUpdate, Frame, FrameCommand};
 
+/// Renders frames created by a [`Scene`](crate::scene::Scene).
 pub struct FrameRenderer<T>
 where
     T: VertexShaderSource,
@@ -362,7 +363,7 @@ where
             for command in std::mem::take(&mut engine_frame.commands) {
                 match command {
                     FrameCommand::LoadTexture(texture) => {
-                        if !gpu_state.textures.contains_key(&texture.id) {
+                        if !gpu_state.textures.contains_key(&texture.id()) {
                             let sampler = self
                                 .renderer
                                 .sampler(FilterMode::Nearest, FilterMode::Nearest);
@@ -393,7 +394,7 @@ where
                                         TextureUsage::SAMPLED | TextureUsage::COPY_DST,
                                     ),
                                     pixels.to_owned(),
-                                    texture.id,
+                                    texture.id(),
                                 )
                             };
 
@@ -430,15 +431,13 @@ where
                         // prepared_shape.draw(&mut pass);
                     }
                     FrameCommand::DrawText { text, clip } => {
-                        if let Some(loaded_font) = engine_frame.fonts.get(&text.data.font.id()) {
+                        if let Some(loaded_font) = engine_frame.fonts.get(&text.font.id()) {
                             if let Some(texture) = loaded_font.texture.as_ref() {
                                 let mut batch =
                                     sprite::GpuBatch::new(texture.size, clip.map(|r| r.to_box2d()));
-                                for (uv_rect, screen_rect) in
-                                    text.data.glyphs.iter().filter_map(|g| {
-                                        loaded_font.cache.rect_for(0, &g.glyph).ok().flatten()
-                                    })
-                                {
+                                for (uv_rect, screen_rect) in text.glyphs.iter().filter_map(|g| {
+                                    loaded_font.cache.rect_for(0, &g.glyph).ok().flatten()
+                                }) {
                                     // This is one section that feels like a kludge. gpu_cache is
                                     // storing the textures upside down like normal but easywgpu is
                                     // automatically flipping textures. Easygpu's texture isn't
@@ -473,7 +472,7 @@ where
                                         source.cast_unit().cast(),
                                         dest,
                                         sprite::SpriteRotation::default(),
-                                        text.data.color.into(),
+                                        text.color.into(),
                                     );
                                 }
                                 render_commands.push(RenderCommand::FontBuffer(
@@ -552,7 +551,9 @@ const fn buffer_size(size: Size<u32, ScreenSpace>) -> usize {
     size_for_aligned_copy(size.width as usize * 4) * size.height as usize
 }
 
+/// A callback that can be invoked when a [`FrameRenderer`] is fully shut down.
 pub trait ShutdownCallback: Send + Sync + 'static {
+    /// Invoked when the [`FrameRenderer`] is fully shut down.
     fn shutdown(&mut self);
 }
 

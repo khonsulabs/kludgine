@@ -1,23 +1,24 @@
 #[cfg(feature = "bundled-fonts-enabled")]
 pub mod bundled_fonts;
-pub mod font;
+pub(crate) mod font;
+/// Types for handling perpared text.
 pub mod prepared;
 use euclid::Length;
+pub use font::Font;
 use rusttype::Scale;
 
-use self::{
-    font::Font,
-    prepared::{GlyphInfo, PreparedSpan},
-};
+use self::prepared::{GlyphInfo, PreparedSpan};
 use crate::{
     color::Color,
     math::{Pixels, Scaled},
     prelude::Target,
 };
 
-pub struct Text;
+/// Text rendering functionality
+pub enum Text {}
 
 impl Text {
+    /// Prepares `text` to be rendered with the provided settings.
     #[must_use]
     pub fn prepare(
         text: &str,

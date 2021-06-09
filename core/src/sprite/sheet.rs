@@ -6,11 +6,13 @@ use crate::{
     texture::Texture,
 };
 
+/// A collection of sprites from a single [`Texture`].
 #[derive(Debug, Clone)]
 pub struct SpriteSheet<T>
 where
     T: Debug,
 {
+    /// The source texture.
     pub texture: Texture,
     data: Arc<SpriteSheetData<T>>,
 }
@@ -29,6 +31,8 @@ impl<T> SpriteSheet<T>
 where
     T: Debug + Eq + Hash,
 {
+    /// Creates a new sprite sheet, diving `texture` into a grid of `tile_size`.
+    /// The order of `tiles` will be read left-to-right, top-to-bottom.
     #[must_use]
     pub fn new(texture: Texture, tile_size: Size<u32>, tiles: Vec<T>) -> Self {
         let dimensions = divide_size(texture.size().cast(), tile_size);
@@ -38,11 +42,17 @@ where
         }
     }
 
+    /// Returns the size of the tiles within this sheet.
     #[must_use]
     pub fn tile_size(&self) -> Size<u32> {
         self.data.tile_size
     }
 
+    /// Returns the sprites identified by each element in `iterator`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if a tile isn't found.
     #[must_use]
     pub fn sprites<I: IntoIterator<Item = T>>(&self, iterator: I) -> Vec<SpriteSource> {
         iterator
@@ -54,6 +64,8 @@ where
             .collect()
     }
 
+    /// Returns the sprites identified by each element in `iterator` into a
+    /// [`SpriteMap`].
     #[must_use]
     pub fn sprite_map<I: IntoIterator<Item = T>>(&self, iterator: I) -> SpriteMap<T> {
         let map = iterator
@@ -100,18 +112,22 @@ impl<T> SpriteSheet<T>
 where
     T: Clone + Debug + Eq + Hash,
 {
+    /// Returns a collection of all tiles in the sheet  as
     #[must_use]
-    pub fn all_sprites(&self) -> HashMap<T, SpriteSource> {
-        self.data
-            .sprites
-            .iter()
-            .map(|(tile, location)| {
-                (
-                    tile.clone(),
-                    SpriteSource::new(*location, self.texture.clone()),
-                )
-            })
-            .collect()
+    pub fn to_sprite_map(&self) -> SpriteMap<T> {
+        SpriteMap::new(
+            self.data
+                .sprites
+                .clone()
+                .iter()
+                .map(|(tile, location)| {
+                    (
+                        tile.clone(),
+                        SpriteSource::new(*location, self.texture.clone()),
+                    )
+                })
+                .collect(),
+        )
     }
 }
 

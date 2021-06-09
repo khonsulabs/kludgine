@@ -124,7 +124,7 @@ impl GpuBatch {
             }
         }
 
-        let origin = rotation.screen_location.unwrap_or_else(|| dest.center());
+        let origin = rotation.location.unwrap_or_else(|| dest.center());
         let top_left = self
             .vertex(src.min, dest.min, color)
             .rotate_by(rotation.angle, origin);

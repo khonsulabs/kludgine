@@ -37,17 +37,17 @@ impl Window for OrthoTiles {
         let stickguy = self.stickguy.as_mut().unwrap();
         // Our default animation is Idle
         let mut animation = "Idle";
-        if scene.keys_pressed().contains(&VirtualKeyCode::Right) {
+        if scene.keys_pressed.contains(&VirtualKeyCode::Right) {
             animation = "WalkRight";
             self.position.x += 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
-        } else if scene.keys_pressed().contains(&VirtualKeyCode::Left) {
+        } else if scene.keys_pressed.contains(&VirtualKeyCode::Left) {
             animation = "WalkLeft";
             self.position.x -= 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
         }
 
-        if scene.keys_pressed().contains(&VirtualKeyCode::Up) {
+        if scene.keys_pressed.contains(&VirtualKeyCode::Up) {
             self.position.y -= 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
-        } else if scene.keys_pressed().contains(&VirtualKeyCode::Down) {
+        } else if scene.keys_pressed.contains(&VirtualKeyCode::Down) {
             self.position.y += 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
         }
         stickguy.set_current_tag(Some(animation))?;

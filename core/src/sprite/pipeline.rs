@@ -130,13 +130,22 @@ impl<T> Deref for Pipeline<T> {
     }
 }
 
+/// Defines a shader source for sprites.
 pub trait VertexShaderSource {
+    /// The corresponding shader source type in `easygpu_lyon` for shape
+    /// rendering.
     type Lyon: easygpu_lyon::VertexShaderSource + Send + Sync;
 
+    /// The shader executable.
+    #[must_use]
     fn shader() -> &'static [u8];
 
+    /// The texture format expected.
+    #[must_use]
     fn texture_format() -> TextureFormat;
 
+    /// The sampler format expected.
+    #[must_use]
     fn sampler_format() -> TextureFormat {
         <Self::Lyon as easygpu_lyon::VertexShaderSource>::sampler_format()
     }

@@ -11,30 +11,40 @@ mod sheet;
 pub(crate) use self::{
     batch::Batch,
     gpu_batch::{BatchBuffers, GpuBatch},
-    pipeline::{Pipeline, VertexShaderSource},
+    pipeline::Pipeline,
 };
 
 mod source;
 use std::{collections::HashMap, iter::IntoIterator, sync::Arc, time::Duration};
 
-pub use self::{collection::*, sheet::*, source::*};
+pub use self::{collection::*, pipeline::VertexShaderSource, sheet::*, source::*};
 
+/// Includes an [Aseprite](https://www.aseprite.org/) sprite sheet and Json
+/// export. For more information, see [`Sprite::load_aseprite_json`]. This macro
+/// will append ".png" and ".json" to the path provided and include both files
+/// in your binary.
 #[macro_export]
 macro_rules! include_aseprite_sprite {
     ($path:expr) => {{
-        let image_bytes = std::include_bytes!(concat!($path, ".png"));
-        match Texture::from_bytes(image_bytes) {
-            Ok(texture) =>
-                Sprite::load_aseprite_json(include_str!(concat!($path, ".json")), &texture),
-            Err(err) => Err(err),
-        }
+        $crate::include_texture!(concat!($path, ".png")).and_then(|texture| {
+            $crate::sprite::Sprite::load_aseprite_json(
+                include_str!(concat!($path, ".json")),
+                &texture,
+            )
+        })
     }};
 }
 
+/// The animation mode of the sprite.
 #[derive(Debug, Clone)]
 pub enum AnimationMode {
+    /// Iterate frames in order. When at the end, reset to the start.
     Forward,
+    /// Iterate frames in reverse order. When at the start, reset to the end.
     Reverse,
+    /// Iterate frames starting at the beginning and continuously iterating
+    /// forwards and backwards across the frames, changing direction whenever
+    /// the start or end are reached.
     PingPong,
 }
 
@@ -53,27 +63,28 @@ enum AnimationDirection {
     Reverse,
 }
 
+/// A sprite is a renderable graphic with optional animations.
 #[derive(Debug, Clone)]
 pub struct Sprite {
-    title: Option<String>,
+    /// The animations that form this sprite.
+    pub animations: SpriteAnimations,
     elapsed_since_frame_change: Duration,
     current_tag: Option<String>,
     current_frame: usize,
     current_animation_direction: AnimationDirection,
-    animations: SpriteAnimations,
 }
 
 impl From<SpriteAnimations> for Sprite {
     fn from(animations: SpriteAnimations) -> Self {
-        Self::new(None, animations)
+        Self::new(animations)
     }
 }
 
 impl Sprite {
+    /// Returns a new sprite with `animations`.
     #[must_use]
-    pub const fn new(title: Option<String>, animations: SpriteAnimations) -> Self {
+    pub const fn new(animations: SpriteAnimations) -> Self {
         Self {
-            title,
             animations,
             current_frame: 0,
             current_tag: None,
@@ -86,47 +97,45 @@ impl Sprite {
     #[must_use]
     pub fn merged<S: Into<String>, I: IntoIterator<Item = (S, Self)>>(source: I) -> Self {
         let mut combined = HashMap::new();
-        let mut title = None;
         for (name, sprite) in source {
             combined.insert(
                 Some(name.into()),
                 sprite
                     .animations
-                    .frames_for(&Option::<&str>::None)
+                    .animation_for(&Option::<&str>::None)
                     .unwrap()
                     .clone(),
             );
-            title = title.or_else(|| sprite.title.clone());
         }
-        Self::new(title, SpriteAnimations::new(combined))
+        Self::new(SpriteAnimations::new(combined))
     }
 
+    /// Creates an instance from a texture. This creates a `SpriteAnimation`
+    /// with no tag and a single frame.
     #[must_use]
     pub fn single_frame(texture: Texture) -> Self {
-        let size = texture.size();
-        let source = SpriteSource::new(Rect::new(Point::default(), size.cast_unit()), texture);
+        let source = SpriteSource::entire_texture(texture);
         let mut frames = HashMap::new();
         frames.insert(
             None,
-            SpriteAnimation::new(
-                vec![SpriteFrame {
-                    source,
-                    duration: None,
-                }],
-                AnimationMode::Forward,
-            ),
+            SpriteAnimation::new(vec![SpriteFrame {
+                source,
+                duration: None,
+            }])
+            .with_mode(AnimationMode::Forward),
         );
         let frames = SpriteAnimations::new(frames);
 
-        Self::new(None, frames)
+        Self::new(frames)
     }
 
-    /// Loads [Aseprite](https://www.aseprite.org/) JSON export format, when using the correct settings
+    /// Loads [Aseprite](https://www.aseprite.org/) JSON export format, when
+    /// using the correct settings.
     ///
     /// For the JSON data, use the Hash export option (default), and use either
     /// spaces or underscores (_) inbetween the fields in the name. Ensure
-    /// `{frame}` is the last field in the name before the extension.
-    /// E.g., `{tag}_{frame}.{extension}`
+    /// `{frame}` is the last field in the name before the extension. E.g.,
+    /// `{tag}_{frame}.{extension}`
     #[allow(clippy::too_many_lines)]
     // TODO refactor. Now that I know more about serde, this probably can be parsed
     // with a complex serde type.
@@ -147,8 +156,6 @@ impl Sprite {
                 "invalid aseprite json: Size did not match input texture".to_owned(),
             ));
         }
-
-        let title = meta["image"].as_str().map(str::to_owned);
 
         let mut frames = HashMap::new();
         for (name, frame) in json["frames"].entries() {
@@ -247,7 +254,10 @@ impl Sprite {
                 animation_frames.push(frame.clone());
             }
 
-            animations.insert(name, SpriteAnimation::new(animation_frames, direction));
+            animations.insert(
+                name,
+                SpriteAnimation::new(animation_frames).with_mode(direction),
+            );
         }
 
         let mut frames: Vec<_> = frames.into_iter().collect();
@@ -255,15 +265,16 @@ impl Sprite {
 
         animations.insert(
             None,
-            SpriteAnimation::new(
-                frames.iter().map(|(_, f)| f.clone()).collect(),
-                AnimationMode::Forward,
-            ),
+            SpriteAnimation::new(frames.iter().map(|(_, f)| f.clone()).collect())
+                .with_mode(AnimationMode::Forward),
         );
 
-        Ok(Self::new(title, SpriteAnimations::new(animations)))
+        Ok(Self::new(SpriteAnimations::new(animations)))
     }
 
+    /// Sets the current tag for the animation. If the tag currently matches,
+    /// nothing will happen. If it is a new tag, the current frame and animation
+    /// direction will be switched to the values from the new tag.
     pub fn set_current_tag<S: Into<String>>(&mut self, tag: Option<S>) -> crate::Result<()> {
         let new_tag = tag.map(Into::into);
         if self.current_tag != new_tag {
@@ -282,11 +293,17 @@ impl Sprite {
         Ok(())
     }
 
+    /// Returns the current tag.
     #[must_use]
     pub fn current_tag(&self) -> Option<&'_ str> {
         self.current_tag.as_deref()
     }
 
+    /// Gets the current frame after advancing the animation for `elapsed`
+    /// duration. If you need to invoke this multiple times in a single frame,
+    /// pass `None` on subsequent calls. In general, you should clone sprites
+    /// rather than reuse them. Kludgine ensures that your texture and animation
+    /// data will be shared and not cloned.
     pub fn get_frame(&mut self, elapsed: Option<Duration>) -> crate::Result<SpriteSource> {
         if let Some(elapsed) = elapsed {
             self.elapsed_since_frame_change += elapsed;
@@ -306,6 +323,9 @@ impl Sprite {
         self.with_current_frame(|frame| frame.source.clone())
     }
 
+    /// Returns the amount of time remaining until the next frame is due to be
+    /// shown for this sprite. Can be used to calculate redraws more efficiently
+    /// if you're not rendering at a constant framerate.
     pub fn remaining_frame_duration(&self) -> crate::Result<Option<Duration>> {
         let duration = self
             .with_current_frame(|frame| frame.duration)?
@@ -316,31 +336,6 @@ impl Sprite {
             });
 
         Ok(duration)
-    }
-
-    #[must_use]
-    pub const fn animations(&self) -> &'_ SpriteAnimations {
-        &self.animations
-    }
-
-    #[must_use]
-    pub fn bounds(&self) -> Option<Rect<u32>> {
-        if let Some(animation) = self.animations.animations.values().next() {
-            if let Some(frame) = animation.frames.first() {
-                return Some(frame.source.location.bounds());
-            }
-        }
-        None
-    }
-
-    #[must_use]
-    pub fn size(&self) -> Option<Size<u32>> {
-        if let Some(animation) = self.animations.animations.values().next() {
-            if let Some(frame) = animation.frames.first() {
-                return Some(frame.source.location.size());
-            }
-        }
-        None
     }
 
     fn advance_frame(&mut self) -> crate::Result<()> {
@@ -402,12 +397,15 @@ impl Sprite {
     }
 }
 
+/// A collection of [`SpriteAnimation`]s. This is an immutable object that
+/// shares data when cloned to minimize data copies.
 #[derive(Clone, Debug)]
 pub struct SpriteAnimations {
     animations: Arc<HashMap<Option<String>, SpriteAnimation>>,
 }
 
 impl SpriteAnimations {
+    /// Creates a new collection from `animations`.
     #[must_use]
     pub fn new(animations: HashMap<Option<String>, SpriteAnimation>) -> Self {
         Self {
@@ -415,37 +413,52 @@ impl SpriteAnimations {
         }
     }
 
+    /// Returns the animation for `tag`.
     #[must_use]
-    pub fn frames_for(&self, tag: &Option<impl ToString>) -> Option<&'_ SpriteAnimation> {
+    pub fn animation_for(&self, tag: &Option<impl ToString>) -> Option<&'_ SpriteAnimation> {
         self.animations.get(&tag.as_ref().map(|s| s.to_string()))
     }
 }
 
+/// An animation of one or more [`SpriteFrame`]s.
 #[derive(Debug, Clone)]
 pub struct SpriteAnimation {
+    /// The frames of the animation.
     pub frames: Vec<SpriteFrame>,
+    /// The mode of the animation.
     pub mode: AnimationMode,
 }
 
 impl SpriteAnimation {
+    /// Creates a new animation with `frames` and [`AnimationMode::Forward`].
     #[must_use]
-    pub fn new(frames: Vec<SpriteFrame>, mode: AnimationMode) -> Self {
-        Self { frames, mode }
+    pub fn new(frames: Vec<SpriteFrame>) -> Self {
+        Self {
+            frames,
+            mode: AnimationMode::Forward,
+        }
+    }
+
+    /// Builder-style function. Sets `mode` and returns self.
+    #[must_use]
+    pub const fn with_mode(mut self, mode: AnimationMode) -> Self {
+        self.mode = mode;
+        self
     }
 }
 
+/// A single frame for a [`SpriteAnimation`].
 #[derive(Debug, Clone)]
 pub struct SpriteFrame {
+    /// The source to render.
     pub source: SpriteSource,
+    /// The length the frame should be displayed. `None` will act as an infinite
+    /// duration.
     pub duration: Option<Duration>,
 }
 
-pub struct SpriteFrameBuilder {
-    source: SpriteSource,
-    duration: Option<Duration>,
-}
-
-impl SpriteFrameBuilder {
+impl SpriteFrame {
+    /// Creates a new frame with `source` and no duration.
     #[must_use]
     pub const fn new(source: SpriteSource) -> Self {
         Self {
@@ -454,22 +467,15 @@ impl SpriteFrameBuilder {
         }
     }
 
+    /// Builder-style function. Sets `duration` and returns self.
     #[must_use]
     pub const fn with_duration(mut self, duration: Duration) -> Self {
         self.duration = Some(duration);
         self
     }
-
-    #[must_use]
-    #[allow(clippy::missing_const_for_fn)] // this isn't supported
-    pub fn build(self) -> SpriteFrame {
-        SpriteFrame {
-            source: self.source,
-            duration: self.duration,
-        }
-    }
 }
 
+/// A rendered sprite.
 #[derive(Clone, Debug)]
 pub struct RenderedSprite {
     pub(crate) data: Arc<RenderedSpriteData>,
@@ -477,7 +483,7 @@ pub struct RenderedSprite {
 
 impl RenderedSprite {
     #[must_use]
-    pub fn new(
+    pub(crate) fn new(
         render_at: Box2D<f32, Raw>,
         rotation: SpriteRotation<Raw>,
         alpha: f32,
@@ -502,37 +508,41 @@ pub(crate) struct RenderedSpriteData {
     pub source: SpriteSource,
 }
 
+/// A rotation of a sprite.
 #[derive(Copy, Clone, Debug)]
 pub struct SpriteRotation<Unit> {
+    /// The angle to rotate around `screen_location`.
     pub angle: Option<Angle>,
     /// The location to rotate the sprite around. If not specified, the center
     /// of the sprite is used.
-    pub screen_location: Option<Point<f32, Unit>>,
+    pub location: Option<Point<f32, Unit>>,
 }
 
 impl<Unit> Default for SpriteRotation<Unit> {
     fn default() -> Self {
         Self {
             angle: None,
-            screen_location: None,
+            location: None,
         }
     }
 }
 
 impl<Unit> SpriteRotation<Unit> {
+    /// Returns a rotation around the center of the shape.
     #[must_use]
     pub const fn around_center(angle: Angle) -> Self {
         Self {
             angle: Some(angle),
-            screen_location: None,
+            location: None,
         }
     }
 
+    /// Returns a rotation around `location`.
     #[must_use]
-    pub const fn around(angle: Angle, screen_location: Point<f32, Unit>) -> Self {
+    pub const fn around(angle: Angle, location: Point<f32, Unit>) -> Self {
         Self {
             angle: Some(angle),
-            screen_location: Some(screen_location),
+            location: Some(location),
         }
     }
 }
@@ -543,10 +553,15 @@ impl<A, B> std::ops::Mul<Scale<f32, A, B>> for SpriteRotation<A> {
     fn mul(self, rhs: Scale<f32, A, B>) -> Self::Output {
         SpriteRotation {
             angle: self.angle,
-            screen_location: self.screen_location.map(|l| l * rhs),
+            location: self.location.map(|l| l * rhs),
         }
     }
 }
 
+/// The Srgb colorspace. Used as a `VertexShaderSource` in
+/// [`FrameRenderer`](crate::frame_renderer::FrameRenderer).
 pub struct Srgb;
+/// The uncorrected Rgb colorspace. Used as a
+/// [`VertexShaderSource`](crate::sprite::VertexShaderSource) in
+/// [`FrameRenderer`](crate::frame_renderer::FrameRenderer).
 pub struct Normal;

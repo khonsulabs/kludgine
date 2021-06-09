@@ -19,7 +19,6 @@
     clippy::cast_possible_truncation,
     clippy::cast_precision_loss,
     clippy::mut_mut, // false alarm on futures::select!
-    missing_docs,
 )]
 
 mod color;
@@ -55,14 +54,15 @@ pub use self::{
     frame_renderer::{FrameRenderer, ShutdownCallback},
 };
 
+/// A collection of commonly used exports provided by this crate.
 pub mod prelude {
     #[cfg(feature = "bundled-fonts-enabled")]
     pub use super::text::bundled_fonts;
     pub use super::{
         include_aseprite_sprite, include_font, include_texture,
         math::{
-            Angle, Dimension, Length, Pixels, Point, PointExt, Points, Raw, Rect, Scale, Scaled,
-            ScreenScale, Size, SizeExt, Surround, Unknown, Vector,
+            Angle, Length, Pixels, Point, PointExt, Points, Raw, Rect, Scale, Scaled, ScreenScale,
+            Size, SizeExt, Unknown, Vector,
         },
         scene::{Scene, Target},
         shape::*,

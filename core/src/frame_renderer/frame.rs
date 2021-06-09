@@ -12,10 +12,10 @@ use crate::{
     texture::Texture,
 };
 #[derive(Default, Debug)]
-pub(crate) struct Frame {
+pub struct Frame {
     pub size: Size<f32, ScreenSpace>,
-    pub commands: Vec<FrameCommand>,
-    pub(crate) textures: HashMap<u64, Texture>,
+    pub textures: HashMap<u64, Texture>,
+    pub(crate) commands: Vec<FrameCommand>,
     pub(crate) fonts: HashMap<u64, LoadedFont>,
     pub(crate) pending_font_updates: Vec<FontUpdate>,
     receiver: FrameReceiver,
@@ -65,7 +65,7 @@ impl FrameReceiver {
 }
 
 #[derive(Debug)]
-pub(crate) struct FontUpdate {
+pub struct FontUpdate {
     pub font_id: u64,
     pub rect: rusttype::Rect<u32>,
     pub data: Vec<u8>,
@@ -141,7 +141,7 @@ impl Frame {
                     let texture = &sprite.source.texture;
 
                     if current_texture_id.is_none()
-                        || current_texture_id.as_ref().unwrap() != &texture.id
+                        || current_texture_id.as_ref().unwrap() != &texture.id()
                         || current_batch.is_none()
                         || !current_batch.as_ref().unwrap().is_sprite()
                         || current_batch
@@ -153,20 +153,20 @@ impl Frame {
                             != *clip
                     {
                         self.commit_batch(current_batch);
-                        current_texture_id = Some(texture.id);
-                        referenced_texture_ids.insert(texture.id);
+                        current_texture_id = Some(texture.id());
+                        referenced_texture_ids.insert(texture.id());
 
                         // Load the texture if needed
                         #[allow(clippy::map_entry)]
-                        if !self.textures.contains_key(&texture.id) {
+                        if !self.textures.contains_key(&texture.id()) {
                             self.textures
-                                .insert(texture.id, sprite.source.texture.clone());
+                                .insert(texture.id(), sprite.source.texture.clone());
                             self.commands
                                 .push(FrameCommand::LoadTexture(sprite.source.texture.clone()));
                         }
 
                         current_batch = Some(FrameBatch::Sprite(sprite::Batch::new(
-                            texture.id,
+                            texture.id(),
                             texture.size(),
                             *clip,
                         )));
@@ -227,13 +227,13 @@ impl Frame {
             Element::Text { span, .. } => Some(span),
             _ => None,
         }) {
-            referenced_fonts.insert(text.data.font.id());
+            referenced_fonts.insert(text.font.id());
 
-            for glyph_info in &text.data.glyphs {
+            for glyph_info in &text.glyphs {
                 let loaded_font = self
                     .fonts
-                    .entry(text.data.font.id())
-                    .or_insert_with(|| LoadedFont::new(&text.data.font));
+                    .entry(text.font.id())
+                    .or_insert_with(|| LoadedFont::new(&text.font));
                 loaded_font.cache.queue_glyph(0, glyph_info.glyph.clone());
             }
         }
@@ -269,7 +269,7 @@ impl Frame {
 }
 
 #[derive(Debug)]
-pub(crate) enum FrameCommand {
+pub enum FrameCommand {
     LoadTexture(Texture),
     DrawBatch(sprite::Batch),
     DrawShapes(shape::Batch),
