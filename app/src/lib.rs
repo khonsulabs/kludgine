@@ -18,28 +18,31 @@
     clippy::cast_possible_truncation,
     clippy::cast_precision_loss,
     clippy::mut_mut, // false alarm on futures::select!
-    missing_docs,
 )]
 
-pub mod application;
+mod application;
 mod error;
-pub mod runtime;
-pub mod window;
-pub use error::Error;
+mod runtime;
+mod window;
+#[cfg(feature = "multiwindow")]
+pub use window::OpenableWindow;
 
+pub use self::{
+    application::{Application, SingleWindowApplication},
+    error::Error,
+    runtime::Runtime,
+    window::{event, RedrawStatus, Window, WindowBuilder, WindowCreator},
+};
+
+/// A collection of commonly used exports provided by this crate.
 pub mod prelude {
-    #[cfg(feature = "multiwindow")]
-    pub use super::window::OpenableWindow;
     pub use super::{
-        application::{Application, SingleWindowApplication},
-        runtime::Runtime,
-        window::{
-            event::{
-                DeviceId, ElementState, Event, EventStatus, InputEvent, MouseButton,
-                MouseScrollDelta, ScanCode, TouchPhase, VirtualKeyCode,
-            },
-            OpenWindow, RedrawStatus, Window, WindowBuilder, WindowCreator,
+        event::{
+            DeviceId, ElementState, Event, EventStatus, InputEvent, MouseButton, MouseScrollDelta,
+            ScanCode, TouchPhase, VirtualKeyCode,
         },
+        Application, Error, RedrawStatus, Runtime, SingleWindowApplication, Window, WindowBuilder,
+        WindowCreator,
     };
 }
 

@@ -19,12 +19,17 @@ pub struct OpenWindow<T: Window> {
     scene: Arc<Scene>,
 }
 
+/// Tracks when a window should be redrawn. Allows for rendering a frame
+/// immediately as well as scheduling a refresh in the future.
 pub struct RedrawStatus {
     next_redraw_target: RedrawTarget,
     needs_render: bool,
     event_sender: Sender<WindowEvent>,
 }
+
 impl RedrawStatus {
+    /// Triggers a redraw as soon as possible. Any estimated frame instants will
+    /// be ignored.
     pub fn set_needs_redraw(&mut self) {
         if !self.needs_render {
             self.needs_render = true;
@@ -32,10 +37,15 @@ impl RedrawStatus {
         }
     }
 
+    /// Estimates the next redraw instant by adding `duration` to
+    /// `Instant::now()`. If this is later than the current estimate, it
+    /// will be ignored.
     pub fn estimate_next_frame(&mut self, duration: Duration) {
         self.estimate_next_frame_instant(Instant::now().checked_add(duration).unwrap());
     }
 
+    /// Estimates the next redraw instant. If `instant` is later than the
+    /// current estimate, it will be ignored.
     pub fn estimate_next_frame_instant(&mut self, instant: Instant) {
         match self.next_redraw_target {
             RedrawTarget::Never | RedrawTarget::None => {

@@ -16,12 +16,13 @@ use lazy_static::lazy_static;
 
 use crate::Error;
 
+/// Types for event handling.
 pub mod event;
-pub(crate) mod open;
+pub mod open;
 mod runtime_window;
 
 pub use open::{OpenWindow, RedrawStatus};
-pub(crate) use runtime_window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig};
+pub use runtime_window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig};
 pub use winit::window::Icon;
 
 use self::event::InputEvent;
@@ -36,12 +37,14 @@ pub enum CloseResponse {
 
 /// Trait to implement a Window
 pub trait Window: Send + Sync + 'static {
+    /// Called when the window is being initilaized.
     fn initialize(&mut self, _scene: &Target) -> crate::Result<()>
     where
         Self: Sized,
     {
         Ok(())
     }
+
     /// The window was requested to be closed, most likely from the Close
     /// Button. Override this implementation if you want logic in place to
     /// prevent a window from closing.
@@ -76,11 +79,18 @@ pub trait Window: Send + Sync + 'static {
         None
     }
 
-    fn render(&mut self, _scene: &Target) -> crate::Result<()> {
+    /// Renders the contents of the window. Called whenever the operating system
+    /// needs the window's contents to be redrawn or when [`RedrawStatus`]
+    /// indicates a new frame should be rendered in [`Window::update()`].
+    #[allow(unused_variables)]
+    fn render(&mut self, scene: &Target) -> crate::Result<()> {
         Ok(())
     }
 
-    fn update(&mut self, _scene: &Target, _status: &mut RedrawStatus) -> crate::Result<()>
+    /// Called on a regular basis as events come in. Use `status` to indicate
+    /// when a redraw should happen.
+    #[allow(unused_variables)]
+    fn update(&mut self, scene: &Target, status: &mut RedrawStatus) -> crate::Result<()>
     where
         Self: Sized,
     {
@@ -88,7 +98,9 @@ pub trait Window: Send + Sync + 'static {
     }
 }
 
+/// Defines initial window properties.
 pub trait WindowCreator: Window {
+    /// Returns a [`WindowBuilder`] for this window.
     #[must_use]
     fn get_window_builder() -> WindowBuilder {
         WindowBuilder::default()
@@ -103,52 +115,63 @@ pub trait WindowCreator: Window {
             .with_always_on_top(Self::always_on_top())
     }
 
+    /// The initial title of the window.
     #[must_use]
     fn window_title() -> String {
         "Kludgine".to_owned()
     }
 
+    /// The initial size of the window.
     #[must_use]
     fn initial_size() -> Size<u32, Scaled> {
         Size::new(1024, 768)
     }
 
+    /// Whether the window should be resizable or not.
     #[must_use]
     fn resizable() -> bool {
         true
     }
 
+    /// Whether the window should be maximized or not.
     #[must_use]
     fn maximized() -> bool {
         false
     }
 
+    /// Whether the window should be visible or not.
     #[must_use]
     fn visible() -> bool {
         true
     }
 
+    /// Whether the window should be transparent or not.
     #[must_use]
     fn transparent() -> bool {
         false
     }
 
+    /// Whether the window should be drawn with decorations or not.
     #[must_use]
     fn decorations() -> bool {
         true
     }
 
+    /// Whether the window should always be on top or not.
     #[must_use]
     fn always_on_top() -> bool {
         false
     }
 
+    /// The default [`Theme`] for the [`Window`] if `winit` is unable to
+    /// determine the system theme.
     #[must_use]
     fn initial_system_theme() -> Theme {
         Theme::Light
     }
 }
 
+/// A builder for a [`Window`].
 #[derive(Default)]
 pub struct WindowBuilder {
     title: Option<String>,
@@ -164,54 +187,63 @@ pub struct WindowBuilder {
 }
 
 impl WindowBuilder {
+    /// Builder-style function. Sets `title` and returns self.
     #[must_use]
     pub fn with_title<T: Into<String>>(mut self, title: T) -> Self {
         self.title = Some(title.into());
         self
     }
 
+    /// Builder-style function. Sets `size` and returns self.
     #[must_use]
     pub const fn with_size(mut self, size: Size<u32, Scaled>) -> Self {
         self.size = Some(size);
         self
     }
 
+    /// Builder-style function. Sets `resizable` and returns self.
     #[must_use]
     pub const fn with_resizable(mut self, resizable: bool) -> Self {
         self.resizable = Some(resizable);
         self
     }
 
+    /// Builder-style function. Sets `maximized` and returns self.
     #[must_use]
     pub const fn with_maximized(mut self, maximized: bool) -> Self {
         self.maximized = Some(maximized);
         self
     }
 
+    /// Builder-style function. Sets `visible` and returns self.
     #[must_use]
     pub const fn with_visible(mut self, visible: bool) -> Self {
         self.visible = Some(visible);
         self
     }
 
+    /// Builder-style function. Sets `transparent` and returns self.
     #[must_use]
     pub const fn with_transparent(mut self, transparent: bool) -> Self {
         self.transparent = Some(transparent);
         self
     }
 
+    /// Builder-style function. Sets `decorations` and returns self.
     #[must_use]
     pub const fn with_decorations(mut self, decorations: bool) -> Self {
         self.decorations = Some(decorations);
         self
     }
 
+    /// Builder-style function. Sets `alawys_on_top` and returns self.
     #[must_use]
     pub const fn with_always_on_top(mut self, always_on_top: bool) -> Self {
         self.always_on_top = Some(always_on_top);
         self
     }
 
+    /// Builder-style function. Sets `icon` and returns self.
     #[must_use]
     #[allow(clippy::missing_const_for_fn)] // unsupported
     pub fn with_icon(mut self, icon: Icon) -> Self {
@@ -219,6 +251,7 @@ impl WindowBuilder {
         self
     }
 
+    /// Builder-style function. Sets `initial_system_theme` and returns self.
     #[must_use]
     pub const fn with_initial_system_theme(mut self, system_theme: Theme) -> Self {
         self.initial_system_theme = Some(system_theme);
@@ -264,9 +297,11 @@ impl From<WindowBuilder> for WinitWindowBuilder {
     }
 }
 
+/// A window that can be opened.
 #[cfg(feature = "multiwindow")]
 pub trait OpenableWindow {
-    fn open(window: Self);
+    /// Opens `self` as a [`Window`].
+    fn open(self);
 }
 
 #[cfg(feature = "multiwindow")]
@@ -274,8 +309,8 @@ impl<T> OpenableWindow for T
 where
     T: Window + WindowCreator,
 {
-    fn open(window: Self) {
-        crate::runtime::Runtime::open_window(Self::get_window_builder(), window)
+    fn open(self) {
+        crate::runtime::Runtime::open_window(Self::get_window_builder(), self)
     }
 }
 
@@ -283,7 +318,8 @@ lazy_static! {
     static ref WINDOW_CHANNELS: Arc<Mutex<HashMap<WindowId, flume::Sender<WindowMessage>>>> =
         Arc::default();
 }
-pub(crate) enum WindowMessage {
+
+pub enum WindowMessage {
     Close,
 }
 

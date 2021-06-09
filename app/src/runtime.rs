@@ -18,7 +18,7 @@ use crate::{
     window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig, Window, WindowBuilder},
 };
 
-pub(crate) enum RuntimeRequest {
+pub enum RuntimeRequest {
     #[cfg(feature = "multiwindow")]
     OpenWindow {
         builder: WindowBuilder,
@@ -43,7 +43,7 @@ impl RuntimeRequest {
 }
 
 #[derive(Debug)]
-pub(crate) enum RuntimeEvent {
+pub enum RuntimeEvent {
     Running,
     WindowClosed,
 }
@@ -62,12 +62,11 @@ pub trait EventProcessor: Send + Sync {
 }
 
 lazy_static! {
-    pub(crate) static ref GLOBAL_RUNTIME_SENDER: Mutex<Option<flume::Sender<RuntimeRequest>>> =
+    pub static ref GLOBAL_RUNTIME_SENDER: Mutex<Option<flume::Sender<RuntimeRequest>>> =
         Mutex::new(None);
-    pub(crate) static ref GLOBAL_RUNTIME_RECEIVER: Mutex<Option<flume::Receiver<RuntimeEvent>>> =
+    pub static ref GLOBAL_RUNTIME_RECEIVER: Mutex<Option<flume::Receiver<RuntimeEvent>>> =
         Mutex::new(None);
-    pub(crate) static ref GLOBAL_EVENT_HANDLER: Mutex<Option<Box<dyn EventProcessor>>> =
-        Mutex::new(None);
+    pub static ref GLOBAL_EVENT_HANDLER: Mutex<Option<Box<dyn EventProcessor>>> = Mutex::new(None);
 }
 
 #[cfg(feature = "smol-rt")]
@@ -200,15 +199,17 @@ pub struct Runtime {
 
 #[cfg(feature = "multiwindow")]
 lazy_static! {
-    pub(crate) static ref WINIT_WINDOWS: RwLock<HashMap<WindowId, winit::window::Window>> =
+    pub static ref WINIT_WINDOWS: RwLock<HashMap<WindowId, winit::window::Window>> =
         RwLock::new(HashMap::new());
 }
 
 impl Runtime {
+    /// Initializes the managed async runtime.
     pub fn initialize() {
         initialize_async_runtime();
     }
 
+    /// Returns a new runtime for `app`.
     pub fn new<App>(app: App) -> Self
     where
         App: Application + 'static,
@@ -244,6 +245,7 @@ impl Runtime {
         matches!(TARGET_OS, OS::Android | OS::iOS)
     }
 
+    /// Executes the runtime's event loop.
     pub fn run<T>(self, initial_window: WindowBuilder, window: T) -> !
     where
         T: Window + Sized + 'static,
@@ -321,6 +323,7 @@ impl Runtime {
         });
     }
 
+    /// Opens a [`Window`]. Requires feature `multiwindow`.
     #[cfg(feature = "multiwindow")]
     pub fn open_window<T>(builder: WindowBuilder, window: T)
     where
@@ -388,6 +391,5 @@ fn initialize_async_runtime() {
 }
 
 lazy_static! {
-    pub(crate) static ref WINDOWS: RwLock<HashMap<WindowId, RuntimeWindow>> =
-        RwLock::new(HashMap::new());
+    pub static ref WINDOWS: RwLock<HashMap<WindowId, RuntimeWindow>> = RwLock::new(HashMap::new());
 }

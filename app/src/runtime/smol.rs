@@ -44,18 +44,22 @@ pub fn initialize() {
 }
 
 impl super::Runtime {
+    /// Spawns an async task.
     pub fn spawn<Fut: Future<Output = T> + Send + 'static, T: Send + 'static>(future: Fut) {
         let guard = GLOBAL_THREAD_POOL.read().expect("Error getting runtime");
         let executor = guard.as_ref().unwrap();
         executor.spawn(future).detach()
     }
 
+    /// Executes a future in a blocking-safe manner.
     pub fn block_on<'a, Fut: Future<Output = R> + Send + 'a, R: Send + Sync + 'a>(
         future: Fut,
     ) -> R {
         futures::executor::block_on(future)
     }
 
+    /// Executes `future` for up to `duration`. If a timeout occurs, `None` is
+    /// returned.
     pub async fn timeout<F: Future<Output = T> + Send, T: Send>(
         future: F,
         duration: Duration,
