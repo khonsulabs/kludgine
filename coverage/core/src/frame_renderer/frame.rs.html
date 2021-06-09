@@ -15,7 +15,7 @@
         <div>
             <p class="heading">Lines</p>
             <p class="title has-text-danger">
-                <abbr title="48 / 87">55.17 %</abbr></p>
+                <abbr title="48 / 86">55.81 %</abbr></p>
         </div>
     </div>
 
@@ -229,7 +229,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">pub(crate) struct Frame {</pre>
+                <pre class="has-background-white py-0 px-2">pub struct Frame {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -255,7 +255,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    pub commands: Vec&lt;FrameCommand&gt;,</pre>
+                <pre class="has-background-white py-0 px-2">    pub textures: HashMap&lt;u64, Texture&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -268,7 +268,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    pub(crate) textures: HashMap&lt;u64, Texture&gt;,</pre>
+                <pre class="has-background-white py-0 px-2">    pub(crate) commands: Vec&lt;FrameCommand&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -918,7 +918,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">pub(crate) struct FontUpdate {</pre>
+                <pre class="has-background-white py-0 px-2">pub struct FontUpdate {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1906,7 +1906,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        || current_texture_id.as_ref().unwrap() != &amp;texture.id</pre>
+                <pre class="has-background-white py-0 px-2">                        || current_texture_id.as_ref().unwrap() != &amp;texture.id()</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2062,7 +2062,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        current_texture_id = Some(texture.id);</pre>
+                <pre class="has-background-white py-0 px-2">                        current_texture_id = Some(texture.id());</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2075,7 +2075,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        referenced_texture_ids.insert(texture.id);</pre>
+                <pre class="has-background-white py-0 px-2">                        referenced_texture_ids.insert(texture.id());</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2127,7 +2127,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        if !self.textures.contains_key(&amp;texture.id) {</pre>
+                <pre class="has-background-white py-0 px-2">                        if !self.textures.contains_key(&amp;texture.id()) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2153,7 +2153,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                                .insert(texture.id, sprite.source.texture.clone());</pre>
+                <pre class="has-background-white py-0 px-2">                                .insert(texture.id(), sprite.source.texture.clone());</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2231,7 +2231,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                            texture.id,</pre>
+                <pre class="has-background-white py-0 px-2">                            texture.id(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2695,11 +2695,11 @@
                 <a href="#205">205</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            .filter(|id| !referenced_texture_ids.contains(id))</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">            .filter(|id| !referenced_texture_ids.contains(id))</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3024,7 +3024,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            referenced_fonts.insert(text.data.font.id());</pre>
+                <pre class="has-background-danger-light py-0 px-2">            referenced_fonts.insert(text.font.id());</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3050,7 +3050,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            for glyph_info in &amp;text.data.glyphs {</pre>
+                <pre class="has-background-danger-light py-0 px-2">            for glyph_info in &amp;text.glyphs {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3089,7 +3089,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    .entry(text.data.font.id())</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    .entry(text.font.id())</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3102,7 +3102,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    .or_insert_with(|| LoadedFont::new(&amp;text.data.font));</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    .or_insert_with(|| LoadedFont::new(&amp;text.font));</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3570,7 +3570,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">pub(crate) enum FrameCommand {</pre>
+                <pre class="has-background-white py-0 px-2">pub enum FrameCommand {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3679,7 +3679,7 @@
         </div></div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2021-06-09 01:55</p>
+                <p class="heading">Date: 2021-06-09 05:04</p>
             </div>
         </footer>
     </body>
