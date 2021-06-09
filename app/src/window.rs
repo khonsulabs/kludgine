@@ -89,6 +89,7 @@ pub trait Window: Send + Sync + 'static {
 }
 
 pub trait WindowCreator: Window {
+    #[must_use]
     fn get_window_builder() -> WindowBuilder {
         WindowBuilder::default()
             .with_title(Self::window_title())
@@ -102,38 +103,47 @@ pub trait WindowCreator: Window {
             .with_always_on_top(Self::always_on_top())
     }
 
+    #[must_use]
     fn window_title() -> String {
         "Kludgine".to_owned()
     }
 
+    #[must_use]
     fn initial_size() -> Size<u32, Scaled> {
         Size::new(1024, 768)
     }
 
+    #[must_use]
     fn resizable() -> bool {
         true
     }
 
+    #[must_use]
     fn maximized() -> bool {
         false
     }
 
+    #[must_use]
     fn visible() -> bool {
         true
     }
 
+    #[must_use]
     fn transparent() -> bool {
         false
     }
 
+    #[must_use]
     fn decorations() -> bool {
         true
     }
 
+    #[must_use]
     fn always_on_top() -> bool {
         false
     }
 
+    #[must_use]
     fn initial_system_theme() -> Theme {
         Theme::Light
     }
@@ -154,52 +164,63 @@ pub struct WindowBuilder {
 }
 
 impl WindowBuilder {
+    #[must_use]
     pub fn with_title<T: Into<String>>(mut self, title: T) -> Self {
         self.title = Some(title.into());
         self
     }
 
-    pub fn with_size(mut self, size: Size<u32, Scaled>) -> Self {
+    #[must_use]
+    pub const fn with_size(mut self, size: Size<u32, Scaled>) -> Self {
         self.size = Some(size);
         self
     }
 
-    pub fn with_resizable(mut self, resizable: bool) -> Self {
+    #[must_use]
+    pub const fn with_resizable(mut self, resizable: bool) -> Self {
         self.resizable = Some(resizable);
         self
     }
 
-    pub fn with_maximized(mut self, maximized: bool) -> Self {
+    #[must_use]
+    pub const fn with_maximized(mut self, maximized: bool) -> Self {
         self.maximized = Some(maximized);
         self
     }
 
-    pub fn with_visible(mut self, visible: bool) -> Self {
+    #[must_use]
+    pub const fn with_visible(mut self, visible: bool) -> Self {
         self.visible = Some(visible);
         self
     }
 
-    pub fn with_transparent(mut self, transparent: bool) -> Self {
+    #[must_use]
+    pub const fn with_transparent(mut self, transparent: bool) -> Self {
         self.transparent = Some(transparent);
         self
     }
 
-    pub fn with_decorations(mut self, decorations: bool) -> Self {
+    #[must_use]
+    pub const fn with_decorations(mut self, decorations: bool) -> Self {
         self.decorations = Some(decorations);
         self
     }
 
-    pub fn with_always_on_top(mut self, always_on_top: bool) -> Self {
+    #[must_use]
+    pub const fn with_always_on_top(mut self, always_on_top: bool) -> Self {
         self.always_on_top = Some(always_on_top);
         self
     }
 
+    #[must_use]
+    #[allow(clippy::missing_const_for_fn)] // unsupported
     pub fn with_icon(mut self, icon: Icon) -> Self {
         self.icon = Some(icon);
         self
     }
 
-    pub fn with_initial_system_theme(mut self, system_theme: Theme) -> Self {
+    #[must_use]
+    pub const fn with_initial_system_theme(mut self, system_theme: Theme) -> Self {
         self.initial_system_theme = Some(system_theme);
         self
     }
@@ -273,7 +294,7 @@ impl WindowMessage {
             if let Some(sender) = channels.get_mut(&id) {
                 sender.clone()
             } else {
-                return Err(Error::InternalWindowMessageSendError(
+                return Err(Error::InternalWindowMessageSend(
                     "Channel not found for id".to_owned(),
                 ));
             }

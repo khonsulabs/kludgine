@@ -1,7 +1,7 @@
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("error sending a WindowMessage to a Window: {0}")]
-    InternalWindowMessageSendError(String),
+    InternalWindowMessageSend(String),
 
     #[error("kludgine-core error: {0}")]
     Core(#[from] kludgine_core::Error),

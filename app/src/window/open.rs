@@ -73,7 +73,7 @@ impl<T: Window> OpenWindow<T> {
                 Some(fps) => {
                     self.redraw_status.next_redraw_target = RedrawTarget::Scheduled(
                         Instant::now()
-                            .checked_add(Duration::from_secs_f32(1. / fps as f32))
+                            .checked_add(Duration::from_secs_f32(1. / f32::from(fps)))
                             .unwrap(),
                     );
                 }
@@ -91,8 +91,7 @@ impl<T: Window> OpenWindow<T> {
     pub fn needs_render(&self) -> bool {
         self.redraw_status.needs_render
             || match self.redraw_status.next_redraw_target {
-                RedrawTarget::Never => false,
-                RedrawTarget::None => false,
+                RedrawTarget::Never | RedrawTarget::None => false,
                 RedrawTarget::Scheduled(scheduled_for) => scheduled_for < Instant::now(),
             }
     }
@@ -160,7 +159,7 @@ impl<T: Window> OpenWindow<T> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) enum RedrawTarget {
+pub enum RedrawTarget {
     None,
     Never,
     Scheduled(Instant),
@@ -172,13 +171,13 @@ impl Default for RedrawTarget {
     }
 }
 
-pub(crate) enum UpdateSchedule {
+pub enum UpdateSchedule {
     Now,
     Scheduled(Instant),
 }
 
 impl RedrawTarget {
-    pub fn next_update_instant(&self) -> Option<UpdateSchedule> {
+    pub(crate) const fn next_update_instant(&self) -> Option<UpdateSchedule> {
         match self {
             RedrawTarget::Never => None,
             Self::None => Some(UpdateSchedule::Now),

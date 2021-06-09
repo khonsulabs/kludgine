@@ -14,16 +14,16 @@ pub enum EventStatus {
 
 impl Default for EventStatus {
     fn default() -> Self {
-        EventStatus::Ignored
+        Self::Ignored
     }
 }
 
 impl EventStatus {
     pub fn update_with(&mut self, other: Self) {
-        *self = if self == &EventStatus::Processed || other == EventStatus::Processed {
-            EventStatus::Processed
+        *self = if self == &Self::Processed || other == Self::Processed {
+            Self::Processed
         } else {
-            EventStatus::Ignored
+            Self::Ignored
         };
     }
 }

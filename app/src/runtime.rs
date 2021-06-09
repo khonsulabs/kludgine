@@ -31,7 +31,7 @@ pub(crate) enum RuntimeRequest {
 
 impl RuntimeRequest {
     pub fn send(self) -> crate::Result<()> {
-        let sender: Sender<RuntimeRequest> = {
+        let sender: Sender<Self> = {
             let guard = GLOBAL_RUNTIME_SENDER.lock().expect("Error locking mutex");
             match *guard {
                 Some(ref sender) => sender.clone(),
@@ -57,7 +57,7 @@ pub trait EventProcessor: Send + Sync {
     fn process_event(
         &mut self,
         event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
-        event: winit::event::Event<()>,
+        event: winit::event::Event<'_, ()>,
         control_flow: &mut winit::event_loop::ControlFlow,
     );
 }
@@ -156,7 +156,7 @@ impl EventProcessor for Runtime {
     fn process_event(
         &mut self,
         event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
-        event: winit::event::Event<()>,
+        event: winit::event::Event<'_, ()>,
         control_flow: &mut winit::event_loop::ControlFlow,
     ) {
         while let Ok(request) = self.request_receiver.try_recv() {
@@ -166,7 +166,7 @@ impl EventProcessor for Runtime {
                     window_sender,
                     builder,
                 } => {
-                    self.internal_open_window(window_sender, builder, event_loop);
+                    Self::internal_open_window(&window_sender, builder, event_loop);
                 }
                 RuntimeRequest::Quit => {
                     *control_flow = winit::event_loop::ControlFlow::Exit;
@@ -179,7 +179,7 @@ impl EventProcessor for Runtime {
                 }
             }
         }
-        self.process_window_events(&event);
+        Self::process_window_events(&event);
 
         if let winit::event::Event::NewEvents(winit::event::StartCause::Init) = event {
             self.event_sender
@@ -192,7 +192,8 @@ impl EventProcessor for Runtime {
 }
 
 /// Runtime is designed to consume the main thread. For cross-platform
-/// compatibility, ensure that you call Runtime::run from thee main thread.
+/// compatibility, ensure that you call [`Runtime::run()`] from thee main
+/// thread.
 pub struct Runtime {
     request_receiver: Receiver<RuntimeRequest>,
     event_sender: Sender<RuntimeEvent>,
@@ -226,13 +227,12 @@ impl Runtime {
 
     #[cfg(feature = "multiwindow")]
     fn internal_open_window(
-        &mut self,
-        window_sender: flume::Sender<RuntimeWindowConfig>,
+        window_sender: &flume::Sender<RuntimeWindowConfig>,
         builder: WindowBuilder,
         event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
     ) {
         let builder: winit::window::WindowBuilder = builder.into();
-        let winit_window = builder.build(&event_loop).unwrap();
+        let winit_window = builder.build(event_loop).unwrap();
         window_sender
             .try_send(RuntimeWindowConfig::new(&winit_window))
             .unwrap();
@@ -241,7 +241,7 @@ impl Runtime {
         windows.insert(winit_window.id(), winit_window);
     }
 
-    fn should_run_in_exclusive_mode() -> bool {
+    const fn should_run_in_exclusive_mode() -> bool {
         matches!(TARGET_OS, OS::Android | OS::iOS)
     }
 
@@ -288,7 +288,7 @@ impl Runtime {
             .send(RuntimeWindowConfig::new(&initial_window))
             .unwrap();
 
-        RuntimeWindow::open(window_receiver, initial_system_theme, window);
+        RuntimeWindow::open(&window_receiver, initial_system_theme, window);
 
         #[cfg(feature = "multiwindow")]
         {
@@ -318,7 +318,7 @@ impl Runtime {
                 .expect("No event handler installed");
             event_handler
                 .as_mut()
-                .process_event(&event_loop, event, control_flow);
+                .process_event(event_loop, event, control_flow);
         });
     }
 
@@ -336,18 +336,18 @@ impl Runtime {
         .send()
         .unwrap_or_default();
 
-        RuntimeWindow::open(window_receiver, initial_system_theme, window);
+        RuntimeWindow::open(&window_receiver, initial_system_theme, window);
     }
 
-    fn process_window_events(&mut self, event: &Event<()>) {
+    fn process_window_events(event: &Event<'_, ()>) {
         let mut windows = WINDOWS.write().unwrap();
 
         if let Event::WindowEvent { window_id, event } = event {
-            if let Some(window) = windows.get_mut(&window_id) {
+            if let Some(window) = windows.get_mut(window_id) {
                 window.process_event(event);
             }
         } else if let Event::RedrawRequested(window_id) = event {
-            if let Some(window) = windows.get_mut(&window_id) {
+            if let Some(window) = windows.get_mut(window_id) {
                 window.request_redraw();
             }
         }
@@ -372,7 +372,7 @@ impl Runtime {
                     if w.keep_running.load(Ordering::SeqCst) {
                         true
                     } else {
-                        winit_windows.remove(&id);
+                        winit_windows.remove(id);
                         false
                     }
                 });

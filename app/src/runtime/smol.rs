@@ -6,8 +6,7 @@ use lazy_static::lazy_static;
 use smol_timeout::TimeoutExt;
 
 lazy_static! {
-    pub(crate) static ref GLOBAL_THREAD_POOL: RwLock<Option<smol::Executor<'static>>> =
-        RwLock::new(None);
+    pub static ref GLOBAL_THREAD_POOL: RwLock<Option<smol::Executor<'static>>> = RwLock::new(None);
 }
 
 pub fn initialize() {
@@ -30,6 +29,7 @@ pub fn initialize() {
         easy_parallel::Parallel::new()
             // Run four executor threads.
             .each(0..4, |_| {
+                #[allow(clippy::await_holding_lock)] // this is an rwlock, not a mutex.
                 futures::executor::block_on(async {
                     let guard = GLOBAL_THREAD_POOL.read().unwrap();
                     let executor = guard.as_ref().unwrap();
@@ -56,7 +56,7 @@ impl super::Runtime {
         futures::executor::block_on(future)
     }
 
-    pub async fn timeout<F: Future<Output = T>, T: Send>(
+    pub async fn timeout<F: Future<Output = T> + Send, T: Send>(
         future: F,
         duration: Duration,
     ) -> Option<T> {

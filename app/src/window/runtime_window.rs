@@ -31,7 +31,7 @@ use crate::{
     Error,
 };
 
-pub(crate) struct RuntimeWindow {
+pub struct RuntimeWindow {
     pub window_id: WindowId,
     pub keep_running: Arc<AtomicBool>,
     receiver: flume::Receiver<WindowMessage>,
@@ -40,7 +40,7 @@ pub(crate) struct RuntimeWindow {
     last_known_scale_factor: ScreenScale,
 }
 
-pub(crate) struct RuntimeWindowConfig {
+pub struct RuntimeWindowConfig {
     window_id: WindowId,
     instance: wgpu::Instance,
     surface: wgpu::Surface,
@@ -66,7 +66,7 @@ impl RuntimeWindowConfig {
 
 static OPENED_FIRST_WINDOW: OnceCell<()> = OnceCell::new();
 
-pub(crate) fn opened_first_window() -> bool {
+pub fn opened_first_window() -> bool {
     OPENED_FIRST_WINDOW.get().is_some()
 }
 
@@ -81,7 +81,7 @@ type Format = kludgine_core::sprite::Normal;
 
 impl RuntimeWindow {
     pub(crate) fn open<T>(
-        window_receiver: flume::Receiver<RuntimeWindowConfig>,
+        window_receiver: &flume::Receiver<RuntimeWindowConfig>,
         initial_system_theme: Theme,
         app_window: T,
     ) where
@@ -170,7 +170,7 @@ impl RuntimeWindow {
         match event_receiver.try_recv() {
             Ok(event) => Ok(Some(event)),
             Err(flume::TryRecvError::Empty) => Ok(None),
-            Err(flume::TryRecvError::Disconnected) => Err(Error::InternalWindowMessageSendError(
+            Err(flume::TryRecvError::Disconnected) => Err(Error::InternalWindowMessageSend(
                 "Window channel closed".to_owned(),
             )),
         }
@@ -181,7 +181,7 @@ impl RuntimeWindow {
     ) -> crate::Result<Option<WindowEvent>> {
         match event_receiver.recv() {
             Ok(event) => Ok(Some(event)),
-            Err(_) => Err(Error::InternalWindowMessageSendError(
+            Err(_) => Err(Error::InternalWindowMessageSend(
                 "Window channel closed".to_owned(),
             )),
         }
@@ -194,7 +194,7 @@ impl RuntimeWindow {
         match event_receiver.recv_timeout(wait_for) {
             Ok(event) => Ok(Some(event)),
             Err(flume::RecvTimeoutError::Timeout) => Ok(None),
-            Err(_) => Err(Error::InternalWindowMessageSendError(
+            Err(_) => Err(Error::InternalWindowMessageSend(
                 "Window channel closed".to_owned(),
             )),
         }
@@ -224,9 +224,8 @@ impl RuntimeWindow {
                 Self::next_window_event_non_blocking(event_receiver)
             } else if let Some(redraw_at) = next_redraw_target.next_update_instant() {
                 let timeout_target = redraw_at.timeout_target();
-                let remaining_time = timeout_target
-                    .map(|t| t.checked_duration_since(Instant::now()))
-                    .flatten();
+                let remaining_time =
+                    timeout_target.and_then(|t| t.checked_duration_since(Instant::now()));
                 if let Some(remaining_time) = remaining_time {
                     Self::next_window_event_timeout(event_receiver, remaining_time)
                 } else {
@@ -239,7 +238,7 @@ impl RuntimeWindow {
         }
     }
 
-    fn window_loop<T: Window>(
+    fn window_loop<T>(
         id: WindowId,
         scene_event_sender: flume::Sender<SceneEvent>,
         event_sender: flume::Sender<WindowEvent>,
@@ -382,7 +381,7 @@ impl RuntimeWindow {
     }
 
     #[instrument(name = "RuntimeWindow::process_event", level = "trace", skip(self))]
-    pub(crate) fn process_event(&mut self, event: &WinitWindowEvent) {
+    pub(crate) fn process_event(&mut self, event: &WinitWindowEvent<'_>) {
         match event {
             WinitWindowEvent::CloseRequested => {
                 self.event_sender
