@@ -17,20 +17,26 @@
 <span id="14">14</span>
 <span id="15">15</span>
 <span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="kw">use</span> <span class="ident">lyon_tessellation</span>::<span class="ident">FillOptions</span>;
+
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">color</span>::<span class="ident">Color</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Fill</span> {
     <span class="kw">pub</span> <span class="ident">color</span>: <span class="ident">Color</span>,
-    <span class="kw">pub</span> <span class="ident">options</span>: <span class="ident">lyon_tessellation</span>::<span class="ident">FillOptions</span>,
+    <span class="kw">pub</span> <span class="ident">options</span>: <span class="ident">FillOptions</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Fill</span> {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">color</span>: <span class="ident">Color</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">color</span>,
-            <span class="ident">options</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">options</span>: <span class="ident">FillOptions</span>::<span class="ident">default</span>(),
         }
     }
 }

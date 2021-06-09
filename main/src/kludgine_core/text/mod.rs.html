@@ -60,16 +60,21 @@
 <span id="57">57</span>
 <span id="58">58</span>
 <span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;bundled-fonts-enabled&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">bundled_fonts</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">font</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">prepared</span>;
 <span class="kw">use</span> <span class="ident">euclid</span>::<span class="ident">Length</span>;
-<span class="kw">use</span> <span class="ident">font</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">rusttype</span>::<span class="ident">Scale</span>;
 
-<span class="kw">use</span> <span class="self">self</span>::<span class="ident">prepared</span>::{<span class="ident">GlyphInfo</span>, <span class="ident">PreparedSpan</span>};
+<span class="kw">use</span> <span class="self">self</span>::{
+    <span class="ident">font</span>::<span class="ident">Font</span>,
+    <span class="ident">prepared</span>::{<span class="ident">GlyphInfo</span>, <span class="ident">PreparedSpan</span>},
+};
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">color</span>::<span class="ident">Color</span>,
     <span class="ident">math</span>::{<span class="ident">Pixels</span>, <span class="ident">Scaled</span>},
@@ -79,6 +84,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Text</span>;
 
 <span class="kw">impl</span> <span class="ident">Text</span> {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">prepare</span>(
         <span class="ident">text</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
         <span class="ident">font</span>: <span class="kw-2">&amp;</span><span class="ident">Font</span>,

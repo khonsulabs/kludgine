@@ -54,6 +54,11 @@
 <span id="51">51</span>
 <span id="52">52</span>
 <span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">math</span>::{<span class="ident">Length</span>, <span class="ident">Scaled</span>};
 
@@ -69,27 +74,32 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">Dimension</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_f32</span>(<span class="ident">value</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">from_f32</span>(<span class="ident">value</span>: <span class="ident">f32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span>::<span class="ident">Length</span>(<span class="ident">Length</span>::<span class="ident">new</span>(<span class="ident">value</span>))
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_length</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Length</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">value</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span>::<span class="ident">Length</span>(<span class="ident">value</span>.<span class="ident">into</span>())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_auto</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_auto</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">Dimension</span>::<span class="ident">Minimal</span> <span class="op">|</span> <span class="ident">Dimension</span>::<span class="ident">Auto</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="ident">Dimension</span>::<span class="ident">Length</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="self">Self</span>::<span class="ident">Minimal</span> <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Auto</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+            <span class="self">Self</span>::<span class="ident">Length</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="op">!</span><span class="self">self</span>.<span class="ident">is_auto</span>()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Length</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Dimension</span>::<span class="ident">Length</span>(<span class="ident">points</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span> {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Length</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span>::<span class="ident">Length</span>(<span class="ident">points</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span> {
             <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">points</span>)
         } <span class="kw">else</span> {
             <span class="prelude-val">None</span>
@@ -99,13 +109,13 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Dimension</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">Dimension</span>::<span class="ident">Auto</span>
+        <span class="self">Self</span>::<span class="ident">Auto</span>
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Length</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Dimension</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">Length</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">Dimension</span>::<span class="ident">from_length</span>(<span class="ident">value</span>)
+        <span class="self">Self</span>::<span class="ident">from_length</span>(<span class="ident">value</span>)
     }
 }
 </pre></div>

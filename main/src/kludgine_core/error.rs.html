@@ -16,21 +16,29 @@
 <span id="13">13</span>
 <span id="14">14</span>
 <span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
 </pre><div class="example-wrap"><pre class="rust ">
+<span class="doccomment">/// All errors that `kludgine-core` can return.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">thiserror</span>::<span class="ident">Error</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Error</span> {
+    <span class="doccomment">/// An error opening an image.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;error reading image: {0}&quot;</span>)]</span>
-    <span class="ident">ImageError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">image</span>::<span class="ident">ImageError</span>),
+    <span class="ident">Image</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">image</span>::<span class="ident">ImageError</span>),
+    <span class="doccomment">/// An error parsing Json.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;error parsing json: {0}&quot;</span>)]</span>
-    <span class="ident">JsonError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">json</span>::<span class="ident">Error</span>),
+    <span class="ident">Json</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">json</span>::<span class="ident">Error</span>),
+    <span class="doccomment">/// An error while rendering shapes.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;error tessellating shape&quot;</span>)]</span>
-    <span class="ident">TessellationError</span>(<span class="ident">lyon_tessellation</span>::<span class="ident">TessellationError</span>),
+    <span class="ident">Tessellation</span>(<span class="ident">lyon_tessellation</span>::<span class="ident">TessellationError</span>),
+    <span class="doccomment">/// An error while parsing sprite data.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;error parsing sprite data: {0}&quot;</span>)]</span>
-    <span class="ident">SpriteParseError</span>(<span class="ident">String</span>),
+    <span class="ident">SpriteParse</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// The sprite&#39;s current tag has no frames.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;no frames could be found for the current tag&quot;</span>)]</span>
     <span class="ident">InvalidSpriteTag</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;font family not found: {0}&quot;</span>)]</span>
-    <span class="ident">FontFamilyNotFound</span>(<span class="ident">String</span>),
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="kludgine_core" data-search-js="../../search-index.js"></div>

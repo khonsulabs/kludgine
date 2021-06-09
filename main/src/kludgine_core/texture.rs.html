@@ -68,6 +68,9 @@
 <span id="65">65</span>
 <span id="66">66</span>
 <span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">path</span>::<span class="ident">Path</span>,
@@ -102,7 +105,8 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Texture</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">image</span>: <span class="ident">DynamicImage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">image</span>: <span class="kw-2">&amp;</span><span class="ident">DynamicImage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">image</span> <span class="op">=</span> <span class="ident">image</span>.<span class="ident">to_rgba8</span>();
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">GLOBAL_ID_CELL</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
         <span class="self">Self</span> {
@@ -114,20 +118,22 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">from_path</span>: <span class="ident">P</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">img</span> <span class="op">=</span> <span class="ident">image</span>::<span class="ident">open</span>(<span class="ident">from_path</span>)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">img</span>))
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">img</span>))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">img</span> <span class="op">=</span> <span class="ident">image</span>::<span class="ident">load_from_memory</span>(<span class="ident">bytes</span>)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">img</span>))
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">img</span>))
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">w</span>, <span class="ident">h</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">image</span>.<span class="ident">dimensions</span>();
         <span class="ident">Size</span>::<span class="ident">new</span>(<span class="ident">w</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">h</span> <span class="kw">as</span> <span class="ident">u32</span>)
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rgba_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
         (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">image</span>).<span class="ident">clone</span>().<span class="ident">into_vec</span>()
     }

@@ -171,10 +171,10 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span>,
 {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">Surround</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Unit</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
 
     <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">Output</span> {
-        <span class="ident">Surround</span> {
+        <span class="self">Self</span> {
             <span class="ident">left</span>: <span class="self">self</span>.<span class="ident">left</span> <span class="op">-</span> <span class="ident">rhs</span>.<span class="ident">left</span>,
             <span class="ident">right</span>: <span class="self">self</span>.<span class="ident">right</span> <span class="op">-</span> <span class="ident">rhs</span>.<span class="ident">right</span>,
             <span class="ident">top</span>: <span class="self">self</span>.<span class="ident">top</span> <span class="op">-</span> <span class="ident">rhs</span>.<span class="ident">top</span>,

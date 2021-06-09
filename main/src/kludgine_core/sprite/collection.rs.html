@@ -81,6 +81,11 @@
 <span id="78">78</span>
 <span id="79">79</span>
 <span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections</span>::<span class="ident">HashMap</span>, <span class="ident">fmt</span>::<span class="ident">Debug</span>, <span class="ident">hash</span>::<span class="ident">Hash</span>};
 
@@ -93,7 +98,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">SpriteMap</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">SpriteMap</span> {
+        <span class="self">Self</span> {
             <span class="ident">sprites</span>: <span class="ident">HashMap</span>::<span class="ident">default</span>(),
         }
     }
@@ -103,12 +108,14 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
 {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">sprites</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">SpriteSource</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">sprites</span> }
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_foreign_sheet</span><span class="op">&lt;</span><span class="ident">O</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>, <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">O</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">sheet</span>: <span class="ident">SpriteSheet</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span>,
+        <span class="ident">sheet</span>: <span class="kw-2">&amp;</span><span class="ident">SpriteSheet</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span>,
         <span class="ident">converter</span>: <span class="ident">F</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">default</span>();
@@ -118,7 +125,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_foreign_sheet</span><span class="op">&lt;</span><span class="ident">O</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>, <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">O</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">sheet</span>: <span class="ident">SpriteSheet</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span>,
+        <span class="ident">sheet</span>: <span class="kw-2">&amp;</span><span class="ident">SpriteSheet</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span>,
         <span class="ident">converter</span>: <span class="ident">F</span>,
     ) {
         <span class="kw">for</span> (<span class="ident">tile</span>, <span class="ident">sprite</span>) <span class="kw">in</span> <span class="ident">sheet</span>.<span class="ident">all_sprites</span>() {
@@ -131,10 +138,11 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
 {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_sheet</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">sheet</span>: <span class="ident">SpriteSheet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_sheet</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">sheet</span>: <span class="kw-2">&amp;</span><span class="ident">SpriteSheet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) {
         <span class="self">self</span>.<span class="ident">add_foreign_sheet</span>(<span class="ident">sheet</span>, <span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>)
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keys</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="ident">T</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">sprites</span>.<span class="ident">keys</span>().<span class="ident">collect</span>()
     }
@@ -144,8 +152,10 @@
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
 {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">fn</span> <span class="ident">sprite</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tile</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SpriteSource</span><span class="op">&gt;</span>;
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">fn</span> <span class="ident">sprites</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tiles</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SpriteSource</span><span class="op">&gt;</span> {
         <span class="ident">tiles</span>
             .<span class="ident">iter</span>()

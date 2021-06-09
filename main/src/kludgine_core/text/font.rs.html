@@ -101,6 +101,12 @@
 <span id="98"> 98</span>
 <span id="99"> 99</span>
 <span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">fmt</span>::<span class="ident">Debug</span>,
@@ -135,24 +141,28 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Font</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_from_bytes</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Font</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_from_bytes</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">font</span> <span class="op">=</span> <span class="ident">rusttype</span>::<span class="ident">Font</span>::<span class="ident">try_from_bytes</span>(<span class="ident">bytes</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">GLOBAL_ID_CELL</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
-        <span class="prelude-val">Some</span>(<span class="ident">Font</span> {
+        <span class="prelude-val">Some</span>(<span class="self">Self</span> {
             <span class="ident">handle</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">FontData</span> { <span class="ident">id</span>, <span class="ident">font</span> }),
         })
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
         <span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">id</span>
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">metrics</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">size</span>: <span class="ident">Pixels</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">rusttype</span>::<span class="ident">VMetrics</span> {
         <span class="self">self</span>.<span class="ident">handle</span>
             .<span class="ident">font</span>
             .<span class="ident">v_metrics</span>(<span class="ident">rusttype</span>::<span class="ident">Scale</span>::<span class="ident">uniform</span>(<span class="ident">size</span>.<span class="ident">get</span>()))
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">family</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">font</span> {
             <span class="ident">rusttype</span>::<span class="ident">Font</span>::<span class="ident">Ref</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">family_name</span>(),
@@ -160,10 +170,12 @@
         }
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">glyph</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">rusttype</span>::<span class="ident">Glyph</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">font</span>.<span class="ident">glyph</span>(<span class="ident">c</span>)
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pair_kerning</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">size</span>: <span class="ident">f32</span>, <span class="ident">a</span>: <span class="ident">rusttype</span>::<span class="ident">GlyphId</span>, <span class="ident">b</span>: <span class="ident">rusttype</span>::<span class="ident">GlyphId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
         <span class="self">self</span>.<span class="ident">handle</span>.<span class="ident">font</span>.<span class="ident">pair_kerning</span>(<span class="ident">Scale</span>::<span class="ident">uniform</span>(<span class="ident">size</span>), <span class="ident">a</span>, <span class="ident">b</span>)
     }

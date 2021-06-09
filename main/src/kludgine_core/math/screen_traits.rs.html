@@ -47,7 +47,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S</span><span class="op">&gt;</span> <span class="ident">PixelAlignment</span> <span class="kw">for</span> <span class="ident">T</span>
 <span class="kw">where</span>
     <span class="ident">T</span>: <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Mul</span><span class="op">&lt;</span><span class="ident">ScreenScale</span>, <span class="ident">Output</span> <span class="op">=</span> <span class="ident">S</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Copy</span>,
-    <span class="ident">S</span>: <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Div</span><span class="op">&lt;</span><span class="ident">ScreenScale</span>, <span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span>
+    <span class="ident">S</span>: <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Div</span><span class="op">&lt;</span><span class="ident">ScreenScale</span>, <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">euclid</span>::<span class="ident">num</span>::<span class="ident">Round</span>
         <span class="op">+</span> <span class="ident">euclid</span>::<span class="ident">num</span>::<span class="ident">Floor</span>
         <span class="op">+</span> <span class="ident">euclid</span>::<span class="ident">num</span>::<span class="ident">Ceil</span>,

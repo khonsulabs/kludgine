@@ -188,6 +188,13 @@
 <span id="185">185</span>
 <span id="186">186</span>
 <span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">math</span>::{<span class="ident">Box2D</span>, <span class="ident">Point</span>, <span class="ident">Raw</span>, <span class="ident">Rect</span>, <span class="ident">Scaled</span>, <span class="ident">Size</span>},
@@ -208,22 +215,23 @@
 }
 
 <span class="kw">impl</span> <span class="ident">SpriteSourceLocation</span> {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bounds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="self">Self</span>::<span class="ident">Rect</span>(<span class="ident">rect</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">rect</span>,
             <span class="self">Self</span>::<span class="ident">Joined</span>(<span class="ident">locations</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">locations</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">fold</span>(<span class="prelude-ty">Option</span>::<span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="prelude-val">None</span>, <span class="op">|</span><span class="ident">union</span>, <span class="ident">location</span><span class="op">|</span> {
-                    <span class="prelude-val">Some</span>(
-                        <span class="ident">union</span>
-                            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">total</span><span class="op">|</span> <span class="ident">total</span>.<span class="ident">union</span>(<span class="kw-2">&amp;</span><span class="ident">location</span>.<span class="ident">destination_rect</span>()))
-                            .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">location</span>.<span class="ident">destination_rect</span>()),
-                    )
+                    <span class="prelude-val">Some</span>(<span class="ident">union</span>.<span class="ident">map_or_else</span>(
+                        <span class="op">|</span><span class="op">|</span> <span class="ident">location</span>.<span class="ident">destination_rect</span>(),
+                        <span class="op">|</span><span class="ident">total</span><span class="op">|</span> <span class="ident">total</span>.<span class="ident">union</span>(<span class="kw-2">&amp;</span><span class="ident">location</span>.<span class="ident">destination_rect</span>()),
+                    ))
                 })
                 .<span class="ident">unwrap_or_default</span>(),
         }
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">bounds</span>().<span class="ident">size</span>
     }
@@ -236,19 +244,22 @@
 }
 
 <span class="kw">impl</span> <span class="ident">SpriteSourceSublocation</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">destination_rect</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">destination_rect</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
         <span class="ident">Rect</span>::<span class="ident">new</span>(<span class="self">self</span>.<span class="ident">destination</span>, <span class="self">self</span>.<span class="ident">source</span>.<span class="ident">size</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">SpriteSource</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">location</span>: <span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">texture</span>: <span class="ident">Texture</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">SpriteSource</span> {
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">location</span>: <span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">texture</span>: <span class="ident">Texture</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> {
             <span class="ident">location</span>: <span class="ident">SpriteSourceLocation</span>::<span class="ident">Rect</span>(<span class="ident">location</span>),
             <span class="ident">texture</span>,
         }
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">joined</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">SpriteSourceSublocation</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="ident">locations</span>: <span class="ident">I</span>,
         <span class="ident">texture</span>: <span class="ident">Texture</span>,
@@ -259,10 +270,12 @@
         }
     }
 
-    <span class="doccomment">/// All SpriteSources must be from the same texture, and must have a square</span>
-    <span class="doccomment">/// number of sprites</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">joined_square</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">SpriteSource</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">sources</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="doccomment">/// All `SpriteSources` must be from the same texture, and must have a</span>
+    <span class="doccomment">/// square number of sprites</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">joined_square</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">sources</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">sources</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">sources</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>();
+        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">cast_sign_loss</span>)]</span> <span class="comment">// sqrt of a positive number is always positive</span>
         <span class="kw">let</span> <span class="ident">sprites_wide</span> <span class="op">=</span> (<span class="ident">sources</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">f32</span>).<span class="ident">sqrt</span>() <span class="kw">as</span> <span class="ident">usize</span>;
         <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">sprites_wide</span> <span class="op">*</span> <span class="ident">sprites_wide</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sources</span>.<span class="ident">len</span>()); <span class="comment">// check for square</span>
         <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="ident">sources</span>[<span class="number">0</span>].<span class="ident">texture</span>.<span class="ident">clone</span>();
@@ -287,6 +300,7 @@
         <span class="self">Self</span>::<span class="ident">joined</span>(<span class="ident">locations</span>, <span class="ident">texture</span>)
     }
 
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">entire_texture</span>(<span class="ident">texture</span>: <span class="ident">Texture</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Rect</span>::<span class="ident">new</span>(<span class="ident">Point</span>::<span class="ident">default</span>(), <span class="ident">texture</span>.<span class="ident">size</span>()), <span class="ident">texture</span>)
     }
