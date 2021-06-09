@@ -568,6 +568,10 @@
 <span id="565">565</span>
 <span id="566">566</span>
 <span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">math</span>::{<span class="ident">Angle</span>, <span class="ident">Box2D</span>, <span class="ident">Point</span>, <span class="ident">Raw</span>, <span class="ident">Rect</span>, <span class="ident">Scale</span>, <span class="ident">Size</span>},
@@ -635,6 +639,10 @@
 }
 
 <span class="doccomment">/// A sprite is a renderable graphic with optional animations.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Cloning a sprite is cheap. When cloning, the animations will be shared</span>
+<span class="doccomment">/// between all clones of the sprite, but each sprite will track its current</span>
+<span class="doccomment">/// frame/tag independently.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Sprite</span> {
     <span class="doccomment">/// The animations that form this sprite.</span>
