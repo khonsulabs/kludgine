@@ -23,6 +23,7 @@ impl<P> TileMap<P>
 where
     P: TileProvider,
 {
+    /// Creates a new tile map of the given size.
     pub fn new(tile_size: Size<u32, Scaled>, provider: P) -> Self {
         Self {
             tile_size,
@@ -31,19 +32,26 @@ where
         }
     }
 
+    /// Sets the stagger. This causes every odd row of tiles to be offset by
+    /// `stagger` when rendered. This is commmonly used when creating isometric
+    /// tile maps.
     pub fn set_stagger(&mut self, stagger: Size<u32, Scaled>) {
         self.stagger = Some(stagger);
     }
 
-    pub fn draw(
+    /// Renders the tilemap. The tilemap will fill the `target`, but will be
+    /// offset by `location`.
+    pub fn render(
         &mut self,
-        scene: &Target,
+        target: &Target,
         location: Point<f32, Scaled>,
     ) -> kludgine_core::Result<()> {
-        self.draw_scaled(scene, location, Scale::identity())
+        self.render_scaled(target, location, Scale::identity())
     }
 
-    pub fn draw_scaled(
+    /// Renders the tilemap scaled by `scale`. The tilemap will fill the
+    /// `target`, but will be offset by `location`.
+    pub fn render_scaled(
         &mut self,
         scene: &Target,
         location: Point<f32, Scaled>,
@@ -105,7 +113,7 @@ where
         scene: &Target,
         elapsed: Option<Duration>,
     ) -> kludgine_core::Result<()> {
-        if let Some(mut tile) = self.provider.get_tile(tile) {
+        if let Some(mut tile) = self.provider.tile(tile) {
             let sprite = tile.sprite.get_frame(elapsed)?;
             sprite.render_raw_with_alpha_in_box(scene, destination, SpriteRotation::default(), 1.);
         }
@@ -113,14 +121,18 @@ where
     }
 }
 
-/// `TileProvider` is how a [`TileMap`] retrieves tiles to render.
+/// `TileProvider` provides [`Tile`]s for a  [`TileMap`].
 pub trait TileProvider {
-    fn get_tile(&mut self, location: Point<i32>) -> Option<Tile<'_>>;
+    /// Returns the tile for `location`.
+    fn tile(&mut self, location: Point<i32>) -> Option<Tile<'_>>;
 }
 
+/// A tile's sprite.
 #[derive(Debug)]
 pub enum TileSprite<'a> {
+    /// A sprite that may be animated.
     Sprite(&'a mut Sprite),
+    /// A single frame image.
     SpriteSource(SpriteSource),
 }
 
@@ -137,6 +149,7 @@ impl<'a> From<SpriteSource> for TileSprite<'a> {
 }
 
 impl<'a> TileSprite<'a> {
+    /// Returns the current frame to display.
     pub fn get_frame(&mut self, elapsed: Option<Duration>) -> kludgine_core::Result<SpriteSource> {
         match self {
             TileSprite::Sprite(sprite) => sprite.get_frame(elapsed),
@@ -148,7 +161,9 @@ impl<'a> TileSprite<'a> {
 /// A Tile represents a sprite at an integer offset on the map
 #[derive(Debug)]
 pub struct Tile<'a> {
+    /// The location of the tile.
     pub location: Point<i32>,
+    /// The sprite to render for the tile.
     pub sprite: TileSprite<'a>,
 }
 
@@ -159,9 +174,12 @@ pub struct PersistentTileProvider {
     dimensions: Size<u32>,
 }
 
+/// A tile sprite source for [`PersistentTileProvider`].
 #[derive(Debug)]
 pub enum PersistentTileSource {
+    /// A sprite.
     Sprite(Sprite),
+    /// A sprite source.
     SpriteSource(SpriteSource),
 }
 
@@ -192,7 +210,7 @@ impl PersistentTileSource {
 
 impl TileProvider for PersistentTileProvider {
     #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
-    fn get_tile(&mut self, location: Point<i32>) -> Option<Tile<'_>> {
+    fn tile(&mut self, location: Point<i32>) -> Option<Tile<'_>> {
         if location.x < 0
             || location.y < 0
             || location.x >= self.dimensions.width as i32
@@ -209,15 +227,18 @@ impl TileProvider for PersistentTileProvider {
 }
 
 impl PersistentTileProvider {
+    /// Returns a blank map with dimensions `dimensions`.
     #[must_use]
-    pub fn blank(size: Size<u32>) -> Self {
+    pub fn blank(dimensions: Size<u32>) -> Self {
         let mut tiles = Vec::new();
-        tiles.resize_with((size.width * size.height) as usize, || {
+        tiles.resize_with((dimensions.width * dimensions.height) as usize, || {
             Option::<Sprite>::None
         });
-        Self::new(size, tiles)
+        Self::new(dimensions, tiles)
     }
 
+    /// Creates a new map using `tiles` with `dimensions`. Tiles are initialized
+    /// from left-to-right then top-to-bottom.
     #[must_use]
     pub fn new<S: Into<PersistentTileSource>>(
         dimensions: Size<u32>,
@@ -230,6 +251,12 @@ impl PersistentTileProvider {
         Self { tiles, dimensions }
     }
 
+    /// Sets a single tile at `location`. Returns the existing tile, if one was
+    /// set.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `location` is outside of the bounds of this map.
     pub fn set<I: Into<PersistentTileSource>>(
         &mut self,
         location: Point<u32>,
@@ -248,19 +275,26 @@ impl PersistentTileProvider {
 /// [`TileMap`]`<`[`PersistentTileProvider`]`>`
 pub type PersistentTileMap = TileMap<PersistentTileProvider>;
 
+/// Convenience trait for creating persistent tile maps.
 pub trait PersistentMap {
-    fn persistent_with_size(tile_size: Size<u32, Scaled>, map_size: Size<u32>) -> Self;
-
-    fn set<I: Into<PersistentTileSource>>(&mut self, location: Point<u32>, sprite: Option<I>);
-}
-
-impl PersistentMap for PersistentTileMap {
-    /// Creates a [`TileMap`] using a [`PersistentTileProvider`]
+    /// Creates a [`TileMap`] using a [`PersistentTileProvider`].
     ///
     /// # Arguments
     ///
     /// * `tile_size`: The dimensions of each tile
     /// * `map_size`: The size of the map, in number of tiles
+    fn persistent_with_size(tile_size: Size<u32, Scaled>, map_size: Size<u32>) -> Self;
+
+    /// Sets a single tile at `location`. Returns the existing tile, if one was
+    /// set.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `location` is outside of the bounds of this map.
+    fn set<I: Into<PersistentTileSource>>(&mut self, location: Point<u32>, sprite: Option<I>);
+}
+
+impl PersistentMap for PersistentTileMap {
     fn persistent_with_size(tile_size: Size<u32, Scaled>, map_size: Size<u32>) -> Self {
         Self::new(tile_size, PersistentTileProvider::blank(map_size))
     }

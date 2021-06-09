@@ -25,7 +25,7 @@ impl WindowCreator for OrthoTiles {
 static MAP_SIZE: u32 = 100;
 
 impl Window for OrthoTiles {
-    async fn initialize(&mut self) -> KludgineResult<()> {
+    async fn initialize(&mut self) -> kludgine::Result<()> {
         self.load_assets()?;
         self.zoom = 1.0;
         self.x = MAP_SIZE as f32 * 32.0 / 2.0;
@@ -33,7 +33,7 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    async fn update(&mut self, scene: &mut Scene) -> KludgineResult<()> {
+    async fn update(&mut self, scene: &mut Scene) -> kludgine::Result<()> {
         let stickguy = self.stickguy.as_ref().unwrap();
         // Our default animation is Idle
         let mut animation = "Idle";
@@ -62,7 +62,7 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    async fn render(&mut self, scene: &mut Scene) -> KludgineResult<()> {
+    async fn render(&mut self, scene: &mut Scene) -> kludgine::Result<()> {
         // The map is drawn at a static location of 0,0 (upper-left)
         // It will be offset scene.origin()
         let map = self.map.as_ref().unwrap();
@@ -76,7 +76,7 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    async fn process_input(&mut self, event: InputEvent) -> KludgineResult<()> {
+    async fn process_input(&mut self, event: InputEvent) -> kludgine::Result<()> {
         match event.event {
             Event::MouseWheel { delta, .. } => {
                 let zoom_amount = match delta {
@@ -93,7 +93,7 @@ impl Window for OrthoTiles {
 
 
 impl OrthoTiles {
-    fn load_assets(&mut self) -> KludgineResult<()> {
+    fn load_assets(&mut self) -> kludgine::Result<()> {
         let sprite = include_aseprite_sprite!("../../assets/grass.json", "../../assets/grass.png")?;
         sprite.set_current_tag(Some("Swaying"))?;
 

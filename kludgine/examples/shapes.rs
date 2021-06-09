@@ -14,7 +14,7 @@ impl WindowCreator for Shapes {
 }
 
 impl Window for Shapes {
-    fn render(&mut self, scene: &Target) -> KludgineResult<()> {
+    fn render(&mut self, scene: &Target) -> kludgine::Result<()> {
         let center = Rect::new(Point::default(), scene.size()).center();
 
         Shape::polygon(vec![

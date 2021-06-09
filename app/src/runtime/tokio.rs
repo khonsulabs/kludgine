@@ -23,6 +23,7 @@ pub fn initialize() {
 }
 
 impl super::Runtime {
+    /// Spawns an async task.
     pub fn spawn<Fut: Future<Output = T> + Send + 'static, T: Send + 'static>(
         future: Fut,
     ) -> tokio::task::JoinHandle<T> {
@@ -31,6 +32,7 @@ impl super::Runtime {
         executor.spawn(future)
     }
 
+    /// Executes a future in a blocking-safe manner.
     pub fn block_on<'a, Fut: Future<Output = R> + Send + 'a, R: Send + Sync + 'a>(
         future: Fut,
     ) -> R {
@@ -39,6 +41,8 @@ impl super::Runtime {
         executor.block_on(future)
     }
 
+    /// Executes `future` for up to `duration`. If a timeout occurs, `None` is
+    /// returned.
     pub async fn timeout<F: Future<Output = T>, T: Send>(
         future: F,
         duration: Duration,

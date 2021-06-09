@@ -64,6 +64,10 @@ enum AnimationDirection {
 }
 
 /// A sprite is a renderable graphic with optional animations.
+///
+/// Cloning a sprite is cheap. When cloning, the animations will be shared
+/// between all clones of the sprite, but each sprite will track its current
+/// frame/tag independently.
 #[derive(Debug, Clone)]
 pub struct Sprite {
     /// The animations that form this sprite.

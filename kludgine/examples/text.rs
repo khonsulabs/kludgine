@@ -13,7 +13,7 @@ impl WindowCreator for TextExample {
 }
 
 impl Window for TextExample {
-    fn render(&mut self, scene: &Target) -> KludgineResult<()> {
+    fn render(&mut self, scene: &Target) -> kludgine::Result<()> {
         Text::prepare(
             "Hello, World!",
             &ROBOTO,

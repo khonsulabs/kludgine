@@ -25,7 +25,7 @@ impl Window for OrthoTiles {
         Some(60)
     }
 
-    fn initialize(&mut self, _scene: &Target) -> KludgineResult<()> {
+    fn initialize(&mut self, _scene: &Target) -> kludgine::Result<()> {
         self.load_assets()?;
         self.zoom = 1.0;
         // self.position.x = MAP_SIZE as f32 * 32.0 / 2.0;
@@ -33,7 +33,7 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    fn update(&mut self, scene: &Target, _status: &mut RedrawStatus) -> KludgineResult<()> {
+    fn update(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
         let stickguy = self.stickguy.as_mut().unwrap();
         // Our default animation is Idle
         let mut animation = "Idle";
@@ -55,10 +55,10 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    fn render(&mut self, scene: &Target) -> KludgineResult<()> {
+    fn render(&mut self, scene: &Target) -> kludgine::Result<()> {
         let center = scene.size().to_vector().to_point() / 2.0;
         let map = self.map.as_mut().unwrap();
-        map.draw_scaled(
+        map.render_scaled(
             &scene,
             center - self.position.to_vector() * self.zoom,
             Scale::new(self.zoom),
@@ -83,7 +83,7 @@ impl Window for OrthoTiles {
         &mut self,
         input: InputEvent,
         status: &mut RedrawStatus,
-    ) -> KludgineResult<()> {
+    ) -> kludgine::Result<()> {
         if let Event::MouseWheel { delta, .. } = input.event {
             let zoom_amount = match delta {
                 MouseScrollDelta::LineDelta(_x, y) => y * 16.,
@@ -97,7 +97,7 @@ impl Window for OrthoTiles {
 }
 
 impl OrthoTiles {
-    fn load_assets(&mut self) -> KludgineResult<()> {
+    fn load_assets(&mut self) -> kludgine::Result<()> {
         let mut sprite = include_aseprite_sprite!("assets/grass")?;
         sprite.set_current_tag(Some("Swaying"))?;
 
