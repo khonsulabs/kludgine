@@ -75,8 +75,7 @@
 <span class="kw">use</span> <span class="ident">smol_timeout</span>::<span class="ident">TimeoutExt</span>;
 
 <span class="macro">lazy_static</span><span class="macro">!</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">GLOBAL_THREAD_POOL</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">smol</span>::<span class="ident">Executor</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
-        <span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>);
+    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">GLOBAL_THREAD_POOL</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">smol</span>::<span class="ident">Executor</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="prelude-val">None</span>);
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">initialize</span>() {
@@ -99,6 +98,7 @@
         <span class="ident">easy_parallel</span>::<span class="ident">Parallel</span>::<span class="ident">new</span>()
             <span class="comment">// Run four executor threads.</span>
             .<span class="ident">each</span>(<span class="number">0</span>..<span class="number">4</span>, <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">await_holding_lock</span>)]</span> <span class="comment">// this is an rwlock, not a mutex.</span>
                 <span class="ident">futures</span>::<span class="ident">executor</span>::<span class="ident">block_on</span>(<span class="kw">async</span> {
                     <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">GLOBAL_THREAD_POOL</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>();
                     <span class="kw">let</span> <span class="ident">executor</span> <span class="op">=</span> <span class="ident">guard</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
@@ -125,7 +125,7 @@
         <span class="ident">futures</span>::<span class="ident">executor</span>::<span class="ident">block_on</span>(<span class="ident">future</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">timeout</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span>, <span class="ident">T</span>: <span class="ident">Send</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">timeout</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>, <span class="ident">T</span>: <span class="ident">Send</span><span class="op">&gt;</span>(
         <span class="ident">future</span>: <span class="ident">F</span>,
         <span class="ident">duration</span>: <span class="ident">Duration</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
