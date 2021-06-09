@@ -3,10 +3,12 @@ pub mod bundled_fonts;
 pub mod font;
 pub mod prepared;
 use euclid::Length;
-use font::*;
 use rusttype::Scale;
 
-use self::prepared::{GlyphInfo, PreparedSpan};
+use self::{
+    font::Font,
+    prepared::{GlyphInfo, PreparedSpan},
+};
 use crate::{
     color::Color,
     math::{Pixels, Scaled},
@@ -16,6 +18,7 @@ use crate::{
 pub struct Text;
 
 impl Text {
+    #[must_use]
     pub fn prepare(
         text: &str,
         font: &Font,

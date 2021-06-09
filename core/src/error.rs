@@ -1,15 +1,19 @@
+/// All errors that `kludgine-core` can return.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
+    /// An error opening an image.
     #[error("error reading image: {0}")]
-    ImageError(#[from] image::ImageError),
+    Image(#[from] image::ImageError),
+    /// An error parsing Json.
     #[error("error parsing json: {0}")]
-    JsonError(#[from] json::Error),
+    Json(#[from] json::Error),
+    /// An error while rendering shapes.
     #[error("error tessellating shape")]
-    TessellationError(lyon_tessellation::TessellationError),
+    Tessellation(lyon_tessellation::TessellationError),
+    /// An error while parsing sprite data.
     #[error("error parsing sprite data: {0}")]
-    SpriteParseError(String),
+    SpriteParse(String),
+    /// The sprite's current tag has no frames.
     #[error("no frames could be found for the current tag")]
     InvalidSpriteTag,
-    #[error("font family not found: {0}")]
-    FontFamilyNotFound(String),
 }

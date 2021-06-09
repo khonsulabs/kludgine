@@ -47,7 +47,7 @@ pub struct Scene {
 }
 
 impl From<Arc<Scene>> for Target {
-    fn from(scene: Arc<Scene>) -> Target {
+    fn from(scene: Arc<Scene>) -> Self {
         Self {
             scene,
             clip: None,
@@ -57,7 +57,7 @@ impl From<Arc<Scene>> for Target {
 }
 
 impl From<Scene> for Target {
-    fn from(scene: Scene) -> Target {
+    fn from(scene: Scene) -> Self {
         Self::from(Arc::new(scene))
     }
 }
@@ -70,6 +70,7 @@ pub struct Target {
 }
 
 impl Target {
+    #[must_use]
     pub fn clipped_to(&self, new_clip: Rect<u32, Raw>) -> Self {
         Self {
             scene: self.scene.clone(),
@@ -81,6 +82,7 @@ impl Target {
         }
     }
 
+    #[must_use]
     pub fn offset_by(&self, delta: Vector<f32, Raw>) -> Self {
         Self {
             scene: self.scene.clone(),
@@ -92,6 +94,7 @@ impl Target {
         }
     }
 
+    #[must_use]
     pub fn offset_point(&self, point: Point<f32, Scaled>) -> Point<f32, Scaled> {
         match self.offset {
             Some(offset) => point + offset / self.scale_factor(),
@@ -99,6 +102,7 @@ impl Target {
         }
     }
 
+    #[must_use]
     pub fn offset_point_raw(&self, point: Point<f32, Raw>) -> Point<f32, Raw> {
         match self.offset {
             Some(offset) => point + offset,
@@ -106,6 +110,7 @@ impl Target {
         }
     }
 
+    #[must_use]
     pub fn scene_mut(&mut self) -> Option<&mut Scene> {
         Arc::get_mut(&mut self.scene)
     }
@@ -119,6 +124,7 @@ impl std::ops::Deref for Target {
     }
 }
 
+#[allow(clippy::struct_excessive_bools)]
 pub struct Modifiers {
     pub control: bool,
     pub alt: bool,
@@ -127,14 +133,16 @@ pub struct Modifiers {
 }
 
 impl Modifiers {
-    pub fn primary_modifier(&self) -> bool {
+    #[must_use]
+    pub const fn primary_modifier(&self) -> bool {
         match TARGET_OS {
             OS::MacOS | OS::iOS => self.os,
             _ => self.control,
         }
     }
 
-    pub fn command_key(&self) -> bool {
+    #[must_use]
+    pub const fn command_key(&self) -> bool {
         match TARGET_OS {
             OS::MacOS | OS::iOS => self.os,
             _ => false,
@@ -143,6 +151,7 @@ impl Modifiers {
 }
 
 impl Scene {
+    #[must_use]
     pub fn new(event_sender: flume::Sender<SceneEvent>) -> Self {
         Self {
             event_sender,
@@ -156,7 +165,8 @@ impl Scene {
         }
     }
 
-    pub fn system_theme(&self) -> Theme {
+    #[must_use]
+    pub const fn system_theme(&self) -> Theme {
         self.system_theme
     }
 
@@ -165,7 +175,7 @@ impl Scene {
     }
 
     pub(crate) fn push_element(&self, element: Element) {
-        let _ = self.event_sender.send(SceneEvent::Render(element));
+        drop(self.event_sender.send(SceneEvent::Render(element)));
     }
 
     pub fn set_internal_size(&mut self, size: Size<f32, Raw>) {
@@ -181,18 +191,22 @@ impl Scene {
         self.scale_factor = scale_factor;
     }
 
-    pub fn scale_factor(&self) -> ScreenScale {
+    #[must_use]
+    pub const fn scale_factor(&self) -> ScreenScale {
         self.scale_factor
     }
 
+    #[must_use]
     pub fn keys_pressed(&self) -> HashSet<VirtualKeyCode> {
         self.pressed_keys.clone()
     }
 
+    #[must_use]
     pub fn key_pressed(&self, key: VirtualKeyCode) -> bool {
         self.pressed_keys.contains(&key)
     }
 
+    #[must_use]
     pub fn any_key_pressed(&self, keys: &[VirtualKeyCode]) -> bool {
         for key in keys {
             if self.pressed_keys.contains(key) {
@@ -202,6 +216,7 @@ impl Scene {
         false
     }
 
+    #[must_use]
     pub fn modifiers_pressed(&self) -> Modifiers {
         Modifiers {
             control: self.any_key_pressed(&[VirtualKeyCode::RControl, VirtualKeyCode::LControl]),
@@ -218,28 +233,33 @@ impl Scene {
             Some(last_start) => self.now.unwrap().checked_duration_since(last_start),
             None => None,
         };
-        let _ = self
-            .event_sender
-            .send(SceneEvent::BeginFrame { size: self.size });
+        drop(
+            self.event_sender
+                .send(SceneEvent::BeginFrame { size: self.size }),
+        );
     }
 
     pub fn end_frame(&self) {
-        let _ = self.event_sender.send(SceneEvent::EndFrame);
+        drop(self.event_sender.send(SceneEvent::EndFrame));
     }
 
+    #[must_use]
     pub fn size(&self) -> Size<f32, Scaled> {
         self.size / self.scale_factor
     }
 
+    #[must_use]
     pub fn now(&self) -> Instant {
         self.now.expect("now() called without starting a frame")
     }
 
-    pub fn elapsed(&self) -> Option<Duration> {
+    #[must_use]
+    pub const fn elapsed(&self) -> Option<Duration> {
         self.elapsed
     }
 
-    pub fn is_initial_frame(&self) -> bool {
+    #[must_use]
+    pub const fn is_initial_frame(&self) -> bool {
         self.elapsed.is_none()
     }
 

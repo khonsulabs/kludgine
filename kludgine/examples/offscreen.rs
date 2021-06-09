@@ -7,7 +7,6 @@ use kludgine::core::{
     easygpu::{renderer::Renderer, wgpu},
     flume,
     prelude::*,
-    renderer::FrameRenderer,
 };
 
 #[tokio::main]

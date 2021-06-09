@@ -77,15 +77,15 @@ enum FrameBatch {
 }
 
 impl FrameBatch {
-    fn is_shape(&self) -> bool {
+    const fn is_shape(&self) -> bool {
         matches!(self, Self::Shape(_))
     }
 
-    fn is_sprite(&self) -> bool {
+    const fn is_sprite(&self) -> bool {
         !self.is_shape()
     }
 
-    fn sprite_batch(&self) -> Option<&'_ sprite::Batch> {
+    const fn sprite_batch(&self) -> Option<&'_ sprite::Batch> {
         if let FrameBatch::Sprite(batch) = self {
             Some(batch)
         } else {
@@ -223,18 +223,13 @@ impl Frame {
 
     fn cache_glyphs(&mut self, elements: &[Element]) {
         let mut referenced_fonts = HashSet::new();
-        for text in elements
-            .iter()
-            .map(|e| match &e {
-                Element::Text { span, .. } => Some(span),
-                _ => None,
-            })
-            .filter(|e| e.is_some())
-            .map(|e| e.unwrap())
-        {
+        for text in elements.iter().filter_map(|e| match &e {
+            Element::Text { span, .. } => Some(span),
+            _ => None,
+        }) {
             referenced_fonts.insert(text.data.font.id());
 
-            for glyph_info in text.data.glyphs.iter() {
+            for glyph_info in &text.data.glyphs {
                 let loaded_font = self
                     .fonts
                     .entry(text.data.font.id())

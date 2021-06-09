@@ -9,7 +9,7 @@ pub trait PixelAlignment {
 impl<T, S> PixelAlignment for T
 where
     T: std::ops::Mul<ScreenScale, Output = S> + Copy,
-    S: std::ops::Div<ScreenScale, Output = T>
+    S: std::ops::Div<ScreenScale, Output = Self>
         + euclid::num::Round
         + euclid::num::Floor
         + euclid::num::Ceil,

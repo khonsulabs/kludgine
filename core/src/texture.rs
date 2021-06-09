@@ -31,7 +31,8 @@ pub struct Texture {
 }
 
 impl Texture {
-    pub fn new(image: DynamicImage) -> Self {
+    #[must_use]
+    pub fn new(image: &DynamicImage) -> Self {
         let image = image.to_rgba8();
         let id = GLOBAL_ID_CELL.fetch_add(1, Ordering::SeqCst);
         Self {
@@ -43,20 +44,22 @@ impl Texture {
     pub fn load<P: AsRef<Path>>(from_path: P) -> crate::Result<Self> {
         let img = image::open(from_path)?;
 
-        Ok(Self::new(img))
+        Ok(Self::new(&img))
     }
 
     pub fn from_bytes(bytes: &[u8]) -> crate::Result<Self> {
         let img = image::load_from_memory(bytes)?;
 
-        Ok(Self::new(img))
+        Ok(Self::new(&img))
     }
 
+    #[must_use]
     pub fn size(&self) -> Size<u32> {
         let (w, h) = self.image.dimensions();
         Size::new(w as u32, h as u32)
     }
 
+    #[must_use]
     pub fn rgba_pixels(&self) -> Vec<u8> {
         (*self.image).clone().into_vec()
     }

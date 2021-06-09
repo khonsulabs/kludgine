@@ -11,7 +11,7 @@
 //!
 //! To enable a single font, look at the documentation of the font in question.
 //!
-//! WHen enabled, the Scene object's font library is initialized with all
+//! When enabled, the Scene object's font library is initialized with all
 //! bundled fonts that are enabled.
 
 use lazy_static::lazy_static;

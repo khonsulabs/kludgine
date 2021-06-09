@@ -57,10 +57,10 @@ impl<T, Unit> std::ops::Sub for Surround<T, Unit>
 where
     T: std::ops::Sub<Output = T>,
 {
-    type Output = Surround<T, Unit>;
+    type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        Surround {
+        Self {
             left: self.left - rhs.left,
             right: self.right - rhs.right,
             top: self.top - rhs.top,

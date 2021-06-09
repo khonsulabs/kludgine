@@ -42,6 +42,7 @@ where
         }
     }
 
+    #[must_use]
     pub fn circle(center: Point<f32, S>, radius: Length<f32, S>) -> Self {
         Self {
             geometry: ShapeGeometry::Circle(Circle { center, radius }),
@@ -50,6 +51,7 @@ where
         }
     }
 
+    #[must_use]
     pub fn polygon(points: impl IntoIterator<Item = Point<f32, S>>) -> Self {
         let mut points = points.into_iter();
         if let Some(start) = points.next() {
@@ -68,16 +70,19 @@ where
         }
     }
 
+    #[must_use]
     pub fn fill(mut self, fill: Fill) -> Self {
         self.fill = Some(fill);
         self
     }
 
+    #[must_use]
     pub fn stroke(mut self, stroke: Stroke) -> Self {
         self.stroke = Some(stroke);
         self
     }
 
+    #[must_use]
     pub fn cast_unit<U>(self) -> Shape<U> {
         Shape {
             geometry: self.geometry.cast_unit(),

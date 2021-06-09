@@ -10,13 +10,13 @@ use kludgine_core::{
     easygpu::prelude::*,
     flume,
     math::{Pixels, Point, ScreenScale, Size},
-    renderer::FrameRenderer,
     scene::{Scene, SceneEvent},
     winit::{
         self,
         event::WindowEvent as WinitWindowEvent,
         window::{Theme, WindowId},
     },
+    FrameRenderer,
 };
 use once_cell::sync::OnceCell;
 use tracing::instrument;
@@ -26,7 +26,7 @@ use crate::{
     runtime::{Runtime, RuntimeRequest, WINDOWS},
     window::{
         event::{ElementState, Event, InputEvent, VirtualKeyCode, WindowEvent},
-        CloseResponse, Renderer, Window, WindowMessage, WINDOW_CHANNELS,
+        CloseResponse, Window, WindowMessage, WINDOW_CHANNELS,
     },
     Error,
 };

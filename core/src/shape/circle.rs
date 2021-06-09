@@ -5,7 +5,7 @@ use crate::{
     Error,
 };
 #[derive(Clone, Debug)]
-pub(crate) struct Circle<S> {
+pub struct Circle<S> {
     pub center: Point<f32, S>,
     pub radius: Length<f32, S>,
 }
@@ -47,7 +47,7 @@ impl Circle<Raw> {
                 &fill.options,
                 builder,
             )
-            .map_err(Error::TessellationError)?;
+            .map_err(Error::Tessellation)?;
         }
 
         if let Some(stroke) = stroke {
@@ -58,7 +58,7 @@ impl Circle<Raw> {
                 &stroke.options,
                 builder,
             )
-            .map_err(Error::TessellationError)?;
+            .map_err(Error::Tessellation)?;
         }
 
         Ok(())

@@ -4,7 +4,6 @@ use std::{
 };
 
 use kludgine_core::{
-    easygpu::prelude::*,
     flume,
     math::{Scaled, Size},
     scene::Target,

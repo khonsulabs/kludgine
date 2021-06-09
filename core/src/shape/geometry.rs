@@ -5,7 +5,7 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub(crate) enum ShapeGeometry<S> {
+pub enum ShapeGeometry<S> {
     Empty,
     Path(Path<S>),
     Circle(Circle<S>),

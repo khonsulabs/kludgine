@@ -25,7 +25,7 @@ macro_rules! include_aseprite_sprite {
         let image_bytes = std::include_bytes!(concat!($path, ".png"));
         match Texture::from_bytes(image_bytes) {
             Ok(texture) =>
-                Sprite::load_aseprite_json(include_str!(concat!($path, ".json")), texture),
+                Sprite::load_aseprite_json(include_str!(concat!($path, ".json")), &texture),
             Err(err) => Err(err),
         }
     }};
@@ -39,7 +39,7 @@ pub enum AnimationMode {
 }
 
 impl AnimationMode {
-    fn default_direction(&self) -> AnimationDirection {
+    const fn default_direction(&self) -> AnimationDirection {
         match self {
             AnimationMode::Forward | AnimationMode::PingPong => AnimationDirection::Forward,
             AnimationMode::Reverse => AnimationDirection::Reverse,
@@ -70,7 +70,8 @@ impl From<SpriteAnimations> for Sprite {
 }
 
 impl Sprite {
-    pub fn new(title: Option<String>, animations: SpriteAnimations) -> Self {
+    #[must_use]
+    pub const fn new(title: Option<String>, animations: SpriteAnimations) -> Self {
         Self {
             title,
             animations,
@@ -82,6 +83,7 @@ impl Sprite {
     }
 
     /// For merging multiple Sprites that have no tags within them
+    #[must_use]
     pub fn merged<S: Into<String>, I: IntoIterator<Item = (S, Self)>>(source: I) -> Self {
         let mut combined = HashMap::new();
         let mut title = None;
@@ -99,6 +101,7 @@ impl Sprite {
         Self::new(title, SpriteAnimations::new(combined))
     }
 
+    #[must_use]
     pub fn single_frame(texture: Texture) -> Self {
         let size = texture.size();
         let source = SpriteSource::new(Rect::new(Point::default(), size.cast_unit()), texture);
@@ -124,20 +127,23 @@ impl Sprite {
     /// spaces or underscores (_) inbetween the fields in the name. Ensure
     /// `{frame}` is the last field in the name before the extension.
     /// E.g., `{tag}_{frame}.{extension}`
-    pub fn load_aseprite_json(raw_json: &str, texture: Texture) -> crate::Result<Self> {
+    #[allow(clippy::too_many_lines)]
+    // TODO refactor. Now that I know more about serde, this probably can be parsed
+    // with a complex serde type.
+    pub fn load_aseprite_json(raw_json: &str, texture: &Texture) -> crate::Result<Self> {
         let json = json::parse(raw_json)?;
 
         // Validate the data
         let meta = &json["meta"];
         if !meta.is_object() {
-            return Err(Error::SpriteParseError(
+            return Err(Error::SpriteParse(
                 "invalid aseprite json: No `meta` section".to_owned(),
             ));
         }
 
         let texture_size = texture.size();
         if meta["size"]["w"] != texture_size.width || meta["size"]["h"] != texture_size.height {
-            return Err(Error::SpriteParseError(
+            return Err(Error::SpriteParse(
                 "invalid aseprite json: Size did not match input texture".to_owned(),
             ));
         }
@@ -156,7 +162,7 @@ impl Sprite {
                     if json["frames"].len() == 1 {
                         Ok(0)
                     } else {
-                        Err(Error::SpriteParseError(
+                        Err(Error::SpriteParse(
                             "invalid aseprite json: frame was not numeric.".to_owned(),
                         ))
                     }
@@ -165,7 +171,7 @@ impl Sprite {
             let duration = match frame["duration"].as_u64() {
                 Some(millis) => Duration::from_millis(millis),
                 None =>
-                    return Err(Error::SpriteParseError(
+                    return Err(Error::SpriteParse(
                         "invalid aseprite json: invalid duration".to_owned(),
                     )),
             };
@@ -173,24 +179,24 @@ impl Sprite {
             let frame = Rect::new(
                 Point::new(
                     frame["frame"]["x"].as_u32().ok_or_else(|| {
-                        Error::SpriteParseError(
+                        Error::SpriteParse(
                             "invalid aseprite json: frame x was not valid".to_owned(),
                         )
                     })?,
                     frame["frame"]["y"].as_u32().ok_or_else(|| {
-                        Error::SpriteParseError(
+                        Error::SpriteParse(
                             "invalid aseprite json: frame y was not valid".to_owned(),
                         )
                     })?,
                 ),
                 Size::new(
                     frame["frame"]["w"].as_u32().ok_or_else(|| {
-                        Error::SpriteParseError(
+                        Error::SpriteParse(
                             "invalid aseprite json: frame w was not valid".to_owned(),
                         )
                     })?,
                     frame["frame"]["h"].as_u32().ok_or_else(|| {
-                        Error::SpriteParseError(
+                        Error::SpriteParse(
                             "invalid aseprite json: frame h was not valid".to_owned(),
                         )
                     })?,
@@ -214,7 +220,7 @@ impl Sprite {
             } else if tag["direction"] == "pingpong" {
                 AnimationMode::PingPong
             } else {
-                return Err(Error::SpriteParseError(
+                return Err(Error::SpriteParse(
                     "invalid aseprite json: frameTags direction is an unknown value".to_owned(),
                 ));
             };
@@ -222,19 +228,19 @@ impl Sprite {
             let name = tag["name"].as_str().map(str::to_owned);
 
             let start_frame = tag["from"].as_usize().ok_or_else(|| {
-                Error::SpriteParseError(
+                Error::SpriteParse(
                     "invalid aseprite json: frameTags from was not numeric".to_owned(),
                 )
             })?;
             let end_frame = tag["to"].as_usize().ok_or_else(|| {
-                Error::SpriteParseError(
+                Error::SpriteParse(
                     "invalid aseprite json: frameTags from was not numeric".to_owned(),
                 )
             })?;
             let mut animation_frames = Vec::new();
-            for i in start_frame..(end_frame + 1) {
+            for i in start_frame..=end_frame {
                 let frame = frames.get(&i).ok_or_else(|| {
-                    Error::SpriteParseError(
+                    Error::SpriteParse(
                         "invalid aseprite json: frameTags frame was out of bounds".to_owned(),
                     )
                 })?;
@@ -255,11 +261,11 @@ impl Sprite {
             ),
         );
 
-        Ok(Sprite::new(title, SpriteAnimations::new(animations)))
+        Ok(Self::new(title, SpriteAnimations::new(animations)))
     }
 
     pub fn set_current_tag<S: Into<String>>(&mut self, tag: Option<S>) -> crate::Result<()> {
-        let new_tag = tag.map(|t| t.into());
+        let new_tag = tag.map(Into::into);
         if self.current_tag != new_tag {
             self.current_animation_direction = {
                 let animation = self
@@ -276,6 +282,7 @@ impl Sprite {
         Ok(())
     }
 
+    #[must_use]
     pub fn current_tag(&self) -> Option<&'_ str> {
         self.current_tag.as_deref()
     }
@@ -311,10 +318,12 @@ impl Sprite {
         Ok(duration)
     }
 
-    pub fn animations(&self) -> &'_ SpriteAnimations {
+    #[must_use]
+    pub const fn animations(&self) -> &'_ SpriteAnimations {
         &self.animations
     }
 
+    #[must_use]
     pub fn bounds(&self) -> Option<Rect<u32>> {
         if let Some(animation) = self.animations.animations.values().next() {
             if let Some(frame) = animation.frames.first() {
@@ -324,6 +333,7 @@ impl Sprite {
         None
     }
 
+    #[must_use]
     pub fn size(&self) -> Option<Size<u32>> {
         if let Some(animation) = self.animations.animations.values().next() {
             if let Some(frame) = animation.frames.first() {
@@ -338,6 +348,7 @@ impl Sprite {
         Ok(())
     }
 
+    #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
     fn next_frame(&mut self) -> crate::Result<usize> {
         let starting_frame = self.current_frame as i32;
         let animation = self
@@ -397,12 +408,14 @@ pub struct SpriteAnimations {
 }
 
 impl SpriteAnimations {
+    #[must_use]
     pub fn new(animations: HashMap<Option<String>, SpriteAnimation>) -> Self {
         Self {
             animations: Arc::new(animations),
         }
     }
 
+    #[must_use]
     pub fn frames_for(&self, tag: &Option<impl ToString>) -> Option<&'_ SpriteAnimation> {
         self.animations.get(&tag.as_ref().map(|s| s.to_string()))
     }
@@ -415,6 +428,7 @@ pub struct SpriteAnimation {
 }
 
 impl SpriteAnimation {
+    #[must_use]
     pub fn new(frames: Vec<SpriteFrame>, mode: AnimationMode) -> Self {
         Self { frames, mode }
     }
@@ -432,18 +446,22 @@ pub struct SpriteFrameBuilder {
 }
 
 impl SpriteFrameBuilder {
-    pub fn new(source: SpriteSource) -> Self {
+    #[must_use]
+    pub const fn new(source: SpriteSource) -> Self {
         Self {
             source,
             duration: None,
         }
     }
 
-    pub fn with_duration(mut self, duration: Duration) -> Self {
+    #[must_use]
+    pub const fn with_duration(mut self, duration: Duration) -> Self {
         self.duration = Some(duration);
         self
     }
 
+    #[must_use]
+    #[allow(clippy::missing_const_for_fn)] // this isn't supported
     pub fn build(self) -> SpriteFrame {
         SpriteFrame {
             source: self.source,
@@ -458,6 +476,7 @@ pub struct RenderedSprite {
 }
 
 impl RenderedSprite {
+    #[must_use]
     pub fn new(
         render_at: Box2D<f32, Raw>,
         rotation: SpriteRotation<Raw>,
@@ -501,14 +520,16 @@ impl<Unit> Default for SpriteRotation<Unit> {
 }
 
 impl<Unit> SpriteRotation<Unit> {
-    pub fn around_center(angle: Angle) -> Self {
+    #[must_use]
+    pub const fn around_center(angle: Angle) -> Self {
         Self {
             angle: Some(angle),
             screen_location: None,
         }
     }
 
-    pub fn around(angle: Angle, screen_location: Point<f32, Unit>) -> Self {
+    #[must_use]
+    pub const fn around(angle: Angle, screen_location: Point<f32, Unit>) -> Self {
         Self {
             angle: Some(angle),
             screen_location: Some(screen_location),

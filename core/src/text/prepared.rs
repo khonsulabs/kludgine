@@ -25,10 +25,12 @@ impl From<rusttype::VMetrics> for VMetrics {
 }
 
 impl VMetrics {
+    #[must_use]
     pub fn line_height(&self) -> Pixels {
         self.height() + self.line_gap
     }
 
+    #[must_use]
     pub fn height(&self) -> Pixels {
         self.ascent - self.descent
     }
@@ -41,6 +43,7 @@ pub struct PreparedSpan {
 }
 
 impl PreparedSpan {
+    #[must_use]
     pub fn new(
         font: Font,
         size: Pixels,
@@ -64,6 +67,7 @@ impl PreparedSpan {
         }
     }
 
+    #[must_use]
     pub fn translate(&self, location: Point<f32, Raw>) -> Self {
         Self {
             // We want to ensure that we are pixel-aligned when rendering a span's start.
@@ -72,6 +76,7 @@ impl PreparedSpan {
         }
     }
 
+    #[must_use]
     pub fn metrics(&self) -> rusttype::VMetrics {
         self.data.font.metrics(self.data.size)
     }
@@ -114,10 +119,12 @@ pub struct GlyphInfo {
 }
 
 impl GlyphInfo {
+    #[must_use]
     pub fn width(&self) -> Pixels {
         Pixels::new(self.glyph.unpositioned().h_metrics().advance_width)
     }
 
+    #[must_use]
     pub fn location(&self) -> Point<f32, Raw> {
         Point::new(self.glyph.position().x, self.glyph.position().y)
     }

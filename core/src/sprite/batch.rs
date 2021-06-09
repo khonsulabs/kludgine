@@ -4,7 +4,7 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub(crate) struct Batch {
+pub struct Batch {
     pub size: Size<u32>,
     pub clipping_rect: Option<Rect<u32, Raw>>,
     pub loaded_texture_id: u64,
@@ -12,7 +12,7 @@ pub(crate) struct Batch {
 }
 
 impl Batch {
-    pub fn new(
+    pub const fn new(
         loaded_texture_id: u64,
         size: Size<u32>,
         clipping_rect: Option<Rect<u32, Raw>>,

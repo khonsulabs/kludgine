@@ -1,7 +1,7 @@
 use easygpu::wgpu;
 use image::{GenericImageView, Rgba};
 
-use crate::{prelude::*, renderer::FrameRenderer, sprite::Srgb};
+use crate::{frame_renderer::FrameRenderer, prelude::*, sprite::Srgb};
 
 #[tokio::test]
 async fn offscreen_render_test() {

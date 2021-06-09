@@ -233,6 +233,7 @@ where
         }
     }
 
+    #[allow(clippy::too_many_lines)] // TODO refactor
     fn render_frame(&mut self, engine_frame: &mut Frame) -> crate::Result<()> {
         let frame_size = engine_frame.size.cast::<u32>();
         if frame_size.width == 0 || frame_size.height == 0 {
@@ -309,7 +310,7 @@ where
                 font_id,
                 rect,
                 data,
-            } in engine_frame.pending_font_updates.iter()
+            } in &engine_frame.pending_font_updates
             {
                 let mut loaded_font = engine_frame.fonts.get_mut(font_id).unwrap();
                 if loaded_font.texture.is_none() {
@@ -414,7 +415,7 @@ where
                             batch.size.cast_unit(),
                             batch.clipping_rect.map(|r| r.to_box2d()),
                         );
-                        for sprite_handle in batch.sprites.iter() {
+                        for sprite_handle in &batch.sprites {
                             gpu_batch.add_sprite(sprite_handle.clone());
                         }
                         render_commands.push(RenderCommand::SpriteBuffer(
@@ -497,8 +498,7 @@ where
                         if let Some(binding) = engine_frame
                             .fonts
                             .get(font_id)
-                            .map(|f| f.binding.as_ref())
-                            .flatten()
+                            .and_then(|f| f.binding.as_ref())
                         {
                             pass.easy_draw(buffer, binding);
                         }
@@ -542,13 +542,13 @@ where
     }
 }
 
-fn size_for_aligned_copy(bytes: usize) -> usize {
+const fn size_for_aligned_copy(bytes: usize) -> usize {
     let chunks =
         (bytes + COPY_BYTES_PER_ROW_ALIGNMENT as usize - 1) / COPY_BYTES_PER_ROW_ALIGNMENT as usize;
     chunks * COPY_BYTES_PER_ROW_ALIGNMENT as usize
 }
 
-fn buffer_size(size: Size<u32, ScreenSpace>) -> usize {
+const fn buffer_size(size: Size<u32, ScreenSpace>) -> usize {
     size_for_aligned_copy(size.width as usize * 4) * size.height as usize
 }
 

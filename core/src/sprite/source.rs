@@ -17,22 +17,23 @@ pub enum SpriteSourceLocation {
 }
 
 impl SpriteSourceLocation {
+    #[must_use]
     pub fn bounds(&self) -> Rect<u32> {
         match self {
             Self::Rect(rect) => *rect,
             Self::Joined(locations) => locations
                 .iter()
                 .fold(Option::<Rect<u32>>::None, |union, location| {
-                    Some(
-                        union
-                            .map(|total| total.union(&location.destination_rect()))
-                            .unwrap_or_else(|| location.destination_rect()),
-                    )
+                    Some(union.map_or_else(
+                        || location.destination_rect(),
+                        |total| total.union(&location.destination_rect()),
+                    ))
                 })
                 .unwrap_or_default(),
         }
     }
 
+    #[must_use]
     pub fn size(&self) -> Size<u32> {
         self.bounds().size
     }
@@ -45,19 +46,22 @@ pub struct SpriteSourceSublocation {
 }
 
 impl SpriteSourceSublocation {
-    pub fn destination_rect(&self) -> Rect<u32> {
+    #[must_use]
+    pub const fn destination_rect(&self) -> Rect<u32> {
         Rect::new(self.destination, self.source.size)
     }
 }
 
 impl SpriteSource {
-    pub fn new(location: Rect<u32>, texture: Texture) -> Self {
-        SpriteSource {
+    #[must_use]
+    pub const fn new(location: Rect<u32>, texture: Texture) -> Self {
+        Self {
             location: SpriteSourceLocation::Rect(location),
             texture,
         }
     }
 
+    #[must_use]
     pub fn joined<I: IntoIterator<Item = SpriteSourceSublocation>>(
         locations: I,
         texture: Texture,
@@ -68,10 +72,12 @@ impl SpriteSource {
         }
     }
 
-    /// All SpriteSources must be from the same texture, and must have a square
-    /// number of sprites
-    pub fn joined_square<I: IntoIterator<Item = SpriteSource>>(sources: I) -> Self {
+    /// All `SpriteSources` must be from the same texture, and must have a
+    /// square number of sprites
+    #[must_use]
+    pub fn joined_square<I: IntoIterator<Item = Self>>(sources: I) -> Self {
         let sources: Vec<_> = sources.into_iter().collect();
+        #[allow(clippy::cast_sign_loss)] // sqrt of a positive number is always positive
         let sprites_wide = (sources.len() as f32).sqrt() as usize;
         assert!(sprites_wide * sprites_wide == sources.len()); // check for square
         let texture = sources[0].texture.clone();
@@ -96,6 +102,7 @@ impl SpriteSource {
         Self::joined(locations, texture)
     }
 
+    #[must_use]
     pub fn entire_texture(texture: Texture) -> Self {
         Self::new(Rect::new(Point::default(), texture.size()), texture)
     }

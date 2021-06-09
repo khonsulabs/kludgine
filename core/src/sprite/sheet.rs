@@ -29,6 +29,7 @@ impl<T> SpriteSheet<T>
 where
     T: Debug + Eq + Hash,
 {
+    #[must_use]
     pub fn new(texture: Texture, tile_size: Size<u32>, tiles: Vec<T>) -> Self {
         let dimensions = divide_size(texture.size().cast(), tile_size);
         Self {
@@ -37,10 +38,12 @@ where
         }
     }
 
+    #[must_use]
     pub fn tile_size(&self) -> Size<u32> {
         self.data.tile_size
     }
 
+    #[must_use]
     pub fn sprites<I: IntoIterator<Item = T>>(&self, iterator: I) -> Vec<SpriteSource> {
         iterator
             .into_iter()
@@ -51,6 +54,7 @@ where
             .collect()
     }
 
+    #[must_use]
     pub fn sprite_map<I: IntoIterator<Item = T>>(&self, iterator: I) -> SpriteMap<T> {
         let map = iterator
             .into_iter()
@@ -63,7 +67,7 @@ where
     }
 }
 
-fn divide_size(a: Size<u32>, b: Size<u32>) -> Size<u32> {
+const fn divide_size(a: Size<u32>, b: Size<u32>) -> Size<u32> {
     Size::new(a.width / b.width, a.height / b.height)
 }
 
@@ -96,6 +100,7 @@ impl<T> SpriteSheet<T>
 where
     T: Clone + Debug + Eq + Hash,
 {
+    #[must_use]
     pub fn all_sprites(&self) -> HashMap<T, SpriteSource> {
         self.data
             .sprites

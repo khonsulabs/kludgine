@@ -54,3 +54,19 @@ required-features = ["bundled-fonts-roboto", "app"]
 [[example]]
 name = "orthotiles"
 required-features = ["app"]
+
+[[example]]
+name = "isometric"
+required-features = ["app"]
+
+[[example]]
+name = "shapes"
+required-features = ["app"]
+
+[[example]]
+name = "simple"
+required-features = ["app"]
+
+[[example]]
+name = "sprite_sheets"
+required-features = ["app"]

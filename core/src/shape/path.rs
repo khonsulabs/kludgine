@@ -71,6 +71,7 @@ impl From<PathEvent<Raw>> for LyonPathEvent {
 }
 
 impl<U> PathEvent<U> {
+    #[must_use]
     pub fn cast_unit<V>(self) -> PathEvent<V> {
         match self {
             Self::Begin { at } => PathEvent::Begin { at: at.cast_unit() },
@@ -109,9 +110,10 @@ pub struct Path<S> {
 }
 
 impl<U> Path<U> {
+    #[must_use]
     pub fn cast_unit<V>(self) -> Path<V> {
         Path {
-            events: self.events.into_iter().map(|e| e.cast_unit()).collect(),
+            events: self.events.into_iter().map(PathEvent::cast_unit).collect(),
         }
     }
 }
@@ -186,14 +188,14 @@ impl Path<Raw> {
             builder.default_color = fill.color.rgba();
             builder
                 .fill(&path, &fill.options)
-                .map_err(Error::TessellationError)?;
+                .map_err(Error::Tessellation)?;
         }
 
         if let Some(stroke) = stroke {
             builder.default_color = stroke.color.rgba();
             builder
                 .stroke(&path, &stroke.options)
-                .map_err(Error::TessellationError)?;
+                .map_err(Error::Tessellation)?;
         }
 
         Ok(())
@@ -227,6 +229,7 @@ pub struct PathBuilder<S> {
 }
 
 impl<S> PathBuilder<S> {
+    #[must_use]
     pub fn new(start_at: Endpoint<S>) -> Self {
         let events = vec![PathEvent::Begin { at: start_at }];
         Self {
@@ -237,6 +240,7 @@ impl<S> PathBuilder<S> {
         }
     }
 
+    #[must_use]
     pub fn build(mut self) -> Path<S> {
         self.path.events.push(PathEvent::End {
             first: self.start_at,
@@ -246,6 +250,7 @@ impl<S> PathBuilder<S> {
         self.path
     }
 
+    #[must_use]
     pub fn line_to(mut self, end_at: Endpoint<S>) -> Self {
         self.path.events.push(PathEvent::Line {
             from: self.current_location,
@@ -255,6 +260,7 @@ impl<S> PathBuilder<S> {
         self
     }
 
+    #[must_use]
     pub fn quadratic_curve_to(mut self, control: ControlPoint<S>, end_at: Endpoint<S>) -> Self {
         self.path.events.push(PathEvent::Quadratic {
             from: self.current_location,
@@ -265,6 +271,7 @@ impl<S> PathBuilder<S> {
         self
     }
 
+    #[must_use]
     pub fn cubic_curve_to(
         mut self,
         control1: ControlPoint<S>,
@@ -281,7 +288,8 @@ impl<S> PathBuilder<S> {
         self
     }
 
-    pub fn close(mut self) -> Self {
+    #[must_use]
+    pub const fn close(mut self) -> Self {
         self.close = true;
         self
     }

@@ -31,24 +31,28 @@ pub struct Font {
 }
 
 impl Font {
-    pub fn try_from_bytes(bytes: &'static [u8]) -> Option<Font> {
+    #[must_use]
+    pub fn try_from_bytes(bytes: &'static [u8]) -> Option<Self> {
         let font = rusttype::Font::try_from_bytes(bytes)?;
         let id = GLOBAL_ID_CELL.fetch_add(1, Ordering::SeqCst);
-        Some(Font {
+        Some(Self {
             handle: Arc::new(FontData { id, font }),
         })
     }
 
+    #[must_use]
     pub fn id(&self) -> u64 {
         self.handle.id
     }
 
+    #[must_use]
     pub fn metrics(&self, size: Pixels) -> rusttype::VMetrics {
         self.handle
             .font
             .v_metrics(rusttype::Scale::uniform(size.get()))
     }
 
+    #[must_use]
     pub fn family(&self) -> Option<String> {
         match &self.handle.font {
             rusttype::Font::Ref(f) => f.family_name(),
@@ -56,10 +60,12 @@ impl Font {
         }
     }
 
+    #[must_use]
     pub fn glyph(&self, c: char) -> rusttype::Glyph<'static> {
         self.handle.font.glyph(c)
     }
 
+    #[must_use]
     pub fn pair_kerning(&self, size: f32, a: rusttype::GlyphId, b: rusttype::GlyphId) -> f32 {
         self.handle.font.pair_kerning(Scale::uniform(size), a, b)
     }

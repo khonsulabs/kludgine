@@ -5,7 +5,7 @@ use crate::{
     sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation, SpriteSourceLocation},
 };
 
-pub(crate) struct GpuBatch {
+pub struct GpuBatch {
     pub size: Size<u32, ScreenSpace>,
     pub clip: Option<Box2D<u32, Raw>>,
 
@@ -18,8 +18,8 @@ impl GpuBatch {
         Self {
             size,
             clip,
-            items: Default::default(),
-            indicies: Default::default(),
+            items: Vec::default(),
+            indicies: Vec::default(),
         }
     }
 
@@ -44,8 +44,8 @@ impl GpuBatch {
                 let scale_x = sprite.render_at.width() as f32 / source_bounds.size.width as f32;
                 let scale_y = sprite.render_at.height() as f32 / source_bounds.size.height as f32;
                 for location in locations {
-                    let x = sprite.render_at.min.x + location.destination.x as f32 * scale_x;
-                    let y = sprite.render_at.min.y + location.destination.y as f32 * scale_y;
+                    let x = scale_x.mul_add(location.destination.x as f32, sprite.render_at.min.x);
+                    let y = scale_y.mul_add(location.destination.y as f32, sprite.render_at.min.y);
                     let width = location.source.width() as f32 * scale_x;
                     let height = location.source.height() as f32 * scale_y;
                     let destination = Rect::new(Point::new(x, y), Size::new(width, height));
@@ -107,8 +107,8 @@ impl GpuBatch {
                         let y_scale = source_size.height / dest_size.height;
                         src = Box2D::new(
                             Point::new(
-                                src.min.x + (clipped_destination.min.x - dest.min.x) * x_scale,
-                                src.min.y + (clipped_destination.min.y - dest.min.y) * y_scale,
+                                x_scale.mul_add(clipped_destination.min.x - dest.min.x, src.min.x),
+                                y_scale.mul_add(clipped_destination.min.y - dest.min.y, src.min.y),
                             ),
                             Point::new(
                                 src.max.x - (dest.max.x - clipped_destination.max.x) * x_scale,
@@ -153,23 +153,29 @@ impl GpuBatch {
         self.add_quad(top_left, top_right, bottom_left, bottom_right);
     }
 
-    pub fn add_quad(&mut self, tl: Vertex, tr: Vertex, bl: Vertex, br: Vertex) {
-        let tl_index = self.items.len() as u16;
-        self.items.push(tl);
-        let tr_index = self.items.len() as u16;
-        self.items.push(tr);
-        let bl_index = self.items.len() as u16;
-        self.items.push(bl);
-        let br_index = self.items.len() as u16;
-        self.items.push(br);
+    pub fn add_quad(
+        &mut self,
+        top_left: Vertex,
+        top_right: Vertex,
+        bottom_left: Vertex,
+        bottom_right: Vertex,
+    ) {
+        let top_left_index = self.items.len() as u16;
+        self.items.push(top_left);
+        let top_right_index = self.items.len() as u16;
+        self.items.push(top_right);
+        let bottom_left_index = self.items.len() as u16;
+        self.items.push(bottom_left);
+        let bottom_right_index = self.items.len() as u16;
+        self.items.push(bottom_right);
 
-        self.indicies.push(tl_index);
-        self.indicies.push(tr_index);
-        self.indicies.push(bl_index);
+        self.indicies.push(top_left_index);
+        self.indicies.push(top_right_index);
+        self.indicies.push(bottom_left_index);
 
-        self.indicies.push(tr_index);
-        self.indicies.push(br_index);
-        self.indicies.push(bl_index);
+        self.indicies.push(top_right_index);
+        self.indicies.push(bottom_right_index);
+        self.indicies.push(bottom_left_index);
     }
 
     // pub fn add_triangle(&mut self, a: Vertex, b: Vertex, c: Vertex) {
@@ -181,7 +187,7 @@ impl GpuBatch {
     //     self.items.push(c);
     // }
 
-    pub fn finish(&self, renderer: &Renderer) -> BatchBuffers {
+    pub(crate) fn finish(&self, renderer: &Renderer) -> BatchBuffers {
         let vertices = renderer.device.create_buffer(&self.items);
         let indices = renderer.device.create_index(&self.indicies);
         BatchBuffers {
@@ -192,7 +198,7 @@ impl GpuBatch {
     }
 }
 
-pub(crate) struct BatchBuffers {
+pub struct BatchBuffers {
     pub vertices: VertexBuffer,
     pub indices: IndexBuffer,
     pub index_count: u32,

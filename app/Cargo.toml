@@ -1,8 +1,20 @@
 [package]
 name = "kludgine-app"
-version = "0.1.0"
+version = "0.1.0-dev.0"
 authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
 edition = "2018"
+description = "An asynchronous app and 2d game framework"
+readme = "../README.md"
+license = "MIT OR Apache-2.0"
+keywords = ["gamedev", "graphics", "gui", "wgpu"]
+categories = [
+    "gui",
+    "graphics",
+    "rendering::engine",
+    "game-engines",
+    "asynchronous",
+]
+repository = "https://github.com/khonsulabs/kludgine"
 
 [features]
 default = ["smol-rt", "multiwindow"]
