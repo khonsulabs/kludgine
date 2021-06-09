@@ -87,9 +87,9 @@
 
 <span class="ident">cfg_if</span>::<span class="macro">cfg_if</span><span class="macro">!</span> {
     <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;app&quot;</span>)]</span> {
-        <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">app</span>::<span class="prelude-ty">Result</span> <span class="kw">as</span> <span class="prelude-ty">Result</span>;
+        <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">kludgine_app</span>::<span class="prelude-ty">Result</span> <span class="kw">as</span> <span class="prelude-ty">Result</span>;
     } <span class="kw">else</span> {
-        <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">core</span>::<span class="prelude-ty">Result</span> <span class="kw">as</span> <span class="prelude-ty">Result</span>;
+        <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">kludgine_core</span>::<span class="prelude-ty">Result</span> <span class="kw">as</span> <span class="prelude-ty">Result</span>;
     }
 }
 
