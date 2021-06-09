@@ -32,9 +32,9 @@ pub use kludgine_core as core;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "app")] {
-        pub use app::Result as Result;
+        pub use kludgine_app::Result as Result;
     } else {
-        pub use core::Result as Result;
+        pub use kludgine_core::Result as Result;
     }
 }
 
