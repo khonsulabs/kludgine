@@ -39,6 +39,3 @@ platforms = "1"
 thiserror = "1"
 anyhow = "1.0"
 futures = "0.3"
-
-# Sharded lock
-crossbeam = "0.8"

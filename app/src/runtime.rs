@@ -1,9 +1,8 @@
-use std::{collections::HashMap, sync::atomic::Ordering};
-
-use crossbeam::{
-    channel::{unbounded, Receiver, Sender},
-    sync::ShardedLock,
+use std::{
+    collections::HashMap,
+    sync::{atomic::Ordering, RwLock},
 };
+
 use kludgine_core::{
     flume,
     winit::{
@@ -31,7 +30,7 @@ pub(crate) enum RuntimeRequest {
 
 impl RuntimeRequest {
     pub fn send(self) -> crate::Result<()> {
-        let sender: Sender<Self> = {
+        let sender: flume::Sender<Self> = {
             let guard = GLOBAL_RUNTIME_SENDER.lock().expect("Error locking mutex");
             match *guard {
                 Some(ref sender) => sender.clone(),
@@ -63,9 +62,9 @@ pub trait EventProcessor: Send + Sync {
 }
 
 lazy_static! {
-    pub(crate) static ref GLOBAL_RUNTIME_SENDER: Mutex<Option<Sender<RuntimeRequest>>> =
+    pub(crate) static ref GLOBAL_RUNTIME_SENDER: Mutex<Option<flume::Sender<RuntimeRequest>>> =
         Mutex::new(None);
-    pub(crate) static ref GLOBAL_RUNTIME_RECEIVER: Mutex<Option<Receiver<RuntimeEvent>>> =
+    pub(crate) static ref GLOBAL_RUNTIME_RECEIVER: Mutex<Option<flume::Receiver<RuntimeEvent>>> =
         Mutex::new(None);
     pub(crate) static ref GLOBAL_EVENT_HANDLER: Mutex<Option<Box<dyn EventProcessor>>> =
         Mutex::new(None);
@@ -88,9 +87,9 @@ impl<App> ApplicationRuntime<App>
 where
     App: Application + 'static,
 {
-    fn launch(self) -> (Receiver<RuntimeRequest>, Sender<RuntimeEvent>) {
-        let (event_sender, event_receiver) = unbounded();
-        let (request_sender, request_receiver) = unbounded();
+    fn launch(self) -> (flume::Receiver<RuntimeRequest>, flume::Sender<RuntimeEvent>) {
+        let (event_sender, event_receiver) = flume::unbounded();
+        let (request_sender, request_receiver) = flume::unbounded();
         {
             let mut global_sender = GLOBAL_RUNTIME_SENDER
                 .lock()
@@ -195,14 +194,14 @@ impl EventProcessor for Runtime {
 /// compatibility, ensure that you call [`Runtime::run()`] from thee main
 /// thread.
 pub struct Runtime {
-    request_receiver: Receiver<RuntimeRequest>,
-    event_sender: Sender<RuntimeEvent>,
+    request_receiver: flume::Receiver<RuntimeRequest>,
+    event_sender: flume::Sender<RuntimeEvent>,
 }
 
 #[cfg(feature = "multiwindow")]
 lazy_static! {
-    pub(crate) static ref WINIT_WINDOWS: ShardedLock<HashMap<WindowId, winit::window::Window>> =
-        ShardedLock::new(HashMap::new());
+    pub(crate) static ref WINIT_WINDOWS: RwLock<HashMap<WindowId, winit::window::Window>> =
+        RwLock::new(HashMap::new());
 }
 
 impl Runtime {
@@ -389,6 +388,6 @@ fn initialize_async_runtime() {
 }
 
 lazy_static! {
-    pub(crate) static ref WINDOWS: ShardedLock<HashMap<WindowId, RuntimeWindow>> =
-        ShardedLock::new(HashMap::new());
+    pub(crate) static ref WINDOWS: RwLock<HashMap<WindowId, RuntimeWindow>> =
+        RwLock::new(HashMap::new());
 }

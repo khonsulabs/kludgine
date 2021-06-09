@@ -11,7 +11,7 @@ use kludgine_core::{
     sprite::{Sprite, SpriteRotation, SpriteSource},
 };
 
-/// TileMap renders tiles retrieved from a TileProvider
+/// `TileMap` renders tiles retrieved from a [`TileProvider`]
 #[derive(Debug)]
 pub struct TileMap<P> {
     provider: P,
@@ -113,7 +113,7 @@ where
     }
 }
 
-/// TileProvider is how a TileMap retrieves tiles to render
+/// `TileProvider` is how a [`TileMap`] retrieves tiles to render.
 pub trait TileProvider {
     fn get_tile(&mut self, location: Point<i32>) -> Option<Tile<'_>>;
 }
@@ -191,6 +191,7 @@ impl PersistentTileSource {
 }
 
 impl TileProvider for PersistentTileProvider {
+    #[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
     fn get_tile(&mut self, location: Point<i32>) -> Option<Tile<'_>> {
         if location.x < 0
             || location.y < 0
@@ -208,6 +209,7 @@ impl TileProvider for PersistentTileProvider {
 }
 
 impl PersistentTileProvider {
+    #[must_use]
     pub fn blank(size: Size<u32>) -> Self {
         let mut tiles = Vec::new();
         tiles.resize_with((size.width * size.height) as usize, || {
@@ -216,13 +218,14 @@ impl PersistentTileProvider {
         Self::new(size, tiles)
     }
 
+    #[must_use]
     pub fn new<S: Into<PersistentTileSource>>(
         dimensions: Size<u32>,
         tiles: Vec<Option<S>>,
     ) -> Self {
         let tiles = tiles
             .into_iter()
-            .map(|sprite| sprite.map(|sprite| sprite.into()))
+            .map(|sprite| sprite.map(Into::into))
             .collect();
         Self { tiles, dimensions }
     }
@@ -233,15 +236,16 @@ impl PersistentTileProvider {
         sprite: Option<I>,
     ) -> Option<PersistentTileSource> {
         let index = self.point_to_index(location);
-        mem::replace(&mut self.tiles[index], sprite.map(|sprite| sprite.into()))
+        mem::replace(&mut self.tiles[index], sprite.map(Into::into))
     }
 
-    fn point_to_index(&self, location: Point<u32>) -> usize {
+    const fn point_to_index(&self, location: Point<u32>) -> usize {
         (location.x + location.y * self.dimensions.width) as usize
     }
 }
 
-/// PersistentTileMap is an alias for TileMap<PersistentTileProvider>
+/// `PersistentTileMap` is an alias for
+/// [`TileMap`]`<`[`PersistentTileProvider`]`>`
 pub type PersistentTileMap = TileMap<PersistentTileProvider>;
 
 pub trait PersistentMap {
@@ -251,18 +255,18 @@ pub trait PersistentMap {
 }
 
 impl PersistentMap for PersistentTileMap {
-    /// Creates a TileMap using a PersistentTileProvider
+    /// Creates a [`TileMap`] using a [`PersistentTileProvider`]
     ///
     /// # Arguments
     ///
-    /// * `tile_size`: THe dimensions of each tile
+    /// * `tile_size`: The dimensions of each tile
     /// * `map_size`: The size of the map, in number of tiles
     fn persistent_with_size(tile_size: Size<u32, Scaled>, map_size: Size<u32>) -> Self {
-        TileMap::new(tile_size, PersistentTileProvider::blank(map_size))
+        Self::new(tile_size, PersistentTileProvider::blank(map_size))
     }
 
     fn set<I: Into<PersistentTileSource>>(&mut self, location: Point<u32>, sprite: Option<I>) {
-        self.provider.set(location, sprite.map(|s| s.into()));
+        self.provider.set(location, sprite.map(Into::into));
     }
 }
 
