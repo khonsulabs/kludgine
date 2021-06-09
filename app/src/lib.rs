@@ -46,5 +46,5 @@ pub mod prelude {
     };
 }
 
-/// Alias for [`std::result::Result`] where the eroor type is [`Error`].
+/// Alias for [`std::result::Result`] where the error type is [`Error`].
 pub type Result<T> = std::result::Result<T, Error>;
