@@ -363,8 +363,7 @@ impl Runtime {
         if opened_first_window() {
             #[cfg(not(feature = "multiwindow"))]
             {
-                let old_count = windows.len();
-                windows.retain(|_, w| w.keep_running.load());
+                windows.retain(|_, w| w.keep_running.load(Ordering::SeqCst));
             }
 
             #[cfg(feature = "multiwindow")]

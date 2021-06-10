@@ -23,7 +23,7 @@ all-features = true
 default = ["bundled-fonts", "smol-rt", "app", "multiwindow"]
 app = ["kludgine-app"]
 multiwindow = ["kludgine-app/multiwindow"]
-tokio-rt = ["kludgine-app/tokio"]
+tokio-rt = ["kludgine-app/tokio-rt"]
 smol-rt = ["kludgine-app/smol-rt"]
 # Enable all bundled fonts. All bundled fonts are licensed under the Apache License 2.0.
 # For more information, see here: https://github.com/khonsulabs/kludgine/tree/master/fonts/README.md
@@ -33,7 +33,7 @@ serialization = ["kludgine-core/serialization"]
 
 [dependencies]
 kludgine-core = { path = "../core" }
-kludgine-app = { path = "../app", optional = true }
+kludgine-app = { path = "../app", optional = true, default-features = false }
 cfg-if = "1"
 
 # [target.'cfg(target_arch = "wasm32")'.dependencies]
