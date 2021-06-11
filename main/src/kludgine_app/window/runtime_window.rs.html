@@ -493,6 +493,8 @@
 <span id="490">490</span>
 <span id="491">491</span>
 <span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">sync</span>::{
@@ -716,7 +718,7 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
         {
             <span class="kw">let</span> <span class="ident">next_redraw_target</span> <span class="op">=</span> <span class="ident">window</span>.<span class="ident">next_redraw_target</span>();
-            <span class="kw">if</span> <span class="ident">window</span>.<span class="ident">needs_render</span>() {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">window</span>.<span class="ident">can_wait_for_events</span>() {
                 <span class="self">Self</span>::<span class="ident">next_window_event_non_blocking</span>(<span class="ident">event_receiver</span>)
             } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">redraw_at</span>) <span class="op">=</span> <span class="ident">next_redraw_target</span>.<span class="ident">next_update_instant</span>() {
                 <span class="kw">let</span> <span class="ident">timeout_target</span> <span class="op">=</span> <span class="ident">redraw_at</span>.<span class="ident">timeout_target</span>();
@@ -758,7 +760,9 @@
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(()),
             } {
                 <span class="kw">match</span> <span class="ident">event</span> {
-                    <span class="ident">WindowEvent</span>::<span class="ident">WakeUp</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                    <span class="ident">WindowEvent</span>::<span class="ident">WakeUp</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">window</span>.<span class="ident">redraw_status</span>.<span class="ident">set_needs_update</span>();
+                    }
                     <span class="ident">WindowEvent</span>::<span class="ident">SystemThemeChanged</span>(<span class="ident">system_theme</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">set_system_theme</span>(<span class="ident">system_theme</span>);
                         <span class="ident">window</span>.<span class="ident">redraw_status</span>.<span class="ident">set_needs_redraw</span>();
@@ -817,7 +821,7 @@
 
                 <span class="ident">window</span>.<span class="ident">update</span>(<span class="ident">target_fps</span>)<span class="question-mark">?</span>;
 
-                <span class="kw">if</span> <span class="ident">window</span>.<span class="ident">needs_render</span>() {
+                <span class="kw">if</span> <span class="ident">window</span>.<span class="ident">should_redraw_now</span>() {
                     <span class="ident">window</span>.<span class="ident">render</span>()<span class="question-mark">?</span>;
                     <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">end_frame</span>();
                 }
