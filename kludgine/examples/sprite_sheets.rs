@@ -33,7 +33,7 @@ enum StickGuy {
 }
 
 impl Window for SpriteSheetExample {
-    fn initialize(&mut self, _scene: &Target) -> kludgine::Result<()> {
+    fn initialize(&mut self, _scene: &Target, _requester: RedrawRequester) -> kludgine::Result<()> {
         let texture = include_texture!("assets/stickguy.png")?;
         let sheet = SpriteSheet::new(texture, Size::new(32, 32), vec![
             StickGuy::Idle1,

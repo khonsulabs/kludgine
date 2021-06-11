@@ -18,10 +18,10 @@ use crate::Error;
 
 /// Types for event handling.
 pub mod event;
-pub mod open;
+mod open;
 mod runtime_window;
 
-pub use open::{OpenWindow, RedrawStatus};
+pub use open::{OpenWindow, RedrawRequester, RedrawStatus};
 pub use runtime_window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig};
 pub use winit::window::Icon;
 
@@ -38,7 +38,7 @@ pub enum CloseResponse {
 /// Trait to implement a Window
 pub trait Window: Send + Sync + 'static {
     /// Called when the window is being initilaized.
-    fn initialize(&mut self, _scene: &Target) -> crate::Result<()>
+    fn initialize(&mut self, _scene: &Target, _redrawer: RedrawRequester) -> crate::Result<()>
     where
         Self: Sized,
     {

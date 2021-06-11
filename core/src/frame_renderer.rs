@@ -131,7 +131,7 @@ where
     ) -> crate::Result<DynamicImage> {
         let mut frame_renderer = Self::new(renderer, Arc::default(), scene_event_receiver);
         let mut frame = Frame::default();
-        frame.update(&frame_renderer.scene_event_receiver);
+        let _ = frame.update(&frame_renderer.scene_event_receiver);
         frame_renderer.render_frame(&mut frame)?;
         if let Destination::Texture { output, .. } = frame_renderer.destination {
             let data = output.slice(..);
@@ -197,9 +197,12 @@ where
                 }
                 return;
             }
-            frame.update(&self.scene_event_receiver);
-            self.render_frame(&mut frame)
-                .expect("Error rendering window");
+            if frame.update(&self.scene_event_receiver) {
+                self.render_frame(&mut frame)
+                    .expect("Error rendering window");
+            } else {
+                self.keep_running.store(false, Ordering::SeqCst)
+            }
         }
     }
 

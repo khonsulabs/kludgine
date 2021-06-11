@@ -1,4 +1,5 @@
 use kludgine::prelude::*;
+use kludgine_app::RedrawRequester;
 
 fn main() {
     SingleWindowApplication::run(OrthoTiles::default());
@@ -25,7 +26,7 @@ impl Window for OrthoTiles {
         Some(60)
     }
 
-    fn initialize(&mut self, _scene: &Target) -> kludgine::Result<()> {
+    fn initialize(&mut self, _scene: &Target, _requester: RedrawRequester) -> kludgine::Result<()> {
         self.load_assets()?;
         self.zoom = 1.0;
         // self.position.x = MAP_SIZE as f32 * 32.0 / 2.0;

@@ -31,7 +31,7 @@ pub use self::{
     application::{Application, SingleWindowApplication},
     error::Error,
     runtime::Runtime,
-    window::{event, RedrawStatus, Window, WindowBuilder, WindowCreator},
+    window::{event, RedrawRequester, RedrawStatus, Window, WindowBuilder, WindowCreator},
 };
 
 /// A collection of commonly used exports provided by this crate.
@@ -41,8 +41,8 @@ pub mod prelude {
             DeviceId, ElementState, Event, EventStatus, InputEvent, MouseButton, MouseScrollDelta,
             ScanCode, TouchPhase, VirtualKeyCode,
         },
-        Application, Error, RedrawStatus, Runtime, SingleWindowApplication, Window, WindowBuilder,
-        WindowCreator,
+        Application, Error, RedrawRequester, RedrawStatus, Runtime, SingleWindowApplication,
+        Window, WindowBuilder, WindowCreator,
     };
 }
 

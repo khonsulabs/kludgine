@@ -19,11 +19,32 @@ pub struct OpenWindow<T: Window> {
     scene: Arc<Scene>,
 }
 
+/// Allows requesting window refreshes outside of the event loop.
+#[derive(Clone, Debug)]
+pub struct RedrawRequester {
+    event_sender: Sender<WindowEvent>,
+}
+
+impl RedrawRequester {
+    /// Requests the window refresh itself. This will trigger [`Window::update`]
+    /// before rendering.
+    pub fn request_redraw(&self) {
+        let _ = self.event_sender.send(WindowEvent::RedrawRequested);
+    }
+
+    /// Wakes the event loop, without necessarily redrawing.
+    pub fn awaken(&self) {
+        let _ = self.event_sender.send(WindowEvent::WakeUp);
+    }
+}
+
 /// Tracks when a window should be redrawn. Allows for rendering a frame
 /// immediately as well as scheduling a refresh in the future.
+#[derive(Debug)]
 pub struct RedrawStatus {
     next_redraw_target: RedrawTarget,
     needs_render: bool,
+    needs_update: bool,
     event_sender: Sender<WindowEvent>,
 }
 
@@ -31,6 +52,14 @@ impl RedrawStatus {
     /// Triggers a redraw as soon as possible. Any estimated frame instants will
     /// be ignored.
     pub fn set_needs_redraw(&mut self) {
+        if !self.needs_render {
+            self.needs_render = true;
+            let _ = self.event_sender.send(WindowEvent::WakeUp);
+        }
+    }
+
+    /// Triggers an update as soon as possible. Does not affect redrawing.
+    pub fn set_needs_update(&mut self) {
         if !self.needs_render {
             self.needs_render = true;
             let _ = self.event_sender.send(WindowEvent::WakeUp);
@@ -57,6 +86,14 @@ impl RedrawStatus {
                 },
         }
     }
+
+    /// Returns a redraw requester that can be used outside of the event loop.
+    #[must_use]
+    pub fn redraw_requester(&self) -> RedrawRequester {
+        RedrawRequester {
+            event_sender: self.event_sender.clone(),
+        }
+    }
 }
 
 impl<T: Window> OpenWindow<T> {
@@ -66,6 +103,7 @@ impl<T: Window> OpenWindow<T> {
             scene: Arc::new(scene),
             redraw_status: RedrawStatus {
                 needs_render: true,
+                needs_update: true,
                 next_redraw_target: RedrawTarget::None,
                 event_sender,
             },
@@ -75,6 +113,10 @@ impl<T: Window> OpenWindow<T> {
     pub(crate) fn clear_redraw_target(&mut self) {
         self.redraw_status.needs_render = false;
         self.redraw_status.next_redraw_target = RedrawTarget::None;
+    }
+
+    pub(crate) fn set_has_updated(&mut self) {
+        self.redraw_status.needs_update = false;
     }
 
     pub(crate) fn initialize_redraw_target(&mut self, target_fps: Option<u16>) {
@@ -98,7 +140,11 @@ impl<T: Window> OpenWindow<T> {
         self.redraw_status.next_redraw_target
     }
 
-    pub fn needs_render(&self) -> bool {
+    pub(crate) fn can_wait_for_events(&self) -> bool {
+        !self.should_redraw_now() && !self.redraw_status.needs_update
+    }
+
+    pub(crate) fn should_redraw_now(&self) -> bool {
         self.redraw_status.needs_render
             || match self.redraw_status.next_redraw_target {
                 RedrawTarget::Never | RedrawTarget::None => false,
@@ -120,29 +166,35 @@ impl<T: Window> OpenWindow<T> {
     }
 
     pub(crate) fn initialize(&mut self) -> crate::Result<()> {
-        self.window.initialize(&Target {
-            scene: self.scene.clone(),
-            clip: None,
-            offset: None,
-        })?;
+        self.window.initialize(
+            &Target {
+                scene: self.scene.clone(),
+                clip: None,
+                offset: None,
+            },
+            self.redraw_status.redraw_requester(),
+        )?;
 
         Ok(())
     }
 
     pub(crate) fn render(&mut self) -> crate::Result<()> {
+        // Clear the redraw target first, so that if something inside of render
+        // (or another thread) requests a redraw it will still be honored.
+        self.clear_redraw_target();
+
         self.window.render(&Target {
             scene: self.scene.clone(),
             clip: None,
             offset: None,
         })?;
 
-        self.clear_redraw_target();
-
         Ok(())
     }
 
     pub(crate) fn update(&mut self, target_fps: Option<u16>) -> crate::Result<()> {
         self.initialize_redraw_target(target_fps);
+        self.set_has_updated();
 
         self.window.update(
             &Target {

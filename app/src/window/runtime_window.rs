@@ -220,7 +220,7 @@ impl RuntimeWindow {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let next_redraw_target = window.next_redraw_target();
-            if window.needs_render() {
+            if !window.can_wait_for_events() {
                 Self::next_window_event_non_blocking(event_receiver)
             } else if let Some(redraw_at) = next_redraw_target.next_update_instant() {
                 let timeout_target = redraw_at.timeout_target();
@@ -262,7 +262,9 @@ impl RuntimeWindow {
                 Err(_) => return Ok(()),
             } {
                 match event {
-                    WindowEvent::WakeUp => {}
+                    WindowEvent::WakeUp => {
+                        window.redraw_status.set_needs_update();
+                    }
                     WindowEvent::SystemThemeChanged(system_theme) => {
                         window.scene_mut().set_system_theme(system_theme);
                         window.redraw_status.set_needs_redraw();
@@ -321,7 +323,7 @@ impl RuntimeWindow {
 
                 window.update(target_fps)?;
 
-                if window.needs_render() {
+                if window.should_redraw_now() {
                     window.render()?;
                     window.scene_mut().end_frame();
                 }

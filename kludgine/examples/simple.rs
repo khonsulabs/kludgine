@@ -21,7 +21,7 @@ impl Window for Simple {
         Some(60)
     }
 
-    fn initialize(&mut self, _scene: &Target) -> kludgine::Result<()> {
+    fn initialize(&mut self, _scene: &Target, _requester: RedrawRequester) -> kludgine::Result<()> {
         let texture = Texture::load("kludgine/examples/assets/k.png")?;
         self.source_sprite = Some(SpriteSource::entire_texture(texture));
         Ok(())

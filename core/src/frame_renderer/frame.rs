@@ -28,9 +28,13 @@ struct FrameReceiver {
 }
 
 impl FrameReceiver {
-    pub fn get_latest_frame(&mut self, receiver: &flume::Receiver<SceneEvent>) -> Vec<Element> {
+    pub fn get_latest_frame(
+        &mut self,
+        receiver: &flume::Receiver<SceneEvent>,
+    ) -> Option<Vec<Element>> {
         // Receive a frame, blocking until we get an EndFrame
-        while let Ok(evt) = receiver.recv() {
+        loop {
+            let evt = receiver.recv().ok()?;
             if self.process_scene_event(evt) {
                 // New frame
                 break;
@@ -45,7 +49,7 @@ impl FrameReceiver {
                 latest_frame = std::mem::replace(&mut self.elements, Vec::new());
             }
         }
-        latest_frame
+        Some(latest_frame)
     }
 
     fn process_scene_event(&mut self, event: SceneEvent) -> bool {
@@ -120,8 +124,12 @@ impl FrameBatch {
 
 impl Frame {
     #[instrument(name = "Frame::update", level = "trace", skip(self, event_receiver))]
-    pub fn update(&mut self, event_receiver: &flume::Receiver<SceneEvent>) {
-        let elements = self.receiver.get_latest_frame(event_receiver);
+    #[must_use]
+    pub fn update(&mut self, event_receiver: &flume::Receiver<SceneEvent>) -> bool {
+        let elements = match self.receiver.get_latest_frame(event_receiver) {
+            Some(elements) => elements,
+            None => return false,
+        };
         self.size = self.receiver.size;
         self.commands.clear();
 
@@ -208,6 +216,8 @@ impl Frame {
         for id in dead_texture_ids {
             self.textures.remove(&id);
         }
+
+        true
     }
 
     fn commit_batch(&mut self, batch: Option<FrameBatch>) -> Option<FrameBatch> {
