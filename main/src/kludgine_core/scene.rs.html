@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/scene.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>scene.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../kludgine_core/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../kludgine_core/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -360,19 +360,19 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>},
-    <span class="ident">sync</span>::<span class="ident">Arc</span>,
+    <span class="ident">sync::Arc</span>,
     <span class="ident">time</span>::{<span class="ident">Duration</span>, <span class="ident">Instant</span>},
 };
 
-<span class="kw">use</span> <span class="ident">euclid</span>::<span class="ident">Rect</span>;
-<span class="kw">use</span> <span class="ident">platforms</span>::<span class="ident">target</span>::{<span class="ident">OS</span>, <span class="ident">TARGET_OS</span>};
-<span class="kw">use</span> <span class="ident">winit</span>::{<span class="ident">event</span>::<span class="ident">VirtualKeyCode</span>, <span class="ident">window</span>::<span class="ident">Theme</span>};
+<span class="kw">use</span> <span class="ident">euclid::Rect</span>;
+<span class="kw">use</span> <span class="ident">platforms::target</span>::{<span class="ident">OS</span>, <span class="ident">TARGET_OS</span>};
+<span class="kw">use</span> <span class="ident">winit</span>::{<span class="ident">event::VirtualKeyCode</span>, <span class="ident">window::Theme</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">math</span>::{<span class="ident">Point</span>, <span class="ident">Raw</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>, <span class="ident">ScreenScale</span>, <span class="ident">Size</span>, <span class="ident">Vector</span>},
-    <span class="ident">shape</span>::<span class="ident">Shape</span>,
-    <span class="ident">sprite</span>::<span class="ident">RenderedSprite</span>,
-    <span class="ident">text</span>::{<span class="ident">font</span>::<span class="ident">Font</span>, <span class="ident">prepared</span>::<span class="ident">PreparedSpan</span>},
+    <span class="ident">shape::Shape</span>,
+    <span class="ident">sprite::RenderedSprite</span>,
+    <span class="ident">text</span>::{<span class="ident">font::Font</span>, <span class="ident">prepared::PreparedSpan</span>},
 };
 
 <span class="doccomment">/// An individual render instruction.</span>
@@ -416,7 +416,7 @@
     <span class="kw">pub</span> <span class="ident">keys_pressed</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">VirtualKeyCode</span><span class="op">&gt;</span>,
     <span class="ident">scale_factor</span>: <span class="ident">ScreenScale</span>,
     <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Raw</span><span class="op">&gt;</span>,
-    <span class="ident">event_sender</span>: <span class="ident">flume</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">SceneEvent</span><span class="op">&gt;</span>,
+    <span class="ident">event_sender</span>: <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">SceneEvent</span><span class="op">&gt;</span>,
     <span class="ident">now</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Instant</span><span class="op">&gt;</span>,
     <span class="ident">elapsed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
     <span class="ident">fonts</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Font</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -435,7 +435,7 @@
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Scene</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Target</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">scene</span>: <span class="ident">Scene</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">from</span>(<span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">scene</span>))
+        <span class="self">Self</span><span class="ident">::from</span>(<span class="ident">Arc::new</span>(<span class="ident">scene</span>))
     }
 }
 
@@ -502,20 +502,20 @@
     <span class="doccomment">/// references exist. Not intended for use inside of `kludgine-app`.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scene_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Scene</span><span class="op">&gt;</span> {
-        <span class="ident">Arc</span>::<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">scene</span>)
+        <span class="ident">Arc::get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">scene</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">Target</span> {
+<span class="kw">impl</span> <span class="ident">std::ops::Deref</span> <span class="kw">for</span> <span class="ident">Target</span> {
     <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">Scene</span>;
 
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Target</span> {
+    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Target</span> {
         <span class="self">self</span>.<span class="ident">scene</span>.<span class="ident">as_ref</span>()
     }
 }
 
 <span class="doccomment">/// The state of keyboard modifier keys.</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">struct_excessive_bools</span>)]</span>
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::struct_excessive_bools</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Modifiers</span> {
     <span class="doccomment">/// If true, a control key is currently depressed.</span>
     <span class="kw">pub</span> <span class="ident">control</span>: <span class="ident">bool</span>,
@@ -535,7 +535,7 @@
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">primary_modifier</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="ident">TARGET_OS</span> {
-            <span class="ident">OS</span>::<span class="ident">MacOS</span> <span class="op">|</span> <span class="ident">OS</span>::<span class="ident">iOS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">operating_system</span>,
+            <span class="ident">OS::MacOS</span> <span class="op">|</span> <span class="ident">OS::iOS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">operating_system</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">control</span>,
         }
     }
@@ -546,7 +546,7 @@
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">command_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="ident">TARGET_OS</span> {
-            <span class="ident">OS</span>::<span class="ident">MacOS</span> <span class="op">|</span> <span class="ident">OS</span>::<span class="ident">iOS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">operating_system</span>,
+            <span class="ident">OS::MacOS</span> <span class="op">|</span> <span class="ident">OS::iOS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">operating_system</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
         }
     }
@@ -555,16 +555,16 @@
 <span class="kw">impl</span> <span class="ident">Scene</span> {
     <span class="doccomment">/// Returns a new Scene that emits [`SceneEvent`]s to `event_sender`.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">event_sender</span>: <span class="ident">flume</span>::<span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">SceneEvent</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">event_sender</span>: <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">SceneEvent</span><span class="op">&gt;</span>, <span class="ident">default_system_theme</span>: <span class="ident">Theme</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">event_sender</span>,
-            <span class="ident">scale_factor</span>: <span class="ident">Scale</span>::<span class="ident">identity</span>(),
-            <span class="ident">size</span>: <span class="ident">Size</span>::<span class="ident">default</span>(),
-            <span class="ident">keys_pressed</span>: <span class="ident">HashSet</span>::<span class="ident">new</span>(),
+            <span class="ident">scale_factor</span>: <span class="ident">Scale::identity</span>(),
+            <span class="ident">size</span>: <span class="ident">Size::default</span>(),
+            <span class="ident">keys_pressed</span>: <span class="ident">HashSet::new</span>(),
             <span class="ident">now</span>: <span class="prelude-val">None</span>,
             <span class="ident">elapsed</span>: <span class="prelude-val">None</span>,
-            <span class="ident">fonts</span>: <span class="ident">HashMap</span>::<span class="ident">new</span>(),
-            <span class="ident">system_theme</span>: <span class="ident">Theme</span>::<span class="ident">Light</span>,
+            <span class="ident">fonts</span>: <span class="ident">HashMap::new</span>(),
+            <span class="ident">system_theme</span>: <span class="ident">default_system_theme</span>,
         }
     }
 
@@ -580,7 +580,7 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">push_element</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">element</span>: <span class="ident">Element</span>) {
-        <span class="ident">drop</span>(<span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">send</span>(<span class="ident">SceneEvent</span>::<span class="ident">Render</span>(<span class="ident">element</span>)));
+        <span class="ident">drop</span>(<span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">send</span>(<span class="ident">SceneEvent::Render</span>(<span class="ident">element</span>)));
     }
 
     <span class="doccomment">/// Sets the size of the scene.</span>
@@ -614,30 +614,30 @@
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">modifiers_pressed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Modifiers</span> {
         <span class="ident">Modifiers</span> {
-            <span class="ident">control</span>: <span class="self">self</span>.<span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode</span>::<span class="ident">RControl</span>, <span class="ident">VirtualKeyCode</span>::<span class="ident">LControl</span>]),
-            <span class="ident">alt</span>: <span class="self">self</span>.<span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode</span>::<span class="ident">RAlt</span>, <span class="ident">VirtualKeyCode</span>::<span class="ident">LAlt</span>]),
-            <span class="ident">shift</span>: <span class="self">self</span>.<span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode</span>::<span class="ident">LShift</span>, <span class="ident">VirtualKeyCode</span>::<span class="ident">RShift</span>]),
-            <span class="ident">operating_system</span>: <span class="self">self</span>.<span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode</span>::<span class="ident">RWin</span>, <span class="ident">VirtualKeyCode</span>::<span class="ident">LWin</span>]),
+            <span class="ident">control</span>: <span class="self">self</span>.<span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode::RControl</span>, <span class="ident">VirtualKeyCode::LControl</span>]),
+            <span class="ident">alt</span>: <span class="self">self</span>.<span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode::RAlt</span>, <span class="ident">VirtualKeyCode::LAlt</span>]),
+            <span class="ident">shift</span>: <span class="self">self</span>.<span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode::LShift</span>, <span class="ident">VirtualKeyCode::RShift</span>]),
+            <span class="ident">operating_system</span>: <span class="self">self</span>.<span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode::RWin</span>, <span class="ident">VirtualKeyCode::LWin</span>]),
         }
     }
 
     <span class="doccomment">/// Begins a new frame with the current size.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_frame</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">let</span> <span class="ident">last_start</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">now</span>;
-        <span class="self">self</span>.<span class="ident">now</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Instant</span>::<span class="ident">now</span>());
+        <span class="self">self</span>.<span class="ident">now</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Instant::now</span>());
         <span class="self">self</span>.<span class="ident">elapsed</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">last_start</span> {
             <span class="prelude-val">Some</span>(<span class="ident">last_start</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">now</span>.<span class="ident">unwrap</span>().<span class="ident">checked_duration_since</span>(<span class="ident">last_start</span>),
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         };
         <span class="ident">drop</span>(
             <span class="self">self</span>.<span class="ident">event_sender</span>
-                .<span class="ident">send</span>(<span class="ident">SceneEvent</span>::<span class="ident">BeginFrame</span> { <span class="ident">size</span>: <span class="self">self</span>.<span class="ident">size</span> }),
+                .<span class="ident">send</span>(<span class="ident">SceneEvent::BeginFrame</span> { <span class="ident">size</span>: <span class="self">self</span>.<span class="ident">size</span> }),
         );
     }
 
     <span class="doccomment">/// Ends the current frame, allowing it to be rendered.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">end_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="ident">drop</span>(<span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">send</span>(<span class="ident">SceneEvent</span>::<span class="ident">EndFrame</span>));
+        <span class="ident">drop</span>(<span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">send</span>(<span class="ident">SceneEvent::EndFrame</span>));
     }
 
     <span class="doccomment">/// Returns the current size of the scene in [`Scaled`] units.</span>
@@ -715,5 +715,5 @@
     <span class="comment">// }</span>
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="kludgine_core" data-search-js="../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="kludgine_core" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>
