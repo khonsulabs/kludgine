@@ -62,7 +62,7 @@ impl Font {
     pub fn family(&self) -> Option<String> {
         match &self.handle.font {
             rusttype::Font::Ref(f) => f.family_name(),
-            _ => None,
+            rusttype::Font::Owned(_) => None,
         }
     }
 

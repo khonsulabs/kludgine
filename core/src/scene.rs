@@ -195,7 +195,7 @@ impl Modifiers {
 impl Scene {
     /// Returns a new Scene that emits [`SceneEvent`]s to `event_sender`.
     #[must_use]
-    pub fn new(event_sender: flume::Sender<SceneEvent>) -> Self {
+    pub fn new(event_sender: flume::Sender<SceneEvent>, default_system_theme: Theme) -> Self {
         Self {
             event_sender,
             scale_factor: Scale::identity(),
@@ -204,7 +204,7 @@ impl Scene {
             now: None,
             elapsed: None,
             fonts: HashMap::new(),
-            system_theme: Theme::Light,
+            system_theme: default_system_theme,
         }
     }
 

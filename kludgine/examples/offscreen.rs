@@ -8,6 +8,7 @@ use kludgine::core::{
     flume,
     prelude::*,
 };
+use kludgine_core::winit::window::Theme;
 
 #[tokio::main]
 async fn main() {
@@ -25,7 +26,7 @@ async fn main() {
         .await
         .expect("error creating renderer");
 
-    let mut target = Target::from(Scene::new(scene_sender));
+    let mut target = Target::from(Scene::new(scene_sender, Theme::Light));
     target.scene_mut().unwrap().set_size(Size::new(64., 64.));
     target.scene_mut().unwrap().start_frame();
 

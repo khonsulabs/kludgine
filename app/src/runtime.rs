@@ -251,10 +251,7 @@ impl Runtime {
         T: Window + Sized + 'static,
     {
         let event_loop = winit::event_loop::EventLoop::new();
-        let initial_system_theme = initial_window
-            .initial_system_theme
-            .clone()
-            .unwrap_or(Theme::Light);
+        let initial_system_theme = initial_window.initial_system_theme.unwrap_or(Theme::Light);
         let mut initial_window: winit::window::WindowBuilder = initial_window.into();
 
         if Self::should_run_in_exclusive_mode() {

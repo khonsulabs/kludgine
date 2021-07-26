@@ -40,13 +40,13 @@ impl FrameReceiver {
                 break;
             }
         }
-        let mut latest_frame = std::mem::replace(&mut self.elements, Vec::new());
+        let mut latest_frame = std::mem::take(&mut self.elements);
         // Receive any pending events in a non-blocking fashion. We only want to render
         // the frame we have the most recent information for
         while let Ok(evt) = receiver.try_recv() {
             if self.process_scene_event(evt) {
                 // New frame
-                latest_frame = std::mem::replace(&mut self.elements, Vec::new());
+                latest_frame = std::mem::take(&mut self.elements);
             }
         }
         Some(latest_frame)
@@ -211,7 +211,7 @@ impl Frame {
             .textures
             .keys()
             .filter(|id| !referenced_texture_ids.contains(id))
-            .cloned()
+            .copied()
             .collect::<Vec<_>>();
         for id in dead_texture_ids {
             self.textures.remove(&id);
@@ -252,7 +252,7 @@ impl Frame {
             .fonts
             .keys()
             .filter(|id| !referenced_fonts.contains(id))
-            .cloned()
+            .copied()
             .collect::<Vec<_>>();
         for id in fonts_to_remove {
             self.fonts.remove(&id);

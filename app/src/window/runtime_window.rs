@@ -249,8 +249,7 @@ impl RuntimeWindow {
     where
         T: Window,
     {
-        let mut scene = Scene::new(scene_event_sender);
-        scene.set_system_theme(initial_system_theme);
+        let scene = Scene::new(scene_event_sender, initial_system_theme);
 
         let target_fps = window.target_fps();
         let mut window = OpenWindow::new(window, event_sender, scene);

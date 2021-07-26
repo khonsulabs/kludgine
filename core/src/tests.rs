@@ -1,5 +1,6 @@
 use easygpu::wgpu;
 use image::{GenericImageView, Rgba};
+use winit::window::Theme;
 
 use crate::{frame_renderer::FrameRenderer, prelude::*, sprite::Srgb};
 
@@ -19,7 +20,7 @@ async fn offscreen_render_test() {
         .await
         .expect("error creating renderer");
 
-    let mut target = Target::from(Scene::new(scene_sender));
+    let mut target = Target::from(Scene::new(scene_sender, Theme::Light));
     target.scene_mut().unwrap().set_size(Size::new(64., 64.));
     target.scene_mut().unwrap().start_frame();
 
