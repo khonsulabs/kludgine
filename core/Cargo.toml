@@ -29,8 +29,8 @@ serialization = ["serde", "euclid/serde", "palette/serializing"]
 
 [dependencies]
 approx = "0.5"
-easygpu = "0.0.11"
-easygpu-lyon = "0.0.11"
+easygpu = "0.0.12"
+easygpu-lyon = "0.0.12"
 lyon_tessellation = "0.16"
 image = ">=0.23.12"
 palette = "0.6"
