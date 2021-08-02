@@ -5,14 +5,19 @@ use structopt::StructOpt;
 #[derive(Debug, StructOpt)]
 enum Args {
     CompileShaders,
-    GenerateCodeCoverageReport,
+    GenerateCodeCoverageReport {
+        #[structopt(long = "install-dependencies")]
+        install_dependencies: bool,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
     let args = Args::from_args();
     match args {
         Args::CompileShaders => compile_shaders()?,
-        Args::GenerateCodeCoverageReport => CodeCoverage::<CodeCoverageConfig>::execute()?,
+        Args::GenerateCodeCoverageReport {
+            install_dependencies,
+        } => CodeCoverage::<CodeCoverageConfig>::execute(install_dependencies)?,
     };
     Ok(())
 }
