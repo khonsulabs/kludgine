@@ -62,7 +62,7 @@ where
 {
     /// Adds all sprites from `sheet`.
     pub fn add_sheet(&mut self, sheet: &SpriteSheet<T>) {
-        self.add_foreign_sheet(sheet, |a| a)
+        self.add_foreign_sheet(sheet, |a| a);
     }
 }
 

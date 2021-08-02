@@ -104,7 +104,7 @@ impl Shape<Scaled> {
     /// Renders the shape at `location` within `scene`.
     pub fn render_at(&self, location: Point<f32, Scaled>, scene: &Target) {
         let translated = self.convert_from_user_to_device(location, scene);
-        scene.push_element(Element::Shape(translated))
+        scene.push_element(Element::Shape(translated));
     }
 
     fn convert_from_user_to_device(

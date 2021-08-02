@@ -5,6 +5,7 @@ use winit::window::Theme;
 use crate::{frame_renderer::FrameRenderer, prelude::*, sprite::Srgb};
 
 #[tokio::test]
+#[allow(clippy::semicolon_if_nothing_returned)] // false positive from tokio::test
 async fn offscreen_render_test() {
     let (scene_sender, scene_receiver) = flume::unbounded();
 

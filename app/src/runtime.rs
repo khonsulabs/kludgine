@@ -29,7 +29,7 @@ pub enum RuntimeRequest {
 }
 
 impl RuntimeRequest {
-    pub fn send(self) -> crate::Result<()> {
+    pub fn send(self) {
         let sender: flume::Sender<Self> = {
             let guard = GLOBAL_RUNTIME_SENDER.lock().expect("Error locking mutex");
             match *guard {
@@ -38,7 +38,6 @@ impl RuntimeRequest {
             }
         };
         sender.send(self).unwrap_or_default();
-        Ok(())
     }
 }
 
@@ -116,11 +115,10 @@ where
     {
         self.app.initialize();
 
-        self.run()
-            .expect("Error encountered running application loop");
+        self.run();
     }
 
-    fn run(mut self) -> crate::Result<()>
+    fn run(mut self)
     where
         App: Application + 'static,
     {
@@ -140,12 +138,10 @@ where
             }
 
             if running && self.app.should_exit() {
-                RuntimeRequest::Quit.send()?;
+                RuntimeRequest::Quit.send();
                 break;
             }
         }
-
-        Ok(())
     }
 }
 
@@ -332,8 +328,7 @@ impl Runtime {
             builder,
             window_sender,
         }
-        .send()
-        .unwrap_or_default();
+        .send();
 
         RuntimeWindow::open(&window_receiver, initial_system_theme, window);
     }

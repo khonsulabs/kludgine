@@ -201,7 +201,7 @@ where
                 self.render_frame(&mut frame)
                     .expect("Error rendering window");
             } else {
-                self.keep_running.store(false, Ordering::SeqCst)
+                self.keep_running.store(false, Ordering::SeqCst);
             }
         }
     }
@@ -283,7 +283,7 @@ where
                         *depth = new_depth;
                         *output = new_output;
                     } else {
-                        unreachable!()
+                        unreachable!();
                     }
                 }
                 Output::Texture { color, depth }

@@ -267,7 +267,7 @@ impl Frame {
                         font_id,
                         rect,
                         data: data.to_vec(),
-                    })
+                    });
                 })
                 .expect("Error caching font"); // TODO Change this to a graceful
                                                // failure that

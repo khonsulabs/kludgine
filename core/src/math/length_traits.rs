@@ -25,11 +25,11 @@ where
     }
 
     fn set_width(&mut self, width: Length<S, U>) {
-        self.width = width.get()
+        self.width = width.get();
     }
 
     fn set_height(&mut self, height: Length<S, U>) {
-        self.height = height.get()
+        self.height = height.get();
     }
 }
 
@@ -58,11 +58,11 @@ where
     }
 
     fn set_x(&mut self, x: Length<S, U>) {
-        self.x = x.get()
+        self.x = x.get();
     }
 
     fn set_y(&mut self, y: Length<S, U>) {
-        self.y = y.get()
+        self.y = y.get();
     }
 }
 
@@ -79,10 +79,10 @@ where
     }
 
     fn set_x(&mut self, x: Length<S, U>) {
-        self.x = x.get()
+        self.x = x.get();
     }
 
     fn set_y(&mut self, y: Length<S, U>) {
-        self.y = y.get()
+        self.y = y.get();
     }
 }

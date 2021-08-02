@@ -133,7 +133,7 @@ impl SpriteSource {
         location: Point<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
-        self.render_at_with_alpha(scene, location, rotation, 1.)
+        self.render_at_with_alpha(scene, location, rotation, 1.);
     }
 
     /// Renders the sprite within `bounds` (stretching if needed) with
@@ -144,7 +144,7 @@ impl SpriteSource {
         bounds: Rect<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
-        self.render_with_alpha(scene, bounds, rotation, 1.)
+        self.render_with_alpha(scene, bounds, rotation, 1.);
     }
 
     /// Renders the sprite within `bounds` (stretching if needed) with
@@ -155,7 +155,7 @@ impl SpriteSource {
         bounds: Box2D<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
-        self.render_with_alpha_in_box(scene, bounds, rotation, 1.)
+        self.render_with_alpha_in_box(scene, bounds, rotation, 1.);
     }
 
     /// Renders the sprite with `alpha` at `location` with `rotation` into
@@ -172,7 +172,7 @@ impl SpriteSource {
             Rect::new(location, self.location.size().to_f32().cast_unit()),
             rotation,
             alpha,
-        )
+        );
     }
 
     /// Renders the sprite with `alpha` within `bounds` with `rotation` into
@@ -184,7 +184,7 @@ impl SpriteSource {
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
     ) {
-        self.render_with_alpha_in_box(scene, bounds.to_box2d(), rotation, alpha)
+        self.render_with_alpha_in_box(scene, bounds.to_box2d(), rotation, alpha);
     }
 
     /// Renders the sprite with `alpha` within `bounds` with `rotation` into
@@ -202,7 +202,7 @@ impl SpriteSource {
             bounds * effective_scale,
             rotation * effective_scale,
             alpha,
-        )
+        );
     }
 
     /// Renders the sprite with `alpha` within `bounds` with `rotation` into

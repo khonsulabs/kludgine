@@ -187,7 +187,7 @@ impl Path<Scaled> {
                     ctrl2: Self::convert_point(*ctrl2, location, effective_scale),
                     to: Self::convert_point(*to, location, effective_scale),
                 },
-            })
+            });
         }
 
         Path { events }
@@ -230,7 +230,7 @@ impl Path<Raw> {
     pub(crate) fn as_lyon(&self) -> lyon_tessellation::path::Path {
         let mut builder = lyon_tessellation::path::Path::builder();
         for &event in &self.events {
-            builder.path_event(event.into())
+            builder.path_event(event.into());
         }
         builder.build()
     }

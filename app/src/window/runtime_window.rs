@@ -117,7 +117,7 @@ impl RuntimeWindow {
                     event_receiver,
                     initial_system_theme,
                     app_window,
-                )
+                );
             })
             .unwrap();
 
@@ -128,7 +128,7 @@ impl RuntimeWindow {
         });
 
         FrameRenderer::<Format>::run(renderer, task_keep_running, scene_event_receiver, || {
-            RuntimeRequest::WindowClosed.send().unwrap();
+            RuntimeRequest::WindowClosed.send();
         });
 
         {
@@ -348,7 +348,7 @@ impl RuntimeWindow {
             initial_system_theme,
             window,
         )
-        .expect("Error running window loop.")
+        .expect("Error running window loop.");
     }
 
     pub(crate) fn count() -> usize {

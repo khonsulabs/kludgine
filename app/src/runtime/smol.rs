@@ -48,7 +48,7 @@ impl super::Runtime {
     pub fn spawn<Fut: Future<Output = T> + Send + 'static, T: Send + 'static>(future: Fut) {
         let guard = GLOBAL_THREAD_POOL.read().expect("Error getting runtime");
         let executor = guard.as_ref().unwrap();
-        executor.spawn(future).detach()
+        executor.spawn(future).detach();
     }
 
     /// Executes a future in a blocking-safe manner.

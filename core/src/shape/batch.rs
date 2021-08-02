@@ -11,7 +11,7 @@ pub struct Batch {
 
 impl Batch {
     pub(crate) fn add(&mut self, shape: Shape<Raw>) {
-        self.shapes.push(shape)
+        self.shapes.push(shape);
     }
 
     pub(crate) fn finish(self, renderer: &Renderer) -> crate::Result<easygpu_lyon::Shape> {
