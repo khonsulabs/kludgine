@@ -568,7 +568,7 @@
                     <span class="ident">ctrl2</span>: <span class="self">Self</span><span class="ident">::convert_point</span>(<span class="kw-2">*</span><span class="ident">ctrl2</span>, <span class="ident">location</span>, <span class="ident">effective_scale</span>),
                     <span class="ident">to</span>: <span class="self">Self</span><span class="ident">::convert_point</span>(<span class="kw-2">*</span><span class="ident">to</span>, <span class="ident">location</span>, <span class="ident">effective_scale</span>),
                 },
-            })
+            });
         }
 
         <span class="ident">Path</span> { <span class="ident">events</span> }
@@ -611,7 +611,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">as_lyon</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">lyon_tessellation::path::Path</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">lyon_tessellation::path::Path::builder</span>();
         <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">event</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">events</span> {
-            <span class="ident">builder</span>.<span class="ident">path_event</span>(<span class="ident">event</span>.<span class="ident">into</span>())
+            <span class="ident">builder</span>.<span class="ident">path_event</span>(<span class="ident">event</span>.<span class="ident">into</span>());
         }
         <span class="ident">builder</span>.<span class="ident">build</span>()
     }

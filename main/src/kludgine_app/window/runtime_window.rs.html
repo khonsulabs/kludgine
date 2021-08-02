@@ -614,7 +614,7 @@
                     <span class="ident">event_receiver</span>,
                     <span class="ident">initial_system_theme</span>,
                     <span class="ident">app_window</span>,
-                )
+                );
             })
             .<span class="ident">unwrap</span>();
 
@@ -625,7 +625,7 @@
         });
 
         <span class="ident">FrameRenderer</span>::<span class="op">&lt;</span><span class="ident">Format</span><span class="op">&gt;</span><span class="ident">::run</span>(<span class="ident">renderer</span>, <span class="ident">task_keep_running</span>, <span class="ident">scene_event_receiver</span>, <span class="op">|</span><span class="op">|</span> {
-            <span class="ident">RuntimeRequest::WindowClosed</span>.<span class="ident">send</span>().<span class="ident">unwrap</span>();
+            <span class="ident">RuntimeRequest::WindowClosed</span>.<span class="ident">send</span>();
         });
 
         {
@@ -845,7 +845,7 @@
             <span class="ident">initial_system_theme</span>,
             <span class="ident">window</span>,
         )
-        .<span class="ident">expect</span>(<span class="string">&quot;Error running window loop.&quot;</span>)
+        .<span class="ident">expect</span>(<span class="string">&quot;Error running window loop.&quot;</span>);
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">count</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {

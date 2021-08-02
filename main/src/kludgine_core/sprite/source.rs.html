@@ -363,7 +363,7 @@
         <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span>,
         <span class="ident">rotation</span>: <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>,
     ) {
-        <span class="self">self</span>.<span class="ident">render_at_with_alpha</span>(<span class="ident">scene</span>, <span class="ident">location</span>, <span class="ident">rotation</span>, <span class="number">1.</span>)
+        <span class="self">self</span>.<span class="ident">render_at_with_alpha</span>(<span class="ident">scene</span>, <span class="ident">location</span>, <span class="ident">rotation</span>, <span class="number">1.</span>);
     }
 
     <span class="doccomment">/// Renders the sprite within `bounds` (stretching if needed) with</span>
@@ -374,7 +374,7 @@
         <span class="ident">bounds</span>: <span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span>,
         <span class="ident">rotation</span>: <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>,
     ) {
-        <span class="self">self</span>.<span class="ident">render_with_alpha</span>(<span class="ident">scene</span>, <span class="ident">bounds</span>, <span class="ident">rotation</span>, <span class="number">1.</span>)
+        <span class="self">self</span>.<span class="ident">render_with_alpha</span>(<span class="ident">scene</span>, <span class="ident">bounds</span>, <span class="ident">rotation</span>, <span class="number">1.</span>);
     }
 
     <span class="doccomment">/// Renders the sprite within `bounds` (stretching if needed) with</span>
@@ -385,7 +385,7 @@
         <span class="ident">bounds</span>: <span class="ident">Box2D</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span>,
         <span class="ident">rotation</span>: <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>,
     ) {
-        <span class="self">self</span>.<span class="ident">render_with_alpha_in_box</span>(<span class="ident">scene</span>, <span class="ident">bounds</span>, <span class="ident">rotation</span>, <span class="number">1.</span>)
+        <span class="self">self</span>.<span class="ident">render_with_alpha_in_box</span>(<span class="ident">scene</span>, <span class="ident">bounds</span>, <span class="ident">rotation</span>, <span class="number">1.</span>);
     }
 
     <span class="doccomment">/// Renders the sprite with `alpha` at `location` with `rotation` into</span>
@@ -402,7 +402,7 @@
             <span class="ident">Rect::new</span>(<span class="ident">location</span>, <span class="self">self</span>.<span class="ident">location</span>.<span class="ident">size</span>().<span class="ident">to_f32</span>().<span class="ident">cast_unit</span>()),
             <span class="ident">rotation</span>,
             <span class="ident">alpha</span>,
-        )
+        );
     }
 
     <span class="doccomment">/// Renders the sprite with `alpha` within `bounds` with `rotation` into</span>
@@ -414,7 +414,7 @@
         <span class="ident">rotation</span>: <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>,
         <span class="ident">alpha</span>: <span class="ident">f32</span>,
     ) {
-        <span class="self">self</span>.<span class="ident">render_with_alpha_in_box</span>(<span class="ident">scene</span>, <span class="ident">bounds</span>.<span class="ident">to_box2d</span>(), <span class="ident">rotation</span>, <span class="ident">alpha</span>)
+        <span class="self">self</span>.<span class="ident">render_with_alpha_in_box</span>(<span class="ident">scene</span>, <span class="ident">bounds</span>.<span class="ident">to_box2d</span>(), <span class="ident">rotation</span>, <span class="ident">alpha</span>);
     }
 
     <span class="doccomment">/// Renders the sprite with `alpha` within `bounds` with `rotation` into</span>
@@ -432,7 +432,7 @@
             <span class="ident">bounds</span> <span class="op">*</span> <span class="ident">effective_scale</span>,
             <span class="ident">rotation</span> <span class="op">*</span> <span class="ident">effective_scale</span>,
             <span class="ident">alpha</span>,
-        )
+        );
     }
 
     <span class="doccomment">/// Renders the sprite with `alpha` within `bounds` with `rotation` into</span>
