@@ -430,13 +430,13 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">approx::relative_eq</span>;
 <span class="kw">use</span> <span class="ident">easygpu::color</span>::{<span class="ident">Rgba</span>, <span class="ident">Rgba8</span>};
-<span class="kw">use</span> <span class="ident">palette</span>::{<span class="ident">rgb::Srgba</span>, <span class="ident">Component</span>, <span class="ident">Shade</span>, <span class="ident">Srgb</span>};
+<span class="kw">use</span> <span class="ident">palette</span>::{<span class="ident">rgb::Srgba</span>, <span class="ident">Component</span>, <span class="ident">IntoComponent</span>, <span class="ident">Shade</span>, <span class="ident">Srgb</span>};
 
 <span class="doccomment">/// A RGBA color with f32 components.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Color</span>(<span class="ident">Rgba</span>);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>: <span class="ident">Component</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Srgba</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Color</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>: <span class="ident">Component</span> <span class="op">+</span> <span class="ident">IntoComponent</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Srgba</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Color</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">color</span>: <span class="ident">Srgba</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">color</span> <span class="op">=</span> <span class="ident">color</span>.<span class="ident">into_format</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">f32</span><span class="op">&gt;</span>();
         <span class="self">Self</span>(<span class="ident">Rgba</span> {
@@ -448,7 +448,7 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>: <span class="ident">Component</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Srgb</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Color</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span>: <span class="ident">Component</span> <span class="op">+</span> <span class="ident">IntoComponent</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Srgb</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Color</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">color</span>: <span class="ident">Srgb</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">color</span> <span class="op">=</span> <span class="ident">color</span>.<span class="ident">into_format</span>::<span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>();
         <span class="self">Self</span>(<span class="ident">Rgba</span> {
