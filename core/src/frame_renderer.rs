@@ -565,6 +565,6 @@ where
     F: FnMut() + Send + Sync + 'static,
 {
     fn shutdown(&mut self) {
-        self()
+        self();
     }
 }

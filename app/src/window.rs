@@ -310,7 +310,7 @@ where
     T: Window + WindowCreator,
 {
     fn open(self) {
-        crate::runtime::Runtime::open_window(Self::get_window_builder(), self)
+        crate::runtime::Runtime::open_window(Self::get_window_builder(), self);
     }
 }
 

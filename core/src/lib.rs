@@ -45,6 +45,7 @@ pub mod texture;
 pub use easygpu;
 pub use euclid;
 pub use flume;
+pub use image;
 pub use lazy_static;
 pub use winit;
 

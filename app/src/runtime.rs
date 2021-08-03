@@ -323,7 +323,7 @@ impl Runtime {
         T: Window + Sized,
     {
         let (window_sender, window_receiver) = flume::bounded(1);
-        let initial_system_theme = builder.initial_system_theme.clone().unwrap_or(Theme::Light);
+        let initial_system_theme = builder.initial_system_theme.unwrap_or(Theme::Light);
         RuntimeRequest::OpenWindow {
             builder,
             window_sender,

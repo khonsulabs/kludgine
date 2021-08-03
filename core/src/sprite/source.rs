@@ -167,12 +167,10 @@ impl SpriteSource {
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
     ) {
-        self.render_with_alpha(
-            scene,
-            Rect::new(location, self.location.size().to_f32().cast_unit()),
-            rotation,
-            alpha,
-        );
+        // We want to render this at a 1:1 pixel scale
+        let size_as_points =
+            self.location.size().to_f32().cast_unit::<Raw>() / scene.scale_factor();
+        self.render_with_alpha(scene, Rect::new(location, size_as_points), rotation, alpha);
     }
 
     /// Renders the sprite with `alpha` within `bounds` with `rotation` into

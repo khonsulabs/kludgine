@@ -44,20 +44,16 @@ impl Texture {
 
     /// Creates a new texture from an image.
     #[must_use]
-    pub fn new(image: &DynamicImage) -> Self {
-        let image = image.to_rgba8();
+    pub fn new(image: Arc<RgbaImage>) -> Self {
         let id = GLOBAL_ID_CELL.fetch_add(1, Ordering::SeqCst);
-        Self {
-            id,
-            image: Arc::new(image),
-        }
+        Self { id, image }
     }
 
     /// Loads a texture from an image at `path`
     pub fn load<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         let img = image::open(path)?;
 
-        Ok(Self::new(&img))
+        Ok(Self::from(&img))
     }
 
     /// Returns the size of the image.
@@ -86,6 +82,13 @@ impl<'a> TryFrom<&'a [u8]> for Texture {
     fn try_from(bytes: &[u8]) -> crate::Result<Self> {
         let img = image::load_from_memory(bytes)?;
 
-        Ok(Self::new(&img))
+        Ok(Self::from(&img))
+    }
+}
+
+impl<'a> From<&'a DynamicImage> for Texture {
+    fn from(img: &'a DynamicImage) -> Self {
+        let img = img.to_rgba8();
+        Self::new(Arc::new(img))
     }
 }
