@@ -225,6 +225,8 @@
 <span id="222">222</span>
 <span id="223">223</span>
 <span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">math</span>::{<span class="ident">Box2D</span>, <span class="ident">Point</span>, <span class="ident">Raw</span>, <span class="ident">Rect</span>, <span class="ident">Scaled</span>, <span class="ident">Size</span>},
@@ -395,10 +397,12 @@
         <span class="ident">rotation</span>: <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>,
         <span class="ident">alpha</span>: <span class="ident">f32</span>,
     ) {
-        <span class="comment">// We want to render this at a 1:1 pixel scale</span>
-        <span class="kw">let</span> <span class="ident">size_as_points</span> <span class="op">=</span>
-            <span class="self">self</span>.<span class="ident">location</span>.<span class="ident">size</span>().<span class="ident">to_f32</span>().<span class="ident">cast_unit</span>::<span class="op">&lt;</span><span class="ident">Raw</span><span class="op">&gt;</span>() <span class="op">/</span> <span class="ident">scene</span>.<span class="ident">scale_factor</span>();
-        <span class="self">self</span>.<span class="ident">render_with_alpha</span>(<span class="ident">scene</span>, <span class="ident">Rect::new</span>(<span class="ident">location</span>, <span class="ident">size_as_points</span>), <span class="ident">rotation</span>, <span class="ident">alpha</span>);
+        <span class="self">self</span>.<span class="ident">render_with_alpha</span>(
+            <span class="ident">scene</span>,
+            <span class="ident">Rect::new</span>(<span class="ident">location</span>, <span class="self">self</span>.<span class="ident">location</span>.<span class="ident">size</span>().<span class="ident">to_f32</span>().<span class="ident">cast_unit</span>()),
+            <span class="ident">rotation</span>,
+            <span class="ident">alpha</span>,
+        );
     }
 
     <span class="doccomment">/// Renders the sprite with `alpha` within `bounds` with `rotation` into</span>
