@@ -656,7 +656,7 @@
     <span class="ident">T</span>: <span class="ident">Window</span> <span class="op">+</span> <span class="ident">WindowCreator</span>,
 {
     <span class="kw">fn</span> <span class="ident">open</span>(<span class="self">self</span>) {
-        <span class="kw">crate</span><span class="ident">::runtime::Runtime::open_window</span>(<span class="self">Self</span><span class="ident">::get_window_builder</span>(), <span class="self">self</span>)
+        <span class="kw">crate</span><span class="ident">::runtime::Runtime::open_window</span>(<span class="self">Self</span><span class="ident">::get_window_builder</span>(), <span class="self">self</span>);
     }
 }
 
