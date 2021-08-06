@@ -306,7 +306,7 @@
 };
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Frame</span> {
-    <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">ScreenSpace</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">ScreenSpace</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">textures</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">u64</span>, <span class="ident">Texture</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">commands</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FrameCommand</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">fonts</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">u64</span>, <span class="ident">LoadedFont</span><span class="op">&gt;</span>,
@@ -316,7 +316,7 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">FrameReceiver</span> {
-    <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">ScreenSpace</span><span class="op">&gt;</span>,
+    <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">ScreenSpace</span><span class="op">&gt;</span>,
     <span class="ident">elements</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Element</span><span class="op">&gt;</span>,
 }
 

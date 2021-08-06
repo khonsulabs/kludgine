@@ -490,9 +490,6 @@
 <span id="488">488</span>
 <span id="489">489</span>
 <span id="490">490</span>
-<span id="491">491</span>
-<span id="492">492</span>
-<span id="493">493</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">sync</span>::{
@@ -505,7 +502,7 @@
 <span class="kw">use</span> <span class="ident">kludgine_core</span>::{
     <span class="ident">easygpu::prelude</span>::<span class="kw-2">*</span>,
     <span class="ident">flume</span>,
-    <span class="ident">math</span>::{<span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">ScreenScale</span>, <span class="ident">Size</span>},
+    <span class="ident">math</span>::{<span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">Raw</span>, <span class="ident">ScreenScale</span>, <span class="ident">Size</span>},
     <span class="ident">scene</span>::{<span class="ident">Scene</span>, <span class="ident">SceneEvent</span>},
     <span class="ident">winit</span>::{
         <span class="self">self</span>,
@@ -532,7 +529,7 @@
     <span class="kw">pub</span> <span class="ident">keep_running</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
     <span class="ident">receiver</span>: <span class="ident">flume::Receiver</span><span class="op">&lt;</span><span class="ident">WindowMessage</span><span class="op">&gt;</span>,
     <span class="ident">event_sender</span>: <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
-    <span class="ident">last_known_size</span>: <span class="ident">Size</span>,
+    <span class="ident">last_known_size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Raw</span><span class="op">&gt;</span>,
     <span class="ident">last_known_scale_factor</span>: <span class="ident">ScreenScale</span>,
 }
 
@@ -540,7 +537,7 @@
     <span class="ident">window_id</span>: <span class="ident">WindowId</span>,
     <span class="ident">instance</span>: <span class="ident">wgpu::Instance</span>,
     <span class="ident">surface</span>: <span class="ident">wgpu::Surface</span>,
-    <span class="ident">initial_size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">ScreenSpace</span><span class="op">&gt;</span>,
+    <span class="ident">initial_size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Raw</span><span class="op">&gt;</span>,
     <span class="ident">scale_factor</span>: <span class="ident">f32</span>,
 }
 
@@ -634,7 +631,7 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime_window</span> <span class="op">=</span> <span class="self">Self</span> {
             <span class="ident">receiver</span>: <span class="ident">message_receiver</span>,
-            <span class="ident">last_known_size</span>: <span class="ident">initial_size</span>.<span class="ident">to_f32</span>().<span class="ident">cast_unit</span>(),
+            <span class="ident">last_known_size</span>: <span class="ident">initial_size</span>,
             <span class="ident">keep_running</span>,
             <span class="ident">event_sender</span>,
             <span class="ident">last_known_scale_factor</span>: <span class="ident">ScreenScale::new</span>(<span class="ident">scale_factor</span>),
@@ -765,9 +762,7 @@
                         <span class="ident">window</span>.<span class="ident">redraw_status</span>.<span class="ident">set_needs_redraw</span>();
                     }
                     <span class="ident">WindowEvent::Resize</span> { <span class="ident">size</span>, <span class="ident">scale_factor</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">window</span>
-                            .<span class="ident">scene_mut</span>()
-                            .<span class="ident">set_size</span>(<span class="ident">Size::new</span>(<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f32</span>));
+                        <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">set_size</span>(<span class="ident">size</span>.<span class="ident">cast_unit</span>());
                         <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">set_scale_factor</span>(<span class="ident">scale_factor</span>);
                     }
                     <span class="ident">WindowEvent::CloseRequested</span> <span class="op">=</span><span class="op">&gt;</span>
@@ -886,7 +881,7 @@
                     .<span class="ident">unwrap_or_default</span>();
             }
             <span class="ident">WinitWindowEvent::Resized</span>(<span class="ident">size</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">last_known_size</span> <span class="op">=</span> <span class="ident">Size::new</span>(<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f32</span>);
+                <span class="self">self</span>.<span class="ident">last_known_size</span> <span class="op">=</span> <span class="ident">Size::new</span>(<span class="ident">size</span>.<span class="ident">width</span>, <span class="ident">size</span>.<span class="ident">height</span>);
                 <span class="self">self</span>.<span class="ident">notify_size_changed</span>();
             }
             <span class="ident">WinitWindowEvent::ScaleFactorChanged</span> {
@@ -894,8 +889,7 @@
                 <span class="ident">new_inner_size</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">last_known_scale_factor</span> <span class="op">=</span> <span class="ident">ScreenScale::new</span>(<span class="kw-2">*</span><span class="ident">scale_factor</span> <span class="kw">as</span> <span class="ident">f32</span>);
-                <span class="self">self</span>.<span class="ident">last_known_size</span> <span class="op">=</span>
-                    <span class="ident">Size::new</span>(<span class="ident">new_inner_size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="ident">new_inner_size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f32</span>);
+                <span class="self">self</span>.<span class="ident">last_known_size</span> <span class="op">=</span> <span class="ident">Size::new</span>(<span class="ident">new_inner_size</span>.<span class="ident">width</span>, <span class="ident">new_inner_size</span>.<span class="ident">height</span>);
                 <span class="self">self</span>.<span class="ident">notify_size_changed</span>();
             }
             <span class="ident">WinitWindowEvent::KeyboardInput</span> {

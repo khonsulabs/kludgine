@@ -762,9 +762,9 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">frame</span> <span class="op">=</span> <span class="ident">Frame::default</span>();
         <span class="kw">loop</span> {
             <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">keep_running</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>) {
-                <span class="comment">// These drops prevents a segfault on exit per. The shutdown method must be called</span>
-                <span class="comment">// after self is dropped. https://github.com/gfx-rs/wgpu-rs/issues/911</span>
                 <span class="kw">let</span> <span class="ident">shutdown</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shutdown</span>.<span class="ident">take</span>();
+                <span class="comment">// These drops prevents a segfault on exit per. The shutdown method must be</span>
+                <span class="comment">// called after self is dropped. https://github.com/gfx-rs/wgpu/issues/1439</span>
                 <span class="ident">drop</span>(<span class="self">self</span>);
                 <span class="ident">drop</span>(<span class="ident">frame</span>);
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">shutdown</span>) <span class="op">=</span> <span class="ident">shutdown</span> {

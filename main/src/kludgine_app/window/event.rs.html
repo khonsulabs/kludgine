@@ -99,7 +99,7 @@
     <span class="ident">DeviceId</span>, <span class="ident">ElementState</span>, <span class="ident">MouseButton</span>, <span class="ident">MouseScrollDelta</span>, <span class="ident">ScanCode</span>, <span class="ident">TouchPhase</span>, <span class="ident">VirtualKeyCode</span>,
 };
 <span class="kw">use</span> <span class="ident">kludgine_core</span>::{
-    <span class="ident">math</span>::{<span class="ident">Point</span>, <span class="ident">Scaled</span>, <span class="ident">ScreenScale</span>, <span class="ident">Size</span>},
+    <span class="ident">math</span>::{<span class="ident">Point</span>, <span class="ident">Raw</span>, <span class="ident">Scaled</span>, <span class="ident">ScreenScale</span>, <span class="ident">Size</span>},
     <span class="ident">winit::window::Theme</span>,
 };
 
@@ -181,7 +181,7 @@
     <span class="ident">WakeUp</span>,
     <span class="ident">CloseRequested</span>,
     <span class="ident">Resize</span> {
-        <span class="ident">size</span>: <span class="ident">Size</span>,
+        <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Raw</span><span class="op">&gt;</span>,
         <span class="ident">scale_factor</span>: <span class="ident">ScreenScale</span>,
     },
     <span class="ident">Input</span>(<span class="ident">InputEvent</span>),
