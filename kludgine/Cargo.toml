@@ -46,6 +46,7 @@ cfg-if = "1"
 rand = "0.7"
 tokio = { version = "1.0", features = ["full"] }
 maplit = "1"
+image = { version = ">=0.23.12", default-features = false, features = ["png"] }
 
 [[example]]
 name = "text"
