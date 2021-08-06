@@ -15,7 +15,7 @@
         <div>
             <p class="heading">Lines</p>
             <p class="title has-text-danger">
-                <abbr title="170 / 415">40.96 %</abbr></p>
+                <abbr title="170 / 416">40.87 %</abbr></p>
         </div>
     </div>
 
@@ -1890,7 +1890,7 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1298
+                923
             </div>
             <div class="column has-background-success-light p-0">
                 <pre class="has-background-success-light py-0 px-2">                        wgpu_device.poll(wgpu::Maintain::Poll);</pre>
@@ -1903,7 +1903,7 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1298
+                923
             </div>
             <div class="column has-background-success-light p-0">
                 <pre class="has-background-success-light py-0 px-2">                        delay::Delay::new(Duration::from_millis(1)).await;</pre>
@@ -1968,7 +1968,7 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1300
+                925
             </div>
             <div class="column has-background-success-light p-0">
                 <pre class="has-background-success-light py-0 px-2">            while futures::select! {</pre>
@@ -1981,7 +1981,7 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2598
+                1847
             </div>
             <div class="column has-background-success-light p-0">
                 <pre class="has-background-success-light py-0 px-2">                _ = map_async =&gt; false,</pre>
@@ -1994,7 +1994,7 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2598
+                1847
             </div>
             <div class="column has-background-success-light p-0">
                 <pre class="has-background-success-light py-0 px-2">                _ = poll_loop =&gt; true,</pre>
@@ -2007,7 +2007,7 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2598
+                1847
             </div>
             <div class="column has-background-success-light p-0">
                 <pre class="has-background-success-light py-0 px-2">            } {}</pre>
@@ -2517,7 +2517,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                &#x2F;&#x2F; This drop prevents a segfault on exit per. The shutdown method must be called</pre>
+                <pre class="has-background-white py-0 px-2">                &#x2F;&#x2F; These drops prevents a segfault on exit per. The shutdown method must be called</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2569,7 +2569,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                if let Some(mut shutdown) = shutdown {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                drop(frame);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2582,7 +2582,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    shutdown.shutdown();</pre>
+                <pre class="has-background-danger-light py-0 px-2">                if let Some(mut shutdown) = shutdown {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2595,7 +2595,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    shutdown.shutdown();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2608,7 +2608,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                return;</pre>
+                <pre class="has-background-danger-light py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2621,7 +2621,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                return;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2634,7 +2634,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            if frame.update(&amp;self.scene_event_receiver) {</pre>
+                <pre class="has-background-danger-light py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2647,7 +2647,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                self.render_frame(&amp;mut frame)</pre>
+                <pre class="has-background-danger-light py-0 px-2">            if frame.update(&amp;self.scene_event_receiver) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2660,7 +2660,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    .expect(&quot;Error rendering window&quot;);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                self.render_frame(&amp;mut frame)</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2673,7 +2673,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            } else {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    .expect(&quot;Error rendering window&quot;);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2686,7 +2686,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                self.keep_running.store(false, Ordering::SeqCst);</pre>
+                <pre class="has-background-danger-light py-0 px-2">            } else {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2699,13 +2699,26 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                self.keep_running.store(false, Ordering::SeqCst);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
                 id="206">
                 <a href="#206">206</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                
+            </div>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">            }</pre>
+            </div>
+        </div><div class="columns p-0 m-0">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="207">
+                <a href="#207">207</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -2717,8 +2730,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="207">
-                <a href="#207">207</a>
+                id="208">
+                <a href="#208">208</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
@@ -2730,8 +2743,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="208">
-                <a href="#208">208</a>
+                id="209">
+                <a href="#209">209</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -2739,19 +2752,6 @@
             </div>
             <div class="column has-background-white p-0">
                 <pre class="has-background-white py-0 px-2"></pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="209">
-                <a href="#209">209</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
-            </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    fn create_destination(renderer: &amp;Renderer, frame_size: Size&lt;u32, ScreenSpace&gt;) -&gt; Destination {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2764,7 +2764,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        if renderer.device.surface.is_some() {</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn create_destination(renderer: &amp;Renderer, frame_size: Size&lt;u32, ScreenSpace&gt;) -&gt; Destination {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2773,11 +2773,11 @@
                 <a href="#211">211</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                1
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            Destination::SwapChain(renderer.swap_chain(</pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">        if renderer.device.surface.is_some() {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2790,7 +2790,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                frame_size,</pre>
+                <pre class="has-background-danger-light py-0 px-2">            Destination::SwapChain(renderer.swap_chain(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2803,7 +2803,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                PresentMode::Vsync,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                frame_size,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2816,7 +2816,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                T::sampler_format(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                PresentMode::Vsync,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2829,7 +2829,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            ))</pre>
+                <pre class="has-background-danger-light py-0 px-2">                T::sampler_format(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2838,11 +2838,11 @@
                 <a href="#216">216</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">        } else {</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">            ))</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2851,11 +2851,11 @@
                 <a href="#217">217</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            let color = renderer.texture(</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">        } else {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2868,7 +2868,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                frame_size,</pre>
+                <pre class="has-background-success-light py-0 px-2">            let color = renderer.texture(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2881,7 +2881,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                T::sampler_format(),</pre>
+                <pre class="has-background-success-light py-0 px-2">                frame_size,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2894,7 +2894,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                TextureUsage::SAMPLED</pre>
+                <pre class="has-background-success-light py-0 px-2">                T::sampler_format(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2907,7 +2907,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    | TextureUsage::COPY_DST</pre>
+                <pre class="has-background-success-light py-0 px-2">                TextureUsage::SAMPLED</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2920,7 +2920,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    | TextureUsage::COPY_SRC</pre>
+                <pre class="has-background-success-light py-0 px-2">                    | TextureUsage::COPY_DST</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2933,7 +2933,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    | TextureUsage::RENDER_ATTACHMENT,</pre>
+                <pre class="has-background-success-light py-0 px-2">                    | TextureUsage::COPY_SRC</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2946,7 +2946,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            );</pre>
+                <pre class="has-background-success-light py-0 px-2">                    | TextureUsage::RENDER_ATTACHMENT,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2959,7 +2959,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            let depth = renderer.device.create_zbuffer(frame_size);</pre>
+                <pre class="has-background-success-light py-0 px-2">            );</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2972,7 +2972,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            let output = renderer.device.wgpu.create_buffer(&amp;wgpu::BufferDescriptor {</pre>
+                <pre class="has-background-success-light py-0 px-2">            let depth = renderer.device.create_zbuffer(frame_size);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2985,7 +2985,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                label: Some(&quot;output buffer&quot;),</pre>
+                <pre class="has-background-success-light py-0 px-2">            let output = renderer.device.wgpu.create_buffer(&amp;wgpu::BufferDescriptor {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2998,7 +2998,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                size: buffer_size(frame_size) as u64,</pre>
+                <pre class="has-background-success-light py-0 px-2">                label: Some(&quot;output buffer&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3011,7 +3011,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                usage: wgpu::BufferUsage::COPY_DST | wgpu::BufferUsage::MAP_READ,</pre>
+                <pre class="has-background-success-light py-0 px-2">                size: buffer_size(frame_size) as u64,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3024,7 +3024,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                mapped_at_creation: false,</pre>
+                <pre class="has-background-success-light py-0 px-2">                usage: wgpu::BufferUsage::COPY_DST | wgpu::BufferUsage::MAP_READ,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3037,7 +3037,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            });</pre>
+                <pre class="has-background-success-light py-0 px-2">                mapped_at_creation: false,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3050,7 +3050,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            Destination::Texture {</pre>
+                <pre class="has-background-success-light py-0 px-2">            });</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3063,7 +3063,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                color,</pre>
+                <pre class="has-background-success-light py-0 px-2">            Destination::Texture {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3076,7 +3076,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                depth,</pre>
+                <pre class="has-background-success-light py-0 px-2">                color,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3089,7 +3089,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                output,</pre>
+                <pre class="has-background-success-light py-0 px-2">                depth,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3102,13 +3102,26 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            }</pre>
+                <pre class="has-background-success-light py-0 px-2">                output,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
                 id="237">
                 <a href="#237">237</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                1
+            </div>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">            }</pre>
+            </div>
+        </div><div class="columns p-0 m-0">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="238">
+                <a href="#238">238</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -3120,8 +3133,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="238">
-                <a href="#238">238</a>
+                id="239">
+                <a href="#239">239</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
@@ -3129,19 +3142,6 @@
             </div>
             <div class="column has-background-success-light p-0">
                 <pre class="has-background-success-light py-0 px-2">    }</pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="239">
-                <a href="#239">239</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
-            </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3154,7 +3154,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    #[allow(clippy::too_many_lines)] &#x2F;&#x2F; TODO refactor</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3163,11 +3163,11 @@
                 <a href="#241">241</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    fn render_frame(&amp;mut self, engine_frame: &amp;mut Frame) -&gt; crate::Result&lt;()&gt; {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">    #[allow(clippy::too_many_lines)] &#x2F;&#x2F; TODO refactor</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3180,7 +3180,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let frame_size = engine_frame.size.cast::&lt;u32&gt;();</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn render_frame(&amp;mut self, engine_frame: &amp;mut Frame) -&gt; crate::Result&lt;()&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3193,13 +3193,26 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        if frame_size.width == 0 || frame_size.height == 0 {</pre>
+                <pre class="has-background-success-light py-0 px-2">        let frame_size = engine_frame.size.cast::&lt;u32&gt;();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
                 id="244">
                 <a href="#244">244</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                2
+            </div>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">        if frame_size.width == 0 || frame_size.height == 0 {</pre>
+            </div>
+        </div><div class="columns p-0 m-0">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="245">
+                <a href="#245">245</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
@@ -3211,8 +3224,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="245">
-                <a href="#245">245</a>
+                id="246">
+                <a href="#246">246</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
@@ -3224,8 +3237,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="246">
-                <a href="#246">246</a>
+                id="247">
+                <a href="#247">247</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -3233,19 +3246,6 @@
             </div>
             <div class="column has-background-white p-0">
                 <pre class="has-background-white py-0 px-2"></pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="247">
-                <a href="#247">247</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2
-            </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let output = match &amp;mut self.destination {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3258,7 +3258,7 @@
                 2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            Destination::Uninitialized =&gt; {</pre>
+                <pre class="has-background-success-light py-0 px-2">        let output = match &amp;mut self.destination {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3268,10 +3268,10 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
+                2
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                self.destination = Self::create_destination(&amp;self.renderer, frame_size);</pre>
+                <pre class="has-background-success-light py-0 px-2">            Destination::Uninitialized =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3284,7 +3284,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                return self.render_frame(engine_frame);</pre>
+                <pre class="has-background-success-light py-0 px-2">                self.destination = Self::create_destination(&amp;self.renderer, frame_size);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3293,11 +3293,11 @@
                 <a href="#251">251</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                1
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            }</pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">                return self.render_frame(engine_frame);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3306,11 +3306,11 @@
                 <a href="#252">252</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            Destination::SwapChain(swap_chain) =&gt; {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3323,7 +3323,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                if swap_chain.size != frame_size {</pre>
+                <pre class="has-background-danger-light py-0 px-2">            Destination::SwapChain(swap_chain) =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3336,7 +3336,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    *swap_chain = self.renderer.swap_chain(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                if swap_chain.size != frame_size {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3349,7 +3349,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        frame_size,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    *swap_chain = self.renderer.swap_chain(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3362,7 +3362,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        PresentMode::Vsync,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        frame_size,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3375,7 +3375,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        T::sampler_format(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        PresentMode::Vsync,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3388,7 +3388,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    );</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        T::sampler_format(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3401,7 +3401,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    );</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3410,11 +3410,11 @@
                 <a href="#260">260</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3423,11 +3423,11 @@
                 <a href="#261">261</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                let output = match swap_chain.next_texture() {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3440,7 +3440,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    Ok(texture) =&gt; texture,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                let output = match swap_chain.next_texture() {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3453,7 +3453,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    Err(wgpu::SwapChainError::Outdated) =&gt; return Ok(()), &#x2F;* Ignore outdated,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    Ok(texture) =&gt; texture,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3462,11 +3462,11 @@
                 <a href="#264">264</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                                                                            * we&#x27;ll draw *&#x2F;</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                    Err(wgpu::SwapChainError::Outdated) =&gt; return Ok(()), &#x2F;* Ignore outdated,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3479,13 +3479,26 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    &#x2F;&#x2F; next time.</pre>
+                <pre class="has-background-white py-0 px-2">                                                                            * we&#x27;ll draw *&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
                 id="266">
                 <a href="#266">266</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
+            </div>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                    &#x2F;&#x2F; next time.</pre>
+            </div>
+        </div><div class="columns p-0 m-0">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="267">
+                <a href="#267">267</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
@@ -3497,8 +3510,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="267">
-                <a href="#267">267</a>
+                id="268">
+                <a href="#268">268</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -3510,8 +3523,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="268">
-                <a href="#268">268</a>
+                id="269">
+                <a href="#269">269</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
@@ -3519,19 +3532,6 @@
             </div>
             <div class="column has-background-danger-light p-0">
                 <pre class="has-background-danger-light py-0 px-2">                Output::SwapChain(output)</pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="269">
-                <a href="#269">269</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
-            </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3544,7 +3544,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            Destination::Texture {</pre>
+                <pre class="has-background-white py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3553,11 +3553,11 @@
                 <a href="#271">271</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                color,</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">            Destination::Texture {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3570,7 +3570,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                depth,</pre>
+                <pre class="has-background-success-light py-0 px-2">                color,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3583,7 +3583,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                output,</pre>
+                <pre class="has-background-success-light py-0 px-2">                depth,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3596,7 +3596,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            } =&gt; {</pre>
+                <pre class="has-background-success-light py-0 px-2">                output,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3609,7 +3609,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                if color.size != frame_size {</pre>
+                <pre class="has-background-success-light py-0 px-2">            } =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3618,11 +3618,11 @@
                 <a href="#276">276</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                1
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    if let Destination::Texture {</pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">                if color.size != frame_size {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3631,11 +3631,11 @@
                 <a href="#277">277</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        color: new_color,</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                    if let Destination::Texture {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3648,7 +3648,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        depth: new_depth,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        color: new_color,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3661,7 +3661,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        output: new_output,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        depth: new_depth,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3674,7 +3674,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    } = Self::create_destination(&amp;self.renderer, frame_size)</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        output: new_output,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3687,7 +3687,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    } = Self::create_destination(&amp;self.renderer, frame_size)</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3700,7 +3700,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        *color = new_color;</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3713,7 +3713,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        *depth = new_depth;</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        *color = new_color;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3726,7 +3726,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        *output = new_output;</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        *depth = new_depth;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3739,7 +3739,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    } else {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        *output = new_output;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3752,7 +3752,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        unreachable!();</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    } else {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3761,11 +3761,11 @@
                 <a href="#287">287</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    }</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                        unreachable!();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3774,11 +3774,11 @@
                 <a href="#288">288</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                }</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3791,7 +3791,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                Output::Texture { color, depth }</pre>
+                <pre class="has-background-success-light py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3800,11 +3800,11 @@
                 <a href="#290">290</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                1
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            }</pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">                Output::Texture { color, depth }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3817,7 +3817,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">        };</pre>
+                <pre class="has-background-white py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3826,11 +3826,11 @@
                 <a href="#292">292</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let mut frame = self.renderer.frame();</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">        };</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3843,7 +3843,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">        let mut frame = self.renderer.frame();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3856,7 +3856,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        let ortho = ScreenTransformation::ortho(</pre>
+                <pre class="has-background-success-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3869,7 +3869,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            0.,</pre>
+                <pre class="has-background-success-light py-0 px-2">        let ortho = ScreenTransformation::ortho(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3882,7 +3882,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            frame_size.width as f32,</pre>
+                <pre class="has-background-success-light py-0 px-2">            0.,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3895,7 +3895,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            frame_size.height as f32,</pre>
+                <pre class="has-background-success-light py-0 px-2">            frame_size.width as f32,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3908,7 +3908,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            0.,</pre>
+                <pre class="has-background-success-light py-0 px-2">            frame_size.height as f32,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3921,7 +3921,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            -1.,</pre>
+                <pre class="has-background-success-light py-0 px-2">            0.,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3934,7 +3934,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            1.,</pre>
+                <pre class="has-background-success-light py-0 px-2">            -1.,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3947,7 +3947,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        );</pre>
+                <pre class="has-background-success-light py-0 px-2">            1.,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3960,7 +3960,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        self.renderer.update_pipeline(&amp;self.shape_pipeline, ortho);</pre>
+                <pre class="has-background-success-light py-0 px-2">        );</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3973,7 +3973,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">        self.renderer.update_pipeline(&amp;self.shape_pipeline, ortho);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3986,7 +3986,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        self.renderer.update_pipeline(&amp;self.sprite_pipeline, ortho);</pre>
+                <pre class="has-background-success-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3999,7 +3999,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">        self.renderer.update_pipeline(&amp;self.sprite_pipeline, ortho);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4012,7 +4012,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        {</pre>
+                <pre class="has-background-success-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4025,7 +4025,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            let mut render_commands = Vec::new();</pre>
+                <pre class="has-background-success-light py-0 px-2">        {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4038,7 +4038,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            let mut gpu_state = self</pre>
+                <pre class="has-background-success-light py-0 px-2">            let mut render_commands = Vec::new();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4051,7 +4051,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                .gpu_state</pre>
+                <pre class="has-background-success-light py-0 px-2">            let mut gpu_state = self</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4064,7 +4064,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                .try_lock()</pre>
+                <pre class="has-background-success-light py-0 px-2">                .gpu_state</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4077,7 +4077,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                .expect(&quot;There should be no contention&quot;);</pre>
+                <pre class="has-background-success-light py-0 px-2">                .try_lock()</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4086,11 +4086,11 @@
                 <a href="#312">312</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                1
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">                .expect(&quot;There should be no contention&quot;);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4099,11 +4099,11 @@
                 <a href="#313">313</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            for FontUpdate {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4116,7 +4116,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                font_id,</pre>
+                <pre class="has-background-danger-light py-0 px-2">            for FontUpdate {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4129,7 +4129,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                rect,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                font_id,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4142,13 +4142,26 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                data,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                rect,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
                 id="317">
                 <a href="#317">317</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                
+            </div>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                data,</pre>
+            </div>
+        </div><div class="columns p-0 m-0">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="318">
+                <a href="#318">318</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
@@ -4160,8 +4173,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="318">
-                <a href="#318">318</a>
+                id="319">
+                <a href="#319">319</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -4169,19 +4182,6 @@
             </div>
             <div class="column has-background-white p-0">
                 <pre class="has-background-white py-0 px-2">            {</pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="319">
-                <a href="#319">319</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
-                
-            </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                let mut loaded_font = engine_frame.fonts.get_mut(font_id).unwrap();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4194,7 +4194,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                if loaded_font.texture.is_none() {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                let mut loaded_font = engine_frame.fonts.get_mut(font_id).unwrap();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4207,7 +4207,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    let texture = self.renderer.texture(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                if loaded_font.texture.is_none() {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4220,7 +4220,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        Size::new(512, 512),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    let texture = self.renderer.texture(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4233,7 +4233,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        T::texture_format(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        Size::new(512, 512),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4246,7 +4246,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        TextureUsage::SAMPLED | TextureUsage::COPY_DST,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        T::texture_format(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4259,7 +4259,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    ); &#x2F;&#x2F; TODO font texture should be configurable</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        TextureUsage::SAMPLED | TextureUsage::COPY_DST,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4272,7 +4272,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    let sampler = self</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    ); &#x2F;&#x2F; TODO font texture should be configurable</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4285,7 +4285,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        .renderer</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    let sampler = self</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4298,7 +4298,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        .sampler(FilterMode::Linear, FilterMode::Linear);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        .renderer</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4311,7 +4311,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2"></pre>
+                <pre class="has-background-danger-light py-0 px-2">                        .sampler(FilterMode::Linear, FilterMode::Linear);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4324,7 +4324,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    let binding = self</pre>
+                <pre class="has-background-danger-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4337,7 +4337,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        .sprite_pipeline</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    let binding = self</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4350,7 +4350,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        .binding(&amp;self.renderer, &amp;texture, &amp;sampler);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        .sprite_pipeline</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4363,7 +4363,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    loaded_font.binding = Some(binding);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        .binding(&amp;self.renderer, &amp;texture, &amp;sampler);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4376,7 +4376,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    loaded_font.texture = Some(texture);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    loaded_font.binding = Some(binding);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4389,7 +4389,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    loaded_font.texture = Some(texture);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4398,11 +4398,11 @@
                 <a href="#336">336</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4411,11 +4411,11 @@
                 <a href="#337">337</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                let row_bytes = size_for_aligned_copy(rect.width() as usize * 4);</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4428,7 +4428,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                let mut pixels = Vec::with_capacity(row_bytes * rect.height() as usize);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                let row_bytes = size_for_aligned_copy(rect.width() as usize * 4);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4441,7 +4441,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                let mut pixel_iterator = data.iter();</pre>
+                <pre class="has-background-danger-light py-0 px-2">                let mut pixels = Vec::with_capacity(row_bytes * rect.height() as usize);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4454,7 +4454,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                for _ in 0..rect.height() {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                let mut pixel_iterator = data.iter();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4467,7 +4467,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    for _ in 0..rect.width() {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                for _ in 0..rect.height() {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4480,7 +4480,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        let p = pixel_iterator.next().unwrap();</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    for _ in 0..rect.width() {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4493,7 +4493,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        pixels.push(255);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        let p = pixel_iterator.next().unwrap();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4532,7 +4532,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        pixels.push(*p);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        pixels.push(255);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4545,13 +4545,26 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        pixels.push(*p);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
                 id="348">
                 <a href="#348">348</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                
+            </div>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                    }</pre>
+            </div>
+        </div><div class="columns p-0 m-0">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="349">
+                <a href="#349">349</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -4563,8 +4576,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="349">
-                <a href="#349">349</a>
+                id="350">
+                <a href="#350">350</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
@@ -4572,19 +4585,6 @@
             </div>
             <div class="column has-background-danger-light p-0">
                 <pre class="has-background-danger-light py-0 px-2">                    pixels.resize_with(size_for_aligned_copy(pixels.len()), Default::default);</pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="350">
-                <a href="#350">350</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
-            </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4597,7 +4597,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4606,11 +4606,11 @@
                 <a href="#352">352</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                let pixels = Rgba8::align(&amp;pixels);</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4623,7 +4623,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                self.renderer.submit(&amp;[Op::Transfer {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                let pixels = Rgba8::align(&amp;pixels);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4636,7 +4636,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    f: loaded_font.texture.as_ref().unwrap(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                self.renderer.submit(&amp;[Op::Transfer {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4649,7 +4649,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    buf: pixels,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    f: loaded_font.texture.as_ref().unwrap(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4662,7 +4662,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    rect: Box2D::new(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    buf: pixels,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4675,7 +4675,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        Point::new(rect.min.x, rect.min.y),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    rect: Box2D::new(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4688,7 +4688,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        Point::new(rect.max.x, rect.max.y),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        Point::new(rect.min.x, rect.min.y),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4701,7 +4701,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    )</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        Point::new(rect.max.x, rect.max.y),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4714,7 +4714,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    .to_rect()</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    )</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4727,7 +4727,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    .cast::&lt;i32&gt;(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    .to_rect()</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4740,13 +4740,26 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                }]);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    .cast::&lt;i32&gt;(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
                 id="363">
                 <a href="#363">363</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                
+            </div>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                }]);</pre>
+            </div>
+        </div><div class="columns p-0 m-0">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="364">
+                <a href="#364">364</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -4758,8 +4771,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="364">
-                <a href="#364">364</a>
+                id="365">
+                <a href="#365">365</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
@@ -4771,8 +4784,8 @@
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="365">
-                <a href="#365">365</a>
+                id="366">
+                <a href="#366">366</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -4780,19 +4793,6 @@
             </div>
             <div class="column has-background-white p-0">
                 <pre class="has-background-white py-0 px-2"></pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="366">
-                <a href="#366">366</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
-            </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            for command in std::mem::take(&amp;mut engine_frame.commands) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4805,7 +4805,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                match command {</pre>
+                <pre class="has-background-success-light py-0 px-2">            for command in std::mem::take(&amp;mut engine_frame.commands) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4814,11 +4814,11 @@
                 <a href="#368">368</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                1
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    FrameCommand::LoadTexture(texture) =&gt; {</pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">                match command {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4831,7 +4831,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        if !gpu_state.textures.contains_key(&amp;texture.id()) {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    FrameCommand::LoadTexture(texture) =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4844,7 +4844,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            let sampler = self</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        if !gpu_state.textures.contains_key(&amp;texture.id()) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4857,7 +4857,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                .renderer</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            let sampler = self</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4870,7 +4870,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                .sampler(FilterMode::Nearest, FilterMode::Nearest);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                .renderer</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4879,11 +4879,11 @@
                 <a href="#373">373</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                                .sampler(FilterMode::Nearest, FilterMode::Nearest);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4892,11 +4892,11 @@
                 <a href="#374">374</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            let (gpu_texture, texels, texture_id) = {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4909,7 +4909,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                let (w, h) = texture.image.dimensions();</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            let (gpu_texture, texels, texture_id) = {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4922,7 +4922,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                let bytes_per_row = size_for_aligned_copy(w as usize * 4);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                let (w, h) = texture.image.dimensions();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4935,7 +4935,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                let mut pixels = Vec::with_capacity(bytes_per_row * h as usize);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                let bytes_per_row = size_for_aligned_copy(w as usize * 4);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4948,7 +4948,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                for (_, row) in texture.image.enumerate_rows() {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                let mut pixels = Vec::with_capacity(bytes_per_row * h as usize);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4961,7 +4961,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    for (_, _, pixel) in row {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                for (_, row) in texture.image.enumerate_rows() {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4974,7 +4974,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        pixels.push(pixel[0]);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    for (_, _, pixel) in row {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4987,7 +4987,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        pixels.push(pixel[1]);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        pixels.push(pixel[0]);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5000,7 +5000,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        pixels.push(pixel[2]);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        pixels.push(pixel[1]);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5013,7 +5013,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        pixels.push(pixel[3]);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        pixels.push(pixel[2]);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5026,7 +5026,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        pixels.push(pixel[3]);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5035,11 +5035,11 @@
                 <a href="#385">385</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5048,11 +5048,11 @@
                 <a href="#386">386</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    pixels.resize_with(</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5065,7 +5065,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        size_for_aligned_copy(pixels.len()),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    pixels.resize_with(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5078,7 +5078,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        Default::default,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        size_for_aligned_copy(pixels.len()),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5091,7 +5091,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    );</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        Default::default,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5100,11 +5100,11 @@
                 <a href="#390">390</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                                }</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                                    );</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5113,11 +5113,11 @@
                 <a href="#391">391</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                let pixels = Rgba8::align(&amp;pixels);</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5130,7 +5130,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2"></pre>
+                <pre class="has-background-danger-light py-0 px-2">                                let pixels = Rgba8::align(&amp;pixels);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5143,7 +5143,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                (</pre>
+                <pre class="has-background-danger-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5156,7 +5156,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    self.renderer.texture(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                (</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5169,7 +5169,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        Size::new(w, h).cast::&lt;u32&gt;(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    self.renderer.texture(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5182,7 +5182,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        T::texture_format(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        Size::new(w, h).cast::&lt;u32&gt;(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5195,7 +5195,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        TextureUsage::SAMPLED | TextureUsage::COPY_DST,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        T::texture_format(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5208,7 +5208,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    ),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        TextureUsage::SAMPLED | TextureUsage::COPY_DST,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5221,7 +5221,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    pixels.to_owned(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    ),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5234,7 +5234,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    texture.id(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    pixels.to_owned(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5247,7 +5247,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                )</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    texture.id(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5260,7 +5260,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            };</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                )</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5273,7 +5273,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2"></pre>
+                <pre class="has-background-danger-light py-0 px-2">                            };</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5286,7 +5286,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            self.renderer</pre>
+                <pre class="has-background-danger-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5299,7 +5299,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                .submit(&amp;[Op::Fill(&amp;gpu_texture, texels.as_slice())]);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            self.renderer</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5312,7 +5312,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2"></pre>
+                <pre class="has-background-danger-light py-0 px-2">                                .submit(&amp;[Op::Fill(&amp;gpu_texture, texels.as_slice())]);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5325,7 +5325,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            gpu_state.textures.insert(</pre>
+                <pre class="has-background-danger-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5338,7 +5338,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                texture_id,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            gpu_state.textures.insert(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5351,7 +5351,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                self.sprite_pipeline.binding(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                texture_id,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5364,7 +5364,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    &amp;self.renderer,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                self.sprite_pipeline.binding(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5377,7 +5377,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    &amp;gpu_texture,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    &amp;self.renderer,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5390,7 +5390,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    &amp;sampler,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    &amp;gpu_texture,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5403,7 +5403,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                ),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    &amp;sampler,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5416,7 +5416,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            );</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                ),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5429,7 +5429,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            );</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5438,11 +5438,11 @@
                 <a href="#416">416</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    }</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                        }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5451,11 +5451,11 @@
                 <a href="#417">417</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    FrameCommand::DrawBatch(batch) =&gt; {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5468,7 +5468,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        let mut gpu_batch = sprite::GpuBatch::new(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    FrameCommand::DrawBatch(batch) =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5481,7 +5481,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            batch.size.cast_unit(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        let mut gpu_batch = sprite::GpuBatch::new(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5494,7 +5494,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            batch.clipping_rect.map(|r| r.to_box2d()),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            batch.size.cast_unit(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5507,7 +5507,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        );</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            batch.clipping_rect.map(|r| r.to_box2d()),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5520,7 +5520,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        for sprite_handle in &amp;batch.sprites {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        );</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5533,7 +5533,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            gpu_batch.add_sprite(sprite_handle.clone());</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        for sprite_handle in &amp;batch.sprites {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5546,7 +5546,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            gpu_batch.add_sprite(sprite_handle.clone());</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5559,7 +5559,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        render_commands.push(RenderCommand::SpriteBuffer(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5572,7 +5572,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            batch.loaded_texture_id,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        render_commands.push(RenderCommand::SpriteBuffer(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5585,7 +5585,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            gpu_batch.finish(&amp;self.renderer),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            batch.loaded_texture_id,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5598,7 +5598,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        ));</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            gpu_batch.finish(&amp;self.renderer),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5607,11 +5607,11 @@
                 <a href="#429">429</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    }</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                        ));</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5620,11 +5620,11 @@
                 <a href="#430">430</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    FrameCommand::DrawShapes(batch) =&gt; {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5637,7 +5637,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        render_commands.push(RenderCommand::Shapes(batch.finish(&amp;self.renderer)?));</pre>
+                <pre class="has-background-success-light py-0 px-2">                    FrameCommand::DrawShapes(batch) =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5646,11 +5646,11 @@
                 <a href="#432">432</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                1
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        &#x2F;&#x2F; let prepared_shape = batch.finish(&amp;self.renderer)?;</pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">                        render_commands.push(RenderCommand::Shapes(batch.finish(&amp;self.renderer)?));</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5663,7 +5663,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        &#x2F;&#x2F; pass.set_easy_pipeline(&amp;self.shape_pipeline);</pre>
+                <pre class="has-background-white py-0 px-2">                        &#x2F;&#x2F; let prepared_shape = batch.finish(&amp;self.renderer)?;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5676,7 +5676,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        &#x2F;&#x2F; prepared_shape.draw(&amp;mut pass);</pre>
+                <pre class="has-background-white py-0 px-2">                        &#x2F;&#x2F; pass.set_easy_pipeline(&amp;self.shape_pipeline);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5689,7 +5689,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    }</pre>
+                <pre class="has-background-white py-0 px-2">                        &#x2F;&#x2F; prepared_shape.draw(&amp;mut pass);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5698,11 +5698,11 @@
                 <a href="#436">436</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    FrameCommand::DrawText { text, clip } =&gt; {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5715,7 +5715,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        if let Some(loaded_font) = engine_frame.fonts.get(&amp;text.font.id()) {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    FrameCommand::DrawText { text, clip } =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5728,7 +5728,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            if let Some(texture) = loaded_font.texture.as_ref() {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        if let Some(loaded_font) = engine_frame.fonts.get(&amp;text.font.id()) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5741,7 +5741,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                let mut batch =</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            if let Some(texture) = loaded_font.texture.as_ref() {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5754,7 +5754,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    sprite::GpuBatch::new(texture.size, clip.map(|r| r.to_box2d()));</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                let mut batch =</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5767,7 +5767,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                for (uv_rect, screen_rect) in text.glyphs.iter().filter_map(|g| {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    sprite::GpuBatch::new(texture.size, clip.map(|r| r.to_box2d()));</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5780,7 +5780,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    loaded_font.cache.rect_for(0, &amp;g.glyph).ok().flatten()</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                for (uv_rect, screen_rect) in text.glyphs.iter().filter_map(|g| {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5793,7 +5793,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                }) {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    loaded_font.cache.rect_for(0, &amp;g.glyph).ok().flatten()</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5806,7 +5806,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; This is one section that feels like a kludge. gpu_cache is</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                }) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5819,7 +5819,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; storing the textures upside down like normal but easywgpu is</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; This is one section that feels like a kludge. gpu_cache is</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5832,7 +5832,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; automatically flipping textures. Easygpu&#x27;s texture isn&#x27;t</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; storing the textures upside down like normal but easywgpu is</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5845,7 +5845,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; exactly the best compatibility with this process</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; automatically flipping textures. Easygpu&#x27;s texture isn&#x27;t</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5858,7 +5858,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; because gpu_cache also produces data that is 1 byte per</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; exactly the best compatibility with this process</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5871,7 +5871,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; pixel, and we have to expand it when we&#x27;re updating the</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; because gpu_cache also produces data that is 1 byte per</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5884,7 +5884,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; texture</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; pixel, and we have to expand it when we&#x27;re updating the</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5897,7 +5897,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    let source = Box2D::&lt;_, Unknown&gt;::new(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    &#x2F;&#x2F; texture</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5910,7 +5910,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        Point::new(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    let source = Box2D::&lt;_, Unknown&gt;::new(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5923,7 +5923,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                            uv_rect.min.x * 512.0,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        Point::new(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5936,7 +5936,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                            (1.0 - uv_rect.max.y) * 512.0,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                            uv_rect.min.x * 512.0,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5949,7 +5949,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        ),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                            (1.0 - uv_rect.max.y) * 512.0,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5962,7 +5962,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        Point::new(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        ),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5975,7 +5975,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                            uv_rect.max.x * 512.0,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        Point::new(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5988,7 +5988,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                            (1.0 - uv_rect.min.y) * 512.0,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                            uv_rect.max.x * 512.0,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6001,7 +6001,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        ),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                            (1.0 - uv_rect.min.y) * 512.0,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6014,7 +6014,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    );</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        ),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6027,7 +6027,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2"></pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    );</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6040,7 +6040,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    let dest = Box2D::new(</pre>
+                <pre class="has-background-danger-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6053,7 +6053,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        text.location</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    let dest = Box2D::new(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6066,7 +6066,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                            + euclid::Vector2D::new(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        text.location</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6079,7 +6079,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                                screen_rect.min.x as f32,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                            + euclid::Vector2D::new(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6092,7 +6092,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                                screen_rect.min.y as f32,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                                screen_rect.min.x as f32,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6105,7 +6105,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                            ),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                                screen_rect.min.y as f32,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6118,7 +6118,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        text.location</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                            ),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6131,7 +6131,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                            + euclid::Vector2D::new(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        text.location</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6144,7 +6144,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                                screen_rect.max.x as f32,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                            + euclid::Vector2D::new(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6157,7 +6157,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                                screen_rect.max.y as f32,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                                screen_rect.max.x as f32,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6170,7 +6170,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                            ),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                                screen_rect.max.y as f32,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6183,7 +6183,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    );</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                            ),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6196,7 +6196,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    batch.add_box(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    );</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6209,7 +6209,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        source.cast_unit().cast(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    batch.add_box(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6222,7 +6222,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        dest,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        source.cast_unit().cast(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6235,7 +6235,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        sprite::SpriteRotation::default(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        dest,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6248,7 +6248,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                        text.color.into(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        sprite::SpriteRotation::default(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6261,7 +6261,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    );</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                        text.color.into(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6274,7 +6274,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    );</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6287,7 +6287,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                render_commands.push(RenderCommand::FontBuffer(</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6300,7 +6300,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    loaded_font.font.id(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                render_commands.push(RenderCommand::FontBuffer(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6313,7 +6313,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    batch.finish(&amp;self.renderer),</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    loaded_font.font.id(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6326,7 +6326,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                ));</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    batch.finish(&amp;self.renderer),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6339,7 +6339,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                ));</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6352,7 +6352,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6361,11 +6361,11 @@
                 <a href="#487">487</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    }</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                        }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6378,7 +6378,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                }</pre>
+                <pre class="has-background-white py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6391,7 +6391,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            }</pre>
+                <pre class="has-background-white py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6400,11 +6400,11 @@
                 <a href="#490">490</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            let mut pass = frame.pass(PassOp::Clear(Rgba::TRANSPARENT), &amp;output);</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6417,7 +6417,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            for command in &amp;render_commands {</pre>
+                <pre class="has-background-success-light py-0 px-2">            let mut pass = frame.pass(PassOp::Clear(Rgba::TRANSPARENT), &amp;output);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6430,7 +6430,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                match command {</pre>
+                <pre class="has-background-success-light py-0 px-2">            for command in &amp;render_commands {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6439,11 +6439,11 @@
                 <a href="#493">493</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                1
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    RenderCommand::SpriteBuffer(texture_id, buffer) =&gt; {</pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">                match command {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6456,7 +6456,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        pass.set_easy_pipeline(&amp;self.sprite_pipeline);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    RenderCommand::SpriteBuffer(texture_id, buffer) =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6469,7 +6469,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        let binding = gpu_state.textures.get(texture_id).unwrap();</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        pass.set_easy_pipeline(&amp;self.sprite_pipeline);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6482,7 +6482,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        pass.easy_draw(buffer, binding);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        let binding = gpu_state.textures.get(texture_id).unwrap();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6495,7 +6495,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        pass.easy_draw(buffer, binding);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6508,7 +6508,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    RenderCommand::FontBuffer(font_id, buffer) =&gt; {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6521,7 +6521,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        pass.set_easy_pipeline(&amp;self.sprite_pipeline);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    RenderCommand::FontBuffer(font_id, buffer) =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6534,7 +6534,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        if let Some(binding) = engine_frame</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        pass.set_easy_pipeline(&amp;self.sprite_pipeline);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6547,7 +6547,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            .fonts</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        if let Some(binding) = engine_frame</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6560,7 +6560,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            .get(font_id)</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            .fonts</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6573,7 +6573,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            .and_then(|f| f.binding.as_ref())</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            .get(font_id)</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6586,7 +6586,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            .and_then(|f| f.binding.as_ref())</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6599,7 +6599,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            pass.easy_draw(buffer, binding);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6612,7 +6612,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            pass.easy_draw(buffer, binding);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6621,11 +6621,11 @@
                 <a href="#507">507</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    }</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                        }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6634,11 +6634,11 @@
                 <a href="#508">508</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    RenderCommand::Shapes(shapes) =&gt; {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6651,7 +6651,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        pass.set_easy_pipeline(&amp;self.shape_pipeline);</pre>
+                <pre class="has-background-success-light py-0 px-2">                    RenderCommand::Shapes(shapes) =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6664,7 +6664,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        shapes.draw(&amp;mut pass);</pre>
+                <pre class="has-background-success-light py-0 px-2">                        pass.set_easy_pipeline(&amp;self.shape_pipeline);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6677,7 +6677,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    }</pre>
+                <pre class="has-background-success-light py-0 px-2">                        shapes.draw(&amp;mut pass);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6686,11 +6686,11 @@
                 <a href="#512">512</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                1
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                }</pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6703,7 +6703,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            }</pre>
+                <pre class="has-background-white py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6716,7 +6716,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">        }</pre>
+                <pre class="has-background-white py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6729,7 +6729,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6738,11 +6738,11 @@
                 <a href="#516">516</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        if let Destination::Texture { output, color, .. } = &amp;self.destination {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6755,7 +6755,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            frame.encoder_mut().copy_texture_to_buffer(</pre>
+                <pre class="has-background-success-light py-0 px-2">        if let Destination::Texture { output, color, .. } = &amp;self.destination {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6768,7 +6768,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                wgpu::ImageCopyTexture {</pre>
+                <pre class="has-background-success-light py-0 px-2">            frame.encoder_mut().copy_texture_to_buffer(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6781,7 +6781,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    texture: &amp;color.wgpu,</pre>
+                <pre class="has-background-success-light py-0 px-2">                wgpu::ImageCopyTexture {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6794,7 +6794,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    mip_level: 0,</pre>
+                <pre class="has-background-success-light py-0 px-2">                    texture: &amp;color.wgpu,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6807,7 +6807,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    origin: Origin3d::ZERO,</pre>
+                <pre class="has-background-success-light py-0 px-2">                    mip_level: 0,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6820,7 +6820,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                },</pre>
+                <pre class="has-background-success-light py-0 px-2">                    origin: Origin3d::ZERO,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6833,7 +6833,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                wgpu::ImageCopyBuffer {</pre>
+                <pre class="has-background-success-light py-0 px-2">                },</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6846,7 +6846,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    buffer: output,</pre>
+                <pre class="has-background-success-light py-0 px-2">                wgpu::ImageCopyBuffer {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6859,7 +6859,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    layout: wgpu::ImageDataLayout {</pre>
+                <pre class="has-background-success-light py-0 px-2">                    buffer: output,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6872,7 +6872,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        offset: 0,</pre>
+                <pre class="has-background-success-light py-0 px-2">                    layout: wgpu::ImageDataLayout {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6885,7 +6885,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        bytes_per_row: NonZeroU32::new(size_for_aligned_copy(</pre>
+                <pre class="has-background-success-light py-0 px-2">                        offset: 0,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6898,7 +6898,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                            frame_size.width as usize * 4,</pre>
+                <pre class="has-background-success-light py-0 px-2">                        bytes_per_row: NonZeroU32::new(size_for_aligned_copy(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6911,7 +6911,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        ) as u32),</pre>
+                <pre class="has-background-success-light py-0 px-2">                            frame_size.width as usize * 4,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6924,7 +6924,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                        rows_per_image: NonZeroU32::new(frame_size.height as u32),</pre>
+                <pre class="has-background-success-light py-0 px-2">                        ) as u32),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6937,7 +6937,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    },</pre>
+                <pre class="has-background-success-light py-0 px-2">                        rows_per_image: NonZeroU32::new(frame_size.height as u32),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6950,7 +6950,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                },</pre>
+                <pre class="has-background-success-light py-0 px-2">                    },</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6963,7 +6963,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                Extent3d {</pre>
+                <pre class="has-background-success-light py-0 px-2">                },</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6976,7 +6976,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    width: frame_size.width,</pre>
+                <pre class="has-background-success-light py-0 px-2">                Extent3d {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6989,7 +6989,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    height: frame_size.height,</pre>
+                <pre class="has-background-success-light py-0 px-2">                    width: frame_size.width,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7002,7 +7002,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                    depth_or_array_layers: 1,</pre>
+                <pre class="has-background-success-light py-0 px-2">                    height: frame_size.height,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7015,7 +7015,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">                },</pre>
+                <pre class="has-background-success-light py-0 px-2">                    depth_or_array_layers: 1,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7028,7 +7028,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">            );</pre>
+                <pre class="has-background-success-light py-0 px-2">                },</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7041,7 +7041,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        }</pre>
+                <pre class="has-background-success-light py-0 px-2">            );</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7050,11 +7050,11 @@
                 <a href="#540">540</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                1
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">        }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7063,11 +7063,11 @@
                 <a href="#541">541</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        self.renderer.present(frame);</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7080,7 +7080,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">        self.renderer.present(frame);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7093,7 +7093,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        Ok(())</pre>
+                <pre class="has-background-success-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7103,10 +7103,10 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                2
+                1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">        Ok(())</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7115,11 +7115,11 @@
                 <a href="#545">545</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                2
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">}</pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7132,7 +7132,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7141,11 +7141,11 @@
                 <a href="#547">547</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                3
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">const fn size_for_aligned_copy(bytes: usize) -&gt; usize {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7158,7 +7158,7 @@
                 3
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    let chunks =</pre>
+                <pre class="has-background-success-light py-0 px-2">const fn size_for_aligned_copy(bytes: usize) -&gt; usize {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7171,7 +7171,7 @@
                 3
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">        (bytes + COPY_BYTES_PER_ROW_ALIGNMENT as usize - 1) &#x2F; COPY_BYTES_PER_ROW_ALIGNMENT as usize;</pre>
+                <pre class="has-background-success-light py-0 px-2">    let chunks =</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7184,7 +7184,7 @@
                 3
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    chunks * COPY_BYTES_PER_ROW_ALIGNMENT as usize</pre>
+                <pre class="has-background-success-light py-0 px-2">        (bytes + COPY_BYTES_PER_ROW_ALIGNMENT as usize - 1) &#x2F; COPY_BYTES_PER_ROW_ALIGNMENT as usize;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7197,7 +7197,7 @@
                 3
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">}</pre>
+                <pre class="has-background-success-light py-0 px-2">    chunks * COPY_BYTES_PER_ROW_ALIGNMENT as usize</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7206,11 +7206,11 @@
                 <a href="#552">552</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                3
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7219,11 +7219,11 @@
                 <a href="#553">553</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
-                1
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                
             </div>
-            <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">const fn buffer_size(size: Size&lt;u32, ScreenSpace&gt;) -&gt; usize {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7236,7 +7236,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">    size_for_aligned_copy(size.width as usize * 4) * size.height as usize</pre>
+                <pre class="has-background-success-light py-0 px-2">const fn buffer_size(size: Size&lt;u32, ScreenSpace&gt;) -&gt; usize {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7249,7 +7249,7 @@
                 1
             </div>
             <div class="column has-background-success-light p-0">
-                <pre class="has-background-success-light py-0 px-2">}</pre>
+                <pre class="has-background-success-light py-0 px-2">    size_for_aligned_copy(size.width as usize * 4) * size.height as usize</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7258,11 +7258,11 @@
                 <a href="#556">556</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success">
+                1
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-success-light p-0">
+                <pre class="has-background-success-light py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7275,7 +7275,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; A callback that can be invoked when a [`FrameRenderer`] is fully shut down.</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7288,7 +7288,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">pub trait ShutdownCallback: Send + Sync + &#x27;static {</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; A callback that can be invoked when a [`FrameRenderer`] is fully shut down.</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7301,7 +7301,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Invoked when the [`FrameRenderer`] is fully shut down.</pre>
+                <pre class="has-background-white py-0 px-2">pub trait ShutdownCallback: Send + Sync + &#x27;static {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7314,7 +7314,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    fn shutdown(&amp;mut self);</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Invoked when the [`FrameRenderer`] is fully shut down.</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7327,7 +7327,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2">    fn shutdown(&amp;mut self);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7340,7 +7340,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7353,7 +7353,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">impl&lt;F&gt; ShutdownCallback for F</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7366,7 +7366,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">where</pre>
+                <pre class="has-background-white py-0 px-2">impl&lt;F&gt; ShutdownCallback for F</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7379,7 +7379,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    F: FnMut() + Send + Sync + &#x27;static,</pre>
+                <pre class="has-background-white py-0 px-2">where</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7392,7 +7392,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">{</pre>
+                <pre class="has-background-white py-0 px-2">    F: FnMut() + Send + Sync + &#x27;static,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7401,11 +7401,11 @@
                 <a href="#567">567</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    fn shutdown(&amp;mut self) {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">{</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7418,7 +7418,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        self();</pre>
+                <pre class="has-background-danger-light py-0 px-2">    fn shutdown(&amp;mut self) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7431,13 +7431,26 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    }</pre>
+                <pre class="has-background-danger-light py-0 px-2">        self();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
                 id="570">
                 <a href="#570">570</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                
+            </div>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">    }</pre>
+            </div>
+        </div><div class="columns p-0 m-0">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="571">
+                <a href="#571">571</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -7449,7 +7462,7 @@
         </div></div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2021-08-03 23:21</p>
+                <p class="heading">Date: 2021-08-06 14:50</p>
             </div>
         </footer>
     </body>
