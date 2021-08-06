@@ -22,7 +22,7 @@ async fn offscreen_render_test() {
         .expect("error creating renderer");
 
     let mut target = Target::from(Scene::new(scene_sender, Theme::Light));
-    target.scene_mut().unwrap().set_size(Size::new(64., 64.));
+    target.scene_mut().unwrap().set_size(Size::new(64, 64));
     target.scene_mut().unwrap().start_frame();
 
     Shape::circle(Point::new(16., 16.), Points::new(16.))

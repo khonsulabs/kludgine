@@ -188,9 +188,9 @@ where
         let mut frame = Frame::default();
         loop {
             if !self.keep_running.load(Ordering::SeqCst) {
-                // These drops prevents a segfault on exit per. The shutdown method must be called
-                // after self is dropped. https://github.com/gfx-rs/wgpu-rs/issues/911
                 let shutdown = self.shutdown.take();
+                // These drops prevents a segfault on exit per. The shutdown method must be
+                // called after self is dropped. https://github.com/gfx-rs/wgpu/issues/1439
                 drop(self);
                 drop(frame);
                 if let Some(mut shutdown) = shutdown {

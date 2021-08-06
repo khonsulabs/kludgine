@@ -9,7 +9,7 @@ use std::{
 use kludgine_core::{
     easygpu::prelude::*,
     flume,
-    math::{Pixels, Point, ScreenScale, Size},
+    math::{Pixels, Point, Raw, ScreenScale, Size},
     scene::{Scene, SceneEvent},
     winit::{
         self,
@@ -36,7 +36,7 @@ pub struct RuntimeWindow {
     pub keep_running: Arc<AtomicBool>,
     receiver: flume::Receiver<WindowMessage>,
     event_sender: flume::Sender<WindowEvent>,
-    last_known_size: Size,
+    last_known_size: Size<u32, Raw>,
     last_known_scale_factor: ScreenScale,
 }
 
@@ -44,7 +44,7 @@ pub struct RuntimeWindowConfig {
     window_id: WindowId,
     instance: wgpu::Instance,
     surface: wgpu::Surface,
-    initial_size: Size<u32, ScreenSpace>,
+    initial_size: Size<u32, Raw>,
     scale_factor: f32,
 }
 
@@ -138,7 +138,7 @@ impl RuntimeWindow {
 
         let mut runtime_window = Self {
             receiver: message_receiver,
-            last_known_size: initial_size.to_f32().cast_unit(),
+            last_known_size: initial_size,
             keep_running,
             event_sender,
             last_known_scale_factor: ScreenScale::new(scale_factor),
@@ -269,9 +269,7 @@ impl RuntimeWindow {
                         window.redraw_status.set_needs_redraw();
                     }
                     WindowEvent::Resize { size, scale_factor } => {
-                        window
-                            .scene_mut()
-                            .set_size(Size::new(size.width as f32, size.height as f32));
+                        window.scene_mut().set_size(size.cast_unit());
                         window.scene_mut().set_scale_factor(scale_factor);
                     }
                     WindowEvent::CloseRequested =>
@@ -390,7 +388,7 @@ impl RuntimeWindow {
                     .unwrap_or_default();
             }
             WinitWindowEvent::Resized(size) => {
-                self.last_known_size = Size::new(size.width as f32, size.height as f32);
+                self.last_known_size = Size::new(size.width, size.height);
                 self.notify_size_changed();
             }
             WinitWindowEvent::ScaleFactorChanged {
@@ -398,8 +396,7 @@ impl RuntimeWindow {
                 new_inner_size,
             } => {
                 self.last_known_scale_factor = ScreenScale::new(*scale_factor as f32);
-                self.last_known_size =
-                    Size::new(new_inner_size.width as f32, new_inner_size.height as f32);
+                self.last_known_size = Size::new(new_inner_size.width, new_inner_size.height);
                 self.notify_size_changed();
             }
             WinitWindowEvent::KeyboardInput {

@@ -19,7 +19,7 @@ pub use euclid::{Box2D, Length, Scale};
 /// The scale used to convert between [`Points`] ([`Scaled`]) and [`Pixels`]
 /// ([`Raw`]).
 pub type ScreenScale = Scale<f32, Scaled, Raw>;
-///
+/// A type representing an angle of measurement.
 pub type Angle = euclid::Angle<f32>;
 
 /// A unit representing physical pixels on a display.

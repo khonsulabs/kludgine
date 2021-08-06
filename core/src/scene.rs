@@ -41,7 +41,7 @@ pub enum SceneEvent {
     /// Begin a new frame with the given size.
     BeginFrame {
         /// The frame size to render.
-        size: Size<f32, Raw>,
+        size: Size<u32, Raw>,
     },
     /// Render an element.
     Render(Element),
@@ -55,7 +55,7 @@ pub struct Scene {
     /// The virtual key codes curently depressed.
     pub keys_pressed: HashSet<VirtualKeyCode>,
     scale_factor: ScreenScale,
-    size: Size<f32, Raw>,
+    size: Size<u32, Raw>,
     event_sender: flume::Sender<SceneEvent>,
     now: Option<Instant>,
     elapsed: Option<Duration>,
@@ -100,7 +100,9 @@ impl Target {
             scene: self.scene.clone(),
             clip: Some(match &self.clip {
                 Some(existing_clip) => existing_clip.intersection(&new_clip).unwrap_or_default(),
-                None => new_clip,
+                None => new_clip
+                    .intersection(&Rect::new(Point::default(), self.size_in_pixels()))
+                    .unwrap_or_default(),
             }),
             offset: self.offset,
         }
@@ -224,7 +226,7 @@ impl Scene {
     }
 
     /// Sets the size of the scene.
-    pub fn set_size(&mut self, size: Size<f32, Raw>) {
+    pub fn set_size(&mut self, size: Size<u32, Raw>) {
         self.size = size;
     }
 
@@ -283,7 +285,13 @@ impl Scene {
     /// Returns the current size of the scene in [`Scaled`] units.
     #[must_use]
     pub fn size(&self) -> Size<f32, Scaled> {
-        self.size / self.scale_factor
+        self.size.to_f32() / self.scale_factor
+    }
+
+    /// Returns the current size of the scene in [`Raw`] units.
+    #[must_use]
+    pub const fn size_in_pixels(&self) -> Size<u32, Raw> {
+        self.size
     }
 
     /// Returns the [`Instant`] when the frame began.

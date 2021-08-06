@@ -13,7 +13,7 @@ use crate::{
 };
 #[derive(Default, Debug)]
 pub struct Frame {
-    pub size: Size<f32, ScreenSpace>,
+    pub size: Size<u32, ScreenSpace>,
     pub textures: HashMap<u64, Texture>,
     pub(crate) commands: Vec<FrameCommand>,
     pub(crate) fonts: HashMap<u64, LoadedFont>,
@@ -23,7 +23,7 @@ pub struct Frame {
 
 #[derive(Default, Debug)]
 struct FrameReceiver {
-    size: Size<f32, ScreenSpace>,
+    size: Size<u32, ScreenSpace>,
     elements: Vec<Element>,
 }
 
