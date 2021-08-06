@@ -15,7 +15,7 @@
         <div>
             <p class="heading">Lines</p>
             <p class="title has-text-danger">
-                <abbr title="0 / 281">0 %</abbr></p>
+                <abbr title="0 / 279">0 %</abbr></p>
         </div>
     </div>
 
@@ -190,7 +190,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    math::{Pixels, Point, ScreenScale, Size},</pre>
+                <pre class="has-background-white py-0 px-2">    math::{Pixels, Point, Raw, ScreenScale, Size},</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -541,7 +541,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    last_known_size: Size,</pre>
+                <pre class="has-background-white py-0 px-2">    last_known_size: Size&lt;u32, Raw&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -645,7 +645,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    initial_size: Size&lt;u32, ScreenSpace&gt;,</pre>
+                <pre class="has-background-white py-0 px-2">    initial_size: Size&lt;u32, Raw&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1867,7 +1867,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            last_known_size: initial_size.to_f32().cast_unit(),</pre>
+                <pre class="has-background-danger-light py-0 px-2">            last_known_size: initial_size,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3570,7 +3570,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        window</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        window.scene_mut().set_size(size.cast_unit());</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3583,7 +3583,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            .scene_mut()</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        window.scene_mut().set_scale_factor(scale_factor);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3596,7 +3596,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            .set_size(Size::new(size.width as f32, size.height as f32));</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3605,11 +3605,11 @@
                 <a href="#275">275</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        window.scene_mut().set_scale_factor(scale_factor);</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                    WindowEvent::CloseRequested =&gt;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3622,7 +3622,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        if Self::request_window_close(id, &amp;mut window)? {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3631,11 +3631,11 @@
                 <a href="#277">277</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    WindowEvent::CloseRequested =&gt;</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                            return Ok(());</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3648,7 +3648,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        if Self::request_window_close(id, &amp;mut window)? {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        },</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3661,7 +3661,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            return Ok(());</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    WindowEvent::Input(input) =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3670,11 +3670,11 @@
                 <a href="#280">280</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        },</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                        if let Event::Keyboard {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3687,7 +3687,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    WindowEvent::Input(input) =&gt; {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            key: Some(key),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3696,11 +3696,11 @@
                 <a href="#282">282</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        if let Event::Keyboard {</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                            state,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3709,11 +3709,11 @@
                 <a href="#283">283</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            key: Some(key),</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                            ..</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3726,7 +3726,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            state,</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        } = input.event</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3739,7 +3739,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                            ..</pre>
+                <pre class="has-background-white py-0 px-2">                        {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3752,7 +3752,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        } = input.event</pre>
+                <pre class="has-background-danger-light py-0 px-2">                            match state {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3761,11 +3761,11 @@
                 <a href="#287">287</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        {</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                                ElementState::Pressed =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3778,7 +3778,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                            match state {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    window.scene_mut().keys_pressed.insert(key);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3791,7 +3791,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                ElementState::Pressed =&gt; {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3804,7 +3804,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    window.scene_mut().keys_pressed.insert(key);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                ElementState::Released =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3817,7 +3817,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                    window.scene_mut().keys_pressed.remove(&amp;key);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3830,7 +3830,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                ElementState::Released =&gt; {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3839,11 +3839,11 @@
                 <a href="#293">293</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                    window.scene_mut().keys_pressed.remove(&amp;key);</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3856,7 +3856,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                                }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3869,7 +3869,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                            }</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3882,7 +3882,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        }</pre>
+                <pre class="has-background-danger-light py-0 px-2">                        window.process_input(input)?;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3895,7 +3895,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3908,7 +3908,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        window.process_input(input)?;</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    WindowEvent::ReceiveCharacter(character) =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3917,11 +3917,11 @@
                 <a href="#299">299</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    }</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                        window.receive_character(character)?;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3930,11 +3930,11 @@
                 <a href="#300">300</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    WindowEvent::ReceiveCharacter(character) =&gt; {</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3947,7 +3947,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        window.receive_character(character)?;</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    WindowEvent::RedrawRequested =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3956,11 +3956,11 @@
                 <a href="#302">302</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    }</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                        window.redraw_status.set_needs_redraw();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3973,7 +3973,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    WindowEvent::RedrawRequested =&gt; {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3982,11 +3982,11 @@
                 <a href="#304">304</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                        window.redraw_status.set_needs_redraw();</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3995,11 +3995,11 @@
                 <a href="#305">305</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    }</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4012,7 +4012,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                }</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4025,7 +4025,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            }</pre>
+                <pre class="has-background-white py-0 px-2">            &#x2F;&#x2F; Check for Cmd + W or Alt + f4 to close the window.</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4038,7 +4038,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">            {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4047,11 +4047,11 @@
                 <a href="#309">309</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            &#x2F;&#x2F; Check for Cmd + W or Alt + f4 to close the window.</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                let modifiers = window.scene().modifiers_pressed();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4060,11 +4060,11 @@
                 <a href="#310">310</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            {</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                if modifiers.primary_modifier()</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4077,7 +4077,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                let modifiers = window.scene().modifiers_pressed();</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    &amp;&amp; window.scene().keys_pressed.contains(&amp;VirtualKeyCode::W)</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4090,7 +4090,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                if modifiers.primary_modifier()</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    &amp;&amp; Self::request_window_close(id, &amp;mut window)?</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4099,11 +4099,11 @@
                 <a href="#313">313</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    &amp;&amp; window.scene().keys_pressed.contains(&amp;VirtualKeyCode::W)</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">                {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4116,7 +4116,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    &amp;&amp; Self::request_window_close(id, &amp;mut window)?</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    return Ok(());</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4125,11 +4125,11 @@
                 <a href="#315">315</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                {</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4142,7 +4142,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    return Ok(());</pre>
+                <pre class="has-background-danger-light py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4155,7 +4155,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                }</pre>
+                <pre class="has-background-danger-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4168,7 +4168,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            }</pre>
+                <pre class="has-background-danger-light py-0 px-2">            if window.scene().size().area() &gt; 0.0 {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4181,7 +4181,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2"></pre>
+                <pre class="has-background-danger-light py-0 px-2">                window.scene_mut().start_frame();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4194,7 +4194,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            if window.scene().size().area() &gt; 0.0 {</pre>
+                <pre class="has-background-danger-light py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4207,7 +4207,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                window.scene_mut().start_frame();</pre>
+                <pre class="has-background-danger-light py-0 px-2">                window.update(target_fps)?;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4216,11 +4216,11 @@
                 <a href="#322">322</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2"></pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4233,7 +4233,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                window.update(target_fps)?;</pre>
+                <pre class="has-background-danger-light py-0 px-2">                if window.should_redraw_now() {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4242,11 +4242,11 @@
                 <a href="#324">324</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">                    window.render()?;</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4259,7 +4259,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                if window.should_redraw_now() {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    window.scene_mut().end_frame();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4272,7 +4272,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    window.render()?;</pre>
+                <pre class="has-background-danger-light py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4285,7 +4285,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    window.scene_mut().end_frame();</pre>
+                <pre class="has-background-danger-light py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4294,11 +4294,11 @@
                 <a href="#328">328</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                }</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">        }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4311,7 +4311,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            }</pre>
+                <pre class="has-background-danger-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4324,7 +4324,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">        }</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4337,7 +4337,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    }</pre>
+                <pre class="has-background-danger-light py-0 px-2">    fn window_main&lt;T&gt;(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4346,11 +4346,11 @@
                 <a href="#332">332</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">        id: WindowId,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4363,7 +4363,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    fn window_main&lt;T&gt;(</pre>
+                <pre class="has-background-danger-light py-0 px-2">        scene_event_sender: flume::Sender&lt;SceneEvent&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4376,7 +4376,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        id: WindowId,</pre>
+                <pre class="has-background-danger-light py-0 px-2">        event_sender: flume::Sender&lt;WindowEvent&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4389,7 +4389,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        scene_event_sender: flume::Sender&lt;SceneEvent&gt;,</pre>
+                <pre class="has-background-danger-light py-0 px-2">        event_receiver: flume::Receiver&lt;WindowEvent&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4402,7 +4402,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        event_sender: flume::Sender&lt;WindowEvent&gt;,</pre>
+                <pre class="has-background-danger-light py-0 px-2">        initial_system_theme: Theme,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4415,7 +4415,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        event_receiver: flume::Receiver&lt;WindowEvent&gt;,</pre>
+                <pre class="has-background-danger-light py-0 px-2">        window: T,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4428,7 +4428,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        initial_system_theme: Theme,</pre>
+                <pre class="has-background-danger-light py-0 px-2">    ) where</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4441,7 +4441,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        window: T,</pre>
+                <pre class="has-background-danger-light py-0 px-2">        T: Window,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4454,7 +4454,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    ) where</pre>
+                <pre class="has-background-danger-light py-0 px-2">    {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4467,7 +4467,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        T: Window,</pre>
+                <pre class="has-background-danger-light py-0 px-2">        Self::window_loop(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4480,7 +4480,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    {</pre>
+                <pre class="has-background-danger-light py-0 px-2">            id,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4493,7 +4493,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        Self::window_loop(</pre>
+                <pre class="has-background-danger-light py-0 px-2">            scene_event_sender,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4506,7 +4506,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            id,</pre>
+                <pre class="has-background-danger-light py-0 px-2">            event_sender,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4519,7 +4519,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            scene_event_sender,</pre>
+                <pre class="has-background-danger-light py-0 px-2">            event_receiver,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4532,7 +4532,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            event_sender,</pre>
+                <pre class="has-background-danger-light py-0 px-2">            initial_system_theme,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4545,7 +4545,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            event_receiver,</pre>
+                <pre class="has-background-danger-light py-0 px-2">            window,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4558,7 +4558,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            initial_system_theme,</pre>
+                <pre class="has-background-danger-light py-0 px-2">        )</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4571,7 +4571,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            window,</pre>
+                <pre class="has-background-danger-light py-0 px-2">        .expect(&quot;Error running window loop.&quot;);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4584,7 +4584,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        )</pre>
+                <pre class="has-background-danger-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4593,11 +4593,11 @@
                 <a href="#351">351</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        .expect(&quot;Error running window loop.&quot;);</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4610,7 +4610,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    }</pre>
+                <pre class="has-background-danger-light py-0 px-2">    pub(crate) fn count() -&gt; usize {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4619,11 +4619,11 @@
                 <a href="#353">353</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">        if opened_first_window() {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4636,7 +4636,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    pub(crate) fn count() -&gt; usize {</pre>
+                <pre class="has-background-danger-light py-0 px-2">            let channels = WINDOW_CHANNELS.lock().unwrap();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4649,7 +4649,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        if opened_first_window() {</pre>
+                <pre class="has-background-danger-light py-0 px-2">            channels.len()</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4658,11 +4658,11 @@
                 <a href="#356">356</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            let channels = WINDOW_CHANNELS.lock().unwrap();</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">        } else {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4671,11 +4671,11 @@
                 <a href="#357">357</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            channels.len()</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">            &#x2F;&#x2F; If our first window hasn&#x27;t opened, return a count of 1. This will happen in a</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4688,7 +4688,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">        } else {</pre>
+                <pre class="has-background-white py-0 px-2">            &#x2F;&#x2F; single-threaded environment because RuntimeWindow::open is spawned, not</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4701,7 +4701,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            &#x2F;&#x2F; If our first window hasn&#x27;t opened, return a count of 1. This will happen in a</pre>
+                <pre class="has-background-white py-0 px-2">            &#x2F;&#x2F; blocked_on.</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4710,11 +4710,11 @@
                 <a href="#360">360</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            &#x2F;&#x2F; single-threaded environment because RuntimeWindow::open is spawned, not</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">            1</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4727,7 +4727,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            &#x2F;&#x2F; blocked_on.</pre>
+                <pre class="has-background-white py-0 px-2">        }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4740,7 +4740,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            1</pre>
+                <pre class="has-background-danger-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4753,7 +4753,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">        }</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4762,11 +4762,11 @@
                 <a href="#364">364</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    }</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">    pub(crate) fn receive_messages(&amp;mut self) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4775,11 +4775,11 @@
                 <a href="#365">365</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">        while let Ok(request) = self.receiver.try_recv() {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4788,11 +4788,11 @@
                 <a href="#366">366</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    pub(crate) fn receive_messages(&amp;mut self) {</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">            match request {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4805,7 +4805,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        while let Ok(request) = self.receiver.try_recv() {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                WindowMessage::Close =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4818,7 +4818,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            match request {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    let mut channels = WINDOW_CHANNELS.lock().unwrap();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4831,7 +4831,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                WindowMessage::Close =&gt; {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    channels.remove(&amp;self.window_id);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4844,7 +4844,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    let mut channels = WINDOW_CHANNELS.lock().unwrap();</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    self.keep_running.store(false, Ordering::SeqCst);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4857,7 +4857,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    channels.remove(&amp;self.window_id);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4866,11 +4866,11 @@
                 <a href="#372">372</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    self.keep_running.store(false, Ordering::SeqCst);</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4879,11 +4879,11 @@
                 <a href="#373">373</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                }</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">        }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4892,11 +4892,11 @@
                 <a href="#374">374</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            }</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4909,7 +4909,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">        }</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4922,7 +4922,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    }</pre>
+                <pre class="has-background-danger-light py-0 px-2">    pub(crate) fn request_redraw(&amp;self) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4931,11 +4931,11 @@
                 <a href="#377">377</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">        self.event_sender</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4948,7 +4948,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    pub(crate) fn request_redraw(&amp;self) {</pre>
+                <pre class="has-background-danger-light py-0 px-2">            .try_send(WindowEvent::RedrawRequested)</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4961,7 +4961,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        self.event_sender</pre>
+                <pre class="has-background-danger-light py-0 px-2">            .unwrap_or_default();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4974,7 +4974,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            .try_send(WindowEvent::RedrawRequested)</pre>
+                <pre class="has-background-danger-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4983,11 +4983,11 @@
                 <a href="#381">381</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            .unwrap_or_default();</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4996,11 +4996,11 @@
                 <a href="#382">382</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
                 
             </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    }</pre>
+            <div class="column has-background-white p-0">
+                <pre class="has-background-white py-0 px-2">    #[instrument(name = &quot;RuntimeWindow::process_event&quot;, level = &quot;trace&quot;, skip(self))]</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5013,7 +5013,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    pub(crate) fn process_event(&amp;mut self, event: &amp;WinitWindowEvent&lt;&#x27;_&gt;) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5026,7 +5026,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    #[instrument(name = &quot;RuntimeWindow::process_event&quot;, level = &quot;trace&quot;, skip(self))]</pre>
+                <pre class="has-background-white py-0 px-2">        match event {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5039,7 +5039,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    pub(crate) fn process_event(&amp;mut self, event: &amp;WinitWindowEvent&lt;&#x27;_&gt;) {</pre>
+                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::CloseRequested =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5052,7 +5052,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">        match event {</pre>
+                <pre class="has-background-white py-0 px-2">                self.event_sender</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5065,7 +5065,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::CloseRequested =&gt; {</pre>
+                <pre class="has-background-white py-0 px-2">                    .try_send(WindowEvent::CloseRequested)</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5078,7 +5078,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                self.event_sender</pre>
+                <pre class="has-background-white py-0 px-2">                    .unwrap_or_default();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5091,7 +5091,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    .try_send(WindowEvent::CloseRequested)</pre>
+                <pre class="has-background-white py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5104,7 +5104,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    .unwrap_or_default();</pre>
+                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::Resized(size) =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5117,7 +5117,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            }</pre>
+                <pre class="has-background-white py-0 px-2">                self.last_known_size = Size::new(size.width, size.height);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5130,7 +5130,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::Resized(size) =&gt; {</pre>
+                <pre class="has-background-white py-0 px-2">                self.notify_size_changed();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5143,7 +5143,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                self.last_known_size = Size::new(size.width as f32, size.height as f32);</pre>
+                <pre class="has-background-white py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5156,7 +5156,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                self.notify_size_changed();</pre>
+                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::ScaleFactorChanged {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5169,7 +5169,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            }</pre>
+                <pre class="has-background-white py-0 px-2">                scale_factor,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5182,7 +5182,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::ScaleFactorChanged {</pre>
+                <pre class="has-background-white py-0 px-2">                new_inner_size,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5195,7 +5195,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                scale_factor,</pre>
+                <pre class="has-background-white py-0 px-2">            } =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5208,7 +5208,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                new_inner_size,</pre>
+                <pre class="has-background-white py-0 px-2">                self.last_known_scale_factor = ScreenScale::new(*scale_factor as f32);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5221,7 +5221,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            } =&gt; {</pre>
+                <pre class="has-background-white py-0 px-2">                self.last_known_size = Size::new(new_inner_size.width, new_inner_size.height);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5234,7 +5234,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                self.last_known_scale_factor = ScreenScale::new(*scale_factor as f32);</pre>
+                <pre class="has-background-white py-0 px-2">                self.notify_size_changed();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5247,7 +5247,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                self.last_known_size =</pre>
+                <pre class="has-background-white py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5260,7 +5260,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    Size::new(new_inner_size.width as f32, new_inner_size.height as f32);</pre>
+                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::KeyboardInput {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5273,7 +5273,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                self.notify_size_changed();</pre>
+                <pre class="has-background-white py-0 px-2">                device_id, input, ..</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5286,7 +5286,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            }</pre>
+                <pre class="has-background-white py-0 px-2">            } =&gt; self</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5299,7 +5299,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::KeyboardInput {</pre>
+                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5312,7 +5312,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                device_id, input, ..</pre>
+                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::Input(InputEvent {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5325,7 +5325,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            } =&gt; self</pre>
+                <pre class="has-background-white py-0 px-2">                    device_id: *device_id,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5338,7 +5338,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
+                <pre class="has-background-white py-0 px-2">                    event: Event::Keyboard {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5351,7 +5351,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::Input(InputEvent {</pre>
+                <pre class="has-background-white py-0 px-2">                        key: input.virtual_keycode,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5364,7 +5364,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    device_id: *device_id,</pre>
+                <pre class="has-background-white py-0 px-2">                        state: input.state,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5377,7 +5377,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    event: Event::Keyboard {</pre>
+                <pre class="has-background-white py-0 px-2">                        scancode: input.scancode,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5390,7 +5390,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        key: input.virtual_keycode,</pre>
+                <pre class="has-background-white py-0 px-2">                    },</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5403,7 +5403,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        state: input.state,</pre>
+                <pre class="has-background-white py-0 px-2">                }))</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5416,7 +5416,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        scancode: input.scancode,</pre>
+                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5429,7 +5429,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    },</pre>
+                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::MouseInput {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5442,7 +5442,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                }))</pre>
+                <pre class="has-background-white py-0 px-2">                device_id,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5455,7 +5455,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
+                <pre class="has-background-white py-0 px-2">                button,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5468,7 +5468,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::MouseInput {</pre>
+                <pre class="has-background-white py-0 px-2">                state,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5481,7 +5481,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                device_id,</pre>
+                <pre class="has-background-white py-0 px-2">                ..</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5494,7 +5494,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                button,</pre>
+                <pre class="has-background-white py-0 px-2">            } =&gt; self</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5507,7 +5507,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                state,</pre>
+                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5520,7 +5520,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                ..</pre>
+                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::Input(InputEvent {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5533,7 +5533,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            } =&gt; self</pre>
+                <pre class="has-background-white py-0 px-2">                    device_id: *device_id,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5546,7 +5546,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
+                <pre class="has-background-white py-0 px-2">                    event: Event::MouseButton {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5559,7 +5559,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::Input(InputEvent {</pre>
+                <pre class="has-background-white py-0 px-2">                        button: *button,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5572,7 +5572,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    device_id: *device_id,</pre>
+                <pre class="has-background-white py-0 px-2">                        state: *state,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5585,7 +5585,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    event: Event::MouseButton {</pre>
+                <pre class="has-background-white py-0 px-2">                    },</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5598,7 +5598,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        button: *button,</pre>
+                <pre class="has-background-white py-0 px-2">                }))</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5611,7 +5611,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        state: *state,</pre>
+                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5624,7 +5624,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    },</pre>
+                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::MouseWheel {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5637,7 +5637,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                }))</pre>
+                <pre class="has-background-white py-0 px-2">                device_id,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5650,7 +5650,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
+                <pre class="has-background-white py-0 px-2">                delta,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5663,7 +5663,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::MouseWheel {</pre>
+                <pre class="has-background-white py-0 px-2">                phase,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5676,7 +5676,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                device_id,</pre>
+                <pre class="has-background-white py-0 px-2">                ..</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5689,7 +5689,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                delta,</pre>
+                <pre class="has-background-white py-0 px-2">            } =&gt; self</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5702,7 +5702,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                phase,</pre>
+                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5715,7 +5715,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                ..</pre>
+                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::Input(InputEvent {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5728,7 +5728,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            } =&gt; self</pre>
+                <pre class="has-background-white py-0 px-2">                    device_id: *device_id,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5741,7 +5741,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
+                <pre class="has-background-white py-0 px-2">                    event: Event::MouseWheel {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5754,7 +5754,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::Input(InputEvent {</pre>
+                <pre class="has-background-white py-0 px-2">                        delta: *delta,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5767,7 +5767,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    device_id: *device_id,</pre>
+                <pre class="has-background-white py-0 px-2">                        touch_phase: *phase,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5780,7 +5780,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    event: Event::MouseWheel {</pre>
+                <pre class="has-background-white py-0 px-2">                    },</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5793,7 +5793,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        delta: *delta,</pre>
+                <pre class="has-background-white py-0 px-2">                }))</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5806,7 +5806,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        touch_phase: *phase,</pre>
+                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5819,7 +5819,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    },</pre>
+                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::CursorMoved {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5832,7 +5832,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                }))</pre>
+                <pre class="has-background-white py-0 px-2">                device_id,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5845,7 +5845,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
+                <pre class="has-background-white py-0 px-2">                position,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5858,7 +5858,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::CursorMoved {</pre>
+                <pre class="has-background-white py-0 px-2">                ..</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5871,7 +5871,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                device_id,</pre>
+                <pre class="has-background-white py-0 px-2">            } =&gt; self</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5884,7 +5884,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                position,</pre>
+                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5897,7 +5897,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                ..</pre>
+                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::Input(InputEvent {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5910,7 +5910,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            } =&gt; self</pre>
+                <pre class="has-background-white py-0 px-2">                    device_id: *device_id,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5923,7 +5923,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
+                <pre class="has-background-white py-0 px-2">                    event: Event::MouseMoved {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5936,7 +5936,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::Input(InputEvent {</pre>
+                <pre class="has-background-white py-0 px-2">                        position: Some(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5949,7 +5949,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    device_id: *device_id,</pre>
+                <pre class="has-background-white py-0 px-2">                            Point::from_lengths(</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5962,7 +5962,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    event: Event::MouseMoved {</pre>
+                <pre class="has-background-white py-0 px-2">                                Pixels::new(position.x as f32),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5975,7 +5975,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        position: Some(</pre>
+                <pre class="has-background-white py-0 px-2">                                Pixels::new(position.y as f32),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5988,7 +5988,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                            Point::from_lengths(</pre>
+                <pre class="has-background-white py-0 px-2">                            ) &#x2F; self.last_known_scale_factor,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6001,7 +6001,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                                Pixels::new(position.x as f32),</pre>
+                <pre class="has-background-white py-0 px-2">                        ),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6014,7 +6014,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                                Pixels::new(position.y as f32),</pre>
+                <pre class="has-background-white py-0 px-2">                    },</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6027,7 +6027,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                            ) &#x2F; self.last_known_scale_factor,</pre>
+                <pre class="has-background-white py-0 px-2">                }))</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6040,7 +6040,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                        ),</pre>
+                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6053,7 +6053,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    },</pre>
+                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::CursorLeft { device_id } =&gt; self</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6066,7 +6066,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                }))</pre>
+                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6079,7 +6079,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
+                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::Input(InputEvent {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6092,7 +6092,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::CursorLeft { device_id } =&gt; self</pre>
+                <pre class="has-background-white py-0 px-2">                    device_id: *device_id,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6105,7 +6105,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
+                <pre class="has-background-white py-0 px-2">                    event: Event::MouseMoved { position: None },</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6118,7 +6118,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::Input(InputEvent {</pre>
+                <pre class="has-background-white py-0 px-2">                }))</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6131,7 +6131,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    device_id: *device_id,</pre>
+                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6144,7 +6144,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                    event: Event::MouseMoved { position: None },</pre>
+                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::ReceivedCharacter(character) =&gt; self</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6157,7 +6157,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                }))</pre>
+                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6170,7 +6170,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
+                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::ReceiveCharacter(*character))</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6183,7 +6183,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::ReceivedCharacter(character) =&gt; self</pre>
+                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6196,7 +6196,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
+                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::ThemeChanged(theme) =&gt; self</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6209,7 +6209,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::ReceiveCharacter(*character))</pre>
+                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6222,7 +6222,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
+                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::SystemThemeChanged(*theme))</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6235,7 +6235,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            WinitWindowEvent::ThemeChanged(theme) =&gt; self</pre>
+                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6248,7 +6248,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .event_sender</pre>
+                <pre class="has-background-white py-0 px-2">            _ =&gt; {}</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6261,7 +6261,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .try_send(WindowEvent::SystemThemeChanged(*theme))</pre>
+                <pre class="has-background-white py-0 px-2">        }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6274,7 +6274,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">                .unwrap_or_default(),</pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6287,7 +6287,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">            _ =&gt; {}</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6296,11 +6296,11 @@
                 <a href="#482">482</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">        }</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">    fn notify_size_changed(&amp;mut self) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6309,11 +6309,11 @@
                 <a href="#483">483</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">        self.event_sender</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6322,11 +6322,11 @@
                 <a href="#484">484</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
+                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
                 
             </div>
-            <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2"></pre>
+            <div class="column has-background-danger-light p-0">
+                <pre class="has-background-danger-light py-0 px-2">            .try_send(WindowEvent::Resize {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6339,7 +6339,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    fn notify_size_changed(&amp;mut self) {</pre>
+                <pre class="has-background-danger-light py-0 px-2">                size: self.last_known_size,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6352,7 +6352,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        self.event_sender</pre>
+                <pre class="has-background-danger-light py-0 px-2">                scale_factor: self.last_known_scale_factor,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6365,7 +6365,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            .try_send(WindowEvent::Resize {</pre>
+                <pre class="has-background-danger-light py-0 px-2">            })</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6378,7 +6378,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                size: self.last_known_size,</pre>
+                <pre class="has-background-danger-light py-0 px-2">            .unwrap_or_default();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -6391,52 +6391,13 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                scale_factor: self.last_known_scale_factor,</pre>
+                <pre class="has-background-danger-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
                 id="490">
                 <a href="#490">490</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
-                
-            </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            })</pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="491">
-                <a href="#491">491</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
-                
-            </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            .unwrap_or_default();</pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="492">
-                <a href="#492">492</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-danger-light has-background-danger">
-                
-            </div>
-            <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    }</pre>
-            </div>
-        </div><div class="columns p-0 m-0">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="493">
-                <a href="#493">493</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white">
@@ -6448,7 +6409,7 @@
         </div></div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2021-08-06 14:50</p>
+                <p class="heading">Date: 2021-08-06 19:46</p>
             </div>
         </footer>
     </body>
