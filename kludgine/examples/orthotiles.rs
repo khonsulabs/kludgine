@@ -1,5 +1,6 @@
 use kludgine::prelude::*;
 use kludgine_app::RedrawRequester;
+use kludgine_core::figures::Vectorlike;
 
 fn main() {
     SingleWindowApplication::run(OrthoTiles::default());
@@ -70,7 +71,7 @@ impl Window for OrthoTiles {
         let sprite = stickguy.get_frame(scene.elapsed())?;
 
         // Calculate the zoomed size
-        let rendered_size = (sprite.location.size().to_f32().to_vector() * self.zoom)
+        let rendered_size = (sprite.location.size().cast::<f32>().to_vector() * self.zoom)
             .to_size()
             .cast_unit();
         let rendered_bounds = Rect::new(center - rendered_size / 2., rendered_size);

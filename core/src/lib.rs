@@ -43,7 +43,7 @@ pub mod texture;
 
 // Re-exports
 pub use easygpu;
-pub use euclid;
+pub use figures;
 pub use flume;
 pub use image;
 pub use lazy_static;
@@ -62,8 +62,8 @@ pub mod prelude {
     pub use super::{
         include_aseprite_sprite, include_font, include_texture,
         math::{
-            Angle, Length, Pixels, Point, PointExt, Points, Raw, Rect, Scale, Scaled, ScreenScale,
-            Size, SizeExt, Unknown, Vector,
+            Angle, Figure, Pixels, Point, Points, Raw, Rect, Scale, Scaled, ScreenScale, Size,
+            Unknown, Vector,
         },
         scene::{Scene, Target},
         shape::*,

@@ -1,6 +1,12 @@
 [workspace]
 members = ["kludgine", "core", "app", "xtask"]
 
-# [patch.crates-io] # must be commented out for CI to succeed
+[patch.crates-io]
+easygpu = { git = "https://github.com/khonsulabs/easygpu.git", branch = "main" }
+easygpu-lyon = { git = "https://github.com/khonsulabs/easygpu.git", branch = "main" }
+# must be commented out for CI to succeed
 # easygpu = { path = "../easygpu" }
 # easygpu-lyon = { path = "../easygpu-lyon" }
+
+# [patch."https://github.com/khonsulabs/figures.git"]
+# figures = { path = "../figures/figures" }

@@ -1,5 +1,8 @@
+use figures::Vectorlike;
+
+use super::lyon_point;
 use crate::{
-    math::{Length, Point, Raw, Scale, Scaled},
+    math::{Figure, Point, Raw, Scale, Scaled},
     scene::Target,
     shape::{Fill, Stroke},
     Error,
@@ -7,7 +10,7 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct Circle<S> {
     pub center: Point<f32, S>,
-    pub radius: Length<f32, S>,
+    pub radius: Figure<f32, S>,
 }
 
 impl<U> Circle<U> {
@@ -42,7 +45,7 @@ impl Circle<Raw> {
         if let Some(fill) = fill {
             builder.default_color = fill.color.rgba();
             lyon_tessellation::basic_shapes::fill_circle(
-                self.center.cast_unit(),
+                lyon_point(self.center),
                 self.radius.get(),
                 &fill.options,
                 builder,
@@ -53,7 +56,7 @@ impl Circle<Raw> {
         if let Some(stroke) = stroke {
             builder.default_color = stroke.color.rgba();
             lyon_tessellation::basic_shapes::stroke_circle(
-                self.center.cast_unit(),
+                lyon_point(self.center),
                 self.radius.get(),
                 &stroke.options,
                 builder,

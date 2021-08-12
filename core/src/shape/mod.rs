@@ -6,7 +6,7 @@ mod path;
 mod stroke;
 
 use circle::Circle;
-use euclid::{Length, Scale};
+use figures::{Figure, Rectlike, Scale};
 use geometry::ShapeGeometry;
 
 pub use self::{batch::*, fill::*, path::*, stroke::*};
@@ -16,24 +16,31 @@ use crate::{
 };
 
 /// A 2d shape.
-#[derive(Default, Clone, Debug)]
-pub struct Shape<S> {
-    geometry: ShapeGeometry<S>,
+#[derive(Debug, Clone)]
+pub struct Shape<Unit> {
+    geometry: ShapeGeometry<Unit>,
     stroke: Option<Stroke>,
     fill: Option<Fill>,
 }
 
-impl<S> Shape<S>
-where
-    S: Copy + Default,
-{
+impl<Unit> Default for Shape<Unit> {
+    fn default() -> Self {
+        Self {
+            geometry: ShapeGeometry::Empty,
+            stroke: None,
+            fill: None,
+        }
+    }
+}
+
+impl<Unit> Shape<Unit> {
     /// Returns a rectangle.
-    pub fn rect(rect: impl Into<Rect<f32, S>>) -> Self {
-        let rect = rect.into();
-        let path = PathBuilder::new(Point::new(rect.min_x(), rect.min_y()))
-            .line_to(Point::new(rect.max_x(), rect.min_y()))
-            .line_to(Point::new(rect.max_x(), rect.max_y()))
-            .line_to(Point::new(rect.min_x(), rect.max_y()))
+    pub fn rect(rect: impl Into<Rect<f32, Unit>>) -> Self {
+        let rect = rect.into().as_extents();
+        let path = PathBuilder::new(Point::from_figures(rect.origin.x(), rect.origin.y()))
+            .line_to(Point::from_figures(rect.extent.x(), rect.origin.y()))
+            .line_to(Point::from_figures(rect.extent.x(), rect.extent.y()))
+            .line_to(Point::from_figures(rect.origin.x(), rect.extent.y()))
             .close()
             .build();
 
@@ -46,7 +53,7 @@ where
 
     /// Returns a circle with `center` and `radius`.
     #[must_use]
-    pub fn circle(center: Point<f32, S>, radius: Length<f32, S>) -> Self {
+    pub const fn circle(center: Point<f32, Unit>, radius: Figure<f32, Unit>) -> Self {
         Self {
             geometry: ShapeGeometry::Circle(Circle { center, radius }),
             stroke: None,
@@ -56,7 +63,7 @@ where
 
     /// Returns a closed polygon created with `points`.
     #[must_use]
-    pub fn polygon(points: impl IntoIterator<Item = Point<f32, S>>) -> Self {
+    pub fn polygon(points: impl IntoIterator<Item = Point<f32, Unit>>) -> Self {
         let mut points = points.into_iter();
         if let Some(start) = points.next() {
             let mut builder = PathBuilder::new(start);
@@ -76,14 +83,14 @@ where
 
     /// Builder-style function. Set `fill` and returns self.
     #[must_use]
-    pub fn fill(mut self, fill: Fill) -> Self {
+    pub const fn fill(mut self, fill: Fill) -> Self {
         self.fill = Some(fill);
         self
     }
 
     /// Builder-style function. Set `stroke` and returns self.
     #[must_use]
-    pub fn stroke(mut self, stroke: Stroke) -> Self {
+    pub const fn stroke(mut self, stroke: Stroke) -> Self {
         self.stroke = Some(stroke);
         self
     }
@@ -138,4 +145,8 @@ impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for Shape<Src> {
             stroke: self.stroke,
         }
     }
+}
+
+const fn lyon_point<T>(pt: Point<f32, T>) -> lyon_tessellation::math::Point {
+    lyon_tessellation::math::Point::new(pt.x, pt.y)
 }

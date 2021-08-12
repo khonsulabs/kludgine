@@ -2,6 +2,7 @@ use std::{marker::PhantomData, ops::Deref};
 
 use bytemuck::{Pod, Zeroable};
 use easygpu::{prelude::*, wgpu::TextureFormat};
+use figures::Vectorlike;
 
 use super::{Normal, Srgb};
 use crate::math::{Angle, Point, Raw};
@@ -33,10 +34,9 @@ impl Vertex {
     pub fn rotate_by(mut self, angle: Option<Angle>, origin: Point<f32, Raw>) -> Self {
         if let Some(angle) = angle {
             let origin = origin.to_vector();
-            let rotation2d = euclid::Rotation2D::new(angle);
             let position = Point::new(self.position[0], self.position[1]);
             let relative_position = position - origin;
-            let rotated = rotation2d.transform_point(relative_position) + origin;
+            let rotated = angle.transform_point(relative_position) + origin;
 
             self.position[0] = rotated.x;
             self.position[1] = rotated.y;

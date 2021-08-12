@@ -3,7 +3,7 @@ pub mod bundled_fonts;
 pub(crate) mod font;
 /// Types for handling perpared text.
 pub mod prepared;
-use euclid::Length;
+use figures::Figure;
 pub use font::Font;
 use rusttype::Scale;
 
@@ -23,7 +23,7 @@ impl Text {
     pub fn prepare(
         text: &str,
         font: &Font,
-        size: Length<f32, Scaled>,
+        size: Figure<f32, Scaled>,
         color: Color,
         scene: &Target,
     ) -> PreparedSpan {

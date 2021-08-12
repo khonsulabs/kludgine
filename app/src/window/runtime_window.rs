@@ -315,7 +315,7 @@ impl RuntimeWindow {
                 }
             }
 
-            if window.scene().size().area() > 0.0 {
+            if window.scene().size().area().get() > 0.0 {
                 window.scene_mut().start_frame();
 
                 window.update(target_fps)?;
@@ -452,7 +452,7 @@ impl RuntimeWindow {
                     device_id: *device_id,
                     event: Event::MouseMoved {
                         position: Some(
-                            Point::from_lengths(
+                            Point::from_figures(
                                 Pixels::new(position.x as f32),
                                 Pixels::new(position.y as f32),
                             ) / self.last_known_scale_factor,

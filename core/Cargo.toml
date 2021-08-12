@@ -25,37 +25,37 @@ bundled-fonts = ["bundled-fonts-roboto"]
 bundled-fonts-roboto = ["bundled-fonts-enabled"]
 # Internal feature that exports the bundled_fonts module
 bundled-fonts-enabled = []
-serialization = ["serde", "euclid/serde", "palette/serializing"]
+serialization = ["serde", "figures/serde", "palette/serializing"]
 
 [dependencies]
 approx = "0.5"
 easygpu = "0.0.12"
 easygpu-lyon = "0.0.12"
 lyon_tessellation = "0.16"
-image = { version=">=0.23.12", default-features=false }
+image = { version = ">=0.23.12", default-features = false }
 palette = "0.6"
 futures-timer = "3"
-euclid = "0.22"
+figures = { git = "https://github.com/khonsulabs/figures.git", branch = "main" }
 futures = "0.3"
 instant = "0.1.9"
 flume = "0.10"
-rusttype = { version="0.9", features=["gpu_cache"] }
+rusttype = { version = "0.9", features = ["gpu_cache"] }
 platforms = "1"
 ttf-parser = "0.6"
 json = "0.12"
-serde = { version="1", optional=true, features=["derive"] }
+serde = { version = "1", optional = true, features = ["derive"] }
 winit = "0.25"
-bytemuck = { version="1", features=["derive"] }
+bytemuck = { version = "1", features = ["derive"] }
 lazy_static = "1"
 thiserror = "1"
 
-tracing = { version="0.1" }
-tracing-futures = { version="0.2" }
+tracing = { version = "0.1" }
+tracing-futures = { version = "0.2" }
 
 
 [dev-dependencies]
 # rand = "0.7"
 # futures-await-test = "0.3"
-tokio = { version="1.0", features=["full"] }
-image = { version=">=0.23.12", default-features=false, features=["png"] }
+tokio = { version = "1.0", features = ["full"] }
+image = { version = ">=0.23.12", default-features = false, features = ["png"] }
 # maplit = "1"

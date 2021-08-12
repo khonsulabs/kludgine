@@ -1,5 +1,7 @@
 use std::{ops::Deref, sync::Arc};
 
+use figures::{Round, Vectorlike};
+
 use crate::{
     color::Color,
     math::{Pixels, Point, Raw, Scaled},
@@ -12,7 +14,7 @@ use crate::{
 pub struct VMetrics {
     /// The amount of pixels above the baseline.
     pub ascent: Pixels,
-    /// The amount of ixels below the baseline. Typically a negative number.
+    /// The amount of pixels below the baseline. Typically a negative number.
     pub descent: Pixels,
     /// The amount of pixels to allow between lines.
     pub line_gap: Pixels,

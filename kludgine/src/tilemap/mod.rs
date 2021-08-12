@@ -5,8 +5,8 @@ use std::{
 };
 
 use kludgine_core::{
-    euclid::Rect,
-    math::{Box2D, Length, Point, PointExt, Raw, Scale, Scaled, Size, SizeExt, Unknown},
+    figures::{One, Rectlike, SizedRect},
+    math::{ExtentsRect, Figure, Point, Raw, Scale, Scaled, Size, Unknown},
     scene::Target,
     sprite::{Sprite, SpriteRotation, SpriteSource},
 };
@@ -46,7 +46,7 @@ where
         target: &Target,
         location: Point<f32, Scaled>,
     ) -> kludgine_core::Result<()> {
-        self.render_scaled(target, location, Scale::identity())
+        self.render_scaled(target, location, Scale::one())
     }
 
     /// Renders the tilemap scaled by `scale`. The tilemap will fill the
@@ -67,8 +67,8 @@ where
         // We need to start at the upper-left of inverting the location
         let min_x = (-location.x / tile_size.width).floor() as i32;
         let min_y = (-location.y / tile_size.height).floor() as i32;
-        let extra_x = tile_size.width() - Length::new(1.);
-        let extra_y = tile_size.height() - Length::new(1.);
+        let extra_x = tile_size.width() - Figure::new(1.);
+        let extra_y = tile_size.height() - Figure::new(1.);
         let scene_size = scene.size();
         let total_width = scene_size.width() + extra_x;
         let total_height = scene_size.height() + extra_y;
@@ -79,14 +79,15 @@ where
 
         let effective_scale = scene.scale_factor();
         let tile_size = tile_size * effective_scale;
-        let render_size = self.tile_size.to_f32() * Scale::new(effective_scale.0 * scale.0);
+        let render_size =
+            self.tile_size.cast::<f32>() * Scale::new(effective_scale.get() * scale.get());
         let location = location * effective_scale;
         let mut y_pos = tile_size.height() * min_y as f32 + location.y();
         for y in min_y..(min_y + tiles_high) {
             let mut x_pos = tile_size.width() * min_x as f32 + location.x();
             if let Some(stagger) = &self.stagger {
                 if y % 2 == 0 {
-                    x_pos -= Length::<f32, Scaled>::new(stagger.width as f32) * effective_scale;
+                    x_pos -= Figure::<f32, Scaled>::new(stagger.width as f32) * effective_scale;
                 }
             }
             let next_y = y_pos + tile_size.height();
@@ -94,7 +95,7 @@ where
                 let next_x = x_pos + tile_size.width();
                 self.draw_one_tile(
                     Point::new(x, y),
-                    Rect::new(Point::from_lengths(x_pos, y_pos), render_size).to_box2d(),
+                    SizedRect::new(Point::from_figures(x_pos, y_pos), render_size).as_extents(),
                     scene,
                     elapsed,
                 )?;
@@ -109,7 +110,7 @@ where
     fn draw_one_tile(
         &mut self,
         tile: Point<i32>,
-        destination: Box2D<f32, Raw>,
+        destination: ExtentsRect<f32, Raw>,
         scene: &Target,
         elapsed: Option<Duration>,
     ) -> kludgine_core::Result<()> {

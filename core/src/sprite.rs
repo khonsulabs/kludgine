@@ -1,5 +1,5 @@
 use crate::{
-    math::{Angle, Box2D, Point, Raw, Rect, Scale, Size},
+    math::{Angle, ExtentsRect, Point, Raw, Rect, Scale, Size},
     texture::Texture,
     Error,
 };
@@ -488,7 +488,7 @@ pub struct RenderedSprite {
 impl RenderedSprite {
     #[must_use]
     pub(crate) fn new(
-        render_at: Box2D<f32, Raw>,
+        render_at: ExtentsRect<f32, Raw>,
         rotation: SpriteRotation<Raw>,
         alpha: f32,
         source: SpriteSource,
@@ -506,7 +506,7 @@ impl RenderedSprite {
 
 #[derive(Debug)]
 pub(crate) struct RenderedSpriteData {
-    pub render_at: Box2D<f32, Raw>,
+    pub render_at: ExtentsRect<f32, Raw>,
     pub rotation: SpriteRotation<Raw>,
     pub alpha: f32,
     pub source: SpriteSource,

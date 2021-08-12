@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use easygpu::transform::ScreenSpace;
-use euclid::Rect;
+use figures::SizedRect;
 use tracing::instrument;
 
 use crate::{
@@ -285,6 +285,6 @@ pub enum FrameCommand {
     DrawShapes(shape::Batch),
     DrawText {
         text: PreparedSpan,
-        clip: Option<Rect<u32, Raw>>,
+        clip: Option<SizedRect<u32, Raw>>,
     },
 }

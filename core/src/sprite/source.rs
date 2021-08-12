@@ -1,5 +1,7 @@
+use figures::Rectlike;
+
 use crate::{
-    math::{Box2D, Point, Raw, Rect, Scaled, Size},
+    math::{ExtentsRect, Point, Raw, Rect, Scaled, Size},
     scene::{Element, Target},
     sprite::{RenderedSprite, SpriteRotation},
     texture::Texture,
@@ -33,10 +35,14 @@ impl SpriteSourceLocation {
             Self::Joined(locations) => locations
                 .iter()
                 .fold(Option::<Rect<u32>>::None, |union, location| {
-                    Some(union.map_or_else(
-                        || location.destination_rect(),
-                        |total| total.union(&location.destination_rect()),
-                    ))
+                    union.map_or_else(
+                        || Some(location.destination_rect()),
+                        |total| {
+                            total
+                                .union(&location.destination_rect())
+                                .map(|r| r.as_sized())
+                        },
+                    )
                 })
                 .unwrap_or_default(),
         }
@@ -152,7 +158,7 @@ impl SpriteSource {
     pub fn render_within_box(
         &self,
         scene: &Target,
-        bounds: Box2D<f32, Scaled>,
+        bounds: ExtentsRect<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
     ) {
         self.render_with_alpha_in_box(scene, bounds, rotation, 1.);
@@ -169,7 +175,7 @@ impl SpriteSource {
     ) {
         self.render_with_alpha(
             scene,
-            Rect::new(location, self.location.size().to_f32().cast_unit()),
+            Rect::new(location, self.location.size().cast::<f32>().cast_unit()),
             rotation,
             alpha,
         );
@@ -184,7 +190,7 @@ impl SpriteSource {
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
     ) {
-        self.render_with_alpha_in_box(scene, bounds.to_box2d(), rotation, alpha);
+        self.render_with_alpha_in_box(scene, bounds.as_extents(), rotation, alpha);
     }
 
     /// Renders the sprite with `alpha` within `bounds` with `rotation` into
@@ -192,7 +198,7 @@ impl SpriteSource {
     pub fn render_with_alpha_in_box(
         &self,
         scene: &Target,
-        bounds: Box2D<f32, Scaled>,
+        bounds: ExtentsRect<f32, Scaled>,
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
     ) {
@@ -210,13 +216,13 @@ impl SpriteSource {
     pub fn render_raw_with_alpha_in_box(
         &self,
         scene: &Target,
-        bounds: Box2D<f32, Raw>,
+        bounds: ExtentsRect<f32, Raw>,
         rotation: SpriteRotation<Raw>,
         alpha: f32,
     ) {
-        let bounds = Box2D::new(
-            scene.offset_point_raw(bounds.min),
-            scene.offset_point_raw(bounds.max),
+        let bounds = ExtentsRect::new(
+            scene.offset_point_raw(bounds.origin),
+            scene.offset_point_raw(bounds.extent),
         );
         scene.push_element(Element::Sprite {
             sprite: RenderedSprite::new(bounds, rotation, alpha, self.clone()),

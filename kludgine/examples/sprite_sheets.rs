@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use kludgine::prelude::*;
+use kludgine_core::figures::Rectlike;
 
 fn main() {
     SingleWindowApplication::run(SpriteSheetExample::default());

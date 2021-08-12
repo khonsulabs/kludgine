@@ -12,13 +12,14 @@ use easygpu::{
     wgpu::{Buffer, Extent3d, FilterMode, Origin3d, TextureUsage, COPY_BYTES_PER_ROW_ALIGNMENT},
 };
 use easygpu_lyon::LyonPipeline;
+use figures::Rectlike;
 use futures::FutureExt;
 use image::DynamicImage;
 use instant::Duration;
 
 use crate::{
     delay,
-    math::{Box2D, Point, Size, Unknown},
+    math::{ExtentsRect, Point, Size, Unknown},
     scene::SceneEvent,
     sprite::{self, VertexShaderSource},
 };
@@ -294,9 +295,9 @@ where
 
         let ortho = ScreenTransformation::ortho(
             0.,
+            0.,
             frame_size.width as f32,
             frame_size.height as f32,
-            0.,
             -1.,
             1.,
         );
@@ -354,11 +355,11 @@ where
                 self.renderer.submit(&[Op::Transfer {
                     f: loaded_font.texture.as_ref().unwrap(),
                     buf: pixels,
-                    rect: Box2D::new(
+                    rect: ExtentsRect::new(
                         Point::new(rect.min.x, rect.min.y),
                         Point::new(rect.max.x, rect.max.y),
                     )
-                    .to_rect()
+                    .as_sized()
                     .cast::<i32>(),
                 }]);
             }
@@ -418,7 +419,7 @@ where
                     FrameCommand::DrawBatch(batch) => {
                         let mut gpu_batch = sprite::GpuBatch::new(
                             batch.size.cast_unit(),
-                            batch.clipping_rect.map(|r| r.to_box2d()),
+                            batch.clipping_rect.map(|r| r.as_extents()),
                         );
                         for sprite_handle in &batch.sprites {
                             gpu_batch.add_sprite(sprite_handle.clone());
@@ -437,8 +438,10 @@ where
                     FrameCommand::DrawText { text, clip } => {
                         if let Some(loaded_font) = engine_frame.fonts.get(&text.font.id()) {
                             if let Some(texture) = loaded_font.texture.as_ref() {
-                                let mut batch =
-                                    sprite::GpuBatch::new(texture.size, clip.map(|r| r.to_box2d()));
+                                let mut batch = sprite::GpuBatch::new(
+                                    texture.size,
+                                    clip.map(|r| r.as_extents()),
+                                );
                                 for (uv_rect, screen_rect) in text.glyphs.iter().filter_map(|g| {
                                     loaded_font.cache.rect_for(0, &g.glyph).ok().flatten()
                                 }) {
@@ -449,7 +452,7 @@ where
                                     // because gpu_cache also produces data that is 1 byte per
                                     // pixel, and we have to expand it when we're updating the
                                     // texture
-                                    let source = Box2D::<_, Unknown>::new(
+                                    let source = ExtentsRect::<_, Unknown>::new(
                                         Point::new(
                                             uv_rect.min.x * 512.0,
                                             (1.0 - uv_rect.max.y) * 512.0,
@@ -460,14 +463,14 @@ where
                                         ),
                                     );
 
-                                    let dest = Box2D::new(
+                                    let dest = ExtentsRect::new(
                                         text.location
-                                            + euclid::Vector2D::new(
+                                            + figures::Vector::new(
                                                 screen_rect.min.x as f32,
                                                 screen_rect.min.y as f32,
                                             ),
                                         text.location
-                                            + euclid::Vector2D::new(
+                                            + figures::Vector::new(
                                                 screen_rect.max.x as f32,
                                                 screen_rect.max.y as f32,
                                             ),

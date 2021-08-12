@@ -1,20 +1,21 @@
 use easygpu::prelude::*;
+use figures::{Rectlike, Round};
 
 use crate::{
-    math::{Box2D, Point, PointExt, Raw, Rect, Size, Unknown},
+    math::{ExtentsRect, Point, Raw, Rect, Size, Unknown},
     sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation, SpriteSourceLocation},
 };
 
 pub struct GpuBatch {
     pub size: Size<u32, ScreenSpace>,
-    pub clip: Option<Box2D<u32, Raw>>,
+    pub clip: Option<ExtentsRect<u32, Raw>>,
 
     items: Vec<Vertex>,
     indicies: Vec<u16>,
 }
 
 impl GpuBatch {
-    pub fn new(size: Size<u32, ScreenSpace>, clip: Option<Box2D<u32, Raw>>) -> Self {
+    pub fn new(size: Size<u32, ScreenSpace>, clip: Option<ExtentsRect<u32, Raw>>) -> Self {
         Self {
             size,
             clip,
@@ -34,24 +35,26 @@ impl GpuBatch {
 
         match &sprite.source.location {
             SpriteSourceLocation::Rect(location) => self.add_box(
-                location.to_box2d(),
+                location.as_extents(),
                 sprite.render_at,
                 sprite.rotation,
                 white_transparent,
             ),
             SpriteSourceLocation::Joined(locations) => {
                 let source_bounds = sprite.source.location.bounds();
-                let scale_x = sprite.render_at.width() as f32 / source_bounds.size.width as f32;
-                let scale_y = sprite.render_at.height() as f32 / source_bounds.size.height as f32;
+                let scale_x = sprite.render_at.width().get() / source_bounds.size.width as f32;
+                let scale_y = sprite.render_at.height().get() / source_bounds.size.height as f32;
                 for location in locations {
-                    let x = scale_x.mul_add(location.destination.x as f32, sprite.render_at.min.x);
-                    let y = scale_y.mul_add(location.destination.y as f32, sprite.render_at.min.y);
-                    let width = location.source.width() as f32 * scale_x;
-                    let height = location.source.height() as f32 * scale_y;
+                    let x =
+                        scale_x.mul_add(location.destination.x as f32, sprite.render_at.origin.x);
+                    let y =
+                        scale_y.mul_add(location.destination.y as f32, sprite.render_at.origin.y);
+                    let width = location.source.width().get() as f32 * scale_x;
+                    let height = location.source.height().get() as f32 * scale_y;
                     let destination = Rect::new(Point::new(x, y), Size::new(width, height));
                     self.add_box(
-                        location.source.to_box2d(),
-                        destination.to_box2d(),
+                        location.source.as_extents(),
+                        destination.as_extents(),
                         sprite.rotation,
                         white_transparent,
                     );
@@ -73,23 +76,23 @@ impl GpuBatch {
 
     pub fn add_box(
         &mut self,
-        src: Box2D<u32, Unknown>,
-        mut dest: Box2D<f32, Raw>,
+        src: ExtentsRect<u32, Unknown>,
+        mut dest: ExtentsRect<f32, Raw>,
         rotation: SpriteRotation<Raw>,
         color: Rgba8,
     ) {
-        let mut src = src.to_f32();
+        let mut src = src.cast::<f32>();
         if let Some(clip) = &self.clip {
             // Convert to i32 because the destination could have negative coordinates.
-            let clip_signed = clip.to_i32();
-            let dest_rounded = dest.round().to_i32();
+            let clip_signed = clip.cast::<i32>();
+            let dest_rounded = dest.round().cast::<i32>();
 
-            if !(clip_signed.min.x as i32 <= dest_rounded.min.x
-                && clip_signed.min.y as i32 <= dest_rounded.min.y
-                && clip_signed.max.x as i32 >= dest_rounded.max.x
-                && clip_signed.max.y as i32 >= dest_rounded.max.y)
+            if !(clip_signed.origin.x as i32 <= dest_rounded.origin.x
+                && clip_signed.origin.y as i32 <= dest_rounded.origin.y
+                && clip_signed.extent.x as i32 >= dest_rounded.extent.x
+                && clip_signed.extent.y as i32 >= dest_rounded.extent.y)
             {
-                if let Some(clipped_destination) = dest.intersection(&clip.to_f32()) {
+                if let Some(clipped_destination) = dest.intersection(&clip.cast::<f32>()) {
                     if rotation.angle.is_some() {
                         // To properly apply clipping on a rotated quad requires tessellating the
                         // remaining polygon, and the easygpu-lyon layer doesn't support uv
@@ -105,14 +108,22 @@ impl GpuBatch {
                         let dest_size = dest.size();
                         let x_scale = source_size.width / dest_size.width;
                         let y_scale = source_size.height / dest_size.height;
-                        src = Box2D::new(
+                        src = ExtentsRect::new(
                             Point::new(
-                                x_scale.mul_add(clipped_destination.min.x - dest.min.x, src.min.x),
-                                y_scale.mul_add(clipped_destination.min.y - dest.min.y, src.min.y),
+                                x_scale.mul_add(
+                                    clipped_destination.origin.x - dest.origin.x,
+                                    src.origin.x,
+                                ),
+                                y_scale.mul_add(
+                                    clipped_destination.origin.y - dest.origin.y,
+                                    src.origin.y,
+                                ),
                             ),
                             Point::new(
-                                src.max.x - (dest.max.x - clipped_destination.max.x) * x_scale,
-                                src.max.y - (dest.max.y - clipped_destination.max.y) * y_scale,
+                                src.extent.x
+                                    - (dest.extent.x - clipped_destination.extent.x) * x_scale,
+                                src.extent.y
+                                    - (dest.extent.y - clipped_destination.extent.y) * y_scale,
                             ),
                         );
                         dest = clipped_destination;
@@ -126,26 +137,26 @@ impl GpuBatch {
 
         let origin = rotation.location.unwrap_or_else(|| dest.center());
         let top_left = self
-            .vertex(src.min, dest.min, color)
+            .vertex(src.origin, dest.origin, color)
             .rotate_by(rotation.angle, origin);
         let top_right = self
             .vertex(
-                Point::from_lengths(src.max.x(), src.min.y()),
-                Point::from_lengths(dest.max.x(), dest.min.y()),
+                Point::from_figures(src.extent.x(), src.origin.y()),
+                Point::from_figures(dest.extent.x(), dest.origin.y()),
                 color,
             )
             .rotate_by(rotation.angle, origin);
         let bottom_left = self
             .vertex(
-                Point::from_lengths(src.min.x(), src.max.y()),
-                Point::from_lengths(dest.min.x(), dest.max.y()),
+                Point::from_figures(src.origin.x(), src.extent.y()),
+                Point::from_figures(dest.origin.x(), dest.extent.y()),
                 color,
             )
             .rotate_by(rotation.angle, origin);
         let bottom_right = self
             .vertex(
-                Point::from_lengths(src.max.x(), src.max.y()),
-                Point::from_lengths(dest.max.x(), dest.max.y()),
+                Point::from_figures(src.extent.x(), src.extent.y()),
+                Point::from_figures(dest.extent.x(), dest.extent.y()),
                 color,
             )
             .rotate_by(rotation.angle, origin);

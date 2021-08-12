@@ -4,7 +4,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use euclid::Rect;
+use figures::{num_traits::identities::One, Rectlike, SizedRect};
 use platforms::target::{OS, TARGET_OS};
 use winit::{event::VirtualKeyCode, window::Theme};
 
@@ -23,14 +23,14 @@ pub enum Element {
         /// The sprite being rendered.
         sprite: RenderedSprite,
         /// The current clipping rect.
-        clip: Option<Rect<u32, Raw>>,
+        clip: Option<SizedRect<u32, Raw>>,
     },
     /// A rendered span of text.
     Text {
         /// The span being rendered.
         span: PreparedSpan,
         /// The current clipping rect.
-        clip: Option<Rect<u32, Raw>>,
+        clip: Option<SizedRect<u32, Raw>>,
     },
     /// A rendered shape.
     Shape(Shape<Raw>),
@@ -86,7 +86,7 @@ pub struct Target {
     pub scene: Arc<Scene>,
     /// The curent clipping rect. All drawing calls will be clipped to this
     /// area.
-    pub clip: Option<Rect<u32, Raw>>,
+    pub clip: Option<SizedRect<u32, Raw>>,
     /// The current offset (translation) of drawing calls.
     pub offset: Option<Vector<f32, Raw>>,
 }
@@ -95,14 +95,18 @@ impl Target {
     /// Returns a new [`Target`] with the intersection of `new_clip` an the
     /// current `clip`, if any. The scene and offset are cloned.
     #[must_use]
-    pub fn clipped_to(&self, new_clip: Rect<u32, Raw>) -> Self {
+    pub fn clipped_to(&self, new_clip: SizedRect<u32, Raw>) -> Self {
         Self {
             scene: self.scene.clone(),
             clip: Some(match &self.clip {
-                Some(existing_clip) => existing_clip.intersection(&new_clip).unwrap_or_default(),
+                Some(existing_clip) => existing_clip
+                    .intersection(&new_clip)
+                    .unwrap_or_default()
+                    .as_sized(),
                 None => new_clip
-                    .intersection(&Rect::new(Point::default(), self.size_in_pixels()))
-                    .unwrap_or_default(),
+                    .intersection(&SizedRect::new(Point::default(), self.size_in_pixels()))
+                    .unwrap_or_default()
+                    .as_sized(),
             }),
             offset: self.offset,
         }
@@ -200,7 +204,7 @@ impl Scene {
     pub fn new(event_sender: flume::Sender<SceneEvent>, default_system_theme: Theme) -> Self {
         Self {
             event_sender,
-            scale_factor: Scale::identity(),
+            scale_factor: Scale::one(),
             size: Size::default(),
             keys_pressed: HashSet::new(),
             now: None,
@@ -285,7 +289,7 @@ impl Scene {
     /// Returns the current size of the scene in [`Scaled`] units.
     #[must_use]
     pub fn size(&self) -> Size<f32, Scaled> {
-        self.size.to_f32() / self.scale_factor
+        self.size.cast::<f32>() / self.scale_factor
     }
 
     /// Returns the current size of the scene in [`Raw`] units.

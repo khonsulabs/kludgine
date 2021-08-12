@@ -1,4 +1,5 @@
 use kludgine::prelude::*;
+use kludgine_core::figures::Rectlike;
 
 fn main() {
     SingleWindowApplication::run(Simple::default());
@@ -29,7 +30,7 @@ impl Window for Simple {
 
     fn update(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
         if let Some(elapsed) = scene.elapsed() {
-            self.rotation_angle += Angle::radians(elapsed.as_secs_f32());
+            self.rotation_angle += Angle::Radians(elapsed.as_secs_f32());
         }
 
         Ok(())

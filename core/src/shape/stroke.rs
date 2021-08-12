@@ -1,4 +1,4 @@
-use euclid::Length;
+use figures::Figure;
 use lyon_tessellation::StrokeOptions;
 
 use crate::{color::Color, math::Scaled};
@@ -31,7 +31,7 @@ impl Stroke {
 
     /// Builder-style function. Sets `options.line_width` and return self.
     #[must_use]
-    pub fn line_width<F: Into<Length<f32, Scaled>>>(mut self, width: F) -> Self {
+    pub fn line_width<F: Into<Figure<f32, Scaled>>>(mut self, width: F) -> Self {
         self.options.line_width = width.into().get();
         self
     }

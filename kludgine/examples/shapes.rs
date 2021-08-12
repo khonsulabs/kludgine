@@ -1,4 +1,5 @@
 use kludgine::prelude::*;
+use kludgine_core::figures::Rectlike;
 
 fn main() {
     SingleWindowApplication::run(Shapes::default());

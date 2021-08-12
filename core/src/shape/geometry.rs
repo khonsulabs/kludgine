@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::{
     math::{Point, Raw, Scale, Scaled},
     scene::Target,

@@ -1,5 +1,7 @@
+use figures::Vectorlike;
 use lyon_tessellation::path::{builder::PathBuilder as _, PathEvent as LyonPathEvent};
 
+use super::lyon_point;
 use crate::{
     math::{Point, Raw, Scale, Scaled, ScreenScale},
     scene::Target,
@@ -61,15 +63,15 @@ pub enum PathEvent<S> {
 impl From<PathEvent<Raw>> for LyonPathEvent {
     fn from(event: PathEvent<Raw>) -> Self {
         match event {
-            PathEvent::Begin { at } => Self::Begin { at: at.cast_unit() },
+            PathEvent::Begin { at } => Self::Begin { at: lyon_point(at) },
             PathEvent::Line { from, to } => Self::Line {
-                from: from.cast_unit(),
-                to: to.cast_unit(),
+                from: lyon_point(from),
+                to: lyon_point(to),
             },
             PathEvent::Quadratic { from, ctrl, to } => Self::Quadratic {
-                from: from.cast_unit(),
-                ctrl: ctrl.cast_unit(),
-                to: to.cast_unit(),
+                from: lyon_point(from),
+                ctrl: lyon_point(ctrl),
+                to: lyon_point(to),
             },
             PathEvent::Cubic {
                 from,
@@ -77,14 +79,14 @@ impl From<PathEvent<Raw>> for LyonPathEvent {
                 ctrl2,
                 to,
             } => Self::Cubic {
-                from: from.cast_unit(),
-                ctrl1: ctrl1.cast_unit(),
-                ctrl2: ctrl2.cast_unit(),
-                to: to.cast_unit(),
+                from: lyon_point(from),
+                ctrl1: lyon_point(ctrl1),
+                ctrl2: lyon_point(ctrl2),
+                to: lyon_point(to),
             },
             PathEvent::End { last, first, close } => Self::End {
-                last: last.cast_unit(),
-                first: first.cast_unit(),
+                last: lyon_point(last),
+                first: lyon_point(first),
                 close,
             },
         }
