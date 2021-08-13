@@ -86,7 +86,7 @@ pub(crate) enum WindowEvent {
     CloseRequested,
     Resize {
         size: Size<u32, Pixels>,
-        scale_factor: Scale<f32, Pixels, Points>,
+        scale_factor: Scale<f32, Points, Pixels>,
     },
     Input(InputEvent),
     ReceiveCharacter(char),

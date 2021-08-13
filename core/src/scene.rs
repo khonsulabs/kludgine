@@ -235,7 +235,7 @@ impl Scene {
     }
 
     /// Sets the DPI scale.
-    pub fn set_dpi_scale(&mut self, scale_factor: Scale<f32, Pixels, Points>) {
+    pub fn set_dpi_scale(&mut self, scale_factor: Scale<f32, Points, Pixels>) {
         self.scale_factor = DisplayScale::new(scale_factor, Scale::one());
     }
 

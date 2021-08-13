@@ -208,7 +208,7 @@ impl<T: Window> OpenWindow<T> {
         )
     }
 
-    pub(crate) fn additional_scale(&self) -> Scale<f32, Points, Scaled> {
+    pub(crate) fn additional_scale(&self) -> Scale<f32, Scaled, Points> {
         self.window.additional_scale()
     }
 

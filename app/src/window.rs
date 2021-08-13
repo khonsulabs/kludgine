@@ -101,7 +101,7 @@ pub trait Window: Send + Sync + 'static {
     /// Called prior to rendering to allow setting a scaling amount that
     /// operates on top of the automatic DPI scaling. This can be used to offer
     /// a zoom setting to end-users.
-    fn additional_scale(&self) -> Scale<f32, Points, Scaled> {
+    fn additional_scale(&self) -> Scale<f32, Scaled, Points> {
         Scale::one()
     }
 }
@@ -329,7 +329,7 @@ lazy_static! {
 
 pub enum WindowMessage {
     Close,
-    SetAdditionalScale(Scale<f32, Points, Scaled>),
+    SetAdditionalScale(Scale<f32, Scaled, Points>),
 }
 
 impl WindowMessage {
