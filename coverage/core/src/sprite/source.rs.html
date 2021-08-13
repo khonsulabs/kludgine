@@ -47,7 +47,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">use figures::Rectlike;</pre>
+                <pre class="has-background-white py-0 px-2">use figures::{Displayable, Rectlike};</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -86,7 +86,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    math::{ExtentsRect, Point, Raw, Rect, Scaled, Size},</pre>
+                <pre class="has-background-white py-0 px-2">    math::{ExtentsRect, Pixels, Point, Rect, Scaled, Size},</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2699,7 +2699,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        let effective_scale = scene.scale_factor();</pre>
+                <pre class="has-background-danger-light py-0 px-2">        let effective_scale = scene.scale();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2738,7 +2738,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            bounds * effective_scale,</pre>
+                <pre class="has-background-danger-light py-0 px-2">            bounds.to_pixels(effective_scale),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2751,7 +2751,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            rotation * effective_scale,</pre>
+                <pre class="has-background-danger-light py-0 px-2">            rotation.to_pixels(effective_scale),</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2881,7 +2881,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        bounds: ExtentsRect&lt;f32, Raw&gt;,</pre>
+                <pre class="has-background-danger-light py-0 px-2">        bounds: ExtentsRect&lt;f32, Pixels&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2894,7 +2894,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        rotation: SpriteRotation&lt;Raw&gt;,</pre>
+                <pre class="has-background-danger-light py-0 px-2">        rotation: SpriteRotation&lt;Pixels&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3055,7 +3055,7 @@
         </div></div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2021-08-12 02:21</p>
+                <p class="heading">Date: 2021-08-13 16:47</p>
             </div>
         </footer>
     </body>

@@ -47,7 +47,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">use figures::Vectorlike;</pre>
+                <pre class="has-background-white py-0 px-2">use figures::{DisplayScale, Displayable};</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -112,7 +112,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    math::{Point, Raw, Scale, Scaled, ScreenScale},</pre>
+                <pre class="has-background-white py-0 px-2">    math::{Pixels, Point, Scale, Scaled},</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -853,7 +853,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">impl From&lt;PathEvent&lt;Raw&gt;&gt; for LyonPathEvent {</pre>
+                <pre class="has-background-white py-0 px-2">impl From&lt;PathEvent&lt;Pixels&gt;&gt; for LyonPathEvent {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -866,7 +866,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    fn from(event: PathEvent&lt;Raw&gt;) -&gt; Self {</pre>
+                <pre class="has-background-danger-light py-0 px-2">    fn from(event: PathEvent&lt;Pixels&gt;) -&gt; Self {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2036,7 +2036,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    ) -&gt; Path&lt;Raw&gt; {</pre>
+                <pre class="has-background-danger-light py-0 px-2">    ) -&gt; Path&lt;Pixels&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2049,7 +2049,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        let effective_scale = scene.scale_factor();</pre>
+                <pre class="has-background-danger-light py-0 px-2">        let effective_scale = scene.scale();</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2647,7 +2647,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        effective_scale: ScreenScale,</pre>
+                <pre class="has-background-danger-light py-0 px-2">        effective_scale: &amp;DisplayScale&lt;f32&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2660,7 +2660,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    ) -&gt; Point&lt;f32, Raw&gt; {</pre>
+                <pre class="has-background-danger-light py-0 px-2">    ) -&gt; Point&lt;f32, Pixels&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2673,7 +2673,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        (location + point.to_vector()) * effective_scale</pre>
+                <pre class="has-background-danger-light py-0 px-2">        (location + point).to_pixels(effective_scale)</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2725,7 +2725,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">impl Path&lt;Raw&gt; {</pre>
+                <pre class="has-background-white py-0 px-2">impl Path&lt;Pixels&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4966,7 +4966,7 @@
         </div></div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2021-08-12 02:21</p>
+                <p class="heading">Date: 2021-08-13 16:47</p>
             </div>
         </footer>
     </body>
