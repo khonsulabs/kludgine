@@ -455,7 +455,7 @@
     <span class="doccomment">/// Called prior to rendering to allow setting a scaling amount that</span>
     <span class="doccomment">/// operates on top of the automatic DPI scaling. This can be used to offer</span>
     <span class="doccomment">/// a zoom setting to end-users.</span>
-    <span class="kw">fn</span> <span class="ident">additional_scale</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Points</span>, <span class="ident">Scaled</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">additional_scale</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span>, <span class="ident">Points</span><span class="op">&gt;</span> {
         <span class="ident">Scale::one</span>()
     }
 }
@@ -683,7 +683,7 @@
 
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">WindowMessage</span> {
     <span class="ident">Close</span>,
-    <span class="ident">SetAdditionalScale</span>(<span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Points</span>, <span class="ident">Scaled</span><span class="op">&gt;</span>),
+    <span class="ident">SetAdditionalScale</span>(<span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span>, <span class="ident">Points</span><span class="op">&gt;</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">WindowMessage</span> {
