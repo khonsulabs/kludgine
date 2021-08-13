@@ -79,9 +79,6 @@
 <span id="77">77</span>
 <span id="78">78</span>
 <span id="79">79</span>
-<span id="80">80</span>
-<span id="81">81</span>
-<span id="82">82</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Rendering and math related types.</span>
 
@@ -128,7 +125,7 @@
 
 <span class="comment">// Re-exports</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">easygpu</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">euclid</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">figures</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">flume</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">image</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">lazy_static</span>;
@@ -146,10 +143,7 @@
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span><span class="ident">::text::bundled_fonts</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::{
         <span class="ident">include_aseprite_sprite</span>, <span class="ident">include_font</span>, <span class="ident">include_texture</span>,
-        <span class="ident">math</span>::{
-            <span class="ident">Angle</span>, <span class="ident">Length</span>, <span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">PointExt</span>, <span class="ident">Points</span>, <span class="ident">Raw</span>, <span class="ident">Rect</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>, <span class="ident">ScreenScale</span>,
-            <span class="ident">Size</span>, <span class="ident">SizeExt</span>, <span class="ident">Unknown</span>, <span class="ident">Vector</span>,
-        },
+        <span class="ident">math</span>::{<span class="ident">Angle</span>, <span class="ident">Figure</span>, <span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">Rect</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>, <span class="ident">Size</span>, <span class="ident">Unknown</span>, <span class="ident">Vector</span>},
         <span class="ident">scene</span>::{<span class="ident">Scene</span>, <span class="ident">Target</span>},
         <span class="ident">shape</span>::<span class="kw-2">*</span>,
         <span class="ident">sprite</span>::{

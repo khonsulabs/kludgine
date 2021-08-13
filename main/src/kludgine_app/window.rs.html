@@ -342,6 +342,15 @@
 <span id="340">340</span>
 <span id="341">341</span>
 <span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections::HashMap</span>,
@@ -349,8 +358,9 @@
 };
 
 <span class="kw">use</span> <span class="ident">kludgine_core</span>::{
+    <span class="ident">figures</span>::{<span class="ident">num_traits::One</span>, <span class="ident">Points</span>},
     <span class="ident">flume</span>,
-    <span class="ident">math</span>::{<span class="ident">Scaled</span>, <span class="ident">Size</span>},
+    <span class="ident">math</span>::{<span class="ident">Scale</span>, <span class="ident">Scaled</span>, <span class="ident">Size</span>},
     <span class="ident">scene::Target</span>,
     <span class="ident">winit</span>::{
         <span class="self">self</span>,
@@ -440,6 +450,13 @@
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
         <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="doccomment">/// Called prior to rendering to allow setting a scaling amount that</span>
+    <span class="doccomment">/// operates on top of the automatic DPI scaling. This can be used to offer</span>
+    <span class="doccomment">/// a zoom setting to end-users.</span>
+    <span class="kw">fn</span> <span class="ident">additional_scale</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Points</span>, <span class="ident">Scaled</span><span class="op">&gt;</span> {
+        <span class="ident">Scale::one</span>()
     }
 }
 
@@ -666,6 +683,7 @@
 
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">WindowMessage</span> {
     <span class="ident">Close</span>,
+    <span class="ident">SetAdditionalScale</span>(<span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Points</span>, <span class="ident">Scaled</span><span class="op">&gt;</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">WindowMessage</span> {

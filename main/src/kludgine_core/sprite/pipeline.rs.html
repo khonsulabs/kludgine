@@ -181,9 +181,10 @@
 
 <span class="kw">use</span> <span class="ident">bytemuck</span>::{<span class="ident">Pod</span>, <span class="ident">Zeroable</span>};
 <span class="kw">use</span> <span class="ident">easygpu</span>::{<span class="ident">prelude</span>::<span class="kw-2">*</span>, <span class="ident">wgpu::TextureFormat</span>};
+<span class="kw">use</span> <span class="ident">figures::Vectorlike</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Normal</span>, <span class="ident">Srgb</span>};
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::math</span>::{<span class="ident">Angle</span>, <span class="ident">Point</span>, <span class="ident">Raw</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::math</span>::{<span class="ident">Angle</span>, <span class="ident">Pixels</span>, <span class="ident">Point</span>};
 
 <span class="doccomment">/// A pipeline for rendering shapes.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Pipeline</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
@@ -209,13 +210,12 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Vertex</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rotate_by</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">angle</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Angle</span><span class="op">&gt;</span>, <span class="ident">origin</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Raw</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rotate_by</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">angle</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Angle</span><span class="op">&gt;</span>, <span class="ident">origin</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">angle</span>) <span class="op">=</span> <span class="ident">angle</span> {
             <span class="kw">let</span> <span class="ident">origin</span> <span class="op">=</span> <span class="ident">origin</span>.<span class="ident">to_vector</span>();
-            <span class="kw">let</span> <span class="ident">rotation2d</span> <span class="op">=</span> <span class="ident">euclid::Rotation2D::new</span>(<span class="ident">angle</span>);
             <span class="kw">let</span> <span class="ident">position</span> <span class="op">=</span> <span class="ident">Point::new</span>(<span class="self">self</span>.<span class="ident">position</span>[<span class="number">0</span>], <span class="self">self</span>.<span class="ident">position</span>[<span class="number">1</span>]);
             <span class="kw">let</span> <span class="ident">relative_position</span> <span class="op">=</span> <span class="ident">position</span> <span class="op">-</span> <span class="ident">origin</span>;
-            <span class="kw">let</span> <span class="ident">rotated</span> <span class="op">=</span> <span class="ident">rotation2d</span>.<span class="ident">transform_point</span>(<span class="ident">relative_position</span>) <span class="op">+</span> <span class="ident">origin</span>;
+            <span class="kw">let</span> <span class="ident">rotated</span> <span class="op">=</span> <span class="ident">angle</span>.<span class="ident">transform_point</span>(<span class="ident">relative_position</span>) <span class="op">+</span> <span class="ident">origin</span>;
 
             <span class="self">self</span>.<span class="ident">position</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">rotated</span>.<span class="ident">x</span>;
             <span class="self">self</span>.<span class="ident">position</span>[<span class="number">1</span>] <span class="op">=</span> <span class="ident">rotated</span>.<span class="ident">y</span>;

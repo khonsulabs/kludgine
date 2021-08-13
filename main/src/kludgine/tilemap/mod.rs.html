@@ -319,6 +319,8 @@
 <span id="317">317</span>
 <span id="318">318</span>
 <span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">mem</span>,
@@ -327,8 +329,8 @@
 };
 
 <span class="kw">use</span> <span class="ident">kludgine_core</span>::{
-    <span class="ident">euclid::Rect</span>,
-    <span class="ident">math</span>::{<span class="ident">Box2D</span>, <span class="ident">Length</span>, <span class="ident">Point</span>, <span class="ident">PointExt</span>, <span class="ident">Raw</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>, <span class="ident">Size</span>, <span class="ident">SizeExt</span>, <span class="ident">Unknown</span>},
+    <span class="ident">figures</span>::{<span class="ident">Displayable</span>, <span class="ident">One</span>, <span class="ident">Rectlike</span>, <span class="ident">SizedRect</span>},
+    <span class="ident">math</span>::{<span class="ident">ExtentsRect</span>, <span class="ident">Figure</span>, <span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>, <span class="ident">Size</span>, <span class="ident">Unknown</span>},
     <span class="ident">scene::Target</span>,
     <span class="ident">sprite</span>::{<span class="ident">Sprite</span>, <span class="ident">SpriteRotation</span>, <span class="ident">SpriteSource</span>},
 };
@@ -368,7 +370,7 @@
         <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
         <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">kludgine_core::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">render_scaled</span>(<span class="ident">target</span>, <span class="ident">location</span>, <span class="ident">Scale::identity</span>())
+        <span class="self">self</span>.<span class="ident">render_scaled</span>(<span class="ident">target</span>, <span class="ident">location</span>, <span class="ident">Scale::one</span>())
     }
 
     <span class="doccomment">/// Renders the tilemap scaled by `scale`. The tilemap will fill the</span>
@@ -389,8 +391,8 @@
         <span class="comment">// We need to start at the upper-left of inverting the location</span>
         <span class="kw">let</span> <span class="ident">min_x</span> <span class="op">=</span> (<span class="op">-</span><span class="ident">location</span>.<span class="ident">x</span> <span class="op">/</span> <span class="ident">tile_size</span>.<span class="ident">width</span>).<span class="ident">floor</span>() <span class="kw">as</span> <span class="ident">i32</span>;
         <span class="kw">let</span> <span class="ident">min_y</span> <span class="op">=</span> (<span class="op">-</span><span class="ident">location</span>.<span class="ident">y</span> <span class="op">/</span> <span class="ident">tile_size</span>.<span class="ident">height</span>).<span class="ident">floor</span>() <span class="kw">as</span> <span class="ident">i32</span>;
-        <span class="kw">let</span> <span class="ident">extra_x</span> <span class="op">=</span> <span class="ident">tile_size</span>.<span class="ident">width</span>() <span class="op">-</span> <span class="ident">Length::new</span>(<span class="number">1.</span>);
-        <span class="kw">let</span> <span class="ident">extra_y</span> <span class="op">=</span> <span class="ident">tile_size</span>.<span class="ident">height</span>() <span class="op">-</span> <span class="ident">Length::new</span>(<span class="number">1.</span>);
+        <span class="kw">let</span> <span class="ident">extra_x</span> <span class="op">=</span> <span class="ident">tile_size</span>.<span class="ident">width</span>() <span class="op">-</span> <span class="ident">Figure::new</span>(<span class="number">1.</span>);
+        <span class="kw">let</span> <span class="ident">extra_y</span> <span class="op">=</span> <span class="ident">tile_size</span>.<span class="ident">height</span>() <span class="op">-</span> <span class="ident">Figure::new</span>(<span class="number">1.</span>);
         <span class="kw">let</span> <span class="ident">scene_size</span> <span class="op">=</span> <span class="ident">scene</span>.<span class="ident">size</span>();
         <span class="kw">let</span> <span class="ident">total_width</span> <span class="op">=</span> <span class="ident">scene_size</span>.<span class="ident">width</span>() <span class="op">+</span> <span class="ident">extra_x</span>;
         <span class="kw">let</span> <span class="ident">total_height</span> <span class="op">=</span> <span class="ident">scene_size</span>.<span class="ident">height</span>() <span class="op">+</span> <span class="ident">extra_y</span>;
@@ -399,16 +401,18 @@
 
         <span class="kw">let</span> <span class="ident">elapsed</span> <span class="op">=</span> <span class="ident">scene</span>.<span class="ident">elapsed</span>();
 
-        <span class="kw">let</span> <span class="ident">effective_scale</span> <span class="op">=</span> <span class="ident">scene</span>.<span class="ident">scale_factor</span>();
-        <span class="kw">let</span> <span class="ident">tile_size</span> <span class="op">=</span> <span class="ident">tile_size</span> <span class="op">*</span> <span class="ident">effective_scale</span>;
-        <span class="kw">let</span> <span class="ident">render_size</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tile_size</span>.<span class="ident">to_f32</span>() <span class="op">*</span> <span class="ident">Scale::new</span>(<span class="ident">effective_scale</span>.<span class="number">0</span> <span class="op">*</span> <span class="ident">scale</span>.<span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">location</span> <span class="op">=</span> <span class="ident">location</span> <span class="op">*</span> <span class="ident">effective_scale</span>;
+        <span class="kw">let</span> <span class="ident">effective_scale</span> <span class="op">=</span> <span class="ident">scene</span>.<span class="ident">scale</span>();
+        <span class="kw">let</span> <span class="ident">tile_size</span> <span class="op">=</span> <span class="ident">tile_size</span>.<span class="ident">to_pixels</span>(<span class="ident">effective_scale</span>);
+        <span class="kw">let</span> <span class="ident">render_size</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tile_size</span>.<span class="ident">cast</span>::<span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>()
+            <span class="op">*</span> <span class="ident">Scale::new</span>(<span class="ident">effective_scale</span>.<span class="ident">total_scale</span>().<span class="ident">get</span>() <span class="op">*</span> <span class="ident">scale</span>.<span class="ident">get</span>());
+        <span class="kw">let</span> <span class="ident">location</span> <span class="op">=</span> <span class="ident">location</span>.<span class="ident">to_pixels</span>(<span class="ident">effective_scale</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">y_pos</span> <span class="op">=</span> <span class="ident">tile_size</span>.<span class="ident">height</span>() <span class="op">*</span> <span class="ident">min_y</span> <span class="kw">as</span> <span class="ident">f32</span> <span class="op">+</span> <span class="ident">location</span>.<span class="ident">y</span>();
         <span class="kw">for</span> <span class="ident">y</span> <span class="kw">in</span> <span class="ident">min_y</span>..(<span class="ident">min_y</span> <span class="op">+</span> <span class="ident">tiles_high</span>) {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">x_pos</span> <span class="op">=</span> <span class="ident">tile_size</span>.<span class="ident">width</span>() <span class="op">*</span> <span class="ident">min_x</span> <span class="kw">as</span> <span class="ident">f32</span> <span class="op">+</span> <span class="ident">location</span>.<span class="ident">x</span>();
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">stagger</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stagger</span> {
                 <span class="kw">if</span> <span class="ident">y</span> <span class="op">%</span> <span class="number">2</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="ident">x_pos</span> <span class="op">-</span><span class="op">=</span> <span class="ident">Length</span>::<span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">stagger</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f32</span>) <span class="op">*</span> <span class="ident">effective_scale</span>;
+                    <span class="ident">x_pos</span> <span class="op">-</span><span class="op">=</span>
+                        <span class="ident">Figure</span>::<span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">stagger</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f32</span>).<span class="ident">to_pixels</span>(<span class="ident">effective_scale</span>);
                 }
             }
             <span class="kw">let</span> <span class="ident">next_y</span> <span class="op">=</span> <span class="ident">y_pos</span> <span class="op">+</span> <span class="ident">tile_size</span>.<span class="ident">height</span>();
@@ -416,7 +420,7 @@
                 <span class="kw">let</span> <span class="ident">next_x</span> <span class="op">=</span> <span class="ident">x_pos</span> <span class="op">+</span> <span class="ident">tile_size</span>.<span class="ident">width</span>();
                 <span class="self">self</span>.<span class="ident">draw_one_tile</span>(
                     <span class="ident">Point::new</span>(<span class="ident">x</span>, <span class="ident">y</span>),
-                    <span class="ident">Rect::new</span>(<span class="ident">Point::from_lengths</span>(<span class="ident">x_pos</span>, <span class="ident">y_pos</span>), <span class="ident">render_size</span>).<span class="ident">to_box2d</span>(),
+                    <span class="ident">SizedRect::new</span>(<span class="ident">Point::from_figures</span>(<span class="ident">x_pos</span>, <span class="ident">y_pos</span>), <span class="ident">render_size</span>).<span class="ident">as_extents</span>(),
                     <span class="ident">scene</span>,
                     <span class="ident">elapsed</span>,
                 )<span class="question-mark">?</span>;
@@ -431,7 +435,7 @@
     <span class="kw">fn</span> <span class="ident">draw_one_tile</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">tile</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>,
-        <span class="ident">destination</span>: <span class="ident">Box2D</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Raw</span><span class="op">&gt;</span>,
+        <span class="ident">destination</span>: <span class="ident">ExtentsRect</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
         <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
         <span class="ident">elapsed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">kludgine_core::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {

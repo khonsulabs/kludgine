@@ -160,9 +160,11 @@
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">ops::Deref</span>, <span class="ident">sync::Arc</span>};
 
+<span class="kw">use</span> <span class="ident">figures</span>::{<span class="ident">Displayable</span>, <span class="ident">Figure</span>, <span class="ident">Round</span>};
+
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">color::Color</span>,
-    <span class="ident">math</span>::{<span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">Raw</span>, <span class="ident">Scaled</span>},
+    <span class="ident">math</span>::{<span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">Scaled</span>},
     <span class="ident">scene</span>::{<span class="ident">Element</span>, <span class="ident">Target</span>},
     <span class="ident">text::Font</span>,
 };
@@ -171,19 +173,19 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VMetrics</span> {
     <span class="doccomment">/// The amount of pixels above the baseline.</span>
-    <span class="kw">pub</span> <span class="ident">ascent</span>: <span class="ident">Pixels</span>,
-    <span class="doccomment">/// The amount of ixels below the baseline. Typically a negative number.</span>
-    <span class="kw">pub</span> <span class="ident">descent</span>: <span class="ident">Pixels</span>,
+    <span class="kw">pub</span> <span class="ident">ascent</span>: <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// The amount of pixels below the baseline. Typically a negative number.</span>
+    <span class="kw">pub</span> <span class="ident">descent</span>: <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The amount of pixels to allow between lines.</span>
-    <span class="kw">pub</span> <span class="ident">line_gap</span>: <span class="ident">Pixels</span>,
+    <span class="kw">pub</span> <span class="ident">line_gap</span>: <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">rusttype::VMetrics</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">VMetrics</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">rusttype::VMetrics</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">ascent</span>: <span class="ident">Pixels::new</span>(<span class="ident">value</span>.<span class="ident">ascent</span>),
-            <span class="ident">descent</span>: <span class="ident">Pixels::new</span>(<span class="ident">value</span>.<span class="ident">descent</span>),
-            <span class="ident">line_gap</span>: <span class="ident">Pixels::new</span>(<span class="ident">value</span>.<span class="ident">line_gap</span>),
+            <span class="ident">ascent</span>: <span class="ident">Figure::new</span>(<span class="ident">value</span>.<span class="ident">ascent</span>),
+            <span class="ident">descent</span>: <span class="ident">Figure::new</span>(<span class="ident">value</span>.<span class="ident">descent</span>),
+            <span class="ident">line_gap</span>: <span class="ident">Figure::new</span>(<span class="ident">value</span>.<span class="ident">line_gap</span>),
         }
     }
 }
@@ -191,13 +193,13 @@
 <span class="kw">impl</span> <span class="ident">VMetrics</span> {
     <span class="doccomment">/// The total height of the line.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">line_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pixels</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">line_height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">height</span>() <span class="op">+</span> <span class="self">self</span>.<span class="ident">line_gap</span>
     }
 
     <span class="doccomment">/// The height of the ascent and descent combined.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pixels</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">height</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">ascent</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">descent</span>
     }
 }
@@ -206,7 +208,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PreparedSpan</span> {
     <span class="doccomment">/// The location of the span.</span>
-    <span class="kw">pub</span> <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Raw</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
     <span class="ident">data</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">PreparedSpanData</span><span class="op">&gt;</span>,
 }
 
@@ -214,9 +216,9 @@
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">font</span>: <span class="ident">Font</span>,
-        <span class="ident">size</span>: <span class="ident">Pixels</span>,
+        <span class="ident">size</span>: <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
         <span class="ident">color</span>: <span class="ident">Color</span>,
-        <span class="ident">width</span>: <span class="ident">Pixels</span>,
+        <span class="ident">width</span>: <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
         <span class="ident">characters</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span>,
         <span class="ident">glyphs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">GlyphInfo</span><span class="op">&gt;</span>,
         <span class="ident">metrics</span>: <span class="ident">rusttype::VMetrics</span>,
@@ -236,7 +238,7 @@
     }
 
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">translate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Raw</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">translate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="comment">// We want to ensure that we are pixel-aligned when rendering a span&#39;s start.</span>
             <span class="ident">location</span>: <span class="ident">location</span>.<span class="ident">round</span>(),
@@ -250,12 +252,10 @@
         <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
         <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">effective_scale_factor</span> <span class="op">=</span> <span class="ident">scene</span>.<span class="ident">scale_factor</span>();
+        <span class="kw">let</span> <span class="ident">effective_scale_factor</span> <span class="op">=</span> <span class="ident">scene</span>.<span class="ident">scale</span>();
 
-        <span class="kw">let</span> <span class="ident">location</span> <span class="op">=</span> <span class="ident">scene</span>.<span class="ident">offset_point_raw</span>(
-            (<span class="ident">location</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">location</span>.<span class="ident">to_vector</span>() <span class="op">/</span> <span class="ident">effective_scale_factor</span>)
-                <span class="op">*</span> <span class="ident">effective_scale_factor</span>,
-        );
+        <span class="kw">let</span> <span class="ident">location</span> <span class="op">=</span>
+            <span class="ident">scene</span>.<span class="ident">offset_point_raw</span>(<span class="ident">location</span>.<span class="ident">to_pixels</span>(<span class="ident">effective_scale_factor</span>) <span class="op">+</span> <span class="self">self</span>.<span class="ident">location</span>);
         <span class="ident">scene</span>.<span class="ident">push_element</span>(<span class="ident">Element::Text</span> {
             <span class="ident">span</span>: <span class="self">self</span>.<span class="ident">translate</span>(<span class="ident">location</span>),
             <span class="ident">clip</span>: <span class="ident">scene</span>.<span class="ident">clip</span>,
@@ -278,11 +278,11 @@
     <span class="doccomment">/// The font being rendered.</span>
     <span class="kw">pub</span> <span class="ident">font</span>: <span class="ident">Font</span>,
     <span class="doccomment">/// The font size.</span>
-    <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">Pixels</span>,
+    <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The color to render.</span>
     <span class="kw">pub</span> <span class="ident">color</span>: <span class="ident">Color</span>,
     <span class="doccomment">/// The total width of the span.</span>
-    <span class="kw">pub</span> <span class="ident">width</span>: <span class="ident">Pixels</span>,
+    <span class="kw">pub</span> <span class="ident">width</span>: <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
     <span class="doccomment">/// THe characters that compose this span.</span>
     <span class="kw">pub</span> <span class="ident">characters</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">char</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The glyphs that will be rendered.</span>
@@ -305,13 +305,13 @@
 <span class="kw">impl</span> <span class="ident">GlyphInfo</span> {
     <span class="doccomment">/// The width of the glyph.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Pixels</span> {
-        <span class="ident">Pixels::new</span>(<span class="self">self</span>.<span class="ident">glyph</span>.<span class="ident">unpositioned</span>().<span class="ident">h_metrics</span>().<span class="ident">advance_width</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">width</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
+        <span class="ident">Figure::new</span>(<span class="self">self</span>.<span class="ident">glyph</span>.<span class="ident">unpositioned</span>().<span class="ident">h_metrics</span>().<span class="ident">advance_width</span>)
     }
 
     <span class="doccomment">/// The location of the glyph, relative to the span start.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">location</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Raw</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">location</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
         <span class="ident">Point::new</span>(<span class="self">self</span>.<span class="ident">glyph</span>.<span class="ident">position</span>().<span class="ident">x</span>, <span class="self">self</span>.<span class="ident">glyph</span>.<span class="ident">position</span>().<span class="ident">y</span>)
     }
 }

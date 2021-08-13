@@ -29,14 +29,14 @@
 <span id="27">27</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">math</span>::{<span class="ident">Raw</span>, <span class="ident">Rect</span>, <span class="ident">Size</span>},
+    <span class="ident">math</span>::{<span class="ident">Pixels</span>, <span class="ident">Rect</span>, <span class="ident">Size</span>},
     <span class="ident">sprite::RenderedSprite</span>,
 };
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Batch</span> {
     <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">clipping_rect</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Raw</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">clipping_rect</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">loaded_texture_id</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span> <span class="ident">sprites</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RenderedSprite</span><span class="op">&gt;</span>,
 }
@@ -45,7 +45,7 @@
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(
         <span class="ident">loaded_texture_id</span>: <span class="ident">u64</span>,
         <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-        <span class="ident">clipping_rect</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Raw</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">clipping_rect</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">loaded_texture_id</span>,

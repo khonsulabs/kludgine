@@ -263,6 +263,12 @@
 <span id="261">261</span>
 <span id="262">262</span>
 <span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">sync::Arc</span>,
@@ -270,7 +276,9 @@
 };
 
 <span class="kw">use</span> <span class="ident">kludgine_core</span>::{
+    <span class="ident">figures</span>::{<span class="ident">Points</span>, <span class="ident">Scaled</span>},
     <span class="ident">flume::Sender</span>,
+    <span class="ident">math::Scale</span>,
     <span class="ident">scene</span>::{<span class="ident">Scene</span>, <span class="ident">Target</span>},
 };
 
@@ -470,6 +478,10 @@
             },
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">redraw_status</span>,
         )
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">additional_scale</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Points</span>, <span class="ident">Scaled</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">window</span>.<span class="ident">additional_scale</span>()
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">scene</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Target</span> {

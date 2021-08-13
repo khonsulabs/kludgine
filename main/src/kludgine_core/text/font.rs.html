@@ -117,6 +117,7 @@
 <span id="115">115</span>
 <span id="116">116</span>
 <span id="117">117</span>
+<span id="118">118</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">fmt::Debug</span>,
@@ -127,6 +128,7 @@
 };
 
 <span class="kw">use</span> <span class="ident">easygpu::prelude</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="ident">figures::Figure</span>;
 <span class="kw">use</span> <span class="ident">lazy_static::lazy_static</span>;
 <span class="kw">use</span> <span class="ident">rusttype</span>::{<span class="ident">gpu_cache</span>, <span class="ident">Scale</span>};
 
@@ -171,7 +173,7 @@
 
     <span class="doccomment">/// Measures the vertical metrics for a given size.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">metrics</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">size</span>: <span class="ident">Pixels</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">rusttype::VMetrics</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">metrics</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">size</span>: <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">rusttype::VMetrics</span> {
         <span class="self">self</span>.<span class="ident">handle</span>
             .<span class="ident">font</span>
             .<span class="ident">v_metrics</span>(<span class="ident">rusttype::Scale::uniform</span>(<span class="ident">size</span>.<span class="ident">get</span>()))

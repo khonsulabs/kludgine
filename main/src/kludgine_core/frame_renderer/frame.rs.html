@@ -294,11 +294,11 @@
 <span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
 
 <span class="kw">use</span> <span class="ident">easygpu::transform::ScreenSpace</span>;
-<span class="kw">use</span> <span class="ident">euclid::Rect</span>;
+<span class="kw">use</span> <span class="ident">figures::SizedRect</span>;
 <span class="kw">use</span> <span class="ident">tracing::instrument</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">math</span>::{<span class="ident">Raw</span>, <span class="ident">Size</span>},
+    <span class="ident">math</span>::{<span class="ident">Pixels</span>, <span class="ident">Size</span>},
     <span class="ident">scene</span>::{<span class="ident">Element</span>, <span class="ident">SceneEvent</span>},
     <span class="ident">shape</span>, <span class="ident">sprite</span>,
     <span class="ident">text</span>::{<span class="ident">font::LoadedFont</span>, <span class="ident">prepared::PreparedSpan</span>},
@@ -578,7 +578,7 @@
     <span class="ident">DrawShapes</span>(<span class="ident">shape::Batch</span>),
     <span class="ident">DrawText</span> {
         <span class="ident">text</span>: <span class="ident">PreparedSpan</span>,
-        <span class="ident">clip</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Raw</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">clip</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SizedRect</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     },
 }
 </pre></div>

@@ -77,9 +77,15 @@
 <span id="75">75</span>
 <span id="76">76</span>
 <span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
 </pre><pre class="rust">
+<span class="kw">use</span> <span class="ident">figures</span>::{<span class="ident">Displayable</span>, <span class="ident">Vectorlike</span>};
+
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::lyon_point</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">math</span>::{<span class="ident">Length</span>, <span class="ident">Point</span>, <span class="ident">Raw</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>},
+    <span class="ident">math</span>::{<span class="ident">Figure</span>, <span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>},
     <span class="ident">scene::Target</span>,
     <span class="ident">shape</span>::{<span class="ident">Fill</span>, <span class="ident">Stroke</span>},
     <span class="ident">Error</span>,
@@ -87,7 +93,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Circle</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">center</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">radius</span>: <span class="ident">Length</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">radius</span>: <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">S</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span> <span class="ident">Circle</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span> {
@@ -104,15 +110,15 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span>,
         <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Circle</span><span class="op">&lt;</span><span class="ident">Raw</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">effective_scale</span> <span class="op">=</span> <span class="ident">scene</span>.<span class="ident">scale_factor</span>();
-        <span class="kw">let</span> <span class="ident">center</span> <span class="op">=</span> (<span class="ident">location</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">center</span>.<span class="ident">to_vector</span>()) <span class="op">*</span> <span class="ident">effective_scale</span>;
-        <span class="kw">let</span> <span class="ident">radius</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">radius</span> <span class="op">*</span> <span class="ident">effective_scale</span>;
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Circle</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">effective_scale</span> <span class="op">=</span> <span class="ident">scene</span>.<span class="ident">scale</span>();
+        <span class="kw">let</span> <span class="ident">center</span> <span class="op">=</span> (<span class="ident">location</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">center</span>.<span class="ident">to_vector</span>()).<span class="ident">to_pixels</span>(<span class="ident">effective_scale</span>);
+        <span class="kw">let</span> <span class="ident">radius</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">radius</span>.<span class="ident">to_pixels</span>(<span class="ident">effective_scale</span>);
         <span class="ident">Circle</span> { <span class="ident">center</span>, <span class="ident">radius</span> }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Circle</span><span class="op">&lt;</span><span class="ident">Raw</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Circle</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">easygpu_lyon::ShapeBuilder</span>,
@@ -122,7 +128,7 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">fill</span>) <span class="op">=</span> <span class="ident">fill</span> {
             <span class="ident">builder</span>.<span class="ident">default_color</span> <span class="op">=</span> <span class="ident">fill</span>.<span class="ident">color</span>.<span class="ident">rgba</span>();
             <span class="ident">lyon_tessellation::basic_shapes::fill_circle</span>(
-                <span class="self">self</span>.<span class="ident">center</span>.<span class="ident">cast_unit</span>(),
+                <span class="ident">lyon_point</span>(<span class="self">self</span>.<span class="ident">center</span>),
                 <span class="self">self</span>.<span class="ident">radius</span>.<span class="ident">get</span>(),
                 <span class="kw-2">&amp;</span><span class="ident">fill</span>.<span class="ident">options</span>,
                 <span class="ident">builder</span>,
@@ -133,7 +139,7 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">stroke</span>) <span class="op">=</span> <span class="ident">stroke</span> {
             <span class="ident">builder</span>.<span class="ident">default_color</span> <span class="op">=</span> <span class="ident">stroke</span>.<span class="ident">color</span>.<span class="ident">rgba</span>();
             <span class="ident">lyon_tessellation::basic_shapes::stroke_circle</span>(
-                <span class="self">self</span>.<span class="ident">center</span>.<span class="ident">cast_unit</span>(),
+                <span class="ident">lyon_point</span>(<span class="self">self</span>.<span class="ident">center</span>),
                 <span class="self">self</span>.<span class="ident">radius</span>.<span class="ident">get</span>(),
                 <span class="kw-2">&amp;</span><span class="ident">stroke</span>.<span class="ident">options</span>,
                 <span class="ident">builder</span>,
