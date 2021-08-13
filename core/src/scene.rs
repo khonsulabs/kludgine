@@ -4,12 +4,12 @@ use std::{
     time::{Duration, Instant},
 };
 
-use figures::{num_traits::identities::One, Rectlike, SizedRect};
+use figures::{DisplayScale, Displayable, One, Pixels, Points, Rectlike, SizedRect};
 use platforms::target::{OS, TARGET_OS};
 use winit::{event::VirtualKeyCode, window::Theme};
 
 use crate::{
-    math::{Point, Raw, Scale, Scaled, ScreenScale, Size, Vector},
+    math::{Point, Scale, Scaled, Size, Vector},
     shape::Shape,
     sprite::RenderedSprite,
     text::{font::Font, prepared::PreparedSpan},
@@ -23,17 +23,17 @@ pub enum Element {
         /// The sprite being rendered.
         sprite: RenderedSprite,
         /// The current clipping rect.
-        clip: Option<SizedRect<u32, Raw>>,
+        clip: Option<SizedRect<u32, Pixels>>,
     },
     /// A rendered span of text.
     Text {
         /// The span being rendered.
         span: PreparedSpan,
         /// The current clipping rect.
-        clip: Option<SizedRect<u32, Raw>>,
+        clip: Option<SizedRect<u32, Pixels>>,
     },
     /// A rendered shape.
-    Shape(Shape<Raw>),
+    Shape(Shape<Pixels>),
 }
 
 /// An event instructing how to render frames.
@@ -41,7 +41,7 @@ pub enum SceneEvent {
     /// Begin a new frame with the given size.
     BeginFrame {
         /// The frame size to render.
-        size: Size<u32, Raw>,
+        size: Size<u32, Pixels>,
     },
     /// Render an element.
     Render(Element),
@@ -54,8 +54,8 @@ pub enum SceneEvent {
 pub struct Scene {
     /// The virtual key codes curently depressed.
     pub keys_pressed: HashSet<VirtualKeyCode>,
-    scale_factor: ScreenScale,
-    size: Size<u32, Raw>,
+    scale_factor: DisplayScale<f32>,
+    size: Size<u32, Pixels>,
     event_sender: flume::Sender<SceneEvent>,
     now: Option<Instant>,
     elapsed: Option<Duration>,
@@ -86,16 +86,16 @@ pub struct Target {
     pub scene: Arc<Scene>,
     /// The curent clipping rect. All drawing calls will be clipped to this
     /// area.
-    pub clip: Option<SizedRect<u32, Raw>>,
+    pub clip: Option<SizedRect<u32, Pixels>>,
     /// The current offset (translation) of drawing calls.
-    pub offset: Option<Vector<f32, Raw>>,
+    pub offset: Option<Vector<f32, Pixels>>,
 }
 
 impl Target {
     /// Returns a new [`Target`] with the intersection of `new_clip` an the
     /// current `clip`, if any. The scene and offset are cloned.
     #[must_use]
-    pub fn clipped_to(&self, new_clip: SizedRect<u32, Raw>) -> Self {
+    pub fn clipped_to(&self, new_clip: SizedRect<u32, Pixels>) -> Self {
         Self {
             scene: self.scene.clone(),
             clip: Some(match &self.clip {
@@ -115,7 +115,7 @@ impl Target {
     /// Returns a new [`Target`] offset by `delta` from the current `offset`, if
     /// any. The scene and clipping rect are cloned.
     #[must_use]
-    pub fn offset_by(&self, delta: Vector<f32, Raw>) -> Self {
+    pub fn offset_by(&self, delta: Vector<f32, Pixels>) -> Self {
         Self {
             scene: self.scene.clone(),
             clip: self.clip,
@@ -130,14 +130,14 @@ impl Target {
     #[must_use]
     pub fn offset_point(&self, point: Point<f32, Scaled>) -> Point<f32, Scaled> {
         match self.offset {
-            Some(offset) => point + offset / self.scale_factor(),
+            Some(offset) => point + offset.to_scaled(self.scale()),
             None => point,
         }
     }
 
     /// Translates `point` by the current `offset`, if any.
     #[must_use]
-    pub fn offset_point_raw(&self, point: Point<f32, Raw>) -> Point<f32, Raw> {
+    pub fn offset_point_raw(&self, point: Point<f32, Pixels>) -> Point<f32, Pixels> {
         match self.offset {
             Some(offset) => point + offset,
             None => point,
@@ -204,7 +204,7 @@ impl Scene {
     pub fn new(event_sender: flume::Sender<SceneEvent>, default_system_theme: Theme) -> Self {
         Self {
             event_sender,
-            scale_factor: Scale::one(),
+            scale_factor: DisplayScale::one(),
             size: Size::default(),
             keys_pressed: HashSet::new(),
             now: None,
@@ -230,19 +230,19 @@ impl Scene {
     }
 
     /// Sets the size of the scene.
-    pub fn set_size(&mut self, size: Size<u32, Raw>) {
+    pub fn set_size(&mut self, size: Size<u32, Pixels>) {
         self.size = size;
     }
 
     /// Sets the DPI scale.
-    pub fn set_scale_factor(&mut self, scale_factor: ScreenScale) {
-        self.scale_factor = scale_factor;
+    pub fn set_dpi_scale(&mut self, scale_factor: Scale<f32, Pixels, Points>) {
+        self.scale_factor = DisplayScale::new(scale_factor, Scale::one());
     }
 
-    /// Returns the current [`ScreenScale`].
+    /// Returns the current [`DisplayScale`].
     #[must_use]
-    pub const fn scale_factor(&self) -> ScreenScale {
-        self.scale_factor
+    pub const fn scale(&self) -> &DisplayScale<f32> {
+        &self.scale_factor
     }
 
     /// Returns true if any of `keys` are currently pressed.
@@ -289,12 +289,12 @@ impl Scene {
     /// Returns the current size of the scene in [`Scaled`] units.
     #[must_use]
     pub fn size(&self) -> Size<f32, Scaled> {
-        self.size.cast::<f32>() / self.scale_factor
+        self.size.cast::<f32>().to_scaled(self.scale())
     }
 
-    /// Returns the current size of the scene in [`Raw`] units.
+    /// Returns the current size of the scene in [`Pixels`] units.
     #[must_use]
-    pub const fn size_in_pixels(&self) -> Size<u32, Raw> {
+    pub const fn size_in_pixels(&self) -> Size<u32, Pixels> {
         self.size
     }
 

@@ -2,7 +2,8 @@ pub use kludgine_core::winit::event::{
     DeviceId, ElementState, MouseButton, MouseScrollDelta, ScanCode, TouchPhase, VirtualKeyCode,
 };
 use kludgine_core::{
-    math::{Point, Raw, Scaled, ScreenScale, Size},
+    figures::{Pixels, Points},
+    math::{Point, Scale, Scaled, Size},
     winit::window::Theme,
 };
 
@@ -84,8 +85,8 @@ pub(crate) enum WindowEvent {
     WakeUp,
     CloseRequested,
     Resize {
-        size: Size<u32, Raw>,
-        scale_factor: ScreenScale,
+        size: Size<u32, Pixels>,
+        scale_factor: Scale<f32, Pixels, Points>,
     },
     Input(InputEvent),
     ReceiveCharacter(char),

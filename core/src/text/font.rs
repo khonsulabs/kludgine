@@ -7,6 +7,7 @@ use std::{
 };
 
 use easygpu::prelude::*;
+use figures::Figure;
 use lazy_static::lazy_static;
 use rusttype::{gpu_cache, Scale};
 
@@ -51,7 +52,7 @@ impl Font {
 
     /// Measures the vertical metrics for a given size.
     #[must_use]
-    pub fn metrics(&self, size: Pixels) -> rusttype::VMetrics {
+    pub fn metrics(&self, size: Figure<f32, Pixels>) -> rusttype::VMetrics {
         self.handle
             .font
             .v_metrics(rusttype::Scale::uniform(size.get()))

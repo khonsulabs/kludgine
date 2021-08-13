@@ -1,7 +1,7 @@
-use figures::Rectlike;
+use figures::{Displayable, Rectlike};
 
 use crate::{
-    math::{ExtentsRect, Point, Raw, Rect, Scaled, Size},
+    math::{ExtentsRect, Pixels, Point, Rect, Scaled, Size},
     scene::{Element, Target},
     sprite::{RenderedSprite, SpriteRotation},
     texture::Texture,
@@ -202,11 +202,11 @@ impl SpriteSource {
         rotation: SpriteRotation<Scaled>,
         alpha: f32,
     ) {
-        let effective_scale = scene.scale_factor();
+        let effective_scale = scene.scale();
         self.render_raw_with_alpha_in_box(
             scene,
-            bounds * effective_scale,
-            rotation * effective_scale,
+            bounds.to_pixels(effective_scale),
+            rotation.to_pixels(effective_scale),
             alpha,
         );
     }
@@ -216,8 +216,8 @@ impl SpriteSource {
     pub fn render_raw_with_alpha_in_box(
         &self,
         scene: &Target,
-        bounds: ExtentsRect<f32, Raw>,
-        rotation: SpriteRotation<Raw>,
+        bounds: ExtentsRect<f32, Pixels>,
+        rotation: SpriteRotation<Pixels>,
         alpha: f32,
     ) {
         let bounds = ExtentsRect::new(

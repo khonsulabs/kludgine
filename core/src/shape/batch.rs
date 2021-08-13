@@ -1,16 +1,16 @@
 use easygpu::prelude::*;
 use easygpu_lyon::ShapeBuilder;
 
-use crate::{math::Raw, shape::Shape};
+use crate::{math::Pixels, shape::Shape};
 
 /// A batch of shapes that can be rendered together.
 #[derive(Debug, Default, Clone)]
 pub struct Batch {
-    shapes: Vec<Shape<Raw>>,
+    shapes: Vec<Shape<Pixels>>,
 }
 
 impl Batch {
-    pub(crate) fn add(&mut self, shape: Shape<Raw>) {
+    pub(crate) fn add(&mut self, shape: Shape<Pixels>) {
         self.shapes.push(shape);
     }
 

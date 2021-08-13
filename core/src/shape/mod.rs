@@ -11,7 +11,7 @@ use geometry::ShapeGeometry;
 
 pub use self::{batch::*, fill::*, path::*, stroke::*};
 use crate::{
-    math::{Point, Raw, Rect, Scaled},
+    math::{Pixels, Point, Rect, Scaled},
     scene::{Element, Target},
 };
 
@@ -118,7 +118,7 @@ impl Shape<Scaled> {
         &self,
         location: Point<f32, Scaled>,
         scene: &Target,
-    ) -> Shape<Raw> {
+    ) -> Shape<Pixels> {
         Shape {
             geometry: self
                 .geometry
@@ -129,7 +129,7 @@ impl Shape<Scaled> {
     }
 }
 
-impl Shape<Raw> {
+impl Shape<Pixels> {
     pub(crate) fn build(&self, builder: &mut easygpu_lyon::ShapeBuilder) -> crate::Result<()> {
         self.geometry.build(builder, &self.stroke, &self.fill)
     }

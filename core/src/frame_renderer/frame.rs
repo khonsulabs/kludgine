@@ -5,7 +5,7 @@ use figures::SizedRect;
 use tracing::instrument;
 
 use crate::{
-    math::{Raw, Size},
+    math::{Pixels, Size},
     scene::{Element, SceneEvent},
     shape, sprite,
     text::{font::LoadedFont, prepared::PreparedSpan},
@@ -285,6 +285,6 @@ pub enum FrameCommand {
     DrawShapes(shape::Batch),
     DrawText {
         text: PreparedSpan,
-        clip: Option<SizedRect<u32, Raw>>,
+        clip: Option<SizedRect<u32, Pixels>>,
     },
 }

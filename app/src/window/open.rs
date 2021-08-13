@@ -4,7 +4,9 @@ use std::{
 };
 
 use kludgine_core::{
+    figures::{Points, Scaled},
     flume::Sender,
+    math::Scale,
     scene::{Scene, Target},
 };
 
@@ -204,6 +206,10 @@ impl<T: Window> OpenWindow<T> {
             },
             &mut self.redraw_status,
         )
+    }
+
+    pub(crate) fn additional_scale(&self) -> Scale<f32, Points, Scaled> {
+        self.window.additional_scale()
     }
 
     pub(crate) fn scene(&self) -> Target {

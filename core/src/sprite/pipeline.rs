@@ -5,7 +5,7 @@ use easygpu::{prelude::*, wgpu::TextureFormat};
 use figures::Vectorlike;
 
 use super::{Normal, Srgb};
-use crate::math::{Angle, Point, Raw};
+use crate::math::{Angle, Pixels, Point};
 
 /// A pipeline for rendering shapes.
 pub struct Pipeline<T> {
@@ -31,7 +31,7 @@ pub struct Vertex {
 }
 
 impl Vertex {
-    pub fn rotate_by(mut self, angle: Option<Angle>, origin: Point<f32, Raw>) -> Self {
+    pub fn rotate_by(mut self, angle: Option<Angle>, origin: Point<f32, Pixels>) -> Self {
         if let Some(angle) = angle {
             let origin = origin.to_vector();
             let position = Point::new(self.position[0], self.position[1]);

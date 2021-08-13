@@ -17,7 +17,7 @@ impl Window for TextExample {
         Text::prepare(
             "Hello, World!",
             &ROBOTO,
-            Points::new(64.),
+            Figure::new(64.),
             Color::BISQUE,
             scene,
         )

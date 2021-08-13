@@ -2,20 +2,20 @@ use easygpu::prelude::*;
 use figures::{Rectlike, Round};
 
 use crate::{
-    math::{ExtentsRect, Point, Raw, Rect, Size, Unknown},
+    math::{ExtentsRect, Pixels, Point, Rect, Size, Unknown},
     sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation, SpriteSourceLocation},
 };
 
 pub struct GpuBatch {
     pub size: Size<u32, ScreenSpace>,
-    pub clip: Option<ExtentsRect<u32, Raw>>,
+    pub clip: Option<ExtentsRect<u32, Pixels>>,
 
     items: Vec<Vertex>,
     indicies: Vec<u16>,
 }
 
 impl GpuBatch {
-    pub fn new(size: Size<u32, ScreenSpace>, clip: Option<ExtentsRect<u32, Raw>>) -> Self {
+    pub fn new(size: Size<u32, ScreenSpace>, clip: Option<ExtentsRect<u32, Pixels>>) -> Self {
         Self {
             size,
             clip,
@@ -63,7 +63,12 @@ impl GpuBatch {
         }
     }
 
-    pub fn vertex(&self, src: Point<f32, Unknown>, dest: Point<f32, Raw>, color: Rgba8) -> Vertex {
+    pub fn vertex(
+        &self,
+        src: Point<f32, Unknown>,
+        dest: Point<f32, Pixels>,
+        color: Rgba8,
+    ) -> Vertex {
         Vertex {
             position: [dest.x, dest.y, 0.],
             uv: [
@@ -77,8 +82,8 @@ impl GpuBatch {
     pub fn add_box(
         &mut self,
         src: ExtentsRect<u32, Unknown>,
-        mut dest: ExtentsRect<f32, Raw>,
-        rotation: SpriteRotation<Raw>,
+        mut dest: ExtentsRect<f32, Pixels>,
+        rotation: SpriteRotation<Pixels>,
         color: Rgba8,
     ) {
         let mut src = src.cast::<f32>();

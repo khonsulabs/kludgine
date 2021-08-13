@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::{
-    math::{Point, Raw, Scale, Scaled},
+    math::{Pixels, Point, Scale, Scaled},
     scene::Target,
     shape::{circle::Circle, Fill, Path, Stroke},
 };
@@ -23,7 +23,7 @@ impl<U> ShapeGeometry<U> {
     }
 }
 
-impl ShapeGeometry<Raw> {
+impl ShapeGeometry<Pixels> {
     pub fn build(
         &self,
         builder: &mut easygpu_lyon::ShapeBuilder,
@@ -43,7 +43,7 @@ impl ShapeGeometry<Scaled> {
         &self,
         location: Point<f32, Scaled>,
         scene: &Target,
-    ) -> ShapeGeometry<Raw> {
+    ) -> ShapeGeometry<Pixels> {
         match self {
             Self::Empty => ShapeGeometry::Empty,
             Self::Path(path) =>

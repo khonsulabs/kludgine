@@ -4,8 +4,9 @@ use std::{
 };
 
 use kludgine_core::{
+    figures::{num_traits::One, Points},
     flume,
-    math::{Scaled, Size},
+    math::{Scale, Scaled, Size},
     scene::Target,
     winit::{
         self,
@@ -95,6 +96,13 @@ pub trait Window: Send + Sync + 'static {
         Self: Sized,
     {
         Ok(())
+    }
+
+    /// Called prior to rendering to allow setting a scaling amount that
+    /// operates on top of the automatic DPI scaling. This can be used to offer
+    /// a zoom setting to end-users.
+    fn additional_scale(&self) -> Scale<f32, Points, Scaled> {
+        Scale::one()
     }
 }
 
@@ -321,6 +329,7 @@ lazy_static! {
 
 pub enum WindowMessage {
     Close,
+    SetAdditionalScale(Scale<f32, Points, Scaled>),
 }
 
 impl WindowMessage {

@@ -1,9 +1,9 @@
-use figures::Vectorlike;
+use figures::{DisplayScale, Displayable};
 use lyon_tessellation::path::{builder::PathBuilder as _, PathEvent as LyonPathEvent};
 
 use super::lyon_point;
 use crate::{
-    math::{Point, Raw, Scale, Scaled, ScreenScale},
+    math::{Pixels, Point, Scale, Scaled},
     scene::Target,
     shape::{Fill, Stroke},
     Error,
@@ -60,8 +60,8 @@ pub enum PathEvent<S> {
     },
 }
 
-impl From<PathEvent<Raw>> for LyonPathEvent {
-    fn from(event: PathEvent<Raw>) -> Self {
+impl From<PathEvent<Pixels>> for LyonPathEvent {
+    fn from(event: PathEvent<Pixels>) -> Self {
         match event {
             PathEvent::Begin { at } => Self::Begin { at: lyon_point(at) },
             PathEvent::Line { from, to } => Self::Line {
@@ -151,8 +151,8 @@ impl Path<Scaled> {
         &self,
         location: Point<f32, Scaled>,
         scene: &Target,
-    ) -> Path<Raw> {
-        let effective_scale = scene.scale_factor();
+    ) -> Path<Pixels> {
+        let effective_scale = scene.scale();
         let location = scene.offset_point(location);
         let mut events = Vec::new();
 
@@ -198,13 +198,13 @@ impl Path<Scaled> {
     fn convert_point(
         point: Point<f32, Scaled>,
         location: Point<f32, Scaled>,
-        effective_scale: ScreenScale,
-    ) -> Point<f32, Raw> {
-        (location + point.to_vector()) * effective_scale
+        effective_scale: &DisplayScale<f32>,
+    ) -> Point<f32, Pixels> {
+        (location + point).to_pixels(effective_scale)
     }
 }
 
-impl Path<Raw> {
+impl Path<Pixels> {
     pub(crate) fn build(
         &self,
         builder: &mut easygpu_lyon::ShapeBuilder,

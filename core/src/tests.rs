@@ -25,15 +25,15 @@ async fn offscreen_render_test() {
     target.scene_mut().unwrap().set_size(Size::new(64, 64));
     target.scene_mut().unwrap().start_frame();
 
-    Shape::circle(Point::new(16., 16.), Points::new(16.))
+    Shape::circle(Point::new(16., 16.), Figure::new(16.))
         .fill(Fill::new(Color::RED))
         .render_at(Point::default(), &target);
 
-    Shape::circle(Point::new(48., 16.), Points::new(16.))
+    Shape::circle(Point::new(48., 16.), Figure::new(16.))
         .fill(Fill::new(Color::LIME))
         .render_at(Point::default(), &target);
 
-    Shape::circle(Point::new(16., 48.), Points::new(16.))
+    Shape::circle(Point::new(16., 48.), Figure::new(16.))
         .fill(Fill::new(Color::BLUE))
         .render_at(Point::default(), &target);
 

@@ -26,7 +26,7 @@ impl Window for Shapes {
         .fill(Fill::new(Color::GREEN))
         .render_at(center, scene);
 
-        Shape::circle(Point::new(0., 0.), Points::new(25.))
+        Shape::circle(Point::new(0., 0.), Figure::new(25.))
             .fill(Fill::new(Color::RED))
             .render_at(center, scene);
 

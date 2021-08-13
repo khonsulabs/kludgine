@@ -61,10 +61,7 @@ pub mod prelude {
     pub use super::text::bundled_fonts;
     pub use super::{
         include_aseprite_sprite, include_font, include_texture,
-        math::{
-            Angle, Figure, Pixels, Point, Points, Raw, Rect, Scale, Scaled, ScreenScale, Size,
-            Unknown, Vector,
-        },
+        math::{Angle, Figure, Pixels, Point, Rect, Scale, Scaled, Size, Unknown, Vector},
         scene::{Scene, Target},
         shape::*,
         sprite::{

@@ -1,5 +1,7 @@
+use figures::{Displayable, Pixels, Points, Scaled};
+
 use crate::{
-    math::{Angle, ExtentsRect, Point, Raw, Rect, Scale, Size},
+    math::{Angle, ExtentsRect, Point, Rect, Size},
     texture::Texture,
     Error,
 };
@@ -488,8 +490,8 @@ pub struct RenderedSprite {
 impl RenderedSprite {
     #[must_use]
     pub(crate) fn new(
-        render_at: ExtentsRect<f32, Raw>,
-        rotation: SpriteRotation<Raw>,
+        render_at: ExtentsRect<f32, Pixels>,
+        rotation: SpriteRotation<Pixels>,
         alpha: f32,
         source: SpriteSource,
     ) -> Self {
@@ -506,8 +508,8 @@ impl RenderedSprite {
 
 #[derive(Debug)]
 pub(crate) struct RenderedSpriteData {
-    pub render_at: ExtentsRect<f32, Raw>,
-    pub rotation: SpriteRotation<Raw>,
+    pub render_at: ExtentsRect<f32, Pixels>,
+    pub rotation: SpriteRotation<Pixels>,
     pub alpha: f32,
     pub source: SpriteSource,
 }
@@ -551,14 +553,75 @@ impl<Unit> SpriteRotation<Unit> {
     }
 }
 
-impl<A, B> std::ops::Mul<Scale<f32, A, B>> for SpriteRotation<A> {
-    type Output = SpriteRotation<B>;
+impl Displayable<f32> for SpriteRotation<Pixels> {
+    type Pixels = Self;
+    type Points = SpriteRotation<Points>;
+    type Scaled = SpriteRotation<Scaled>;
 
-    fn mul(self, rhs: Scale<f32, A, B>) -> Self::Output {
+    fn to_pixels(&self, _scale: &figures::DisplayScale<f32>) -> Self::Pixels {
+        *self
+    }
+
+    fn to_points(&self, scale: &figures::DisplayScale<f32>) -> Self::Points {
         SpriteRotation {
             angle: self.angle,
-            location: self.location.map(|l| l * rhs),
+            location: self.location.map(|l| l.to_points(scale)),
         }
+    }
+
+    fn to_scaled(&self, scale: &figures::DisplayScale<f32>) -> Self::Scaled {
+        SpriteRotation {
+            angle: self.angle,
+            location: self.location.map(|l| l.to_scaled(scale)),
+        }
+    }
+}
+
+impl Displayable<f32> for SpriteRotation<Points> {
+    type Pixels = SpriteRotation<Pixels>;
+    type Points = Self;
+    type Scaled = SpriteRotation<Scaled>;
+
+    fn to_pixels(&self, scale: &figures::DisplayScale<f32>) -> Self::Pixels {
+        SpriteRotation {
+            angle: self.angle,
+            location: self.location.map(|l| l.to_pixels(scale)),
+        }
+    }
+
+    fn to_points(&self, _scale: &figures::DisplayScale<f32>) -> Self::Points {
+        *self
+    }
+
+    fn to_scaled(&self, scale: &figures::DisplayScale<f32>) -> Self::Scaled {
+        SpriteRotation {
+            angle: self.angle,
+            location: self.location.map(|l| l.to_scaled(scale)),
+        }
+    }
+}
+
+impl Displayable<f32> for SpriteRotation<Scaled> {
+    type Pixels = SpriteRotation<Pixels>;
+    type Points = SpriteRotation<Points>;
+    type Scaled = Self;
+
+    fn to_pixels(&self, scale: &figures::DisplayScale<f32>) -> Self::Pixels {
+        SpriteRotation {
+            angle: self.angle,
+            location: self.location.map(|l| l.to_pixels(scale)),
+        }
+    }
+
+    fn to_points(&self, scale: &figures::DisplayScale<f32>) -> Self::Points {
+        SpriteRotation {
+            angle: self.angle,
+            location: self.location.map(|l| l.to_points(scale)),
+        }
+    }
+
+    fn to_scaled(&self, _scale: &figures::DisplayScale<f32>) -> Self::Scaled {
+        *self
     }
 }
 

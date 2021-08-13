@@ -1,10 +1,10 @@
 use std::{ops::Deref, sync::Arc};
 
-use figures::{Round, Vectorlike};
+use figures::{Displayable, Figure, Round};
 
 use crate::{
     color::Color,
-    math::{Pixels, Point, Raw, Scaled},
+    math::{Pixels, Point, Scaled},
     scene::{Element, Target},
     text::Font,
 };
@@ -13,19 +13,19 @@ use crate::{
 #[derive(Copy, Clone, Debug)]
 pub struct VMetrics {
     /// The amount of pixels above the baseline.
-    pub ascent: Pixels,
+    pub ascent: Figure<f32, Pixels>,
     /// The amount of pixels below the baseline. Typically a negative number.
-    pub descent: Pixels,
+    pub descent: Figure<f32, Pixels>,
     /// The amount of pixels to allow between lines.
-    pub line_gap: Pixels,
+    pub line_gap: Figure<f32, Pixels>,
 }
 
 impl From<rusttype::VMetrics> for VMetrics {
     fn from(value: rusttype::VMetrics) -> Self {
         Self {
-            ascent: Pixels::new(value.ascent),
-            descent: Pixels::new(value.descent),
-            line_gap: Pixels::new(value.line_gap),
+            ascent: Figure::new(value.ascent),
+            descent: Figure::new(value.descent),
+            line_gap: Figure::new(value.line_gap),
         }
     }
 }
@@ -33,13 +33,13 @@ impl From<rusttype::VMetrics> for VMetrics {
 impl VMetrics {
     /// The total height of the line.
     #[must_use]
-    pub fn line_height(&self) -> Pixels {
+    pub fn line_height(&self) -> Figure<f32, Pixels> {
         self.height() + self.line_gap
     }
 
     /// The height of the ascent and descent combined.
     #[must_use]
-    pub fn height(&self) -> Pixels {
+    pub fn height(&self) -> Figure<f32, Pixels> {
         self.ascent - self.descent
     }
 }
@@ -48,7 +48,7 @@ impl VMetrics {
 #[derive(Clone, Debug)]
 pub struct PreparedSpan {
     /// The location of the span.
-    pub location: Point<f32, Raw>,
+    pub location: Point<f32, Pixels>,
     data: Arc<PreparedSpanData>,
 }
 
@@ -56,9 +56,9 @@ impl PreparedSpan {
     #[must_use]
     pub(crate) fn new(
         font: Font,
-        size: Pixels,
+        size: Figure<f32, Pixels>,
         color: Color,
-        width: Pixels,
+        width: Figure<f32, Pixels>,
         characters: Vec<char>,
         glyphs: Vec<GlyphInfo>,
         metrics: rusttype::VMetrics,
@@ -78,7 +78,7 @@ impl PreparedSpan {
     }
 
     #[must_use]
-    pub(crate) fn translate(&self, location: Point<f32, Raw>) -> Self {
+    pub(crate) fn translate(&self, location: Point<f32, Pixels>) -> Self {
         Self {
             // We want to ensure that we are pixel-aligned when rendering a span's start.
             location: location.round(),
@@ -92,12 +92,10 @@ impl PreparedSpan {
         scene: &Target,
         location: Point<f32, Scaled>,
     ) -> crate::Result<()> {
-        let effective_scale_factor = scene.scale_factor();
+        let effective_scale_factor = scene.scale();
 
-        let location = scene.offset_point_raw(
-            (location + self.location.to_vector() / effective_scale_factor)
-                * effective_scale_factor,
-        );
+        let location =
+            scene.offset_point_raw(location.to_pixels(effective_scale_factor) + self.location);
         scene.push_element(Element::Text {
             span: self.translate(location),
             clip: scene.clip,
@@ -120,11 +118,11 @@ pub struct PreparedSpanData {
     /// The font being rendered.
     pub font: Font,
     /// The font size.
-    pub size: Pixels,
+    pub size: Figure<f32, Pixels>,
     /// The color to render.
     pub color: Color,
     /// The total width of the span.
-    pub width: Pixels,
+    pub width: Figure<f32, Pixels>,
     /// THe characters that compose this span.
     pub characters: Vec<char>,
     /// The glyphs that will be rendered.
@@ -147,13 +145,13 @@ pub struct GlyphInfo {
 impl GlyphInfo {
     /// The width of the glyph.
     #[must_use]
-    pub fn width(&self) -> Pixels {
-        Pixels::new(self.glyph.unpositioned().h_metrics().advance_width)
+    pub fn width(&self) -> Figure<f32, Pixels> {
+        Figure::new(self.glyph.unpositioned().h_metrics().advance_width)
     }
 
     /// The location of the glyph, relative to the span start.
     #[must_use]
-    pub fn location(&self) -> Point<f32, Raw> {
+    pub fn location(&self) -> Point<f32, Pixels> {
         Point::new(self.glyph.position().x, self.glyph.position().y)
     }
 }

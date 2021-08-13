@@ -5,8 +5,8 @@ use std::{
 };
 
 use kludgine_core::{
-    figures::{One, Rectlike, SizedRect},
-    math::{ExtentsRect, Figure, Point, Raw, Scale, Scaled, Size, Unknown},
+    figures::{Displayable, One, Rectlike, SizedRect},
+    math::{ExtentsRect, Figure, Pixels, Point, Scale, Scaled, Size, Unknown},
     scene::Target,
     sprite::{Sprite, SpriteRotation, SpriteSource},
 };
@@ -77,17 +77,18 @@ where
 
         let elapsed = scene.elapsed();
 
-        let effective_scale = scene.scale_factor();
-        let tile_size = tile_size * effective_scale;
-        let render_size =
-            self.tile_size.cast::<f32>() * Scale::new(effective_scale.get() * scale.get());
-        let location = location * effective_scale;
+        let effective_scale = scene.scale();
+        let tile_size = tile_size.to_pixels(effective_scale);
+        let render_size = self.tile_size.cast::<f32>()
+            * Scale::new(effective_scale.total_scale().get() * scale.get());
+        let location = location.to_pixels(effective_scale);
         let mut y_pos = tile_size.height() * min_y as f32 + location.y();
         for y in min_y..(min_y + tiles_high) {
             let mut x_pos = tile_size.width() * min_x as f32 + location.x();
             if let Some(stagger) = &self.stagger {
                 if y % 2 == 0 {
-                    x_pos -= Figure::<f32, Scaled>::new(stagger.width as f32) * effective_scale;
+                    x_pos -=
+                        Figure::<f32, Scaled>::new(stagger.width as f32).to_pixels(effective_scale);
                 }
             }
             let next_y = y_pos + tile_size.height();
@@ -110,7 +111,7 @@ where
     fn draw_one_tile(
         &mut self,
         tile: Point<i32>,
-        destination: ExtentsRect<f32, Raw>,
+        destination: ExtentsRect<f32, Pixels>,
         scene: &Target,
         elapsed: Option<Duration>,
     ) -> kludgine_core::Result<()> {

@@ -8,8 +8,9 @@ use std::{
 
 use kludgine_core::{
     easygpu::prelude::*,
+    figures::{num_traits::One, DisplayScale, Displayable, Pixels},
     flume,
-    math::{Pixels, Point, Raw, ScreenScale, Size},
+    math::{Point, Scale, Size},
     scene::{Scene, SceneEvent},
     winit::{
         self,
@@ -36,15 +37,15 @@ pub struct RuntimeWindow {
     pub keep_running: Arc<AtomicBool>,
     receiver: flume::Receiver<WindowMessage>,
     event_sender: flume::Sender<WindowEvent>,
-    last_known_size: Size<u32, Raw>,
-    last_known_scale_factor: ScreenScale,
+    last_known_size: Size<u32, Pixels>,
+    last_known_scale_factor: DisplayScale<f32>,
 }
 
 pub struct RuntimeWindowConfig {
     window_id: WindowId,
     instance: wgpu::Instance,
     surface: wgpu::Surface,
-    initial_size: Size<u32, Raw>,
+    initial_size: Size<u32, Pixels>,
     scale_factor: f32,
 }
 
@@ -141,7 +142,7 @@ impl RuntimeWindow {
             last_known_size: initial_size,
             keep_running,
             event_sender,
-            last_known_scale_factor: ScreenScale::new(scale_factor),
+            last_known_scale_factor: DisplayScale::new(Scale::new(scale_factor), Scale::one()),
             window_id,
         };
         runtime_window.notify_size_changed();
@@ -270,7 +271,7 @@ impl RuntimeWindow {
                     }
                     WindowEvent::Resize { size, scale_factor } => {
                         window.scene_mut().set_size(size.cast_unit());
-                        window.scene_mut().set_scale_factor(scale_factor);
+                        window.scene_mut().set_dpi_scale(scale_factor);
                     }
                     WindowEvent::CloseRequested =>
                         if Self::request_window_close(id, &mut window)? {
@@ -316,6 +317,11 @@ impl RuntimeWindow {
             }
 
             if window.scene().size().area().get() > 0.0 {
+                let additional_scale = window.additional_scale();
+                if additional_scale != window.scene().scale().additional_scale() {
+                    WindowMessage::SetAdditionalScale(additional_scale).send_to(id)?;
+                }
+
                 window.scene_mut().start_frame();
 
                 window.update(target_fps)?;
@@ -369,6 +375,9 @@ impl RuntimeWindow {
                     channels.remove(&self.window_id);
                     self.keep_running.store(false, Ordering::SeqCst);
                 }
+                WindowMessage::SetAdditionalScale(scale) => {
+                    self.last_known_scale_factor.set_additional_scale(scale);
+                }
             }
         }
     }
@@ -395,7 +404,8 @@ impl RuntimeWindow {
                 scale_factor,
                 new_inner_size,
             } => {
-                self.last_known_scale_factor = ScreenScale::new(*scale_factor as f32);
+                self.last_known_scale_factor
+                    .set_dpi_scale(Scale::new(*scale_factor as f32));
                 self.last_known_size = Size::new(new_inner_size.width, new_inner_size.height);
                 self.notify_size_changed();
             }
@@ -452,10 +462,8 @@ impl RuntimeWindow {
                     device_id: *device_id,
                     event: Event::MouseMoved {
                         position: Some(
-                            Point::from_figures(
-                                Pixels::new(position.x as f32),
-                                Pixels::new(position.y as f32),
-                            ) / self.last_known_scale_factor,
+                            Point::<f32, Pixels>::new(position.x as f32, position.y as f32)
+                                .to_scaled(&self.last_known_scale_factor),
                         ),
                     },
                 }))
@@ -483,7 +491,7 @@ impl RuntimeWindow {
         self.event_sender
             .try_send(WindowEvent::Resize {
                 size: self.last_known_size,
-                scale_factor: self.last_known_scale_factor,
+                scale_factor: self.last_known_scale_factor.dpi_scale(),
             })
             .unwrap_or_default();
     }

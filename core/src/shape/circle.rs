@@ -1,8 +1,8 @@
-use figures::Vectorlike;
+use figures::{Displayable, Vectorlike};
 
 use super::lyon_point;
 use crate::{
-    math::{Figure, Point, Raw, Scale, Scaled},
+    math::{Figure, Pixels, Point, Scale, Scaled},
     scene::Target,
     shape::{Fill, Stroke},
     Error,
@@ -27,15 +27,15 @@ impl Circle<Scaled> {
         &self,
         location: Point<f32, Scaled>,
         scene: &Target,
-    ) -> Circle<Raw> {
-        let effective_scale = scene.scale_factor();
-        let center = (location + self.center.to_vector()) * effective_scale;
-        let radius = self.radius * effective_scale;
+    ) -> Circle<Pixels> {
+        let effective_scale = scene.scale();
+        let center = (location + self.center.to_vector()).to_pixels(effective_scale);
+        let radius = self.radius.to_pixels(effective_scale);
         Circle { center, radius }
     }
 }
 
-impl Circle<Raw> {
+impl Circle<Pixels> {
     pub fn build(
         &self,
         builder: &mut easygpu_lyon::ShapeBuilder,
