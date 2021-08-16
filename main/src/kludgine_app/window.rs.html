@@ -351,6 +351,12 @@
 <span id="349">349</span>
 <span id="350">350</span>
 <span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections::HashMap</span>,
@@ -408,7 +414,12 @@
     }
 
     <span class="doccomment">/// The window has received an input event.</span>
-    <span class="kw">fn</span> <span class="ident">process_input</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_input</span>: <span class="ident">InputEvent</span>, <span class="ident">_status</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">RedrawStatus</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">process_input</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">_input</span>: <span class="ident">InputEvent</span>,
+        <span class="ident">_status</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">RedrawStatus</span>,
+        <span class="ident">_scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
@@ -420,6 +431,7 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">_character</span>: <span class="ident">char</span>,
         <span class="ident">_status</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">RedrawStatus</span>,
+        <span class="ident">_scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
@@ -438,7 +450,7 @@
     <span class="doccomment">/// needs the window&#39;s contents to be redrawn or when [`RedrawStatus`]</span>
     <span class="doccomment">/// indicates a new frame should be rendered in [`Window::update()`].</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_variables</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">render</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">render</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>, <span class="ident">status</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">RedrawStatus</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(())
     }
 
