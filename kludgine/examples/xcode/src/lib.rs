@@ -62,7 +62,7 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    async fn render(&mut self, scene: &mut Scene) -> kludgine::Result<()> {
+    async fn render(&mut self, scene: &mut Scene, _status: &mut RedrawStatus) -> kludgine::Result<()> {
         // The map is drawn at a static location of 0,0 (upper-left)
         // It will be offset scene.origin()
         let map = self.map.as_ref().unwrap();

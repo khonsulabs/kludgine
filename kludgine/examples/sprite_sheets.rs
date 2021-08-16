@@ -120,7 +120,7 @@ impl Window for SpriteSheetExample {
         Ok(())
     }
 
-    fn render(&mut self, scene: &Target) -> kludgine::Result<()> {
+    fn render(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
         Shape::rect(Rect::new(Point::default(), scene.size()))
             .fill(Fill::new(Color::WHITE))
             .render_at(Point::default(), scene);

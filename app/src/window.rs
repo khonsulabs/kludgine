@@ -54,7 +54,12 @@ pub trait Window: Send + Sync + 'static {
     }
 
     /// The window has received an input event.
-    fn process_input(&mut self, _input: InputEvent, _status: &mut RedrawStatus) -> crate::Result<()>
+    fn process_input(
+        &mut self,
+        _input: InputEvent,
+        _status: &mut RedrawStatus,
+        _scene: &Target,
+    ) -> crate::Result<()>
     where
         Self: Sized,
     {
@@ -66,6 +71,7 @@ pub trait Window: Send + Sync + 'static {
         &mut self,
         _character: char,
         _status: &mut RedrawStatus,
+        _scene: &Target,
     ) -> crate::Result<()>
     where
         Self: Sized,
@@ -84,7 +90,7 @@ pub trait Window: Send + Sync + 'static {
     /// needs the window's contents to be redrawn or when [`RedrawStatus`]
     /// indicates a new frame should be rendered in [`Window::update()`].
     #[allow(unused_variables)]
-    fn render(&mut self, scene: &Target) -> crate::Result<()> {
+    fn render(&mut self, scene: &Target, status: &mut RedrawStatus) -> crate::Result<()> {
         Ok(())
     }
 

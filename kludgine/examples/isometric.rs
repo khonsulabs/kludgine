@@ -24,7 +24,7 @@ impl Window for Isometric {
         Ok(())
     }
 
-    fn render(&mut self, scene: &Target) -> kludgine::Result<()> {
+    fn render(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
         let map = self.map.as_mut().unwrap();
         map.render(scene, Point::default())?;
 

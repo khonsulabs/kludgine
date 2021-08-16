@@ -159,21 +159,24 @@ impl<T: Window> OpenWindow<T> {
     }
 
     pub(crate) fn process_input(&mut self, input: InputEvent) -> crate::Result<()> {
-        self.window.process_input(input, &mut self.redraw_status)
+        self.window.process_input(
+            input,
+            &mut self.redraw_status,
+            &Target::from(self.scene.clone()),
+        )
     }
 
     pub(crate) fn receive_character(&mut self, character: char) -> crate::Result<()> {
-        self.window
-            .receive_character(character, &mut self.redraw_status)
+        self.window.receive_character(
+            character,
+            &mut self.redraw_status,
+            &Target::from(self.scene.clone()),
+        )
     }
 
     pub(crate) fn initialize(&mut self) -> crate::Result<()> {
         self.window.initialize(
-            &Target {
-                scene: self.scene.clone(),
-                clip: None,
-                offset: None,
-            },
+            &Target::from(self.scene.clone()),
             self.redraw_status.redraw_requester(),
         )?;
 
@@ -185,11 +188,14 @@ impl<T: Window> OpenWindow<T> {
         // (or another thread) requests a redraw it will still be honored.
         self.clear_redraw_target();
 
-        self.window.render(&Target {
-            scene: self.scene.clone(),
-            clip: None,
-            offset: None,
-        })?;
+        self.window.render(
+            &Target {
+                scene: self.scene.clone(),
+                clip: None,
+                offset: None,
+            },
+            &mut self.redraw_status,
+        )?;
 
         Ok(())
     }

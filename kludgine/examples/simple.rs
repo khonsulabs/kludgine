@@ -36,7 +36,7 @@ impl Window for Simple {
         Ok(())
     }
 
-    fn render(&mut self, scene: &Target) -> kludgine::Result<()> {
+    fn render(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
         let sprite = self.source_sprite.as_ref().unwrap();
 
         let bounds = Rect::new(Point::default(), scene.size());

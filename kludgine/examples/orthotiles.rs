@@ -57,7 +57,7 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    fn render(&mut self, scene: &Target) -> kludgine::Result<()> {
+    fn render(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
         let center = scene.size().to_vector().to_point() / 2.0;
         let map = self.map.as_mut().unwrap();
         map.render_scaled(
@@ -85,6 +85,7 @@ impl Window for OrthoTiles {
         &mut self,
         input: InputEvent,
         status: &mut RedrawStatus,
+        _scene: &Target,
     ) -> kludgine::Result<()> {
         if let Event::MouseWheel { delta, .. } = input.event {
             let zoom_amount = match delta {
