@@ -1,4 +1,4 @@
-use figures::{DisplayScale, Displayable};
+use figures::{Displayable, Points};
 use lyon_tessellation::path::{builder::PathBuilder as _, PathEvent as LyonPathEvent};
 
 use super::lyon_point;
@@ -146,14 +146,13 @@ impl<U> Path<U> {
     }
 }
 
-impl Path<Scaled> {
+impl Path<Pixels> {
     pub(crate) fn translate_and_convert_to_device(
         &self,
-        location: Point<f32, Scaled>,
+        location: Point<f32, Pixels>,
         scene: &Target,
-    ) -> Path<Pixels> {
-        let effective_scale = scene.scale();
-        let location = scene.offset_point(location);
+    ) -> Self {
+        let location = scene.offset_point_raw(location);
         let mut events = Vec::new();
 
         for event in &self.events {
@@ -161,22 +160,20 @@ impl Path<Scaled> {
             // cross-dependency on any of these parameters.
             #[allow(clippy::eval_order_dependence)]
             events.push(match event {
-                PathEvent::Begin { at } => PathEvent::Begin {
-                    at: Self::convert_point(*at, location, effective_scale),
-                },
+                PathEvent::Begin { at } => PathEvent::Begin { at: *at + location },
                 PathEvent::Line { from, to } => PathEvent::Line {
-                    from: Self::convert_point(*from, location, effective_scale),
-                    to: Self::convert_point(*to, location, effective_scale),
+                    from: *from + location,
+                    to: *to + location,
                 },
                 PathEvent::End { first, last, close } => PathEvent::End {
-                    first: Self::convert_point(*first, location, effective_scale),
-                    last: Self::convert_point(*last, location, effective_scale),
+                    first: *first + location,
+                    last: *last + location,
                     close: *close,
                 },
                 PathEvent::Quadratic { from, ctrl, to } => PathEvent::Quadratic {
-                    from: Self::convert_point(*from, location, effective_scale),
-                    ctrl: Self::convert_point(*ctrl, location, effective_scale),
-                    to: Self::convert_point(*to, location, effective_scale),
+                    from: *from + location,
+                    ctrl: *ctrl + location,
+                    to: *to + location,
                 },
                 PathEvent::Cubic {
                     from,
@@ -184,23 +181,15 @@ impl Path<Scaled> {
                     ctrl2,
                     to,
                 } => PathEvent::Cubic {
-                    from: Self::convert_point(*from, location, effective_scale),
-                    ctrl1: Self::convert_point(*ctrl1, location, effective_scale),
-                    ctrl2: Self::convert_point(*ctrl2, location, effective_scale),
-                    to: Self::convert_point(*to, location, effective_scale),
+                    from: *from + location,
+                    ctrl1: *ctrl1 + location,
+                    ctrl2: *ctrl2 + location,
+                    to: *to + location,
                 },
             });
         }
 
-        Path { events }
-    }
-
-    fn convert_point(
-        point: Point<f32, Scaled>,
-        location: Point<f32, Scaled>,
-        effective_scale: &DisplayScale<f32>,
-    ) -> Point<f32, Pixels> {
-        (location + point).to_pixels(effective_scale)
+        Self { events }
     }
 }
 
@@ -375,5 +364,299 @@ impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for PathEvent<Src> {
                 close,
             },
         }
+    }
+}
+
+impl Displayable<f32> for Path<Pixels> {
+    type Pixels = Self;
+    type Points = Path<Points>;
+    type Scaled = Path<Scaled>;
+
+    fn to_pixels(&self, _scale: &figures::DisplayScale<f32>) -> Self::Pixels {
+        self.clone()
+    }
+
+    fn to_points(&self, scale: &figures::DisplayScale<f32>) -> Self::Points {
+        Path {
+            events: self.events.iter().map(|e| e.to_points(scale)).collect(),
+        }
+    }
+
+    fn to_scaled(&self, scale: &figures::DisplayScale<f32>) -> Self::Scaled {
+        Path {
+            events: self.events.iter().map(|e| e.to_scaled(scale)).collect(),
+        }
+    }
+}
+
+impl Displayable<f32> for Path<Points> {
+    type Pixels = Path<Pixels>;
+    type Points = Self;
+    type Scaled = Path<Scaled>;
+
+    fn to_pixels(&self, scale: &figures::DisplayScale<f32>) -> Self::Pixels {
+        Path {
+            events: self.events.iter().map(|e| e.to_pixels(scale)).collect(),
+        }
+    }
+
+    fn to_points(&self, _scale: &figures::DisplayScale<f32>) -> Self::Points {
+        self.clone()
+    }
+
+    fn to_scaled(&self, scale: &figures::DisplayScale<f32>) -> Self::Scaled {
+        Path {
+            events: self.events.iter().map(|e| e.to_scaled(scale)).collect(),
+        }
+    }
+}
+
+impl Displayable<f32> for Path<Scaled> {
+    type Pixels = Path<Pixels>;
+    type Points = Path<Points>;
+    type Scaled = Self;
+
+    fn to_pixels(&self, scale: &figures::DisplayScale<f32>) -> Self::Pixels {
+        Path {
+            events: self.events.iter().map(|e| e.to_pixels(scale)).collect(),
+        }
+    }
+
+    fn to_points(&self, scale: &figures::DisplayScale<f32>) -> Self::Points {
+        Path {
+            events: self.events.iter().map(|e| e.to_points(scale)).collect(),
+        }
+    }
+
+    fn to_scaled(&self, _scale: &figures::DisplayScale<f32>) -> Self::Scaled {
+        self.clone()
+    }
+}
+
+impl Displayable<f32> for PathEvent<Pixels> {
+    type Pixels = Self;
+    type Points = PathEvent<Points>;
+    type Scaled = PathEvent<Scaled>;
+
+    fn to_pixels(&self, _scale: &figures::DisplayScale<f32>) -> Self::Pixels {
+        *self
+    }
+
+    fn to_points(&self, scale: &figures::DisplayScale<f32>) -> Self::Points {
+        match self {
+            Self::Begin { at } => PathEvent::Begin {
+                at: at.to_points(scale),
+            },
+            Self::Line { from, to } => PathEvent::Line {
+                from: from.to_points(scale),
+                to: to.to_points(scale),
+            },
+            Self::Quadratic { from, ctrl, to } => PathEvent::Quadratic {
+                from: from.to_points(scale),
+                ctrl: ctrl.to_points(scale),
+                to: to.to_points(scale),
+            },
+            Self::Cubic {
+                from,
+                ctrl1,
+                ctrl2,
+                to,
+            } => PathEvent::Cubic {
+                from: from.to_points(scale),
+                ctrl1: ctrl1.to_points(scale),
+                ctrl2: ctrl2.to_points(scale),
+                to: to.to_points(scale),
+            },
+            Self::End { last, first, close } => PathEvent::End {
+                last: last.to_points(scale),
+                first: first.to_points(scale),
+                close: *close,
+            },
+        }
+    }
+
+    fn to_scaled(&self, scale: &figures::DisplayScale<f32>) -> Self::Scaled {
+        match self {
+            Self::Begin { at } => PathEvent::Begin {
+                at: at.to_scaled(scale),
+            },
+            Self::Line { from, to } => PathEvent::Line {
+                from: from.to_scaled(scale),
+                to: to.to_scaled(scale),
+            },
+            Self::Quadratic { from, ctrl, to } => PathEvent::Quadratic {
+                from: from.to_scaled(scale),
+                ctrl: ctrl.to_scaled(scale),
+                to: to.to_scaled(scale),
+            },
+            Self::Cubic {
+                from,
+                ctrl1,
+                ctrl2,
+                to,
+            } => PathEvent::Cubic {
+                from: from.to_scaled(scale),
+                ctrl1: ctrl1.to_scaled(scale),
+                ctrl2: ctrl2.to_scaled(scale),
+                to: to.to_scaled(scale),
+            },
+            Self::End { last, first, close } => PathEvent::End {
+                last: last.to_scaled(scale),
+                first: first.to_scaled(scale),
+                close: *close,
+            },
+        }
+    }
+}
+
+impl Displayable<f32> for PathEvent<Points> {
+    type Pixels = PathEvent<Pixels>;
+    type Points = Self;
+    type Scaled = PathEvent<Scaled>;
+
+    fn to_pixels(&self, scale: &figures::DisplayScale<f32>) -> Self::Pixels {
+        match self {
+            Self::Begin { at } => PathEvent::Begin {
+                at: at.to_pixels(scale),
+            },
+            Self::Line { from, to } => PathEvent::Line {
+                from: from.to_pixels(scale),
+                to: to.to_pixels(scale),
+            },
+            Self::Quadratic { from, ctrl, to } => PathEvent::Quadratic {
+                from: from.to_pixels(scale),
+                ctrl: ctrl.to_pixels(scale),
+                to: to.to_pixels(scale),
+            },
+            Self::Cubic {
+                from,
+                ctrl1,
+                ctrl2,
+                to,
+            } => PathEvent::Cubic {
+                from: from.to_pixels(scale),
+                ctrl1: ctrl1.to_pixels(scale),
+                ctrl2: ctrl2.to_pixels(scale),
+                to: to.to_pixels(scale),
+            },
+            Self::End { last, first, close } => PathEvent::End {
+                last: last.to_pixels(scale),
+                first: first.to_pixels(scale),
+                close: *close,
+            },
+        }
+    }
+
+    fn to_points(&self, _scale: &figures::DisplayScale<f32>) -> Self::Points {
+        *self
+    }
+
+    fn to_scaled(&self, scale: &figures::DisplayScale<f32>) -> Self::Scaled {
+        match self {
+            Self::Begin { at } => PathEvent::Begin {
+                at: at.to_scaled(scale),
+            },
+            Self::Line { from, to } => PathEvent::Line {
+                from: from.to_scaled(scale),
+                to: to.to_scaled(scale),
+            },
+            Self::Quadratic { from, ctrl, to } => PathEvent::Quadratic {
+                from: from.to_scaled(scale),
+                ctrl: ctrl.to_scaled(scale),
+                to: to.to_scaled(scale),
+            },
+            Self::Cubic {
+                from,
+                ctrl1,
+                ctrl2,
+                to,
+            } => PathEvent::Cubic {
+                from: from.to_scaled(scale),
+                ctrl1: ctrl1.to_scaled(scale),
+                ctrl2: ctrl2.to_scaled(scale),
+                to: to.to_scaled(scale),
+            },
+            Self::End { last, first, close } => PathEvent::End {
+                last: last.to_scaled(scale),
+                first: first.to_scaled(scale),
+                close: *close,
+            },
+        }
+    }
+}
+
+impl Displayable<f32> for PathEvent<Scaled> {
+    type Pixels = PathEvent<Pixels>;
+    type Points = PathEvent<Points>;
+    type Scaled = Self;
+
+    fn to_pixels(&self, scale: &figures::DisplayScale<f32>) -> Self::Pixels {
+        match self {
+            Self::Begin { at } => PathEvent::Begin {
+                at: at.to_pixels(scale),
+            },
+            Self::Line { from, to } => PathEvent::Line {
+                from: from.to_pixels(scale),
+                to: to.to_pixels(scale),
+            },
+            Self::Quadratic { from, ctrl, to } => PathEvent::Quadratic {
+                from: from.to_pixels(scale),
+                ctrl: ctrl.to_pixels(scale),
+                to: to.to_pixels(scale),
+            },
+            Self::Cubic {
+                from,
+                ctrl1,
+                ctrl2,
+                to,
+            } => PathEvent::Cubic {
+                from: from.to_pixels(scale),
+                ctrl1: ctrl1.to_pixels(scale),
+                ctrl2: ctrl2.to_pixels(scale),
+                to: to.to_pixels(scale),
+            },
+            Self::End { last, first, close } => PathEvent::End {
+                last: last.to_pixels(scale),
+                first: first.to_pixels(scale),
+                close: *close,
+            },
+        }
+    }
+
+    fn to_points(&self, scale: &figures::DisplayScale<f32>) -> Self::Points {
+        match self {
+            Self::Begin { at } => PathEvent::Begin {
+                at: at.to_points(scale),
+            },
+            Self::Line { from, to } => PathEvent::Line {
+                from: from.to_points(scale),
+                to: to.to_points(scale),
+            },
+            Self::Quadratic { from, ctrl, to } => PathEvent::Quadratic {
+                from: from.to_points(scale),
+                ctrl: ctrl.to_points(scale),
+                to: to.to_points(scale),
+            },
+            Self::Cubic {
+                from,
+                ctrl1,
+                ctrl2,
+                to,
+            } => PathEvent::Cubic {
+                from: from.to_points(scale),
+                ctrl1: ctrl1.to_points(scale),
+                ctrl2: ctrl2.to_points(scale),
+                to: to.to_points(scale),
+            },
+            Self::End { last, first, close } => PathEvent::End {
+                last: last.to_points(scale),
+                first: first.to_points(scale),
+                close: *close,
+            },
+        }
+    }
+
+    fn to_scaled(&self, _scale: &figures::DisplayScale<f32>) -> Self::Scaled {
+        *self
     }
 }

@@ -6,7 +6,7 @@ mod path;
 mod stroke;
 
 use circle::Circle;
-use figures::{Figure, Rectlike, Scale};
+use figures::{Displayable, Figure, Points, Rectlike, Scale};
 use geometry::ShapeGeometry;
 
 pub use self::{batch::*, fill::*, path::*, stroke::*};
@@ -107,19 +107,32 @@ impl<Unit> Shape<Unit> {
     }
 }
 
-impl Shape<Scaled> {
-    /// Renders the shape at `location` within `scene`.
-    pub fn render_at(&self, location: Point<f32, Scaled>, scene: &Target) {
-        let translated = self.convert_from_user_to_device(location, scene);
-        scene.push_element(Element::Shape(translated));
+impl<Unit> Shape<Unit>
+where
+    Self: Displayable<f32, Pixels = Shape<Pixels>>,
+{
+    /// Renders the shape within `scene`. Uses the coordinates in the shape
+    /// without translation.
+    pub fn render(&self, scene: &Target) {
+        self.render_at(&Point::<f32, Pixels>::default(), scene);
     }
 
-    fn convert_from_user_to_device(
+    /// Renders the shape at `location` within `scene`.
+    pub fn render_at(
         &self,
-        location: Point<f32, Scaled>,
+        location: &impl Displayable<f32, Pixels = Point<f32, Pixels>>,
         scene: &Target,
-    ) -> Shape<Pixels> {
-        Shape {
+    ) {
+        let location = location.to_pixels(scene.scale());
+        let pixel_shape = self.to_pixels(scene.scale());
+        let translated = pixel_shape.convert_from_user_to_device(location, scene);
+        scene.push_element(Element::Shape(translated));
+    }
+}
+
+impl Shape<Pixels> {
+    fn convert_from_user_to_device(&self, location: Point<f32, Pixels>, scene: &Target) -> Self {
+        Self {
             geometry: self
                 .geometry
                 .translate_and_convert_to_device(location, scene),
@@ -144,6 +157,84 @@ impl<Src, Dst> std::ops::Mul<Scale<f32, Src, Dst>> for Shape<Src> {
             fill: self.fill,
             stroke: self.stroke,
         }
+    }
+}
+
+impl Displayable<f32> for Shape<Pixels> {
+    type Pixels = Self;
+    type Points = Shape<Points>;
+    type Scaled = Shape<Scaled>;
+
+    fn to_pixels(&self, _scale: &figures::DisplayScale<f32>) -> Self::Pixels {
+        self.clone()
+    }
+
+    fn to_points(&self, scale: &figures::DisplayScale<f32>) -> Self::Points {
+        Shape {
+            geometry: self.geometry.to_points(scale),
+            stroke: self.stroke.clone(),
+            fill: self.fill.clone(),
+        }
+    }
+
+    fn to_scaled(&self, scale: &figures::DisplayScale<f32>) -> Self::Scaled {
+        Shape {
+            geometry: self.geometry.to_scaled(scale),
+            stroke: self.stroke.clone(),
+            fill: self.fill.clone(),
+        }
+    }
+}
+
+impl Displayable<f32> for Shape<Points> {
+    type Pixels = Shape<Pixels>;
+    type Points = Self;
+    type Scaled = Shape<Scaled>;
+
+    fn to_pixels(&self, scale: &figures::DisplayScale<f32>) -> Self::Pixels {
+        Shape {
+            geometry: self.geometry.to_pixels(scale),
+            stroke: self.stroke.clone(),
+            fill: self.fill.clone(),
+        }
+    }
+
+    fn to_points(&self, _scale: &figures::DisplayScale<f32>) -> Self::Points {
+        self.clone()
+    }
+
+    fn to_scaled(&self, scale: &figures::DisplayScale<f32>) -> Self::Scaled {
+        Shape {
+            geometry: self.geometry.to_scaled(scale),
+            stroke: self.stroke.clone(),
+            fill: self.fill.clone(),
+        }
+    }
+}
+
+impl Displayable<f32> for Shape<Scaled> {
+    type Pixels = Shape<Pixels>;
+    type Points = Shape<Points>;
+    type Scaled = Self;
+
+    fn to_pixels(&self, scale: &figures::DisplayScale<f32>) -> Self::Pixels {
+        Shape {
+            geometry: self.geometry.to_pixels(scale),
+            stroke: self.stroke.clone(),
+            fill: self.fill.clone(),
+        }
+    }
+
+    fn to_points(&self, scale: &figures::DisplayScale<f32>) -> Self::Points {
+        Shape {
+            geometry: self.geometry.to_points(scale),
+            stroke: self.stroke.clone(),
+            fill: self.fill.clone(),
+        }
+    }
+
+    fn to_scaled(&self, _scale: &figures::DisplayScale<f32>) -> Self::Scaled {
+        self.clone()
     }
 }
 

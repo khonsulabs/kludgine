@@ -123,7 +123,7 @@ impl Window for SpriteSheetExample {
     fn render(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
         Shape::rect(Rect::new(Point::default(), scene.size()))
             .fill(Fill::new(Color::WHITE))
-            .render_at(Point::default(), scene);
+            .render(scene);
 
         let sprite = self.current_frame.as_ref().unwrap();
         let bounds = Rect::new(Point::default(), scene.size());
