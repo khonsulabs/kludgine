@@ -259,18 +259,18 @@
             <span class="ident">pipeline_layout</span>: <span class="kw-2">&amp;</span>[
                 <span class="ident">Set</span>(<span class="kw-2">&amp;</span>[<span class="ident">Binding</span> {
                     <span class="ident">binding</span>: <span class="ident">BindingType::UniformBuffer</span>,
-                    <span class="ident">stage</span>: <span class="ident">ShaderStage::VERTEX</span>,
+                    <span class="ident">stage</span>: <span class="ident">ShaderStages::VERTEX</span>,
                 }]),
                 <span class="ident">Set</span>(<span class="kw-2">&amp;</span>[
                     <span class="ident">Binding</span> {
                         <span class="ident">binding</span>: <span class="ident">BindingType::SampledTexture</span> {
                             <span class="ident">multisampled</span>: <span class="bool-val">false</span>,
                         },
-                        <span class="ident">stage</span>: <span class="ident">ShaderStage::FRAGMENT</span>,
+                        <span class="ident">stage</span>: <span class="ident">ShaderStages::FRAGMENT</span>,
                     },
                     <span class="ident">Binding</span> {
                         <span class="ident">binding</span>: <span class="ident">BindingType::Sampler</span>,
-                        <span class="ident">stage</span>: <span class="ident">ShaderStage::FRAGMENT</span>,
+                        <span class="ident">stage</span>: <span class="ident">ShaderStages::FRAGMENT</span>,
                     },
                 ]),
             ],

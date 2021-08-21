@@ -597,6 +597,7 @@
 <span id="595">595</span>
 <span id="596">596</span>
 <span id="597">597</span>
+<span id="598">598</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections::HashMap</span>,
@@ -609,7 +610,10 @@
 
 <span class="kw">use</span> <span class="ident">easygpu</span>::{
     <span class="ident">prelude</span>::<span class="kw-2">*</span>,
-    <span class="ident">wgpu</span>::{<span class="ident">Buffer</span>, <span class="ident">Extent3d</span>, <span class="ident">FilterMode</span>, <span class="ident">Origin3d</span>, <span class="ident">TextureUsage</span>, <span class="ident">COPY_BYTES_PER_ROW_ALIGNMENT</span>},
+    <span class="ident">wgpu</span>::{
+        <span class="ident">Buffer</span>, <span class="ident">Extent3d</span>, <span class="ident">FilterMode</span>, <span class="ident">Origin3d</span>, <span class="ident">PresentMode</span>, <span class="ident">TextureAspect</span>, <span class="ident">TextureUsages</span>,
+        <span class="ident">COPY_BYTES_PER_ROW_ALIGNMENT</span>,
+    },
 };
 <span class="kw">use</span> <span class="ident">easygpu_lyon::LyonPipeline</span>;
 <span class="kw">use</span> <span class="ident">figures::Rectlike</span>;
@@ -650,7 +654,7 @@
 
 <span class="kw">enum</span> <span class="ident">Destination</span> {
     <span class="ident">Uninitialized</span>,
-    <span class="ident">SwapChain</span>(<span class="ident">SwapChain</span>),
+    <span class="ident">Device</span>,
     <span class="ident">Texture</span> {
         <span class="ident">color</span>: <span class="ident">Texture</span>,
         <span class="ident">depth</span>: <span class="ident">DepthBuffer</span>,
@@ -659,7 +663,7 @@
 }
 
 <span class="kw">enum</span> <span class="ident">Output</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">SwapChain</span>(<span class="ident">SwapChainTexture</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="ident">SwapChain</span>(<span class="ident">RenderFrame</span>),
     <span class="ident">Texture</span> {
         <span class="ident">color</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Texture</span>,
         <span class="ident">depth</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">DepthBuffer</span>,
@@ -810,21 +814,21 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">create_destination</span>(<span class="ident">renderer</span>: <span class="kw-2">&amp;</span><span class="ident">Renderer</span>, <span class="ident">frame_size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">ScreenSpace</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Destination</span> {
+    <span class="kw">fn</span> <span class="ident">create_destination</span>(
+        <span class="ident">renderer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Renderer</span>,
+        <span class="ident">frame_size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">ScreenSpace</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Destination</span> {
         <span class="kw">if</span> <span class="ident">renderer</span>.<span class="ident">device</span>.<span class="ident">surface</span>.<span class="ident">is_some</span>() {
-            <span class="ident">Destination::SwapChain</span>(<span class="ident">renderer</span>.<span class="ident">swap_chain</span>(
-                <span class="ident">frame_size</span>,
-                <span class="ident">PresentMode::Vsync</span>,
-                <span class="ident">T::sampler_format</span>(),
-            ))
+            <span class="ident">renderer</span>.<span class="ident">configure</span>(<span class="ident">frame_size</span>, <span class="ident">PresentMode::Fifo</span>, <span class="ident">T::sampler_format</span>());
+            <span class="ident">Destination::Device</span>
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">color</span> <span class="op">=</span> <span class="ident">renderer</span>.<span class="ident">texture</span>(
                 <span class="ident">frame_size</span>,
                 <span class="ident">T::sampler_format</span>(),
-                <span class="ident">TextureUsage::SAMPLED</span>
-                    <span class="op">|</span> <span class="ident">TextureUsage::COPY_DST</span>
-                    <span class="op">|</span> <span class="ident">TextureUsage::COPY_SRC</span>
-                    <span class="op">|</span> <span class="ident">TextureUsage::RENDER_ATTACHMENT</span>,
+                <span class="ident">TextureUsages::TEXTURE_BINDING</span>
+                    <span class="op">|</span> <span class="ident">TextureUsages::COPY_DST</span>
+                    <span class="op">|</span> <span class="ident">TextureUsages::COPY_SRC</span>
+                    <span class="op">|</span> <span class="ident">TextureUsages::RENDER_ATTACHMENT</span>,
                 <span class="bool-val">true</span>,
             );
             <span class="kw">let</span> <span class="ident">depth</span> <span class="op">=</span> <span class="ident">renderer</span>
@@ -833,7 +837,7 @@
             <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">renderer</span>.<span class="ident">device</span>.<span class="ident">wgpu</span>.<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">wgpu::BufferDescriptor</span> {
                 <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;output buffer&quot;</span>),
                 <span class="ident">size</span>: <span class="ident">buffer_size</span>(<span class="ident">frame_size</span>) <span class="kw">as</span> <span class="ident">u64</span>,
-                <span class="ident">usage</span>: <span class="ident">wgpu::BufferUsage::COPY_DST</span> <span class="op">|</span> <span class="ident">wgpu::BufferUsage::MAP_READ</span>,
+                <span class="ident">usage</span>: <span class="ident">wgpu::BufferUsages::COPY_DST</span> <span class="op">|</span> <span class="ident">wgpu::BufferUsages::MAP_READ</span>,
                 <span class="ident">mapped_at_creation</span>: <span class="bool-val">false</span>,
             });
             <span class="ident">Destination::Texture</span> {
@@ -853,21 +857,18 @@
 
         <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">destination</span> {
             <span class="ident">Destination::Uninitialized</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">destination</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::create_destination</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">renderer</span>, <span class="ident">frame_size</span>);
+                <span class="self">self</span>.<span class="ident">destination</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::create_destination</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">renderer</span>, <span class="ident">frame_size</span>);
                 <span class="kw">return</span> <span class="self">self</span>.<span class="ident">render_frame</span>(<span class="ident">engine_frame</span>);
             }
-            <span class="ident">Destination::SwapChain</span>(<span class="ident">swap_chain</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">swap_chain</span>.<span class="ident">size</span> <span class="op">!</span><span class="op">=</span> <span class="ident">frame_size</span> {
-                    <span class="kw-2">*</span><span class="ident">swap_chain</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">renderer</span>.<span class="ident">swap_chain</span>(
-                        <span class="ident">frame_size</span>,
-                        <span class="ident">PresentMode::Vsync</span>,
-                        <span class="ident">T::sampler_format</span>(),
-                    );
+            <span class="ident">Destination::Device</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">renderer</span>.<span class="ident">device</span>.<span class="ident">size</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">frame_size</span> {
+                    <span class="self">self</span>.<span class="ident">renderer</span>
+                        .<span class="ident">configure</span>(<span class="ident">frame_size</span>, <span class="ident">PresentMode::Fifo</span>, <span class="ident">T::sampler_format</span>());
                 }
 
-                <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">swap_chain</span>.<span class="ident">next_texture</span>() {
+                <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">renderer</span>.<span class="ident">current_frame</span>() {
                     <span class="prelude-val">Ok</span>(<span class="ident">texture</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">texture</span>,
-                    <span class="prelude-val">Err</span>(<span class="ident">wgpu::SwapChainError::Outdated</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(()), <span class="comment">/* Ignore outdated,
+                    <span class="prelude-val">Err</span>(<span class="ident">wgpu::SurfaceError::Outdated</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(()), <span class="comment">/* Ignore outdated,
                                                                             * we&#39;ll draw */</span>
                     <span class="comment">// next time.</span>
                     <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Unrecoverable error on swap chain {:?}&quot;</span>, <span class="ident">err</span>),
@@ -884,7 +885,7 @@
                         <span class="ident">color</span>: <span class="ident">new_color</span>,
                         <span class="ident">depth</span>: <span class="ident">new_depth</span>,
                         <span class="ident">output</span>: <span class="ident">new_output</span>,
-                    } <span class="op">=</span> <span class="self">Self</span><span class="ident">::create_destination</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">renderer</span>, <span class="ident">frame_size</span>)
+                    } <span class="op">=</span> <span class="self">Self</span><span class="ident">::create_destination</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">renderer</span>, <span class="ident">frame_size</span>)
                     {
                         <span class="kw-2">*</span><span class="ident">color</span> <span class="op">=</span> <span class="ident">new_color</span>;
                         <span class="kw-2">*</span><span class="ident">depth</span> <span class="op">=</span> <span class="ident">new_depth</span>;
@@ -928,7 +929,7 @@
                     <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">renderer</span>.<span class="ident">texture</span>(
                         <span class="ident">Size::new</span>(<span class="number">512</span>, <span class="number">512</span>),
                         <span class="ident">T::texture_format</span>(),
-                        <span class="ident">TextureUsage::SAMPLED</span> <span class="op">|</span> <span class="ident">TextureUsage::COPY_DST</span>,
+                        <span class="ident">TextureUsages::TEXTURE_BINDING</span> <span class="op">|</span> <span class="ident">TextureUsages::COPY_DST</span>,
                         <span class="bool-val">false</span>,
                     ); <span class="comment">// TODO font texture should be configurable</span>
                     <span class="kw">let</span> <span class="ident">sampler</span> <span class="op">=</span> <span class="self">self</span>
@@ -1002,7 +1003,7 @@
                                     <span class="self">self</span>.<span class="ident">renderer</span>.<span class="ident">texture</span>(
                                         <span class="ident">Size::new</span>(<span class="ident">w</span>, <span class="ident">h</span>).<span class="ident">cast</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>(),
                                         <span class="ident">T::texture_format</span>(),
-                                        <span class="ident">TextureUsage::SAMPLED</span> <span class="op">|</span> <span class="ident">TextureUsage::COPY_DST</span>,
+                                        <span class="ident">TextureUsages::TEXTURE_BINDING</span> <span class="op">|</span> <span class="ident">TextureUsages::COPY_DST</span>,
                                         <span class="bool-val">false</span>,
                                     ),
                                     <span class="ident">pixels</span>.<span class="ident">to_owned</span>(),
@@ -1106,7 +1107,7 @@
                 <span class="self">self</span>.<span class="ident">multisample_texture</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">renderer</span>.<span class="ident">texture</span>(
                     <span class="ident">frame_size</span>,
                     <span class="ident">T::sampler_format</span>(),
-                    <span class="ident">TextureUsage::RENDER_ATTACHMENT</span> <span class="op">|</span> <span class="ident">TextureUsage::SAMPLED</span>,
+                    <span class="ident">TextureUsages::RENDER_ATTACHMENT</span> <span class="op">|</span> <span class="ident">TextureUsages::TEXTURE_BINDING</span>,
                     <span class="bool-val">true</span>,
                 ));
             }
@@ -1146,6 +1147,7 @@
                     <span class="ident">texture</span>: <span class="kw-2">&amp;</span><span class="ident">color</span>.<span class="ident">wgpu</span>,
                     <span class="ident">mip_level</span>: <span class="number">0</span>,
                     <span class="ident">origin</span>: <span class="ident">Origin3d::ZERO</span>,
+                    <span class="ident">aspect</span>: <span class="ident">TextureAspect::All</span>,
                 },
                 <span class="ident">wgpu::ImageCopyBuffer</span> {
                     <span class="ident">buffer</span>: <span class="ident">output</span>,
