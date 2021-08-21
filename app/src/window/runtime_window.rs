@@ -53,7 +53,7 @@ impl RuntimeWindowConfig {
     pub fn new(window: &winit::window::Window) -> Self {
         // TODO in wasm, we need to explicity enable GL, but since wasm isn't possible
         // right now, we're just hardcoding primary
-        let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+        let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
         let surface = unsafe { instance.create_surface(window) };
         Self {
             window_id: window.id(),
@@ -273,10 +273,11 @@ impl RuntimeWindow {
                         window.scene_mut().set_size(size.cast_unit());
                         window.scene_mut().set_dpi_scale(scale_factor);
                     }
-                    WindowEvent::CloseRequested =>
+                    WindowEvent::CloseRequested => {
                         if Self::request_window_close(id, &mut window)? {
                             return Ok(());
-                        },
+                        }
+                    }
                     WindowEvent::Input(input) => {
                         if let Event::Keyboard {
                             key: Some(key),

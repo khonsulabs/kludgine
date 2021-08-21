@@ -78,18 +78,18 @@ where
             pipeline_layout: &[
                 Set(&[Binding {
                     binding: BindingType::UniformBuffer,
-                    stage: ShaderStage::VERTEX,
+                    stage: ShaderStages::VERTEX,
                 }]),
                 Set(&[
                     Binding {
                         binding: BindingType::SampledTexture {
                             multisampled: false,
                         },
-                        stage: ShaderStage::FRAGMENT,
+                        stage: ShaderStages::FRAGMENT,
                     },
                     Binding {
                         binding: BindingType::Sampler,
-                        stage: ShaderStage::FRAGMENT,
+                        stage: ShaderStages::FRAGMENT,
                     },
                 ]),
             ],

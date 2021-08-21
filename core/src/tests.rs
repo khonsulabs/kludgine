@@ -9,7 +9,7 @@ use crate::{frame_renderer::FrameRenderer, prelude::*, sprite::Srgb};
 async fn offscreen_render_test() {
     let (scene_sender, scene_receiver) = flume::unbounded();
 
-    let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+    let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
     let adapter = instance
         .request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: wgpu::PowerPreference::default(),

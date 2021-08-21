@@ -9,7 +9,10 @@ use std::{
 
 use easygpu::{
     prelude::*,
-    wgpu::{Buffer, Extent3d, FilterMode, Origin3d, TextureUsage, COPY_BYTES_PER_ROW_ALIGNMENT},
+    wgpu::{
+        Buffer, Extent3d, FilterMode, Origin3d, PresentMode, TextureAspect, TextureUsages,
+        COPY_BYTES_PER_ROW_ALIGNMENT,
+    },
 };
 use easygpu_lyon::LyonPipeline;
 use figures::Rectlike;
@@ -50,7 +53,7 @@ struct GpuState {
 
 enum Destination {
     Uninitialized,
-    SwapChain(SwapChain),
+    Device,
     Texture {
         color: Texture,
         depth: DepthBuffer,
@@ -59,7 +62,7 @@ enum Destination {
 }
 
 enum Output<'a> {
-    SwapChain(SwapChainTexture<'a>),
+    SwapChain(RenderFrame),
     Texture {
         color: &'a Texture,
         depth: &'a DepthBuffer,
@@ -210,21 +213,21 @@ where
         }
     }
 
-    fn create_destination(renderer: &Renderer, frame_size: Size<u32, ScreenSpace>) -> Destination {
+    fn create_destination(
+        renderer: &mut Renderer,
+        frame_size: Size<u32, ScreenSpace>,
+    ) -> Destination {
         if renderer.device.surface.is_some() {
-            Destination::SwapChain(renderer.swap_chain(
-                frame_size,
-                PresentMode::Vsync,
-                T::sampler_format(),
-            ))
+            renderer.configure(frame_size, PresentMode::Fifo, T::sampler_format());
+            Destination::Device
         } else {
             let color = renderer.texture(
                 frame_size,
                 T::sampler_format(),
-                TextureUsage::SAMPLED
-                    | TextureUsage::COPY_DST
-                    | TextureUsage::COPY_SRC
-                    | TextureUsage::RENDER_ATTACHMENT,
+                TextureUsages::TEXTURE_BINDING
+                    | TextureUsages::COPY_DST
+                    | TextureUsages::COPY_SRC
+                    | TextureUsages::RENDER_ATTACHMENT,
                 true,
             );
             let depth = renderer
@@ -233,7 +236,7 @@ where
             let output = renderer.device.wgpu.create_buffer(&wgpu::BufferDescriptor {
                 label: Some("output buffer"),
                 size: buffer_size(frame_size) as u64,
-                usage: wgpu::BufferUsage::COPY_DST | wgpu::BufferUsage::MAP_READ,
+                usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
                 mapped_at_creation: false,
             });
             Destination::Texture {
@@ -253,21 +256,18 @@ where
 
         let output = match &mut self.destination {
             Destination::Uninitialized => {
-                self.destination = Self::create_destination(&self.renderer, frame_size);
+                self.destination = Self::create_destination(&mut self.renderer, frame_size);
                 return self.render_frame(engine_frame);
             }
-            Destination::SwapChain(swap_chain) => {
-                if swap_chain.size != frame_size {
-                    *swap_chain = self.renderer.swap_chain(
-                        frame_size,
-                        PresentMode::Vsync,
-                        T::sampler_format(),
-                    );
+            Destination::Device => {
+                if self.renderer.device.size() != frame_size {
+                    self.renderer
+                        .configure(frame_size, PresentMode::Fifo, T::sampler_format());
                 }
 
-                let output = match swap_chain.next_texture() {
+                let output = match self.renderer.current_frame() {
                     Ok(texture) => texture,
-                    Err(wgpu::SwapChainError::Outdated) => return Ok(()), /* Ignore outdated,
+                    Err(wgpu::SurfaceError::Outdated) => return Ok(()), /* Ignore outdated,
                                                                             * we'll draw */
                     // next time.
                     Err(err) => panic!("Unrecoverable error on swap chain {:?}", err),
@@ -284,7 +284,7 @@ where
                         color: new_color,
                         depth: new_depth,
                         output: new_output,
-                    } = Self::create_destination(&self.renderer, frame_size)
+                    } = Self::create_destination(&mut self.renderer, frame_size)
                     {
                         *color = new_color;
                         *depth = new_depth;
@@ -328,7 +328,7 @@ where
                     let texture = self.renderer.texture(
                         Size::new(512, 512),
                         T::texture_format(),
-                        TextureUsage::SAMPLED | TextureUsage::COPY_DST,
+                        TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
                         false,
                     ); // TODO font texture should be configurable
                     let sampler = self
@@ -402,7 +402,7 @@ where
                                     self.renderer.texture(
                                         Size::new(w, h).cast::<u32>(),
                                         T::texture_format(),
-                                        TextureUsage::SAMPLED | TextureUsage::COPY_DST,
+                                        TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
                                         false,
                                     ),
                                     pixels.to_owned(),
@@ -506,7 +506,7 @@ where
                 self.multisample_texture = Some(self.renderer.texture(
                     frame_size,
                     T::sampler_format(),
-                    TextureUsage::RENDER_ATTACHMENT | TextureUsage::SAMPLED,
+                    TextureUsages::RENDER_ATTACHMENT | TextureUsages::TEXTURE_BINDING,
                     true,
                 ));
             }
@@ -546,6 +546,7 @@ where
                     texture: &color.wgpu,
                     mip_level: 0,
                     origin: Origin3d::ZERO,
+                    aspect: TextureAspect::All,
                 },
                 wgpu::ImageCopyBuffer {
                     buffer: output,
