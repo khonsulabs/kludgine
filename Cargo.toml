@@ -3,8 +3,8 @@ members = ["kludgine", "core", "app", "xtask"]
 resolver = "2"
 
 [patch.crates-io]
-easygpu = { git = "https://github.com/khonsulabs/easygpu.git", branch = "wgpu-0.10" }
-easygpu-lyon = { git = "https://github.com/khonsulabs/easygpu.git", branch = "wgpu-0.10" }
+easygpu = { git = "https://github.com/khonsulabs/easygpu.git", branch = "main" }
+easygpu-lyon = { git = "https://github.com/khonsulabs/easygpu.git", branch = "main" }
 # must be commented out for CI to succeed
 # easygpu = { path = "../easygpu/easygpu" }
 # easygpu-lyon = { path = "../easygpu/lyon" }

@@ -2,7 +2,6 @@ use kludgine::prelude::*;
 use kludgine_core::figures::Rectlike;
 
 fn main() {
-    env_logger::init();
     SingleWindowApplication::run(Shapes::default());
 }
 
