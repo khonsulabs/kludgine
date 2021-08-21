@@ -123,7 +123,7 @@ impl RuntimeWindow {
             .unwrap();
 
         let renderer = Runtime::block_on(async move {
-            Renderer::for_surface(surface, &instance)
+            Renderer::for_surface(surface, &instance, 4)
                 .await
                 .expect("Error creating renderer for window")
         });

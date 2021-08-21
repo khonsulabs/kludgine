@@ -22,7 +22,7 @@ async fn main() {
         })
         .await
         .expect("No wgpu adapter found");
-    let renderer = Renderer::offscreen(&adapter)
+    let renderer = Renderer::offscreen(&adapter, 4)
         .await
         .expect("error creating renderer");
 

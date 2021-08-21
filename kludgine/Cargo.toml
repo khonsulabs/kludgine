@@ -47,6 +47,7 @@ rand = "0.7"
 tokio = { version = "1.0", features = ["full"] }
 maplit = "1"
 image = { version = ">=0.23.12", default-features = false, features = ["png"] }
+env_logger = "0.9"
 
 [[example]]
 name = "text"

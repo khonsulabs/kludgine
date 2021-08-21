@@ -17,7 +17,7 @@ async fn offscreen_render_test() {
         })
         .await
         .expect("No wgpu adapter found");
-    let renderer = easygpu::renderer::Renderer::offscreen(&adapter)
+    let renderer = easygpu::renderer::Renderer::offscreen(&adapter, 4)
         .await
         .expect("error creating renderer");
 

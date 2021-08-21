@@ -35,6 +35,7 @@ where
     keep_running: Arc<AtomicBool>,
     shutdown: Option<Box<dyn ShutdownCallback>>,
     renderer: Renderer,
+    multisample_texture: Option<Texture>,
     destination: Destination,
     sprite_pipeline: sprite::Pipeline<T>,
     shape_pipeline: LyonPipeline<T::Lyon>,
@@ -106,6 +107,7 @@ where
             shape_pipeline,
             scene_event_receiver,
             shutdown: None,
+            multisample_texture: None,
             gpu_state: Mutex::new(GpuState::default()),
         }
     }
@@ -223,8 +225,11 @@ where
                     | TextureUsage::COPY_DST
                     | TextureUsage::COPY_SRC
                     | TextureUsage::RENDER_ATTACHMENT,
+                true,
             );
-            let depth = renderer.device.create_zbuffer(frame_size);
+            let depth = renderer
+                .device
+                .create_zbuffer(frame_size, renderer.sample_count());
             let output = renderer.device.wgpu.create_buffer(&wgpu::BufferDescriptor {
                 label: Some("output buffer"),
                 size: buffer_size(frame_size) as u64,
@@ -324,6 +329,7 @@ where
                         Size::new(512, 512),
                         T::texture_format(),
                         TextureUsage::SAMPLED | TextureUsage::COPY_DST,
+                        false,
                     ); // TODO font texture should be configurable
                     let sampler = self
                         .renderer
@@ -397,6 +403,7 @@ where
                                         Size::new(w, h).cast::<u32>(),
                                         T::texture_format(),
                                         TextureUsage::SAMPLED | TextureUsage::COPY_DST,
+                                        false,
                                     ),
                                     pixels.to_owned(),
                                     texture.id(),
@@ -491,7 +498,23 @@ where
                     }
                 }
             }
-            let mut pass = frame.pass(PassOp::Clear(Rgba::TRANSPARENT), &output);
+            if self
+                .multisample_texture
+                .as_ref()
+                .map_or(true, |t| t.size != frame_size)
+            {
+                self.multisample_texture = Some(self.renderer.texture(
+                    frame_size,
+                    T::sampler_format(),
+                    TextureUsage::RENDER_ATTACHMENT | TextureUsage::SAMPLED,
+                    true,
+                ));
+            }
+            let mut pass = frame.pass(
+                PassOp::Clear(Rgba::TRANSPARENT),
+                &output,
+                Some(&self.multisample_texture.as_ref().unwrap().view),
+            );
             for command in &render_commands {
                 match command {
                     RenderCommand::SpriteBuffer(texture_id, buffer) => {

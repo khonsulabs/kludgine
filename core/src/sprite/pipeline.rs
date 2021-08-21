@@ -82,7 +82,9 @@ where
                 }]),
                 Set(&[
                     Binding {
-                        binding: BindingType::SampledTexture,
+                        binding: BindingType::SampledTexture {
+                            multisampled: false,
+                        },
                         stage: ShaderStage::FRAGMENT,
                     },
                     Binding {
