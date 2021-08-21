@@ -624,7 +624,7 @@
             .<span class="ident">unwrap</span>();
 
         <span class="kw">let</span> <span class="ident">renderer</span> <span class="op">=</span> <span class="ident">Runtime::block_on</span>(<span class="kw">async</span> <span class="kw">move</span> {
-            <span class="ident">Renderer::for_surface</span>(<span class="ident">surface</span>, <span class="kw-2">&amp;</span><span class="ident">instance</span>)
+            <span class="ident">Renderer::for_surface</span>(<span class="ident">surface</span>, <span class="kw-2">&amp;</span><span class="ident">instance</span>, <span class="number">4</span>)
                 .<span class="kw">await</span>
                 .<span class="ident">expect</span>(<span class="string">&quot;Error creating renderer for window&quot;</span>)
         });

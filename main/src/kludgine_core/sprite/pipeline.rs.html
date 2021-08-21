@@ -176,6 +176,8 @@
 <span id="174">174</span>
 <span id="175">175</span>
 <span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">ops::Deref</span>};
 
@@ -261,7 +263,9 @@
                 }]),
                 <span class="ident">Set</span>(<span class="kw-2">&amp;</span>[
                     <span class="ident">Binding</span> {
-                        <span class="ident">binding</span>: <span class="ident">BindingType::SampledTexture</span>,
+                        <span class="ident">binding</span>: <span class="ident">BindingType::SampledTexture</span> {
+                            <span class="ident">multisampled</span>: <span class="bool-val">false</span>,
+                        },
                         <span class="ident">stage</span>: <span class="ident">ShaderStage::FRAGMENT</span>,
                     },
                     <span class="ident">Binding</span> {
