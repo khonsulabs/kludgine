@@ -228,7 +228,7 @@ where
                     | TextureUsages::COPY_DST
                     | TextureUsages::COPY_SRC
                     | TextureUsages::RENDER_ATTACHMENT,
-                true,
+                false,
             );
             let depth = renderer
                 .device
