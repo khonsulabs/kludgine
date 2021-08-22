@@ -498,6 +498,7 @@
 <span id="496">496</span>
 <span id="497">497</span>
 <span id="498">498</span>
+<span id="499">499</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">sync</span>::{
@@ -774,10 +775,11 @@
                         <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">set_size</span>(<span class="ident">size</span>.<span class="ident">cast_unit</span>());
                         <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">set_dpi_scale</span>(<span class="ident">scale_factor</span>);
                     }
-                    <span class="ident">WindowEvent::CloseRequested</span> <span class="op">=</span><span class="op">&gt;</span>
+                    <span class="ident">WindowEvent::CloseRequested</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">if</span> <span class="self">Self</span><span class="ident">::request_window_close</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">window</span>)<span class="question-mark">?</span> {
                             <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
-                        },
+                        }
+                    }
                     <span class="ident">WindowEvent::Input</span>(<span class="ident">input</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Event::Keyboard</span> {
                             <span class="ident">key</span>: <span class="prelude-val">Some</span>(<span class="ident">key</span>),

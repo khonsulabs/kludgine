@@ -152,6 +152,7 @@
 <span id="150">150</span>
 <span id="151">151</span>
 <span id="152">152</span>
+<span id="153">153</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std::fmt::Debug</span>;
 
@@ -204,8 +205,9 @@
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="self">Self</span><span class="ident">::Empty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Empty</span>,
             <span class="self">Self</span><span class="ident">::Path</span>(<span class="ident">path</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Path</span>(<span class="ident">path</span>.<span class="ident">translate_and_convert_to_device</span>(<span class="ident">location</span>, <span class="ident">scene</span>)),
-            <span class="self">Self</span><span class="ident">::Circle</span>(<span class="ident">circle</span>) <span class="op">=</span><span class="op">&gt;</span>
-                <span class="self">Self</span><span class="ident">::Circle</span>(<span class="ident">circle</span>.<span class="ident">translate_and_convert_to_device</span>(<span class="ident">location</span>, <span class="ident">scene</span>)),
+            <span class="self">Self</span><span class="ident">::Circle</span>(<span class="ident">circle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">Self</span><span class="ident">::Circle</span>(<span class="ident">circle</span>.<span class="ident">translate_and_convert_to_device</span>(<span class="ident">location</span>, <span class="ident">scene</span>))
+            }
         }
     }
 }

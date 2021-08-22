@@ -329,6 +329,7 @@
 <span id="327">327</span>
 <span id="328">328</span>
 <span id="329">329</span>
+<span id="330">330</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Types for rendering tilemaps. Requires `unstable-apis` feature flag.</span>
 <span class="doccomment">//!</span>
@@ -543,8 +544,9 @@
             <span class="ident">location</span>,
             <span class="ident">sprite</span>: <span class="kw">match</span> <span class="self">self</span> {
                 <span class="ident">PersistentTileSource::Sprite</span>(<span class="ident">sprite</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TileSprite::Sprite</span>(<span class="ident">sprite</span>),
-                <span class="ident">PersistentTileSource::SpriteSource</span>(<span class="ident">source</span>) <span class="op">=</span><span class="op">&gt;</span>
-                    <span class="ident">TileSprite::SpriteSource</span>(<span class="ident">source</span>.<span class="ident">clone</span>()),
+                <span class="ident">PersistentTileSource::SpriteSource</span>(<span class="ident">source</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">TileSprite::SpriteSource</span>(<span class="ident">source</span>.<span class="ident">clone</span>())
+                }
             },
         }
     }
