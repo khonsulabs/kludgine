@@ -87,6 +87,7 @@ impl PreparedSpan {
     }
 
     /// Renders the text in `scene` with the baseline at `location`
+    #[allow(clippy::needless_pass_by_value)]
     pub fn render_baseline_at(
         &self,
         scene: &Target,

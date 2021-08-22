@@ -1,3 +1,4 @@
+use easygpu_lyon::lyon_tessellation::{FillTessellator, StrokeTessellator};
 use figures::{Displayable, Points, Vectorlike};
 
 use super::lyon_point;
@@ -44,24 +45,28 @@ impl Circle<Pixels> {
     ) -> crate::Result<()> {
         if let Some(fill) = fill {
             builder.default_color = fill.color.rgba();
-            lyon_tessellation::basic_shapes::fill_circle(
-                lyon_point(self.center),
-                self.radius.get(),
-                &fill.options,
-                builder,
-            )
-            .map_err(Error::Tessellation)?;
+            let mut tessellator = FillTessellator::new();
+            tessellator
+                .tessellate_circle(
+                    lyon_point(self.center),
+                    self.radius.get(),
+                    &fill.options,
+                    builder,
+                )
+                .map_err(Error::Tessellation)?;
         }
 
         if let Some(stroke) = stroke {
             builder.default_color = stroke.color.rgba();
-            lyon_tessellation::basic_shapes::stroke_circle(
-                lyon_point(self.center),
-                self.radius.get(),
-                &stroke.options,
-                builder,
-            )
-            .map_err(Error::Tessellation)?;
+            let mut tessellator = StrokeTessellator::new();
+            tessellator
+                .tessellate_circle(
+                    lyon_point(self.center),
+                    self.radius.get(),
+                    &stroke.options,
+                    builder,
+                )
+                .map_err(Error::Tessellation)?;
         }
 
         Ok(())

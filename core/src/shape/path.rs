@@ -1,5 +1,5 @@
+use easygpu_lyon::lyon_tessellation::{self, path::PathEvent as LyonPathEvent};
 use figures::{Displayable, Points};
-use lyon_tessellation::path::{builder::PathBuilder as _, PathEvent as LyonPathEvent};
 
 use super::lyon_point;
 use crate::{

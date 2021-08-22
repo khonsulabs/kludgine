@@ -1,3 +1,5 @@
+use easygpu_lyon::lyon_tessellation::TessellationError;
+
 /// All errors that `kludgine-core` can return.
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -9,7 +11,7 @@ pub enum Error {
     Json(#[from] json::Error),
     /// An error while rendering shapes.
     #[error("error tessellating shape")]
-    Tessellation(lyon_tessellation::TessellationError),
+    Tessellation(TessellationError),
     /// An error while parsing sprite data.
     #[error("error parsing sprite data: {0}")]
     SpriteParse(String),

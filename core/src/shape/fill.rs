@@ -1,4 +1,4 @@
-use lyon_tessellation::FillOptions;
+use easygpu_lyon::lyon_tessellation::FillOptions;
 
 use crate::color::Color;
 

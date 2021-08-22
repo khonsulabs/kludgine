@@ -51,6 +51,7 @@ struct GpuState {
     textures: HashMap<u64, BindingGroup>,
 }
 
+#[allow(clippy::large_enum_variant)]
 enum Destination {
     Uninitialized,
     Device,

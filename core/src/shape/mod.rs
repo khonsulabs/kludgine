@@ -6,6 +6,7 @@ mod path;
 mod stroke;
 
 use circle::Circle;
+use easygpu_lyon::lyon_tessellation;
 use figures::{Displayable, Figure, Points, Rectlike, Scale};
 use geometry::ShapeGeometry;
 

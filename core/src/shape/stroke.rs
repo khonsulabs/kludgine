@@ -1,5 +1,5 @@
+use easygpu_lyon::lyon_tessellation::StrokeOptions;
 use figures::Figure;
-use lyon_tessellation::StrokeOptions;
 
 use crate::{color::Color, math::Scaled};
 
