@@ -117,7 +117,7 @@ where
     ) -> kludgine_core::Result<()> {
         if let Some(mut tile) = self.provider.tile(tile) {
             let sprite = tile.sprite.get_frame(elapsed)?;
-            sprite.render_raw_with_alpha_in_box(scene, destination, SpriteRotation::default(), 1.);
+            sprite.render_raw_with_alpha_in_box(scene, destination, SpriteRotation::none(), 1.);
         }
         Ok(())
     }

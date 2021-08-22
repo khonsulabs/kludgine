@@ -1,7 +1,7 @@
 use figures::{Displayable, Rectlike};
 
 use crate::{
-    math::{ExtentsRect, Pixels, Point, Rect, Scaled, Size},
+    math::{ExtentsRect, Pixels, Point, Rect, Size},
     scene::{Element, Target},
     sprite::{RenderedSprite, SpriteRotation},
     texture::Texture,
@@ -136,8 +136,8 @@ impl SpriteSource {
     pub fn render_at(
         &self,
         scene: &Target,
-        location: Point<f32, Scaled>,
-        rotation: SpriteRotation<Scaled>,
+        location: impl Displayable<f32, Pixels = Point<f32, Pixels>>,
+        rotation: impl Displayable<f32, Pixels = SpriteRotation<Pixels>>,
     ) {
         self.render_at_with_alpha(scene, location, rotation, 1.);
     }
@@ -147,35 +147,28 @@ impl SpriteSource {
     pub fn render_within(
         &self,
         scene: &Target,
-        bounds: Rect<f32, Scaled>,
-        rotation: SpriteRotation<Scaled>,
+        bounds: impl Displayable<f32, Pixels = Rect<f32, Pixels>>,
+        rotation: impl Displayable<f32, Pixels = SpriteRotation<Pixels>>,
     ) {
         self.render_with_alpha(scene, bounds, rotation, 1.);
     }
 
-    /// Renders the sprite within `bounds` (stretching if needed) with
-    /// `rotation` into `scene`.
-    pub fn render_within_box(
-        &self,
-        scene: &Target,
-        bounds: ExtentsRect<f32, Scaled>,
-        rotation: SpriteRotation<Scaled>,
-    ) {
-        self.render_with_alpha_in_box(scene, bounds, rotation, 1.);
-    }
-
     /// Renders the sprite with `alpha` at `location` with `rotation` into
     /// `scene`.
+    #[allow(clippy::needless_pass_by_value)]
     pub fn render_at_with_alpha(
         &self,
         scene: &Target,
-        location: Point<f32, Scaled>,
-        rotation: SpriteRotation<Scaled>,
+        location: impl Displayable<f32, Pixels = Point<f32, Pixels>>,
+        rotation: impl Displayable<f32, Pixels = SpriteRotation<Pixels>>,
         alpha: f32,
     ) {
         self.render_with_alpha(
             scene,
-            Rect::new(location, self.location.size().cast::<f32>().cast_unit()),
+            Rect::new(
+                location.to_pixels(scene.scale()),
+                self.location.size().cast::<f32>().cast_unit(),
+            ),
             rotation,
             alpha,
         );
@@ -183,23 +176,30 @@ impl SpriteSource {
 
     /// Renders the sprite with `alpha` within `bounds` with `rotation` into
     /// `scene`.
+    #[allow(clippy::needless_pass_by_value)]
     pub fn render_with_alpha(
         &self,
         scene: &Target,
-        bounds: Rect<f32, Scaled>,
-        rotation: SpriteRotation<Scaled>,
+        bounds: impl Displayable<f32, Pixels = Rect<f32, Pixels>>,
+        rotation: impl Displayable<f32, Pixels = SpriteRotation<Pixels>>,
         alpha: f32,
     ) {
-        self.render_with_alpha_in_box(scene, bounds.as_extents(), rotation, alpha);
+        self.render_with_alpha_in_box(
+            scene,
+            bounds.to_pixels(scene.scale()).as_extents(),
+            rotation,
+            alpha,
+        );
     }
 
     /// Renders the sprite with `alpha` within `bounds` with `rotation` into
     /// `scene`.
+    #[allow(clippy::needless_pass_by_value)]
     pub fn render_with_alpha_in_box(
         &self,
         scene: &Target,
-        bounds: ExtentsRect<f32, Scaled>,
-        rotation: SpriteRotation<Scaled>,
+        bounds: impl Displayable<f32, Pixels = ExtentsRect<f32, Pixels>>,
+        rotation: impl Displayable<f32, Pixels = SpriteRotation<Pixels>>,
         alpha: f32,
     ) {
         let effective_scale = scene.scale();
@@ -213,19 +213,26 @@ impl SpriteSource {
 
     /// Renders the sprite with `alpha` within `bounds` with `rotation` into
     /// `scene`.
+    #[allow(clippy::needless_pass_by_value)]
     pub fn render_raw_with_alpha_in_box(
         &self,
         scene: &Target,
-        bounds: ExtentsRect<f32, Pixels>,
-        rotation: SpriteRotation<Pixels>,
+        bounds: impl Displayable<f32, Pixels = ExtentsRect<f32, Pixels>>,
+        rotation: impl Displayable<f32, Pixels = SpriteRotation<Pixels>>,
         alpha: f32,
     ) {
+        let bounds = bounds.to_pixels(scene.scale());
         let bounds = ExtentsRect::new(
             scene.offset_point_raw(bounds.origin),
             scene.offset_point_raw(bounds.extent),
         );
         scene.push_element(Element::Sprite {
-            sprite: RenderedSprite::new(bounds, rotation, alpha, self.clone()),
+            sprite: RenderedSprite::new(
+                bounds,
+                rotation.to_pixels(scene.scale()),
+                alpha,
+                self.clone(),
+            ),
             clip: scene.clip,
         });
     }
