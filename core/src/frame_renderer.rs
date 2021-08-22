@@ -486,7 +486,7 @@ where
                                     batch.add_box(
                                         source.cast_unit().cast(),
                                         dest,
-                                        sprite::SpriteRotation::default(),
+                                        sprite::SpriteRotation::none(),
                                         text.color.into(),
                                     );
                                 }

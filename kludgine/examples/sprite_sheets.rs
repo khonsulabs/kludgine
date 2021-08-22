@@ -128,7 +128,7 @@ impl Window for SpriteSheetExample {
         let sprite = self.current_frame.as_ref().unwrap();
         let bounds = Rect::new(Point::default(), scene.size());
 
-        sprite.render_at(scene, bounds.center(), SpriteRotation::default());
+        sprite.render_at(scene, bounds.center(), SpriteRotation::none());
 
         Ok(())
     }

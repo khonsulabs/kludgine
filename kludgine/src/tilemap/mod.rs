@@ -1,3 +1,11 @@
+//! Types for rendering tilemaps. Requires `unstable-apis` feature flag.
+//!
+//! This module will likely be removed from `kludgine` and relocated to the
+//! [`gooey-renderer`](https://gooey.rs/main/gooey/renderer/trait.Renderer.html)
+//! ecosystem. The refactored tilemap will still be usable by `kludgine` apps
+//! without using a `gooey` user interface, it will just use the `Renderer`
+//! trait instead of directly interacting with a `Target`.
+
 use std::{
     mem,
     ops::{Deref, DerefMut},

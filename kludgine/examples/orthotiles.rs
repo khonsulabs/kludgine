@@ -76,7 +76,7 @@ impl Window for OrthoTiles {
             .cast_unit();
         let rendered_bounds = Rect::new(center - rendered_size / 2., rendered_size);
 
-        sprite.render_within(&scene, rendered_bounds, SpriteRotation::default());
+        sprite.render_within(&scene, rendered_bounds, SpriteRotation::none());
 
         Ok(())
     }

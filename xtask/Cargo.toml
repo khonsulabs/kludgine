@@ -15,6 +15,7 @@ categories = [
     "asynchronous",
 ]
 readme = "../README.md"
+publish = false
 
 [dependencies]
 devx-cmd = "0.3"

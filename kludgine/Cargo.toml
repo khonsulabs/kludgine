@@ -21,6 +21,7 @@ all-features = true
 
 [features]
 default = ["bundled-fonts", "smol-rt", "app", "multiwindow"]
+unstable-apis = []
 app = ["kludgine-app"]
 multiwindow = ["kludgine-app/multiwindow"]
 tokio-rt = ["kludgine-app/tokio-rt"]
@@ -55,11 +56,11 @@ required-features = ["bundled-fonts-roboto", "app"]
 
 [[example]]
 name = "orthotiles"
-required-features = ["app"]
+required-features = ["app", "unstable-apis"]
 
 [[example]]
 name = "isometric"
-required-features = ["app"]
+required-features = ["app", "unstable-apis"]
 
 [[example]]
 name = "shapes"

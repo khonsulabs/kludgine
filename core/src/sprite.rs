@@ -533,6 +533,14 @@ impl SpriteRotation<Pixels> {
             location: None,
         }
     }
+
+    /// Returns a rotation around the center of the shape.
+    pub const fn around_center(angle: Angle) -> Self {
+        Self {
+            angle: Some(angle),
+            location: None,
+        }
+    }
 }
 
 impl<Unit> Default for SpriteRotation<Unit> {
@@ -545,14 +553,6 @@ impl<Unit> Default for SpriteRotation<Unit> {
 }
 
 impl<Unit> SpriteRotation<Unit> {
-    /// Returns a rotation around the center of the shape.
-    pub const fn around_center(angle: Angle) -> Self {
-        Self {
-            angle: Some(angle),
-            location: None,
-        }
-    }
-
     /// Returns a rotation around `location`.
     pub const fn around(angle: Angle, location: Point<f32, Unit>) -> Self {
         Self {

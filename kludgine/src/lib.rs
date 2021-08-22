@@ -22,7 +22,7 @@
     clippy::multiple_crate_versions, // this is a mess due to winit dependencies and wgpu dependencies not lining up
 )]
 
-/// Types for rendering tilemaps.
+#[cfg(feature = "unstable-apis")]
 pub mod tilemap;
 #[cfg(feature = "app")]
 #[doc(inline)]
@@ -42,10 +42,9 @@ cfg_if::cfg_if! {
 pub mod prelude {
     #[cfg(feature = "app")]
     pub use super::app::prelude::*;
-    pub use super::{
-        core::prelude::*,
-        tilemap::{
-            PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,
-        },
+    pub use super::core::prelude::*;
+    #[cfg(feature = "unstable-apis")]
+    pub use super::tilemap::{
+        PersistentMap, PersistentTileMap, PersistentTileProvider, Tile, TileMap, TileProvider,
     };
 }
