@@ -4,7 +4,7 @@ use figures::{Displayable, Figure, Round};
 
 use crate::{
     color::Color,
-    math::{Pixels, Point, Scaled},
+    math::{Pixels, Point},
     scene::{Element, Target},
     text::Font,
 };
@@ -90,7 +90,7 @@ impl PreparedSpan {
     pub fn render_baseline_at(
         &self,
         scene: &Target,
-        location: Point<f32, Scaled>,
+        location: impl Displayable<f32, Pixels = Point<f32, Pixels>>,
     ) -> crate::Result<()> {
         let effective_scale_factor = scene.scale();
 

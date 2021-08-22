@@ -21,7 +21,7 @@ impl Window for TextExample {
             Color::BISQUE,
             scene,
         )
-        .render_baseline_at(scene, Point::new(64., 64.))?;
+        .render_baseline_at(scene, Point::<f32, Scaled>::new(64., 64.))?;
         Ok(())
     }
 }
