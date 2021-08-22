@@ -40,7 +40,7 @@ impl Window for Simple {
 
         sprite.render_at(
             scene,
-            Rect::from(scene.size()).center(),
+            Rect::new(Point::default(), scene.size()).center(),
             SpriteRotation::around_center(self.rotation_angle),
         );
 
