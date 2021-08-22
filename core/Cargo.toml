@@ -6,15 +6,16 @@ edition = "2018"
 description = "2D rendering for Kludgine"
 readme = "../README.md"
 license = "MIT OR Apache-2.0"
-keywords = ["gamedev", "graphics", "gui", "wgpu"]
-categories = [
-    "gui",
-    "graphics",
-    "rendering::engine",
-    "game-engines",
-    "asynchronous",
-]
+keywords = ["gamedev", "graphics", "wgpu"]
+categories = ["graphics", "rendering::engine", "game-engines"]
 repository = "https://github.com/khonsulabs/kludgine"
+include = [
+    "/fonts",
+    "/src",
+    "../LICENSE-MIT",
+    "../LICENSE-APACHE",
+    "../COPYRIGHT",
+]
 
 [features]
 default = ["bundled-fonts"]

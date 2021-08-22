@@ -6,14 +6,8 @@ edition = "2018"
 description = "Build-related tasks"
 repository = "https://github.com/khonsulabs/kludgine"
 license = "MIT OR Apache-2.0"
-keywords = ["gamedev", "graphics", "gui", "wgpu"]
-categories = [
-    "gui",
-    "graphics",
-    "rendering::engine",
-    "game-engines",
-    "asynchronous",
-]
+keywords = ["gamedev", "graphics", "wgpu"]
+categories = ["graphics", "rendering::engine", "game-engines", "asynchronous"]
 readme = "../README.md"
 publish = false
 

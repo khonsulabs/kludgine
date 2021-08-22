@@ -6,14 +6,8 @@ edition = "2018"
 description = "Application and Windowing for Kludgine"
 readme = "../README.md"
 license = "MIT OR Apache-2.0"
-keywords = ["gamedev", "graphics", "gui", "wgpu"]
-categories = [
-    "gui",
-    "graphics",
-    "rendering::engine",
-    "game-engines",
-    "asynchronous",
-]
+keywords = ["gamedev", "graphics", "wgpu"]
+categories = ["graphics", "rendering::engine", "game-engines"]
 repository = "https://github.com/khonsulabs/kludgine"
 
 [features]
@@ -23,7 +17,7 @@ tokio-rt = ["tokio"]
 smol-rt = ["smol", "smol-timeout", "easy-parallel"]
 
 [dependencies]
-kludgine-core = { path = "../core" }
+kludgine-core = { version = "0.1.0-dev.0", path = "../core" }
 
 tracing = { version = "0.1" }
 tracing-futures = { version = "0.2" }
