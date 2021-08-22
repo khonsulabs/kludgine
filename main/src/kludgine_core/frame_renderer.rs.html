@@ -598,6 +598,7 @@
 <span id="596">596</span>
 <span id="597">597</span>
 <span id="598">598</span>
+<span id="599">599</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections::HashMap</span>,
@@ -652,6 +653,7 @@
     <span class="ident">textures</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">u64</span>, <span class="ident">BindingGroup</span><span class="op">&gt;</span>,
 }
 
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::large_enum_variant</span>)]</span>
 <span class="kw">enum</span> <span class="ident">Destination</span> {
     <span class="ident">Uninitialized</span>,
     <span class="ident">Device</span>,
