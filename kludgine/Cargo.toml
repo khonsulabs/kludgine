@@ -6,14 +6,8 @@ edition = "2018"
 description = "An asynchronous app and 2d game framework"
 readme = "../README.md"
 license = "MIT OR Apache-2.0"
-keywords = ["gamedev", "graphics", "gui", "wgpu"]
-categories = [
-    "gui",
-    "graphics",
-    "rendering::engine",
-    "game-engines",
-    "asynchronous",
-]
+keywords = ["gamedev", "graphics", "wgpu"]
+categories = ["graphics", "rendering::engine", "game-engines", "asynchronous"]
 repository = "https://github.com/khonsulabs/kludgine"
 
 [package.metadata.docs.rs]
