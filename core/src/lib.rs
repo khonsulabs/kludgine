@@ -57,6 +57,11 @@ pub use self::{
 
 /// A collection of commonly used exports provided by this crate.
 pub mod prelude {
+    pub use figures::{
+        Approx as _, Ceil as _, Displayable as _, Floor as _, One as _, Rectlike as _, Round as _,
+        Vectorlike as _, Zero as _,
+    };
+
     #[cfg(feature = "bundled-fonts-enabled")]
     pub use super::text::bundled_fonts;
     pub use super::{

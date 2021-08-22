@@ -1,5 +1,4 @@
 use kludgine::prelude::*;
-use kludgine_core::figures::Rectlike;
 
 fn main() {
     SingleWindowApplication::run(Simple::default());
@@ -39,11 +38,9 @@ impl Window for Simple {
     fn render(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
         let sprite = self.source_sprite.as_ref().unwrap();
 
-        let bounds = Rect::new(Point::default(), scene.size());
-
         sprite.render_at(
             scene,
-            bounds.center(),
+            Rect::from(scene.size()).center(),
             SpriteRotation::around_center(self.rotation_angle),
         );
 

@@ -1,6 +1,5 @@
 use kludgine::prelude::*;
 use kludgine_app::RedrawRequester;
-use kludgine_core::figures::Vectorlike;
 
 fn main() {
     SingleWindowApplication::run(OrthoTiles::default());
