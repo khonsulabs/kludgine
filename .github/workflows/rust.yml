@@ -24,8 +24,10 @@ jobs:
         with:
           ref: ${{ matrix.branch }}
       - name: Audit
+        # RUSTSEC-2021-0090: indirect dependency, ash https://github.com/MaikKlein/ash/issues/354
         run: |
-          cargo audit -D warnings
+          cargo audit -D warnings --ignore RUSTSEC-2021-0090
+          
 
   test:
     runs-on: ubuntu-latest
@@ -80,34 +82,4 @@ jobs:
           git-config-name: kl-botsu
           git-config-email: botsu@khonsulabs.com
           target-folder: /main/
-          clean: true
-
-  coverage:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Install x11 dependencies for Kludgine
-        run: |
-          sudo apt-get update -y -qq
-          sudo add-apt-repository ppa:kisak/kisak-mesa -y
-          sudo apt-get install -yqq \
-            libxcb-render-util0-dev \
-            libxcb-shape0-dev \
-            libxcb-xfixes0-dev \
-            mesa-vulkan-drivers
-
-      - name: Run code coverage
-        run: |
-          cargo xtask generate-code-coverage-report --install-dependencies
-
-      - name: Deploy Docs
-        if: github.ref == 'refs/heads/main'
-        uses: JamesIves/github-pages-deploy-action@releases/v4
-        with:
-          branch: gh-pages
-          folder: coverage/
-          git-config-name: kl-botsu
-          git-config-email: botsu@khonsulabs.com
-          target-folder: /coverage/
           clean: true
