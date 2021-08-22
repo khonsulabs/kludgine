@@ -634,6 +634,15 @@
 <span id="632">632</span>
 <span id="633">633</span>
 <span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">figures</span>::{<span class="ident">Displayable</span>, <span class="ident">Pixels</span>, <span class="ident">Points</span>, <span class="ident">Scaled</span>};
 
@@ -1153,12 +1162,23 @@
 
 <span class="doccomment">/// A rotation of a sprite.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
+<span class="attribute">#[<span class="ident">must_use</span>]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Unit</span> <span class="op">=</span> <span class="ident">Scaled</span><span class="op">&gt;</span> {
     <span class="doccomment">/// The angle to rotate around `screen_location`.</span>
     <span class="kw">pub</span> <span class="ident">angle</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Angle</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The location to rotate the sprite around. If not specified, the center</span>
     <span class="doccomment">/// of the sprite is used.</span>
     <span class="kw">pub</span> <span class="ident">location</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Returns a value that performs no rotation.</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">none</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">angle</span>: <span class="prelude-val">None</span>,
+            <span class="ident">location</span>: <span class="prelude-val">None</span>,
+        }
+    }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
@@ -1172,7 +1192,6 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Returns a rotation around the center of the shape.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">around_center</span>(<span class="ident">angle</span>: <span class="ident">Angle</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">angle</span>: <span class="prelude-val">Some</span>(<span class="ident">angle</span>),
@@ -1181,7 +1200,6 @@
     }
 
     <span class="doccomment">/// Returns a rotation around `location`.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">around</span>(<span class="ident">angle</span>: <span class="ident">Angle</span>, <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">angle</span>: <span class="prelude-val">Some</span>(<span class="ident">angle</span>),

@@ -441,7 +441,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">kludgine_core::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">tile</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">provider</span>.<span class="ident">tile</span>(<span class="ident">tile</span>) {
             <span class="kw">let</span> <span class="ident">sprite</span> <span class="op">=</span> <span class="ident">tile</span>.<span class="ident">sprite</span>.<span class="ident">get_frame</span>(<span class="ident">elapsed</span>)<span class="question-mark">?</span>;
-            <span class="ident">sprite</span>.<span class="ident">render_raw_with_alpha_in_box</span>(<span class="ident">scene</span>, <span class="ident">destination</span>, <span class="ident">SpriteRotation::default</span>(), <span class="number">1.</span>);
+            <span class="ident">sprite</span>.<span class="ident">render_raw_with_alpha_in_box</span>(<span class="ident">scene</span>, <span class="ident">destination</span>, <span class="ident">SpriteRotation::none</span>(), <span class="number">1.</span>);
         }
         <span class="prelude-val">Ok</span>(())
     }
