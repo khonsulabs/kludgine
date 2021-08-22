@@ -1179,6 +1179,14 @@
             <span class="ident">location</span>: <span class="prelude-val">None</span>,
         }
     }
+
+    <span class="doccomment">/// Returns a rotation around the center of the shape.</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">around_center</span>(<span class="ident">angle</span>: <span class="ident">Angle</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">angle</span>: <span class="prelude-val">Some</span>(<span class="ident">angle</span>),
+            <span class="ident">location</span>: <span class="prelude-val">None</span>,
+        }
+    }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
@@ -1191,14 +1199,6 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns a rotation around the center of the shape.</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">around_center</span>(<span class="ident">angle</span>: <span class="ident">Angle</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">angle</span>: <span class="prelude-val">Some</span>(<span class="ident">angle</span>),
-            <span class="ident">location</span>: <span class="prelude-val">None</span>,
-        }
-    }
-
     <span class="doccomment">/// Returns a rotation around `location`.</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">around</span>(<span class="ident">angle</span>: <span class="ident">Angle</span>, <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {

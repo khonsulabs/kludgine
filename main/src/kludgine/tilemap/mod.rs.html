@@ -321,7 +321,23 @@
 <span id="319">319</span>
 <span id="320">320</span>
 <span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
 </pre><pre class="rust">
+<span class="doccomment">//! Types for rendering tilemaps. Requires `unstable-apis` feature flag.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This module will likely be removed from `kludgine` and relocated to the</span>
+<span class="doccomment">//! [`gooey-renderer`](https://gooey.rs/main/gooey/renderer/trait.Renderer.html)</span>
+<span class="doccomment">//! ecosystem. The refactored tilemap will still be usable by `kludgine` apps</span>
+<span class="doccomment">//! without using a `gooey` user interface, it will just use the `Renderer`</span>
+<span class="doccomment">//! trait instead of directly interacting with a `Target`.</span>
+
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">mem</span>,
     <span class="ident">ops</span>::{<span class="ident">Deref</span>, <span class="ident">DerefMut</span>},
