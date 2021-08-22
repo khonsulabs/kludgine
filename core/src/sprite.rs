@@ -183,10 +183,11 @@ impl Sprite {
 
             let duration = match frame["duration"].as_u64() {
                 Some(millis) => Duration::from_millis(millis),
-                None =>
+                None => {
                     return Err(Error::SpriteParse(
                         "invalid aseprite json: invalid duration".to_owned(),
-                    )),
+                    ))
+                }
             };
 
             let frame = Rect::new(
@@ -218,10 +219,13 @@ impl Sprite {
 
             let source = SpriteSource::new(frame, texture.clone());
 
-            frames.insert(frame_number, SpriteFrame {
-                duration: Some(duration),
-                source,
-            });
+            frames.insert(
+                frame_number,
+                SpriteFrame {
+                    duration: Some(duration),
+                    source,
+                },
+            );
         }
 
         let mut animations = HashMap::new();

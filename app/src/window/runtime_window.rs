@@ -273,10 +273,11 @@ impl RuntimeWindow {
                         window.scene_mut().set_size(size.cast_unit());
                         window.scene_mut().set_dpi_scale(scale_factor);
                     }
-                    WindowEvent::CloseRequested =>
+                    WindowEvent::CloseRequested => {
                         if Self::request_window_close(id, &mut window)? {
                             return Ok(());
-                        },
+                        }
+                    }
                     WindowEvent::Input(input) => {
                         if let Event::Keyboard {
                             key: Some(key),

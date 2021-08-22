@@ -49,8 +49,9 @@ impl ShapeGeometry<Pixels> {
         match self {
             Self::Empty => Self::Empty,
             Self::Path(path) => Self::Path(path.translate_and_convert_to_device(location, scene)),
-            Self::Circle(circle) =>
-                Self::Circle(circle.translate_and_convert_to_device(location, scene)),
+            Self::Circle(circle) => {
+                Self::Circle(circle.translate_and_convert_to_device(location, scene))
+            }
         }
     }
 }
