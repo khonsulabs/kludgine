@@ -26,7 +26,7 @@ impl Text {
         let size_in_pixels = size.to_pixels(scene.scale());
         let characters = text.chars().collect::<Vec<_>>();
         let mut caret = Figure::new(0.);
-        let mut glyphs = Vec::new();
+        let mut glyphs = Vec::with_capacity(characters.len());
         let mut last_glyph_id = None;
         for (source_offset, &c) in characters.iter().enumerate() {
             let base_glyph = font.glyph(c);
