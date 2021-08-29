@@ -104,7 +104,7 @@ impl Target {
                     .unwrap_or_default()
                     .as_sized(),
                 None => new_clip
-                    .intersection(&SizedRect::new(Point::default(), self.size_in_pixels()))
+                    .intersection(&SizedRect::from(self.size_in_pixels()))
                     .unwrap_or_default()
                     .as_sized(),
             }),

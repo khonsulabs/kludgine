@@ -31,27 +31,27 @@ serialization = ["serde", "figures/serde", "palette/serializing"]
 approx = "0.5"
 easygpu = "0.0.13"
 easygpu-lyon = "0.0.13"
-image = { version = ">=0.23.12", default-features = false }
+image = { version=">=0.23.12", default-features=false }
 palette = "0.6"
 futures-timer = "3"
-figures = "0.1"
+figures = ">=0.1.1"
 futures = "0.3"
 instant = "0.1.9"
 flume = "0.10"
-rusttype = { version = "0.9", features = ["gpu_cache"] }
+rusttype = { version="0.9", features=["gpu_cache"] }
 platforms = "1"
 ttf-parser = "0.6"
 json = "0.12"
-serde = { version = "1", optional = true, features = ["derive"] }
+serde = { version="1", optional=true, features=["derive"] }
 winit = "0.25"
-bytemuck = { version = "1", features = ["derive"] }
+bytemuck = { version="1", features=["derive"] }
 lazy_static = "1"
 thiserror = "1"
 
-tracing = { version = "0.1" }
-tracing-futures = { version = "0.2" }
+tracing = { version="0.1" }
+tracing-futures = { version="0.2" }
 
 
 [dev-dependencies]
-tokio = { version = "1.0", features = ["full"] }
-image = { version = ">=0.23.12", default-features = false, features = ["png"] }
+tokio = { version="1.0", features=["full"] }
+image = { version=">=0.23.12", default-features=false, features=["png"] }
