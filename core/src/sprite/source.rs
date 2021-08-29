@@ -1,4 +1,4 @@
-use figures::{Displayable, Rectlike};
+use figures::{Displayable, Rectlike, Scaled};
 
 use crate::{
     math::{ExtentsRect, Pixels, Point, Rect, Size},
@@ -167,7 +167,11 @@ impl SpriteSource {
             scene,
             Rect::new(
                 location.to_pixels(scene.scale()),
-                self.location.size().cast::<f32>().cast_unit(),
+                self.location
+                    .size()
+                    .cast::<f32>()
+                    .cast_unit::<Scaled>()
+                    .to_pixels(scene.scale()),
             ),
             rotation,
             alpha,
