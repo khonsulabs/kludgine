@@ -4,7 +4,7 @@ use std::{
 };
 
 use kludgine_core::{
-    figures::{num_traits::One, Points},
+    figures::{num_traits::One, Pixels, Point, Points},
     flume,
     math::{Scale, Scaled, Size},
     scene::Target,
@@ -133,71 +133,71 @@ pub trait Window: Send + Sync + 'static {
 pub trait WindowCreator: Window {
     /// Returns a [`WindowBuilder`] for this window.
     #[must_use]
-    fn get_window_builder() -> WindowBuilder {
+    fn get_window_builder(&self) -> WindowBuilder {
         WindowBuilder::default()
-            .with_title(Self::window_title())
-            .with_initial_system_theme(Self::initial_system_theme())
-            .with_size(Self::initial_size())
-            .with_resizable(Self::resizable())
-            .with_maximized(Self::maximized())
-            .with_visible(Self::visible())
-            .with_transparent(Self::transparent())
-            .with_decorations(Self::decorations())
-            .with_always_on_top(Self::always_on_top())
+            .with_title(self.window_title())
+            .with_initial_system_theme(self.initial_system_theme())
+            .with_size(self.initial_size())
+            .with_resizable(self.resizable())
+            .with_maximized(self.maximized())
+            .with_visible(self.visible())
+            .with_transparent(self.transparent())
+            .with_decorations(self.decorations())
+            .with_always_on_top(self.always_on_top())
     }
 
     /// The initial title of the window.
     #[must_use]
-    fn window_title() -> String {
+    fn window_title(&self) -> String {
         "Kludgine".to_owned()
     }
 
     /// The initial size of the window.
     #[must_use]
-    fn initial_size() -> Size<u32, Scaled> {
+    fn initial_size(&self) -> Size<u32, Pixels> {
         Size::new(1024, 768)
     }
 
     /// Whether the window should be resizable or not.
     #[must_use]
-    fn resizable() -> bool {
+    fn resizable(&self) -> bool {
         true
     }
 
     /// Whether the window should be maximized or not.
     #[must_use]
-    fn maximized() -> bool {
+    fn maximized(&self) -> bool {
         false
     }
 
     /// Whether the window should be visible or not.
     #[must_use]
-    fn visible() -> bool {
+    fn visible(&self) -> bool {
         true
     }
 
     /// Whether the window should be transparent or not.
     #[must_use]
-    fn transparent() -> bool {
+    fn transparent(&self) -> bool {
         false
     }
 
     /// Whether the window should be drawn with decorations or not.
     #[must_use]
-    fn decorations() -> bool {
+    fn decorations(&self) -> bool {
         true
     }
 
     /// Whether the window should always be on top or not.
     #[must_use]
-    fn always_on_top() -> bool {
+    fn always_on_top(&self) -> bool {
         false
     }
 
     /// The default [`Theme`] for the [`Window`] if `winit` is unable to
     /// determine the system theme.
     #[must_use]
-    fn initial_system_theme() -> Theme {
+    fn initial_system_theme(&self) -> Theme {
         Theme::Light
     }
 }
@@ -206,7 +206,8 @@ pub trait WindowCreator: Window {
 #[derive(Default)]
 pub struct WindowBuilder {
     title: Option<String>,
-    size: Option<Size<u32, Scaled>>,
+    position: Option<Point<i32, Pixels>>,
+    size: Option<Size<u32, Pixels>>,
     resizable: Option<bool>,
     maximized: Option<bool>,
     visible: Option<bool>,
@@ -227,7 +228,14 @@ impl WindowBuilder {
 
     /// Builder-style function. Sets `size` and returns self.
     #[must_use]
-    pub const fn with_size(mut self, size: Size<u32, Scaled>) -> Self {
+    pub const fn with_position(mut self, position: Point<i32, Pixels>) -> Self {
+        self.position = Some(position);
+        self
+    }
+
+    /// Builder-style function. Sets `size` and returns self.
+    #[must_use]
+    pub const fn with_size(mut self, size: Size<u32, Pixels>) -> Self {
         self.size = Some(size);
         self
     }
@@ -296,6 +304,14 @@ impl From<WindowBuilder> for WinitWindowBuilder {
         if let Some(title) = wb.title {
             builder = builder.with_title(title);
         }
+        if let Some(position) = wb.position {
+            builder = builder.with_position(winit::dpi::Position::Physical(
+                winit::dpi::PhysicalPosition {
+                    x: position.x,
+                    y: position.y,
+                },
+            ));
+        }
         if let Some(size) = wb.size {
             builder =
                 builder.with_inner_size(winit::dpi::Size::Physical(winit::dpi::PhysicalSize {
@@ -341,7 +357,7 @@ where
     T: Window + WindowCreator,
 {
     fn open(self) {
-        crate::runtime::Runtime::open_window(Self::get_window_builder(), self);
+        crate::runtime::Runtime::open_window(self.get_window_builder(), self);
     }
 }
 

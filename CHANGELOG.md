@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `WindowHandle`, which allows interacting with the window after it has
   been built. This parameter is passed into nearly all `Window` trait functions
   now.
+- `WindowCreator` now takes `&self` parameter for all methods. There was no
+  reason for these methods to be static, and it prevented a window from being
+  able to control how it was built based on its initial configuration.
 
 ### Fixes
 

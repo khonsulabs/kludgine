@@ -43,6 +43,6 @@ where
         let app = Self {
             phantom: PhantomData::default(),
         };
-        Runtime::new(app).run(T::get_window_builder(), window)
+        Runtime::new(app).run(window.get_window_builder(), window)
     }
 }
