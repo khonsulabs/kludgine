@@ -1,16 +1,15 @@
-use std::{
-    collections::HashMap,
-    sync::{atomic::Ordering, RwLock},
-};
+use std::{collections::HashMap, sync::atomic::Ordering};
 
 use kludgine_core::{
     flume,
     winit::{
         self,
         event::Event,
+        event_loop::EventLoopProxy,
         window::{Theme, WindowId},
     },
 };
+use parking_lot::{MappedRwLockReadGuard, Mutex, RwLock, RwLockReadGuard};
 use platforms::target::{OS, TARGET_OS};
 
 use crate::{
@@ -30,14 +29,13 @@ pub enum RuntimeRequest {
 
 impl RuntimeRequest {
     pub fn send(self) {
-        let sender: flume::Sender<Self> = {
-            let guard = GLOBAL_RUNTIME_SENDER.lock().expect("Error locking mutex");
-            match *guard {
-                Some(ref sender) => sender.clone(),
-                None => panic!("Uninitialized runtime"),
+        let guard = GLOBAL_RUNTIME_SENDER.lock();
+        match *guard {
+            Some(ref sender) => {
+                let _ = sender.send_event(self);
             }
-        };
-        sender.send(self).unwrap_or_default();
+            None => panic!("Uninitialized runtime"),
+        }
     }
 }
 
@@ -47,21 +45,19 @@ pub enum RuntimeEvent {
     WindowClosed,
 }
 
-use std::sync::Mutex;
-
 use kludgine_core::lazy_static::lazy_static;
 
 pub trait EventProcessor: Send + Sync {
     fn process_event(
         &mut self,
-        event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
-        event: winit::event::Event<'_, ()>,
+        event_loop: &winit::event_loop::EventLoopWindowTarget<RuntimeRequest>,
+        event: winit::event::Event<'_, RuntimeRequest>,
         control_flow: &mut winit::event_loop::ControlFlow,
     );
 }
 
 lazy_static! {
-    pub static ref GLOBAL_RUNTIME_SENDER: Mutex<Option<flume::Sender<RuntimeRequest>>> =
+    pub static ref GLOBAL_RUNTIME_SENDER: Mutex<Option<EventLoopProxy<RuntimeRequest>>> =
         Mutex::new(None);
     pub static ref GLOBAL_RUNTIME_RECEIVER: Mutex<Option<flume::Receiver<RuntimeEvent>>> =
         Mutex::new(None);
@@ -85,18 +81,10 @@ impl<App> ApplicationRuntime<App>
 where
     App: Application + 'static,
 {
-    fn launch(self) -> (flume::Receiver<RuntimeRequest>, flume::Sender<RuntimeEvent>) {
+    fn launch(self) -> flume::Sender<RuntimeEvent> {
         let (event_sender, event_receiver) = flume::unbounded();
-        let (request_sender, request_receiver) = flume::unbounded();
         {
-            let mut global_sender = GLOBAL_RUNTIME_SENDER
-                .lock()
-                .expect("Error locking global sender");
-            assert!(global_sender.is_none());
-            *global_sender = Some(request_sender);
-            let mut global_receiver = GLOBAL_RUNTIME_RECEIVER
-                .lock()
-                .expect("Error locking global receiver");
+            let mut global_receiver = GLOBAL_RUNTIME_RECEIVER.lock();
             assert!(global_receiver.is_none());
             *global_receiver = Some(event_receiver);
         }
@@ -106,7 +94,7 @@ where
             .spawn(move || self.async_main())
             .unwrap();
 
-        (request_receiver, event_sender)
+        event_sender
     }
 
     fn async_main(mut self)
@@ -124,9 +112,7 @@ where
     {
         let mut running = false;
         let event_receiver = {
-            let guard = GLOBAL_RUNTIME_RECEIVER
-                .lock()
-                .expect("Error locking runtime reciver");
+            let guard = GLOBAL_RUNTIME_RECEIVER.lock();
             guard.as_ref().expect("Receiver was not set").clone()
         };
         while let Some(event) = event_receiver.recv().ok() {
@@ -149,12 +135,22 @@ impl EventProcessor for Runtime {
     #[cfg_attr(not(feature = "multiwindow"), allow(unused_variables))] // event_loop is unused if this feature isn't specified
     fn process_event(
         &mut self,
-        event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
-        event: winit::event::Event<'_, ()>,
+        event_loop: &winit::event_loop::EventLoopWindowTarget<RuntimeRequest>,
+        event: winit::event::Event<'_, RuntimeRequest>,
         control_flow: &mut winit::event_loop::ControlFlow,
     ) {
-        while let Ok(request) = self.request_receiver.try_recv() {
-            match request {
+        // while let Ok(request) = self.request_receiver.try_recv() {
+        //
+        // }
+        Self::try_process_window_events(Some(&event));
+
+        match event {
+            winit::event::Event::NewEvents(winit::event::StartCause::Init) => {
+                self.event_sender
+                    .send(RuntimeEvent::Running)
+                    .unwrap_or_default();
+            }
+            winit::event::Event::UserEvent(request) => match request {
                 #[cfg(feature = "multiwindow")]
                 RuntimeRequest::OpenWindow {
                     window_sender,
@@ -171,14 +167,8 @@ impl EventProcessor for Runtime {
                         .send(RuntimeEvent::WindowClosed)
                         .unwrap_or_default();
                 }
-            }
-        }
-        Self::process_window_events(&event);
-
-        if let winit::event::Event::NewEvents(winit::event::StartCause::Init) = event {
-            self.event_sender
-                .send(RuntimeEvent::Running)
-                .unwrap_or_default();
+            },
+            _ => {}
         }
 
         *control_flow = winit::event_loop::ControlFlow::Wait;
@@ -189,11 +179,9 @@ impl EventProcessor for Runtime {
 /// compatibility, ensure that you call [`Runtime::run()`] from thee main
 /// thread.
 pub struct Runtime {
-    request_receiver: flume::Receiver<RuntimeRequest>,
     event_sender: flume::Sender<RuntimeEvent>,
 }
 
-#[cfg(feature = "multiwindow")]
 lazy_static! {
     pub static ref WINIT_WINDOWS: RwLock<HashMap<WindowId, winit::window::Window>> =
         RwLock::new(HashMap::new());
@@ -213,19 +201,16 @@ impl Runtime {
         Self::initialize();
 
         let app_runtime = ApplicationRuntime { app };
-        let (request_receiver, event_sender) = app_runtime.launch();
+        let event_sender = app_runtime.launch();
 
-        Self {
-            request_receiver,
-            event_sender,
-        }
+        Self { event_sender }
     }
 
     #[cfg(feature = "multiwindow")]
     fn internal_open_window(
         window_sender: &flume::Sender<RuntimeWindowConfig>,
         builder: WindowBuilder,
-        event_loop: &winit::event_loop::EventLoopWindowTarget<()>,
+        event_loop: &winit::event_loop::EventLoopWindowTarget<RuntimeRequest>,
     ) {
         let builder: winit::window::WindowBuilder = builder.into();
         let winit_window = builder.build(event_loop).unwrap();
@@ -233,7 +218,7 @@ impl Runtime {
             .try_send(RuntimeWindowConfig::new(&winit_window))
             .unwrap();
 
-        let mut windows = WINIT_WINDOWS.write().unwrap();
+        let mut windows = WINIT_WINDOWS.write();
         windows.insert(winit_window.id(), winit_window);
     }
 
@@ -246,7 +231,7 @@ impl Runtime {
     where
         T: Window + Sized + 'static,
     {
-        let event_loop = winit::event_loop::EventLoop::new();
+        let event_loop = winit::event_loop::EventLoop::<RuntimeRequest>::with_user_event();
         let initial_system_theme = initial_window.initial_system_theme.unwrap_or(Theme::Light);
         let mut initial_window: winit::window::WindowBuilder = initial_window.into();
 
@@ -284,10 +269,15 @@ impl Runtime {
 
         RuntimeWindow::open(&window_receiver, initial_system_theme, window);
 
-        #[cfg(feature = "multiwindow")]
         {
-            let mut windows = WINIT_WINDOWS.write().unwrap();
+            let mut windows = WINIT_WINDOWS.write();
             windows.insert(initial_window.id(), initial_window);
+        }
+
+        {
+            let mut global_sender = GLOBAL_RUNTIME_SENDER.lock();
+            assert!(global_sender.is_none());
+            *global_sender = Some(event_loop.create_proxy());
         }
 
         // Install the global event handler, and also ensure we aren't trying to
@@ -297,16 +287,12 @@ impl Runtime {
         // mutex. This abstraction also wraps it in dynamic dispatch, because we can't
         // have a generic-type static variable.
         {
-            let mut event_handler = GLOBAL_EVENT_HANDLER
-                .lock()
-                .expect("Error locking global event handler");
+            let mut event_handler = GLOBAL_EVENT_HANDLER.lock();
             assert!(event_handler.is_none());
             *event_handler = Some(Box::new(self));
         }
         event_loop.run(move |event, event_loop, control_flow| {
-            let mut event_handler_guard = GLOBAL_EVENT_HANDLER
-                .lock()
-                .expect("Error locking main event handler");
+            let mut event_handler_guard = GLOBAL_EVENT_HANDLER.lock();
             let event_handler = event_handler_guard
                 .as_mut()
                 .expect("No event handler installed");
@@ -333,17 +319,24 @@ impl Runtime {
         RuntimeWindow::open(&window_receiver, initial_system_theme, window);
     }
 
-    fn process_window_events(event: &Event<'_, ()>) {
-        let mut windows = WINDOWS.write().unwrap();
+    pub(crate) fn try_process_window_events(event: Option<&Event<'_, RuntimeRequest>>) -> bool {
+        let mut windows = match WINDOWS.try_write() {
+            Some(guard) => guard,
+            None => return false,
+        };
 
-        if let Event::WindowEvent { window_id, event } = event {
-            if let Some(window) = windows.get_mut(window_id) {
-                window.process_event(event);
+        match event {
+            Some(Event::WindowEvent { window_id, event }) => {
+                if let Some(window) = windows.get_mut(window_id) {
+                    window.process_event(event);
+                }
             }
-        } else if let Event::RedrawRequested(window_id) = event {
-            if let Some(window) = windows.get_mut(window_id) {
-                window.request_redraw();
+            Some(Event::RedrawRequested(window_id)) => {
+                if let Some(window) = windows.get_mut(window_id) {
+                    window.request_redraw();
+                }
             }
+            _ => {}
         }
 
         {
@@ -353,24 +346,25 @@ impl Runtime {
         }
 
         if opened_first_window() {
-            #[cfg(not(feature = "multiwindow"))]
-            {
-                windows.retain(|_, w| w.keep_running.load(Ordering::SeqCst));
-            }
-
-            #[cfg(feature = "multiwindow")]
-            {
-                let mut winit_windows = WINIT_WINDOWS.write().unwrap();
-                windows.retain(|id, w| {
-                    if w.keep_running.load(Ordering::SeqCst) {
-                        true
-                    } else {
-                        winit_windows.remove(id);
-                        false
-                    }
-                });
-            };
+            let mut winit_windows = WINIT_WINDOWS.write();
+            windows.retain(|id, w| {
+                if w.keep_running.load(Ordering::SeqCst) {
+                    true
+                } else {
+                    winit_windows.remove(id);
+                    false
+                }
+            });
         }
+
+        true
+    }
+
+    pub(crate) fn winit_window(
+        id: &WindowId,
+    ) -> Option<MappedRwLockReadGuard<'static, winit::window::Window>> {
+        let windows = WINIT_WINDOWS.read();
+        RwLockReadGuard::try_map(windows, |windows| windows.get(id)).ok()
     }
 }
 

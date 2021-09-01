@@ -14,6 +14,7 @@ use kludgine_core::{
     scene::{Scene, SceneEvent},
     winit::{
         self,
+        dpi::{PhysicalPosition, PhysicalSize},
         event::WindowEvent as WinitWindowEvent,
         window::{Theme, WindowId},
     },
@@ -147,7 +148,7 @@ impl RuntimeWindow {
         };
         runtime_window.notify_size_changed();
 
-        let mut windows = WINDOWS.write().unwrap();
+        let mut windows = WINDOWS.write();
         windows.insert(window_id, runtime_window);
 
         set_opened_first_window();
@@ -253,7 +254,7 @@ impl RuntimeWindow {
         let scene = Scene::new(scene_event_sender, initial_system_theme);
 
         let target_fps = window.target_fps();
-        let mut window = OpenWindow::new(window, event_sender, scene);
+        let mut window = OpenWindow::new(window, id, event_sender, scene);
 
         window.initialize()?;
         loop {
@@ -371,6 +372,9 @@ impl RuntimeWindow {
     pub(crate) fn receive_messages(&mut self) {
         while let Ok(request) = self.receiver.try_recv() {
             match request {
+                WindowMessage::RequestClose => {
+                    let _ = self.event_sender.send(WindowEvent::CloseRequested);
+                }
                 WindowMessage::Close => {
                     let mut channels = WINDOW_CHANNELS.lock().unwrap();
                     channels.remove(&self.window_id);
@@ -495,5 +499,93 @@ impl RuntimeWindow {
                 scale_factor: self.last_known_scale_factor.dpi_scale(),
             })
             .unwrap_or_default();
+    }
+}
+
+/// A handle to an open window.
+#[derive(Clone, Copy, Debug)]
+pub struct WindowHandle(pub WindowId);
+
+impl WindowHandle {
+    /// Sets the window title.
+    pub fn set_title(&self, title: &str) {
+        if let Some(window) = Runtime::winit_window(&self.0) {
+            window.set_title(title);
+        }
+    }
+
+    /// Returns the size of the content area of the window.
+    #[must_use]
+    pub fn inner_size(&self) -> Size<u32, Pixels> {
+        Runtime::winit_window(&self.0)
+            .map(|window| Size::new(window.inner_size().width, window.inner_size().height))
+            .unwrap_or_default()
+    }
+    /// Attempts to resize the window to `new_size`. This may not work on all platforms.
+    pub fn set_inner_size(&self, new_size: Size<u32, Pixels>) {
+        if let Some(window) = Runtime::winit_window(&self.0) {
+            window.set_inner_size(PhysicalSize::new(new_size.width, new_size.height));
+        }
+    }
+    /// Returns the position on the screen of the window's top-left corner. On
+    /// platforms where this is unsupported, `innner_position()` is returned.
+    #[must_use]
+    pub fn outer_position(&self) -> Point<i32, Pixels> {
+        Runtime::winit_window(&self.0)
+            .and_then(|window| window.outer_position().ok())
+            .map(|position| Point::new(position.x, position.y))
+            .unwrap_or_default()
+    }
+
+    /// Sets the outer position of the window. This may not work on all platforms.
+    pub fn set_outer_position(&self, new_position: Point<i32, Pixels>) {
+        if let Some(window) = Runtime::winit_window(&self.0) {
+            window.set_outer_position(PhysicalPosition::new(new_position.x, new_position.y));
+        }
+    }
+
+    /// Returns the position of the top-left of the content area in screen coordinates.
+    #[must_use]
+    pub fn inner_position(&self) -> Point<i32, Pixels> {
+        Runtime::winit_window(&self.0)
+            .and_then(|window| window.inner_position().ok())
+            .map(|position| Point::new(position.x, position.y))
+            .unwrap_or_default()
+    }
+
+    /// Sets whether the window should always be on top of other windows.
+    pub fn set_always_on_top(&self, always: bool) {
+        if let Some(window) = Runtime::winit_window(&self.0) {
+            window.set_always_on_top(always);
+        }
+    }
+
+    /// Returns true if the window is maximized.
+    #[must_use]
+    pub fn maximized(&self) -> bool {
+        if let Some(window) = Runtime::winit_window(&self.0) {
+            window.is_maximized()
+        } else {
+            false
+        }
+    }
+
+    /// Sets whether the window should be maximized.
+    pub fn set_maximized(&self, maximized: bool) {
+        if let Some(window) = Runtime::winit_window(&self.0) {
+            window.set_maximized(maximized);
+        }
+    }
+
+    /// Sets whether the window should be minimized.
+    pub fn set_minimized(&self, minimized: bool) {
+        if let Some(window) = Runtime::winit_window(&self.0) {
+            window.set_minimized(minimized);
+        }
+    }
+
+    /// Requests that the window close.
+    pub fn request_close(&self) {
+        drop(WindowMessage::RequestClose.send_to(self.0));
     }
 }

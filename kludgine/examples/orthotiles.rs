@@ -26,7 +26,12 @@ impl Window for OrthoTiles {
         Some(60)
     }
 
-    fn initialize(&mut self, _scene: &Target, _requester: RedrawRequester) -> kludgine::Result<()> {
+    fn initialize(
+        &mut self,
+        _scene: &Target,
+        _requester: RedrawRequester,
+        _window: WindowHandle,
+    ) -> kludgine::Result<()> {
         self.load_assets()?;
         self.zoom = 1.0;
         // self.position.x = MAP_SIZE as f32 * 32.0 / 2.0;
@@ -34,7 +39,12 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    fn update(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
+    fn update(
+        &mut self,
+        scene: &Target,
+        _status: &mut RedrawStatus,
+        _window: WindowHandle,
+    ) -> kludgine::Result<()> {
         let stickguy = self.stickguy.as_mut().unwrap();
         // Our default animation is Idle
         let mut animation = "Idle";
@@ -56,7 +66,12 @@ impl Window for OrthoTiles {
         Ok(())
     }
 
-    fn render(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
+    fn render(
+        &mut self,
+        scene: &Target,
+        _status: &mut RedrawStatus,
+        _window: WindowHandle,
+    ) -> kludgine::Result<()> {
         let center = scene.size().to_vector().to_point() / 2.0;
         let map = self.map.as_mut().unwrap();
         map.render_scaled(
@@ -85,6 +100,7 @@ impl Window for OrthoTiles {
         input: InputEvent,
         status: &mut RedrawStatus,
         _scene: &Target,
+        _window: WindowHandle,
     ) -> kludgine::Result<()> {
         if let Event::MouseWheel { delta, .. } = input.event {
             let zoom_amount = match delta {

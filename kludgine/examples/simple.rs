@@ -21,13 +21,23 @@ impl Window for Simple {
         Some(60)
     }
 
-    fn initialize(&mut self, _scene: &Target, _requester: RedrawRequester) -> kludgine::Result<()> {
+    fn initialize(
+        &mut self,
+        _scene: &Target,
+        _requester: RedrawRequester,
+        _window: WindowHandle,
+    ) -> kludgine::Result<()> {
         let texture = Texture::load("kludgine/examples/assets/k.png")?;
         self.source_sprite = Some(SpriteSource::entire_texture(texture));
         Ok(())
     }
 
-    fn update(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
+    fn update(
+        &mut self,
+        scene: &Target,
+        _status: &mut RedrawStatus,
+        _window: WindowHandle,
+    ) -> kludgine::Result<()> {
         if let Some(elapsed) = scene.elapsed() {
             self.rotation_angle += Angle::Radians(elapsed.as_secs_f32());
         }
@@ -35,7 +45,12 @@ impl Window for Simple {
         Ok(())
     }
 
-    fn render(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
+    fn render(
+        &mut self,
+        scene: &Target,
+        _status: &mut RedrawStatus,
+        _window: WindowHandle,
+    ) -> kludgine::Result<()> {
         let sprite = self.source_sprite.as_ref().unwrap();
 
         sprite.render_at(

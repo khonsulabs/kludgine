@@ -18,6 +18,7 @@ smol-rt = ["smol", "smol-timeout", "easy-parallel"]
 
 [dependencies]
 kludgine-core = { version = "0.1.0-dev.0", path = "../core" }
+parking_lot = "0.11"
 
 tracing = { version = "0.1" }
 tracing-futures = { version = "0.2" }

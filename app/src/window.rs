@@ -15,7 +15,7 @@ use kludgine_core::{
 };
 use lazy_static::lazy_static;
 
-use crate::Error;
+use crate::{Error, Runtime};
 
 /// Types for event handling.
 pub mod event;
@@ -23,7 +23,7 @@ mod open;
 mod runtime_window;
 
 pub use open::{OpenWindow, RedrawRequester, RedrawStatus};
-pub use runtime_window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig};
+pub use runtime_window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig, WindowHandle};
 pub use winit::window::Icon;
 
 use self::event::InputEvent;
@@ -39,7 +39,12 @@ pub enum CloseResponse {
 /// Trait to implement a Window
 pub trait Window: Send + Sync + 'static {
     /// Called when the window is being initilaized.
-    fn initialize(&mut self, _scene: &Target, _redrawer: RedrawRequester) -> crate::Result<()>
+    fn initialize(
+        &mut self,
+        _scene: &Target,
+        _redrawer: RedrawRequester,
+        _window: WindowHandle,
+    ) -> crate::Result<()>
     where
         Self: Sized,
     {
@@ -49,7 +54,7 @@ pub trait Window: Send + Sync + 'static {
     /// The window was requested to be closed, most likely from the Close
     /// Button. Override this implementation if you want logic in place to
     /// prevent a window from closing.
-    fn close_requested(&mut self) -> crate::Result<CloseResponse> {
+    fn close_requested(&mut self, _window: WindowHandle) -> crate::Result<CloseResponse> {
         Ok(CloseResponse::Close)
     }
 
@@ -59,6 +64,7 @@ pub trait Window: Send + Sync + 'static {
         _input: InputEvent,
         _status: &mut RedrawStatus,
         _scene: &Target,
+        _window: WindowHandle,
     ) -> crate::Result<()>
     where
         Self: Sized,
@@ -72,6 +78,7 @@ pub trait Window: Send + Sync + 'static {
         _character: char,
         _status: &mut RedrawStatus,
         _scene: &Target,
+        _window: WindowHandle,
     ) -> crate::Result<()>
     where
         Self: Sized,
@@ -90,14 +97,24 @@ pub trait Window: Send + Sync + 'static {
     /// needs the window's contents to be redrawn or when [`RedrawStatus`]
     /// indicates a new frame should be rendered in [`Window::update()`].
     #[allow(unused_variables)]
-    fn render(&mut self, scene: &Target, status: &mut RedrawStatus) -> crate::Result<()> {
+    fn render(
+        &mut self,
+        scene: &Target,
+        status: &mut RedrawStatus,
+        _window: WindowHandle,
+    ) -> crate::Result<()> {
         Ok(())
     }
 
     /// Called on a regular basis as events come in. Use `status` to indicate
     /// when a redraw should happen.
     #[allow(unused_variables)]
-    fn update(&mut self, scene: &Target, status: &mut RedrawStatus) -> crate::Result<()>
+    fn update(
+        &mut self,
+        scene: &Target,
+        status: &mut RedrawStatus,
+        _window: WindowHandle,
+    ) -> crate::Result<()>
     where
         Self: Sized,
     {
@@ -335,6 +352,7 @@ lazy_static! {
 
 pub enum WindowMessage {
     Close,
+    RequestClose,
     SetAdditionalScale(Scale<f32, Scaled, Points>),
 }
 
@@ -352,6 +370,7 @@ impl WindowMessage {
         };
 
         sender.send(self).unwrap_or_default();
+        Runtime::try_process_window_events(None);
         Ok(())
     }
 }

@@ -33,7 +33,12 @@ enum StickGuy {
 }
 
 impl Window for SpriteSheetExample {
-    fn initialize(&mut self, _scene: &Target, _requester: RedrawRequester) -> kludgine::Result<()> {
+    fn initialize(
+        &mut self,
+        _scene: &Target,
+        _requester: RedrawRequester,
+        _window: WindowHandle,
+    ) -> kludgine::Result<()> {
         let texture = include_texture!("assets/stickguy.png")?;
         let sheet = SpriteSheet::new(
             texture,
@@ -109,7 +114,12 @@ impl Window for SpriteSheetExample {
         Ok(())
     }
 
-    fn update(&mut self, scene: &Target, status: &mut RedrawStatus) -> kludgine::Result<()> {
+    fn update(
+        &mut self,
+        scene: &Target,
+        status: &mut RedrawStatus,
+        _window: WindowHandle,
+    ) -> kludgine::Result<()> {
         let sprite = self.sprite.as_mut().unwrap();
         // Update the current frame.
         self.current_frame = Some(sprite.get_frame(scene.elapsed())?);
@@ -123,7 +133,12 @@ impl Window for SpriteSheetExample {
         Ok(())
     }
 
-    fn render(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
+    fn render(
+        &mut self,
+        scene: &Target,
+        _status: &mut RedrawStatus,
+        _window: WindowHandle,
+    ) -> kludgine::Result<()> {
         Shape::rect(Rect::new(Point::default(), scene.size()))
             .fill(Fill::new(Color::WHITE))
             .render(scene);

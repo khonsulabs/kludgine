@@ -1,9 +1,10 @@
 #![cfg(not(feature = "smol-rt"))]
 
-use std::{sync::RwLock, time::Duration};
+use std::time::Duration;
 
 use futures::future::Future;
 use lazy_static::lazy_static;
+use parking_lot::RwLock;
 
 lazy_static! {
     pub(crate) static ref GLOBAL_THREAD_POOL: RwLock<Option<tokio::runtime::Runtime>> =
@@ -11,9 +12,7 @@ lazy_static! {
 }
 
 pub fn initialize() {
-    let mut pool_guard = GLOBAL_THREAD_POOL
-        .write()
-        .expect("Error locking global thread pool");
+    let mut pool_guard = GLOBAL_THREAD_POOL.write();
     if pool_guard.is_some() {
         return;
     }
@@ -27,7 +26,7 @@ impl super::Runtime {
     pub fn spawn<Fut: Future<Output = T> + Send + 'static, T: Send + 'static>(
         future: Fut,
     ) -> tokio::task::JoinHandle<T> {
-        let guard = GLOBAL_THREAD_POOL.read().expect("Error getting runtime");
+        let guard = GLOBAL_THREAD_POOL.read();
         let executor = guard.as_ref().unwrap();
         executor.spawn(future)
     }
@@ -36,7 +35,7 @@ impl super::Runtime {
     pub fn block_on<'a, Fut: Future<Output = R> + Send + 'a, R: Send + Sync + 'a>(
         future: Fut,
     ) -> R {
-        let guard = GLOBAL_THREAD_POOL.read().expect("Error getting runtime");
+        let guard = GLOBAL_THREAD_POOL.read();
         let executor = guard.as_ref().unwrap();
         executor.block_on(future)
     }

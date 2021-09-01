@@ -13,7 +13,12 @@ impl WindowCreator for TextExample {
 }
 
 impl Window for TextExample {
-    fn render(&mut self, scene: &Target, _status: &mut RedrawStatus) -> kludgine::Result<()> {
+    fn render(
+        &mut self,
+        scene: &Target,
+        _status: &mut RedrawStatus,
+        _window: WindowHandle,
+    ) -> kludgine::Result<()> {
         Text::prepare(
             "Hello, World!",
             &ROBOTO,

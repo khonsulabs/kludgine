@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Breaking Changes
+
+- Added `WindowHandle`, which allows interacting with the window after it has
+  been built. This parameter is passed into nearly all `Window` trait functions
+  now.
+
+### Fixes
+
+- Rendering a SpriteSource using a Point without specifying a Size now renders
+  it at `Scaled` resolution. This restores the behavior before the parameters
+  were switched to `Displayable`.
+
+## v0.1.0-dev.0
+
+### Breaking Changes
+
 - Removed all user interface code, and spun off a new user interface project,
   [Gooey](https://github.com/khonsulabs/gooey).
 - Split Kludgine into three crates:
@@ -23,4 +39,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   forcing semver updates when the APIs change. After 1.0, breaking changes to
   `unstable-apis` will be one of the factors that causes minor version
   increments.
-

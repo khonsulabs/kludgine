@@ -8,7 +8,10 @@ use kludgine_core::{
     flume::Sender,
     math::Scale,
     scene::{Scene, Target},
+    winit::window::WindowId,
 };
+
+use crate::WindowHandle;
 
 use super::{
     event::{InputEvent, WindowEvent},
@@ -17,6 +20,7 @@ use super::{
 
 pub struct OpenWindow<T: Window> {
     window: T,
+    window_id: WindowId,
     pub(crate) redraw_status: RedrawStatus,
     scene: Arc<Scene>,
 }
@@ -100,9 +104,15 @@ impl RedrawStatus {
 }
 
 impl<T: Window> OpenWindow<T> {
-    pub(crate) fn new(window: T, event_sender: Sender<WindowEvent>, scene: Scene) -> Self {
+    pub(crate) fn new(
+        window: T,
+        window_id: WindowId,
+        event_sender: Sender<WindowEvent>,
+        scene: Scene,
+    ) -> Self {
         Self {
             window,
+            window_id,
             scene: Arc::new(scene),
             redraw_status: RedrawStatus {
                 needs_render: true,
@@ -156,7 +166,7 @@ impl<T: Window> OpenWindow<T> {
     }
 
     pub(crate) fn request_close(&mut self) -> crate::Result<CloseResponse> {
-        self.window.close_requested()
+        self.window.close_requested(WindowHandle(self.window_id))
     }
 
     pub(crate) fn process_input(&mut self, input: InputEvent) -> crate::Result<()> {
@@ -164,6 +174,7 @@ impl<T: Window> OpenWindow<T> {
             input,
             &mut self.redraw_status,
             &Target::from(self.scene.clone()),
+            WindowHandle(self.window_id),
         )
     }
 
@@ -172,6 +183,7 @@ impl<T: Window> OpenWindow<T> {
             character,
             &mut self.redraw_status,
             &Target::from(self.scene.clone()),
+            WindowHandle(self.window_id),
         )
     }
 
@@ -179,6 +191,7 @@ impl<T: Window> OpenWindow<T> {
         self.window.initialize(
             &Target::from(self.scene.clone()),
             self.redraw_status.redraw_requester(),
+            WindowHandle(self.window_id),
         )?;
 
         Ok(())
@@ -196,6 +209,7 @@ impl<T: Window> OpenWindow<T> {
                 offset: None,
             },
             &mut self.redraw_status,
+            WindowHandle(self.window_id),
         )?;
 
         Ok(())
@@ -212,6 +226,7 @@ impl<T: Window> OpenWindow<T> {
                 offset: None,
             },
             &mut self.redraw_status,
+            WindowHandle(self.window_id),
         )
     }
 

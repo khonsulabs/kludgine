@@ -1,8 +1,9 @@
-use std::{sync::RwLock, time::Duration};
+use std::time::Duration;
 
 use futures::future::Future;
 use kludgine_core::flume;
 use lazy_static::lazy_static;
+use parking_lot::RwLock;
 use smol_timeout::TimeoutExt;
 
 lazy_static! {
@@ -11,9 +12,7 @@ lazy_static! {
 
 pub fn initialize() {
     {
-        let mut pool_guard = GLOBAL_THREAD_POOL
-            .write()
-            .expect("Error locking global thread pool");
+        let mut pool_guard = GLOBAL_THREAD_POOL.write();
         if pool_guard.is_some() {
             return;
         }
@@ -31,7 +30,7 @@ pub fn initialize() {
             .each(0..4, |_| {
                 #[allow(clippy::await_holding_lock)] // this is an rwlock, not a mutex.
                 futures::executor::block_on(async {
-                    let guard = GLOBAL_THREAD_POOL.read().unwrap();
+                    let guard = GLOBAL_THREAD_POOL.read();
                     let executor = guard.as_ref().unwrap();
                     executor.run(shutdown.recv_async()).await
                 })
@@ -46,7 +45,7 @@ pub fn initialize() {
 impl super::Runtime {
     /// Spawns an async task.
     pub fn spawn<Fut: Future<Output = T> + Send + 'static, T: Send + 'static>(future: Fut) {
-        let guard = GLOBAL_THREAD_POOL.read().expect("Error getting runtime");
+        let guard = GLOBAL_THREAD_POOL.read();
         let executor = guard.as_ref().unwrap();
         executor.spawn(future).detach();
     }
