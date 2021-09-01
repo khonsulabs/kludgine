@@ -376,6 +376,22 @@
 <span id="374">374</span>
 <span id="375">375</span>
 <span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections::HashMap</span>,
@@ -383,7 +399,7 @@
 };
 
 <span class="kw">use</span> <span class="ident">kludgine_core</span>::{
-    <span class="ident">figures</span>::{<span class="ident">num_traits::One</span>, <span class="ident">Points</span>},
+    <span class="ident">figures</span>::{<span class="ident">num_traits::One</span>, <span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">Points</span>},
     <span class="ident">flume</span>,
     <span class="ident">math</span>::{<span class="ident">Scale</span>, <span class="ident">Scaled</span>, <span class="ident">Size</span>},
     <span class="ident">scene::Target</span>,
@@ -512,71 +528,71 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">WindowCreator</span>: <span class="ident">Window</span> {
     <span class="doccomment">/// Returns a [`WindowBuilder`] for this window.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">get_window_builder</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">WindowBuilder</span> {
+    <span class="kw">fn</span> <span class="ident">get_window_builder</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">WindowBuilder</span> {
         <span class="ident">WindowBuilder::default</span>()
-            .<span class="ident">with_title</span>(<span class="self">Self</span><span class="ident">::window_title</span>())
-            .<span class="ident">with_initial_system_theme</span>(<span class="self">Self</span><span class="ident">::initial_system_theme</span>())
-            .<span class="ident">with_size</span>(<span class="self">Self</span><span class="ident">::initial_size</span>())
-            .<span class="ident">with_resizable</span>(<span class="self">Self</span><span class="ident">::resizable</span>())
-            .<span class="ident">with_maximized</span>(<span class="self">Self</span><span class="ident">::maximized</span>())
-            .<span class="ident">with_visible</span>(<span class="self">Self</span><span class="ident">::visible</span>())
-            .<span class="ident">with_transparent</span>(<span class="self">Self</span><span class="ident">::transparent</span>())
-            .<span class="ident">with_decorations</span>(<span class="self">Self</span><span class="ident">::decorations</span>())
-            .<span class="ident">with_always_on_top</span>(<span class="self">Self</span><span class="ident">::always_on_top</span>())
+            .<span class="ident">with_title</span>(<span class="self">self</span>.<span class="ident">window_title</span>())
+            .<span class="ident">with_initial_system_theme</span>(<span class="self">self</span>.<span class="ident">initial_system_theme</span>())
+            .<span class="ident">with_size</span>(<span class="self">self</span>.<span class="ident">initial_size</span>())
+            .<span class="ident">with_resizable</span>(<span class="self">self</span>.<span class="ident">resizable</span>())
+            .<span class="ident">with_maximized</span>(<span class="self">self</span>.<span class="ident">maximized</span>())
+            .<span class="ident">with_visible</span>(<span class="self">self</span>.<span class="ident">visible</span>())
+            .<span class="ident">with_transparent</span>(<span class="self">self</span>.<span class="ident">transparent</span>())
+            .<span class="ident">with_decorations</span>(<span class="self">self</span>.<span class="ident">decorations</span>())
+            .<span class="ident">with_always_on_top</span>(<span class="self">self</span>.<span class="ident">always_on_top</span>())
     }
 
     <span class="doccomment">/// The initial title of the window.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">window_title</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">window_title</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="string">&quot;Kludgine&quot;</span>.<span class="ident">to_owned</span>()
     }
 
     <span class="doccomment">/// The initial size of the window.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">initial_size</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">initial_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
         <span class="ident">Size::new</span>(<span class="number">1024</span>, <span class="number">768</span>)
     }
 
     <span class="doccomment">/// Whether the window should be resizable or not.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">resizable</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">resizable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="bool-val">true</span>
     }
 
     <span class="doccomment">/// Whether the window should be maximized or not.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">maximized</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">maximized</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="bool-val">false</span>
     }
 
     <span class="doccomment">/// Whether the window should be visible or not.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">visible</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">visible</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="bool-val">true</span>
     }
 
     <span class="doccomment">/// Whether the window should be transparent or not.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">transparent</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">transparent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="bool-val">false</span>
     }
 
     <span class="doccomment">/// Whether the window should be drawn with decorations or not.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">decorations</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">decorations</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="bool-val">true</span>
     }
 
     <span class="doccomment">/// Whether the window should always be on top or not.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">always_on_top</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">always_on_top</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="bool-val">false</span>
     }
 
     <span class="doccomment">/// The default [`Theme`] for the [`Window`] if `winit` is unable to</span>
     <span class="doccomment">/// determine the system theme.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">initial_system_theme</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Theme</span> {
+    <span class="kw">fn</span> <span class="ident">initial_system_theme</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Theme</span> {
         <span class="ident">Theme::Light</span>
     }
 }
@@ -585,7 +601,8 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WindowBuilder</span> {
     <span class="ident">title</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">size</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">position</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">size</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">resizable</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
     <span class="ident">maximized</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
     <span class="ident">visible</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
@@ -606,7 +623,14 @@
 
     <span class="doccomment">/// Builder-style function. Sets `size` and returns self.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">with_size</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">with_position</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">position</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">position</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">position</span>);
+        <span class="self">self</span>
+    }
+
+    <span class="doccomment">/// Builder-style function. Sets `size` and returns self.</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">with_size</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">size</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">size</span>);
         <span class="self">self</span>
     }
@@ -675,6 +699,14 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">title</span>) <span class="op">=</span> <span class="ident">wb</span>.<span class="ident">title</span> {
             <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">with_title</span>(<span class="ident">title</span>);
         }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">position</span>) <span class="op">=</span> <span class="ident">wb</span>.<span class="ident">position</span> {
+            <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">with_position</span>(<span class="ident">winit::dpi::Position::Physical</span>(
+                <span class="ident">winit::dpi::PhysicalPosition</span> {
+                    <span class="ident">x</span>: <span class="ident">position</span>.<span class="ident">x</span>,
+                    <span class="ident">y</span>: <span class="ident">position</span>.<span class="ident">y</span>,
+                },
+            ));
+        }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">size</span>) <span class="op">=</span> <span class="ident">wb</span>.<span class="ident">size</span> {
             <span class="ident">builder</span> <span class="op">=</span>
                 <span class="ident">builder</span>.<span class="ident">with_inner_size</span>(<span class="ident">winit::dpi::Size::Physical</span>(<span class="ident">winit::dpi::PhysicalSize</span> {
@@ -720,7 +752,7 @@
     <span class="ident">T</span>: <span class="ident">Window</span> <span class="op">+</span> <span class="ident">WindowCreator</span>,
 {
     <span class="kw">fn</span> <span class="ident">open</span>(<span class="self">self</span>) {
-        <span class="kw">crate</span><span class="ident">::runtime::Runtime::open_window</span>(<span class="self">Self</span><span class="ident">::get_window_builder</span>(), <span class="self">self</span>);
+        <span class="kw">crate</span><span class="ident">::runtime::Runtime::open_window</span>(<span class="self">self</span>.<span class="ident">get_window_builder</span>(), <span class="self">self</span>);
     }
 }
 

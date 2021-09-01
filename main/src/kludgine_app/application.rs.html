@@ -94,7 +94,7 @@
         <span class="kw">let</span> <span class="ident">app</span> <span class="op">=</span> <span class="self">Self</span> {
             <span class="ident">phantom</span>: <span class="ident">PhantomData::default</span>(),
         };
-        <span class="ident">Runtime::new</span>(<span class="ident">app</span>).<span class="ident">run</span>(<span class="ident">T::get_window_builder</span>(), <span class="ident">window</span>)
+        <span class="ident">Runtime::new</span>(<span class="ident">app</span>).<span class="ident">run</span>(<span class="ident">window</span>.<span class="ident">get_window_builder</span>(), <span class="ident">window</span>)
     }
 }
 </pre></div>
