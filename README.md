@@ -13,6 +13,7 @@ designed and written by a developer that is fairly new to modern graphics
 programming and rust. Thus, it is probably a
 [kludge](https://en.wikipedia.org/wiki/Kludge).
 
+
 ## Why use Kludgine?
 
 Kludgine is early in development and is subject to breaking API changes. That
@@ -68,6 +69,24 @@ sprite.render_at(
     SpriteRotation::around_center(self.rotation_angle),
 );
 ```
+
+## Getting Started
+
+To use Kludgine, your project must be using [the new features
+resolver](https://doc.rust-lang.org/cargo/reference/features.html#feature-resolver-version-2). The two
+lines to add to your `Cargo.toml` look like this:
+
+```toml
+[lib]
+resolver = "2"
+
+[dependencies]
+kludgine = "0.1.0-dev.0"
+```
+
+The `resolver` requirement is inherited from `wgpu`. This setting [will become
+the default in the 2021
+edition](https://github.com/rust-lang/cargo/issues/9048).
 
 ## About
 
