@@ -499,6 +499,98 @@
 <span id="497">497</span>
 <span id="498">498</span>
 <span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">sync</span>::{
@@ -516,6 +608,7 @@
     <span class="ident">scene</span>::{<span class="ident">Scene</span>, <span class="ident">SceneEvent</span>},
     <span class="ident">winit</span>::{
         <span class="self">self</span>,
+        <span class="ident">dpi</span>::{<span class="ident">PhysicalPosition</span>, <span class="ident">PhysicalSize</span>},
         <span class="ident">event::WindowEvent</span> <span class="kw">as</span> <span class="ident">WinitWindowEvent</span>,
         <span class="ident">window</span>::{<span class="ident">Theme</span>, <span class="ident">WindowId</span>},
     },
@@ -649,7 +742,7 @@
         };
         <span class="ident">runtime_window</span>.<span class="ident">notify_size_changed</span>();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">windows</span> <span class="op">=</span> <span class="ident">WINDOWS</span>.<span class="ident">write</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">windows</span> <span class="op">=</span> <span class="ident">WINDOWS</span>.<span class="ident">write</span>();
         <span class="ident">windows</span>.<span class="ident">insert</span>(<span class="ident">window_id</span>, <span class="ident">runtime_window</span>);
 
         <span class="ident">set_opened_first_window</span>();
@@ -755,7 +848,7 @@
         <span class="kw">let</span> <span class="ident">scene</span> <span class="op">=</span> <span class="ident">Scene::new</span>(<span class="ident">scene_event_sender</span>, <span class="ident">initial_system_theme</span>);
 
         <span class="kw">let</span> <span class="ident">target_fps</span> <span class="op">=</span> <span class="ident">window</span>.<span class="ident">target_fps</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">OpenWindow::new</span>(<span class="ident">window</span>, <span class="ident">event_sender</span>, <span class="ident">scene</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">OpenWindow::new</span>(<span class="ident">window</span>, <span class="ident">id</span>, <span class="ident">event_sender</span>, <span class="ident">scene</span>);
 
         <span class="ident">window</span>.<span class="ident">initialize</span>()<span class="question-mark">?</span>;
         <span class="kw">loop</span> {
@@ -873,6 +966,9 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">receive_messages</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">request</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">receiver</span>.<span class="ident">try_recv</span>() {
             <span class="kw">match</span> <span class="ident">request</span> {
+                <span class="ident">WindowMessage::RequestClose</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">send</span>(<span class="ident">WindowEvent::CloseRequested</span>);
+                }
                 <span class="ident">WindowMessage::Close</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channels</span> <span class="op">=</span> <span class="ident">WINDOW_CHANNELS</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
                     <span class="ident">channels</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">window_id</span>);
@@ -997,6 +1093,94 @@
                 <span class="ident">scale_factor</span>: <span class="self">self</span>.<span class="ident">last_known_scale_factor</span>.<span class="ident">dpi_scale</span>(),
             })
             .<span class="ident">unwrap_or_default</span>();
+    }
+}
+
+<span class="doccomment">/// A handle to an open window.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WindowHandle</span>(<span class="kw">pub</span> <span class="ident">WindowId</span>);
+
+<span class="kw">impl</span> <span class="ident">WindowHandle</span> {
+    <span class="doccomment">/// Sets the window title.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_title</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">title</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
+            <span class="ident">window</span>.<span class="ident">set_title</span>(<span class="ident">title</span>);
+        }
+    }
+
+    <span class="doccomment">/// Returns the size of the content area of the window.</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inner_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
+        <span class="ident">Runtime::winit_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">window</span><span class="op">|</span> <span class="ident">Size::new</span>(<span class="ident">window</span>.<span class="ident">inner_size</span>().<span class="ident">width</span>, <span class="ident">window</span>.<span class="ident">inner_size</span>().<span class="ident">height</span>))
+            .<span class="ident">unwrap_or_default</span>()
+    }
+    <span class="doccomment">/// Attempts to resize the window to `new_size`. This may not work on all platforms.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_inner_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">new_size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
+            <span class="ident">window</span>.<span class="ident">set_inner_size</span>(<span class="ident">PhysicalSize::new</span>(<span class="ident">new_size</span>.<span class="ident">width</span>, <span class="ident">new_size</span>.<span class="ident">height</span>));
+        }
+    }
+    <span class="doccomment">/// Returns the position on the screen of the window&#39;s top-left corner. On</span>
+    <span class="doccomment">/// platforms where this is unsupported, `innner_position()` is returned.</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">outer_position</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
+        <span class="ident">Runtime::winit_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
+            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">window</span><span class="op">|</span> <span class="ident">window</span>.<span class="ident">outer_position</span>().<span class="ident">ok</span>())
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">position</span><span class="op">|</span> <span class="ident">Point::new</span>(<span class="ident">position</span>.<span class="ident">x</span>, <span class="ident">position</span>.<span class="ident">y</span>))
+            .<span class="ident">unwrap_or_default</span>()
+    }
+
+    <span class="doccomment">/// Sets the outer position of the window. This may not work on all platforms.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_outer_position</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">new_position</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
+            <span class="ident">window</span>.<span class="ident">set_outer_position</span>(<span class="ident">PhysicalPosition::new</span>(<span class="ident">new_position</span>.<span class="ident">x</span>, <span class="ident">new_position</span>.<span class="ident">y</span>));
+        }
+    }
+
+    <span class="doccomment">/// Returns the position of the top-left of the content area in screen coordinates.</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inner_position</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
+        <span class="ident">Runtime::winit_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
+            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">window</span><span class="op">|</span> <span class="ident">window</span>.<span class="ident">inner_position</span>().<span class="ident">ok</span>())
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">position</span><span class="op">|</span> <span class="ident">Point::new</span>(<span class="ident">position</span>.<span class="ident">x</span>, <span class="ident">position</span>.<span class="ident">y</span>))
+            .<span class="ident">unwrap_or_default</span>()
+    }
+
+    <span class="doccomment">/// Sets whether the window should always be on top of other windows.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_always_on_top</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">always</span>: <span class="ident">bool</span>) {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
+            <span class="ident">window</span>.<span class="ident">set_always_on_top</span>(<span class="ident">always</span>);
+        }
+    }
+
+    <span class="doccomment">/// Returns true if the window is maximized.</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">maximized</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
+            <span class="ident">window</span>.<span class="ident">is_maximized</span>()
+        } <span class="kw">else</span> {
+            <span class="bool-val">false</span>
+        }
+    }
+
+    <span class="doccomment">/// Sets whether the window should be maximized.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_maximized</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">maximized</span>: <span class="ident">bool</span>) {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
+            <span class="ident">window</span>.<span class="ident">set_maximized</span>(<span class="ident">maximized</span>);
+        }
+    }
+
+    <span class="doccomment">/// Sets whether the window should be minimized.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_minimized</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">minimized</span>: <span class="ident">bool</span>) {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
+            <span class="ident">window</span>.<span class="ident">set_minimized</span>(<span class="ident">minimized</span>);
+        }
+    }
+
+    <span class="doccomment">/// Requests that the window close.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">request_close</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="ident">drop</span>(<span class="ident">WindowMessage::RequestClose</span>.<span class="ident">send_to</span>(<span class="self">self</span>.<span class="number">0</span>));
     }
 }
 </pre></div>

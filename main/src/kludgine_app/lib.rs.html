@@ -50,6 +50,8 @@
 <span id="48">48</span>
 <span id="49">49</span>
 <span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
 </pre><pre class="rust">
 <span class="doccomment">//! Application and window handling.</span>
 
@@ -84,7 +86,9 @@
     <span class="ident">application</span>::{<span class="ident">Application</span>, <span class="ident">SingleWindowApplication</span>},
     <span class="ident">error::Error</span>,
     <span class="ident">runtime::Runtime</span>,
-    <span class="ident">window</span>::{<span class="ident">event</span>, <span class="ident">RedrawRequester</span>, <span class="ident">RedrawStatus</span>, <span class="ident">Window</span>, <span class="ident">WindowBuilder</span>, <span class="ident">WindowCreator</span>},
+    <span class="ident">window</span>::{
+        <span class="ident">event</span>, <span class="ident">RedrawRequester</span>, <span class="ident">RedrawStatus</span>, <span class="ident">Window</span>, <span class="ident">WindowBuilder</span>, <span class="ident">WindowCreator</span>, <span class="ident">WindowHandle</span>,
+    },
 };
 
 <span class="doccomment">/// A collection of commonly used exports provided by this crate.</span>
@@ -95,7 +99,7 @@
             <span class="ident">ScanCode</span>, <span class="ident">TouchPhase</span>, <span class="ident">VirtualKeyCode</span>,
         },
         <span class="ident">Application</span>, <span class="ident">Error</span>, <span class="ident">RedrawRequester</span>, <span class="ident">RedrawStatus</span>, <span class="ident">Runtime</span>, <span class="ident">SingleWindowApplication</span>,
-        <span class="ident">Window</span>, <span class="ident">WindowBuilder</span>, <span class="ident">WindowCreator</span>,
+        <span class="ident">Window</span>, <span class="ident">WindowBuilder</span>, <span class="ident">WindowCreator</span>, <span class="ident">WindowHandle</span>,
     };
 }
 

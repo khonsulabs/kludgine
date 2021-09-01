@@ -68,13 +68,13 @@
 <span id="66">66</span>
 <span id="67">67</span>
 <span id="68">68</span>
-<span id="69">69</span>
 </pre><pre class="rust">
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">sync::RwLock</span>, <span class="ident">time::Duration</span>};
+<span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 
 <span class="kw">use</span> <span class="ident">futures::future::Future</span>;
 <span class="kw">use</span> <span class="ident">kludgine_core::flume</span>;
 <span class="kw">use</span> <span class="ident">lazy_static::lazy_static</span>;
+<span class="kw">use</span> <span class="ident">parking_lot::RwLock</span>;
 <span class="kw">use</span> <span class="ident">smol_timeout::TimeoutExt</span>;
 
 <span class="macro">lazy_static!</span> {
@@ -83,9 +83,7 @@
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">initialize</span>() {
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pool_guard</span> <span class="op">=</span> <span class="ident">GLOBAL_THREAD_POOL</span>
-            .<span class="ident">write</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Error locking global thread pool&quot;</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pool_guard</span> <span class="op">=</span> <span class="ident">GLOBAL_THREAD_POOL</span>.<span class="ident">write</span>();
         <span class="kw">if</span> <span class="ident">pool_guard</span>.<span class="ident">is_some</span>() {
             <span class="kw">return</span>;
         }
@@ -103,7 +101,7 @@
             .<span class="ident">each</span>(<span class="number">0</span>..<span class="number">4</span>, <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::await_holding_lock</span>)]</span> <span class="comment">// this is an rwlock, not a mutex.</span>
                 <span class="ident">futures::executor::block_on</span>(<span class="kw">async</span> {
-                    <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">GLOBAL_THREAD_POOL</span>.<span class="ident">read</span>().<span class="ident">unwrap</span>();
+                    <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">GLOBAL_THREAD_POOL</span>.<span class="ident">read</span>();
                     <span class="kw">let</span> <span class="ident">executor</span> <span class="op">=</span> <span class="ident">guard</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
                     <span class="ident">executor</span>.<span class="ident">run</span>(<span class="ident">shutdown</span>.<span class="ident">recv_async</span>()).<span class="kw">await</span>
                 })
@@ -118,7 +116,7 @@
 <span class="kw">impl</span> <span class="kw">super</span><span class="ident">::Runtime</span> {
     <span class="doccomment">/// Spawns an async task.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">spawn</span><span class="op">&lt;</span><span class="ident">Fut</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>, <span class="ident">T</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">future</span>: <span class="ident">Fut</span>) {
-        <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">GLOBAL_THREAD_POOL</span>.<span class="ident">read</span>().<span class="ident">expect</span>(<span class="string">&quot;Error getting runtime&quot;</span>);
+        <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">GLOBAL_THREAD_POOL</span>.<span class="ident">read</span>();
         <span class="kw">let</span> <span class="ident">executor</span> <span class="op">=</span> <span class="ident">guard</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
         <span class="ident">executor</span>.<span class="ident">spawn</span>(<span class="ident">future</span>).<span class="ident">detach</span>();
     }
