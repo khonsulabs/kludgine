@@ -134,7 +134,7 @@ pub trait WindowCreator: Window {
     /// Returns a [`WindowBuilder`] for this window.
     #[must_use]
     fn get_window_builder(&self) -> WindowBuilder {
-        WindowBuilder::default()
+        let mut builder = WindowBuilder::default()
             .with_title(self.window_title())
             .with_initial_system_theme(self.initial_system_theme())
             .with_size(self.initial_size())
@@ -143,7 +143,13 @@ pub trait WindowCreator: Window {
             .with_visible(self.visible())
             .with_transparent(self.transparent())
             .with_decorations(self.decorations())
-            .with_always_on_top(self.always_on_top())
+            .with_always_on_top(self.always_on_top());
+
+        if let Some(position) = self.initial_position() {
+            builder = builder.with_position(position);
+        }
+
+        builder
     }
 
     /// The initial title of the window.
@@ -152,9 +158,16 @@ pub trait WindowCreator: Window {
         "Kludgine".to_owned()
     }
 
+    /// The initial position of the window. If None is returned, the operating
+    /// system will position the window.
+    #[must_use]
+    fn initial_position(&self) -> Option<Point<i32, Pixels>> {
+        None
+    }
+
     /// The initial size of the window.
     #[must_use]
-    fn initial_size(&self) -> Size<u32, Pixels> {
+    fn initial_size(&self) -> Size<u32, Points> {
         Size::new(1024, 768)
     }
 
@@ -207,7 +220,7 @@ pub trait WindowCreator: Window {
 pub struct WindowBuilder {
     title: Option<String>,
     position: Option<Point<i32, Pixels>>,
-    size: Option<Size<u32, Pixels>>,
+    size: Option<Size<u32, Points>>,
     resizable: Option<bool>,
     maximized: Option<bool>,
     visible: Option<bool>,
@@ -235,7 +248,7 @@ impl WindowBuilder {
 
     /// Builder-style function. Sets `size` and returns self.
     #[must_use]
-    pub const fn with_size(mut self, size: Size<u32, Pixels>) -> Self {
+    pub const fn with_size(mut self, size: Size<u32, Points>) -> Self {
         self.size = Some(size);
         self
     }
@@ -313,11 +326,10 @@ impl From<WindowBuilder> for WinitWindowBuilder {
             ));
         }
         if let Some(size) = wb.size {
-            builder =
-                builder.with_inner_size(winit::dpi::Size::Physical(winit::dpi::PhysicalSize {
-                    width: size.width,
-                    height: size.height,
-                }));
+            builder = builder.with_inner_size(winit::dpi::Size::Logical(winit::dpi::LogicalSize {
+                width: f64::from(size.width),
+                height: f64::from(size.height),
+            }));
         }
         if let Some(resizable) = wb.resizable {
             builder = builder.with_resizable(resizable);
