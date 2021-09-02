@@ -13,7 +13,7 @@ struct SpriteSheetExample {
 }
 
 impl WindowCreator for SpriteSheetExample {
-    fn window_title() -> String {
+    fn window_title(&self) -> String {
         "Sprite Sheet - Kludgine".to_owned()
     }
 }

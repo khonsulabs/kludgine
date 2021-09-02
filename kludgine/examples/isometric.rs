@@ -10,7 +10,7 @@ struct Isometric {
 }
 
 impl WindowCreator for Isometric {
-    fn window_title() -> String {
+    fn window_title(&self) -> String {
         "Isometric - Kludgine".to_owned()
     }
 }

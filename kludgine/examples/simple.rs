@@ -11,7 +11,7 @@ struct Simple {
 }
 
 impl WindowCreator for Simple {
-    fn window_title() -> String {
+    fn window_title(&self) -> String {
         "Simple - Kludgine".to_owned()
     }
 }
