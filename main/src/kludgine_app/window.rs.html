@@ -392,6 +392,18 @@
 <span id="390">390</span>
 <span id="391">391</span>
 <span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections::HashMap</span>,
@@ -529,7 +541,7 @@
     <span class="doccomment">/// Returns a [`WindowBuilder`] for this window.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">fn</span> <span class="ident">get_window_builder</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">WindowBuilder</span> {
-        <span class="ident">WindowBuilder::default</span>()
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">WindowBuilder::default</span>()
             .<span class="ident">with_title</span>(<span class="self">self</span>.<span class="ident">window_title</span>())
             .<span class="ident">with_initial_system_theme</span>(<span class="self">self</span>.<span class="ident">initial_system_theme</span>())
             .<span class="ident">with_size</span>(<span class="self">self</span>.<span class="ident">initial_size</span>())
@@ -538,7 +550,13 @@
             .<span class="ident">with_visible</span>(<span class="self">self</span>.<span class="ident">visible</span>())
             .<span class="ident">with_transparent</span>(<span class="self">self</span>.<span class="ident">transparent</span>())
             .<span class="ident">with_decorations</span>(<span class="self">self</span>.<span class="ident">decorations</span>())
-            .<span class="ident">with_always_on_top</span>(<span class="self">self</span>.<span class="ident">always_on_top</span>())
+            .<span class="ident">with_always_on_top</span>(<span class="self">self</span>.<span class="ident">always_on_top</span>());
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">position</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">initial_position</span>() {
+            <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">with_position</span>(<span class="ident">position</span>);
+        }
+
+        <span class="ident">builder</span>
     }
 
     <span class="doccomment">/// The initial title of the window.</span>
@@ -547,9 +565,16 @@
         <span class="string">&quot;Kludgine&quot;</span>.<span class="ident">to_owned</span>()
     }
 
+    <span class="doccomment">/// The initial position of the window. If None is returned, the operating</span>
+    <span class="doccomment">/// system will position the window.</span>
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">fn</span> <span class="ident">initial_position</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="prelude-val">None</span>
+    }
+
     <span class="doccomment">/// The initial size of the window.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">initial_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">initial_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Points</span><span class="op">&gt;</span> {
         <span class="ident">Size::new</span>(<span class="number">1024</span>, <span class="number">768</span>)
     }
 
@@ -602,7 +627,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WindowBuilder</span> {
     <span class="ident">title</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="ident">position</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">size</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">size</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Points</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">resizable</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
     <span class="ident">maximized</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
     <span class="ident">visible</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
@@ -630,7 +655,7 @@
 
     <span class="doccomment">/// Builder-style function. Sets `size` and returns self.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">with_size</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">with_size</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Points</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">size</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">size</span>);
         <span class="self">self</span>
     }
@@ -708,11 +733,10 @@
             ));
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">size</span>) <span class="op">=</span> <span class="ident">wb</span>.<span class="ident">size</span> {
-            <span class="ident">builder</span> <span class="op">=</span>
-                <span class="ident">builder</span>.<span class="ident">with_inner_size</span>(<span class="ident">winit::dpi::Size::Physical</span>(<span class="ident">winit::dpi::PhysicalSize</span> {
-                    <span class="ident">width</span>: <span class="ident">size</span>.<span class="ident">width</span>,
-                    <span class="ident">height</span>: <span class="ident">size</span>.<span class="ident">height</span>,
-                }));
+            <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">with_inner_size</span>(<span class="ident">winit::dpi::Size::Logical</span>(<span class="ident">winit::dpi::LogicalSize</span> {
+                <span class="ident">width</span>: <span class="ident">f64::from</span>(<span class="ident">size</span>.<span class="ident">width</span>),
+                <span class="ident">height</span>: <span class="ident">f64::from</span>(<span class="ident">size</span>.<span class="ident">height</span>),
+            }));
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">resizable</span>) <span class="op">=</span> <span class="ident">wb</span>.<span class="ident">resizable</span> {
             <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">with_resizable</span>(<span class="ident">resizable</span>);

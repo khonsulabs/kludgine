@@ -591,6 +591,7 @@
 <span id="589">589</span>
 <span id="590">590</span>
 <span id="591">591</span>
+<span id="592">592</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">sync</span>::{
@@ -867,6 +868,7 @@
                     <span class="ident">WindowEvent::Resize</span> { <span class="ident">size</span>, <span class="ident">scale_factor</span> } <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">set_size</span>(<span class="ident">size</span>.<span class="ident">cast_unit</span>());
                         <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">set_dpi_scale</span>(<span class="ident">scale_factor</span>);
+                        <span class="ident">window</span>.<span class="ident">redraw_status</span>.<span class="ident">set_needs_redraw</span>();
                     }
                     <span class="ident">WindowEvent::CloseRequested</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">if</span> <span class="self">Self</span><span class="ident">::request_window_close</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">window</span>)<span class="question-mark">?</span> {
