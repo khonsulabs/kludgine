@@ -273,6 +273,7 @@ impl RuntimeWindow {
                     WindowEvent::Resize { size, scale_factor } => {
                         window.scene_mut().set_size(size.cast_unit());
                         window.scene_mut().set_dpi_scale(scale_factor);
+                        window.redraw_status.set_needs_redraw();
                     }
                     WindowEvent::CloseRequested => {
                         if Self::request_window_close(id, &mut window)? {

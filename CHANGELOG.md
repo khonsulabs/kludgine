@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `WindowCreator` and `WindowBuilder` now use `Points` as the unit for
   `initial_size`. When creating the window, we now request the logical size
   rather than pixels, correspondingly.
+
+### Fixes
+
+- Redrawing while resizing is done with more expediency. Previously, we were
+  waiting for the OS to ask for us to redraw after resizing, rather than forcing
+  a resize.
+
 ## v0.1.0-dev.1
 
 ### Breaking Changes
