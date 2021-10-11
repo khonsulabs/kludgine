@@ -81,7 +81,7 @@ lines to add to your `Cargo.toml` look like this:
 resolver = "2"
 
 [dependencies]
-kludgine = "0.1.0-dev.2"
+kludgine = "0.1.0-dev.3"
 ```
 
 The `resolver` requirement is inherited from `wgpu`. This setting [will become
