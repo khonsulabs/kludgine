@@ -590,6 +590,8 @@
 <span id="590">590</span>
 <span id="591">591</span>
 <span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">sync</span>::{
@@ -1115,12 +1117,14 @@
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">window</span><span class="op">|</span> <span class="ident">Size::new</span>(<span class="ident">window</span>.<span class="ident">inner_size</span>().<span class="ident">width</span>, <span class="ident">window</span>.<span class="ident">inner_size</span>().<span class="ident">height</span>))
             .<span class="ident">unwrap_or_default</span>()
     }
+
     <span class="doccomment">/// Attempts to resize the window to `new_size`. This may not work on all platforms.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_inner_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">new_size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>) {
             <span class="ident">window</span>.<span class="ident">set_inner_size</span>(<span class="ident">PhysicalSize::new</span>(<span class="ident">new_size</span>.<span class="ident">width</span>, <span class="ident">new_size</span>.<span class="ident">height</span>));
         }
     }
+
     <span class="doccomment">/// Returns the position on the screen of the window&#39;s top-left corner. On</span>
     <span class="doccomment">/// platforms where this is unsupported, `innner_position()` is returned.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>

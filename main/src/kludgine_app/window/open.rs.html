@@ -289,7 +289,6 @@
 <span id="289">289</span>
 <span id="290">290</span>
 <span id="291">291</span>
-<span id="292">292</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">sync::Arc</span>,
@@ -304,12 +303,11 @@
     <span class="ident">winit::window::WindowId</span>,
 };
 
-<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::WindowHandle</span>;
-
 <span class="kw">use</span> <span class="kw">super</span>::{
     <span class="ident">event</span>::{<span class="ident">InputEvent</span>, <span class="ident">WindowEvent</span>},
     <span class="ident">CloseResponse</span>, <span class="ident">Window</span>,
 };
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::WindowHandle</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OpenWindow</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Window</span><span class="op">&gt;</span> {
     <span class="ident">window</span>: <span class="ident">T</span>,
