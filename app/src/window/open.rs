@@ -11,12 +11,11 @@ use kludgine_core::{
     winit::window::WindowId,
 };
 
-use crate::WindowHandle;
-
 use super::{
     event::{InputEvent, WindowEvent},
     CloseResponse, Window,
 };
+use crate::WindowHandle;
 
 pub struct OpenWindow<T: Window> {
     window: T,

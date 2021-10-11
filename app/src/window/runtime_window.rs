@@ -522,12 +522,14 @@ impl WindowHandle {
             .map(|window| Size::new(window.inner_size().width, window.inner_size().height))
             .unwrap_or_default()
     }
+
     /// Attempts to resize the window to `new_size`. This may not work on all platforms.
     pub fn set_inner_size(&self, new_size: Size<u32, Pixels>) {
         if let Some(window) = Runtime::winit_window(&self.0) {
             window.set_inner_size(PhysicalSize::new(new_size.width, new_size.height));
         }
     }
+
     /// Returns the position on the screen of the window's top-left corner. On
     /// platforms where this is unsupported, `innner_position()` is returned.
     #[must_use]
