@@ -330,7 +330,13 @@ impl Sprite {
             }
         }
 
-        self.with_current_frame(|frame| frame.source.clone())
+	self.current_frame()
+    }
+
+    /// Retrieve the current animation frame, if set and valid.
+    #[inline]
+    pub fn current_frame(&self) -> crate::Result<SpriteSource> {
+         self.with_current_frame(|frame| frame.source.clone())
     }
 
     /// Returns the amount of time remaining until the next frame is due to be
@@ -393,6 +399,7 @@ impl Sprite {
         })
     }
 
+    /// If tag is valid, invoke `f` with the current animation frame.
     fn with_current_frame<F, R>(&self, f: F) -> crate::Result<R>
     where
         F: Fn(&SpriteFrame) -> R,
