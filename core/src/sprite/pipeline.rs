@@ -40,11 +40,9 @@ impl Vertex {
 
             self.position[0] = rotated.x;
             self.position[1] = rotated.y;
-
-            self
-        } else {
-            self
         }
+
+        self
     }
 }
 
