@@ -1,6 +1,6 @@
 [package]
 name = "kludgine"
-version = "0.1.0-dev.3"
+version = "0.1.0-dev.4"
 authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
 edition = "2018"
 description = "An asynchronous app and 2d game framework"
@@ -27,8 +27,8 @@ bundled-fonts-roboto = ["kludgine-core/bundled-fonts-roboto"]
 serialization = ["kludgine-core/serialization"]
 
 [dependencies]
-kludgine-core = { version = "0.1.0-dev.3", path = "../core" }
-kludgine-app = { version = "0.1.0-dev.3", path = "../app", optional = true, default-features = false }
+kludgine-core = { version = "0.1.0-dev.4", path = "../core" }
+kludgine-app = { version = "0.1.0-dev.4", path = "../app", optional = true, default-features = false }
 cfg-if = "1"
 
 # [target.'cfg(target_arch = "wasm32")'.dependencies]
