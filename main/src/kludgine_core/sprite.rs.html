@@ -985,13 +985,13 @@
             }
         }
 
-	<span class="self">self</span>.<span class="ident">current_frame</span>()
+        <span class="self">self</span>.<span class="ident">current_frame</span>()
     }
 
     <span class="doccomment">/// Retrieve the current animation frame, if set and valid.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">current_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">SpriteSource</span><span class="op">&gt;</span> {
-         <span class="self">self</span>.<span class="ident">with_current_frame</span>(<span class="op">|</span><span class="ident">frame</span><span class="op">|</span> <span class="ident">frame</span>.<span class="ident">source</span>.<span class="ident">clone</span>())
+        <span class="self">self</span>.<span class="ident">with_current_frame</span>(<span class="op">|</span><span class="ident">frame</span><span class="op">|</span> <span class="ident">frame</span>.<span class="ident">source</span>.<span class="ident">clone</span>())
     }
 
     <span class="doccomment">/// Returns the amount of time remaining until the next frame is due to be</span>

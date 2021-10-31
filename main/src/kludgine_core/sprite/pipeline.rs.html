@@ -174,8 +174,6 @@
 <span id="174">174</span>
 <span id="175">175</span>
 <span id="176">176</span>
-<span id="177">177</span>
-<span id="178">178</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">ops::Deref</span>};
 
@@ -219,11 +217,9 @@
 
             <span class="self">self</span>.<span class="ident">position</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">rotated</span>.<span class="ident">x</span>;
             <span class="self">self</span>.<span class="ident">position</span>[<span class="number">1</span>] <span class="op">=</span> <span class="ident">rotated</span>.<span class="ident">y</span>;
-
-            <span class="self">self</span>
-        } <span class="kw">else</span> {
-            <span class="self">self</span>
         }
+
+        <span class="self">self</span>
     }
 }
 
