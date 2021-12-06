@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core&#x2F;src&#x2F;shape&#x2F;path.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>path.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../kludgine_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input"name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core&#x2F;src&#x2F;shape&#x2F;path.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>path.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../kludgine_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -660,11 +660,10 @@
 <span id="660">660</span>
 <span id="661">661</span>
 <span id="662">662</span>
-</pre><pre class="rust">
-<span class="kw">use</span> <span class="ident">easygpu_lyon::lyon_tessellation</span>::{<span class="self">self</span>, <span class="ident">path::PathEvent</span> <span class="kw">as</span> <span class="ident">LyonPathEvent</span>};
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">easygpu_lyon::lyon_tessellation</span>::{<span class="self">self</span>, <span class="ident">path::PathEvent</span> <span class="kw">as</span> <span class="ident">LyonPathEvent</span>};
 <span class="kw">use</span> <span class="ident">figures</span>::{<span class="ident">Displayable</span>, <span class="ident">Points</span>};
 
-<span class="kw">use</span> <span class="kw">super</span><span class="ident">::lyon_point</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::lyon_point</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">math</span>::{<span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>},
     <span class="ident">scene::Target</span>,
@@ -726,12 +725,12 @@
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">LyonPathEvent</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">event</span>: <span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">event</span> {
-            <span class="ident">PathEvent::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Begin</span> { <span class="ident">at</span>: <span class="ident">lyon_point</span>(<span class="ident">at</span>) },
-            <span class="ident">PathEvent::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Line</span> {
+            <span class="ident">PathEvent::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Begin</span> { <span class="ident">at</span>: <span class="ident">lyon_point</span>(<span class="ident">at</span>) },
+            <span class="ident">PathEvent::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Line</span> {
                 <span class="ident">from</span>: <span class="ident">lyon_point</span>(<span class="ident">from</span>),
                 <span class="ident">to</span>: <span class="ident">lyon_point</span>(<span class="ident">to</span>),
             },
-            <span class="ident">PathEvent::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Quadratic</span> {
+            <span class="ident">PathEvent::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Quadratic</span> {
                 <span class="ident">from</span>: <span class="ident">lyon_point</span>(<span class="ident">from</span>),
                 <span class="ident">ctrl</span>: <span class="ident">lyon_point</span>(<span class="ident">ctrl</span>),
                 <span class="ident">to</span>: <span class="ident">lyon_point</span>(<span class="ident">to</span>),
@@ -741,13 +740,13 @@
                 <span class="ident">ctrl1</span>,
                 <span class="ident">ctrl2</span>,
                 <span class="ident">to</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Cubic</span> {
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Cubic</span> {
                 <span class="ident">from</span>: <span class="ident">lyon_point</span>(<span class="ident">from</span>),
                 <span class="ident">ctrl1</span>: <span class="ident">lyon_point</span>(<span class="ident">ctrl1</span>),
                 <span class="ident">ctrl2</span>: <span class="ident">lyon_point</span>(<span class="ident">ctrl2</span>),
                 <span class="ident">to</span>: <span class="ident">lyon_point</span>(<span class="ident">to</span>),
             },
-            <span class="ident">PathEvent::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::End</span> {
+            <span class="ident">PathEvent::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::End</span> {
                 <span class="ident">last</span>: <span class="ident">lyon_point</span>(<span class="ident">last</span>),
                 <span class="ident">first</span>: <span class="ident">lyon_point</span>(<span class="ident">first</span>),
                 <span class="ident">close</span>,
@@ -762,17 +761,17 @@
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cast_unit</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> { <span class="ident">at</span>: <span class="ident">at</span>.<span class="ident">cast_unit</span>() },
-            <span class="self">Self</span><span class="ident">::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
+            <span class="ident"><span class="self">Self</span>::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> { <span class="ident">at</span>: <span class="ident">at</span>.<span class="ident">cast_unit</span>() },
+            <span class="ident"><span class="self">Self</span>::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">cast_unit</span>(),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">cast_unit</span>(),
             },
-            <span class="self">Self</span><span class="ident">::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
+            <span class="ident"><span class="self">Self</span>::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">cast_unit</span>(),
                 <span class="ident">ctrl</span>: <span class="ident">ctrl</span>.<span class="ident">cast_unit</span>(),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">cast_unit</span>(),
             },
-            <span class="self">Self</span><span class="ident">::Cubic</span> {
+            <span class="ident"><span class="self">Self</span>::Cubic</span> {
                 <span class="ident">from</span>,
                 <span class="ident">ctrl1</span>,
                 <span class="ident">ctrl2</span>,
@@ -783,7 +782,7 @@
                 <span class="ident">ctrl2</span>: <span class="ident">ctrl2</span>.<span class="ident">cast_unit</span>(),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">cast_unit</span>(),
             },
-            <span class="self">Self</span><span class="ident">::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
+            <span class="ident"><span class="self">Self</span>::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
                 <span class="ident">last</span>: <span class="ident">last</span>.<span class="ident">cast_unit</span>(),
                 <span class="ident">first</span>: <span class="ident">first</span>.<span class="ident">cast_unit</span>(),
                 <span class="ident">close</span>,
@@ -862,7 +861,7 @@
         <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">easygpu_lyon::ShapeBuilder</span>,
         <span class="ident">stroke</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stroke</span><span class="op">&gt;</span>,
         <span class="ident">fill</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Fill</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">as_lyon</span>();
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">fill</span>) <span class="op">=</span> <span class="ident">fill</span> {
             <span class="ident">builder</span>.<span class="ident">default_color</span> <span class="op">=</span> <span class="ident">fill</span>.<span class="ident">color</span>.<span class="ident">rgba</span>();
@@ -988,8 +987,8 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span> <span class="ident">std::ops::Mul</span><span class="op">&lt;</span><span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Path</span><span class="op">&lt;</span><span class="ident">Src</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">Path</span><span class="op">&lt;</span><span class="ident">Dst</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">scale</span>: <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Output</span> {
-        <span class="self">Self</span><span class="ident">::Output</span> {
+    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">scale</span>: <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+        <span class="ident"><span class="self">Self</span>::Output</span> {
             <span class="ident">events</span>: <span class="self">self</span>.<span class="ident">events</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">event</span><span class="op">|</span> <span class="ident">event</span> <span class="op">*</span> <span class="ident">scale</span>).<span class="ident">collect</span>(),
         }
     }
@@ -998,14 +997,14 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span> <span class="ident">std::ops::Mul</span><span class="op">&lt;</span><span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">Src</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">Dst</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">scale</span>: <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Output</span> {
+    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">scale</span>: <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">PathEvent::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Output::Begin</span> { <span class="ident">at</span>: <span class="ident">at</span> <span class="op">*</span> <span class="ident">scale</span> },
-            <span class="ident">PathEvent::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Output::Line</span> {
+            <span class="ident">PathEvent::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output::Begin</span> { <span class="ident">at</span>: <span class="ident">at</span> <span class="op">*</span> <span class="ident">scale</span> },
+            <span class="ident">PathEvent::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output::Line</span> {
                 <span class="ident">from</span>: <span class="ident">from</span> <span class="op">*</span> <span class="ident">scale</span>,
                 <span class="ident">to</span>: <span class="ident">to</span> <span class="op">*</span> <span class="ident">scale</span>,
             },
-            <span class="ident">PathEvent::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Output::Quadratic</span> {
+            <span class="ident">PathEvent::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output::Quadratic</span> {
                 <span class="ident">from</span>: <span class="ident">from</span> <span class="op">*</span> <span class="ident">scale</span>,
                 <span class="ident">ctrl</span>: <span class="ident">ctrl</span> <span class="op">*</span> <span class="ident">scale</span>,
                 <span class="ident">to</span>: <span class="ident">to</span> <span class="op">*</span> <span class="ident">scale</span>,
@@ -1015,13 +1014,13 @@
                 <span class="ident">ctrl1</span>,
                 <span class="ident">ctrl2</span>,
                 <span class="ident">to</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Output::Cubic</span> {
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output::Cubic</span> {
                 <span class="ident">from</span>: <span class="ident">from</span> <span class="op">*</span> <span class="ident">scale</span>,
                 <span class="ident">ctrl1</span>: <span class="ident">ctrl1</span> <span class="op">*</span> <span class="ident">scale</span>,
                 <span class="ident">ctrl2</span>: <span class="ident">ctrl2</span> <span class="op">*</span> <span class="ident">scale</span>,
                 <span class="ident">to</span>: <span class="ident">to</span> <span class="op">*</span> <span class="ident">scale</span>,
             },
-            <span class="ident">PathEvent::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Output::End</span> {
+            <span class="ident">PathEvent::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output::End</span> {
                 <span class="ident">last</span>: <span class="ident">last</span> <span class="op">*</span> <span class="ident">scale</span>,
                 <span class="ident">first</span>: <span class="ident">first</span> <span class="op">*</span> <span class="ident">scale</span>,
                 <span class="ident">close</span>,
@@ -1035,17 +1034,17 @@
     <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="ident">Path</span><span class="op">&lt;</span><span class="ident">Points</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="ident">Path</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Pixels</span> {
+    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Pixels</span> {
         <span class="self">self</span>.<span class="ident">clone</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Points</span> {
+    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Points</span> {
         <span class="ident">Path</span> {
             <span class="ident">events</span>: <span class="self">self</span>.<span class="ident">events</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>)).<span class="ident">collect</span>(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Scaled</span> {
+    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Scaled</span> {
         <span class="ident">Path</span> {
             <span class="ident">events</span>: <span class="self">self</span>.<span class="ident">events</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>)).<span class="ident">collect</span>(),
         }
@@ -1057,17 +1056,17 @@
     <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="self">Self</span>;
     <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="ident">Path</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Pixels</span> {
+    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Pixels</span> {
         <span class="ident">Path</span> {
             <span class="ident">events</span>: <span class="self">self</span>.<span class="ident">events</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>)).<span class="ident">collect</span>(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Points</span> {
+    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Points</span> {
         <span class="self">self</span>.<span class="ident">clone</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Scaled</span> {
+    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Scaled</span> {
         <span class="ident">Path</span> {
             <span class="ident">events</span>: <span class="self">self</span>.<span class="ident">events</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>)).<span class="ident">collect</span>(),
         }
@@ -1079,19 +1078,19 @@
     <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="ident">Path</span><span class="op">&lt;</span><span class="ident">Points</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Pixels</span> {
+    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Pixels</span> {
         <span class="ident">Path</span> {
             <span class="ident">events</span>: <span class="self">self</span>.<span class="ident">events</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>)).<span class="ident">collect</span>(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Points</span> {
+    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Points</span> {
         <span class="ident">Path</span> {
             <span class="ident">events</span>: <span class="self">self</span>.<span class="ident">events</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>)).<span class="ident">collect</span>(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Scaled</span> {
+    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Scaled</span> {
         <span class="self">self</span>.<span class="ident">clone</span>()
     }
 }
@@ -1101,25 +1100,25 @@
     <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">Points</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Pixels</span> {
+    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Pixels</span> {
         <span class="kw-2">*</span><span class="self">self</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Points</span> {
+    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Points</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> {
+            <span class="ident"><span class="self">Self</span>::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> {
                 <span class="ident">at</span>: <span class="ident">at</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
+            <span class="ident"><span class="self">Self</span>::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
+            <span class="ident"><span class="self">Self</span>::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
                 <span class="ident">ctrl</span>: <span class="ident">ctrl</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Cubic</span> {
+            <span class="ident"><span class="self">Self</span>::Cubic</span> {
                 <span class="ident">from</span>,
                 <span class="ident">ctrl1</span>,
                 <span class="ident">ctrl2</span>,
@@ -1130,7 +1129,7 @@
                 <span class="ident">ctrl2</span>: <span class="ident">ctrl2</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
+            <span class="ident"><span class="self">Self</span>::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
                 <span class="ident">last</span>: <span class="ident">last</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
                 <span class="ident">first</span>: <span class="ident">first</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
                 <span class="ident">close</span>: <span class="kw-2">*</span><span class="ident">close</span>,
@@ -1138,21 +1137,21 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Scaled</span> {
+    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Scaled</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> {
+            <span class="ident"><span class="self">Self</span>::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> {
                 <span class="ident">at</span>: <span class="ident">at</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
+            <span class="ident"><span class="self">Self</span>::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
+            <span class="ident"><span class="self">Self</span>::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
                 <span class="ident">ctrl</span>: <span class="ident">ctrl</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Cubic</span> {
+            <span class="ident"><span class="self">Self</span>::Cubic</span> {
                 <span class="ident">from</span>,
                 <span class="ident">ctrl1</span>,
                 <span class="ident">ctrl2</span>,
@@ -1163,7 +1162,7 @@
                 <span class="ident">ctrl2</span>: <span class="ident">ctrl2</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
+            <span class="ident"><span class="self">Self</span>::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
                 <span class="ident">last</span>: <span class="ident">last</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
                 <span class="ident">first</span>: <span class="ident">first</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
                 <span class="ident">close</span>: <span class="kw-2">*</span><span class="ident">close</span>,
@@ -1177,21 +1176,21 @@
     <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="self">Self</span>;
     <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Pixels</span> {
+    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Pixels</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> {
+            <span class="ident"><span class="self">Self</span>::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> {
                 <span class="ident">at</span>: <span class="ident">at</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
+            <span class="ident"><span class="self">Self</span>::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
+            <span class="ident"><span class="self">Self</span>::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
                 <span class="ident">ctrl</span>: <span class="ident">ctrl</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Cubic</span> {
+            <span class="ident"><span class="self">Self</span>::Cubic</span> {
                 <span class="ident">from</span>,
                 <span class="ident">ctrl1</span>,
                 <span class="ident">ctrl2</span>,
@@ -1202,7 +1201,7 @@
                 <span class="ident">ctrl2</span>: <span class="ident">ctrl2</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
+            <span class="ident"><span class="self">Self</span>::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
                 <span class="ident">last</span>: <span class="ident">last</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
                 <span class="ident">first</span>: <span class="ident">first</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
                 <span class="ident">close</span>: <span class="kw-2">*</span><span class="ident">close</span>,
@@ -1210,25 +1209,25 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Points</span> {
+    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Points</span> {
         <span class="kw-2">*</span><span class="self">self</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Scaled</span> {
+    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Scaled</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> {
+            <span class="ident"><span class="self">Self</span>::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> {
                 <span class="ident">at</span>: <span class="ident">at</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
+            <span class="ident"><span class="self">Self</span>::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
+            <span class="ident"><span class="self">Self</span>::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
                 <span class="ident">ctrl</span>: <span class="ident">ctrl</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Cubic</span> {
+            <span class="ident"><span class="self">Self</span>::Cubic</span> {
                 <span class="ident">from</span>,
                 <span class="ident">ctrl1</span>,
                 <span class="ident">ctrl2</span>,
@@ -1239,7 +1238,7 @@
                 <span class="ident">ctrl2</span>: <span class="ident">ctrl2</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
+            <span class="ident"><span class="self">Self</span>::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
                 <span class="ident">last</span>: <span class="ident">last</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
                 <span class="ident">first</span>: <span class="ident">first</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
                 <span class="ident">close</span>: <span class="kw-2">*</span><span class="ident">close</span>,
@@ -1253,21 +1252,21 @@
     <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="ident">PathEvent</span><span class="op">&lt;</span><span class="ident">Points</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Pixels</span> {
+    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Pixels</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> {
+            <span class="ident"><span class="self">Self</span>::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> {
                 <span class="ident">at</span>: <span class="ident">at</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
+            <span class="ident"><span class="self">Self</span>::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
+            <span class="ident"><span class="self">Self</span>::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
                 <span class="ident">ctrl</span>: <span class="ident">ctrl</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Cubic</span> {
+            <span class="ident"><span class="self">Self</span>::Cubic</span> {
                 <span class="ident">from</span>,
                 <span class="ident">ctrl1</span>,
                 <span class="ident">ctrl2</span>,
@@ -1278,7 +1277,7 @@
                 <span class="ident">ctrl2</span>: <span class="ident">ctrl2</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
+            <span class="ident"><span class="self">Self</span>::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
                 <span class="ident">last</span>: <span class="ident">last</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
                 <span class="ident">first</span>: <span class="ident">first</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
                 <span class="ident">close</span>: <span class="kw-2">*</span><span class="ident">close</span>,
@@ -1286,21 +1285,21 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Points</span> {
+    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Points</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> {
+            <span class="ident"><span class="self">Self</span>::Begin</span> { <span class="ident">at</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Begin</span> {
                 <span class="ident">at</span>: <span class="ident">at</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
+            <span class="ident"><span class="self">Self</span>::Line</span> { <span class="ident">from</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Line</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
+            <span class="ident"><span class="self">Self</span>::Quadratic</span> { <span class="ident">from</span>, <span class="ident">ctrl</span>, <span class="ident">to</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::Quadratic</span> {
                 <span class="ident">from</span>: <span class="ident">from</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
                 <span class="ident">ctrl</span>: <span class="ident">ctrl</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::Cubic</span> {
+            <span class="ident"><span class="self">Self</span>::Cubic</span> {
                 <span class="ident">from</span>,
                 <span class="ident">ctrl1</span>,
                 <span class="ident">ctrl2</span>,
@@ -1311,7 +1310,7 @@
                 <span class="ident">ctrl2</span>: <span class="ident">ctrl2</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
                 <span class="ident">to</span>: <span class="ident">to</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
             },
-            <span class="self">Self</span><span class="ident">::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
+            <span class="ident"><span class="self">Self</span>::End</span> { <span class="ident">last</span>, <span class="ident">first</span>, <span class="ident">close</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">PathEvent::End</span> {
                 <span class="ident">last</span>: <span class="ident">last</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
                 <span class="ident">first</span>: <span class="ident">first</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
                 <span class="ident">close</span>: <span class="kw-2">*</span><span class="ident">close</span>,
@@ -1319,11 +1318,11 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Scaled</span> {
+    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Scaled</span> {
         <span class="kw-2">*</span><span class="self">self</span>
     }
 }
-</pre></div>
+</code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_core" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
     <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
 </body></html>
