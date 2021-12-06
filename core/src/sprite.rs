@@ -433,7 +433,7 @@ impl SpriteAnimations {
     /// Returns the animation for `tag`.
     #[must_use]
     pub fn animation_for(&self, tag: &Option<impl ToString>) -> Option<&'_ SpriteAnimation> {
-        self.animations.get(&tag.as_ref().map(|s| s.to_string()))
+        self.animations.get(&tag.as_ref().map(ToString::to_string))
     }
 }
 

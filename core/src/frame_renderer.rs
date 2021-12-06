@@ -488,6 +488,7 @@ where
                                         dest,
                                         sprite::SpriteRotation::none(),
                                         text.color.into(),
+                                        1.,
                                     );
                                 }
                                 render_commands.push(RenderCommand::FontBuffer(

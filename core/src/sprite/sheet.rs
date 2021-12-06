@@ -23,7 +23,6 @@ where
     T: Debug,
 {
     tile_size: Size<u32>,
-    dimensions: Size<u32>,
     sprites: HashMap<T, Rect<u32>>,
 }
 
@@ -100,11 +99,7 @@ impl<T: Debug + Eq + Hash> SpriteSheetData<T> {
             );
         }
 
-        Self {
-            tile_size,
-            dimensions,
-            sprites,
-        }
+        Self { tile_size, sprites }
     }
 }
 

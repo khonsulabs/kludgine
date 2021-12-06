@@ -32,13 +32,13 @@ impl GpuBatch {
             b: 255,
             a: 0,
         };
-
         match &sprite.source.location {
             SpriteSourceLocation::Rect(location) => self.add_box(
                 location.as_extents(),
                 sprite.render_at,
                 sprite.rotation,
                 white_transparent,
+                sprite.alpha,
             ),
             SpriteSourceLocation::Joined(locations) => {
                 let source_bounds = sprite.source.location.bounds();
@@ -57,6 +57,7 @@ impl GpuBatch {
                         destination.as_extents(),
                         sprite.rotation,
                         white_transparent,
+                        sprite.alpha,
                     );
                 }
             }
@@ -68,6 +69,7 @@ impl GpuBatch {
         src: Point<f32, Unknown>,
         dest: Point<f32, Pixels>,
         color: Rgba8,
+        alpha: f32,
     ) -> Vertex {
         Vertex {
             position: [dest.x, dest.y, 0.],
@@ -76,6 +78,7 @@ impl GpuBatch {
                 src.y / self.size.height as f32,
             ],
             color,
+            alpha,
         }
     }
 
@@ -85,6 +88,7 @@ impl GpuBatch {
         mut dest: ExtentsRect<f32, Pixels>,
         rotation: SpriteRotation<Pixels>,
         color: Rgba8,
+        alpha: f32,
     ) {
         let mut src = src.cast::<f32>();
         if let Some(clip) = &self.clip {
@@ -142,13 +146,14 @@ impl GpuBatch {
 
         let origin = rotation.location.unwrap_or_else(|| dest.center());
         let top_left = self
-            .vertex(src.origin, dest.origin, color)
+            .vertex(src.origin, dest.origin, color, alpha)
             .rotate_by(rotation.angle, origin);
         let top_right = self
             .vertex(
                 Point::from_figures(src.extent.x(), src.origin.y()),
                 Point::from_figures(dest.extent.x(), dest.origin.y()),
                 color,
+                alpha,
             )
             .rotate_by(rotation.angle, origin);
         let bottom_left = self
@@ -156,6 +161,7 @@ impl GpuBatch {
                 Point::from_figures(src.origin.x(), src.extent.y()),
                 Point::from_figures(dest.origin.x(), dest.extent.y()),
                 color,
+                alpha,
             )
             .rotate_by(rotation.angle, origin);
         let bottom_right = self
@@ -163,6 +169,7 @@ impl GpuBatch {
                 Point::from_figures(src.extent.x(), src.extent.y()),
                 Point::from_figures(dest.extent.x(), dest.extent.y()),
                 color,
+                alpha,
             )
             .rotate_by(rotation.angle, origin);
 

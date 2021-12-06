@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashSet,
     sync::Arc,
     time::{Duration, Instant},
 };
@@ -12,7 +12,7 @@ use crate::{
     math::{Point, Scale, Scaled, Size, Vector},
     shape::Shape,
     sprite::RenderedSprite,
-    text::{font::Font, prepared::PreparedSpan},
+    text::prepared::PreparedSpan,
 };
 
 /// An individual render instruction.
@@ -59,7 +59,6 @@ pub struct Scene {
     event_sender: flume::Sender<SceneEvent>,
     now: Option<Instant>,
     elapsed: Option<Duration>,
-    fonts: HashMap<String, Vec<Font>>,
     system_theme: Theme,
 }
 
@@ -209,7 +208,6 @@ impl Scene {
             keys_pressed: HashSet::new(),
             now: None,
             elapsed: None,
-            fonts: HashMap::new(),
             system_theme: default_system_theme,
         }
     }

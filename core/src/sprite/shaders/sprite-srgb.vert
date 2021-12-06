@@ -8,9 +8,11 @@ layout(set = 0, binding = 0) uniform Globals {
 layout(location = 0) in vec3  position;
 layout(location = 1) in vec2  uv;
 layout(location = 2) in vec4  color;
+layout(location = 3) in float alpha;
 
 layout(location = 0) out vec2  f_uv;
 layout(location = 1) out vec4  f_color;
+layout(location = 2) out float f_alpha;
 
 
 // Convert an sRGB color to linear space.
@@ -25,6 +27,7 @@ vec3 linearize(vec3 srgb) {
 void main() {
 	f_color = vec4(linearize(color.rgb), color.a);
 	f_uv = uv;
+	f_alpha = alpha;
 
 	gl_Position = global.ortho * global.transform * vec4(position, 1.0);
 }

@@ -28,6 +28,7 @@ pub struct Vertex {
     pub position: [f32; 3],
     pub uv: [f32; 2],
     pub color: Rgba8,
+    pub alpha: f32,
 }
 
 impl Vertex {
@@ -72,6 +73,7 @@ where
                 VertexFormat::Float3,
                 VertexFormat::Float2,
                 VertexFormat::UByte4,
+                VertexFormat::Float,
             ],
             pipeline_layout: &[
                 Set(&[Binding {

@@ -115,7 +115,7 @@ where
             let guard = GLOBAL_RUNTIME_RECEIVER.lock();
             guard.as_ref().expect("Receiver was not set").clone()
         };
-        while let Some(event) = event_receiver.recv().ok() {
+        while let Ok(event) = event_receiver.recv() {
             match event {
                 RuntimeEvent::Running => {
                     running = true;
