@@ -1,5 +1,6 @@
 use easygpu::wgpu;
 use image::{GenericImageView, Rgba};
+use tracing::Level;
 use winit::window::Theme;
 
 use crate::{frame_renderer::FrameRenderer, prelude::*, sprite::Srgb};
@@ -7,6 +8,9 @@ use crate::{frame_renderer::FrameRenderer, prelude::*, sprite::Srgb};
 #[tokio::test]
 #[allow(clippy::semicolon_if_nothing_returned)] // false positive from tokio::test
 async fn offscreen_render_test() {
+    tracing_subscriber::fmt()
+        .with_max_level(Level::TRACE)
+        .init();
     let (scene_sender, scene_receiver) = flume::unbounded();
 
     let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
