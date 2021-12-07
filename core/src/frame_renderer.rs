@@ -16,12 +16,9 @@ use easygpu::{
 };
 use easygpu_lyon::LyonPipeline;
 use figures::Rectlike;
-use futures::FutureExt;
 use image::DynamicImage;
-use instant::Duration;
 
 use crate::{
-    delay,
     math::{ExtentsRect, Point, Size, Unknown},
     scene::SceneEvent,
     sprite::{self, VertexShaderSource},
@@ -142,21 +139,19 @@ where
         frame_renderer.render_frame(&mut frame)?;
         if let Destination::Texture { output, .. } = frame_renderer.destination {
             let data = output.slice(..);
-            let mut map_async = Box::pin(data.map_async(wgpu::MapMode::Read).fuse());
+            let map_async = data.map_async(wgpu::MapMode::Read);
             let wgpu_device = frame_renderer.renderer.device.wgpu;
-            let mut poll_loop = Box::pin(
-                async move {
-                    loop {
-                        wgpu_device.poll(wgpu::Maintain::Poll);
-                        delay::Delay::new(Duration::from_millis(1)).await;
-                    }
-                }
-                .fuse(),
-            );
-            while futures::select! {
-                _ = map_async => false,
-                _ = poll_loop => true,
-            } {}
+            // TODO this is what the wgpu example does, and it appears to work
+            // in CI. Originally, this code tried to be fancy and had a loop
+            // calling Maintain::Poll and delaying inbetween invocations, but it
+            // locked up under CI -- the buffer map call never returned. This
+            // method is technically blocking, but it's blocking on hardware.
+            // Additionally, when doing an offscreen render, I'm not sure how
+            // impactful it really is to the async runtime to block here. This
+            // theoretically should be moved to a blocking-aware call, but
+            // currently kludgine-core is runtime agnostic.
+            wgpu_device.poll(wgpu::Maintain::Wait);
+            map_async.await?;
 
             let bytes = data.get_mapped_range().to_vec();
 
