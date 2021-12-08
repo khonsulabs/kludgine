@@ -1,10 +1,11 @@
-name: Coverage
+name: Docs
 
 on: [push]
 
 jobs:
-  coverage:
+  docs:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v2
 
@@ -15,18 +16,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             libegl1-mesa libgl1-mesa-dri libxcb-xfixes0-dev mesa-vulkan-drivers
-
-      - name: Run code coverage
+            
+      - name: Generate Docs
         run: |
-          cargo xtask generate-code-coverage-report --install-dependencies
+          cargo doc --no-deps --all-features
 
       - name: Deploy Docs
-        if: github.ref == 'refs/heads/main'
         uses: JamesIves/github-pages-deploy-action@releases/v4
         with:
           branch: gh-pages
-          folder: coverage/
+          folder: target/doc/
           git-config-name: kl-botsu
           git-config-email: botsu@khonsulabs.com
-          target-folder: /coverage/
+          target-folder: /main/
           clean: true

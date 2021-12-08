@@ -1,3 +1,4 @@
+use easygpu::wgpu::BufferAsyncError;
 use easygpu_lyon::lyon_tessellation::TessellationError;
 
 /// All errors that `kludgine-core` can return.
@@ -18,4 +19,7 @@ pub enum Error {
     /// The sprite's current tag has no frames.
     #[error("no frames could be found for the current tag")]
     InvalidSpriteTag,
+    /// An error occurred during offscreen rendering.
+    #[error("error acquiring offscreen buffer: {0}")]
+    Offscreen(#[from] BufferAsyncError),
 }
