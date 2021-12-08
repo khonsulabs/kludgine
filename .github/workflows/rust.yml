@@ -3,32 +3,6 @@ name: Tests
 on: [push]
 
 jobs:
-  audit:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Install Rust
-        uses: hecrj/setup-rust-action@v1
-      - name: Cache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/.crates.toml
-            ~/.cargo/.crates2.json
-            ~/.cargo/bin/cargo-audit
-          key: cargo-audit
-      - name: Install cargo-audit
-        run: cargo -v install cargo-audit
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ matrix.branch }}
-      - name: Audit
-        # RUSTSEC-2021-0090: indirect dependency, ash https://github.com/MaikKlein/ash/issues/354
-        run: |
-          cargo audit -D warnings --ignore RUSTSEC-2021-0090
-          
-
   test:
     runs-on: ubuntu-latest
     steps:
@@ -51,33 +25,3 @@ jobs:
       - name: Run tokio unit tests
         run: |
           cargo test --no-default-features --features="tokio-rt"
-
-  docs:
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Install x11 dependencies for Kludgine
-        run: |
-          sudo apt-get update -y -qq
-          sudo add-apt-repository ppa:kisak/kisak-mesa -y
-          sudo apt-get install -yqq \
-            libxcb-render-util0-dev \
-            libxcb-shape0-dev \
-            libxcb-xfixes0-dev \
-            mesa-vulkan-drivers
-            
-      - name: Generate Docs
-        run: |
-          cargo doc --no-deps --all-features
-
-      - name: Deploy Docs
-        uses: JamesIves/github-pages-deploy-action@releases/v4
-        with:
-          branch: gh-pages
-          folder: target/doc/
-          git-config-name: kl-botsu
-          git-config-email: botsu@khonsulabs.com
-          target-folder: /main/
-          clean: true
