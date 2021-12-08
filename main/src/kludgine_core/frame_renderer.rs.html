@@ -593,11 +593,6 @@
 <span id="593">593</span>
 <span id="594">594</span>
 <span id="595">595</span>
-<span id="596">596</span>
-<span id="597">597</span>
-<span id="598">598</span>
-<span id="599">599</span>
-<span id="600">600</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections::HashMap</span>,
     <span class="ident">num::NonZeroU32</span>,
@@ -616,12 +611,9 @@
 };
 <span class="kw">use</span> <span class="ident">easygpu_lyon::LyonPipeline</span>;
 <span class="kw">use</span> <span class="ident">figures::Rectlike</span>;
-<span class="kw">use</span> <span class="ident">futures::FutureExt</span>;
 <span class="kw">use</span> <span class="ident">image::DynamicImage</span>;
-<span class="kw">use</span> <span class="ident">instant::Duration</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">delay</span>,
     <span class="ident">math</span>::{<span class="ident">ExtentsRect</span>, <span class="ident">Point</span>, <span class="ident">Size</span>, <span class="ident">Unknown</span>},
     <span class="ident">scene::SceneEvent</span>,
     <span class="ident">sprite</span>::{<span class="self">self</span>, <span class="ident">VertexShaderSource</span>},
@@ -742,21 +734,19 @@
         <span class="ident">frame_renderer</span>.<span class="ident">render_frame</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">frame</span>)<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Destination::Texture</span> { <span class="ident">output</span>, .. } <span class="op">=</span> <span class="ident">frame_renderer</span>.<span class="ident">destination</span> {
             <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">output</span>.<span class="ident">slice</span>(..);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map_async</span> <span class="op">=</span> <span class="ident">Box::pin</span>(<span class="ident">data</span>.<span class="ident">map_async</span>(<span class="ident">wgpu::MapMode::Read</span>).<span class="ident">fuse</span>());
+            <span class="kw">let</span> <span class="ident">map_async</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">map_async</span>(<span class="ident">wgpu::MapMode::Read</span>);
             <span class="kw">let</span> <span class="ident">wgpu_device</span> <span class="op">=</span> <span class="ident">frame_renderer</span>.<span class="ident">renderer</span>.<span class="ident">device</span>.<span class="ident">wgpu</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">poll_loop</span> <span class="op">=</span> <span class="ident">Box::pin</span>(
-                <span class="kw">async</span> <span class="kw">move</span> {
-                    <span class="kw">loop</span> {
-                        <span class="ident">wgpu_device</span>.<span class="ident">poll</span>(<span class="ident">wgpu::Maintain::Poll</span>);
-                        <span class="ident">delay::Delay::new</span>(<span class="ident">Duration::from_millis</span>(<span class="number">1</span>)).<span class="kw">await</span>;
-                    }
-                }
-                .<span class="ident">fuse</span>(),
-            );
-            <span class="kw">while</span> <span class="macro">futures::select!</span> {
-                <span class="kw">_</span> <span class="op">=</span> <span class="ident">map_async</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                <span class="kw">_</span> <span class="op">=</span> <span class="ident">poll_loop</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            } {}
+            <span class="comment">// TODO this is what the wgpu example does, and it appears to work</span>
+            <span class="comment">// in CI. Originally, this code tried to be fancy and had a loop</span>
+            <span class="comment">// calling Maintain::Poll and delaying inbetween invocations, but it</span>
+            <span class="comment">// locked up under CI -- the buffer map call never returned. This</span>
+            <span class="comment">// method is technically blocking, but it&#39;s blocking on hardware.</span>
+            <span class="comment">// Additionally, when doing an offscreen render, I&#39;m not sure how</span>
+            <span class="comment">// impactful it really is to the async runtime to block here. This</span>
+            <span class="comment">// theoretically should be moved to a blocking-aware call, but</span>
+            <span class="comment">// currently kludgine-core is runtime agnostic.</span>
+            <span class="ident">wgpu_device</span>.<span class="ident">poll</span>(<span class="ident">wgpu::Maintain::Wait</span>);
+            <span class="ident">map_async</span>.<span class="kw">await</span><span class="question-mark">?</span>;
 
             <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">get_mapped_range</span>().<span class="ident">to_vec</span>();
 
