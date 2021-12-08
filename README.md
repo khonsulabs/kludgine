@@ -13,7 +13,6 @@ designed and written by a developer that is fairly new to modern graphics
 programming and rust. Thus, it is probably a
 [kludge](https://en.wikipedia.org/wiki/Kludge).
 
-
 ## Why use Kludgine?
 
 Kludgine is early in development and is subject to breaking API changes. That
@@ -81,7 +80,7 @@ lines to add to your `Cargo.toml` look like this:
 resolver = "2"
 
 [dependencies]
-kludgine = "0.1.0-dev.5"
+kludgine = "0.1.0-dev.6"
 ```
 
 The `resolver` requirement is inherited from `wgpu`. This setting [will become
