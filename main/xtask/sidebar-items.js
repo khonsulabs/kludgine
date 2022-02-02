@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Args",""]],"fn":[["compile_shaders",""],["main",""]],"struct":[["CodeCoverageConfig",""]]});
+initSidebarItems({"enum":[["Args",""]],"fn":[["compile_shaders",""],["main",""]],"struct":[["Config",""]]});

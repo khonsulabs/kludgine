@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core&#x2F;src&#x2F;shape&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../kludgine_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core&#x2F;src&#x2F;shape&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../kludgine_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -269,7 +270,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">geometry</span>: <span class="ident">ShapeGeometry::Empty</span>,
             <span class="ident">stroke</span>: <span class="prelude-val">None</span>,
@@ -280,7 +281,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Returns a rectangle.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rect</span>(<span class="ident">rect</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rect</span>(<span class="ident">rect</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">rect</span> <span class="op">=</span> <span class="ident">rect</span>.<span class="ident">into</span>().<span class="ident">as_extents</span>();
         <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuilder::new</span>(<span class="ident">Point::from_figures</span>(<span class="ident">rect</span>.<span class="ident">origin</span>.<span class="ident">x</span>(), <span class="ident">rect</span>.<span class="ident">origin</span>.<span class="ident">y</span>()))
             .<span class="ident">line_to</span>(<span class="ident">Point::from_figures</span>(<span class="ident">rect</span>.<span class="ident">extent</span>.<span class="ident">x</span>(), <span class="ident">rect</span>.<span class="ident">origin</span>.<span class="ident">y</span>()))
@@ -298,7 +299,7 @@
 
     <span class="doccomment">/// Returns a circle with `center` and `radius`.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">circle</span>(<span class="ident">center</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span>, <span class="ident">radius</span>: <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">circle</span>(<span class="ident">center</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span>, <span class="ident">radius</span>: <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">geometry</span>: <span class="ident">ShapeGeometry::Circle</span>(<span class="ident">Circle</span> { <span class="ident">center</span>, <span class="ident">radius</span> }),
             <span class="ident">stroke</span>: <span class="prelude-val">None</span>,
@@ -308,7 +309,7 @@
 
     <span class="doccomment">/// Returns a closed polygon created with `points`.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">polygon</span>(<span class="ident">points</span>: <span class="kw">impl</span> <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">polygon</span>(<span class="ident">points</span>: <span class="kw">impl</span> <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">points</span> <span class="op">=</span> <span class="ident">points</span>.<span class="ident">into_iter</span>();
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">start</span>) <span class="op">=</span> <span class="ident">points</span>.<span class="ident">next</span>() {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">PathBuilder::new</span>(<span class="ident">start</span>);
@@ -328,14 +329,14 @@
 
     <span class="doccomment">/// Builder-style function. Set `fill` and returns self.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">fill</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">fill</span>: <span class="ident">Fill</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">fill</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">fill</span>: <span class="ident">Fill</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">fill</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">fill</span>);
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Builder-style function. Set `stroke` and returns self.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">stroke</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">stroke</span>: <span class="ident">Stroke</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">stroke</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">stroke</span>: <span class="ident">Stroke</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">stroke</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">stroke</span>);
         <span class="self">self</span>
     }
@@ -343,7 +344,7 @@
     <span class="doccomment">/// Returns the shape with the geometry casted to the unit provided. This</span>
     <span class="doccomment">/// does not change the underlying shape data at all.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cast_unit</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cast_unit</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span>(<span class="self">self</span>) -&gt; <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span> {
         <span class="ident">Shape</span> {
             <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">cast_unit</span>(),
             <span class="ident">fill</span>: <span class="self">self</span>.<span class="ident">fill</span>,
@@ -376,7 +377,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">convert_from_user_to_device</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>, <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">convert_from_user_to_device</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>, <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">geometry</span>: <span class="self">self</span>
                 .<span class="ident">geometry</span>
@@ -388,7 +389,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">builder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">easygpu_lyon::ShapeBuilder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident">easygpu_lyon::ShapeBuilder</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">build</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stroke</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">fill</span>)
     }
 }
@@ -396,7 +397,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span> <span class="ident">std::ops::Mul</span><span class="op">&lt;</span><span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Src</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Dst</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">scale</span>: <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span> {
+    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">scale</span>: <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
         <span class="ident"><span class="self">Self</span>::Output</span> {
             <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span> <span class="op">*</span> <span class="ident">scale</span>,
             <span class="ident">fill</span>: <span class="self">self</span>.<span class="ident">fill</span>,
@@ -410,11 +411,11 @@
     <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Points</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Pixels</span> {
+    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Pixels</span> {
         <span class="self">self</span>.<span class="ident">clone</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Points</span> {
+    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Points</span> {
         <span class="ident">Shape</span> {
             <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
             <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
@@ -422,7 +423,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Scaled</span> {
+    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Scaled</span> {
         <span class="ident">Shape</span> {
             <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
             <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
@@ -436,7 +437,7 @@
     <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="self">Self</span>;
     <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Pixels</span> {
+    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Pixels</span> {
         <span class="ident">Shape</span> {
             <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
             <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
@@ -444,11 +445,11 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Points</span> {
+    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Points</span> {
         <span class="self">self</span>.<span class="ident">clone</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Scaled</span> {
+    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Scaled</span> {
         <span class="ident">Shape</span> {
             <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
             <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
@@ -462,7 +463,7 @@
     <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Points</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Pixels</span> {
+    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Pixels</span> {
         <span class="ident">Shape</span> {
             <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
             <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
@@ -470,7 +471,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Points</span> {
+    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Points</span> {
         <span class="ident">Shape</span> {
             <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
             <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
@@ -478,15 +479,14 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Scaled</span> {
+    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Scaled</span> {
         <span class="self">self</span>.<span class="ident">clone</span>()
     }
 }
 
-<span class="kw">const</span> <span class="kw">fn</span> <span class="ident">lyon_point</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">pt</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">lyon_tessellation::math::Point</span> {
+<span class="kw">const</span> <span class="kw">fn</span> <span class="ident">lyon_point</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">pt</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident">lyon_tessellation::math::Point</span> {
     <span class="ident">lyon_tessellation::math::Point::new</span>(<span class="ident">pt</span>.<span class="ident">x</span>, <span class="ident">pt</span>.<span class="ident">y</span>)
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_core" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
 </body></html>
