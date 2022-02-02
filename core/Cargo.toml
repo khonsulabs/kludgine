@@ -28,31 +28,31 @@ bundled-fonts-enabled = []
 serialization = ["serde", "figures/serde", "palette/serializing"]
 
 [dependencies]
-approx = "0.5"
-easygpu = "0.0.15"
-easygpu-lyon = "0.0.15"
-image = { version = ">=0.23.12", default-features = false }
-palette = "0.6"
-futures-timer = "3"
-figures = ">=0.1.1"
-futures = "0.3"
-instant = "0.1.9"
-flume = "0.10"
-rusttype = { version = "0.9", features = ["gpu_cache"] }
-platforms = "2"
-ttf-parser = "0.6"
-json = "0.12"
-serde = { version = "1", optional = true, features = ["derive"] }
-winit = "0.26"
-bytemuck = { version = "1", features = ["derive"] }
-lazy_static = "1"
-thiserror = "1"
+approx = "0.5.1"
+easygpu = "0.1.0"
+easygpu-lyon = "0.1.0"
+image = { version = "0.24.0", default-features = false }
+palette = "0.6.0"
+futures-timer = "3.0.2"
+figures = "0.1.2"
+futures = "0.3.19"
+instant = "0.1.12"
+flume = "0.10.10"
+rusttype = { version = "0.9.2", features = ["gpu_cache"] }
+platforms = "2.0.0"
+ttf-parser = "0.14.0"
+json = "0.12.4"
+serde = { version = "1.0.136", optional = true, features = ["derive"] }
+winit = "0.26.1"
+bytemuck = { version = "1.7.3", features = ["derive"] }
+lazy_static = "1.4.0"
+thiserror = "1.0.30"
 
-tracing = { version = "0.1" }
-tracing-futures = { version = "0.2" }
+tracing = "0.1.29"
+tracing-futures = "0.2.5"
 
 
 [dev-dependencies]
-tokio = { version = "1.0", features = ["full"] }
-image = { version = ">=0.23.12", default-features = false, features = ["png"] }
-tracing-subscriber = "0.3"
+tokio = { version = "1.16.1", features = ["full"] }
+image = { version = "0.24.0", default-features = false, features = ["png"] }
+tracing-subscriber = "0.3.7"

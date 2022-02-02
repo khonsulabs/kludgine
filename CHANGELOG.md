@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## v0.1.0
+
+### Changes
+
+- Switching off of pre-release version numbering. They just add more pain than
+  they're worth.
+- Updated dependencies to `wgpu` 0.12
+
+### Fixes
+
+- Fixed incompatibility with image crate update.
+- Changed dependency versions to be less lenient.
+
 ## v0.1.0-dev.6
 
 ### Fixes

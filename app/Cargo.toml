@@ -18,19 +18,19 @@ smol-rt = ["smol", "smol-timeout", "easy-parallel"]
 
 [dependencies]
 kludgine-core = { version = "0.1.0-dev.6", path = "../core" }
-parking_lot = "0.11"
+parking_lot = "0.12.0"
 
-tracing = { version = "0.1" }
-tracing-futures = { version = "0.2" }
+tracing = "0.1.29"
+tracing-futures = "0.2.5"
 
-smol-timeout = { version = "0.6", optional = true }
-smol = { version = "1", optional = true }
-easy-parallel = { version = "3", optional = true }
-tokio = { version = "1.0", features = ["full"], optional = true }
+smol-timeout = { version = "0.6.0", optional = true }
+smol = { version = "1.2.5", optional = true }
+easy-parallel = { version = "3.2.0", optional = true }
+tokio = { version = "1.16.1", features = ["full"], optional = true }
 
-once_cell = "1"
-lazy_static = "1"
-platforms = "2"
-thiserror = "1"
-anyhow = "1.0"
-futures = "0.3"
+once_cell = "1.9.0"
+lazy_static = "1.4.0"
+platforms = "2.0.0"
+thiserror = "1.0.30"
+anyhow = "1.0.53"
+futures = "0.3.19"

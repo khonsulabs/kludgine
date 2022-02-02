@@ -157,29 +157,20 @@ where
 
             let frame_size = frame.size.cast::<usize>();
             let bytes_per_row = size_for_aligned_copy(frame_size.width * 4);
-            Ok(image::DynamicImage::ImageBgra8(
-                if bytes_per_row == frame_size.width * 4 {
-                    image::ImageBuffer::from_vec(
-                        frame_size.width as u32,
-                        frame_size.height as u32,
-                        bytes,
-                    )
-                    .unwrap()
-                } else {
-                    image::ImageBuffer::from_fn(
-                        frame_size.width as u32,
-                        frame_size.height as u32,
-                        move |x, y| {
-                            let offset = y as usize * bytes_per_row + x as usize * 4;
-                            image::Bgra([
-                                bytes[offset],
-                                bytes[offset + 1],
-                                bytes[offset + 2],
-                                bytes[offset + 3],
-                            ])
-                        },
-                    )
-                },
+            Ok(image::DynamicImage::ImageRgba8(
+                image::ImageBuffer::from_fn(
+                    frame_size.width as u32,
+                    frame_size.height as u32,
+                    move |x, y| {
+                        let offset = y as usize * bytes_per_row + x as usize * 4;
+                        image::Rgba([
+                            bytes[offset + 2],
+                            bytes[offset + 1],
+                            bytes[offset],
+                            bytes[offset + 3],
+                        ])
+                    },
+                ),
             ))
         } else {
             panic!("render_one_frame only works with an offscreen renderer")
