@@ -1,6 +1,6 @@
 [package]
 name = "kludgine-core"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
 edition = "2018"
 description = "2D rendering for Kludgine"
