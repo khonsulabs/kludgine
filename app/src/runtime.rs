@@ -10,7 +10,6 @@ use kludgine_core::{
     },
 };
 use parking_lot::{MappedRwLockReadGuard, Mutex, RwLock, RwLockReadGuard};
-use platforms::target::{OS, TARGET_OS};
 
 use crate::{
     application::Application,
@@ -223,7 +222,7 @@ impl Runtime {
     }
 
     const fn should_run_in_exclusive_mode() -> bool {
-        matches!(TARGET_OS, OS::Android | OS::iOS)
+        cfg!(any(target_os = "android", target_os = "ios"))
     }
 
     /// Executes the runtime's event loop.

@@ -5,7 +5,6 @@ use std::{
 };
 
 use figures::{DisplayScale, Displayable, One, Pixels, Points, Rectlike, SizedRect};
-use platforms::target::{OS, TARGET_OS};
 use winit::{event::VirtualKeyCode, window::Theme};
 
 use crate::{
@@ -179,9 +178,14 @@ impl Modifiers {
     /// returns `control`.
     #[must_use]
     pub const fn primary_modifier(&self) -> bool {
-        match TARGET_OS {
-            OS::MacOS | OS::iOS => self.operating_system,
-            _ => self.control,
+        #[cfg(any(target_os = "macos", target_os = "ios"))]
+        {
+            self.operating_system
+        }
+
+        #[cfg(not(any(target_os = "macos", target_os = "ios")))]
+        {
+            self.control
         }
     }
 
@@ -189,10 +193,16 @@ impl Modifiers {
     /// true if `operating_system` key is true and the current operating system
     /// is Mac or iOS.
     #[must_use]
+    #[allow(clippy::unused_self)]
     pub const fn command_key(&self) -> bool {
-        match TARGET_OS {
-            OS::MacOS | OS::iOS => self.operating_system,
-            _ => false,
+        #[cfg(any(target_os = "macos", target_os = "ios"))]
+        {
+            self.operating_system
+        }
+
+        #[cfg(not(any(target_os = "macos", target_os = "ios")))]
+        {
+            false
         }
     }
 }

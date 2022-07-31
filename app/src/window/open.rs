@@ -148,7 +148,7 @@ impl<T: Window> OpenWindow<T> {
         }
     }
 
-    pub(crate) fn next_redraw_target(&self) -> RedrawTarget {
+    pub(crate) const fn next_redraw_target(&self) -> RedrawTarget {
         self.redraw_status.next_redraw_target
     }
 
@@ -268,7 +268,7 @@ pub enum UpdateSchedule {
 impl RedrawTarget {
     pub(crate) const fn next_update_instant(&self) -> Option<UpdateSchedule> {
         match self {
-            RedrawTarget::Never => None,
+            Self::Never => None,
             Self::None => Some(UpdateSchedule::Now),
             Self::Scheduled(scheduled_for) => Some(UpdateSchedule::Scheduled(*scheduled_for)),
         }
