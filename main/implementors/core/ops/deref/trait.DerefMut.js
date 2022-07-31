@@ -1,3 +1,3 @@
 (function() {var implementors = {};
-implementors["kludgine"] = [{"text":"impl&lt;T&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/1.58.1/core/ops/deref/trait.DerefMut.html\" title=\"trait core::ops::deref::DerefMut\">DerefMut</a> for <a class=\"struct\" href=\"kludgine/tilemap/struct.TileMap.html\" title=\"struct kludgine::tilemap::TileMap\">TileMap</a>&lt;T&gt;","synthetic":false,"types":["kludgine::tilemap::TileMap"]}];
+implementors["kludgine"] = [{"text":"impl&lt;T&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/1.62.1/core/ops/deref/trait.DerefMut.html\" title=\"trait core::ops::deref::DerefMut\">DerefMut</a> for <a class=\"struct\" href=\"kludgine/tilemap/struct.TileMap.html\" title=\"struct kludgine::tilemap::TileMap\">TileMap</a>&lt;T&gt;","synthetic":false,"types":["kludgine::tilemap::TileMap"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
