@@ -444,7 +444,7 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">next_redraw_target</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">RedrawTarget</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">next_redraw_target</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">RedrawTarget</span> {
         <span class="self">self</span>.<span class="ident">redraw_status</span>.<span class="ident">next_redraw_target</span>
     }
 
@@ -564,7 +564,7 @@
 <span class="kw">impl</span> <span class="ident">RedrawTarget</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">next_update_instant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">UpdateSchedule</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">RedrawTarget::Never</span> =&gt; <span class="prelude-val">None</span>,
+            <span class="ident"><span class="self">Self</span>::Never</span> =&gt; <span class="prelude-val">None</span>,
             <span class="ident"><span class="self">Self</span>::None</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">UpdateSchedule::Now</span>),
             <span class="ident"><span class="self">Self</span>::Scheduled</span>(<span class="ident">scheduled_for</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">UpdateSchedule::Scheduled</span>(<span class="kw-2">*</span><span class="ident">scheduled_for</span>)),
         }

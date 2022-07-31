@@ -369,6 +369,16 @@
 <span id="364">364</span>
 <span id="365">365</span>
 <span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">collections::HashSet</span>,
     <span class="ident">sync::Arc</span>,
@@ -376,7 +386,6 @@
 };
 
 <span class="kw">use</span> <span class="ident">figures</span>::{<span class="ident">DisplayScale</span>, <span class="ident">Displayable</span>, <span class="ident">One</span>, <span class="ident">Pixels</span>, <span class="ident">Points</span>, <span class="ident">Rectlike</span>, <span class="ident">SizedRect</span>};
-<span class="kw">use</span> <span class="ident">platforms::target</span>::{<span class="ident">OS</span>, <span class="ident">TARGET_OS</span>};
 <span class="kw">use</span> <span class="ident">winit</span>::{<span class="ident">event::VirtualKeyCode</span>, <span class="ident">window::Theme</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -550,9 +559,14 @@
     <span class="doccomment">/// returns `control`.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">primary_modifier</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="ident">TARGET_OS</span> {
-            <span class="ident">OS::MacOS</span> <span class="op">|</span> <span class="ident">OS::iOS</span> =&gt; <span class="self">self</span>.<span class="ident">operating_system</span>,
-            <span class="kw">_</span> =&gt; <span class="self">self</span>.<span class="ident">control</span>,
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>))]</span>
+        {
+            <span class="self">self</span>.<span class="ident">operating_system</span>
+        }
+
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>)))]</span>
+        {
+            <span class="self">self</span>.<span class="ident">control</span>
         }
     }
 
@@ -560,10 +574,16 @@
     <span class="doccomment">/// true if `operating_system` key is true and the current operating system</span>
     <span class="doccomment">/// is Mac or iOS.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::unused_self</span>)]</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">command_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="ident">TARGET_OS</span> {
-            <span class="ident">OS::MacOS</span> <span class="op">|</span> <span class="ident">OS::iOS</span> =&gt; <span class="self">self</span>.<span class="ident">operating_system</span>,
-            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>))]</span>
+        {
+            <span class="self">self</span>.<span class="ident">operating_system</span>
+        }
+
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>)))]</span>
+        {
+            <span class="bool-val">false</span>
         }
     }
 }
