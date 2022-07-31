@@ -129,7 +129,7 @@ where
     }
 
     /// Launches a thread that renders the results of the `SceneEvent`s.
-    pub async fn render_one_frame(
+    pub fn render_one_frame(
         renderer: Renderer,
         scene_event_receiver: flume::Receiver<SceneEvent>,
     ) -> crate::Result<DynamicImage> {
@@ -139,19 +139,21 @@ where
         frame_renderer.render_frame(&mut frame)?;
         if let Destination::Texture { output, .. } = frame_renderer.destination {
             let data = output.slice(..);
-            let map_async = data.map_async(wgpu::MapMode::Read);
+            let result = Arc::new(Mutex::new(None));
+            let callback_result = result.clone();
+            data.map_async(wgpu::MapMode::Read, move |map_result| {
+                let mut result = callback_result.lock().unwrap();
+                *result = Some(map_result);
+            });
             let wgpu_device = frame_renderer.renderer.device.wgpu;
-            // TODO this is what the wgpu example does, and it appears to work
-            // in CI. Originally, this code tried to be fancy and had a loop
-            // calling Maintain::Poll and delaying inbetween invocations, but it
-            // locked up under CI -- the buffer map call never returned. This
-            // method is technically blocking, but it's blocking on hardware.
-            // Additionally, when doing an offscreen render, I'm not sure how
-            // impactful it really is to the async runtime to block here. This
-            // theoretically should be moved to a blocking-aware call, but
-            // currently kludgine-core is runtime agnostic.
-            wgpu_device.poll(wgpu::Maintain::Wait);
-            map_async.await?;
+            loop {
+                wgpu_device.poll(wgpu::Maintain::Wait);
+                match result.lock().unwrap().take() {
+                    Some(Ok(())) => break,
+                    Some(Err(err)) => return Err(err.into()),
+                    None => {}
+                }
+            }
 
             let bytes = data.get_mapped_range().to_vec();
 

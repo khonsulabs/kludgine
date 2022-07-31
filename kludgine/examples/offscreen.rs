@@ -47,7 +47,6 @@ async fn main() {
 
     let image =
         FrameRenderer::<kludgine::core::sprite::Srgb>::render_one_frame(renderer, scene_receiver)
-            .await
             .expect("Error rendering offscreen");
     let image = image.to_rgba8();
     image.save("test.png").unwrap();

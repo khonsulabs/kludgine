@@ -45,7 +45,6 @@ async fn offscreen_render_test() {
     target.scene_mut().unwrap().end_frame();
 
     let image = FrameRenderer::<Srgb>::render_one_frame(renderer, scene_receiver)
-        .await
         .expect("Error rendering offscreen");
 
     assert_eq!(image.width(), 64);
