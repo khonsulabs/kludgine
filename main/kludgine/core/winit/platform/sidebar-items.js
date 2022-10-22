@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["run_return",""],["unix",""]]});
+window.SIDEBAR_ITEMS = {"mod":[["run_return",""],["unix",""]]};

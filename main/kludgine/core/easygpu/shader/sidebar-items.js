@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Shader",""],["ShaderStages","Describes the shader stages that a binding will be visible from."]]});
+window.SIDEBAR_ITEMS = {"struct":[["Shader",""],["ShaderStages","Describes the shader stages that a binding will be visible from."]]};

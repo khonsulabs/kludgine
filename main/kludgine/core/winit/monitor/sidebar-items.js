@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["MonitorHandle","Handle to a monitor."],["VideoMode","Describes a fullscreen video mode of a monitor."]]});
+window.SIDEBAR_ITEMS = {"struct":[["MonitorHandle","Handle to a monitor."],["VideoMode","Describes a fullscreen video mode of a monitor."]]};

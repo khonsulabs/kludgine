@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["Canvas",""]]});
+window.SIDEBAR_ITEMS = {"trait":[["Canvas",""]]};

@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Modifier",""]],"struct":[["ModifierKeyState",""],["ModifierKeymap",""]]});
+window.SIDEBAR_ITEMS = {"enum":[["Modifier",""]],"struct":[["ModifierKeyState",""],["ModifierKeymap",""]]};
