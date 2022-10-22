@@ -230,7 +230,8 @@ impl Runtime {
     where
         T: Window + Sized + 'static,
     {
-        let event_loop = winit::event_loop::EventLoop::<RuntimeRequest>::with_user_event();
+        let event_loop =
+            winit::event_loop::EventLoopBuilder::<RuntimeRequest>::with_user_event().build();
         let initial_system_theme = initial_window.initial_system_theme.unwrap_or(Theme::Light);
         let mut initial_window: winit::window::WindowBuilder = initial_window.into();
 
@@ -360,10 +361,10 @@ impl Runtime {
     }
 
     pub(crate) fn winit_window(
-        id: &WindowId,
+        id: WindowId,
     ) -> Option<MappedRwLockReadGuard<'static, winit::window::Window>> {
         let windows = WINIT_WINDOWS.read();
-        RwLockReadGuard::try_map(windows, |windows| windows.get(id)).ok()
+        RwLockReadGuard::try_map(windows, |windows| windows.get(&id)).ok()
     }
 }
 

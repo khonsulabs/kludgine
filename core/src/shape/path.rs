@@ -158,7 +158,6 @@ impl Path<Pixels> {
         for event in &self.events {
             // There's a bug with async-local variables and this analysis. There is no
             // cross-dependency on any of these parameters.
-            #[allow(clippy::eval_order_dependence)]
             events.push(match event {
                 PathEvent::Begin { at } => PathEvent::Begin { at: *at + location },
                 PathEvent::Line { from, to } => PathEvent::Line {

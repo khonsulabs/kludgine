@@ -1,6 +1,6 @@
 [package]
 name = "kludgine-core"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
 edition = "2018"
 description = "2D rendering for Kludgine"
@@ -29,8 +29,8 @@ serialization = ["serde", "figures/serde", "palette/serializing"]
 
 [dependencies]
 approx = "0.5.1"
-easygpu = "0.2.0"
-easygpu-lyon = "0.2.0"
+easygpu = "0.3.0"
+easygpu-lyon = "0.3.0"
 image = { version = "0.24.0", default-features = false }
 palette = "0.6.0"
 futures-timer = "3.0.2"
@@ -42,7 +42,7 @@ rusttype = { version = "0.9.2", features = ["gpu_cache"] }
 ttf-parser = "0.14.0"
 json = "0.12.4"
 serde = { version = "1.0.136", optional = true, features = ["derive"] }
-winit = "0.26.1"
+winit = "0.27.4"
 bytemuck = { version = "1.7.3", features = ["derive"] }
 lazy_static = "1.4.0"
 thiserror = "1.0.30"

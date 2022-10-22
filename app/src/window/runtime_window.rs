@@ -510,7 +510,7 @@ pub struct WindowHandle(pub WindowId);
 impl WindowHandle {
     /// Sets the window title.
     pub fn set_title(&self, title: &str) {
-        if let Some(window) = Runtime::winit_window(&self.0) {
+        if let Some(window) = Runtime::winit_window(self.0) {
             window.set_title(title);
         }
     }
@@ -518,14 +518,14 @@ impl WindowHandle {
     /// Returns the size of the content area of the window.
     #[must_use]
     pub fn inner_size(&self) -> Size<u32, Pixels> {
-        Runtime::winit_window(&self.0)
+        Runtime::winit_window(self.0)
             .map(|window| Size::new(window.inner_size().width, window.inner_size().height))
             .unwrap_or_default()
     }
 
     /// Attempts to resize the window to `new_size`. This may not work on all platforms.
     pub fn set_inner_size(&self, new_size: Size<u32, Pixels>) {
-        if let Some(window) = Runtime::winit_window(&self.0) {
+        if let Some(window) = Runtime::winit_window(self.0) {
             window.set_inner_size(PhysicalSize::new(new_size.width, new_size.height));
         }
     }
@@ -534,7 +534,7 @@ impl WindowHandle {
     /// platforms where this is unsupported, `innner_position()` is returned.
     #[must_use]
     pub fn outer_position(&self) -> Point<i32, Pixels> {
-        Runtime::winit_window(&self.0)
+        Runtime::winit_window(self.0)
             .and_then(|window| window.outer_position().ok())
             .map(|position| Point::new(position.x, position.y))
             .unwrap_or_default()
@@ -542,7 +542,7 @@ impl WindowHandle {
 
     /// Sets the outer position of the window. This may not work on all platforms.
     pub fn set_outer_position(&self, new_position: Point<i32, Pixels>) {
-        if let Some(window) = Runtime::winit_window(&self.0) {
+        if let Some(window) = Runtime::winit_window(self.0) {
             window.set_outer_position(PhysicalPosition::new(new_position.x, new_position.y));
         }
     }
@@ -550,7 +550,7 @@ impl WindowHandle {
     /// Returns the position of the top-left of the content area in screen coordinates.
     #[must_use]
     pub fn inner_position(&self) -> Point<i32, Pixels> {
-        Runtime::winit_window(&self.0)
+        Runtime::winit_window(self.0)
             .and_then(|window| window.inner_position().ok())
             .map(|position| Point::new(position.x, position.y))
             .unwrap_or_default()
@@ -558,7 +558,7 @@ impl WindowHandle {
 
     /// Sets whether the window should always be on top of other windows.
     pub fn set_always_on_top(&self, always: bool) {
-        if let Some(window) = Runtime::winit_window(&self.0) {
+        if let Some(window) = Runtime::winit_window(self.0) {
             window.set_always_on_top(always);
         }
     }
@@ -566,7 +566,7 @@ impl WindowHandle {
     /// Returns true if the window is maximized.
     #[must_use]
     pub fn maximized(&self) -> bool {
-        if let Some(window) = Runtime::winit_window(&self.0) {
+        if let Some(window) = Runtime::winit_window(self.0) {
             window.is_maximized()
         } else {
             false
@@ -575,14 +575,14 @@ impl WindowHandle {
 
     /// Sets whether the window should be maximized.
     pub fn set_maximized(&self, maximized: bool) {
-        if let Some(window) = Runtime::winit_window(&self.0) {
+        if let Some(window) = Runtime::winit_window(self.0) {
             window.set_maximized(maximized);
         }
     }
 
     /// Sets whether the window should be minimized.
     pub fn set_minimized(&self, minimized: bool) {
-        if let Some(window) = Runtime::winit_window(&self.0) {
+        if let Some(window) = Runtime::winit_window(self.0) {
             window.set_minimized(minimized);
         }
     }
