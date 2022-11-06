@@ -10,6 +10,7 @@ use easygpu::prelude::*;
 use figures::Figure;
 use lazy_static::lazy_static;
 use rusttype::{gpu_cache, Scale};
+use ttf_parser::name_id;
 
 use crate::math::Pixels;
 
@@ -62,7 +63,10 @@ impl Font {
     #[must_use]
     pub fn family(&self) -> Option<String> {
         match &self.handle.font {
-            rusttype::Font::Ref(f) => f.family_name(),
+            rusttype::Font::Ref(f) => f
+                .names()
+                .get(name_id::FAMILY)
+                .and_then(|name| name.to_string()),
             rusttype::Font::Owned(_) => None,
         }
     }
