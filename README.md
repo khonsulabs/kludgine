@@ -69,23 +69,19 @@ sprite.render_at(
 );
 ```
 
+To see examples on how to use various features of Kludgine, see the
+[kludgine/examples][examples] folder in the repository. If you are having
+issues, make sure you're looking at examples for the correct version of
+Kludgine. If you're using a released version, switch to viewing the repository
+at that version's tag.
+
 ## Getting Started
 
-To use Kludgine, your project must be using [the new features
-resolver](https://doc.rust-lang.org/cargo/reference/features.html#feature-resolver-version-2). The two
-lines to add to your `Cargo.toml` look like this:
+To use Kludgine, add it to your Cargo.toml:
 
-```toml
-[lib]
-resolver = "2"
-
-[dependencies]
-kludgine = "0.1.0"
+```sh
+cargo add kludgine
 ```
-
-The `resolver` requirement is inherited from `wgpu`. This setting [will become
-the default in the 2021
-edition](https://github.com/rust-lang/cargo/issues/9048).
 
 ## About
 
@@ -97,3 +93,5 @@ This code is dual-licensed under the [MIT License](./LICENSE-MIT) and [Apache
 License 2.0](./LICENSE-APACHE). Fonts in this repository are not included by
 default, and are [solely licensed under the Apache License
 2.0](./fonts/README.md).
+
+[examples]: https://github.com/khonsulabs/kludgine/tree/main/kludgine/examples
