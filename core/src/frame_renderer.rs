@@ -256,9 +256,11 @@ where
 
                 let output = match self.renderer.current_frame() {
                     Ok(texture) => texture,
-                    Err(wgpu::SurfaceError::Outdated) => return Ok(()), /* Ignore outdated,
-                                                                            * we'll draw */
-                    // next time.
+                    Err(wgpu::SurfaceError::Outdated | wgpu::SurfaceError::Timeout) => {
+                        // Ignore outdated, we'll draw
+                        // next time.
+                        return Ok(());
+                    }
                     Err(err) => panic!("Unrecoverable error on swap chain {:?}", err),
                 };
                 Output::SwapChain(output)
