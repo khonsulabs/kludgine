@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `app/src/window/runtime_window.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>runtime_window.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_app/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `app/src/window/runtime_window.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>runtime_window.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_app/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -592,599 +592,599 @@
 <span id="592">592</span>
 <span id="593">593</span>
 <span id="594">594</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">sync</span>::{
-        <span class="ident">atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>},
-        <span class="ident">Arc</span>,
+</pre><pre class="rust"><code><span class="kw">use </span>std::{
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
     },
-    <span class="ident">time</span>::{<span class="ident">Duration</span>, <span class="ident">Instant</span>},
+    time::{Duration, Instant},
 };
 
-<span class="kw">use</span> <span class="ident">kludgine_core</span>::{
-    <span class="ident">easygpu::prelude</span>::<span class="kw-2">*</span>,
-    <span class="ident">figures</span>::{<span class="ident">num_traits::One</span>, <span class="ident">DisplayScale</span>, <span class="ident">Displayable</span>, <span class="ident">Pixels</span>},
-    <span class="ident">flume</span>,
-    <span class="ident">math</span>::{<span class="ident">Point</span>, <span class="ident">Scale</span>, <span class="ident">Size</span>},
-    <span class="ident">scene</span>::{<span class="ident">Scene</span>, <span class="ident">SceneEvent</span>},
-    <span class="ident">winit</span>::{
+<span class="kw">use </span>kludgine_core::{
+    easygpu::prelude::<span class="kw-2">*</span>,
+    figures::{num_traits::One, DisplayScale, Displayable, Pixels},
+    flume,
+    math::{Point, Scale, Size},
+    scene::{Scene, SceneEvent},
+    winit::{
         <span class="self">self</span>,
-        <span class="ident">dpi</span>::{<span class="ident">PhysicalPosition</span>, <span class="ident">PhysicalSize</span>},
-        <span class="ident">event::WindowEvent</span> <span class="kw">as</span> <span class="ident">WinitWindowEvent</span>,
-        <span class="ident">window</span>::{<span class="ident">Theme</span>, <span class="ident">WindowId</span>},
+        dpi::{PhysicalPosition, PhysicalSize},
+        event::WindowEvent <span class="kw">as </span>WinitWindowEvent,
+        window::{Theme, WindowId},
     },
-    <span class="ident">FrameRenderer</span>,
+    FrameRenderer,
 };
-<span class="kw">use</span> <span class="ident">once_cell::sync::OnceCell</span>;
-<span class="kw">use</span> <span class="ident">tracing::instrument</span>;
+<span class="kw">use </span>once_cell::sync::OnceCell;
+<span class="kw">use </span>tracing::instrument;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::OpenWindow</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">runtime</span>::{<span class="ident">Runtime</span>, <span class="ident">RuntimeRequest</span>, <span class="ident">WINDOWS</span>},
-    <span class="ident">window</span>::{
-        <span class="ident">event</span>::{<span class="ident">ElementState</span>, <span class="ident">Event</span>, <span class="ident">InputEvent</span>, <span class="ident">VirtualKeyCode</span>, <span class="ident">WindowEvent</span>},
-        <span class="ident">CloseResponse</span>, <span class="ident">Window</span>, <span class="ident">WindowMessage</span>, <span class="ident">WINDOW_CHANNELS</span>,
+<span class="kw">use </span><span class="kw">super</span>::OpenWindow;
+<span class="kw">use crate</span>::{
+    runtime::{Runtime, RuntimeRequest, WINDOWS},
+    window::{
+        event::{ElementState, Event, InputEvent, VirtualKeyCode, WindowEvent},
+        CloseResponse, Window, WindowMessage, WINDOW_CHANNELS,
     },
-    <span class="ident">Error</span>,
+    Error,
 };
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RuntimeWindow</span> {
-    <span class="kw">pub</span> <span class="ident">window_id</span>: <span class="ident">WindowId</span>,
-    <span class="kw">pub</span> <span class="ident">keep_running</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
-    <span class="ident">receiver</span>: <span class="ident">flume::Receiver</span><span class="op">&lt;</span><span class="ident">WindowMessage</span><span class="op">&gt;</span>,
-    <span class="ident">event_sender</span>: <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
-    <span class="ident">last_known_size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
-    <span class="ident">last_known_scale_factor</span>: <span class="ident">DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>RuntimeWindow {
+    <span class="kw">pub </span>window_id: WindowId,
+    <span class="kw">pub </span>keep_running: Arc&lt;AtomicBool&gt;,
+    receiver: flume::Receiver&lt;WindowMessage&gt;,
+    event_sender: flume::Sender&lt;WindowEvent&gt;,
+    last_known_size: Size&lt;u32, Pixels&gt;,
+    last_known_scale_factor: DisplayScale&lt;f32&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RuntimeWindowConfig</span> {
-    <span class="ident">window_id</span>: <span class="ident">WindowId</span>,
-    <span class="ident">instance</span>: <span class="ident">wgpu::Instance</span>,
-    <span class="ident">surface</span>: <span class="ident">wgpu::Surface</span>,
-    <span class="ident">initial_size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
-    <span class="ident">scale_factor</span>: <span class="ident">f32</span>,
+<span class="kw">pub struct </span>RuntimeWindowConfig {
+    window_id: WindowId,
+    instance: wgpu::Instance,
+    surface: wgpu::Surface,
+    initial_size: Size&lt;u32, Pixels&gt;,
+    scale_factor: f32,
 }
 
-<span class="kw">impl</span> <span class="ident">RuntimeWindowConfig</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">window</span>: <span class="kw-2">&amp;</span><span class="ident">winit::window::Window</span>) -&gt; <span class="self">Self</span> {
-        <span class="comment">// TODO in wasm, we need to explicity enable GL, but since wasm isn&#39;t possible</span>
-        <span class="comment">// right now, we&#39;re just hardcoding primary</span>
-        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">wgpu::Instance::new</span>(<span class="ident">wgpu::Backends::PRIMARY</span>);
-        <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">instance</span>.<span class="ident">create_surface</span>(<span class="ident">window</span>) };
-        <span class="self">Self</span> {
-            <span class="ident">window_id</span>: <span class="ident">window</span>.<span class="ident">id</span>(),
-            <span class="ident">instance</span>,
-            <span class="ident">surface</span>,
-            <span class="ident">initial_size</span>: <span class="ident">Size::new</span>(<span class="ident">window</span>.<span class="ident">inner_size</span>().<span class="ident">width</span>, <span class="ident">window</span>.<span class="ident">inner_size</span>().<span class="ident">height</span>),
-            <span class="ident">scale_factor</span>: <span class="ident">window</span>.<span class="ident">scale_factor</span>() <span class="kw">as</span> <span class="ident">f32</span>,
+<span class="kw">impl </span>RuntimeWindowConfig {
+    <span class="kw">pub fn </span>new(window: <span class="kw-2">&amp;</span>winit::window::Window) -&gt; <span class="self">Self </span>{
+        <span class="comment">// TODO in wasm, we need to explicity enable GL, but since wasm isn&#39;t possible
+        // right now, we&#39;re just hardcoding primary
+        </span><span class="kw">let </span>instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
+        <span class="kw">let </span>surface = <span class="kw">unsafe </span>{ instance.create_surface(window) };
+        <span class="self">Self </span>{
+            window_id: window.id(),
+            instance,
+            surface,
+            initial_size: Size::new(window.inner_size().width, window.inner_size().height),
+            scale_factor: window.scale_factor() <span class="kw">as </span>f32,
         }
     }
 }
 
-<span class="kw">static</span> <span class="ident">OPENED_FIRST_WINDOW</span>: <span class="ident">OnceCell</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">OnceCell::new</span>();
+<span class="kw">static </span>OPENED_FIRST_WINDOW: OnceCell&lt;()&gt; = OnceCell::new();
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">opened_first_window</span>() -&gt; <span class="ident">bool</span> {
-    <span class="ident">OPENED_FIRST_WINDOW</span>.<span class="ident">get</span>().<span class="ident">is_some</span>()
+<span class="kw">pub fn </span>opened_first_window() -&gt; bool {
+    OPENED_FIRST_WINDOW.get().is_some()
 }
 
-<span class="kw">fn</span> <span class="ident">set_opened_first_window</span>() {
-    <span class="ident">OPENED_FIRST_WINDOW</span>.<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> ());
+<span class="kw">fn </span>set_opened_first_window() {
+    OPENED_FIRST_WINDOW.get_or_init(|| ());
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
-<span class="kw">type</span> <span class="ident">Format</span> <span class="op">=</span> <span class="ident">kludgine_core::sprite::Srgb</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">type</span> <span class="ident">Format</span> <span class="op">=</span> <span class="ident">kludgine_core::sprite::Normal</span>;
+<span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+</span><span class="kw">type </span>Format = kludgine_core::sprite::Srgb;
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+</span><span class="kw">type </span>Format = kludgine_core::sprite::Normal;
 
-<span class="kw">impl</span> <span class="ident">RuntimeWindow</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">open</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">window_receiver</span>: <span class="kw-2">&amp;</span><span class="ident">flume::Receiver</span><span class="op">&lt;</span><span class="ident">RuntimeWindowConfig</span><span class="op">&gt;</span>,
-        <span class="ident">initial_system_theme</span>: <span class="ident">Theme</span>,
-        <span class="ident">app_window</span>: <span class="ident">T</span>,
-    ) <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Window</span> <span class="op">+</span> <span class="ident">Sized</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+<span class="kw">impl </span>RuntimeWindow {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>open&lt;T&gt;(
+        window_receiver: <span class="kw-2">&amp;</span>flume::Receiver&lt;RuntimeWindowConfig&gt;,
+        initial_system_theme: Theme,
+        app_window: T,
+    ) <span class="kw">where
+        </span>T: Window + Sized + <span class="lifetime">&#39;static</span>,
     {
-        <span class="kw">let</span> <span class="ident">RuntimeWindowConfig</span> {
-            <span class="ident">window_id</span>,
-            <span class="ident">instance</span>,
-            <span class="ident">surface</span>,
-            <span class="ident">initial_size</span>,
-            <span class="ident">scale_factor</span>,
-        } <span class="op">=</span> <span class="ident">window_receiver</span>
-            .<span class="ident">recv</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Error receiving winit::window&quot;</span>);
+        <span class="kw">let </span>RuntimeWindowConfig {
+            window_id,
+            instance,
+            surface,
+            initial_size,
+            scale_factor,
+        } = window_receiver
+            .recv()
+            .expect(<span class="string">&quot;Error receiving winit::window&quot;</span>);
 
-        <span class="kw">let</span> (<span class="ident">message_sender</span>, <span class="ident">message_receiver</span>) <span class="op">=</span> <span class="ident">flume::unbounded</span>();
-        <span class="kw">let</span> (<span class="ident">event_sender</span>, <span class="ident">event_receiver</span>) <span class="op">=</span> <span class="ident">flume::unbounded</span>();
+        <span class="kw">let </span>(message_sender, message_receiver) = flume::unbounded();
+        <span class="kw">let </span>(event_sender, event_receiver) = flume::unbounded();
 
-        <span class="kw">let</span> <span class="ident">keep_running</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">AtomicBool::new</span>(<span class="bool-val">true</span>));
-        <span class="kw">let</span> <span class="ident">task_keep_running</span> <span class="op">=</span> <span class="ident">keep_running</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">window_event_sender</span> <span class="op">=</span> <span class="ident">event_sender</span>.<span class="ident">clone</span>();
-        <span class="kw">let</span> (<span class="ident">scene_event_sender</span>, <span class="ident">scene_event_receiver</span>) <span class="op">=</span> <span class="ident">flume::unbounded</span>();
+        <span class="kw">let </span>keep_running = Arc::new(AtomicBool::new(<span class="bool-val">true</span>));
+        <span class="kw">let </span>task_keep_running = keep_running.clone();
+        <span class="kw">let </span>window_event_sender = event_sender.clone();
+        <span class="kw">let </span>(scene_event_sender, scene_event_receiver) = flume::unbounded();
 
-        <span class="comment">// Each window has its own thread/task operating its core update/render</span>
-        <span class="comment">// lifecycle.</span>
-        <span class="ident">std::thread::Builder::new</span>()
-            .<span class="ident">name</span>(<span class="ident">String::from</span>(<span class="string">&quot;kludgine-window-loop&quot;</span>))
-            .<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-                <span class="ident"><span class="self">Self</span>::window_main</span>(
-                    <span class="ident">window_id</span>,
-                    <span class="ident">scene_event_sender</span>,
-                    <span class="ident">window_event_sender</span>,
-                    <span class="ident">event_receiver</span>,
-                    <span class="ident">initial_system_theme</span>,
-                    <span class="ident">app_window</span>,
+        <span class="comment">// Each window has its own thread/task operating its core update/render
+        // lifecycle.
+        </span>std::thread::Builder::new()
+            .name(String::from(<span class="string">&quot;kludgine-window-loop&quot;</span>))
+            .spawn(<span class="kw">move </span>|| {
+                <span class="self">Self</span>::window_main(
+                    window_id,
+                    scene_event_sender,
+                    window_event_sender,
+                    event_receiver,
+                    initial_system_theme,
+                    app_window,
                 );
             })
-            .<span class="ident">unwrap</span>();
+            .unwrap();
 
-        <span class="kw">let</span> <span class="ident">renderer</span> <span class="op">=</span> <span class="ident">Runtime::block_on</span>(<span class="kw">async</span> <span class="kw">move</span> {
-            <span class="ident">Renderer::for_surface</span>(<span class="ident">surface</span>, <span class="kw-2">&amp;</span><span class="ident">instance</span>, <span class="number">4</span>)
-                .<span class="kw">await</span>
-                .<span class="ident">expect</span>(<span class="string">&quot;Error creating renderer for window&quot;</span>)
+        <span class="kw">let </span>renderer = Runtime::block_on(<span class="kw">async move </span>{
+            Renderer::for_surface(surface, <span class="kw-2">&amp;</span>instance, <span class="number">4</span>)
+                .<span class="kw">await
+                </span>.expect(<span class="string">&quot;Error creating renderer for window&quot;</span>)
         });
 
-        <span class="ident">FrameRenderer</span>::<span class="op">&lt;</span><span class="ident">Format</span><span class="op">&gt;</span><span class="ident">::run</span>(<span class="ident">renderer</span>, <span class="ident">task_keep_running</span>, <span class="ident">scene_event_receiver</span>, <span class="op">|</span><span class="op">|</span> {
-            <span class="ident">RuntimeRequest::WindowClosed</span>.<span class="ident">send</span>();
+        FrameRenderer::&lt;Format&gt;::run(renderer, task_keep_running, scene_event_receiver, || {
+            RuntimeRequest::WindowClosed.send();
         });
 
         {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channels</span> <span class="op">=</span> <span class="ident">WINDOW_CHANNELS</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
-            <span class="ident">channels</span>.<span class="ident">insert</span>(<span class="ident">window_id</span>, <span class="ident">message_sender</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>channels = WINDOW_CHANNELS.lock().unwrap();
+            channels.insert(window_id, message_sender);
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime_window</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">receiver</span>: <span class="ident">message_receiver</span>,
-            <span class="ident">last_known_size</span>: <span class="ident">initial_size</span>,
-            <span class="ident">keep_running</span>,
-            <span class="ident">event_sender</span>,
-            <span class="ident">last_known_scale_factor</span>: <span class="ident">DisplayScale::new</span>(<span class="ident">Scale::new</span>(<span class="ident">scale_factor</span>), <span class="ident">Scale::one</span>()),
-            <span class="ident">window_id</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>runtime_window = <span class="self">Self </span>{
+            receiver: message_receiver,
+            last_known_size: initial_size,
+            keep_running,
+            event_sender,
+            last_known_scale_factor: DisplayScale::new(Scale::new(scale_factor), Scale::one()),
+            window_id,
         };
-        <span class="ident">runtime_window</span>.<span class="ident">notify_size_changed</span>();
+        runtime_window.notify_size_changed();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">windows</span> <span class="op">=</span> <span class="ident">WINDOWS</span>.<span class="ident">write</span>();
-        <span class="ident">windows</span>.<span class="ident">insert</span>(<span class="ident">window_id</span>, <span class="ident">runtime_window</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>windows = WINDOWS.write();
+        windows.insert(window_id, runtime_window);
 
-        <span class="ident">set_opened_first_window</span>();
+        set_opened_first_window();
     }
 
-    <span class="kw">fn</span> <span class="ident">request_window_close</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">id</span>: <span class="ident">WindowId</span>, <span class="ident">window</span>: <span class="kw-2">&amp;mut</span> <span class="ident">OpenWindow</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Window</span>,
+    <span class="kw">fn </span>request_window_close&lt;T&gt;(id: WindowId, window: <span class="kw-2">&amp;mut </span>OpenWindow&lt;T&gt;) -&gt; <span class="kw">crate</span>::Result&lt;bool&gt;
+    <span class="kw">where
+        </span>T: Window,
     {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">CloseResponse::RemainOpen</span> <span class="op">=</span> <span class="ident">window</span>.<span class="ident">request_close</span>()<span class="question-mark">?</span> {
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
+        <span class="kw">if let </span>CloseResponse::RemainOpen = window.request_close()<span class="question-mark">? </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
         }
 
-        <span class="ident">WindowMessage::Close</span>.<span class="ident">send_to</span>(<span class="ident">id</span>)<span class="question-mark">?</span>;
+        WindowMessage::Close.send_to(id)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">next_window_event_non_blocking</span>(
-        <span class="ident">event_receiver</span>: <span class="kw-2">&amp;mut</span> <span class="ident">flume::Receiver</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">event_receiver</span>.<span class="ident">try_recv</span>() {
-            <span class="prelude-val">Ok</span>(<span class="ident">event</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">event</span>)),
-            <span class="prelude-val">Err</span>(<span class="ident">flume::TryRecvError::Empty</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-            <span class="prelude-val">Err</span>(<span class="ident">flume::TryRecvError::Disconnected</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InternalWindowMessageSend</span>(
-                <span class="string">&quot;Window channel closed&quot;</span>.<span class="ident">to_owned</span>(),
+    <span class="kw">fn </span>next_window_event_non_blocking(
+        event_receiver: <span class="kw-2">&amp;mut </span>flume::Receiver&lt;WindowEvent&gt;,
+    ) -&gt; <span class="kw">crate</span>::Result&lt;<span class="prelude-ty">Option</span>&lt;WindowEvent&gt;&gt; {
+        <span class="kw">match </span>event_receiver.try_recv() {
+            <span class="prelude-val">Ok</span>(event) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(event)),
+            <span class="prelude-val">Err</span>(flume::TryRecvError::Empty) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            <span class="prelude-val">Err</span>(flume::TryRecvError::Disconnected) =&gt; <span class="prelude-val">Err</span>(Error::InternalWindowMessageSend(
+                <span class="string">&quot;Window channel closed&quot;</span>.to_owned(),
             )),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">next_window_event_blocking</span>(
-        <span class="ident">event_receiver</span>: <span class="kw-2">&amp;mut</span> <span class="ident">flume::Receiver</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">event_receiver</span>.<span class="ident">recv</span>() {
-            <span class="prelude-val">Ok</span>(<span class="ident">event</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">event</span>)),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InternalWindowMessageSend</span>(
-                <span class="string">&quot;Window channel closed&quot;</span>.<span class="ident">to_owned</span>(),
+    <span class="kw">fn </span>next_window_event_blocking(
+        event_receiver: <span class="kw-2">&amp;mut </span>flume::Receiver&lt;WindowEvent&gt;,
+    ) -&gt; <span class="kw">crate</span>::Result&lt;<span class="prelude-ty">Option</span>&lt;WindowEvent&gt;&gt; {
+        <span class="kw">match </span>event_receiver.recv() {
+            <span class="prelude-val">Ok</span>(event) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(event)),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Error::InternalWindowMessageSend(
+                <span class="string">&quot;Window channel closed&quot;</span>.to_owned(),
             )),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">next_window_event_timeout</span>(
-        <span class="ident">event_receiver</span>: <span class="kw-2">&amp;mut</span> <span class="ident">flume::Receiver</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
-        <span class="ident">wait_for</span>: <span class="ident">Duration</span>,
-    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">event_receiver</span>.<span class="ident">recv_timeout</span>(<span class="ident">wait_for</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">event</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">event</span>)),
-            <span class="prelude-val">Err</span>(<span class="ident">flume::RecvTimeoutError::Timeout</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::InternalWindowMessageSend</span>(
-                <span class="string">&quot;Window channel closed&quot;</span>.<span class="ident">to_owned</span>(),
+    <span class="kw">fn </span>next_window_event_timeout(
+        event_receiver: <span class="kw-2">&amp;mut </span>flume::Receiver&lt;WindowEvent&gt;,
+        wait_for: Duration,
+    ) -&gt; <span class="kw">crate</span>::Result&lt;<span class="prelude-ty">Option</span>&lt;WindowEvent&gt;&gt; {
+        <span class="kw">match </span>event_receiver.recv_timeout(wait_for) {
+            <span class="prelude-val">Ok</span>(event) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(event)),
+            <span class="prelude-val">Err</span>(flume::RecvTimeoutError::Timeout) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(Error::InternalWindowMessageSend(
+                <span class="string">&quot;Window channel closed&quot;</span>.to_owned(),
             )),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">next_window_event</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">event_receiver</span>: <span class="kw-2">&amp;mut</span> <span class="ident">flume::Receiver</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
-        <span class="ident">window</span>: <span class="kw-2">&amp;</span><span class="ident">OpenWindow</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Window</span>,
+    <span class="kw">fn </span>next_window_event&lt;T&gt;(
+        event_receiver: <span class="kw-2">&amp;mut </span>flume::Receiver&lt;WindowEvent&gt;,
+        window: <span class="kw-2">&amp;</span>OpenWindow&lt;T&gt;,
+    ) -&gt; <span class="kw">crate</span>::Result&lt;<span class="prelude-ty">Option</span>&lt;WindowEvent&gt;&gt;
+    <span class="kw">where
+        </span>T: Window,
     {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
-        {
-            <span class="comment">// On wasm, the browser is controlling our async runtime, and we don&#39;t have a</span>
-            <span class="comment">// good way to do a Timeout-style function This shouldn&#39;t have any noticable</span>
-            <span class="comment">// effects, because the browser will throttle frames for us automatically</span>
-            <span class="comment">// We could refactor to trigger redraws separately from winit, in which case we</span>
-            <span class="comment">// could properly use the frame update logic</span>
-            <span class="ident"><span class="self">Self</span>::next_window_event_non_blocking</span>(<span class="ident">event_receiver</span>)
+        <span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+        </span>{
+            <span class="comment">// On wasm, the browser is controlling our async runtime, and we don&#39;t have a
+            // good way to do a Timeout-style function This shouldn&#39;t have any noticable
+            // effects, because the browser will throttle frames for us automatically
+            // We could refactor to trigger redraws separately from winit, in which case we
+            // could properly use the frame update logic
+            </span><span class="self">Self</span>::next_window_event_non_blocking(event_receiver)
         }
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
-        {
-            <span class="kw">let</span> <span class="ident">next_redraw_target</span> <span class="op">=</span> <span class="ident">window</span>.<span class="ident">next_redraw_target</span>();
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">window</span>.<span class="ident">can_wait_for_events</span>() {
-                <span class="ident"><span class="self">Self</span>::next_window_event_non_blocking</span>(<span class="ident">event_receiver</span>)
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">redraw_at</span>) <span class="op">=</span> <span class="ident">next_redraw_target</span>.<span class="ident">next_update_instant</span>() {
-                <span class="kw">let</span> <span class="ident">timeout_target</span> <span class="op">=</span> <span class="ident">redraw_at</span>.<span class="ident">timeout_target</span>();
-                <span class="kw">let</span> <span class="ident">remaining_time</span> <span class="op">=</span>
-                    <span class="ident">timeout_target</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">t</span>.<span class="ident">checked_duration_since</span>(<span class="ident">Instant::now</span>()));
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">remaining_time</span>) <span class="op">=</span> <span class="ident">remaining_time</span> {
-                    <span class="ident"><span class="self">Self</span>::next_window_event_timeout</span>(<span class="ident">event_receiver</span>, <span class="ident">remaining_time</span>)
-                } <span class="kw">else</span> {
-                    <span class="comment">// No remaining time, only process events that have already arrived.</span>
-                    <span class="ident"><span class="self">Self</span>::next_window_event_non_blocking</span>(<span class="ident">event_receiver</span>)
+        <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+        </span>{
+            <span class="kw">let </span>next_redraw_target = window.next_redraw_target();
+            <span class="kw">if </span>!window.can_wait_for_events() {
+                <span class="self">Self</span>::next_window_event_non_blocking(event_receiver)
+            } <span class="kw">else if let </span><span class="prelude-val">Some</span>(redraw_at) = next_redraw_target.next_update_instant() {
+                <span class="kw">let </span>timeout_target = redraw_at.timeout_target();
+                <span class="kw">let </span>remaining_time =
+                    timeout_target.and_then(|t| t.checked_duration_since(Instant::now()));
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(remaining_time) = remaining_time {
+                    <span class="self">Self</span>::next_window_event_timeout(event_receiver, remaining_time)
+                } <span class="kw">else </span>{
+                    <span class="comment">// No remaining time, only process events that have already arrived.
+                    </span><span class="self">Self</span>::next_window_event_non_blocking(event_receiver)
                 }
-            } <span class="kw">else</span> {
-                <span class="ident"><span class="self">Self</span>::next_window_event_blocking</span>(<span class="ident">event_receiver</span>)
+            } <span class="kw">else </span>{
+                <span class="self">Self</span>::next_window_event_blocking(event_receiver)
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">window_loop</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">id</span>: <span class="ident">WindowId</span>,
-        <span class="ident">scene_event_sender</span>: <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">SceneEvent</span><span class="op">&gt;</span>,
-        <span class="ident">event_sender</span>: <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
-        <span class="kw-2">mut</span> <span class="ident">event_receiver</span>: <span class="ident">flume::Receiver</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
-        <span class="ident">initial_system_theme</span>: <span class="ident">Theme</span>,
-        <span class="ident">window</span>: <span class="ident">T</span>,
-    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Window</span>,
+    <span class="kw">fn </span>window_loop&lt;T&gt;(
+        id: WindowId,
+        scene_event_sender: flume::Sender&lt;SceneEvent&gt;,
+        event_sender: flume::Sender&lt;WindowEvent&gt;,
+        <span class="kw-2">mut </span>event_receiver: flume::Receiver&lt;WindowEvent&gt;,
+        initial_system_theme: Theme,
+        window: T,
+    ) -&gt; <span class="kw">crate</span>::Result&lt;()&gt;
+    <span class="kw">where
+        </span>T: Window,
     {
-        <span class="kw">let</span> <span class="ident">scene</span> <span class="op">=</span> <span class="ident">Scene::new</span>(<span class="ident">scene_event_sender</span>, <span class="ident">initial_system_theme</span>);
+        <span class="kw">let </span>scene = Scene::new(scene_event_sender, initial_system_theme);
 
-        <span class="kw">let</span> <span class="ident">target_fps</span> <span class="op">=</span> <span class="ident">window</span>.<span class="ident">target_fps</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">OpenWindow::new</span>(<span class="ident">window</span>, <span class="ident">id</span>, <span class="ident">event_sender</span>, <span class="ident">scene</span>);
+        <span class="kw">let </span>target_fps = window.target_fps();
+        <span class="kw">let </span><span class="kw-2">mut </span>window = OpenWindow::new(window, id, event_sender, scene);
 
-        <span class="ident">window</span>.<span class="ident">initialize</span>()<span class="question-mark">?</span>;
-        <span class="kw">loop</span> {
-            <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">event</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident"><span class="self">Self</span>::next_window_event</span>(<span class="kw-2">&amp;mut</span> <span class="ident">event_receiver</span>, <span class="kw-2">&amp;</span><span class="ident">window</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">event</span>) =&gt; <span class="ident">event</span>,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Ok</span>(()),
+        window.initialize()<span class="question-mark">?</span>;
+        <span class="kw">loop </span>{
+            <span class="kw">while let </span><span class="prelude-val">Some</span>(event) = <span class="kw">match </span><span class="self">Self</span>::next_window_event(<span class="kw-2">&amp;mut </span>event_receiver, <span class="kw-2">&amp;</span>window) {
+                <span class="prelude-val">Ok</span>(event) =&gt; event,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
             } {
-                <span class="kw">match</span> <span class="ident">event</span> {
-                    <span class="ident">WindowEvent::WakeUp</span> =&gt; {
-                        <span class="ident">window</span>.<span class="ident">redraw_status</span>.<span class="ident">set_needs_update</span>();
+                <span class="kw">match </span>event {
+                    WindowEvent::WakeUp =&gt; {
+                        window.redraw_status.set_needs_update();
                     }
-                    <span class="ident">WindowEvent::SystemThemeChanged</span>(<span class="ident">system_theme</span>) =&gt; {
-                        <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">set_system_theme</span>(<span class="ident">system_theme</span>);
-                        <span class="ident">window</span>.<span class="ident">redraw_status</span>.<span class="ident">set_needs_redraw</span>();
+                    WindowEvent::SystemThemeChanged(system_theme) =&gt; {
+                        window.scene_mut().set_system_theme(system_theme);
+                        window.redraw_status.set_needs_redraw();
                     }
-                    <span class="ident">WindowEvent::Resize</span> { <span class="ident">size</span>, <span class="ident">scale_factor</span> } =&gt; {
-                        <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">set_size</span>(<span class="ident">size</span>.<span class="ident">cast_unit</span>());
-                        <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">set_dpi_scale</span>(<span class="ident">scale_factor</span>);
-                        <span class="ident">window</span>.<span class="ident">redraw_status</span>.<span class="ident">set_needs_redraw</span>();
+                    WindowEvent::Resize { size, scale_factor } =&gt; {
+                        window.scene_mut().set_size(size.cast_unit());
+                        window.scene_mut().set_dpi_scale(scale_factor);
+                        window.redraw_status.set_needs_redraw();
                     }
-                    <span class="ident">WindowEvent::CloseRequested</span> =&gt; {
-                        <span class="kw">if</span> <span class="ident"><span class="self">Self</span>::request_window_close</span>(<span class="ident">id</span>, <span class="kw-2">&amp;mut</span> <span class="ident">window</span>)<span class="question-mark">?</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+                    WindowEvent::CloseRequested =&gt; {
+                        <span class="kw">if </span><span class="self">Self</span>::request_window_close(id, <span class="kw-2">&amp;mut </span>window)<span class="question-mark">? </span>{
+                            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                         }
                     }
-                    <span class="ident">WindowEvent::Input</span>(<span class="ident">input</span>) =&gt; {
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Event::Keyboard</span> {
-                            <span class="ident">key</span>: <span class="prelude-val">Some</span>(<span class="ident">key</span>),
-                            <span class="ident">state</span>,
+                    WindowEvent::Input(input) =&gt; {
+                        <span class="kw">if let </span>Event::Keyboard {
+                            key: <span class="prelude-val">Some</span>(key),
+                            state,
                             ..
-                        } <span class="op">=</span> <span class="ident">input</span>.<span class="ident">event</span>
+                        } = input.event
                         {
-                            <span class="kw">match</span> <span class="ident">state</span> {
-                                <span class="ident">ElementState::Pressed</span> =&gt; {
-                                    <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">keys_pressed</span>.<span class="ident">insert</span>(<span class="ident">key</span>);
+                            <span class="kw">match </span>state {
+                                ElementState::Pressed =&gt; {
+                                    window.scene_mut().keys_pressed.insert(key);
                                 }
-                                <span class="ident">ElementState::Released</span> =&gt; {
-                                    <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">keys_pressed</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>);
+                                ElementState::Released =&gt; {
+                                    window.scene_mut().keys_pressed.remove(<span class="kw-2">&amp;</span>key);
                                 }
                             }
                         }
 
-                        <span class="ident">window</span>.<span class="ident">process_input</span>(<span class="ident">input</span>)<span class="question-mark">?</span>;
+                        window.process_input(input)<span class="question-mark">?</span>;
                     }
-                    <span class="ident">WindowEvent::ReceiveCharacter</span>(<span class="ident">character</span>) =&gt; {
-                        <span class="ident">window</span>.<span class="ident">receive_character</span>(<span class="ident">character</span>)<span class="question-mark">?</span>;
+                    WindowEvent::ReceiveCharacter(character) =&gt; {
+                        window.receive_character(character)<span class="question-mark">?</span>;
                     }
-                    <span class="ident">WindowEvent::RedrawRequested</span> =&gt; {
-                        <span class="ident">window</span>.<span class="ident">redraw_status</span>.<span class="ident">set_needs_redraw</span>();
+                    WindowEvent::RedrawRequested =&gt; {
+                        window.redraw_status.set_needs_redraw();
                     }
                 }
             }
 
-            <span class="comment">// Check for Cmd + W or Alt + f4 to close the window.</span>
-            {
-                <span class="kw">let</span> <span class="ident">modifiers</span> <span class="op">=</span> <span class="ident">window</span>.<span class="ident">scene</span>().<span class="ident">modifiers_pressed</span>();
-                <span class="kw">if</span> <span class="ident">modifiers</span>.<span class="ident">primary_modifier</span>()
-                    <span class="op">&amp;&amp;</span> <span class="ident">window</span>.<span class="ident">scene</span>().<span class="ident">keys_pressed</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">VirtualKeyCode::W</span>)
-                    <span class="op">&amp;&amp;</span> <span class="ident"><span class="self">Self</span>::request_window_close</span>(<span class="ident">id</span>, <span class="kw-2">&amp;mut</span> <span class="ident">window</span>)<span class="question-mark">?</span>
-                {
-                    <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+            <span class="comment">// Check for Cmd + W or Alt + f4 to close the window.
+            </span>{
+                <span class="kw">let </span>modifiers = window.scene().modifiers_pressed();
+                <span class="kw">if </span>modifiers.primary_modifier()
+                    &amp;&amp; window.scene().keys_pressed.contains(<span class="kw-2">&amp;</span>VirtualKeyCode::W)
+                    &amp;&amp; <span class="self">Self</span>::request_window_close(id, <span class="kw-2">&amp;mut </span>window)<span class="question-mark">?
+                </span>{
+                    <span class="kw">return </span><span class="prelude-val">Ok</span>(());
                 }
             }
 
-            <span class="kw">if</span> <span class="ident">window</span>.<span class="ident">scene</span>().<span class="ident">size</span>().<span class="ident">area</span>().<span class="ident">get</span>() <span class="op">&gt;</span> <span class="number">0.0</span> {
-                <span class="kw">let</span> <span class="ident">additional_scale</span> <span class="op">=</span> <span class="ident">window</span>.<span class="ident">additional_scale</span>();
-                <span class="kw">if</span> <span class="ident">additional_scale</span> <span class="op">!</span><span class="op">=</span> <span class="ident">window</span>.<span class="ident">scene</span>().<span class="ident">scale</span>().<span class="ident">additional_scale</span>() {
-                    <span class="ident">WindowMessage::SetAdditionalScale</span>(<span class="ident">additional_scale</span>).<span class="ident">send_to</span>(<span class="ident">id</span>)<span class="question-mark">?</span>;
+            <span class="kw">if </span>window.scene().size().area().get() &gt; <span class="number">0.0 </span>{
+                <span class="kw">let </span>additional_scale = window.additional_scale();
+                <span class="kw">if </span>additional_scale != window.scene().scale().additional_scale() {
+                    WindowMessage::SetAdditionalScale(additional_scale).send_to(id)<span class="question-mark">?</span>;
                 }
 
-                <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">start_frame</span>();
+                window.scene_mut().start_frame();
 
-                <span class="ident">window</span>.<span class="ident">update</span>(<span class="ident">target_fps</span>)<span class="question-mark">?</span>;
+                window.update(target_fps)<span class="question-mark">?</span>;
 
-                <span class="kw">if</span> <span class="ident">window</span>.<span class="ident">should_redraw_now</span>() {
-                    <span class="ident">window</span>.<span class="ident">render</span>()<span class="question-mark">?</span>;
-                    <span class="ident">window</span>.<span class="ident">scene_mut</span>().<span class="ident">end_frame</span>();
+                <span class="kw">if </span>window.should_redraw_now() {
+                    window.render()<span class="question-mark">?</span>;
+                    window.scene_mut().end_frame();
                 }
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">window_main</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">id</span>: <span class="ident">WindowId</span>,
-        <span class="ident">scene_event_sender</span>: <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">SceneEvent</span><span class="op">&gt;</span>,
-        <span class="ident">event_sender</span>: <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
-        <span class="ident">event_receiver</span>: <span class="ident">flume::Receiver</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
-        <span class="ident">initial_system_theme</span>: <span class="ident">Theme</span>,
-        <span class="ident">window</span>: <span class="ident">T</span>,
-    ) <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Window</span>,
+    <span class="kw">fn </span>window_main&lt;T&gt;(
+        id: WindowId,
+        scene_event_sender: flume::Sender&lt;SceneEvent&gt;,
+        event_sender: flume::Sender&lt;WindowEvent&gt;,
+        event_receiver: flume::Receiver&lt;WindowEvent&gt;,
+        initial_system_theme: Theme,
+        window: T,
+    ) <span class="kw">where
+        </span>T: Window,
     {
-        <span class="ident"><span class="self">Self</span>::window_loop</span>(
-            <span class="ident">id</span>,
-            <span class="ident">scene_event_sender</span>,
-            <span class="ident">event_sender</span>,
-            <span class="ident">event_receiver</span>,
-            <span class="ident">initial_system_theme</span>,
-            <span class="ident">window</span>,
+        <span class="self">Self</span>::window_loop(
+            id,
+            scene_event_sender,
+            event_sender,
+            event_receiver,
+            initial_system_theme,
+            window,
         )
-        .<span class="ident">expect</span>(<span class="string">&quot;Error running window loop.&quot;</span>);
+        .expect(<span class="string">&quot;Error running window loop.&quot;</span>);
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">count</span>() -&gt; <span class="ident">usize</span> {
-        <span class="kw">if</span> <span class="ident">opened_first_window</span>() {
-            <span class="kw">let</span> <span class="ident">channels</span> <span class="op">=</span> <span class="ident">WINDOW_CHANNELS</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
-            <span class="ident">channels</span>.<span class="ident">len</span>()
-        } <span class="kw">else</span> {
-            <span class="comment">// If our first window hasn&#39;t opened, return a count of 1. This will happen in a</span>
-            <span class="comment">// single-threaded environment because RuntimeWindow::open is spawned, not</span>
-            <span class="comment">// blocked_on.</span>
-            <span class="number">1</span>
-        }
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>count() -&gt; usize {
+        <span class="kw">if </span>opened_first_window() {
+            <span class="kw">let </span>channels = WINDOW_CHANNELS.lock().unwrap();
+            channels.len()
+        } <span class="kw">else </span>{
+            <span class="comment">// If our first window hasn&#39;t opened, return a count of 1. This will happen in a
+            // single-threaded environment because RuntimeWindow::open is spawned, not
+            // blocked_on.
+            </span><span class="number">1
+        </span>}
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">receive_messages</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">request</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">receiver</span>.<span class="ident">try_recv</span>() {
-            <span class="kw">match</span> <span class="ident">request</span> {
-                <span class="ident">WindowMessage::RequestClose</span> =&gt; {
-                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">send</span>(<span class="ident">WindowEvent::CloseRequested</span>);
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>receive_messages(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">while let </span><span class="prelude-val">Ok</span>(request) = <span class="self">self</span>.receiver.try_recv() {
+            <span class="kw">match </span>request {
+                WindowMessage::RequestClose =&gt; {
+                    <span class="kw">let _ </span>= <span class="self">self</span>.event_sender.send(WindowEvent::CloseRequested);
                 }
-                <span class="ident">WindowMessage::Close</span> =&gt; {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">channels</span> <span class="op">=</span> <span class="ident">WINDOW_CHANNELS</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
-                    <span class="ident">channels</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">window_id</span>);
-                    <span class="self">self</span>.<span class="ident">keep_running</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering::SeqCst</span>);
+                WindowMessage::Close =&gt; {
+                    <span class="kw">let </span><span class="kw-2">mut </span>channels = WINDOW_CHANNELS.lock().unwrap();
+                    channels.remove(<span class="kw-2">&amp;</span><span class="self">self</span>.window_id);
+                    <span class="self">self</span>.keep_running.store(<span class="bool-val">false</span>, Ordering::SeqCst);
                 }
-                <span class="ident">WindowMessage::SetAdditionalScale</span>(<span class="ident">scale</span>) =&gt; {
-                    <span class="self">self</span>.<span class="ident">last_known_scale_factor</span>.<span class="ident">set_additional_scale</span>(<span class="ident">scale</span>);
+                WindowMessage::SetAdditionalScale(scale) =&gt; {
+                    <span class="self">self</span>.last_known_scale_factor.set_additional_scale(scale);
                 }
             }
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">request_redraw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">event_sender</span>
-            .<span class="ident">try_send</span>(<span class="ident">WindowEvent::RedrawRequested</span>)
-            .<span class="ident">unwrap_or_default</span>();
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>request_redraw(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.event_sender
+            .try_send(WindowEvent::RedrawRequested)
+            .unwrap_or_default();
     }
 
-    <span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;RuntimeWindow::process_event&quot;</span>, <span class="ident">level</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">skip</span>(<span class="self">self</span>))]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">process_event</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="ident">WinitWindowEvent</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) {
-        <span class="kw">match</span> <span class="ident">event</span> {
-            <span class="ident">WinitWindowEvent::CloseRequested</span> =&gt; {
-                <span class="self">self</span>.<span class="ident">event_sender</span>
-                    .<span class="ident">try_send</span>(<span class="ident">WindowEvent::CloseRequested</span>)
-                    .<span class="ident">unwrap_or_default</span>();
+    <span class="attribute">#[instrument(name = <span class="string">&quot;RuntimeWindow::process_event&quot;</span>, level = <span class="string">&quot;trace&quot;</span>, skip(<span class="self">self</span>))]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>process_event(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>WinitWindowEvent&lt;<span class="lifetime">&#39;_</span>&gt;) {
+        <span class="kw">match </span>event {
+            WinitWindowEvent::CloseRequested =&gt; {
+                <span class="self">self</span>.event_sender
+                    .try_send(WindowEvent::CloseRequested)
+                    .unwrap_or_default();
             }
-            <span class="ident">WinitWindowEvent::Resized</span>(<span class="ident">size</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">last_known_size</span> <span class="op">=</span> <span class="ident">Size::new</span>(<span class="ident">size</span>.<span class="ident">width</span>, <span class="ident">size</span>.<span class="ident">height</span>);
-                <span class="self">self</span>.<span class="ident">notify_size_changed</span>();
+            WinitWindowEvent::Resized(size) =&gt; {
+                <span class="self">self</span>.last_known_size = Size::new(size.width, size.height);
+                <span class="self">self</span>.notify_size_changed();
             }
-            <span class="ident">WinitWindowEvent::ScaleFactorChanged</span> {
-                <span class="ident">scale_factor</span>,
-                <span class="ident">new_inner_size</span>,
+            WinitWindowEvent::ScaleFactorChanged {
+                scale_factor,
+                new_inner_size,
             } =&gt; {
-                <span class="self">self</span>.<span class="ident">last_known_scale_factor</span>
-                    .<span class="ident">set_dpi_scale</span>(<span class="ident">Scale::new</span>(<span class="kw-2">*</span><span class="ident">scale_factor</span> <span class="kw">as</span> <span class="ident">f32</span>));
-                <span class="self">self</span>.<span class="ident">last_known_size</span> <span class="op">=</span> <span class="ident">Size::new</span>(<span class="ident">new_inner_size</span>.<span class="ident">width</span>, <span class="ident">new_inner_size</span>.<span class="ident">height</span>);
-                <span class="self">self</span>.<span class="ident">notify_size_changed</span>();
+                <span class="self">self</span>.last_known_scale_factor
+                    .set_dpi_scale(Scale::new(<span class="kw-2">*</span>scale_factor <span class="kw">as </span>f32));
+                <span class="self">self</span>.last_known_size = Size::new(new_inner_size.width, new_inner_size.height);
+                <span class="self">self</span>.notify_size_changed();
             }
-            <span class="ident">WinitWindowEvent::KeyboardInput</span> {
-                <span class="ident">device_id</span>, <span class="ident">input</span>, ..
-            } =&gt; <span class="self">self</span>
-                .<span class="ident">event_sender</span>
-                .<span class="ident">try_send</span>(<span class="ident">WindowEvent::Input</span>(<span class="ident">InputEvent</span> {
-                    <span class="ident">device_id</span>: <span class="kw-2">*</span><span class="ident">device_id</span>,
-                    <span class="ident">event</span>: <span class="ident">Event::Keyboard</span> {
-                        <span class="ident">key</span>: <span class="ident">input</span>.<span class="ident">virtual_keycode</span>,
-                        <span class="ident">state</span>: <span class="ident">input</span>.<span class="ident">state</span>,
-                        <span class="ident">scancode</span>: <span class="ident">input</span>.<span class="ident">scancode</span>,
+            WinitWindowEvent::KeyboardInput {
+                device_id, input, ..
+            } =&gt; <span class="self">self
+                </span>.event_sender
+                .try_send(WindowEvent::Input(InputEvent {
+                    device_id: <span class="kw-2">*</span>device_id,
+                    event: Event::Keyboard {
+                        key: input.virtual_keycode,
+                        state: input.state,
+                        scancode: input.scancode,
                     },
                 }))
-                .<span class="ident">unwrap_or_default</span>(),
-            <span class="ident">WinitWindowEvent::MouseInput</span> {
-                <span class="ident">device_id</span>,
-                <span class="ident">button</span>,
-                <span class="ident">state</span>,
+                .unwrap_or_default(),
+            WinitWindowEvent::MouseInput {
+                device_id,
+                button,
+                state,
                 ..
-            } =&gt; <span class="self">self</span>
-                .<span class="ident">event_sender</span>
-                .<span class="ident">try_send</span>(<span class="ident">WindowEvent::Input</span>(<span class="ident">InputEvent</span> {
-                    <span class="ident">device_id</span>: <span class="kw-2">*</span><span class="ident">device_id</span>,
-                    <span class="ident">event</span>: <span class="ident">Event::MouseButton</span> {
-                        <span class="ident">button</span>: <span class="kw-2">*</span><span class="ident">button</span>,
-                        <span class="ident">state</span>: <span class="kw-2">*</span><span class="ident">state</span>,
+            } =&gt; <span class="self">self
+                </span>.event_sender
+                .try_send(WindowEvent::Input(InputEvent {
+                    device_id: <span class="kw-2">*</span>device_id,
+                    event: Event::MouseButton {
+                        button: <span class="kw-2">*</span>button,
+                        state: <span class="kw-2">*</span>state,
                     },
                 }))
-                .<span class="ident">unwrap_or_default</span>(),
-            <span class="ident">WinitWindowEvent::MouseWheel</span> {
-                <span class="ident">device_id</span>,
-                <span class="ident">delta</span>,
-                <span class="ident">phase</span>,
+                .unwrap_or_default(),
+            WinitWindowEvent::MouseWheel {
+                device_id,
+                delta,
+                phase,
                 ..
-            } =&gt; <span class="self">self</span>
-                .<span class="ident">event_sender</span>
-                .<span class="ident">try_send</span>(<span class="ident">WindowEvent::Input</span>(<span class="ident">InputEvent</span> {
-                    <span class="ident">device_id</span>: <span class="kw-2">*</span><span class="ident">device_id</span>,
-                    <span class="ident">event</span>: <span class="ident">Event::MouseWheel</span> {
-                        <span class="ident">delta</span>: <span class="kw-2">*</span><span class="ident">delta</span>,
-                        <span class="ident">touch_phase</span>: <span class="kw-2">*</span><span class="ident">phase</span>,
+            } =&gt; <span class="self">self
+                </span>.event_sender
+                .try_send(WindowEvent::Input(InputEvent {
+                    device_id: <span class="kw-2">*</span>device_id,
+                    event: Event::MouseWheel {
+                        delta: <span class="kw-2">*</span>delta,
+                        touch_phase: <span class="kw-2">*</span>phase,
                     },
                 }))
-                .<span class="ident">unwrap_or_default</span>(),
-            <span class="ident">WinitWindowEvent::CursorMoved</span> {
-                <span class="ident">device_id</span>,
-                <span class="ident">position</span>,
+                .unwrap_or_default(),
+            WinitWindowEvent::CursorMoved {
+                device_id,
+                position,
                 ..
-            } =&gt; <span class="self">self</span>
-                .<span class="ident">event_sender</span>
-                .<span class="ident">try_send</span>(<span class="ident">WindowEvent::Input</span>(<span class="ident">InputEvent</span> {
-                    <span class="ident">device_id</span>: <span class="kw-2">*</span><span class="ident">device_id</span>,
-                    <span class="ident">event</span>: <span class="ident">Event::MouseMoved</span> {
-                        <span class="ident">position</span>: <span class="prelude-val">Some</span>(
-                            <span class="ident">Point</span>::<span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">position</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="ident">position</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">f32</span>)
-                                .<span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">last_known_scale_factor</span>),
+            } =&gt; <span class="self">self
+                </span>.event_sender
+                .try_send(WindowEvent::Input(InputEvent {
+                    device_id: <span class="kw-2">*</span>device_id,
+                    event: Event::MouseMoved {
+                        position: <span class="prelude-val">Some</span>(
+                            Point::&lt;f32, Pixels&gt;::new(position.x <span class="kw">as </span>f32, position.y <span class="kw">as </span>f32)
+                                .to_scaled(<span class="kw-2">&amp;</span><span class="self">self</span>.last_known_scale_factor),
                         ),
                     },
                 }))
-                .<span class="ident">unwrap_or_default</span>(),
-            <span class="ident">WinitWindowEvent::CursorLeft</span> { <span class="ident">device_id</span> } =&gt; <span class="self">self</span>
-                .<span class="ident">event_sender</span>
-                .<span class="ident">try_send</span>(<span class="ident">WindowEvent::Input</span>(<span class="ident">InputEvent</span> {
-                    <span class="ident">device_id</span>: <span class="kw-2">*</span><span class="ident">device_id</span>,
-                    <span class="ident">event</span>: <span class="ident">Event::MouseMoved</span> { <span class="ident">position</span>: <span class="prelude-val">None</span> },
+                .unwrap_or_default(),
+            WinitWindowEvent::CursorLeft { device_id } =&gt; <span class="self">self
+                </span>.event_sender
+                .try_send(WindowEvent::Input(InputEvent {
+                    device_id: <span class="kw-2">*</span>device_id,
+                    event: Event::MouseMoved { position: <span class="prelude-val">None </span>},
                 }))
-                .<span class="ident">unwrap_or_default</span>(),
-            <span class="ident">WinitWindowEvent::ReceivedCharacter</span>(<span class="ident">character</span>) =&gt; <span class="self">self</span>
-                .<span class="ident">event_sender</span>
-                .<span class="ident">try_send</span>(<span class="ident">WindowEvent::ReceiveCharacter</span>(<span class="kw-2">*</span><span class="ident">character</span>))
-                .<span class="ident">unwrap_or_default</span>(),
-            <span class="ident">WinitWindowEvent::ThemeChanged</span>(<span class="ident">theme</span>) =&gt; <span class="self">self</span>
-                .<span class="ident">event_sender</span>
-                .<span class="ident">try_send</span>(<span class="ident">WindowEvent::SystemThemeChanged</span>(<span class="kw-2">*</span><span class="ident">theme</span>))
-                .<span class="ident">unwrap_or_default</span>(),
-            <span class="kw">_</span> =&gt; {}
+                .unwrap_or_default(),
+            WinitWindowEvent::ReceivedCharacter(character) =&gt; <span class="self">self
+                </span>.event_sender
+                .try_send(WindowEvent::ReceiveCharacter(<span class="kw-2">*</span>character))
+                .unwrap_or_default(),
+            WinitWindowEvent::ThemeChanged(theme) =&gt; <span class="self">self
+                </span>.event_sender
+                .try_send(WindowEvent::SystemThemeChanged(<span class="kw-2">*</span>theme))
+                .unwrap_or_default(),
+            <span class="kw">_ </span>=&gt; {}
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">notify_size_changed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">event_sender</span>
-            .<span class="ident">try_send</span>(<span class="ident">WindowEvent::Resize</span> {
-                <span class="ident">size</span>: <span class="self">self</span>.<span class="ident">last_known_size</span>,
-                <span class="ident">scale_factor</span>: <span class="self">self</span>.<span class="ident">last_known_scale_factor</span>.<span class="ident">dpi_scale</span>(),
+    <span class="kw">fn </span>notify_size_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.event_sender
+            .try_send(WindowEvent::Resize {
+                size: <span class="self">self</span>.last_known_size,
+                scale_factor: <span class="self">self</span>.last_known_scale_factor.dpi_scale(),
             })
-            .<span class="ident">unwrap_or_default</span>();
+            .unwrap_or_default();
     }
 }
 
-<span class="doccomment">/// A handle to an open window.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WindowHandle</span>(<span class="kw">pub</span> <span class="ident">WindowId</span>);
+<span class="doccomment">/// A handle to an open window.
+</span><span class="attribute">#[derive(Clone, Copy, Debug)]
+</span><span class="kw">pub struct </span>WindowHandle(<span class="kw">pub </span>WindowId);
 
-<span class="kw">impl</span> <span class="ident">WindowHandle</span> {
-    <span class="doccomment">/// Sets the window title.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_title</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">title</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="self">self</span>.<span class="number">0</span>) {
-            <span class="ident">window</span>.<span class="ident">set_title</span>(<span class="ident">title</span>);
+<span class="kw">impl </span>WindowHandle {
+    <span class="doccomment">/// Sets the window title.
+    </span><span class="kw">pub fn </span>set_title(<span class="kw-2">&amp;</span><span class="self">self</span>, title: <span class="kw-2">&amp;</span>str) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(window) = Runtime::winit_window(<span class="self">self</span>.<span class="number">0</span>) {
+            window.set_title(title);
         }
     }
 
-    <span class="doccomment">/// Returns the size of the content area of the window.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inner_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
-        <span class="ident">Runtime::winit_window</span>(<span class="self">self</span>.<span class="number">0</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">window</span><span class="op">|</span> <span class="ident">Size::new</span>(<span class="ident">window</span>.<span class="ident">inner_size</span>().<span class="ident">width</span>, <span class="ident">window</span>.<span class="ident">inner_size</span>().<span class="ident">height</span>))
-            .<span class="ident">unwrap_or_default</span>()
+    <span class="doccomment">/// Returns the size of the content area of the window.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>inner_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;u32, Pixels&gt; {
+        Runtime::winit_window(<span class="self">self</span>.<span class="number">0</span>)
+            .map(|window| Size::new(window.inner_size().width, window.inner_size().height))
+            .unwrap_or_default()
     }
 
-    <span class="doccomment">/// Attempts to resize the window to `new_size`. This may not work on all platforms.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_inner_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">new_size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="self">self</span>.<span class="number">0</span>) {
-            <span class="ident">window</span>.<span class="ident">set_inner_size</span>(<span class="ident">PhysicalSize::new</span>(<span class="ident">new_size</span>.<span class="ident">width</span>, <span class="ident">new_size</span>.<span class="ident">height</span>));
+    <span class="doccomment">/// Attempts to resize the window to `new_size`. This may not work on all platforms.
+    </span><span class="kw">pub fn </span>set_inner_size(<span class="kw-2">&amp;</span><span class="self">self</span>, new_size: Size&lt;u32, Pixels&gt;) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(window) = Runtime::winit_window(<span class="self">self</span>.<span class="number">0</span>) {
+            window.set_inner_size(PhysicalSize::new(new_size.width, new_size.height));
         }
     }
 
-    <span class="doccomment">/// Returns the position on the screen of the window&#39;s top-left corner. On</span>
-    <span class="doccomment">/// platforms where this is unsupported, `innner_position()` is returned.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">outer_position</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
-        <span class="ident">Runtime::winit_window</span>(<span class="self">self</span>.<span class="number">0</span>)
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">window</span><span class="op">|</span> <span class="ident">window</span>.<span class="ident">outer_position</span>().<span class="ident">ok</span>())
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">position</span><span class="op">|</span> <span class="ident">Point::new</span>(<span class="ident">position</span>.<span class="ident">x</span>, <span class="ident">position</span>.<span class="ident">y</span>))
-            .<span class="ident">unwrap_or_default</span>()
+    <span class="doccomment">/// Returns the position on the screen of the window&#39;s top-left corner. On
+    /// platforms where this is unsupported, `innner_position()` is returned.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>outer_position(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Point&lt;i32, Pixels&gt; {
+        Runtime::winit_window(<span class="self">self</span>.<span class="number">0</span>)
+            .and_then(|window| window.outer_position().ok())
+            .map(|position| Point::new(position.x, position.y))
+            .unwrap_or_default()
     }
 
-    <span class="doccomment">/// Sets the outer position of the window. This may not work on all platforms.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_outer_position</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">new_position</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="self">self</span>.<span class="number">0</span>) {
-            <span class="ident">window</span>.<span class="ident">set_outer_position</span>(<span class="ident">PhysicalPosition::new</span>(<span class="ident">new_position</span>.<span class="ident">x</span>, <span class="ident">new_position</span>.<span class="ident">y</span>));
+    <span class="doccomment">/// Sets the outer position of the window. This may not work on all platforms.
+    </span><span class="kw">pub fn </span>set_outer_position(<span class="kw-2">&amp;</span><span class="self">self</span>, new_position: Point&lt;i32, Pixels&gt;) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(window) = Runtime::winit_window(<span class="self">self</span>.<span class="number">0</span>) {
+            window.set_outer_position(PhysicalPosition::new(new_position.x, new_position.y));
         }
     }
 
-    <span class="doccomment">/// Returns the position of the top-left of the content area in screen coordinates.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inner_position</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">i32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
-        <span class="ident">Runtime::winit_window</span>(<span class="self">self</span>.<span class="number">0</span>)
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">window</span><span class="op">|</span> <span class="ident">window</span>.<span class="ident">inner_position</span>().<span class="ident">ok</span>())
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">position</span><span class="op">|</span> <span class="ident">Point::new</span>(<span class="ident">position</span>.<span class="ident">x</span>, <span class="ident">position</span>.<span class="ident">y</span>))
-            .<span class="ident">unwrap_or_default</span>()
+    <span class="doccomment">/// Returns the position of the top-left of the content area in screen coordinates.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>inner_position(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Point&lt;i32, Pixels&gt; {
+        Runtime::winit_window(<span class="self">self</span>.<span class="number">0</span>)
+            .and_then(|window| window.inner_position().ok())
+            .map(|position| Point::new(position.x, position.y))
+            .unwrap_or_default()
     }
 
-    <span class="doccomment">/// Sets whether the window should always be on top of other windows.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_always_on_top</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">always</span>: <span class="ident">bool</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="self">self</span>.<span class="number">0</span>) {
-            <span class="ident">window</span>.<span class="ident">set_always_on_top</span>(<span class="ident">always</span>);
+    <span class="doccomment">/// Sets whether the window should always be on top of other windows.
+    </span><span class="kw">pub fn </span>set_always_on_top(<span class="kw-2">&amp;</span><span class="self">self</span>, always: bool) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(window) = Runtime::winit_window(<span class="self">self</span>.<span class="number">0</span>) {
+            window.set_always_on_top(always);
         }
     }
 
-    <span class="doccomment">/// Returns true if the window is maximized.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">maximized</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="self">self</span>.<span class="number">0</span>) {
-            <span class="ident">window</span>.<span class="ident">is_maximized</span>()
-        } <span class="kw">else</span> {
-            <span class="bool-val">false</span>
+    <span class="doccomment">/// Returns true if the window is maximized.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>maximized(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(window) = Runtime::winit_window(<span class="self">self</span>.<span class="number">0</span>) {
+            window.is_maximized()
+        } <span class="kw">else </span>{
+            <span class="bool-val">false
+        </span>}
+    }
+
+    <span class="doccomment">/// Sets whether the window should be maximized.
+    </span><span class="kw">pub fn </span>set_maximized(<span class="kw-2">&amp;</span><span class="self">self</span>, maximized: bool) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(window) = Runtime::winit_window(<span class="self">self</span>.<span class="number">0</span>) {
+            window.set_maximized(maximized);
         }
     }
 
-    <span class="doccomment">/// Sets whether the window should be maximized.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_maximized</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">maximized</span>: <span class="ident">bool</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="self">self</span>.<span class="number">0</span>) {
-            <span class="ident">window</span>.<span class="ident">set_maximized</span>(<span class="ident">maximized</span>);
+    <span class="doccomment">/// Sets whether the window should be minimized.
+    </span><span class="kw">pub fn </span>set_minimized(<span class="kw-2">&amp;</span><span class="self">self</span>, minimized: bool) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(window) = Runtime::winit_window(<span class="self">self</span>.<span class="number">0</span>) {
+            window.set_minimized(minimized);
         }
     }
 
-    <span class="doccomment">/// Sets whether the window should be minimized.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_minimized</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">minimized</span>: <span class="ident">bool</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">Runtime::winit_window</span>(<span class="self">self</span>.<span class="number">0</span>) {
-            <span class="ident">window</span>.<span class="ident">set_minimized</span>(<span class="ident">minimized</span>);
-        }
-    }
-
-    <span class="doccomment">/// Requests that the window close.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">request_close</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="ident">drop</span>(<span class="ident">WindowMessage::RequestClose</span>.<span class="ident">send_to</span>(<span class="self">self</span>.<span class="number">0</span>));
+    <span class="doccomment">/// Requests that the window close.
+    </span><span class="kw">pub fn </span>request_close(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        drop(WindowMessage::RequestClose.send_to(<span class="self">self</span>.<span class="number">0</span>));
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_app" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_app" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

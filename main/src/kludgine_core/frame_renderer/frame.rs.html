@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/frame_renderer/frame.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>frame.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_core/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/frame_renderer/frame.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>frame.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_core/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -288,295 +288,295 @@
 <span id="288">288</span>
 <span id="289">289</span>
 <span id="290">290</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::collections</span>::{<span class="ident">HashMap</span>, <span class="ident">HashSet</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::{HashMap, HashSet};
 
-<span class="kw">use</span> <span class="ident">easygpu::transform::ScreenSpace</span>;
-<span class="kw">use</span> <span class="ident">figures::SizedRect</span>;
-<span class="kw">use</span> <span class="ident">tracing::instrument</span>;
+<span class="kw">use </span>easygpu::transform::ScreenSpace;
+<span class="kw">use </span>figures::SizedRect;
+<span class="kw">use </span>tracing::instrument;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">math</span>::{<span class="ident">Pixels</span>, <span class="ident">Size</span>},
-    <span class="ident">scene</span>::{<span class="ident">Element</span>, <span class="ident">SceneEvent</span>},
-    <span class="ident">shape</span>, <span class="ident">sprite</span>,
-    <span class="ident">text</span>::{<span class="ident">font::LoadedFont</span>, <span class="ident">prepared::PreparedSpan</span>},
-    <span class="ident">texture::Texture</span>,
+<span class="kw">use crate</span>::{
+    math::{Pixels, Size},
+    scene::{Element, SceneEvent},
+    shape, sprite,
+    text::{font::LoadedFont, prepared::PreparedSpan},
+    texture::Texture,
 };
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Frame</span> {
-    <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">ScreenSpace</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">textures</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">u64</span>, <span class="ident">Texture</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">commands</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FrameCommand</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">fonts</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">u64</span>, <span class="ident">LoadedFont</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">pending_font_updates</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FontUpdate</span><span class="op">&gt;</span>,
-    <span class="ident">receiver</span>: <span class="ident">FrameReceiver</span>,
+<span class="attribute">#[derive(Default, Debug)]
+</span><span class="kw">pub struct </span>Frame {
+    <span class="kw">pub </span>size: Size&lt;u32, ScreenSpace&gt;,
+    <span class="kw">pub </span>textures: HashMap&lt;u64, Texture&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) commands: Vec&lt;FrameCommand&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) fonts: HashMap&lt;u64, LoadedFont&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) pending_font_updates: Vec&lt;FontUpdate&gt;,
+    receiver: FrameReceiver,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">FrameReceiver</span> {
-    <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">ScreenSpace</span><span class="op">&gt;</span>,
-    <span class="ident">elements</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Element</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Default, Debug)]
+</span><span class="kw">struct </span>FrameReceiver {
+    size: Size&lt;u32, ScreenSpace&gt;,
+    elements: Vec&lt;Element&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">FrameReceiver</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_latest_frame</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">receiver</span>: <span class="kw-2">&amp;</span><span class="ident">flume::Receiver</span><span class="op">&lt;</span><span class="ident">SceneEvent</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Element</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="comment">// Receive a frame, blocking until we get an EndFrame</span>
-        <span class="kw">loop</span> {
-            <span class="kw">let</span> <span class="ident">evt</span> <span class="op">=</span> <span class="ident">receiver</span>.<span class="ident">recv</span>().<span class="ident">ok</span>()<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">process_scene_event</span>(<span class="ident">evt</span>) {
-                <span class="comment">// New frame</span>
-                <span class="kw">break</span>;
+<span class="kw">impl </span>FrameReceiver {
+    <span class="kw">pub fn </span>get_latest_frame(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        receiver: <span class="kw-2">&amp;</span>flume::Receiver&lt;SceneEvent&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Vec&lt;Element&gt;&gt; {
+        <span class="comment">// Receive a frame, blocking until we get an EndFrame
+        </span><span class="kw">loop </span>{
+            <span class="kw">let </span>evt = receiver.recv().ok()<span class="question-mark">?</span>;
+            <span class="kw">if </span><span class="self">self</span>.process_scene_event(evt) {
+                <span class="comment">// New frame
+                </span><span class="kw">break</span>;
             }
         }
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">latest_frame</span> <span class="op">=</span> <span class="ident">std::mem::take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">elements</span>);
-        <span class="comment">// Receive any pending events in a non-blocking fashion. We only want to render</span>
-        <span class="comment">// the frame we have the most recent information for</span>
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">evt</span>) <span class="op">=</span> <span class="ident">receiver</span>.<span class="ident">try_recv</span>() {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">process_scene_event</span>(<span class="ident">evt</span>) {
-                <span class="comment">// New frame</span>
-                <span class="ident">latest_frame</span> <span class="op">=</span> <span class="ident">std::mem::take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">elements</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>latest_frame = std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.elements);
+        <span class="comment">// Receive any pending events in a non-blocking fashion. We only want to render
+        // the frame we have the most recent information for
+        </span><span class="kw">while let </span><span class="prelude-val">Ok</span>(evt) = receiver.try_recv() {
+            <span class="kw">if </span><span class="self">self</span>.process_scene_event(evt) {
+                <span class="comment">// New frame
+                </span>latest_frame = std::mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.elements);
             }
         }
-        <span class="prelude-val">Some</span>(<span class="ident">latest_frame</span>)
+        <span class="prelude-val">Some</span>(latest_frame)
     }
 
-    <span class="kw">fn</span> <span class="ident">process_scene_event</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">event</span>: <span class="ident">SceneEvent</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="ident">event</span> {
-            <span class="ident">SceneEvent::BeginFrame</span> { <span class="ident">size</span> } =&gt; {
-                <span class="self">self</span>.<span class="ident">size</span> <span class="op">=</span> <span class="ident">size</span>.<span class="ident">cast_unit</span>();
-                <span class="bool-val">false</span>
-            }
-            <span class="ident">SceneEvent::Render</span>(<span class="ident">element</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">elements</span>.<span class="ident">push</span>(<span class="ident">element</span>);
-                <span class="bool-val">false</span>
-            }
+    <span class="kw">fn </span>process_scene_event(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: SceneEvent) -&gt; bool {
+        <span class="kw">match </span>event {
+            SceneEvent::BeginFrame { size } =&gt; {
+                <span class="self">self</span>.size = size.cast_unit();
+                <span class="bool-val">false
+            </span>}
+            SceneEvent::Render(element) =&gt; {
+                <span class="self">self</span>.elements.push(element);
+                <span class="bool-val">false
+            </span>}
 
-            <span class="ident">SceneEvent::EndFrame</span> =&gt; <span class="bool-val">true</span>,
+            SceneEvent::EndFrame =&gt; <span class="bool-val">true</span>,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FontUpdate</span> {
-    <span class="kw">pub</span> <span class="ident">font_id</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">rect</span>: <span class="ident">rusttype::Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>FontUpdate {
+    <span class="kw">pub </span>font_id: u64,
+    <span class="kw">pub </span>rect: rusttype::Rect&lt;u32&gt;,
+    <span class="kw">pub </span>data: Vec&lt;u8&gt;,
 }
 
-<span class="kw">enum</span> <span class="ident">FrameBatch</span> {
-    <span class="ident">Sprite</span>(<span class="ident">sprite::Batch</span>),
-    <span class="ident">Shape</span>(<span class="ident">shape::Batch</span>),
+<span class="kw">enum </span>FrameBatch {
+    Sprite(sprite::Batch),
+    Shape(shape::Batch),
 }
 
-<span class="kw">impl</span> <span class="ident">FrameBatch</span> {
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_shape</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="ident"><span class="self">Self</span>::Shape</span>(<span class="kw">_</span>))
+<span class="kw">impl </span>FrameBatch {
+    <span class="kw">const fn </span>is_shape(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::Shape(<span class="kw">_</span>))
     }
 
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_sprite</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="op">!</span><span class="self">self</span>.<span class="ident">is_shape</span>()
+    <span class="kw">const fn </span>is_sprite(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        !<span class="self">self</span>.is_shape()
     }
 
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">sprite_batch</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="ident">sprite::Batch</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">FrameBatch::Sprite</span>(<span class="ident">batch</span>) <span class="op">=</span> <span class="self">self</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">batch</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
+    <span class="kw">const fn </span>sprite_batch(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>sprite::Batch&gt; {
+        <span class="kw">if let </span>FrameBatch::Sprite(batch) = <span class="self">self </span>{
+            <span class="prelude-val">Some</span>(batch)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     }
 
-    <span class="comment">// fn shape_batch(&amp;self) -&gt; Option&lt;&amp;&#39;_ shape::Batch&gt; {</span>
-    <span class="comment">//     if let FrameBatch::Shape(batch) = self {</span>
-    <span class="comment">//         Some(batch)</span>
-    <span class="comment">//     } else {</span>
-    <span class="comment">//         None</span>
-    <span class="comment">//     }</span>
-    <span class="comment">// }</span>
+    <span class="comment">// fn shape_batch(&amp;self) -&gt; Option&lt;&amp;&#39;_ shape::Batch&gt; {
+    //     if let FrameBatch::Shape(batch) = self {
+    //         Some(batch)
+    //     } else {
+    //         None
+    //     }
+    // }
 
-    <span class="kw">fn</span> <span class="ident">sprite_batch_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="kw-2">mut</span> <span class="ident">sprite::Batch</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">FrameBatch::Sprite</span>(<span class="ident">batch</span>) <span class="op">=</span> <span class="self">self</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">batch</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
+    </span><span class="kw">fn </span>sprite_batch_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="kw-2">mut </span>sprite::Batch&gt; {
+        <span class="kw">if let </span>FrameBatch::Sprite(batch) = <span class="self">self </span>{
+            <span class="prelude-val">Some</span>(batch)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     }
 
-    <span class="kw">fn</span> <span class="ident">shape_batch_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="kw-2">mut</span> <span class="ident">shape::Batch</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">FrameBatch::Shape</span>(<span class="ident">batch</span>) <span class="op">=</span> <span class="self">self</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">batch</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
+    <span class="kw">fn </span>shape_batch_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="kw-2">mut </span>shape::Batch&gt; {
+        <span class="kw">if let </span>FrameBatch::Shape(batch) = <span class="self">self </span>{
+            <span class="prelude-val">Some</span>(batch)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Frame</span> {
-    <span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;Frame::update&quot;</span>, <span class="ident">level</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">event_receiver</span>))]</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">event_receiver</span>: <span class="kw-2">&amp;</span><span class="ident">flume::Receiver</span><span class="op">&lt;</span><span class="ident">SceneEvent</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">elements</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">receiver</span>.<span class="ident">get_latest_frame</span>(<span class="ident">event_receiver</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">elements</span>) =&gt; <span class="ident">elements</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="bool-val">false</span>,
+<span class="kw">impl </span>Frame {
+    <span class="attribute">#[instrument(name = <span class="string">&quot;Frame::update&quot;</span>, level = <span class="string">&quot;trace&quot;</span>, skip(<span class="self">self</span>, event_receiver))]
+    #[must_use]
+    </span><span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event_receiver: <span class="kw-2">&amp;</span>flume::Receiver&lt;SceneEvent&gt;) -&gt; bool {
+        <span class="kw">let </span>elements = <span class="kw">match </span><span class="self">self</span>.receiver.get_latest_frame(event_receiver) {
+            <span class="prelude-val">Some</span>(elements) =&gt; elements,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="bool-val">false</span>,
         };
-        <span class="self">self</span>.<span class="ident">size</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">receiver</span>.<span class="ident">size</span>;
-        <span class="self">self</span>.<span class="ident">commands</span>.<span class="ident">clear</span>();
+        <span class="self">self</span>.size = <span class="self">self</span>.receiver.size;
+        <span class="self">self</span>.commands.clear();
 
-        <span class="self">self</span>.<span class="ident">cache_glyphs</span>(<span class="kw-2">&amp;</span><span class="ident">elements</span>);
+        <span class="self">self</span>.cache_glyphs(<span class="kw-2">&amp;</span>elements);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">referenced_texture_ids</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>referenced_texture_ids = HashSet::new();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_texture_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_batch</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FrameBatch</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">for</span> <span class="ident">element</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">elements</span> {
-            <span class="kw">match</span> <span class="ident">element</span> {
-                <span class="ident">Element::Sprite</span> {
-                    <span class="ident">sprite</span>: <span class="ident">sprite_handle</span>,
-                    <span class="ident">clip</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>current_texture_id: <span class="prelude-ty">Option</span>&lt;u64&gt; = <span class="prelude-val">None</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>current_batch: <span class="prelude-ty">Option</span>&lt;FrameBatch&gt; = <span class="prelude-val">None</span>;
+        <span class="kw">for </span>element <span class="kw">in </span><span class="kw-2">&amp;</span>elements {
+            <span class="kw">match </span>element {
+                Element::Sprite {
+                    sprite: sprite_handle,
+                    clip,
                 } =&gt; {
-                    <span class="kw">let</span> <span class="ident">sprite</span> <span class="op">=</span> <span class="ident">sprite_handle</span>.<span class="ident">data</span>.<span class="ident">clone</span>();
-                    <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">sprite</span>.<span class="ident">source</span>.<span class="ident">texture</span>;
+                    <span class="kw">let </span>sprite = sprite_handle.data.clone();
+                    <span class="kw">let </span>texture = <span class="kw-2">&amp;</span>sprite.source.texture;
 
-                    <span class="kw">if</span> <span class="ident">current_texture_id</span>.<span class="ident">is_none</span>()
-                        <span class="op">|</span><span class="op">|</span> <span class="ident">current_texture_id</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>() <span class="op">!</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">texture</span>.<span class="ident">id</span>()
-                        <span class="op">|</span><span class="op">|</span> <span class="ident">current_batch</span>.<span class="ident">is_none</span>()
-                        <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="ident">current_batch</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">is_sprite</span>()
-                        <span class="op">|</span><span class="op">|</span> <span class="ident">current_batch</span>
-                            .<span class="ident">as_ref</span>()
-                            .<span class="ident">unwrap</span>()
-                            .<span class="ident">sprite_batch</span>()
-                            .<span class="ident">unwrap</span>()
-                            .<span class="ident">clipping_rect</span>
-                            <span class="op">!</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">clip</span>
+                    <span class="kw">if </span>current_texture_id.is_none()
+                        || current_texture_id.as_ref().unwrap() != <span class="kw-2">&amp;</span>texture.id()
+                        || current_batch.is_none()
+                        || !current_batch.as_ref().unwrap().is_sprite()
+                        || current_batch
+                            .as_ref()
+                            .unwrap()
+                            .sprite_batch()
+                            .unwrap()
+                            .clipping_rect
+                            != <span class="kw-2">*</span>clip
                     {
-                        <span class="self">self</span>.<span class="ident">commit_batch</span>(<span class="ident">current_batch</span>);
-                        <span class="ident">current_texture_id</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">texture</span>.<span class="ident">id</span>());
-                        <span class="ident">referenced_texture_ids</span>.<span class="ident">insert</span>(<span class="ident">texture</span>.<span class="ident">id</span>());
+                        <span class="self">self</span>.commit_batch(current_batch);
+                        current_texture_id = <span class="prelude-val">Some</span>(texture.id());
+                        referenced_texture_ids.insert(texture.id());
 
-                        <span class="comment">// Load the texture if needed</span>
-                        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::map_entry</span>)]</span>
-                        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">textures</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">texture</span>.<span class="ident">id</span>()) {
-                            <span class="self">self</span>.<span class="ident">textures</span>
-                                .<span class="ident">insert</span>(<span class="ident">texture</span>.<span class="ident">id</span>(), <span class="ident">sprite</span>.<span class="ident">source</span>.<span class="ident">texture</span>.<span class="ident">clone</span>());
-                            <span class="self">self</span>.<span class="ident">commands</span>
-                                .<span class="ident">push</span>(<span class="ident">FrameCommand::LoadTexture</span>(<span class="ident">sprite</span>.<span class="ident">source</span>.<span class="ident">texture</span>.<span class="ident">clone</span>()));
+                        <span class="comment">// Load the texture if needed
+                        </span><span class="attribute">#[allow(clippy::map_entry)]
+                        </span><span class="kw">if </span>!<span class="self">self</span>.textures.contains_key(<span class="kw-2">&amp;</span>texture.id()) {
+                            <span class="self">self</span>.textures
+                                .insert(texture.id(), sprite.source.texture.clone());
+                            <span class="self">self</span>.commands
+                                .push(FrameCommand::LoadTexture(sprite.source.texture.clone()));
                         }
 
-                        <span class="ident">current_batch</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">FrameBatch::Sprite</span>(<span class="ident">sprite::Batch::new</span>(
-                            <span class="ident">texture</span>.<span class="ident">id</span>(),
-                            <span class="ident">texture</span>.<span class="ident">size</span>(),
-                            <span class="kw-2">*</span><span class="ident">clip</span>,
+                        current_batch = <span class="prelude-val">Some</span>(FrameBatch::Sprite(sprite::Batch::new(
+                            texture.id(),
+                            texture.size(),
+                            <span class="kw-2">*</span>clip,
                         )));
                     }
 
-                    <span class="kw">let</span> <span class="ident">current_batch</span> <span class="op">=</span> <span class="ident">current_batch</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>().<span class="ident">sprite_batch_mut</span>().<span class="ident">unwrap</span>();
-                    <span class="ident">current_batch</span>.<span class="ident">sprites</span>.<span class="ident">push</span>(<span class="ident">sprite_handle</span>.<span class="ident">clone</span>());
+                    <span class="kw">let </span>current_batch = current_batch.as_mut().unwrap().sprite_batch_mut().unwrap();
+                    current_batch.sprites.push(sprite_handle.clone());
                 }
-                <span class="ident">Element::Text</span> { <span class="ident">span</span>, <span class="ident">clip</span> } =&gt; {
-                    <span class="ident">current_batch</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">commit_batch</span>(<span class="ident">current_batch</span>);
-                    <span class="self">self</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">FrameCommand::DrawText</span> {
-                        <span class="ident">text</span>: <span class="ident">span</span>.<span class="ident">clone</span>(),
-                        <span class="ident">clip</span>: <span class="kw-2">*</span><span class="ident">clip</span>,
+                Element::Text { span, clip } =&gt; {
+                    current_batch = <span class="self">self</span>.commit_batch(current_batch);
+                    <span class="self">self</span>.commands.push(FrameCommand::DrawText {
+                        text: span.clone(),
+                        clip: <span class="kw-2">*</span>clip,
                     });
                 }
-                <span class="ident">Element::Shape</span>(<span class="ident">shape</span>) =&gt; {
-                    <span class="kw">if</span> <span class="ident">current_batch</span>.<span class="ident">is_some</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">current_batch</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">is_shape</span>() {
-                        <span class="ident">current_batch</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">commit_batch</span>(<span class="ident">current_batch</span>);
+                Element::Shape(shape) =&gt; {
+                    <span class="kw">if </span>current_batch.is_some() &amp;&amp; !current_batch.as_ref().unwrap().is_shape() {
+                        current_batch = <span class="self">self</span>.commit_batch(current_batch);
                     }
 
-                    <span class="kw">if</span> <span class="ident">current_batch</span>.<span class="ident">is_none</span>() {
-                        <span class="ident">current_batch</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">FrameBatch::Shape</span>(<span class="ident">shape::Batch::default</span>()));
+                    <span class="kw">if </span>current_batch.is_none() {
+                        current_batch = <span class="prelude-val">Some</span>(FrameBatch::Shape(shape::Batch::default()));
                     }
 
-                    <span class="kw">let</span> <span class="ident">current_batch</span> <span class="op">=</span> <span class="ident">current_batch</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>().<span class="ident">shape_batch_mut</span>().<span class="ident">unwrap</span>();
-                    <span class="ident">current_batch</span>.<span class="ident">add</span>(<span class="ident">shape</span>.<span class="ident">clone</span>());
+                    <span class="kw">let </span>current_batch = current_batch.as_mut().unwrap().shape_batch_mut().unwrap();
+                    current_batch.add(shape.clone());
                 }
             }
         }
 
-        <span class="self">self</span>.<span class="ident">commit_batch</span>(<span class="ident">current_batch</span>);
+        <span class="self">self</span>.commit_batch(current_batch);
 
-        <span class="kw">let</span> <span class="ident">dead_texture_ids</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">textures</span>
-            .<span class="ident">keys</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="op">!</span><span class="ident">referenced_texture_ids</span>.<span class="ident">contains</span>(<span class="ident">id</span>))
-            .<span class="ident">copied</span>()
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-        <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">dead_texture_ids</span> {
-            <span class="self">self</span>.<span class="ident">textures</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>);
+        <span class="kw">let </span>dead_texture_ids = <span class="self">self
+            </span>.textures
+            .keys()
+            .filter(|id| !referenced_texture_ids.contains(id))
+            .copied()
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        <span class="kw">for </span>id <span class="kw">in </span>dead_texture_ids {
+            <span class="self">self</span>.textures.remove(<span class="kw-2">&amp;</span>id);
         }
 
-        <span class="bool-val">true</span>
-    }
+        <span class="bool-val">true
+    </span>}
 
-    <span class="kw">fn</span> <span class="ident">commit_batch</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">batch</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FrameBatch</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FrameBatch</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">batch</span>) <span class="op">=</span> <span class="ident">batch</span> {
-            <span class="kw">match</span> <span class="ident">batch</span> {
-                <span class="ident">FrameBatch::Sprite</span>(<span class="ident">batch</span>) =&gt; <span class="self">self</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">FrameCommand::DrawBatch</span>(<span class="ident">batch</span>)),
-                <span class="ident">FrameBatch::Shape</span>(<span class="ident">batch</span>) =&gt; <span class="self">self</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">FrameCommand::DrawShapes</span>(<span class="ident">batch</span>)),
+    <span class="kw">fn </span>commit_batch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, batch: <span class="prelude-ty">Option</span>&lt;FrameBatch&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;FrameBatch&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(batch) = batch {
+            <span class="kw">match </span>batch {
+                FrameBatch::Sprite(batch) =&gt; <span class="self">self</span>.commands.push(FrameCommand::DrawBatch(batch)),
+                FrameBatch::Shape(batch) =&gt; <span class="self">self</span>.commands.push(FrameCommand::DrawShapes(batch)),
             }
         }
 
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">None
+    </span>}
 
-    <span class="kw">fn</span> <span class="ident">cache_glyphs</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">elements</span>: <span class="kw-2">&amp;</span>[<span class="ident">Element</span>]) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">referenced_fonts</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
-        <span class="kw">for</span> <span class="ident">text</span> <span class="kw">in</span> <span class="ident">elements</span>.<span class="ident">iter</span>().<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">e</span> {
-            <span class="ident">Element::Text</span> { <span class="ident">span</span>, .. } =&gt; <span class="prelude-val">Some</span>(<span class="ident">span</span>),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+    <span class="kw">fn </span>cache_glyphs(<span class="kw-2">&amp;mut </span><span class="self">self</span>, elements: <span class="kw-2">&amp;</span>[Element]) {
+        <span class="kw">let </span><span class="kw-2">mut </span>referenced_fonts = HashSet::new();
+        <span class="kw">for </span>text <span class="kw">in </span>elements.iter().filter_map(|e| <span class="kw">match </span><span class="kw-2">&amp;</span>e {
+            Element::Text { span, .. } =&gt; <span class="prelude-val">Some</span>(span),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }) {
-            <span class="ident">referenced_fonts</span>.<span class="ident">insert</span>(<span class="ident">text</span>.<span class="ident">font</span>.<span class="ident">id</span>());
+            referenced_fonts.insert(text.font.id());
 
-            <span class="kw">for</span> <span class="ident">glyph_info</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">text</span>.<span class="ident">glyphs</span> {
-                <span class="kw">let</span> <span class="ident">loaded_font</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">fonts</span>
-                    .<span class="ident">entry</span>(<span class="ident">text</span>.<span class="ident">font</span>.<span class="ident">id</span>())
-                    .<span class="ident">or_insert_with</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">LoadedFont::new</span>(<span class="kw-2">&amp;</span><span class="ident">text</span>.<span class="ident">font</span>));
-                <span class="ident">loaded_font</span>.<span class="ident">cache</span>.<span class="ident">queue_glyph</span>(<span class="number">0</span>, <span class="ident">glyph_info</span>.<span class="ident">glyph</span>.<span class="ident">clone</span>());
+            <span class="kw">for </span>glyph_info <span class="kw">in </span><span class="kw-2">&amp;</span>text.glyphs {
+                <span class="kw">let </span>loaded_font = <span class="self">self
+                    </span>.fonts
+                    .entry(text.font.id())
+                    .or_insert_with(|| LoadedFont::new(<span class="kw-2">&amp;</span>text.font));
+                loaded_font.cache.queue_glyph(<span class="number">0</span>, glyph_info.glyph.clone());
             }
         }
 
-        <span class="kw">let</span> <span class="ident">fonts_to_remove</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">fonts</span>
-            .<span class="ident">keys</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="op">!</span><span class="ident">referenced_fonts</span>.<span class="ident">contains</span>(<span class="ident">id</span>))
-            .<span class="ident">copied</span>()
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-        <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">fonts_to_remove</span> {
-            <span class="self">self</span>.<span class="ident">fonts</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>);
+        <span class="kw">let </span>fonts_to_remove = <span class="self">self
+            </span>.fonts
+            .keys()
+            .filter(|id| !referenced_fonts.contains(id))
+            .copied()
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        <span class="kw">for </span>id <span class="kw">in </span>fonts_to_remove {
+            <span class="self">self</span>.fonts.remove(<span class="kw-2">&amp;</span>id);
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">updates</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">for</span> <span class="ident">font</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">fonts</span>.<span class="ident">values_mut</span>() {
-            <span class="kw">let</span> <span class="ident">font_id</span> <span class="op">=</span> <span class="ident">font</span>.<span class="ident">font</span>.<span class="ident">id</span>();
-            <span class="ident">font</span>.<span class="ident">cache</span>
-                .<span class="ident">cache_queued</span>(<span class="op">|</span><span class="ident">rect</span>, <span class="ident">data</span><span class="op">|</span> {
-                    <span class="ident">updates</span>.<span class="ident">push</span>(<span class="ident">FontUpdate</span> {
-                        <span class="ident">font_id</span>,
-                        <span class="ident">rect</span>,
-                        <span class="ident">data</span>: <span class="ident">data</span>.<span class="ident">to_vec</span>(),
+        <span class="kw">let </span><span class="kw-2">mut </span>updates = Vec::new();
+        <span class="kw">for </span>font <span class="kw">in </span><span class="self">self</span>.fonts.values_mut() {
+            <span class="kw">let </span>font_id = font.font.id();
+            font.cache
+                .cache_queued(|rect, data| {
+                    updates.push(FontUpdate {
+                        font_id,
+                        rect,
+                        data: data.to_vec(),
                     });
                 })
-                .<span class="ident">expect</span>(<span class="string">&quot;Error caching font&quot;</span>); <span class="comment">// TODO Change this to a graceful</span>
-                                               <span class="comment">// failure that</span>
-                                               <span class="comment">// spams the console but doesn&#39;t</span>
-                                               <span class="comment">// crash</span>
-        }
-        <span class="self">self</span>.<span class="ident">pending_font_updates</span>.<span class="ident">extend</span>(<span class="ident">updates</span>);
+                .expect(<span class="string">&quot;Error caching font&quot;</span>); <span class="comment">// TODO Change this to a graceful
+                                               // failure that
+                                               // spams the console but doesn&#39;t
+                                               // crash
+        </span>}
+        <span class="self">self</span>.pending_font_updates.extend(updates);
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">FrameCommand</span> {
-    <span class="ident">LoadTexture</span>(<span class="ident">Texture</span>),
-    <span class="ident">DrawBatch</span>(<span class="ident">sprite::Batch</span>),
-    <span class="ident">DrawShapes</span>(<span class="ident">shape::Batch</span>),
-    <span class="ident">DrawText</span> {
-        <span class="ident">text</span>: <span class="ident">PreparedSpan</span>,
-        <span class="ident">clip</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SizedRect</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub enum </span>FrameCommand {
+    LoadTexture(Texture),
+    DrawBatch(sprite::Batch),
+    DrawShapes(shape::Batch),
+    DrawText {
+        text: PreparedSpan,
+        clip: <span class="prelude-ty">Option</span>&lt;SizedRect&lt;u32, Pixels&gt;&gt;,
     },
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/sprite/pipeline.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>pipeline.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_core/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/sprite/pipeline.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>pipeline.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_core/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -176,183 +176,183 @@
 <span id="176">176</span>
 <span id="177">177</span>
 <span id="178">178</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">marker::PhantomData</span>, <span class="ident">ops::Deref</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{marker::PhantomData, ops::Deref};
 
-<span class="kw">use</span> <span class="ident">bytemuck</span>::{<span class="ident">Pod</span>, <span class="ident">Zeroable</span>};
-<span class="kw">use</span> <span class="ident">easygpu</span>::{<span class="ident">prelude</span>::<span class="kw-2">*</span>, <span class="ident">wgpu::TextureFormat</span>};
-<span class="kw">use</span> <span class="ident">figures::Vectorlike</span>;
+<span class="kw">use </span>bytemuck::{Pod, Zeroable};
+<span class="kw">use </span>easygpu::{prelude::<span class="kw-2">*</span>, wgpu::TextureFormat};
+<span class="kw">use </span>figures::Vectorlike;
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Normal</span>, <span class="ident">Srgb</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::math</span>::{<span class="ident">Angle</span>, <span class="ident">Pixels</span>, <span class="ident">Point</span>};
+<span class="kw">use super</span>::{Normal, Srgb};
+<span class="kw">use </span><span class="kw">crate</span>::math::{Angle, Pixels, Point};
 
-<span class="doccomment">/// A pipeline for rendering shapes.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Pipeline</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">core</span>: <span class="ident">PipelineCore</span>,
-    <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A pipeline for rendering shapes.
+</span><span class="kw">pub struct </span>Pipeline&lt;T&gt; {
+    core: PipelineCore,
+    _phantom: PhantomData&lt;T&gt;,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Pod</span>, <span class="ident">Zeroable</span>)]</span>
-<span class="doccomment">/// The uniforms for the shader.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Uniforms</span> {
-    <span class="doccomment">/// The orthographic projection matrix</span>
-    <span class="kw">pub</span> <span class="ident">ortho</span>: [<span class="ident">f32</span>; <span class="number">16</span>],
-    <span class="doccomment">/// The transformation matrix</span>
-    <span class="kw">pub</span> <span class="ident">transform</span>: [<span class="ident">f32</span>; <span class="number">16</span>],
+<span class="attribute">#[repr(C)]
+#[derive(Copy, Clone, Pod, Zeroable)]
+</span><span class="doccomment">/// The uniforms for the shader.
+</span><span class="kw">pub struct </span>Uniforms {
+    <span class="doccomment">/// The orthographic projection matrix
+    </span><span class="kw">pub </span>ortho: [f32; <span class="number">16</span>],
+    <span class="doccomment">/// The transformation matrix
+    </span><span class="kw">pub </span>transform: [f32; <span class="number">16</span>],
 }
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Pod</span>, <span class="ident">Zeroable</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Vertex</span> {
-    <span class="kw">pub</span> <span class="ident">position</span>: [<span class="ident">f32</span>; <span class="number">3</span>],
-    <span class="kw">pub</span> <span class="ident">uv</span>: [<span class="ident">f32</span>; <span class="number">2</span>],
-    <span class="kw">pub</span> <span class="ident">color</span>: <span class="ident">Rgba8</span>,
-    <span class="kw">pub</span> <span class="ident">alpha</span>: <span class="ident">f32</span>,
+<span class="attribute">#[repr(C)]
+#[derive(Copy, Clone, Debug, Pod, Zeroable)]
+</span><span class="kw">pub struct </span>Vertex {
+    <span class="kw">pub </span>position: [f32; <span class="number">3</span>],
+    <span class="kw">pub </span>uv: [f32; <span class="number">2</span>],
+    <span class="kw">pub </span>color: Rgba8,
+    <span class="kw">pub </span>alpha: f32,
 }
 
-<span class="kw">impl</span> <span class="ident">Vertex</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rotate_by</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">angle</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Angle</span><span class="op">&gt;</span>, <span class="ident">origin</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">angle</span>) <span class="op">=</span> <span class="ident">angle</span> {
-            <span class="kw">let</span> <span class="ident">origin</span> <span class="op">=</span> <span class="ident">origin</span>.<span class="ident">to_vector</span>();
-            <span class="kw">let</span> <span class="ident">position</span> <span class="op">=</span> <span class="ident">Point::new</span>(<span class="self">self</span>.<span class="ident">position</span>[<span class="number">0</span>], <span class="self">self</span>.<span class="ident">position</span>[<span class="number">1</span>]);
-            <span class="kw">let</span> <span class="ident">relative_position</span> <span class="op">=</span> <span class="ident">position</span> <span class="op">-</span> <span class="ident">origin</span>;
-            <span class="kw">let</span> <span class="ident">rotated</span> <span class="op">=</span> <span class="ident">angle</span>.<span class="ident">transform_point</span>(<span class="ident">relative_position</span>) <span class="op">+</span> <span class="ident">origin</span>;
+<span class="kw">impl </span>Vertex {
+    <span class="kw">pub fn </span>rotate_by(<span class="kw-2">mut </span><span class="self">self</span>, angle: <span class="prelude-ty">Option</span>&lt;Angle&gt;, origin: Point&lt;f32, Pixels&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(angle) = angle {
+            <span class="kw">let </span>origin = origin.to_vector();
+            <span class="kw">let </span>position = Point::new(<span class="self">self</span>.position[<span class="number">0</span>], <span class="self">self</span>.position[<span class="number">1</span>]);
+            <span class="kw">let </span>relative_position = position - origin;
+            <span class="kw">let </span>rotated = angle.transform_point(relative_position) + origin;
 
-            <span class="self">self</span>.<span class="ident">position</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">rotated</span>.<span class="ident">x</span>;
-            <span class="self">self</span>.<span class="ident">position</span>[<span class="number">1</span>] <span class="op">=</span> <span class="ident">rotated</span>.<span class="ident">y</span>;
+            <span class="self">self</span>.position[<span class="number">0</span>] = rotated.x;
+            <span class="self">self</span>.position[<span class="number">1</span>] = rotated.y;
         }
 
-        <span class="self">self</span>
-    }
+        <span class="self">self
+    </span>}
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Pipeline</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">binding</span>(
+<span class="kw">impl</span>&lt;T&gt; Pipeline&lt;T&gt; {
+    <span class="kw">pub fn </span>binding(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">renderer</span>: <span class="kw-2">&amp;</span><span class="ident">Renderer</span>,
-        <span class="ident">texture</span>: <span class="kw-2">&amp;</span><span class="ident">Texture</span>,
-        <span class="ident">sampler</span>: <span class="kw-2">&amp;</span><span class="ident">Sampler</span>,
-    ) -&gt; <span class="ident">BindingGroup</span> {
-        <span class="ident">renderer</span>
-            .<span class="ident">device</span>
-            .<span class="ident">create_binding_group</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">pipeline</span>.<span class="ident">layout</span>.<span class="ident">sets</span>[<span class="number">1</span>], <span class="kw-2">&amp;</span>[<span class="ident">texture</span>, <span class="ident">sampler</span>])
+        renderer: <span class="kw-2">&amp;</span>Renderer,
+        texture: <span class="kw-2">&amp;</span>Texture,
+        sampler: <span class="kw-2">&amp;</span>Sampler,
+    ) -&gt; BindingGroup {
+        renderer
+            .device
+            .create_binding_group(<span class="kw-2">&amp;</span><span class="self">self</span>.pipeline.layout.sets[<span class="number">1</span>], <span class="kw-2">&amp;</span>[texture, sampler])
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">AbstractPipeline</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Pipeline</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">VertexShaderSource</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; AbstractPipeline&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>Pipeline&lt;T&gt;
+<span class="kw">where
+    </span>T: VertexShaderSource,
 {
-    <span class="kw">type</span> <span class="ident">PrepareContext</span> <span class="op">=</span> <span class="ident">ScreenTransformation</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Uniforms</span> <span class="op">=</span> <span class="ident"><span class="self">self</span>::Uniforms</span>;
+    <span class="kw">type </span>PrepareContext = ScreenTransformation&lt;f32&gt;;
+    <span class="kw">type </span>Uniforms = <span class="self">self</span>::Uniforms;
 
-    <span class="kw">fn</span> <span class="ident">description</span>() -&gt; <span class="ident">PipelineDescription</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="ident">PipelineDescription</span> {
-            <span class="ident">vertex_layout</span>: <span class="kw-2">&amp;</span>[
-                <span class="ident">VertexFormat::Float3</span>,
-                <span class="ident">VertexFormat::Float2</span>,
-                <span class="ident">VertexFormat::UByte4</span>,
-                <span class="ident">VertexFormat::Float</span>,
+    <span class="kw">fn </span>description() -&gt; PipelineDescription&lt;<span class="lifetime">&#39;a</span>&gt; {
+        PipelineDescription {
+            vertex_layout: <span class="kw-2">&amp;</span>[
+                VertexFormat::Float3,
+                VertexFormat::Float2,
+                VertexFormat::UByte4,
+                VertexFormat::Float,
             ],
-            <span class="ident">pipeline_layout</span>: <span class="kw-2">&amp;</span>[
-                <span class="ident">Set</span>(<span class="kw-2">&amp;</span>[<span class="ident">Binding</span> {
-                    <span class="ident">binding</span>: <span class="ident">BindingType::UniformBuffer</span>,
-                    <span class="ident">stage</span>: <span class="ident">ShaderStages::VERTEX</span>,
+            pipeline_layout: <span class="kw-2">&amp;</span>[
+                Set(<span class="kw-2">&amp;</span>[Binding {
+                    binding: BindingType::UniformBuffer,
+                    stage: ShaderStages::VERTEX,
                 }]),
-                <span class="ident">Set</span>(<span class="kw-2">&amp;</span>[
-                    <span class="ident">Binding</span> {
-                        <span class="ident">binding</span>: <span class="ident">BindingType::SampledTexture</span> {
-                            <span class="ident">multisampled</span>: <span class="bool-val">false</span>,
+                Set(<span class="kw-2">&amp;</span>[
+                    Binding {
+                        binding: BindingType::SampledTexture {
+                            multisampled: <span class="bool-val">false</span>,
                         },
-                        <span class="ident">stage</span>: <span class="ident">ShaderStages::FRAGMENT</span>,
+                        stage: ShaderStages::FRAGMENT,
                     },
-                    <span class="ident">Binding</span> {
-                        <span class="ident">binding</span>: <span class="ident">BindingType::Sampler</span>,
-                        <span class="ident">stage</span>: <span class="ident">ShaderStages::FRAGMENT</span>,
+                    Binding {
+                        binding: BindingType::Sampler,
+                        stage: ShaderStages::FRAGMENT,
                     },
                 ]),
             ],
-            <span class="ident">vertex_shader</span>: <span class="ident">T::shader</span>(),
-            <span class="ident">fragment_shader</span>: <span class="macro">include_bytes!</span>(<span class="string">&quot;shaders/sprite.frag.spv&quot;</span>),
+            vertex_shader: T::shader(),
+            fragment_shader: <span class="macro">include_bytes!</span>(<span class="string">&quot;shaders/sprite.frag.spv&quot;</span>),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">setup</span>(<span class="ident">pipeline</span>: <span class="ident">easygpu::pipeline::Pipeline</span>, <span class="ident">dev</span>: <span class="kw-2">&amp;</span><span class="ident">Device</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">transform</span> <span class="op">=</span> <span class="ident">ScreenTransformation::identity</span>().<span class="ident">to_array</span>();
-        <span class="kw">let</span> <span class="ident">ortho</span> <span class="op">=</span> <span class="ident">ScreenTransformation::identity</span>().<span class="ident">to_array</span>();
-        <span class="kw">let</span> <span class="ident">uniforms</span> <span class="op">=</span> <span class="ident">dev</span>.<span class="ident">create_uniform_buffer</span>(<span class="kw-2">&amp;</span>[<span class="ident"><span class="self">self</span>::Uniforms</span> { <span class="ident">ortho</span>, <span class="ident">transform</span> }]);
-        <span class="kw">let</span> <span class="ident">bindings</span> <span class="op">=</span> <span class="ident">dev</span>.<span class="ident">create_binding_group</span>(<span class="kw-2">&amp;</span><span class="ident">pipeline</span>.<span class="ident">layout</span>.<span class="ident">sets</span>[<span class="number">0</span>], <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">uniforms</span>]);
+    <span class="kw">fn </span>setup(pipeline: easygpu::pipeline::Pipeline, dev: <span class="kw-2">&amp;</span>Device) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>transform = ScreenTransformation::identity().to_array();
+        <span class="kw">let </span>ortho = ScreenTransformation::identity().to_array();
+        <span class="kw">let </span>uniforms = dev.create_uniform_buffer(<span class="kw-2">&amp;</span>[<span class="self">self</span>::Uniforms { ortho, transform }]);
+        <span class="kw">let </span>bindings = dev.create_binding_group(<span class="kw-2">&amp;</span>pipeline.layout.sets[<span class="number">0</span>], <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>uniforms]);
 
-        <span class="self">Self</span> {
-            <span class="ident">core</span>: <span class="ident">PipelineCore</span> {
-                <span class="ident">pipeline</span>,
-                <span class="ident">bindings</span>,
-                <span class="ident">uniforms</span>,
+        <span class="self">Self </span>{
+            core: PipelineCore {
+                pipeline,
+                bindings,
+                uniforms,
             },
-            <span class="ident">_phantom</span>: <span class="ident">PhantomData::default</span>(),
+            _phantom: PhantomData::default(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">prepare</span>(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>,
-        <span class="ident">ortho</span>: <span class="ident">ScreenTransformation</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">UniformBuffer</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="self">self</span>::Uniforms</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">ortho</span> <span class="op">=</span> <span class="ident">ortho</span>.<span class="ident">to_array</span>();
-        <span class="kw">let</span> <span class="ident">transform</span> <span class="op">=</span> <span class="ident">ScreenTransformation::identity</span>().<span class="ident">to_array</span>();
-        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">uniforms</span>, <span class="macro">vec!</span>[<span class="ident"><span class="self">self</span>::Uniforms</span> { <span class="ident">ortho</span>, <span class="ident">transform</span> }]))
+    <span class="kw">fn </span>prepare(
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>,
+        ortho: ScreenTransformation&lt;f32&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>UniformBuffer, Vec&lt;<span class="self">self</span>::Uniforms&gt;)&gt; {
+        <span class="kw">let </span>ortho = ortho.to_array();
+        <span class="kw">let </span>transform = ScreenTransformation::identity().to_array();
+        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="self">self</span>.uniforms, <span class="macro">vec!</span>[<span class="self">self</span>::Uniforms { ortho, transform }]))
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">Pipeline</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">PipelineCore</span>;
+<span class="kw">impl</span>&lt;T&gt; Deref <span class="kw">for </span>Pipeline&lt;T&gt; {
+    <span class="kw">type </span>Target = PipelineCore;
 
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">core</span>
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.core
     }
 }
 
-<span class="doccomment">/// Defines a shader source for sprites.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">VertexShaderSource</span> {
-    <span class="doccomment">/// The corresponding shader source type in `easygpu_lyon` for shape</span>
-    <span class="doccomment">/// rendering.</span>
-    <span class="kw">type</span> <span class="ident">Lyon</span>: <span class="ident">easygpu_lyon::VertexShaderSource</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>;
+<span class="doccomment">/// Defines a shader source for sprites.
+</span><span class="kw">pub trait </span>VertexShaderSource {
+    <span class="doccomment">/// The corresponding shader source type in `easygpu_lyon` for shape
+    /// rendering.
+    </span><span class="kw">type </span>Lyon: easygpu_lyon::VertexShaderSource + Send + Sync;
 
-    <span class="doccomment">/// The shader executable.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">shader</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>];
+    <span class="doccomment">/// The shader executable.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">fn </span>shader() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8];
 
-    <span class="doccomment">/// The texture format expected.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">texture_format</span>() -&gt; <span class="ident">TextureFormat</span>;
+    <span class="doccomment">/// The texture format expected.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">fn </span>texture_format() -&gt; TextureFormat;
 
-    <span class="doccomment">/// The sampler format expected.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sampler_format</span>() -&gt; <span class="ident">TextureFormat</span> {
-        <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Lyon</span> <span class="kw">as</span> <span class="ident">easygpu_lyon::VertexShaderSource</span><span class="op">&gt;</span><span class="ident">::sampler_format</span>()
+    <span class="doccomment">/// The sampler format expected.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">fn </span>sampler_format() -&gt; TextureFormat {
+        &lt;<span class="self">Self</span>::Lyon <span class="kw">as </span>easygpu_lyon::VertexShaderSource&gt;::sampler_format()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">VertexShaderSource</span> <span class="kw">for</span> <span class="ident">Srgb</span> {
-    <span class="kw">type</span> <span class="ident">Lyon</span> <span class="op">=</span> <span class="ident">easygpu_lyon::Srgb</span>;
+<span class="kw">impl </span>VertexShaderSource <span class="kw">for </span>Srgb {
+    <span class="kw">type </span>Lyon = easygpu_lyon::Srgb;
 
-    <span class="kw">fn</span> <span class="ident">shader</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>] {
+    <span class="kw">fn </span>shader() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8] {
         <span class="macro">include_bytes!</span>(<span class="string">&quot;shaders/sprite-srgb.vert.spv&quot;</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">texture_format</span>() -&gt; <span class="ident">TextureFormat</span> {
-        <span class="ident">TextureFormat::Rgba8UnormSrgb</span>
+    <span class="kw">fn </span>texture_format() -&gt; TextureFormat {
+        TextureFormat::Rgba8UnormSrgb
     }
 }
 
-<span class="kw">impl</span> <span class="ident">VertexShaderSource</span> <span class="kw">for</span> <span class="ident">Normal</span> {
-    <span class="kw">type</span> <span class="ident">Lyon</span> <span class="op">=</span> <span class="ident">easygpu_lyon::Normal</span>;
+<span class="kw">impl </span>VertexShaderSource <span class="kw">for </span>Normal {
+    <span class="kw">type </span>Lyon = easygpu_lyon::Normal;
 
-    <span class="kw">fn</span> <span class="ident">shader</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>] {
+    <span class="kw">fn </span>shader() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8] {
         <span class="macro">include_bytes!</span>(<span class="string">&quot;shaders/sprite.vert.spv&quot;</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">texture_format</span>() -&gt; <span class="ident">TextureFormat</span> {
-        <span class="ident">TextureFormat::Rgba8Unorm</span>
+    <span class="kw">fn </span>texture_format() -&gt; TextureFormat {
+        TextureFormat::Rgba8Unorm
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

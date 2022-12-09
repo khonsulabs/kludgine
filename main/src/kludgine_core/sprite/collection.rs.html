@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/sprite/collection.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>collection.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_core/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/sprite/collection.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>collection.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_core/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -114,121 +114,121 @@
 <span id="114">114</span>
 <span id="115">115</span>
 <span id="116">116</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">collections</span>::{<span class="ident">hash_map</span>, <span class="ident">HashMap</span>},
-    <span class="ident">fmt::Debug</span>,
-    <span class="ident">hash::Hash</span>,
-    <span class="ident">ops::Deref</span>,
+</pre><pre class="rust"><code><span class="kw">use </span>std::{
+    collections::{hash_map, HashMap},
+    fmt::Debug,
+    hash::Hash,
+    ops::Deref,
 };
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::sprite</span>::{<span class="ident">SpriteSheet</span>, <span class="ident">SpriteSource</span>};
+<span class="kw">use </span><span class="kw">crate</span>::sprite::{SpriteSheet, SpriteSource};
 
-<span class="doccomment">/// A collection of [`SpriteSource`]s.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpriteMap</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="ident">sprites</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">SpriteSource</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A collection of [`SpriteSource`]s.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>SpriteMap&lt;T&gt; {
+    sprites: HashMap&lt;T, SpriteSource&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">SpriteMap</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">sprites</span>: <span class="ident">HashMap::default</span>(),
+<span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>SpriteMap&lt;T&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            sprites: HashMap::default(),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">SpriteMap</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+<span class="kw">impl</span>&lt;T&gt; SpriteMap&lt;T&gt;
+<span class="kw">where
+    </span>T: Debug + Eq + Hash,
 {
-    <span class="doccomment">/// Creates a new collection with `sprites`.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">sprites</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">SpriteSource</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">sprites</span> }
+    <span class="doccomment">/// Creates a new collection with `sprites`.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>new(sprites: HashMap&lt;T, SpriteSource&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ sprites }
     }
 
-    <span class="doccomment">/// Creates a collection from `sheet` using `converter` to convert from `O`</span>
-    <span class="doccomment">/// to `T`.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_foreign_sheet</span><span class="op">&lt;</span><span class="ident">O</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>, <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">O</span>) -&gt; <span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="ident">sheet</span>: <span class="kw-2">&amp;</span><span class="ident">SpriteSheet</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span>,
-        <span class="ident">converter</span>: <span class="ident">F</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::default</span>();
-        <span class="ident">map</span>.<span class="ident">add_foreign_sheet</span>(<span class="ident">sheet</span>, <span class="ident">converter</span>);
-        <span class="ident">map</span>
+    <span class="doccomment">/// Creates a collection from `sheet` using `converter` to convert from `O`
+    /// to `T`.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>from_foreign_sheet&lt;O: Clone + Debug + Eq + Hash, F: Fn(O) -&gt; T&gt;(
+        sheet: <span class="kw-2">&amp;</span>SpriteSheet&lt;O&gt;,
+        converter: F,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>map = <span class="self">Self</span>::default();
+        map.add_foreign_sheet(sheet, converter);
+        map
     }
 
-    <span class="doccomment">/// Adds a collection from `sheet` using `converter` to convert from `O` to</span>
-    <span class="doccomment">/// `T`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_foreign_sheet</span><span class="op">&lt;</span><span class="ident">O</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>, <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">O</span>) -&gt; <span class="ident">T</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">sheet</span>: <span class="kw-2">&amp;</span><span class="ident">SpriteSheet</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span>,
-        <span class="ident">converter</span>: <span class="ident">F</span>,
+    <span class="doccomment">/// Adds a collection from `sheet` using `converter` to convert from `O` to
+    /// `T`.
+    </span><span class="kw">pub fn </span>add_foreign_sheet&lt;O: Clone + Debug + Eq + Hash, F: Fn(O) -&gt; T&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        sheet: <span class="kw-2">&amp;</span>SpriteSheet&lt;O&gt;,
+        converter: F,
     ) {
-        <span class="kw">for</span> (<span class="ident">tile</span>, <span class="ident">sprite</span>) <span class="kw">in</span> <span class="ident">sheet</span>.<span class="ident">to_sprite_map</span>() {
-            <span class="self">self</span>.<span class="ident">sprites</span>.<span class="ident">insert</span>(<span class="ident">converter</span>(<span class="ident">tile</span>), <span class="ident">sprite</span>);
+        <span class="kw">for </span>(tile, sprite) <span class="kw">in </span>sheet.to_sprite_map() {
+            <span class="self">self</span>.sprites.insert(converter(tile), sprite);
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">SpriteMap</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+<span class="kw">impl</span>&lt;T&gt; SpriteMap&lt;T&gt;
+<span class="kw">where
+    </span>T: Clone + Debug + Eq + Hash,
 {
-    <span class="doccomment">/// Adds all sprites from `sheet`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_sheet</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">sheet</span>: <span class="kw-2">&amp;</span><span class="ident">SpriteSheet</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">add_foreign_sheet</span>(<span class="ident">sheet</span>, <span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>);
+    <span class="doccomment">/// Adds all sprites from `sheet`.
+    </span><span class="kw">pub fn </span>add_sheet(<span class="kw-2">&amp;mut </span><span class="self">self</span>, sheet: <span class="kw-2">&amp;</span>SpriteSheet&lt;T&gt;) {
+        <span class="self">self</span>.add_foreign_sheet(sheet, |a| a);
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">SpriteMap</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">SpriteSource</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;T&gt; Deref <span class="kw">for </span>SpriteMap&lt;T&gt; {
+    <span class="kw">type </span>Target = HashMap&lt;T, SpriteSource&gt;;
 
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">SpriteSource</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sprites</span>
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>HashMap&lt;T, SpriteSource&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.sprites
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">IntoIterator</span> <span class="kw">for</span> <span class="ident">SpriteMap</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">hash_map::IntoIter</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">SpriteSource</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> (<span class="ident">T</span>, <span class="ident">SpriteSource</span>);
+<span class="kw">impl</span>&lt;T&gt; IntoIterator <span class="kw">for </span>SpriteMap&lt;T&gt; {
+    <span class="kw">type </span>IntoIter = hash_map::IntoIter&lt;T, SpriteSource&gt;;
+    <span class="kw">type </span>Item = (T, SpriteSource);
 
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::IntoIter</span> {
-        <span class="self">self</span>.<span class="ident">sprites</span>.<span class="ident">into_iter</span>()
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter {
+        <span class="self">self</span>.sprites.into_iter()
     }
 }
 
-<span class="doccomment">/// A collection of sprites.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SpriteCollection</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span>,
+<span class="doccomment">/// A collection of sprites.
+</span><span class="kw">pub trait </span>SpriteCollection&lt;T&gt;
+<span class="kw">where
+    </span>T: Send + Sync,
 {
-    <span class="doccomment">/// Returns the sprite referred to by `tile`.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sprite</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tile</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SpriteSource</span><span class="op">&gt;</span>;
+    <span class="doccomment">/// Returns the sprite referred to by `tile`.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">fn </span>sprite(<span class="kw-2">&amp;</span><span class="self">self</span>, tile: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Option</span>&lt;SpriteSource&gt;;
 
-    <span class="doccomment">/// Returns all of the requested `tiles`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panics</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Panics if a tile is not found.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sprites</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tiles</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>]) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SpriteSource</span><span class="op">&gt;</span> {
-        <span class="ident">tiles</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">sprite</span>(<span class="ident">t</span>).<span class="ident">unwrap</span>())
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+    <span class="doccomment">/// Returns all of the requested `tiles`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if a tile is not found.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">fn </span>sprites(<span class="kw-2">&amp;</span><span class="self">self</span>, tiles: <span class="kw-2">&amp;</span>[T]) -&gt; Vec&lt;SpriteSource&gt; {
+        tiles
+            .iter()
+            .map(|t| <span class="self">self</span>.sprite(t).unwrap())
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">SpriteCollection</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SpriteMap</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+<span class="kw">impl</span>&lt;T&gt; SpriteCollection&lt;T&gt; <span class="kw">for </span>SpriteMap&lt;T&gt;
+<span class="kw">where
+    </span>T: Send + Sync + Eq + Hash,
 {
-    <span class="kw">fn</span> <span class="ident">sprite</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tile</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SpriteSource</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">sprites</span>.<span class="ident">get</span>(<span class="ident">tile</span>).<span class="ident">cloned</span>()
+    <span class="kw">fn </span>sprite(<span class="kw-2">&amp;</span><span class="self">self</span>, tile: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Option</span>&lt;SpriteSource&gt; {
+        <span class="self">self</span>.sprites.get(tile).cloned()
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

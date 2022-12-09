@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../kludgine_core/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../kludgine_core/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -81,88 +81,88 @@
 <span id="81">81</span>
 <span id="82">82</span>
 <span id="83">83</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Rendering and math related types.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Rendering and math related types.
 
-<span class="attribute">#![<span class="ident">forbid</span>(<span class="ident">unsafe_code</span>)]</span>
-<span class="attribute">#![<span class="ident">warn</span>(
-    <span class="ident">clippy::cargo</span>,
-    <span class="ident">missing_docs</span>,
-    <span class="comment">// clippy::missing_docs_in_private_items,</span>
-    <span class="ident">clippy::pedantic</span>,
-    <span class="ident">future_incompatible</span>,
-    <span class="ident">rust_2018_idioms</span>,
-)]</span>
-<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">doc</span>, <span class="ident">deny</span>(<span class="ident">rustdoc::all</span>))]</span>
-<span class="attribute">#![<span class="ident">allow</span>(
-    <span class="ident">clippy::missing_errors_doc</span>, <span class="comment">// TODO clippy::missing_errors_doc</span>
-    <span class="ident">clippy::missing_panics_doc</span>, <span class="comment">// TODO clippy::missing_panics_doc</span>
-    <span class="ident">clippy::option_if_let_else</span>,
-    <span class="ident">clippy::module_name_repetitions</span>,
-    <span class="ident">clippy::cast_possible_truncation</span>,
-    <span class="ident">clippy::cast_precision_loss</span>,
-    <span class="ident">clippy::mut_mut</span>, <span class="comment">// false alarm on futures::select!</span>
-)]</span>
+</span><span class="attribute">#![forbid(unsafe_code)]
+#![warn(
+    clippy::cargo,
+    missing_docs,
+    <span class="comment">// clippy::missing_docs_in_private_items,
+    </span>clippy::pedantic,
+    future_incompatible,
+    rust_2018_idioms,
+)]
+#![cfg_attr(doc, deny(rustdoc::all))]
+#![allow(
+    clippy::missing_errors_doc, <span class="comment">// TODO clippy::missing_errors_doc
+    </span>clippy::missing_panics_doc, <span class="comment">// TODO clippy::missing_panics_doc
+    </span>clippy::option_if_let_else,
+    clippy::module_name_repetitions,
+    clippy::cast_possible_truncation,
+    clippy::cast_precision_loss,
+    clippy::mut_mut, <span class="comment">// false alarm on futures::select!
+</span>)]
 
-<span class="kw">mod</span> <span class="ident">color</span>;
-<span class="kw">mod</span> <span class="ident">delay</span>;
-<span class="kw">mod</span> <span class="ident">error</span>;
-<span class="doccomment">/// Renders individual frames. Can be used for offscreen rendering.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">frame_renderer</span>;
-<span class="doccomment">/// Math types for 2d geometry.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">math</span>;
-<span class="doccomment">/// `Scene` and `Target` types that are used to draw.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">scene</span>;
-<span class="doccomment">/// Types for rendering shapes.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">shape</span>;
-<span class="doccomment">/// Types for rendering sprites.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">sprite</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span>;
-<span class="doccomment">/// Types for rendering text.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">text</span>;
-<span class="doccomment">/// Types for managing textures.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">texture</span>;
+</span><span class="kw">mod </span>color;
+<span class="kw">mod </span>delay;
+<span class="kw">mod </span>error;
+<span class="doccomment">/// Renders individual frames. Can be used for offscreen rendering.
+</span><span class="kw">pub mod </span>frame_renderer;
+<span class="doccomment">/// Math types for 2d geometry.
+</span><span class="kw">pub mod </span>math;
+<span class="doccomment">/// `Scene` and `Target` types that are used to draw.
+</span><span class="kw">pub mod </span>scene;
+<span class="doccomment">/// Types for rendering shapes.
+</span><span class="kw">pub mod </span>shape;
+<span class="doccomment">/// Types for rendering sprites.
+</span><span class="kw">pub mod </span>sprite;
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests;
+<span class="doccomment">/// Types for rendering text.
+</span><span class="kw">pub mod </span>text;
+<span class="doccomment">/// Types for managing textures.
+</span><span class="kw">pub mod </span>texture;
 
-<span class="comment">// Re-exports</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">easygpu</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">figures</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">flume</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">image</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">lazy_static</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">winit</span>;
+<span class="comment">// Re-exports
+</span><span class="kw">pub use </span>easygpu;
+<span class="kw">pub use </span>figures;
+<span class="kw">pub use </span>flume;
+<span class="kw">pub use </span>image;
+<span class="kw">pub use </span>lazy_static;
+<span class="kw">pub use </span>winit;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::{
-    <span class="ident">color::Color</span>,
-    <span class="ident">error::Error</span>,
-    <span class="ident">frame_renderer</span>::{<span class="ident">FrameRenderer</span>, <span class="ident">ShutdownCallback</span>},
+<span class="kw">pub use </span><span class="self">self</span>::{
+    color::Color,
+    error::Error,
+    frame_renderer::{FrameRenderer, ShutdownCallback},
 };
 
-<span class="doccomment">/// A collection of commonly used exports provided by this crate.</span>
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">prelude</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">figures</span>::{
-        <span class="ident">Approx</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Ceil</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Displayable</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Floor</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">One</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Rectlike</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Round</span> <span class="kw">as</span> <span class="kw">_</span>,
-        <span class="ident">Vectorlike</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Zero</span> <span class="kw">as</span> <span class="kw">_</span>,
+<span class="doccomment">/// A collection of commonly used exports provided by this crate.
+</span><span class="kw">pub mod </span>prelude {
+    <span class="kw">pub use </span>figures::{
+        Approx <span class="kw">as _</span>, Ceil <span class="kw">as _</span>, Displayable <span class="kw">as _</span>, Floor <span class="kw">as _</span>, One <span class="kw">as _</span>, Rectlike <span class="kw">as _</span>, Round <span class="kw">as _</span>,
+        Vectorlike <span class="kw">as _</span>, Zero <span class="kw">as _</span>,
     };
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;bundled-fonts-enabled&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::text::bundled_fonts</span>;
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span>::{
-        <span class="ident">include_aseprite_sprite</span>, <span class="ident">include_font</span>, <span class="ident">include_texture</span>,
-        <span class="ident">math</span>::{<span class="ident">Angle</span>, <span class="ident">Figure</span>, <span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">Rect</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>, <span class="ident">Size</span>, <span class="ident">Unknown</span>, <span class="ident">Vector</span>},
-        <span class="ident">scene</span>::{<span class="ident">Scene</span>, <span class="ident">Target</span>},
-        <span class="ident">shape</span>::<span class="kw-2">*</span>,
-        <span class="ident">sprite</span>::{
-            <span class="ident">AnimationMode</span>, <span class="ident">Sprite</span>, <span class="ident">SpriteAnimation</span>, <span class="ident">SpriteAnimations</span>, <span class="ident">SpriteCollection</span>,
-            <span class="ident">SpriteFrame</span>, <span class="ident">SpriteMap</span>, <span class="ident">SpriteRotation</span>, <span class="ident">SpriteSheet</span>, <span class="ident">SpriteSource</span>,
-            <span class="ident">SpriteSourceSublocation</span>,
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;bundled-fonts-enabled&quot;</span>)]
+    </span><span class="kw">pub use </span><span class="kw">super</span>::text::bundled_fonts;
+    <span class="kw">pub use super</span>::{
+        include_aseprite_sprite, include_font, include_texture,
+        math::{Angle, Figure, Pixels, Point, Rect, Scale, Scaled, Size, Unknown, Vector},
+        scene::{Scene, Target},
+        shape::<span class="kw-2">*</span>,
+        sprite::{
+            AnimationMode, Sprite, SpriteAnimation, SpriteAnimations, SpriteCollection,
+            SpriteFrame, SpriteMap, SpriteRotation, SpriteSheet, SpriteSource,
+            SpriteSourceSublocation,
         },
-        <span class="ident">text</span>::{<span class="ident">font::Font</span>, <span class="ident">prepared::PreparedSpan</span>, <span class="ident">Text</span>},
-        <span class="ident">texture::Texture</span>,
-        <span class="ident">Color</span>, <span class="ident">FrameRenderer</span>, <span class="ident">ShutdownCallback</span>,
+        text::{font::Font, prepared::PreparedSpan, Text},
+        texture::Texture,
+        Color, FrameRenderer, ShutdownCallback,
     };
 }
 
-<span class="doccomment">/// Alias for [`std::result::Result`] where the error type is [`Error`].</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="doccomment">/// Alias for [`std::result::Result`] where the error type is [`Error`].
+</span><span class="kw">pub type </span><span class="prelude-ty">Result</span>&lt;T&gt; = std::result::Result&lt;T, Error&gt;;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

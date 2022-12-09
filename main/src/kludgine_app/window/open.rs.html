@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `app/src/window/open.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>open.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_app/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `app/src/window/open.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>open.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_app/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -289,296 +289,296 @@
 <span id="289">289</span>
 <span id="290">290</span>
 <span id="291">291</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">sync::Arc</span>,
-    <span class="ident">time</span>::{<span class="ident">Duration</span>, <span class="ident">Instant</span>},
+</pre><pre class="rust"><code><span class="kw">use </span>std::{
+    sync::Arc,
+    time::{Duration, Instant},
 };
 
-<span class="kw">use</span> <span class="ident">kludgine_core</span>::{
-    <span class="ident">figures</span>::{<span class="ident">Points</span>, <span class="ident">Scaled</span>},
-    <span class="ident">flume::Sender</span>,
-    <span class="ident">math::Scale</span>,
-    <span class="ident">scene</span>::{<span class="ident">Scene</span>, <span class="ident">Target</span>},
-    <span class="ident">winit::window::WindowId</span>,
+<span class="kw">use </span>kludgine_core::{
+    figures::{Points, Scaled},
+    flume::Sender,
+    math::Scale,
+    scene::{Scene, Target},
+    winit::window::WindowId,
 };
 
-<span class="kw">use</span> <span class="kw">super</span>::{
-    <span class="ident">event</span>::{<span class="ident">InputEvent</span>, <span class="ident">WindowEvent</span>},
-    <span class="ident">CloseResponse</span>, <span class="ident">Window</span>,
+<span class="kw">use super</span>::{
+    event::{InputEvent, WindowEvent},
+    CloseResponse, Window,
 };
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::WindowHandle</span>;
+<span class="kw">use </span><span class="kw">crate</span>::WindowHandle;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OpenWindow</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Window</span><span class="op">&gt;</span> {
-    <span class="ident">window</span>: <span class="ident">T</span>,
-    <span class="ident">window_id</span>: <span class="ident">WindowId</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">redraw_status</span>: <span class="ident">RedrawStatus</span>,
-    <span class="ident">scene</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Scene</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>OpenWindow&lt;T: Window&gt; {
+    window: T,
+    window_id: WindowId,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) redraw_status: RedrawStatus,
+    scene: Arc&lt;Scene&gt;,
 }
 
-<span class="doccomment">/// Allows requesting window refreshes outside of the event loop.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RedrawRequester</span> {
-    <span class="ident">event_sender</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Allows requesting window refreshes outside of the event loop.
+</span><span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>RedrawRequester {
+    event_sender: Sender&lt;WindowEvent&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">RedrawRequester</span> {
-    <span class="doccomment">/// Requests the window refresh itself. This will trigger [`Window::update`]</span>
-    <span class="doccomment">/// before rendering.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">request_redraw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">send</span>(<span class="ident">WindowEvent::RedrawRequested</span>);
+<span class="kw">impl </span>RedrawRequester {
+    <span class="doccomment">/// Requests the window refresh itself. This will trigger [`Window::update`]
+    /// before rendering.
+    </span><span class="kw">pub fn </span>request_redraw(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let _ </span>= <span class="self">self</span>.event_sender.send(WindowEvent::RedrawRequested);
     }
 
-    <span class="doccomment">/// Wakes the event loop, without necessarily redrawing.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">awaken</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">send</span>(<span class="ident">WindowEvent::WakeUp</span>);
+    <span class="doccomment">/// Wakes the event loop, without necessarily redrawing.
+    </span><span class="kw">pub fn </span>awaken(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let _ </span>= <span class="self">self</span>.event_sender.send(WindowEvent::WakeUp);
     }
 }
 
-<span class="doccomment">/// Tracks when a window should be redrawn. Allows for rendering a frame</span>
-<span class="doccomment">/// immediately as well as scheduling a refresh in the future.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RedrawStatus</span> {
-    <span class="ident">next_redraw_target</span>: <span class="ident">RedrawTarget</span>,
-    <span class="ident">needs_render</span>: <span class="ident">bool</span>,
-    <span class="ident">needs_update</span>: <span class="ident">bool</span>,
-    <span class="ident">event_sender</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Tracks when a window should be redrawn. Allows for rendering a frame
+/// immediately as well as scheduling a refresh in the future.
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>RedrawStatus {
+    next_redraw_target: RedrawTarget,
+    needs_render: bool,
+    needs_update: bool,
+    event_sender: Sender&lt;WindowEvent&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">RedrawStatus</span> {
-    <span class="doccomment">/// Triggers a redraw as soon as possible. Any estimated frame instants will</span>
-    <span class="doccomment">/// be ignored.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_needs_redraw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">needs_render</span> {
-            <span class="self">self</span>.<span class="ident">needs_render</span> <span class="op">=</span> <span class="bool-val">true</span>;
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">send</span>(<span class="ident">WindowEvent::WakeUp</span>);
+<span class="kw">impl </span>RedrawStatus {
+    <span class="doccomment">/// Triggers a redraw as soon as possible. Any estimated frame instants will
+    /// be ignored.
+    </span><span class="kw">pub fn </span>set_needs_redraw(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if </span>!<span class="self">self</span>.needs_render {
+            <span class="self">self</span>.needs_render = <span class="bool-val">true</span>;
+            <span class="kw">let _ </span>= <span class="self">self</span>.event_sender.send(WindowEvent::WakeUp);
         }
     }
 
-    <span class="doccomment">/// Triggers an update as soon as possible. Does not affect redrawing.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_needs_update</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">needs_render</span> {
-            <span class="self">self</span>.<span class="ident">needs_render</span> <span class="op">=</span> <span class="bool-val">true</span>;
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">send</span>(<span class="ident">WindowEvent::WakeUp</span>);
+    <span class="doccomment">/// Triggers an update as soon as possible. Does not affect redrawing.
+    </span><span class="kw">pub fn </span>set_needs_update(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if </span>!<span class="self">self</span>.needs_render {
+            <span class="self">self</span>.needs_render = <span class="bool-val">true</span>;
+            <span class="kw">let _ </span>= <span class="self">self</span>.event_sender.send(WindowEvent::WakeUp);
         }
     }
 
-    <span class="doccomment">/// Estimates the next redraw instant by adding `duration` to</span>
-    <span class="doccomment">/// `Instant::now()`. If this is later than the current estimate, it</span>
-    <span class="doccomment">/// will be ignored.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">estimate_next_frame</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">duration</span>: <span class="ident">Duration</span>) {
-        <span class="self">self</span>.<span class="ident">estimate_next_frame_instant</span>(<span class="ident">Instant::now</span>().<span class="ident">checked_add</span>(<span class="ident">duration</span>).<span class="ident">unwrap</span>());
+    <span class="doccomment">/// Estimates the next redraw instant by adding `duration` to
+    /// `Instant::now()`. If this is later than the current estimate, it
+    /// will be ignored.
+    </span><span class="kw">pub fn </span>estimate_next_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>, duration: Duration) {
+        <span class="self">self</span>.estimate_next_frame_instant(Instant::now().checked_add(duration).unwrap());
     }
 
-    <span class="doccomment">/// Estimates the next redraw instant. If `instant` is later than the</span>
-    <span class="doccomment">/// current estimate, it will be ignored.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">estimate_next_frame_instant</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">instant</span>: <span class="ident">Instant</span>) {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">next_redraw_target</span> {
-            <span class="ident">RedrawTarget::Never</span> <span class="op">|</span> <span class="ident">RedrawTarget::None</span> =&gt; {
-                <span class="self">self</span>.<span class="ident">next_redraw_target</span> <span class="op">=</span> <span class="ident">RedrawTarget::Scheduled</span>(<span class="ident">instant</span>);
+    <span class="doccomment">/// Estimates the next redraw instant. If `instant` is later than the
+    /// current estimate, it will be ignored.
+    </span><span class="kw">pub fn </span>estimate_next_frame_instant(<span class="kw-2">&amp;mut </span><span class="self">self</span>, instant: Instant) {
+        <span class="kw">match </span><span class="self">self</span>.next_redraw_target {
+            RedrawTarget::Never | RedrawTarget::None =&gt; {
+                <span class="self">self</span>.next_redraw_target = RedrawTarget::Scheduled(instant);
             }
-            <span class="ident">RedrawTarget::Scheduled</span>(<span class="ident">existing_instant</span>) =&gt; {
-                <span class="kw">if</span> <span class="ident">instant</span> <span class="op">&lt;</span> <span class="ident">existing_instant</span> {
-                    <span class="self">self</span>.<span class="ident">next_redraw_target</span> <span class="op">=</span> <span class="ident">RedrawTarget::Scheduled</span>(<span class="ident">instant</span>);
+            RedrawTarget::Scheduled(existing_instant) =&gt; {
+                <span class="kw">if </span>instant &lt; existing_instant {
+                    <span class="self">self</span>.next_redraw_target = RedrawTarget::Scheduled(instant);
                 }
             }
         }
     }
 
-    <span class="doccomment">/// Returns a redraw requester that can be used outside of the event loop.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">redraw_requester</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">RedrawRequester</span> {
-        <span class="ident">RedrawRequester</span> {
-            <span class="ident">event_sender</span>: <span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">clone</span>(),
+    <span class="doccomment">/// Returns a redraw requester that can be used outside of the event loop.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>redraw_requester(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RedrawRequester {
+        RedrawRequester {
+            event_sender: <span class="self">self</span>.event_sender.clone(),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Window</span><span class="op">&gt;</span> <span class="ident">OpenWindow</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">window</span>: <span class="ident">T</span>,
-        <span class="ident">window_id</span>: <span class="ident">WindowId</span>,
-        <span class="ident">event_sender</span>: <span class="ident">Sender</span><span class="op">&lt;</span><span class="ident">WindowEvent</span><span class="op">&gt;</span>,
-        <span class="ident">scene</span>: <span class="ident">Scene</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">window</span>,
-            <span class="ident">window_id</span>,
-            <span class="ident">scene</span>: <span class="ident">Arc::new</span>(<span class="ident">scene</span>),
-            <span class="ident">redraw_status</span>: <span class="ident">RedrawStatus</span> {
-                <span class="ident">needs_render</span>: <span class="bool-val">true</span>,
-                <span class="ident">needs_update</span>: <span class="bool-val">true</span>,
-                <span class="ident">next_redraw_target</span>: <span class="ident">RedrawTarget::None</span>,
-                <span class="ident">event_sender</span>,
+<span class="kw">impl</span>&lt;T: Window&gt; OpenWindow&lt;T&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
+        window: T,
+        window_id: WindowId,
+        event_sender: Sender&lt;WindowEvent&gt;,
+        scene: Scene,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            window,
+            window_id,
+            scene: Arc::new(scene),
+            redraw_status: RedrawStatus {
+                needs_render: <span class="bool-val">true</span>,
+                needs_update: <span class="bool-val">true</span>,
+                next_redraw_target: RedrawTarget::None,
+                event_sender,
             },
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">clear_redraw_target</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">redraw_status</span>.<span class="ident">needs_render</span> <span class="op">=</span> <span class="bool-val">false</span>;
-        <span class="self">self</span>.<span class="ident">redraw_status</span>.<span class="ident">next_redraw_target</span> <span class="op">=</span> <span class="ident">RedrawTarget::None</span>;
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>clear_redraw_target(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.redraw_status.needs_render = <span class="bool-val">false</span>;
+        <span class="self">self</span>.redraw_status.next_redraw_target = RedrawTarget::None;
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">set_has_updated</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">redraw_status</span>.<span class="ident">needs_update</span> <span class="op">=</span> <span class="bool-val">false</span>;
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_has_updated(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.redraw_status.needs_update = <span class="bool-val">false</span>;
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">initialize_redraw_target</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">target_fps</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">RedrawTarget::None</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">redraw_status</span>.<span class="ident">next_redraw_target</span> {
-            <span class="kw">match</span> <span class="ident">target_fps</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">fps</span>) =&gt; {
-                    <span class="self">self</span>.<span class="ident">redraw_status</span>.<span class="ident">next_redraw_target</span> <span class="op">=</span> <span class="ident">RedrawTarget::Scheduled</span>(
-                        <span class="ident">Instant::now</span>()
-                            .<span class="ident">checked_add</span>(<span class="ident">Duration::from_secs_f32</span>(<span class="number">1.</span> <span class="op">/</span> <span class="ident">f32::from</span>(<span class="ident">fps</span>)))
-                            .<span class="ident">unwrap</span>(),
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>initialize_redraw_target(<span class="kw-2">&amp;mut </span><span class="self">self</span>, target_fps: <span class="prelude-ty">Option</span>&lt;u16&gt;) {
+        <span class="kw">if let </span>RedrawTarget::None = <span class="self">self</span>.redraw_status.next_redraw_target {
+            <span class="kw">match </span>target_fps {
+                <span class="prelude-val">Some</span>(fps) =&gt; {
+                    <span class="self">self</span>.redraw_status.next_redraw_target = RedrawTarget::Scheduled(
+                        Instant::now()
+                            .checked_add(Duration::from_secs_f32(<span class="number">1. </span>/ f32::from(fps)))
+                            .unwrap(),
                     );
                 }
-                <span class="prelude-val">None</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">redraw_status</span>.<span class="ident">next_redraw_target</span> <span class="op">=</span> <span class="ident">RedrawTarget::Never</span>;
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="self">self</span>.redraw_status.next_redraw_target = RedrawTarget::Never;
                 }
             }
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">next_redraw_target</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">RedrawTarget</span> {
-        <span class="self">self</span>.<span class="ident">redraw_status</span>.<span class="ident">next_redraw_target</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>next_redraw_target(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RedrawTarget {
+        <span class="self">self</span>.redraw_status.next_redraw_target
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">can_wait_for_events</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="op">!</span><span class="self">self</span>.<span class="ident">should_redraw_now</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">redraw_status</span>.<span class="ident">needs_update</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>can_wait_for_events(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        !<span class="self">self</span>.should_redraw_now() &amp;&amp; !<span class="self">self</span>.redraw_status.needs_update
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">should_redraw_now</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">redraw_status</span>.<span class="ident">needs_render</span>
-            <span class="op">|</span><span class="op">|</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">redraw_status</span>.<span class="ident">next_redraw_target</span> {
-                <span class="ident">RedrawTarget::Never</span> <span class="op">|</span> <span class="ident">RedrawTarget::None</span> =&gt; <span class="bool-val">false</span>,
-                <span class="ident">RedrawTarget::Scheduled</span>(<span class="ident">scheduled_for</span>) =&gt; <span class="ident">scheduled_for</span> <span class="op">&lt;</span> <span class="ident">Instant::now</span>(),
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>should_redraw_now(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.redraw_status.needs_render
+            || <span class="kw">match </span><span class="self">self</span>.redraw_status.next_redraw_target {
+                RedrawTarget::Never | RedrawTarget::None =&gt; <span class="bool-val">false</span>,
+                RedrawTarget::Scheduled(scheduled_for) =&gt; scheduled_for &lt; Instant::now(),
             }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">request_close</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">CloseResponse</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">window</span>.<span class="ident">close_requested</span>(<span class="ident">WindowHandle</span>(<span class="self">self</span>.<span class="ident">window_id</span>))
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>request_close(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Result&lt;CloseResponse&gt; {
+        <span class="self">self</span>.window.close_requested(WindowHandle(<span class="self">self</span>.window_id))
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">process_input</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">input</span>: <span class="ident">InputEvent</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">window</span>.<span class="ident">process_input</span>(
-            <span class="ident">input</span>,
-            <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">redraw_status</span>,
-            <span class="kw-2">&amp;</span><span class="ident">Target::from</span>(<span class="self">self</span>.<span class="ident">scene</span>.<span class="ident">clone</span>()),
-            <span class="ident">WindowHandle</span>(<span class="self">self</span>.<span class="ident">window_id</span>),
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>process_input(<span class="kw-2">&amp;mut </span><span class="self">self</span>, input: InputEvent) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
+        <span class="self">self</span>.window.process_input(
+            input,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.redraw_status,
+            <span class="kw-2">&amp;</span>Target::from(<span class="self">self</span>.scene.clone()),
+            WindowHandle(<span class="self">self</span>.window_id),
         )
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">receive_character</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">character</span>: <span class="ident">char</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">window</span>.<span class="ident">receive_character</span>(
-            <span class="ident">character</span>,
-            <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">redraw_status</span>,
-            <span class="kw-2">&amp;</span><span class="ident">Target::from</span>(<span class="self">self</span>.<span class="ident">scene</span>.<span class="ident">clone</span>()),
-            <span class="ident">WindowHandle</span>(<span class="self">self</span>.<span class="ident">window_id</span>),
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>receive_character(<span class="kw-2">&amp;mut </span><span class="self">self</span>, character: char) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
+        <span class="self">self</span>.window.receive_character(
+            character,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.redraw_status,
+            <span class="kw-2">&amp;</span>Target::from(<span class="self">self</span>.scene.clone()),
+            WindowHandle(<span class="self">self</span>.window_id),
         )
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">initialize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">window</span>.<span class="ident">initialize</span>(
-            <span class="kw-2">&amp;</span><span class="ident">Target::from</span>(<span class="self">self</span>.<span class="ident">scene</span>.<span class="ident">clone</span>()),
-            <span class="self">self</span>.<span class="ident">redraw_status</span>.<span class="ident">redraw_requester</span>(),
-            <span class="ident">WindowHandle</span>(<span class="self">self</span>.<span class="ident">window_id</span>),
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>initialize(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
+        <span class="self">self</span>.window.initialize(
+            <span class="kw-2">&amp;</span>Target::from(<span class="self">self</span>.scene.clone()),
+            <span class="self">self</span>.redraw_status.redraw_requester(),
+            WindowHandle(<span class="self">self</span>.window_id),
         )<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">render</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// Clear the redraw target first, so that if something inside of render</span>
-        <span class="comment">// (or another thread) requests a redraw it will still be honored.</span>
-        <span class="self">self</span>.<span class="ident">clear_redraw_target</span>();
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
+        <span class="comment">// Clear the redraw target first, so that if something inside of render
+        // (or another thread) requests a redraw it will still be honored.
+        </span><span class="self">self</span>.clear_redraw_target();
 
-        <span class="self">self</span>.<span class="ident">window</span>.<span class="ident">render</span>(
-            <span class="kw-2">&amp;</span><span class="ident">Target</span> {
-                <span class="ident">scene</span>: <span class="self">self</span>.<span class="ident">scene</span>.<span class="ident">clone</span>(),
-                <span class="ident">clip</span>: <span class="prelude-val">None</span>,
-                <span class="ident">offset</span>: <span class="prelude-val">None</span>,
+        <span class="self">self</span>.window.render(
+            <span class="kw-2">&amp;</span>Target {
+                scene: <span class="self">self</span>.scene.clone(),
+                clip: <span class="prelude-val">None</span>,
+                offset: <span class="prelude-val">None</span>,
             },
-            <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">redraw_status</span>,
-            <span class="ident">WindowHandle</span>(<span class="self">self</span>.<span class="ident">window_id</span>),
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.redraw_status,
+            WindowHandle(<span class="self">self</span>.window_id),
         )<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">update</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">target_fps</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">initialize_redraw_target</span>(<span class="ident">target_fps</span>);
-        <span class="self">self</span>.<span class="ident">set_has_updated</span>();
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, target_fps: <span class="prelude-ty">Option</span>&lt;u16&gt;) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
+        <span class="self">self</span>.initialize_redraw_target(target_fps);
+        <span class="self">self</span>.set_has_updated();
 
-        <span class="self">self</span>.<span class="ident">window</span>.<span class="ident">update</span>(
-            <span class="kw-2">&amp;</span><span class="ident">Target</span> {
-                <span class="ident">scene</span>: <span class="self">self</span>.<span class="ident">scene</span>.<span class="ident">clone</span>(),
-                <span class="ident">clip</span>: <span class="prelude-val">None</span>,
-                <span class="ident">offset</span>: <span class="prelude-val">None</span>,
+        <span class="self">self</span>.window.update(
+            <span class="kw-2">&amp;</span>Target {
+                scene: <span class="self">self</span>.scene.clone(),
+                clip: <span class="prelude-val">None</span>,
+                offset: <span class="prelude-val">None</span>,
             },
-            <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">redraw_status</span>,
-            <span class="ident">WindowHandle</span>(<span class="self">self</span>.<span class="ident">window_id</span>),
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.redraw_status,
+            WindowHandle(<span class="self">self</span>.window_id),
         )
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">additional_scale</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span>, <span class="ident">Points</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">window</span>.<span class="ident">additional_scale</span>()
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>additional_scale(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Scale&lt;f32, Scaled, Points&gt; {
+        <span class="self">self</span>.window.additional_scale()
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">scene</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Target</span> {
-        <span class="ident">Target</span> {
-            <span class="ident">scene</span>: <span class="self">self</span>.<span class="ident">scene</span>.<span class="ident">clone</span>(),
-            <span class="ident">clip</span>: <span class="prelude-val">None</span>,
-            <span class="ident">offset</span>: <span class="prelude-val">None</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scene(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Target {
+        Target {
+            scene: <span class="self">self</span>.scene.clone(),
+            clip: <span class="prelude-val">None</span>,
+            offset: <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">scene_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="kw-2">mut</span> <span class="ident">Scene</span> {
-        <span class="ident">Arc::get_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">scene</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Unable to lock scene. Users should not store any references to `Target`&quot;</span>)
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>scene_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span><span class="kw-2">mut </span>Scene {
+        Arc::get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>.scene)
+            .expect(<span class="string">&quot;Unable to lock scene. Users should not store any references to `Target`&quot;</span>)
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RedrawTarget</span> {
+<span class="attribute">#[derive(Debug, Clone, Copy)]
+</span><span class="kw">pub enum </span>RedrawTarget {
     <span class="prelude-val">None</span>,
-    <span class="ident">Never</span>,
-    <span class="ident">Scheduled</span>(<span class="ident">Instant</span>),
+    Never,
+    Scheduled(Instant),
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">RedrawTarget</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::None</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>RedrawTarget {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::None
     }
 }
 
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">UpdateSchedule</span> {
-    <span class="ident">Now</span>,
-    <span class="ident">Scheduled</span>(<span class="ident">Instant</span>),
+<span class="kw">pub enum </span>UpdateSchedule {
+    Now,
+    Scheduled(Instant),
 }
 
-<span class="kw">impl</span> <span class="ident">RedrawTarget</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">next_update_instant</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">UpdateSchedule</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Never</span> =&gt; <span class="prelude-val">None</span>,
-            <span class="ident"><span class="self">Self</span>::None</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">UpdateSchedule::Now</span>),
-            <span class="ident"><span class="self">Self</span>::Scheduled</span>(<span class="ident">scheduled_for</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">UpdateSchedule::Scheduled</span>(<span class="kw-2">*</span><span class="ident">scheduled_for</span>)),
+<span class="kw">impl </span>RedrawTarget {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const fn </span>next_update_instant(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;UpdateSchedule&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Never =&gt; <span class="prelude-val">None</span>,
+            <span class="self">Self</span>::None =&gt; <span class="prelude-val">Some</span>(UpdateSchedule::Now),
+            <span class="self">Self</span>::Scheduled(scheduled_for) =&gt; <span class="prelude-val">Some</span>(UpdateSchedule::Scheduled(<span class="kw-2">*</span>scheduled_for)),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">UpdateSchedule</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">timeout_target</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Instant</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">UpdateSchedule::Now</span> =&gt; <span class="prelude-val">None</span>,
-            <span class="ident">UpdateSchedule::Scheduled</span>(<span class="ident">scheduled_for</span>) =&gt; {
-                <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="ident">Instant::now</span>() <span class="op">&gt;</span> <span class="ident">scheduled_for</span> {
-                    <span class="prelude-val">None</span>
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">scheduled_for</span>)
+<span class="kw">impl </span>UpdateSchedule {
+    <span class="kw">pub fn </span>timeout_target(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Instant&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            UpdateSchedule::Now =&gt; <span class="prelude-val">None</span>,
+            UpdateSchedule::Scheduled(scheduled_for) =&gt; {
+                <span class="kw">if </span><span class="kw-2">&amp;</span>Instant::now() &gt; scheduled_for {
+                    <span class="prelude-val">None
+                </span>} <span class="kw">else </span>{
+                    <span class="prelude-val">Some</span>(<span class="kw-2">*</span>scheduled_for)
                 }
             }
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_app" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_app" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

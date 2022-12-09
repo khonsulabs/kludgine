@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/sprite/source.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>source.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_core/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/sprite/source.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>source.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_core/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -241,248 +241,248 @@
 <span id="241">241</span>
 <span id="242">242</span>
 <span id="243">243</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">figures</span>::{<span class="ident">Displayable</span>, <span class="ident">Rectlike</span>, <span class="ident">Scaled</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>figures::{Displayable, Rectlike, Scaled};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">math</span>::{<span class="ident">ExtentsRect</span>, <span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">Rect</span>, <span class="ident">Size</span>},
-    <span class="ident">scene</span>::{<span class="ident">Element</span>, <span class="ident">Target</span>},
-    <span class="ident">sprite</span>::{<span class="ident">RenderedSprite</span>, <span class="ident">SpriteRotation</span>},
-    <span class="ident">texture::Texture</span>,
+<span class="kw">use crate</span>::{
+    math::{ExtentsRect, Pixels, Point, Rect, Size},
+    scene::{Element, Target},
+    sprite::{RenderedSprite, SpriteRotation},
+    texture::Texture,
 };
 
-<span class="doccomment">/// A sprite&#39;s source location and texture. Cheap to clone.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpriteSource</span> {
-    <span class="doccomment">/// The location of the sprite</span>
-    <span class="kw">pub</span> <span class="ident">location</span>: <span class="ident">SpriteSourceLocation</span>,
-    <span class="doccomment">/// The texture.</span>
-    <span class="kw">pub</span> <span class="ident">texture</span>: <span class="ident">Texture</span>,
+<span class="doccomment">/// A sprite&#39;s source location and texture. Cheap to clone.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>SpriteSource {
+    <span class="doccomment">/// The location of the sprite
+    </span><span class="kw">pub </span>location: SpriteSourceLocation,
+    <span class="doccomment">/// The texture.
+    </span><span class="kw">pub </span>texture: Texture,
 }
 
-<span class="doccomment">/// A sprite location.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SpriteSourceLocation</span> {
-    <span class="doccomment">/// A single rectangle.</span>
-    <span class="ident">Rect</span>(<span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>),
-    <span class="doccomment">/// A joined series of images. Useful for constructing a 32x32 sprite from</span>
-    <span class="doccomment">/// four 16x16 sprites.</span>
-    <span class="ident">Joined</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SpriteSourceSublocation</span><span class="op">&gt;</span>),
+<span class="doccomment">/// A sprite location.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub enum </span>SpriteSourceLocation {
+    <span class="doccomment">/// A single rectangle.
+    </span>Rect(Rect&lt;u32&gt;),
+    <span class="doccomment">/// A joined series of images. Useful for constructing a 32x32 sprite from
+    /// four 16x16 sprites.
+    </span>Joined(Vec&lt;SpriteSourceSublocation&gt;),
 }
 
-<span class="kw">impl</span> <span class="ident">SpriteSourceLocation</span> {
-    <span class="doccomment">/// Returns the bounding box of the source rect.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bounds</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Rect</span>(<span class="ident">rect</span>) =&gt; <span class="kw-2">*</span><span class="ident">rect</span>,
-            <span class="ident"><span class="self">Self</span>::Joined</span>(<span class="ident">locations</span>) =&gt; <span class="ident">locations</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">fold</span>(<span class="prelude-ty">Option</span>::<span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::None</span>, <span class="op">|</span><span class="ident">union</span>, <span class="ident">location</span><span class="op">|</span> {
-                    <span class="ident">union</span>.<span class="ident">map_or_else</span>(
-                        <span class="op">|</span><span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">location</span>.<span class="ident">destination_rect</span>()),
-                        <span class="op">|</span><span class="ident">total</span><span class="op">|</span> {
-                            <span class="ident">total</span>
-                                .<span class="ident">union</span>(<span class="kw-2">&amp;</span><span class="ident">location</span>.<span class="ident">destination_rect</span>())
-                                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">r</span><span class="op">|</span> <span class="ident">r</span>.<span class="ident">as_sized</span>())
+<span class="kw">impl </span>SpriteSourceLocation {
+    <span class="doccomment">/// Returns the bounding box of the source rect.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>bounds(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Rect&lt;u32&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Rect(rect) =&gt; <span class="kw-2">*</span>rect,
+            <span class="self">Self</span>::Joined(locations) =&gt; locations
+                .iter()
+                .fold(<span class="prelude-ty">Option</span>::&lt;Rect&lt;u32&gt;&gt;::None, |union, location| {
+                    union.map_or_else(
+                        || <span class="prelude-val">Some</span>(location.destination_rect()),
+                        |total| {
+                            total
+                                .union(<span class="kw-2">&amp;</span>location.destination_rect())
+                                .map(|r| r.as_sized())
                         },
                     )
                 })
-                .<span class="ident">unwrap_or_default</span>(),
+                .unwrap_or_default(),
         }
     }
 
-    <span class="doccomment">/// Returns the size of the bounds.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">bounds</span>().<span class="ident">size</span>
+    <span class="doccomment">/// Returns the size of the bounds.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;u32&gt; {
+        <span class="self">self</span>.bounds().size
     }
 }
 
-<span class="doccomment">/// A sub-location of a joined sprite.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpriteSourceSublocation</span> {
-    <span class="doccomment">/// The source rectangle.</span>
-    <span class="kw">pub</span> <span class="ident">source</span>: <span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The relative destination when rendering.</span>
-    <span class="kw">pub</span> <span class="ident">destination</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A sub-location of a joined sprite.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>SpriteSourceSublocation {
+    <span class="doccomment">/// The source rectangle.
+    </span><span class="kw">pub </span>source: Rect&lt;u32&gt;,
+    <span class="doccomment">/// The relative destination when rendering.
+    </span><span class="kw">pub </span>destination: Point&lt;u32&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">SpriteSourceSublocation</span> {
-    <span class="doccomment">/// Returns the destination with the source&#39;s size.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">destination_rect</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-        <span class="ident">Rect::new</span>(<span class="self">self</span>.<span class="ident">destination</span>, <span class="self">self</span>.<span class="ident">source</span>.<span class="ident">size</span>)
+<span class="kw">impl </span>SpriteSourceSublocation {
+    <span class="doccomment">/// Returns the destination with the source&#39;s size.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>destination_rect(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Rect&lt;u32&gt; {
+        Rect::new(<span class="self">self</span>.destination, <span class="self">self</span>.source.size)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SpriteSource</span> {
-    <span class="doccomment">/// Creates a new sprite source with the location and textuer given.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">location</span>: <span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">texture</span>: <span class="ident">Texture</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">location</span>: <span class="ident">SpriteSourceLocation::Rect</span>(<span class="ident">location</span>),
-            <span class="ident">texture</span>,
+<span class="kw">impl </span>SpriteSource {
+    <span class="doccomment">/// Creates a new sprite source with the location and textuer given.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>new(location: Rect&lt;u32&gt;, texture: Texture) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            location: SpriteSourceLocation::Rect(location),
+            texture,
         }
     }
 
-    <span class="doccomment">/// Creates a sprite by joining multiple rectangular areas from `texture`</span>
-    <span class="doccomment">/// into one drawable sprite.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">joined</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">SpriteSourceSublocation</span><span class="op">&gt;</span><span class="op">&gt;</span>(
-        <span class="ident">locations</span>: <span class="ident">I</span>,
-        <span class="ident">texture</span>: <span class="ident">Texture</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">location</span>: <span class="ident">SpriteSourceLocation::Joined</span>(<span class="ident">locations</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>()),
-            <span class="ident">texture</span>,
+    <span class="doccomment">/// Creates a sprite by joining multiple rectangular areas from `texture`
+    /// into one drawable sprite.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>joined&lt;I: IntoIterator&lt;Item = SpriteSourceSublocation&gt;&gt;(
+        locations: I,
+        texture: Texture,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            location: SpriteSourceLocation::Joined(locations.into_iter().collect()),
+            texture,
         }
     }
 
-    <span class="doccomment">/// Creates a sprite by joining an iterator of `SpriteSource`s into one. All</span>
-    <span class="doccomment">/// `SpriteSources` must be from the same texture, and the iterator must</span>
-    <span class="doccomment">/// have a square number of sprites.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">joined_square</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">sources</span>: <span class="ident">I</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">sources</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">sources</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>();
-        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::cast_sign_loss</span>)]</span> <span class="comment">// sqrt of a positive number is always positive</span>
-        <span class="kw">let</span> <span class="ident">sprites_wide</span> <span class="op">=</span> (<span class="ident">sources</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">f32</span>).<span class="ident">sqrt</span>() <span class="kw">as</span> <span class="ident">usize</span>;
-        <span class="macro">assert!</span>(<span class="ident">sprites_wide</span> <span class="op">*</span> <span class="ident">sprites_wide</span> <span class="op">==</span> <span class="ident">sources</span>.<span class="ident">len</span>()); <span class="comment">// check for square</span>
-        <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="ident">sources</span>[<span class="number">0</span>].<span class="ident">texture</span>.<span class="ident">clone</span>();
+    <span class="doccomment">/// Creates a sprite by joining an iterator of `SpriteSource`s into one. All
+    /// `SpriteSources` must be from the same texture, and the iterator must
+    /// have a square number of sprites.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>joined_square&lt;I: IntoIterator&lt;Item = <span class="self">Self</span>&gt;&gt;(sources: I) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>sources: Vec&lt;<span class="kw">_</span>&gt; = sources.into_iter().collect();
+        <span class="attribute">#[allow(clippy::cast_sign_loss)] </span><span class="comment">// sqrt of a positive number is always positive
+        </span><span class="kw">let </span>sprites_wide = (sources.len() <span class="kw">as </span>f32).sqrt() <span class="kw">as </span>usize;
+        <span class="macro">assert!</span>(sprites_wide * sprites_wide == sources.len()); <span class="comment">// check for square
+        </span><span class="kw">let </span>texture = sources[<span class="number">0</span>].texture.clone();
 
-        <span class="kw">let</span> <span class="ident">sprite_size</span> <span class="op">=</span> <span class="ident">sources</span>[<span class="number">0</span>].<span class="ident">location</span>.<span class="ident">bounds</span>().<span class="ident">size</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sources</span> <span class="op">=</span> <span class="ident">sources</span>.<span class="ident">into_iter</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">locations</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">for</span> <span class="ident">y</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">sprites_wide</span> {
-            <span class="kw">for</span> <span class="ident">x</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">sprites_wide</span> {
-                <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">sources</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>();
-                <span class="macro">debug_assert!</span>(<span class="ident">texture</span>.<span class="ident">id</span>() <span class="op">==</span> <span class="ident">source</span>.<span class="ident">texture</span>.<span class="ident">id</span>());
-                <span class="ident">locations</span>.<span class="ident">push</span>(<span class="ident">SpriteSourceSublocation</span> {
-                    <span class="ident">source</span>: <span class="ident">source</span>.<span class="ident">location</span>.<span class="ident">bounds</span>(),
-                    <span class="ident">destination</span>: <span class="ident">Point::new</span>(
-                        <span class="ident">x</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="ident">sprite_size</span>.<span class="ident">width</span>,
-                        <span class="ident">y</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="ident">sprite_size</span>.<span class="ident">height</span>,
+        <span class="kw">let </span>sprite_size = sources[<span class="number">0</span>].location.bounds().size;
+        <span class="kw">let </span><span class="kw-2">mut </span>sources = sources.into_iter();
+        <span class="kw">let </span><span class="kw-2">mut </span>locations = Vec::new();
+        <span class="kw">for </span>y <span class="kw">in </span><span class="number">0</span>..sprites_wide {
+            <span class="kw">for </span>x <span class="kw">in </span><span class="number">0</span>..sprites_wide {
+                <span class="kw">let </span>source = sources.next().unwrap();
+                <span class="macro">debug_assert!</span>(texture.id() == source.texture.id());
+                locations.push(SpriteSourceSublocation {
+                    source: source.location.bounds(),
+                    destination: Point::new(
+                        x <span class="kw">as </span>u32 * sprite_size.width,
+                        y <span class="kw">as </span>u32 * sprite_size.height,
                     ),
                 });
             }
         }
 
-        <span class="ident"><span class="self">Self</span>::joined</span>(<span class="ident">locations</span>, <span class="ident">texture</span>)
+        <span class="self">Self</span>::joined(locations, texture)
     }
 
-    <span class="doccomment">/// Creates a sprite source for an entire texture.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">entire_texture</span>(<span class="ident">texture</span>: <span class="ident">Texture</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">Rect::new</span>(<span class="ident">Point::default</span>(), <span class="ident">texture</span>.<span class="ident">size</span>()), <span class="ident">texture</span>)
+    <span class="doccomment">/// Creates a sprite source for an entire texture.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>entire_texture(texture: Texture) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(Rect::new(Point::default(), texture.size()), texture)
     }
 
-    <span class="doccomment">/// Renders the sprite at `location` with `rotation` into `scene`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">render_at</span>(
+    <span class="doccomment">/// Renders the sprite at `location` with `rotation` into `scene`.
+    </span><span class="kw">pub fn </span>render_at(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
-        <span class="ident">location</span>: <span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">rotation</span>: <span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        scene: <span class="kw-2">&amp;</span>Target,
+        location: <span class="kw">impl </span>Displayable&lt;f32, Pixels = Point&lt;f32, Pixels&gt;&gt;,
+        rotation: <span class="kw">impl </span>Displayable&lt;f32, Pixels = SpriteRotation&lt;Pixels&gt;&gt;,
     ) {
-        <span class="self">self</span>.<span class="ident">render_at_with_alpha</span>(<span class="ident">scene</span>, <span class="ident">location</span>, <span class="ident">rotation</span>, <span class="number">1.</span>);
+        <span class="self">self</span>.render_at_with_alpha(scene, location, rotation, <span class="number">1.</span>);
     }
 
-    <span class="doccomment">/// Renders the sprite within `bounds` (stretching if needed) with</span>
-    <span class="doccomment">/// `rotation` into `scene`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">render_within</span>(
+    <span class="doccomment">/// Renders the sprite within `bounds` (stretching if needed) with
+    /// `rotation` into `scene`.
+    </span><span class="kw">pub fn </span>render_within(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
-        <span class="ident">bounds</span>: <span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">rotation</span>: <span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        scene: <span class="kw-2">&amp;</span>Target,
+        bounds: <span class="kw">impl </span>Displayable&lt;f32, Pixels = Rect&lt;f32, Pixels&gt;&gt;,
+        rotation: <span class="kw">impl </span>Displayable&lt;f32, Pixels = SpriteRotation&lt;Pixels&gt;&gt;,
     ) {
-        <span class="self">self</span>.<span class="ident">render_with_alpha</span>(<span class="ident">scene</span>, <span class="ident">bounds</span>, <span class="ident">rotation</span>, <span class="number">1.</span>);
+        <span class="self">self</span>.render_with_alpha(scene, bounds, rotation, <span class="number">1.</span>);
     }
 
-    <span class="doccomment">/// Renders the sprite with `alpha` at `location` with `rotation` into</span>
-    <span class="doccomment">/// `scene`.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::needless_pass_by_value</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">render_at_with_alpha</span>(
+    <span class="doccomment">/// Renders the sprite with `alpha` at `location` with `rotation` into
+    /// `scene`.
+    </span><span class="attribute">#[allow(clippy::needless_pass_by_value)]
+    </span><span class="kw">pub fn </span>render_at_with_alpha(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
-        <span class="ident">location</span>: <span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">rotation</span>: <span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">alpha</span>: <span class="ident">f32</span>,
+        scene: <span class="kw-2">&amp;</span>Target,
+        location: <span class="kw">impl </span>Displayable&lt;f32, Pixels = Point&lt;f32, Pixels&gt;&gt;,
+        rotation: <span class="kw">impl </span>Displayable&lt;f32, Pixels = SpriteRotation&lt;Pixels&gt;&gt;,
+        alpha: f32,
     ) {
-        <span class="self">self</span>.<span class="ident">render_with_alpha</span>(
-            <span class="ident">scene</span>,
-            <span class="ident">Rect::new</span>(
-                <span class="ident">location</span>.<span class="ident">to_pixels</span>(<span class="ident">scene</span>.<span class="ident">scale</span>()),
-                <span class="self">self</span>.<span class="ident">location</span>
-                    .<span class="ident">size</span>()
-                    .<span class="ident">cast</span>::<span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>()
-                    .<span class="ident">cast_unit</span>::<span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>()
-                    .<span class="ident">to_pixels</span>(<span class="ident">scene</span>.<span class="ident">scale</span>()),
+        <span class="self">self</span>.render_with_alpha(
+            scene,
+            Rect::new(
+                location.to_pixels(scene.scale()),
+                <span class="self">self</span>.location
+                    .size()
+                    .cast::&lt;f32&gt;()
+                    .cast_unit::&lt;Scaled&gt;()
+                    .to_pixels(scene.scale()),
             ),
-            <span class="ident">rotation</span>,
-            <span class="ident">alpha</span>,
+            rotation,
+            alpha,
         );
     }
 
-    <span class="doccomment">/// Renders the sprite with `alpha` within `bounds` with `rotation` into</span>
-    <span class="doccomment">/// `scene`.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::needless_pass_by_value</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">render_with_alpha</span>(
+    <span class="doccomment">/// Renders the sprite with `alpha` within `bounds` with `rotation` into
+    /// `scene`.
+    </span><span class="attribute">#[allow(clippy::needless_pass_by_value)]
+    </span><span class="kw">pub fn </span>render_with_alpha(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
-        <span class="ident">bounds</span>: <span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">rotation</span>: <span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">alpha</span>: <span class="ident">f32</span>,
+        scene: <span class="kw-2">&amp;</span>Target,
+        bounds: <span class="kw">impl </span>Displayable&lt;f32, Pixels = Rect&lt;f32, Pixels&gt;&gt;,
+        rotation: <span class="kw">impl </span>Displayable&lt;f32, Pixels = SpriteRotation&lt;Pixels&gt;&gt;,
+        alpha: f32,
     ) {
-        <span class="self">self</span>.<span class="ident">render_with_alpha_in_box</span>(
-            <span class="ident">scene</span>,
-            <span class="ident">bounds</span>.<span class="ident">to_pixels</span>(<span class="ident">scene</span>.<span class="ident">scale</span>()).<span class="ident">as_extents</span>(),
-            <span class="ident">rotation</span>,
-            <span class="ident">alpha</span>,
+        <span class="self">self</span>.render_with_alpha_in_box(
+            scene,
+            bounds.to_pixels(scene.scale()).as_extents(),
+            rotation,
+            alpha,
         );
     }
 
-    <span class="doccomment">/// Renders the sprite with `alpha` within `bounds` with `rotation` into</span>
-    <span class="doccomment">/// `scene`.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::needless_pass_by_value</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">render_with_alpha_in_box</span>(
+    <span class="doccomment">/// Renders the sprite with `alpha` within `bounds` with `rotation` into
+    /// `scene`.
+    </span><span class="attribute">#[allow(clippy::needless_pass_by_value)]
+    </span><span class="kw">pub fn </span>render_with_alpha_in_box(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
-        <span class="ident">bounds</span>: <span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">ExtentsRect</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">rotation</span>: <span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">alpha</span>: <span class="ident">f32</span>,
+        scene: <span class="kw-2">&amp;</span>Target,
+        bounds: <span class="kw">impl </span>Displayable&lt;f32, Pixels = ExtentsRect&lt;f32, Pixels&gt;&gt;,
+        rotation: <span class="kw">impl </span>Displayable&lt;f32, Pixels = SpriteRotation&lt;Pixels&gt;&gt;,
+        alpha: f32,
     ) {
-        <span class="kw">let</span> <span class="ident">effective_scale</span> <span class="op">=</span> <span class="ident">scene</span>.<span class="ident">scale</span>();
-        <span class="self">self</span>.<span class="ident">render_raw_with_alpha_in_box</span>(
-            <span class="ident">scene</span>,
-            <span class="ident">bounds</span>.<span class="ident">to_pixels</span>(<span class="ident">effective_scale</span>),
-            <span class="ident">rotation</span>.<span class="ident">to_pixels</span>(<span class="ident">effective_scale</span>),
-            <span class="ident">alpha</span>,
+        <span class="kw">let </span>effective_scale = scene.scale();
+        <span class="self">self</span>.render_raw_with_alpha_in_box(
+            scene,
+            bounds.to_pixels(effective_scale),
+            rotation.to_pixels(effective_scale),
+            alpha,
         );
     }
 
-    <span class="doccomment">/// Renders the sprite with `alpha` within `bounds` with `rotation` into</span>
-    <span class="doccomment">/// `scene`.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::needless_pass_by_value</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">render_raw_with_alpha_in_box</span>(
+    <span class="doccomment">/// Renders the sprite with `alpha` within `bounds` with `rotation` into
+    /// `scene`.
+    </span><span class="attribute">#[allow(clippy::needless_pass_by_value)]
+    </span><span class="kw">pub fn </span>render_raw_with_alpha_in_box(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
-        <span class="ident">bounds</span>: <span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">ExtentsRect</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">rotation</span>: <span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">alpha</span>: <span class="ident">f32</span>,
+        scene: <span class="kw-2">&amp;</span>Target,
+        bounds: <span class="kw">impl </span>Displayable&lt;f32, Pixels = ExtentsRect&lt;f32, Pixels&gt;&gt;,
+        rotation: <span class="kw">impl </span>Displayable&lt;f32, Pixels = SpriteRotation&lt;Pixels&gt;&gt;,
+        alpha: f32,
     ) {
-        <span class="kw">let</span> <span class="ident">bounds</span> <span class="op">=</span> <span class="ident">bounds</span>.<span class="ident">to_pixels</span>(<span class="ident">scene</span>.<span class="ident">scale</span>());
-        <span class="kw">let</span> <span class="ident">bounds</span> <span class="op">=</span> <span class="ident">ExtentsRect::new</span>(
-            <span class="ident">scene</span>.<span class="ident">offset_point_raw</span>(<span class="ident">bounds</span>.<span class="ident">origin</span>),
-            <span class="ident">scene</span>.<span class="ident">offset_point_raw</span>(<span class="ident">bounds</span>.<span class="ident">extent</span>),
+        <span class="kw">let </span>bounds = bounds.to_pixels(scene.scale());
+        <span class="kw">let </span>bounds = ExtentsRect::new(
+            scene.offset_point_raw(bounds.origin),
+            scene.offset_point_raw(bounds.extent),
         );
-        <span class="ident">scene</span>.<span class="ident">push_element</span>(<span class="ident">Element::Sprite</span> {
-            <span class="ident">sprite</span>: <span class="ident">RenderedSprite::new</span>(
-                <span class="ident">bounds</span>,
-                <span class="ident">rotation</span>.<span class="ident">to_pixels</span>(<span class="ident">scene</span>.<span class="ident">scale</span>()),
-                <span class="ident">alpha</span>,
-                <span class="self">self</span>.<span class="ident">clone</span>(),
+        scene.push_element(Element::Sprite {
+            sprite: RenderedSprite::new(
+                bounds,
+                rotation.to_pixels(scene.scale()),
+                alpha,
+                <span class="self">self</span>.clone(),
             ),
-            <span class="ident">clip</span>: <span class="ident">scene</span>.<span class="ident">clip</span>,
+            clip: scene.clip,
         });
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

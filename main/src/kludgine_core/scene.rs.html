@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/scene.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>scene.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../kludgine_core/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/scene.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>scene.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../kludgine_core/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -374,381 +374,381 @@
 <span id="374">374</span>
 <span id="375">375</span>
 <span id="376">376</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">collections::HashSet</span>,
-    <span class="ident">sync::Arc</span>,
-    <span class="ident">time</span>::{<span class="ident">Duration</span>, <span class="ident">Instant</span>},
+</pre><pre class="rust"><code><span class="kw">use </span>std::{
+    collections::HashSet,
+    sync::Arc,
+    time::{Duration, Instant},
 };
 
-<span class="kw">use</span> <span class="ident">figures</span>::{<span class="ident">DisplayScale</span>, <span class="ident">Displayable</span>, <span class="ident">One</span>, <span class="ident">Pixels</span>, <span class="ident">Points</span>, <span class="ident">Rectlike</span>, <span class="ident">SizedRect</span>};
-<span class="kw">use</span> <span class="ident">winit</span>::{<span class="ident">event::VirtualKeyCode</span>, <span class="ident">window::Theme</span>};
+<span class="kw">use </span>figures::{DisplayScale, Displayable, One, Pixels, Points, Rectlike, SizedRect};
+<span class="kw">use </span>winit::{event::VirtualKeyCode, window::Theme};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">math</span>::{<span class="ident">Point</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>, <span class="ident">Size</span>, <span class="ident">Vector</span>},
-    <span class="ident">shape::Shape</span>,
-    <span class="ident">sprite::RenderedSprite</span>,
-    <span class="ident">text::prepared::PreparedSpan</span>,
+<span class="kw">use crate</span>::{
+    math::{Point, Scale, Scaled, Size, Vector},
+    shape::Shape,
+    sprite::RenderedSprite,
+    text::prepared::PreparedSpan,
 };
 
-<span class="doccomment">/// An individual render instruction.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Element</span> {
-    <span class="doccomment">/// A rendered sprite.</span>
-    <span class="ident">Sprite</span> {
-        <span class="doccomment">/// The sprite being rendered.</span>
-        <span class="ident">sprite</span>: <span class="ident">RenderedSprite</span>,
-        <span class="doccomment">/// The current clipping rect.</span>
-        <span class="ident">clip</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SizedRect</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// An individual render instruction.
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub enum </span>Element {
+    <span class="doccomment">/// A rendered sprite.
+    </span>Sprite {
+        <span class="doccomment">/// The sprite being rendered.
+        </span>sprite: RenderedSprite,
+        <span class="doccomment">/// The current clipping rect.
+        </span>clip: <span class="prelude-ty">Option</span>&lt;SizedRect&lt;u32, Pixels&gt;&gt;,
     },
-    <span class="doccomment">/// A rendered span of text.</span>
-    <span class="ident">Text</span> {
-        <span class="doccomment">/// The span being rendered.</span>
-        <span class="ident">span</span>: <span class="ident">PreparedSpan</span>,
-        <span class="doccomment">/// The current clipping rect.</span>
-        <span class="ident">clip</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SizedRect</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// A rendered span of text.
+    </span>Text {
+        <span class="doccomment">/// The span being rendered.
+        </span>span: PreparedSpan,
+        <span class="doccomment">/// The current clipping rect.
+        </span>clip: <span class="prelude-ty">Option</span>&lt;SizedRect&lt;u32, Pixels&gt;&gt;,
     },
-    <span class="doccomment">/// A rendered shape.</span>
-    <span class="ident">Shape</span>(<span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// A rendered shape.
+    </span>Shape(Shape&lt;Pixels&gt;),
 }
 
-<span class="doccomment">/// An event instructing how to render frames.</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SceneEvent</span> {
-    <span class="doccomment">/// Begin a new frame with the given size.</span>
-    <span class="ident">BeginFrame</span> {
-        <span class="doccomment">/// The frame size to render.</span>
-        <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
+<span class="doccomment">/// An event instructing how to render frames.
+</span><span class="kw">pub enum </span>SceneEvent {
+    <span class="doccomment">/// Begin a new frame with the given size.
+    </span>BeginFrame {
+        <span class="doccomment">/// The frame size to render.
+        </span>size: Size&lt;u32, Pixels&gt;,
     },
-    <span class="doccomment">/// Render an element.</span>
-    <span class="ident">Render</span>(<span class="ident">Element</span>),
-    <span class="doccomment">/// Finish the current frame.</span>
-    <span class="ident">EndFrame</span>,
+    <span class="doccomment">/// Render an element.
+    </span>Render(Element),
+    <span class="doccomment">/// Finish the current frame.
+    </span>EndFrame,
 }
 
-<span class="doccomment">/// The main rendering destination, usually interacted with through [`Target`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Scene</span> {
-    <span class="doccomment">/// The virtual key codes curently depressed.</span>
-    <span class="kw">pub</span> <span class="ident">keys_pressed</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">VirtualKeyCode</span><span class="op">&gt;</span>,
-    <span class="ident">scale_factor</span>: <span class="ident">DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>,
-    <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
-    <span class="ident">event_sender</span>: <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">SceneEvent</span><span class="op">&gt;</span>,
-    <span class="ident">now</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Instant</span><span class="op">&gt;</span>,
-    <span class="ident">elapsed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
-    <span class="ident">system_theme</span>: <span class="ident">Theme</span>,
+<span class="doccomment">/// The main rendering destination, usually interacted with through [`Target`].
+</span><span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Scene {
+    <span class="doccomment">/// The virtual key codes curently depressed.
+    </span><span class="kw">pub </span>keys_pressed: HashSet&lt;VirtualKeyCode&gt;,
+    scale_factor: DisplayScale&lt;f32&gt;,
+    size: Size&lt;u32, Pixels&gt;,
+    event_sender: flume::Sender&lt;SceneEvent&gt;,
+    now: <span class="prelude-ty">Option</span>&lt;Instant&gt;,
+    elapsed: <span class="prelude-ty">Option</span>&lt;Duration&gt;,
+    system_theme: Theme,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Scene</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Target</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">scene</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Scene</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">scene</span>,
-            <span class="ident">clip</span>: <span class="prelude-val">None</span>,
-            <span class="ident">offset</span>: <span class="prelude-val">None</span>,
+<span class="kw">impl </span>From&lt;Arc&lt;Scene&gt;&gt; <span class="kw">for </span>Target {
+    <span class="kw">fn </span>from(scene: Arc&lt;Scene&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            scene,
+            clip: <span class="prelude-val">None</span>,
+            offset: <span class="prelude-val">None</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Scene</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Target</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">scene</span>: <span class="ident">Scene</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::from</span>(<span class="ident">Arc::new</span>(<span class="ident">scene</span>))
+<span class="kw">impl </span>From&lt;Scene&gt; <span class="kw">for </span>Target {
+    <span class="kw">fn </span>from(scene: Scene) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::from(Arc::new(scene))
     }
 }
 
-<span class="doccomment">/// A render target</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Target</span> {
-    <span class="doccomment">/// The scene to draw into.</span>
-    <span class="kw">pub</span> <span class="ident">scene</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Scene</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The curent clipping rect. All drawing calls will be clipped to this</span>
-    <span class="doccomment">/// area.</span>
-    <span class="kw">pub</span> <span class="ident">clip</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SizedRect</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The current offset (translation) of drawing calls.</span>
-    <span class="kw">pub</span> <span class="ident">offset</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A render target
+</span><span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>Target {
+    <span class="doccomment">/// The scene to draw into.
+    </span><span class="kw">pub </span>scene: Arc&lt;Scene&gt;,
+    <span class="doccomment">/// The curent clipping rect. All drawing calls will be clipped to this
+    /// area.
+    </span><span class="kw">pub </span>clip: <span class="prelude-ty">Option</span>&lt;SizedRect&lt;u32, Pixels&gt;&gt;,
+    <span class="doccomment">/// The current offset (translation) of drawing calls.
+    </span><span class="kw">pub </span>offset: <span class="prelude-ty">Option</span>&lt;Vector&lt;f32, Pixels&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Target</span> {
-    <span class="doccomment">/// Returns a new [`Target`] with the intersection of `new_clip` an the</span>
-    <span class="doccomment">/// current `clip`, if any. The scene and offset are cloned.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clipped_to</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">new_clip</span>: <span class="ident">SizedRect</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">scene</span>: <span class="self">self</span>.<span class="ident">scene</span>.<span class="ident">clone</span>(),
-            <span class="ident">clip</span>: <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">clip</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">existing_clip</span>) =&gt; <span class="ident">existing_clip</span>
-                    .<span class="ident">intersection</span>(<span class="kw-2">&amp;</span><span class="ident">new_clip</span>)
-                    .<span class="ident">unwrap_or_default</span>()
-                    .<span class="ident">as_sized</span>(),
-                <span class="prelude-val">None</span> =&gt; <span class="ident">new_clip</span>
-                    .<span class="ident">intersection</span>(<span class="kw-2">&amp;</span><span class="ident">SizedRect::from</span>(<span class="self">self</span>.<span class="ident">size_in_pixels</span>()))
-                    .<span class="ident">unwrap_or_default</span>()
-                    .<span class="ident">as_sized</span>(),
+<span class="kw">impl </span>Target {
+    <span class="doccomment">/// Returns a new [`Target`] with the intersection of `new_clip` an the
+    /// current `clip`, if any. The scene and offset are cloned.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>clipped_to(<span class="kw-2">&amp;</span><span class="self">self</span>, new_clip: SizedRect&lt;u32, Pixels&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            scene: <span class="self">self</span>.scene.clone(),
+            clip: <span class="prelude-val">Some</span>(<span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.clip {
+                <span class="prelude-val">Some</span>(existing_clip) =&gt; existing_clip
+                    .intersection(<span class="kw-2">&amp;</span>new_clip)
+                    .unwrap_or_default()
+                    .as_sized(),
+                <span class="prelude-val">None </span>=&gt; new_clip
+                    .intersection(<span class="kw-2">&amp;</span>SizedRect::from(<span class="self">self</span>.size_in_pixels()))
+                    .unwrap_or_default()
+                    .as_sized(),
             }),
-            <span class="ident">offset</span>: <span class="self">self</span>.<span class="ident">offset</span>,
+            offset: <span class="self">self</span>.offset,
         }
     }
 
-    <span class="doccomment">/// Returns a new [`Target`] offset by `delta` from the current `offset`, if</span>
-    <span class="doccomment">/// any. The scene and clipping rect are cloned.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">offset_by</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">delta</span>: <span class="ident">Vector</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">scene</span>: <span class="self">self</span>.<span class="ident">scene</span>.<span class="ident">clone</span>(),
-            <span class="ident">clip</span>: <span class="self">self</span>.<span class="ident">clip</span>,
-            <span class="ident">offset</span>: <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="self">self</span>.<span class="ident">offset</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">offset</span>) =&gt; <span class="ident">offset</span> <span class="op">+</span> <span class="ident">delta</span>,
-                <span class="prelude-val">None</span> =&gt; <span class="ident">delta</span>,
+    <span class="doccomment">/// Returns a new [`Target`] offset by `delta` from the current `offset`, if
+    /// any. The scene and clipping rect are cloned.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>offset_by(<span class="kw-2">&amp;</span><span class="self">self</span>, delta: Vector&lt;f32, Pixels&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            scene: <span class="self">self</span>.scene.clone(),
+            clip: <span class="self">self</span>.clip,
+            offset: <span class="prelude-val">Some</span>(<span class="kw">match </span><span class="self">self</span>.offset {
+                <span class="prelude-val">Some</span>(offset) =&gt; offset + delta,
+                <span class="prelude-val">None </span>=&gt; delta,
             }),
         }
     }
 
-    <span class="doccomment">/// Translates `point` by the current `offset`, if any.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">offset_point</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span>) -&gt; <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">offset</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">offset</span>) =&gt; <span class="ident">point</span> <span class="op">+</span> <span class="ident">offset</span>.<span class="ident">to_scaled</span>(<span class="self">self</span>.<span class="ident">scale</span>()),
-            <span class="prelude-val">None</span> =&gt; <span class="ident">point</span>,
+    <span class="doccomment">/// Translates `point` by the current `offset`, if any.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>offset_point(<span class="kw-2">&amp;</span><span class="self">self</span>, point: Point&lt;f32, Scaled&gt;) -&gt; Point&lt;f32, Scaled&gt; {
+        <span class="kw">match </span><span class="self">self</span>.offset {
+            <span class="prelude-val">Some</span>(offset) =&gt; point + offset.to_scaled(<span class="self">self</span>.scale()),
+            <span class="prelude-val">None </span>=&gt; point,
         }
     }
 
-    <span class="doccomment">/// Translates `point` by the current `offset`, if any.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">offset_point_raw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">point</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) -&gt; <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">offset</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">offset</span>) =&gt; <span class="ident">point</span> <span class="op">+</span> <span class="ident">offset</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="ident">point</span>,
+    <span class="doccomment">/// Translates `point` by the current `offset`, if any.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>offset_point_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, point: Point&lt;f32, Pixels&gt;) -&gt; Point&lt;f32, Pixels&gt; {
+        <span class="kw">match </span><span class="self">self</span>.offset {
+            <span class="prelude-val">Some</span>(offset) =&gt; point + offset,
+            <span class="prelude-val">None </span>=&gt; point,
         }
     }
 
-    <span class="doccomment">/// Returns the scene as a mutable reference. Will only succeed if no other</span>
-    <span class="doccomment">/// references exist. Not intended for use inside of `kludgine-app`.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scene_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">Scene</span><span class="op">&gt;</span> {
-        <span class="ident">Arc::get_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">scene</span>)
+    <span class="doccomment">/// Returns the scene as a mutable reference. Will only succeed if no other
+    /// references exist. Not intended for use inside of `kludgine-app`.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>scene_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>Scene&gt; {
+        Arc::get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>.scene)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">std::ops::Deref</span> <span class="kw">for</span> <span class="ident">Target</span> {
-    <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">Scene</span>;
+<span class="kw">impl </span>std::ops::Deref <span class="kw">for </span>Target {
+    <span class="kw">type </span>Target = Scene;
 
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
-        <span class="self">self</span>.<span class="ident">scene</span>.<span class="ident">as_ref</span>()
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="self">self</span>.scene.as_ref()
     }
 }
 
-<span class="doccomment">/// The state of keyboard modifier keys.</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::struct_excessive_bools</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Modifiers</span> {
-    <span class="doccomment">/// If true, a control key is currently depressed.</span>
-    <span class="kw">pub</span> <span class="ident">control</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// If true, an alt key is currently depressed.</span>
-    <span class="kw">pub</span> <span class="ident">alt</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// If true, an &quot;Operating System key&quot; is currently depressed. For most</span>
-    <span class="doccomment">/// keyboards, this is the Windows key or the Command/Apple key.</span>
-    <span class="kw">pub</span> <span class="ident">operating_system</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// If true, a shift key is currently depressed.</span>
-    <span class="kw">pub</span> <span class="ident">shift</span>: <span class="ident">bool</span>,
+<span class="doccomment">/// The state of keyboard modifier keys.
+</span><span class="attribute">#[allow(clippy::struct_excessive_bools)]
+</span><span class="kw">pub struct </span>Modifiers {
+    <span class="doccomment">/// If true, a control key is currently depressed.
+    </span><span class="kw">pub </span>control: bool,
+    <span class="doccomment">/// If true, an alt key is currently depressed.
+    </span><span class="kw">pub </span>alt: bool,
+    <span class="doccomment">/// If true, an &quot;Operating System key&quot; is currently depressed. For most
+    /// keyboards, this is the Windows key or the Command/Apple key.
+    </span><span class="kw">pub </span>operating_system: bool,
+    <span class="doccomment">/// If true, a shift key is currently depressed.
+    </span><span class="kw">pub </span>shift: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">Modifiers</span> {
-    <span class="doccomment">/// Returns true if the primary modifier of the current OS is depressed. For</span>
-    <span class="doccomment">/// Mac and iOS, this returns `operating_system`. For all other OSes, this</span>
-    <span class="doccomment">/// returns `control`.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">primary_modifier</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>))]</span>
-        {
-            <span class="self">self</span>.<span class="ident">operating_system</span>
+<span class="kw">impl </span>Modifiers {
+    <span class="doccomment">/// Returns true if the primary modifier of the current OS is depressed. For
+    /// Mac and iOS, this returns `operating_system`. For all other OSes, this
+    /// returns `control`.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>primary_modifier(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="attribute">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>))]
+        </span>{
+            <span class="self">self</span>.operating_system
         }
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>)))]</span>
-        {
-            <span class="self">self</span>.<span class="ident">control</span>
+        <span class="attribute">#[cfg(not(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>)))]
+        </span>{
+            <span class="self">self</span>.control
         }
     }
 
-    <span class="doccomment">/// Returns true if the command key/Apple key is pressed. This only returns</span>
-    <span class="doccomment">/// true if `operating_system` key is true and the current operating system</span>
-    <span class="doccomment">/// is Mac or iOS.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::unused_self</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">command_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>))]</span>
-        {
-            <span class="self">self</span>.<span class="ident">operating_system</span>
+    <span class="doccomment">/// Returns true if the command key/Apple key is pressed. This only returns
+    /// true if `operating_system` key is true and the current operating system
+    /// is Mac or iOS.
+    </span><span class="attribute">#[must_use]
+    #[allow(clippy::unused_self)]
+    </span><span class="kw">pub const fn </span>command_key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="attribute">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>))]
+        </span>{
+            <span class="self">self</span>.operating_system
         }
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>)))]</span>
-        {
-            <span class="bool-val">false</span>
-        }
+        <span class="attribute">#[cfg(not(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>)))]
+        </span>{
+            <span class="bool-val">false
+        </span>}
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Scene</span> {
-    <span class="doccomment">/// Returns a new Scene that emits [`SceneEvent`]s to `event_sender`.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">event_sender</span>: <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">SceneEvent</span><span class="op">&gt;</span>, <span class="ident">default_system_theme</span>: <span class="ident">Theme</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">event_sender</span>,
-            <span class="ident">scale_factor</span>: <span class="ident">DisplayScale::one</span>(),
-            <span class="ident">size</span>: <span class="ident">Size::default</span>(),
-            <span class="ident">keys_pressed</span>: <span class="ident">HashSet::new</span>(),
-            <span class="ident">now</span>: <span class="prelude-val">None</span>,
-            <span class="ident">elapsed</span>: <span class="prelude-val">None</span>,
-            <span class="ident">system_theme</span>: <span class="ident">default_system_theme</span>,
+<span class="kw">impl </span>Scene {
+    <span class="doccomment">/// Returns a new Scene that emits [`SceneEvent`]s to `event_sender`.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>new(event_sender: flume::Sender&lt;SceneEvent&gt;, default_system_theme: Theme) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            event_sender,
+            scale_factor: DisplayScale::one(),
+            size: Size::default(),
+            keys_pressed: HashSet::new(),
+            now: <span class="prelude-val">None</span>,
+            elapsed: <span class="prelude-val">None</span>,
+            system_theme: default_system_theme,
         }
     }
 
-    <span class="doccomment">/// Returns the currently set [`Theme`].</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">system_theme</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Theme</span> {
-        <span class="self">self</span>.<span class="ident">system_theme</span>
+    <span class="doccomment">/// Returns the currently set [`Theme`].
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>system_theme(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Theme {
+        <span class="self">self</span>.system_theme
     }
 
-    <span class="doccomment">/// Sets the [`Theme`].</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_system_theme</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">system_theme</span>: <span class="ident">Theme</span>) {
-        <span class="self">self</span>.<span class="ident">system_theme</span> <span class="op">=</span> <span class="ident">system_theme</span>;
+    <span class="doccomment">/// Sets the [`Theme`].
+    </span><span class="kw">pub fn </span>set_system_theme(<span class="kw-2">&amp;mut </span><span class="self">self</span>, system_theme: Theme) {
+        <span class="self">self</span>.system_theme = system_theme;
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">push_element</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">element</span>: <span class="ident">Element</span>) {
-        <span class="ident">drop</span>(<span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">send</span>(<span class="ident">SceneEvent::Render</span>(<span class="ident">element</span>)));
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push_element(<span class="kw-2">&amp;</span><span class="self">self</span>, element: Element) {
+        drop(<span class="self">self</span>.event_sender.send(SceneEvent::Render(element)));
     }
 
-    <span class="doccomment">/// Sets the size of the scene.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_size</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">size</span> <span class="op">=</span> <span class="ident">size</span>;
+    <span class="doccomment">/// Sets the size of the scene.
+    </span><span class="kw">pub fn </span>set_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: Size&lt;u32, Pixels&gt;) {
+        <span class="self">self</span>.size = size;
     }
 
-    <span class="doccomment">/// Sets the DPI scale.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_dpi_scale</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">scale_factor</span>: <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Points</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">scale_factor</span> <span class="op">=</span> <span class="ident">DisplayScale::new</span>(<span class="ident">scale_factor</span>, <span class="ident">Scale::one</span>());
+    <span class="doccomment">/// Sets the DPI scale.
+    </span><span class="kw">pub fn </span>set_dpi_scale(<span class="kw-2">&amp;mut </span><span class="self">self</span>, scale_factor: Scale&lt;f32, Points, Pixels&gt;) {
+        <span class="self">self</span>.scale_factor = DisplayScale::new(scale_factor, Scale::one());
     }
 
-    <span class="doccomment">/// Returns the current [`DisplayScale`].</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">scale</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">scale_factor</span>
+    <span class="doccomment">/// Returns the current [`DisplayScale`].
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>scale(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>DisplayScale&lt;f32&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.scale_factor
     }
 
-    <span class="doccomment">/// Returns true if any of `keys` are currently pressed.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">keys</span>: <span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode</span>]) -&gt; <span class="ident">bool</span> {
-        <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">keys</span> {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">keys_pressed</span>.<span class="ident">contains</span>(<span class="ident">key</span>) {
-                <span class="kw">return</span> <span class="bool-val">true</span>;
+    <span class="doccomment">/// Returns true if any of `keys` are currently pressed.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>any_key_pressed(<span class="kw-2">&amp;</span><span class="self">self</span>, keys: <span class="kw-2">&amp;</span>[VirtualKeyCode]) -&gt; bool {
+        <span class="kw">for </span>key <span class="kw">in </span>keys {
+            <span class="kw">if </span><span class="self">self</span>.keys_pressed.contains(key) {
+                <span class="kw">return </span><span class="bool-val">true</span>;
             }
         }
-        <span class="bool-val">false</span>
-    }
+        <span class="bool-val">false
+    </span>}
 
-    <span class="doccomment">/// Returns the currently depressed modifier keys.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">modifiers_pressed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Modifiers</span> {
-        <span class="ident">Modifiers</span> {
-            <span class="ident">control</span>: <span class="self">self</span>.<span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode::RControl</span>, <span class="ident">VirtualKeyCode::LControl</span>]),
-            <span class="ident">alt</span>: <span class="self">self</span>.<span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode::RAlt</span>, <span class="ident">VirtualKeyCode::LAlt</span>]),
-            <span class="ident">shift</span>: <span class="self">self</span>.<span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode::LShift</span>, <span class="ident">VirtualKeyCode::RShift</span>]),
-            <span class="ident">operating_system</span>: <span class="self">self</span>.<span class="ident">any_key_pressed</span>(<span class="kw-2">&amp;</span>[<span class="ident">VirtualKeyCode::RWin</span>, <span class="ident">VirtualKeyCode::LWin</span>]),
+    <span class="doccomment">/// Returns the currently depressed modifier keys.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>modifiers_pressed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Modifiers {
+        Modifiers {
+            control: <span class="self">self</span>.any_key_pressed(<span class="kw-2">&amp;</span>[VirtualKeyCode::RControl, VirtualKeyCode::LControl]),
+            alt: <span class="self">self</span>.any_key_pressed(<span class="kw-2">&amp;</span>[VirtualKeyCode::RAlt, VirtualKeyCode::LAlt]),
+            shift: <span class="self">self</span>.any_key_pressed(<span class="kw-2">&amp;</span>[VirtualKeyCode::LShift, VirtualKeyCode::RShift]),
+            operating_system: <span class="self">self</span>.any_key_pressed(<span class="kw-2">&amp;</span>[VirtualKeyCode::RWin, VirtualKeyCode::LWin]),
         }
     }
 
-    <span class="doccomment">/// Begins a new frame with the current size.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_frame</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">last_start</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">now</span>;
-        <span class="self">self</span>.<span class="ident">now</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Instant::now</span>());
-        <span class="self">self</span>.<span class="ident">elapsed</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">last_start</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">last_start</span>) =&gt; <span class="self">self</span>.<span class="ident">now</span>.<span class="ident">unwrap</span>().<span class="ident">checked_duration_since</span>(<span class="ident">last_start</span>),
-            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
+    <span class="doccomment">/// Begins a new frame with the current size.
+    </span><span class="kw">pub fn </span>start_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>last_start = <span class="self">self</span>.now;
+        <span class="self">self</span>.now = <span class="prelude-val">Some</span>(Instant::now());
+        <span class="self">self</span>.elapsed = <span class="kw">match </span>last_start {
+            <span class="prelude-val">Some</span>(last_start) =&gt; <span class="self">self</span>.now.unwrap().checked_duration_since(last_start),
+            <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         };
-        <span class="ident">drop</span>(
-            <span class="self">self</span>.<span class="ident">event_sender</span>
-                .<span class="ident">send</span>(<span class="ident">SceneEvent::BeginFrame</span> { <span class="ident">size</span>: <span class="self">self</span>.<span class="ident">size</span> }),
+        drop(
+            <span class="self">self</span>.event_sender
+                .send(SceneEvent::BeginFrame { size: <span class="self">self</span>.size }),
         );
     }
 
-    <span class="doccomment">/// Ends the current frame, allowing it to be rendered.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">end_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="ident">drop</span>(<span class="self">self</span>.<span class="ident">event_sender</span>.<span class="ident">send</span>(<span class="ident">SceneEvent::EndFrame</span>));
+    <span class="doccomment">/// Ends the current frame, allowing it to be rendered.
+    </span><span class="kw">pub fn </span>end_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        drop(<span class="self">self</span>.event_sender.send(SceneEvent::EndFrame));
     }
 
-    <span class="doccomment">/// Returns the current size of the scene in [`Scaled`] units.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">cast</span>::<span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>().<span class="ident">to_scaled</span>(<span class="self">self</span>.<span class="ident">scale</span>())
+    <span class="doccomment">/// Returns the current size of the scene in [`Scaled`] units.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;f32, Scaled&gt; {
+        <span class="self">self</span>.size.cast::&lt;f32&gt;().to_scaled(<span class="self">self</span>.scale())
     }
 
-    <span class="doccomment">/// Returns the current size of the scene in [`Pixels`] units.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">size_in_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">size</span>
+    <span class="doccomment">/// Returns the current size of the scene in [`Pixels`] units.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>size_in_pixels(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;u32, Pixels&gt; {
+        <span class="self">self</span>.size
     }
 
-    <span class="doccomment">/// Returns the [`Instant`] when the frame began.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">now</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Instant</span> {
-        <span class="self">self</span>.<span class="ident">now</span>.<span class="ident">expect</span>(<span class="string">&quot;now() called without starting a frame&quot;</span>)
+    <span class="doccomment">/// Returns the [`Instant`] when the frame began.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>now(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Instant {
+        <span class="self">self</span>.now.expect(<span class="string">&quot;now() called without starting a frame&quot;</span>)
     }
 
-    <span class="doccomment">/// Returns the elapsed [`Duration`] since the scene was created.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">elapsed</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">elapsed</span>
+    <span class="doccomment">/// Returns the elapsed [`Duration`] since the scene was created.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>elapsed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt; {
+        <span class="self">self</span>.elapsed
     }
 
-    <span class="doccomment">/// Returns true if this is the first frame being rendered.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_initial_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">elapsed</span>.<span class="ident">is_none</span>()
+    <span class="doccomment">/// Returns true if this is the first frame being rendered.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>is_initial_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.elapsed.is_none()
     }
 
-    <span class="comment">// pub fn register_font(&amp;mut self, font: &amp;Font) {</span>
-    <span class="comment">//     let family = font.family().expect(&quot;Unable to register VecFonts&quot;);</span>
-    <span class="comment">//     self.fonts</span>
-    <span class="comment">//         .entry(family)</span>
-    <span class="comment">//         .and_modify(|fonts| fonts.push(font.clone()))</span>
-    <span class="comment">//         .or_insert_with(|| vec![font.clone()]);</span>
-    <span class="comment">// }</span>
+    <span class="comment">// pub fn register_font(&amp;mut self, font: &amp;Font) {
+    //     let family = font.family().expect(&quot;Unable to register VecFonts&quot;);
+    //     self.fonts
+    //         .entry(family)
+    //         .and_modify(|fonts| fonts.push(font.clone()))
+    //         .or_insert_with(|| vec![font.clone()]);
+    // }
 
-    <span class="comment">// pub fn lookup_font(</span>
-    <span class="comment">//     &amp;self,</span>
-    <span class="comment">//     family: &amp;str,</span>
-    <span class="comment">//     weight: Weight,</span>
-    <span class="comment">//     style: FontStyle,</span>
-    <span class="comment">// ) -&gt; kludgine::Result&lt;Font&gt; {</span>
-    <span class="comment">//     let fonts = self.fonts.get(family);</span>
+    // pub fn lookup_font(
+    //     &amp;self,
+    //     family: &amp;str,
+    //     weight: Weight,
+    //     style: FontStyle,
+    // ) -&gt; kludgine::Result&lt;Font&gt; {
+    //     let fonts = self.fonts.get(family);
 
-    <span class="comment">//     match fonts {</span>
-    <span class="comment">//         Some(fonts) =&gt; {</span>
-    <span class="comment">//             let mut closest_font = None;</span>
-    <span class="comment">//             let mut closest_weight = None;</span>
+    //     match fonts {
+    //         Some(fonts) =&gt; {
+    //             let mut closest_font = None;
+    //             let mut closest_weight = None;
 
-    <span class="comment">//             for font in fonts.iter() {</span>
-    <span class="comment">//                 let font_weight = font.weight();</span>
-    <span class="comment">//                 let font_style = font.style();</span>
+    //             for font in fonts.iter() {
+    //                 let font_weight = font.weight();
+    //                 let font_style = font.style();
 
-    <span class="comment">//                 if font_weight == weight &amp;&amp; font_style == style {</span>
-    <span class="comment">//                     return Ok(font.clone());</span>
-    <span class="comment">//                 } else {</span>
-    <span class="comment">//                     // If it&#39;s not the right style, we want to heavily</span>
-    <span class="comment">// penalize the score                     // But if no font matches the</span>
-    <span class="comment">// style, we should pick the weight that matches                     // best</span>
-    <span class="comment">// in another style.                     let style_multiplier = if</span>
-    <span class="comment">// font_style == style { 1 } else { 10 };                     let delta =</span>
-    <span class="comment">// (font.weight().to_number() as i32 - weight.to_number() as i32)</span>
-    <span class="comment">//                         .abs()</span>
-    <span class="comment">//                         * style_multiplier;</span>
+    //                 if font_weight == weight &amp;&amp; font_style == style {
+    //                     return Ok(font.clone());
+    //                 } else {
+    //                     // If it&#39;s not the right style, we want to heavily
+    // penalize the score                     // But if no font matches the
+    // style, we should pick the weight that matches                     // best
+    // in another style.                     let style_multiplier = if
+    // font_style == style { 1 } else { 10 };                     let delta =
+    // (font.weight().to_number() as i32 - weight.to_number() as i32)
+    //                         .abs()
+    //                         * style_multiplier;
 
-    <span class="comment">//                     if closest_weight.is_none() || closest_weight.unwrap() &gt;</span>
-    <span class="comment">// delta {                         closest_weight = Some(delta);</span>
-    <span class="comment">//                         closest_font = Some(font.clone());</span>
-    <span class="comment">//                     }</span>
-    <span class="comment">//                 }</span>
-    <span class="comment">//             }</span>
+    //                     if closest_weight.is_none() || closest_weight.unwrap() &gt;
+    // delta {                         closest_weight = Some(delta);
+    //                         closest_font = Some(font.clone());
+    //                     }
+    //                 }
+    //             }
 
-    <span class="comment">//             closest_font.ok_or_else(||</span>
-    <span class="comment">// KludgineError::FontFamilyNotFound(family.to_owned()))         }</span>
-    <span class="comment">//         None =&gt; Err(KludgineError::FontFamilyNotFound(family.to_owned())),</span>
-    <span class="comment">//     }</span>
-    <span class="comment">// }</span>
-}
+    //             closest_font.ok_or_else(||
+    // KludgineError::FontFamilyNotFound(family.to_owned()))         }
+    //         None =&gt; Err(KludgineError::FontFamilyNotFound(family.to_owned())),
+    //     }
+    // }
+</span>}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

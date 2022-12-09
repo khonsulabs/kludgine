@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `app/src/window/event.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>event.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_app/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `app/src/window/event.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>event.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_app/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -93,100 +93,100 @@
 <span id="93">93</span>
 <span id="94">94</span>
 <span id="95">95</span>
-</pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">use</span> <span class="ident">kludgine_core::winit::event</span>::{
-    <span class="ident">DeviceId</span>, <span class="ident">ElementState</span>, <span class="ident">MouseButton</span>, <span class="ident">MouseScrollDelta</span>, <span class="ident">ScanCode</span>, <span class="ident">TouchPhase</span>, <span class="ident">VirtualKeyCode</span>,
+</pre><pre class="rust"><code><span class="kw">pub use </span>kludgine_core::winit::event::{
+    DeviceId, ElementState, MouseButton, MouseScrollDelta, ScanCode, TouchPhase, VirtualKeyCode,
 };
-<span class="kw">use</span> <span class="ident">kludgine_core</span>::{
-    <span class="ident">figures</span>::{<span class="ident">Pixels</span>, <span class="ident">Points</span>},
-    <span class="ident">math</span>::{<span class="ident">Point</span>, <span class="ident">Scale</span>, <span class="ident">Scaled</span>, <span class="ident">Size</span>},
-    <span class="ident">winit::window::Theme</span>,
+<span class="kw">use </span>kludgine_core::{
+    figures::{Pixels, Points},
+    math::{Point, Scale, Scaled, Size},
+    winit::window::Theme,
 };
 
-<span class="doccomment">/// Whether an event has been processed or ignored.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">EventStatus</span> {
-    <span class="doccomment">/// The event was not handled.</span>
-    <span class="ident">Ignored</span>,
-    <span class="doccomment">/// The event was handled and should not be processed any further.</span>
-    <span class="ident">Processed</span>,
+<span class="doccomment">/// Whether an event has been processed or ignored.
+</span><span class="attribute">#[derive(Eq, PartialEq, Copy, Clone, Debug)]
+</span><span class="kw">pub enum </span>EventStatus {
+    <span class="doccomment">/// The event was not handled.
+    </span>Ignored,
+    <span class="doccomment">/// The event was handled and should not be processed any further.
+    </span>Processed,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">EventStatus</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::Ignored</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>EventStatus {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Ignored
     }
 }
 
-<span class="kw">impl</span> <span class="ident">EventStatus</span> {
-    <span class="doccomment">/// Updates `self` such that if either `self` or `other` are `Processed`,</span>
-    <span class="doccomment">/// `self` will be proecssed.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update_with</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) {
-        <span class="kw">if</span> <span class="self">self</span> <span class="op">!</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">other</span> {
-            <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Processed</span> <span class="op">|</span><span class="op">|</span> <span class="ident">other</span> <span class="op">==</span> <span class="ident"><span class="self">Self</span>::Processed</span> {
-                <span class="ident"><span class="self">Self</span>::Processed</span>
-            } <span class="kw">else</span> {
-                <span class="ident"><span class="self">Self</span>::Ignored</span>
+<span class="kw">impl </span>EventStatus {
+    <span class="doccomment">/// Updates `self` such that if either `self` or `other` are `Processed`,
+    /// `self` will be proecssed.
+    </span><span class="kw">pub fn </span>update_with(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="self">Self</span>) {
+        <span class="kw">if </span><span class="self">self </span>!= <span class="kw-2">&amp;</span>other {
+            <span class="kw-2">*</span><span class="self">self </span>= <span class="kw">if </span><span class="self">self </span>== <span class="kw-2">&amp;</span><span class="self">Self</span>::Processed || other == <span class="self">Self</span>::Processed {
+                <span class="self">Self</span>::Processed
+            } <span class="kw">else </span>{
+                <span class="self">Self</span>::Ignored
             };
         }
     }
 }
 
-<span class="doccomment">/// An Event from a device</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InputEvent</span> {
-    <span class="doccomment">/// The device that triggered this event</span>
-    <span class="kw">pub</span> <span class="ident">device_id</span>: <span class="ident">DeviceId</span>,
-    <span class="doccomment">/// The event that was triggered</span>
-    <span class="kw">pub</span> <span class="ident">event</span>: <span class="ident">Event</span>,
+<span class="doccomment">/// An Event from a device
+</span><span class="attribute">#[derive(Copy, Clone, Debug)]
+</span><span class="kw">pub struct </span>InputEvent {
+    <span class="doccomment">/// The device that triggered this event
+    </span><span class="kw">pub </span>device_id: DeviceId,
+    <span class="doccomment">/// The event that was triggered
+    </span><span class="kw">pub </span>event: Event,
 }
 
-<span class="doccomment">/// An input Event</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Event</span> {
-    <span class="doccomment">/// A keyboard event</span>
-    <span class="ident">Keyboard</span> {
-        <span class="doccomment">/// The hardware-dependent scan code.</span>
-        <span class="ident">scancode</span>: <span class="ident">ScanCode</span>,
-        <span class="doccomment">/// Contains a [`VirtualKeyCode`] if `scancode` was interpetted as a</span>
-        <span class="doccomment">/// known key.</span>
-        <span class="ident">key</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">VirtualKeyCode</span><span class="op">&gt;</span>,
-        <span class="doccomment">/// Indicates pressed or released/</span>
-        <span class="ident">state</span>: <span class="ident">ElementState</span>,
+<span class="doccomment">/// An input Event
+</span><span class="attribute">#[derive(Copy, Clone, Debug)]
+</span><span class="kw">pub enum </span>Event {
+    <span class="doccomment">/// A keyboard event
+    </span>Keyboard {
+        <span class="doccomment">/// The hardware-dependent scan code.
+        </span>scancode: ScanCode,
+        <span class="doccomment">/// Contains a [`VirtualKeyCode`] if `scancode` was interpetted as a
+        /// known key.
+        </span>key: <span class="prelude-ty">Option</span>&lt;VirtualKeyCode&gt;,
+        <span class="doccomment">/// Indicates pressed or released/
+        </span>state: ElementState,
     },
-    <span class="doccomment">/// A mouse button event</span>
-    <span class="ident">MouseButton</span> {
-        <span class="doccomment">/// The button tha triggered this event.</span>
-        <span class="ident">button</span>: <span class="ident">MouseButton</span>,
-        <span class="doccomment">/// Indicates pressed or released/</span>
-        <span class="ident">state</span>: <span class="ident">ElementState</span>,
+    <span class="doccomment">/// A mouse button event
+    </span>MouseButton {
+        <span class="doccomment">/// The button tha triggered this event.
+        </span>button: MouseButton,
+        <span class="doccomment">/// Indicates pressed or released/
+        </span>state: ElementState,
     },
-    <span class="doccomment">/// Mouse cursor event</span>
-    <span class="ident">MouseMoved</span> {
-        <span class="doccomment">/// The location within the window of the cursor. Will be invoked with</span>
-        <span class="doccomment">/// `None` when the cursor leaves the window.</span>
-        <span class="ident">position</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Scaled</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Mouse cursor event
+    </span>MouseMoved {
+        <span class="doccomment">/// The location within the window of the cursor. Will be invoked with
+        /// `None` when the cursor leaves the window.
+        </span>position: <span class="prelude-ty">Option</span>&lt;Point&lt;f32, Scaled&gt;&gt;,
     },
-    <span class="doccomment">/// Mouse wheel event</span>
-    <span class="ident">MouseWheel</span> {
-        <span class="doccomment">/// The scroll amount.</span>
-        <span class="ident">delta</span>: <span class="ident">MouseScrollDelta</span>,
-        <span class="doccomment">/// If this event was caused by touch events, the phase of the touch.</span>
-        <span class="ident">touch_phase</span>: <span class="ident">TouchPhase</span>,
+    <span class="doccomment">/// Mouse wheel event
+    </span>MouseWheel {
+        <span class="doccomment">/// The scroll amount.
+        </span>delta: MouseScrollDelta,
+        <span class="doccomment">/// If this event was caused by touch events, the phase of the touch.
+        </span>touch_phase: TouchPhase,
     },
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">WindowEvent</span> {
-    <span class="ident">WakeUp</span>,
-    <span class="ident">CloseRequested</span>,
-    <span class="ident">Resize</span> {
-        <span class="ident">size</span>: <span class="ident">Size</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
-        <span class="ident">scale_factor</span>: <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Points</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>WindowEvent {
+    WakeUp,
+    CloseRequested,
+    Resize {
+        size: Size&lt;u32, Pixels&gt;,
+        scale_factor: Scale&lt;f32, Points, Pixels&gt;,
     },
-    <span class="ident">Input</span>(<span class="ident">InputEvent</span>),
-    <span class="ident">ReceiveCharacter</span>(<span class="ident">char</span>),
-    <span class="ident">RedrawRequested</span>,
-    <span class="ident">SystemThemeChanged</span>(<span class="ident">Theme</span>),
+    Input(InputEvent),
+    ReceiveCharacter(char),
+    RedrawRequested,
+    SystemThemeChanged(Theme),
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_app" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_app" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `app/src/runtime.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>runtime.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../kludgine_app/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `app/src/runtime.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>runtime.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../kludgine_app/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../kludgine_app/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -378,385 +378,385 @@
 <span id="378">378</span>
 <span id="379">379</span>
 <span id="380">380</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">sync::atomic::Ordering</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, sync::atomic::Ordering};
 
-<span class="kw">use</span> <span class="ident">kludgine_core</span>::{
-    <span class="ident">flume</span>,
-    <span class="ident">winit</span>::{
+<span class="kw">use </span>kludgine_core::{
+    flume,
+    winit::{
         <span class="self">self</span>,
-        <span class="ident">event::Event</span>,
-        <span class="ident">event_loop::EventLoopProxy</span>,
-        <span class="ident">window</span>::{<span class="ident">Theme</span>, <span class="ident">WindowId</span>},
+        event::Event,
+        event_loop::EventLoopProxy,
+        window::{Theme, WindowId},
     },
 };
-<span class="kw">use</span> <span class="ident">parking_lot</span>::{<span class="ident">MappedRwLockReadGuard</span>, <span class="ident">Mutex</span>, <span class="ident">RwLock</span>, <span class="ident">RwLockReadGuard</span>};
+<span class="kw">use </span>parking_lot::{MappedRwLockReadGuard, Mutex, RwLock, RwLockReadGuard};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">application::Application</span>,
-    <span class="ident">window</span>::{<span class="ident">opened_first_window</span>, <span class="ident">RuntimeWindow</span>, <span class="ident">RuntimeWindowConfig</span>, <span class="ident">Window</span>, <span class="ident">WindowBuilder</span>},
+<span class="kw">use crate</span>::{
+    application::Application,
+    window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig, Window, WindowBuilder},
 };
 
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RuntimeRequest</span> {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;multiwindow&quot;</span>)]</span>
-    <span class="ident">OpenWindow</span> {
-        <span class="ident">builder</span>: <span class="ident">WindowBuilder</span>,
-        <span class="ident">window_sender</span>: <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">RuntimeWindowConfig</span><span class="op">&gt;</span>,
+<span class="kw">pub enum </span>RuntimeRequest {
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;multiwindow&quot;</span>)]
+    </span>OpenWindow {
+        builder: WindowBuilder,
+        window_sender: flume::Sender&lt;RuntimeWindowConfig&gt;,
     },
-    <span class="ident">WindowClosed</span>,
-    <span class="ident">Quit</span>,
+    WindowClosed,
+    Quit,
 }
 
-<span class="kw">impl</span> <span class="ident">RuntimeRequest</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send</span>(<span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">GLOBAL_RUNTIME_SENDER</span>.<span class="ident">lock</span>();
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">guard</span> {
-            <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">sender</span>) =&gt; {
-                <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">sender</span>.<span class="ident">send_event</span>(<span class="self">self</span>);
+<span class="kw">impl </span>RuntimeRequest {
+    <span class="kw">pub fn </span>send(<span class="self">self</span>) {
+        <span class="kw">let </span>guard = GLOBAL_RUNTIME_SENDER.lock();
+        <span class="kw">match </span><span class="kw-2">*</span>guard {
+            <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>sender) =&gt; {
+                <span class="kw">let _ </span>= sender.send_event(<span class="self">self</span>);
             }
-            <span class="prelude-val">None</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Uninitialized runtime&quot;</span>),
+            <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Uninitialized runtime&quot;</span>),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RuntimeEvent</span> {
-    <span class="ident">Running</span>,
-    <span class="ident">WindowClosed</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub enum </span>RuntimeEvent {
+    Running,
+    WindowClosed,
 }
 
-<span class="kw">use</span> <span class="ident">kludgine_core::lazy_static::lazy_static</span>;
+<span class="kw">use </span>kludgine_core::lazy_static::lazy_static;
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">EventProcessor</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
-    <span class="kw">fn</span> <span class="ident">process_event</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">event_loop</span>: <span class="kw-2">&amp;</span><span class="ident">winit::event_loop::EventLoopWindowTarget</span><span class="op">&lt;</span><span class="ident">RuntimeRequest</span><span class="op">&gt;</span>,
-        <span class="ident">event</span>: <span class="ident">winit::event::Event</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">RuntimeRequest</span><span class="op">&gt;</span>,
-        <span class="ident">control_flow</span>: <span class="kw-2">&amp;mut</span> <span class="ident">winit::event_loop::ControlFlow</span>,
+<span class="kw">pub trait </span>EventProcessor: Send + Sync {
+    <span class="kw">fn </span>process_event(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        event_loop: <span class="kw-2">&amp;</span>winit::event_loop::EventLoopWindowTarget&lt;RuntimeRequest&gt;,
+        event: winit::event::Event&lt;<span class="lifetime">&#39;_</span>, RuntimeRequest&gt;,
+        control_flow: <span class="kw-2">&amp;mut </span>winit::event_loop::ControlFlow,
     );
 }
 
-<span class="macro">lazy_static!</span> {
-    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">GLOBAL_RUNTIME_SENDER</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">EventLoopProxy</span><span class="op">&lt;</span><span class="ident">RuntimeRequest</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
-        <span class="ident">Mutex::new</span>(<span class="prelude-val">None</span>);
-    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">GLOBAL_RUNTIME_RECEIVER</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">flume::Receiver</span><span class="op">&lt;</span><span class="ident">RuntimeEvent</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
-        <span class="ident">Mutex::new</span>(<span class="prelude-val">None</span>);
-    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">GLOBAL_EVENT_HANDLER</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">EventProcessor</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Mutex::new</span>(<span class="prelude-val">None</span>);
+<span class="macro">lazy_static! </span>{
+    <span class="kw">pub static </span><span class="kw-2">ref </span>GLOBAL_RUNTIME_SENDER: Mutex&lt;<span class="prelude-ty">Option</span>&lt;EventLoopProxy&lt;RuntimeRequest&gt;&gt;&gt; =
+        Mutex::new(<span class="prelude-val">None</span>);
+    <span class="kw">pub static </span><span class="kw-2">ref </span>GLOBAL_RUNTIME_RECEIVER: Mutex&lt;<span class="prelude-ty">Option</span>&lt;flume::Receiver&lt;RuntimeEvent&gt;&gt;&gt; =
+        Mutex::new(<span class="prelude-val">None</span>);
+    <span class="kw">pub static </span><span class="kw-2">ref </span>GLOBAL_EVENT_HANDLER: Mutex&lt;<span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>EventProcessor&gt;&gt;&gt; = Mutex::new(<span class="prelude-val">None</span>);
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;smol-rt&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">smol</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;smol-rt&quot;</span>)]
+</span><span class="kw">mod </span>smol;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tokio-rt&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tokio</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;tokio-rt&quot;</span>)]
+</span><span class="kw">mod </span>tokio;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">web_sys</span>;
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+</span><span class="kw">mod </span>web_sys;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ApplicationRuntime</span><span class="op">&lt;</span><span class="ident">App</span><span class="op">&gt;</span> {
-    <span class="ident">app</span>: <span class="ident">App</span>,
+<span class="kw">pub struct </span>ApplicationRuntime&lt;App&gt; {
+    app: App,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">App</span><span class="op">&gt;</span> <span class="ident">ApplicationRuntime</span><span class="op">&lt;</span><span class="ident">App</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="ident">App</span>: <span class="ident">Application</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+<span class="kw">impl</span>&lt;App&gt; ApplicationRuntime&lt;App&gt;
+<span class="kw">where
+    </span>App: Application + <span class="lifetime">&#39;static</span>,
 {
-    <span class="kw">fn</span> <span class="ident">launch</span>(<span class="self">self</span>) -&gt; <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">RuntimeEvent</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">event_sender</span>, <span class="ident">event_receiver</span>) <span class="op">=</span> <span class="ident">flume::unbounded</span>();
+    <span class="kw">fn </span>launch(<span class="self">self</span>) -&gt; flume::Sender&lt;RuntimeEvent&gt; {
+        <span class="kw">let </span>(event_sender, event_receiver) = flume::unbounded();
         {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">global_receiver</span> <span class="op">=</span> <span class="ident">GLOBAL_RUNTIME_RECEIVER</span>.<span class="ident">lock</span>();
-            <span class="macro">assert!</span>(<span class="ident">global_receiver</span>.<span class="ident">is_none</span>());
-            <span class="kw-2">*</span><span class="ident">global_receiver</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">event_receiver</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>global_receiver = GLOBAL_RUNTIME_RECEIVER.lock();
+            <span class="macro">assert!</span>(global_receiver.is_none());
+            <span class="kw-2">*</span>global_receiver = <span class="prelude-val">Some</span>(event_receiver);
         }
 
-        <span class="ident">std::thread::Builder::new</span>()
-            .<span class="ident">name</span>(<span class="ident">String::from</span>(<span class="string">&quot;kludgine-app&quot;</span>))
-            .<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">async_main</span>())
-            .<span class="ident">unwrap</span>();
+        std::thread::Builder::new()
+            .name(String::from(<span class="string">&quot;kludgine-app&quot;</span>))
+            .spawn(<span class="kw">move </span>|| <span class="self">self</span>.async_main())
+            .unwrap();
 
-        <span class="ident">event_sender</span>
+        event_sender
     }
 
-    <span class="kw">fn</span> <span class="ident">async_main</span>(<span class="kw-2">mut</span> <span class="self">self</span>)
-    <span class="kw">where</span>
-        <span class="ident">App</span>: <span class="ident">Application</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="kw">fn </span>async_main(<span class="kw-2">mut </span><span class="self">self</span>)
+    <span class="kw">where
+        </span>App: Application + <span class="lifetime">&#39;static</span>,
     {
-        <span class="self">self</span>.<span class="ident">app</span>.<span class="ident">initialize</span>();
+        <span class="self">self</span>.app.initialize();
 
-        <span class="self">self</span>.<span class="ident">run</span>();
+        <span class="self">self</span>.run();
     }
 
-    <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">mut</span> <span class="self">self</span>)
-    <span class="kw">where</span>
-        <span class="ident">App</span>: <span class="ident">Application</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="kw">fn </span>run(<span class="kw-2">mut </span><span class="self">self</span>)
+    <span class="kw">where
+        </span>App: Application + <span class="lifetime">&#39;static</span>,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">running</span> <span class="op">=</span> <span class="bool-val">false</span>;
-        <span class="kw">let</span> <span class="ident">event_receiver</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">GLOBAL_RUNTIME_RECEIVER</span>.<span class="ident">lock</span>();
-            <span class="ident">guard</span>.<span class="ident">as_ref</span>().<span class="ident">expect</span>(<span class="string">&quot;Receiver was not set&quot;</span>).<span class="ident">clone</span>()
+        <span class="kw">let </span><span class="kw-2">mut </span>running = <span class="bool-val">false</span>;
+        <span class="kw">let </span>event_receiver = {
+            <span class="kw">let </span>guard = GLOBAL_RUNTIME_RECEIVER.lock();
+            guard.as_ref().expect(<span class="string">&quot;Receiver was not set&quot;</span>).clone()
         };
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">event</span>) <span class="op">=</span> <span class="ident">event_receiver</span>.<span class="ident">recv</span>() {
-            <span class="kw">match</span> <span class="ident">event</span> {
-                <span class="ident">RuntimeEvent::Running</span> =&gt; {
-                    <span class="ident">running</span> <span class="op">=</span> <span class="bool-val">true</span>;
+        <span class="kw">while let </span><span class="prelude-val">Ok</span>(event) = event_receiver.recv() {
+            <span class="kw">match </span>event {
+                RuntimeEvent::Running =&gt; {
+                    running = <span class="bool-val">true</span>;
                 }
-                <span class="ident">RuntimeEvent::WindowClosed</span> =&gt; {}
+                RuntimeEvent::WindowClosed =&gt; {}
             }
 
-            <span class="kw">if</span> <span class="ident">running</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">app</span>.<span class="ident">should_exit</span>() {
-                <span class="ident">RuntimeRequest::Quit</span>.<span class="ident">send</span>();
+            <span class="kw">if </span>running &amp;&amp; <span class="self">self</span>.app.should_exit() {
+                RuntimeRequest::Quit.send();
                 <span class="kw">break</span>;
             }
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">EventProcessor</span> <span class="kw">for</span> <span class="ident">Runtime</span> {
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;multiwindow&quot;</span>), <span class="ident">allow</span>(<span class="ident">unused_variables</span>))]</span> <span class="comment">// event_loop is unused if this feature isn&#39;t specified</span>
-    <span class="kw">fn</span> <span class="ident">process_event</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">event_loop</span>: <span class="kw-2">&amp;</span><span class="ident">winit::event_loop::EventLoopWindowTarget</span><span class="op">&lt;</span><span class="ident">RuntimeRequest</span><span class="op">&gt;</span>,
-        <span class="ident">event</span>: <span class="ident">winit::event::Event</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">RuntimeRequest</span><span class="op">&gt;</span>,
-        <span class="ident">control_flow</span>: <span class="kw-2">&amp;mut</span> <span class="ident">winit::event_loop::ControlFlow</span>,
+<span class="kw">impl </span>EventProcessor <span class="kw">for </span>Runtime {
+    <span class="attribute">#[cfg_attr(not(feature = <span class="string">&quot;multiwindow&quot;</span>), allow(unused_variables))] </span><span class="comment">// event_loop is unused if this feature isn&#39;t specified
+    </span><span class="kw">fn </span>process_event(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        event_loop: <span class="kw-2">&amp;</span>winit::event_loop::EventLoopWindowTarget&lt;RuntimeRequest&gt;,
+        event: winit::event::Event&lt;<span class="lifetime">&#39;_</span>, RuntimeRequest&gt;,
+        control_flow: <span class="kw-2">&amp;mut </span>winit::event_loop::ControlFlow,
     ) {
-        <span class="comment">// while let Ok(request) = self.request_receiver.try_recv() {</span>
-        <span class="comment">//</span>
-        <span class="comment">// }</span>
-        <span class="ident"><span class="self">Self</span>::try_process_window_events</span>(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>));
+        <span class="comment">// while let Ok(request) = self.request_receiver.try_recv() {
+        //
+        // }
+        </span><span class="self">Self</span>::try_process_window_events(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>event));
 
-        <span class="kw">match</span> <span class="ident">event</span> {
-            <span class="ident">winit::event::Event::NewEvents</span>(<span class="ident">winit::event::StartCause::Init</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">event_sender</span>
-                    .<span class="ident">send</span>(<span class="ident">RuntimeEvent::Running</span>)
-                    .<span class="ident">unwrap_or_default</span>();
+        <span class="kw">match </span>event {
+            winit::event::Event::NewEvents(winit::event::StartCause::Init) =&gt; {
+                <span class="self">self</span>.event_sender
+                    .send(RuntimeEvent::Running)
+                    .unwrap_or_default();
             }
-            <span class="ident">winit::event::Event::UserEvent</span>(<span class="ident">request</span>) =&gt; <span class="kw">match</span> <span class="ident">request</span> {
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;multiwindow&quot;</span>)]</span>
-                <span class="ident">RuntimeRequest::OpenWindow</span> {
-                    <span class="ident">window_sender</span>,
-                    <span class="ident">builder</span>,
+            winit::event::Event::UserEvent(request) =&gt; <span class="kw">match </span>request {
+                <span class="attribute">#[cfg(feature = <span class="string">&quot;multiwindow&quot;</span>)]
+                </span>RuntimeRequest::OpenWindow {
+                    window_sender,
+                    builder,
                 } =&gt; {
-                    <span class="ident"><span class="self">Self</span>::internal_open_window</span>(<span class="kw-2">&amp;</span><span class="ident">window_sender</span>, <span class="ident">builder</span>, <span class="ident">event_loop</span>);
+                    <span class="self">Self</span>::internal_open_window(<span class="kw-2">&amp;</span>window_sender, builder, event_loop);
                 }
-                <span class="ident">RuntimeRequest::Quit</span> =&gt; {
-                    <span class="kw-2">*</span><span class="ident">control_flow</span> <span class="op">=</span> <span class="ident">winit::event_loop::ControlFlow::Exit</span>;
+                RuntimeRequest::Quit =&gt; {
+                    <span class="kw-2">*</span>control_flow = winit::event_loop::ControlFlow::Exit;
                     <span class="kw">return</span>;
                 }
-                <span class="ident">RuntimeRequest::WindowClosed</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">event_sender</span>
-                        .<span class="ident">send</span>(<span class="ident">RuntimeEvent::WindowClosed</span>)
-                        .<span class="ident">unwrap_or_default</span>();
+                RuntimeRequest::WindowClosed =&gt; {
+                    <span class="self">self</span>.event_sender
+                        .send(RuntimeEvent::WindowClosed)
+                        .unwrap_or_default();
                 }
             },
-            <span class="kw">_</span> =&gt; {}
+            <span class="kw">_ </span>=&gt; {}
         }
 
-        <span class="kw-2">*</span><span class="ident">control_flow</span> <span class="op">=</span> <span class="ident">winit::event_loop::ControlFlow::Wait</span>;
+        <span class="kw-2">*</span>control_flow = winit::event_loop::ControlFlow::Wait;
     }
 }
 
-<span class="doccomment">/// Runtime is designed to consume the main thread. For cross-platform</span>
-<span class="doccomment">/// compatibility, ensure that you call [`Runtime::run()`] from thee main</span>
-<span class="doccomment">/// thread.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Runtime</span> {
-    <span class="ident">event_sender</span>: <span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">RuntimeEvent</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Runtime is designed to consume the main thread. For cross-platform
+/// compatibility, ensure that you call [`Runtime::run()`] from thee main
+/// thread.
+</span><span class="kw">pub struct </span>Runtime {
+    event_sender: flume::Sender&lt;RuntimeEvent&gt;,
 }
 
-<span class="macro">lazy_static!</span> {
-    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">WINIT_WINDOWS</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">WindowId</span>, <span class="ident">winit::window::Window</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span>
-        <span class="ident">RwLock::new</span>(<span class="ident">HashMap::new</span>());
+<span class="macro">lazy_static! </span>{
+    <span class="kw">pub static </span><span class="kw-2">ref </span>WINIT_WINDOWS: RwLock&lt;HashMap&lt;WindowId, winit::window::Window&gt;&gt; =
+        RwLock::new(HashMap::new());
 }
 
-<span class="kw">impl</span> <span class="ident">Runtime</span> {
-    <span class="doccomment">/// Initializes the managed async runtime.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">initialize</span>() {
-        <span class="ident">initialize_async_runtime</span>();
+<span class="kw">impl </span>Runtime {
+    <span class="doccomment">/// Initializes the managed async runtime.
+    </span><span class="kw">pub fn </span>initialize() {
+        initialize_async_runtime();
     }
 
-    <span class="doccomment">/// Returns a new runtime for `app`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">App</span><span class="op">&gt;</span>(<span class="ident">app</span>: <span class="ident">App</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">App</span>: <span class="ident">Application</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="doccomment">/// Returns a new runtime for `app`.
+    </span><span class="kw">pub fn </span>new&lt;App&gt;(app: App) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>App: Application + <span class="lifetime">&#39;static</span>,
     {
-        <span class="ident"><span class="self">Self</span>::initialize</span>();
+        <span class="self">Self</span>::initialize();
 
-        <span class="kw">let</span> <span class="ident">app_runtime</span> <span class="op">=</span> <span class="ident">ApplicationRuntime</span> { <span class="ident">app</span> };
-        <span class="kw">let</span> <span class="ident">event_sender</span> <span class="op">=</span> <span class="ident">app_runtime</span>.<span class="ident">launch</span>();
+        <span class="kw">let </span>app_runtime = ApplicationRuntime { app };
+        <span class="kw">let </span>event_sender = app_runtime.launch();
 
-        <span class="self">Self</span> { <span class="ident">event_sender</span> }
+        <span class="self">Self </span>{ event_sender }
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;multiwindow&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">internal_open_window</span>(
-        <span class="ident">window_sender</span>: <span class="kw-2">&amp;</span><span class="ident">flume::Sender</span><span class="op">&lt;</span><span class="ident">RuntimeWindowConfig</span><span class="op">&gt;</span>,
-        <span class="ident">builder</span>: <span class="ident">WindowBuilder</span>,
-        <span class="ident">event_loop</span>: <span class="kw-2">&amp;</span><span class="ident">winit::event_loop::EventLoopWindowTarget</span><span class="op">&lt;</span><span class="ident">RuntimeRequest</span><span class="op">&gt;</span>,
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;multiwindow&quot;</span>)]
+    </span><span class="kw">fn </span>internal_open_window(
+        window_sender: <span class="kw-2">&amp;</span>flume::Sender&lt;RuntimeWindowConfig&gt;,
+        builder: WindowBuilder,
+        event_loop: <span class="kw-2">&amp;</span>winit::event_loop::EventLoopWindowTarget&lt;RuntimeRequest&gt;,
     ) {
-        <span class="kw">let</span> <span class="ident">builder</span>: <span class="ident">winit::window::WindowBuilder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">into</span>();
-        <span class="kw">let</span> <span class="ident">winit_window</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">build</span>(<span class="ident">event_loop</span>).<span class="ident">unwrap</span>();
-        <span class="ident">window_sender</span>
-            .<span class="ident">try_send</span>(<span class="ident">RuntimeWindowConfig::new</span>(<span class="kw-2">&amp;</span><span class="ident">winit_window</span>))
-            .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>builder: winit::window::WindowBuilder = builder.into();
+        <span class="kw">let </span>winit_window = builder.build(event_loop).unwrap();
+        window_sender
+            .try_send(RuntimeWindowConfig::new(<span class="kw-2">&amp;</span>winit_window))
+            .unwrap();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">windows</span> <span class="op">=</span> <span class="ident">WINIT_WINDOWS</span>.<span class="ident">write</span>();
-        <span class="ident">windows</span>.<span class="ident">insert</span>(<span class="ident">winit_window</span>.<span class="ident">id</span>(), <span class="ident">winit_window</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>windows = WINIT_WINDOWS.write();
+        windows.insert(winit_window.id(), winit_window);
     }
 
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">should_run_in_exclusive_mode</span>() -&gt; <span class="ident">bool</span> {
-        <span class="macro">cfg!</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>))
+    <span class="kw">const fn </span>should_run_in_exclusive_mode() -&gt; bool {
+        <span class="macro">cfg!</span>(any(target_os = <span class="string">&quot;android&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>))
     }
 
-    <span class="doccomment">/// Executes the runtime&#39;s event loop.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">initial_window</span>: <span class="ident">WindowBuilder</span>, <span class="ident">window</span>: <span class="ident">T</span>) -&gt; <span class="op">!</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Window</span> <span class="op">+</span> <span class="ident">Sized</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    <span class="doccomment">/// Executes the runtime&#39;s event loop.
+    </span><span class="kw">pub fn </span>run&lt;T&gt;(<span class="self">self</span>, initial_window: WindowBuilder, window: T) -&gt; !
+    <span class="kw">where
+        </span>T: Window + Sized + <span class="lifetime">&#39;static</span>,
     {
-        <span class="kw">let</span> <span class="ident">event_loop</span> <span class="op">=</span>
-            <span class="ident">winit::event_loop::EventLoopBuilder</span>::<span class="op">&lt;</span><span class="ident">RuntimeRequest</span><span class="op">&gt;</span><span class="ident">::with_user_event</span>().<span class="ident">build</span>();
-        <span class="kw">let</span> <span class="ident">initial_system_theme</span> <span class="op">=</span> <span class="ident">initial_window</span>.<span class="ident">initial_system_theme</span>.<span class="ident">unwrap_or</span>(<span class="ident">Theme::Light</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">initial_window</span>: <span class="ident">winit::window::WindowBuilder</span> <span class="op">=</span> <span class="ident">initial_window</span>.<span class="ident">into</span>();
+        <span class="kw">let </span>event_loop =
+            winit::event_loop::EventLoopBuilder::&lt;RuntimeRequest&gt;::with_user_event().build();
+        <span class="kw">let </span>initial_system_theme = initial_window.initial_system_theme.unwrap_or(Theme::Light);
+        <span class="kw">let </span><span class="kw-2">mut </span>initial_window: winit::window::WindowBuilder = initial_window.into();
 
-        <span class="kw">if</span> <span class="ident"><span class="self">Self</span>::should_run_in_exclusive_mode</span>() {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">exclusive_mode</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-            <span class="kw">for</span> <span class="ident">monitor</span> <span class="kw">in</span> <span class="ident">event_loop</span>.<span class="ident">available_monitors</span>() {
-                <span class="kw">for</span> <span class="ident">mode</span> <span class="kw">in</span> <span class="ident">monitor</span>.<span class="ident">video_modes</span>() {
-                    <span class="ident">exclusive_mode</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">mode</span>); <span class="comment">// TODO pick the best mode, not</span>
-                                                 <span class="comment">// the last</span>
-                }
+        <span class="kw">if </span><span class="self">Self</span>::should_run_in_exclusive_mode() {
+            <span class="kw">let </span><span class="kw-2">mut </span>exclusive_mode = <span class="prelude-val">None</span>;
+            <span class="kw">for </span>monitor <span class="kw">in </span>event_loop.available_monitors() {
+                <span class="kw">for </span>mode <span class="kw">in </span>monitor.video_modes() {
+                    exclusive_mode = <span class="prelude-val">Some</span>(mode); <span class="comment">// TODO pick the best mode, not
+                                                 // the last
+                </span>}
             }
 
-            <span class="ident">initial_window</span> <span class="op">=</span> <span class="ident">initial_window</span>.<span class="ident">with_fullscreen</span>(<span class="prelude-val">Some</span>(
-                <span class="ident">winit::window::Fullscreen::Exclusive</span>(<span class="ident">exclusive_mode</span>.<span class="ident">unwrap</span>()),
+            initial_window = initial_window.with_fullscreen(<span class="prelude-val">Some</span>(
+                winit::window::Fullscreen::Exclusive(exclusive_mode.unwrap()),
             ));
         }
-        <span class="kw">let</span> <span class="ident">initial_window</span> <span class="op">=</span> <span class="ident">initial_window</span>.<span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="ident">event_loop</span>).<span class="ident">unwrap</span>();
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
-        {
-            <span class="kw">use</span> <span class="ident">winit::platform::web::WindowExtWebSys</span>;
-            <span class="comment">// On wasm, append the canvas to the document body</span>
-            <span class="ident">::web_sys::window</span>()
-                .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">win</span><span class="op">|</span> <span class="ident">win</span>.<span class="ident">document</span>())
-                .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">doc</span><span class="op">|</span> <span class="ident">doc</span>.<span class="ident">body</span>())
-                .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">body</span><span class="op">|</span> {
-                    <span class="ident">body</span>.<span class="ident">append_child</span>(<span class="kw-2">&amp;</span><span class="ident">::web_sys::Element::from</span>(<span class="ident">initial_window</span>.<span class="ident">canvas</span>()))
-                        .<span class="ident">ok</span>()
+        <span class="kw">let </span>initial_window = initial_window.build(<span class="kw-2">&amp;</span>event_loop).unwrap();
+        <span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+        </span>{
+            <span class="kw">use </span>winit::platform::web::WindowExtWebSys;
+            <span class="comment">// On wasm, append the canvas to the document body
+            </span>::web_sys::window()
+                .and_then(|win| win.document())
+                .and_then(|doc| doc.body())
+                .and_then(|body| {
+                    body.append_child(<span class="kw-2">&amp;</span>::web_sys::Element::from(initial_window.canvas()))
+                        .ok()
                 })
-                .<span class="ident">expect</span>(<span class="string">&quot;couldn&#39;t append canvas to document body&quot;</span>);
+                .expect(<span class="string">&quot;couldn&#39;t append canvas to document body&quot;</span>);
         }
-        <span class="kw">let</span> (<span class="ident">window_sender</span>, <span class="ident">window_receiver</span>) <span class="op">=</span> <span class="ident">flume::bounded</span>(<span class="number">1</span>);
-        <span class="ident">window_sender</span>
-            .<span class="ident">send</span>(<span class="ident">RuntimeWindowConfig::new</span>(<span class="kw-2">&amp;</span><span class="ident">initial_window</span>))
-            .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>(window_sender, window_receiver) = flume::bounded(<span class="number">1</span>);
+        window_sender
+            .send(RuntimeWindowConfig::new(<span class="kw-2">&amp;</span>initial_window))
+            .unwrap();
 
-        <span class="ident">RuntimeWindow::open</span>(<span class="kw-2">&amp;</span><span class="ident">window_receiver</span>, <span class="ident">initial_system_theme</span>, <span class="ident">window</span>);
-
-        {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">windows</span> <span class="op">=</span> <span class="ident">WINIT_WINDOWS</span>.<span class="ident">write</span>();
-            <span class="ident">windows</span>.<span class="ident">insert</span>(<span class="ident">initial_window</span>.<span class="ident">id</span>(), <span class="ident">initial_window</span>);
-        }
+        RuntimeWindow::open(<span class="kw-2">&amp;</span>window_receiver, initial_system_theme, window);
 
         {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">global_sender</span> <span class="op">=</span> <span class="ident">GLOBAL_RUNTIME_SENDER</span>.<span class="ident">lock</span>();
-            <span class="macro">assert!</span>(<span class="ident">global_sender</span>.<span class="ident">is_none</span>());
-            <span class="kw-2">*</span><span class="ident">global_sender</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">event_loop</span>.<span class="ident">create_proxy</span>());
+            <span class="kw">let </span><span class="kw-2">mut </span>windows = WINIT_WINDOWS.write();
+            windows.insert(initial_window.id(), initial_window);
         }
 
-        <span class="comment">// Install the global event handler, and also ensure we aren&#39;t trying to</span>
-        <span class="comment">// initialize two runtimes This is necessary because EventLoop::run requires the</span>
-        <span class="comment">// function/closure passed to have a `static lifetime for valid reasons. Every</span>
-        <span class="comment">// approach at using only local variables I could not solve, so we wrap it in a</span>
-        <span class="comment">// mutex. This abstraction also wraps it in dynamic dispatch, because we can&#39;t</span>
-        <span class="comment">// have a generic-type static variable.</span>
         {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">event_handler</span> <span class="op">=</span> <span class="ident">GLOBAL_EVENT_HANDLER</span>.<span class="ident">lock</span>();
-            <span class="macro">assert!</span>(<span class="ident">event_handler</span>.<span class="ident">is_none</span>());
-            <span class="kw-2">*</span><span class="ident">event_handler</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Box::new</span>(<span class="self">self</span>));
+            <span class="kw">let </span><span class="kw-2">mut </span>global_sender = GLOBAL_RUNTIME_SENDER.lock();
+            <span class="macro">assert!</span>(global_sender.is_none());
+            <span class="kw-2">*</span>global_sender = <span class="prelude-val">Some</span>(event_loop.create_proxy());
         }
-        <span class="ident">event_loop</span>.<span class="ident">run</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">event</span>, <span class="ident">event_loop</span>, <span class="ident">control_flow</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">event_handler_guard</span> <span class="op">=</span> <span class="ident">GLOBAL_EVENT_HANDLER</span>.<span class="ident">lock</span>();
-            <span class="kw">let</span> <span class="ident">event_handler</span> <span class="op">=</span> <span class="ident">event_handler_guard</span>
-                .<span class="ident">as_mut</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;No event handler installed&quot;</span>);
-            <span class="ident">event_handler</span>
-                .<span class="ident">as_mut</span>()
-                .<span class="ident">process_event</span>(<span class="ident">event_loop</span>, <span class="ident">event</span>, <span class="ident">control_flow</span>);
+
+        <span class="comment">// Install the global event handler, and also ensure we aren&#39;t trying to
+        // initialize two runtimes This is necessary because EventLoop::run requires the
+        // function/closure passed to have a `static lifetime for valid reasons. Every
+        // approach at using only local variables I could not solve, so we wrap it in a
+        // mutex. This abstraction also wraps it in dynamic dispatch, because we can&#39;t
+        // have a generic-type static variable.
+        </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>event_handler = GLOBAL_EVENT_HANDLER.lock();
+            <span class="macro">assert!</span>(event_handler.is_none());
+            <span class="kw-2">*</span>event_handler = <span class="prelude-val">Some</span>(Box::new(<span class="self">self</span>));
+        }
+        event_loop.run(<span class="kw">move </span>|event, event_loop, control_flow| {
+            <span class="kw">let </span><span class="kw-2">mut </span>event_handler_guard = GLOBAL_EVENT_HANDLER.lock();
+            <span class="kw">let </span>event_handler = event_handler_guard
+                .as_mut()
+                .expect(<span class="string">&quot;No event handler installed&quot;</span>);
+            event_handler
+                .as_mut()
+                .process_event(event_loop, event, control_flow);
         });
     }
 
-    <span class="doccomment">/// Opens a [`Window`]. Requires feature `multiwindow`.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;multiwindow&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open_window</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">builder</span>: <span class="ident">WindowBuilder</span>, <span class="ident">window</span>: <span class="ident">T</span>)
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Window</span> <span class="op">+</span> <span class="ident">Sized</span>,
+    <span class="doccomment">/// Opens a [`Window`]. Requires feature `multiwindow`.
+    </span><span class="attribute">#[cfg(feature = <span class="string">&quot;multiwindow&quot;</span>)]
+    </span><span class="kw">pub fn </span>open_window&lt;T&gt;(builder: WindowBuilder, window: T)
+    <span class="kw">where
+        </span>T: Window + Sized,
     {
-        <span class="kw">let</span> (<span class="ident">window_sender</span>, <span class="ident">window_receiver</span>) <span class="op">=</span> <span class="ident">flume::bounded</span>(<span class="number">1</span>);
-        <span class="kw">let</span> <span class="ident">initial_system_theme</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">initial_system_theme</span>.<span class="ident">unwrap_or</span>(<span class="ident">Theme::Light</span>);
-        <span class="ident">RuntimeRequest::OpenWindow</span> {
-            <span class="ident">builder</span>,
-            <span class="ident">window_sender</span>,
+        <span class="kw">let </span>(window_sender, window_receiver) = flume::bounded(<span class="number">1</span>);
+        <span class="kw">let </span>initial_system_theme = builder.initial_system_theme.unwrap_or(Theme::Light);
+        RuntimeRequest::OpenWindow {
+            builder,
+            window_sender,
         }
-        .<span class="ident">send</span>();
+        .send();
 
-        <span class="ident">RuntimeWindow::open</span>(<span class="kw-2">&amp;</span><span class="ident">window_receiver</span>, <span class="ident">initial_system_theme</span>, <span class="ident">window</span>);
+        RuntimeWindow::open(<span class="kw-2">&amp;</span>window_receiver, initial_system_theme, window);
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">try_process_window_events</span>(<span class="ident">event</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Event</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">RuntimeRequest</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">windows</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">WINDOWS</span>.<span class="ident">try_write</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">guard</span>) =&gt; <span class="ident">guard</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="bool-val">false</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_process_window_events(event: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Event&lt;<span class="lifetime">&#39;_</span>, RuntimeRequest&gt;&gt;) -&gt; bool {
+        <span class="kw">let </span><span class="kw-2">mut </span>windows = <span class="kw">match </span>WINDOWS.try_write() {
+            <span class="prelude-val">Some</span>(guard) =&gt; guard,
+            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="bool-val">false</span>,
         };
 
-        <span class="kw">match</span> <span class="ident">event</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">Event::WindowEvent</span> { <span class="ident">window_id</span>, <span class="ident">event</span> }) =&gt; {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">windows</span>.<span class="ident">get_mut</span>(<span class="ident">window_id</span>) {
-                    <span class="ident">window</span>.<span class="ident">process_event</span>(<span class="ident">event</span>);
+        <span class="kw">match </span>event {
+            <span class="prelude-val">Some</span>(Event::WindowEvent { window_id, event }) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(window) = windows.get_mut(window_id) {
+                    window.process_event(event);
                 }
             }
-            <span class="prelude-val">Some</span>(<span class="ident">Event::RedrawRequested</span>(<span class="ident">window_id</span>)) =&gt; {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">windows</span>.<span class="ident">get_mut</span>(<span class="ident">window_id</span>) {
-                    <span class="ident">window</span>.<span class="ident">request_redraw</span>();
+            <span class="prelude-val">Some</span>(Event::RedrawRequested(window_id)) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(window) = windows.get_mut(window_id) {
+                    window.request_redraw();
                 }
             }
-            <span class="kw">_</span> =&gt; {}
+            <span class="kw">_ </span>=&gt; {}
         }
 
         {
-            <span class="kw">for</span> <span class="ident">window</span> <span class="kw">in</span> <span class="ident">windows</span>.<span class="ident">values_mut</span>() {
-                <span class="ident">window</span>.<span class="ident">receive_messages</span>();
+            <span class="kw">for </span>window <span class="kw">in </span>windows.values_mut() {
+                window.receive_messages();
             }
         }
 
-        <span class="kw">if</span> <span class="ident">opened_first_window</span>() {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">winit_windows</span> <span class="op">=</span> <span class="ident">WINIT_WINDOWS</span>.<span class="ident">write</span>();
-            <span class="ident">windows</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="ident">id</span>, <span class="ident">w</span><span class="op">|</span> {
-                <span class="kw">if</span> <span class="ident">w</span>.<span class="ident">keep_running</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>) {
-                    <span class="bool-val">true</span>
-                } <span class="kw">else</span> {
-                    <span class="ident">winit_windows</span>.<span class="ident">remove</span>(<span class="ident">id</span>);
-                    <span class="bool-val">false</span>
-                }
+        <span class="kw">if </span>opened_first_window() {
+            <span class="kw">let </span><span class="kw-2">mut </span>winit_windows = WINIT_WINDOWS.write();
+            windows.retain(|id, w| {
+                <span class="kw">if </span>w.keep_running.load(Ordering::SeqCst) {
+                    <span class="bool-val">true
+                </span>} <span class="kw">else </span>{
+                    winit_windows.remove(id);
+                    <span class="bool-val">false
+                </span>}
             });
         }
 
-        <span class="bool-val">true</span>
-    }
+        <span class="bool-val">true
+    </span>}
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">winit_window</span>(
-        <span class="ident">id</span>: <span class="ident">WindowId</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MappedRwLockReadGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">winit::window::Window</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">windows</span> <span class="op">=</span> <span class="ident">WINIT_WINDOWS</span>.<span class="ident">read</span>();
-        <span class="ident">RwLockReadGuard::try_map</span>(<span class="ident">windows</span>, <span class="op">|</span><span class="ident">windows</span><span class="op">|</span> <span class="ident">windows</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)).<span class="ident">ok</span>()
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>winit_window(
+        id: WindowId,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;MappedRwLockReadGuard&lt;<span class="lifetime">&#39;static</span>, winit::window::Window&gt;&gt; {
+        <span class="kw">let </span>windows = WINIT_WINDOWS.read();
+        RwLockReadGuard::try_map(windows, |windows| windows.get(<span class="kw-2">&amp;</span>id)).ok()
     }
 }
 
-<span class="kw">fn</span> <span class="ident">initialize_async_runtime</span>() {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;smol-rt&quot;</span>)]</span>
-    <span class="ident">smol::initialize</span>();
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tokio-rt&quot;</span>, <span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;smol-rt&quot;</span>)))]</span>
-    <span class="ident">tokio::initialize</span>();
+<span class="kw">fn </span>initialize_async_runtime() {
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;smol-rt&quot;</span>)]
+    </span>smol::initialize();
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;tokio-rt&quot;</span>, not(feature = <span class="string">&quot;smol-rt&quot;</span>)))]
+    </span>tokio::initialize();
 }
 
-<span class="macro">lazy_static!</span> {
-    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">WINDOWS</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">WindowId</span>, <span class="ident">RuntimeWindow</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">RwLock::new</span>(<span class="ident">HashMap::new</span>());
+<span class="macro">lazy_static! </span>{
+    <span class="kw">pub static </span><span class="kw-2">ref </span>WINDOWS: RwLock&lt;HashMap&lt;WindowId, RuntimeWindow&gt;&gt; = RwLock::new(HashMap::new());
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="kludgine_app" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="kludgine_app" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

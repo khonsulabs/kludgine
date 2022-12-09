@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/shape/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_core/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/shape/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../kludgine_core/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -242,249 +242,249 @@
 <span id="242">242</span>
 <span id="243">243</span>
 <span id="244">244</span>
-</pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">batch</span>;
-<span class="kw">mod</span> <span class="ident">circle</span>;
-<span class="kw">mod</span> <span class="ident">fill</span>;
-<span class="kw">mod</span> <span class="ident">geometry</span>;
-<span class="kw">mod</span> <span class="ident">path</span>;
-<span class="kw">mod</span> <span class="ident">stroke</span>;
+</pre><pre class="rust"><code><span class="kw">mod </span>batch;
+<span class="kw">mod </span>circle;
+<span class="kw">mod </span>fill;
+<span class="kw">mod </span>geometry;
+<span class="kw">mod </span>path;
+<span class="kw">mod </span>stroke;
 
-<span class="kw">use</span> <span class="ident">circle::Circle</span>;
-<span class="kw">use</span> <span class="ident">easygpu_lyon::lyon_tessellation</span>;
-<span class="kw">use</span> <span class="ident">figures</span>::{<span class="ident">Displayable</span>, <span class="ident">Figure</span>, <span class="ident">Points</span>, <span class="ident">Rectlike</span>, <span class="ident">Scale</span>};
-<span class="kw">use</span> <span class="ident">geometry::ShapeGeometry</span>;
+<span class="kw">use </span>circle::Circle;
+<span class="kw">use </span>easygpu_lyon::lyon_tessellation;
+<span class="kw">use </span>figures::{Displayable, Figure, Points, Rectlike, Scale};
+<span class="kw">use </span>geometry::ShapeGeometry;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::{<span class="ident">batch</span>::<span class="kw-2">*</span>, <span class="ident">fill</span>::<span class="kw-2">*</span>, <span class="ident">path</span>::<span class="kw-2">*</span>, <span class="ident">stroke</span>::<span class="kw-2">*</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">math</span>::{<span class="ident">Pixels</span>, <span class="ident">Point</span>, <span class="ident">Rect</span>, <span class="ident">Scaled</span>},
-    <span class="ident">scene</span>::{<span class="ident">Element</span>, <span class="ident">Target</span>},
+<span class="kw">pub use </span><span class="self">self</span>::{batch::<span class="kw-2">*</span>, fill::<span class="kw-2">*</span>, path::<span class="kw-2">*</span>, stroke::<span class="kw-2">*</span>};
+<span class="kw">use crate</span>::{
+    math::{Pixels, Point, Rect, Scaled},
+    scene::{Element, Target},
 };
 
-<span class="doccomment">/// A 2d shape.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
-    <span class="ident">geometry</span>: <span class="ident">ShapeGeometry</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span>,
-    <span class="ident">stroke</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stroke</span><span class="op">&gt;</span>,
-    <span class="ident">fill</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Fill</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A 2d shape.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>Shape&lt;Unit&gt; {
+    geometry: ShapeGeometry&lt;Unit&gt;,
+    stroke: <span class="prelude-ty">Option</span>&lt;Stroke&gt;,
+    fill: <span class="prelude-ty">Option</span>&lt;Fill&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">geometry</span>: <span class="ident">ShapeGeometry::Empty</span>,
-            <span class="ident">stroke</span>: <span class="prelude-val">None</span>,
-            <span class="ident">fill</span>: <span class="prelude-val">None</span>,
+<span class="kw">impl</span>&lt;Unit&gt; Default <span class="kw">for </span>Shape&lt;Unit&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            geometry: ShapeGeometry::Empty,
+            stroke: <span class="prelude-val">None</span>,
+            fill: <span class="prelude-val">None</span>,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns a rectangle.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rect</span>(<span class="ident">rect</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Rect</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">rect</span> <span class="op">=</span> <span class="ident">rect</span>.<span class="ident">into</span>().<span class="ident">as_extents</span>();
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">PathBuilder::new</span>(<span class="ident">Point::from_figures</span>(<span class="ident">rect</span>.<span class="ident">origin</span>.<span class="ident">x</span>(), <span class="ident">rect</span>.<span class="ident">origin</span>.<span class="ident">y</span>()))
-            .<span class="ident">line_to</span>(<span class="ident">Point::from_figures</span>(<span class="ident">rect</span>.<span class="ident">extent</span>.<span class="ident">x</span>(), <span class="ident">rect</span>.<span class="ident">origin</span>.<span class="ident">y</span>()))
-            .<span class="ident">line_to</span>(<span class="ident">Point::from_figures</span>(<span class="ident">rect</span>.<span class="ident">extent</span>.<span class="ident">x</span>(), <span class="ident">rect</span>.<span class="ident">extent</span>.<span class="ident">y</span>()))
-            .<span class="ident">line_to</span>(<span class="ident">Point::from_figures</span>(<span class="ident">rect</span>.<span class="ident">origin</span>.<span class="ident">x</span>(), <span class="ident">rect</span>.<span class="ident">extent</span>.<span class="ident">y</span>()))
-            .<span class="ident">close</span>()
-            .<span class="ident">build</span>();
+<span class="kw">impl</span>&lt;Unit&gt; Shape&lt;Unit&gt; {
+    <span class="doccomment">/// Returns a rectangle.
+    </span><span class="kw">pub fn </span>rect(rect: <span class="kw">impl </span>Into&lt;Rect&lt;f32, Unit&gt;&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>rect = rect.into().as_extents();
+        <span class="kw">let </span>path = PathBuilder::new(Point::from_figures(rect.origin.x(), rect.origin.y()))
+            .line_to(Point::from_figures(rect.extent.x(), rect.origin.y()))
+            .line_to(Point::from_figures(rect.extent.x(), rect.extent.y()))
+            .line_to(Point::from_figures(rect.origin.x(), rect.extent.y()))
+            .close()
+            .build();
 
-        <span class="self">Self</span> {
-            <span class="ident">geometry</span>: <span class="ident">ShapeGeometry::Path</span>(<span class="ident">path</span>),
-            <span class="ident">stroke</span>: <span class="prelude-val">None</span>,
-            <span class="ident">fill</span>: <span class="prelude-val">None</span>,
+        <span class="self">Self </span>{
+            geometry: ShapeGeometry::Path(path),
+            stroke: <span class="prelude-val">None</span>,
+            fill: <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// Returns a circle with `center` and `radius`.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">circle</span>(<span class="ident">center</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span>, <span class="ident">radius</span>: <span class="ident">Figure</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">geometry</span>: <span class="ident">ShapeGeometry::Circle</span>(<span class="ident">Circle</span> { <span class="ident">center</span>, <span class="ident">radius</span> }),
-            <span class="ident">stroke</span>: <span class="prelude-val">None</span>,
-            <span class="ident">fill</span>: <span class="prelude-val">None</span>,
+    <span class="doccomment">/// Returns a circle with `center` and `radius`.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>circle(center: Point&lt;f32, Unit&gt;, radius: Figure&lt;f32, Unit&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            geometry: ShapeGeometry::Circle(Circle { center, radius }),
+            stroke: <span class="prelude-val">None</span>,
+            fill: <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// Returns a closed polygon created with `points`.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">polygon</span>(<span class="ident">points</span>: <span class="kw">impl</span> <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">points</span> <span class="op">=</span> <span class="ident">points</span>.<span class="ident">into_iter</span>();
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">start</span>) <span class="op">=</span> <span class="ident">points</span>.<span class="ident">next</span>() {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">PathBuilder::new</span>(<span class="ident">start</span>);
-            <span class="kw">for</span> <span class="ident">point</span> <span class="kw">in</span> <span class="ident">points</span> {
-                <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">line_to</span>(<span class="ident">point</span>);
+    <span class="doccomment">/// Returns a closed polygon created with `points`.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>polygon(points: <span class="kw">impl </span>IntoIterator&lt;Item = Point&lt;f32, Unit&gt;&gt;) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>points = points.into_iter();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(start) = points.next() {
+            <span class="kw">let </span><span class="kw-2">mut </span>builder = PathBuilder::new(start);
+            <span class="kw">for </span>point <span class="kw">in </span>points {
+                builder = builder.line_to(point);
             }
 
-            <span class="self">Self</span> {
-                <span class="ident">geometry</span>: <span class="ident">ShapeGeometry::Path</span>(<span class="ident">builder</span>.<span class="ident">close</span>().<span class="ident">build</span>()),
-                <span class="ident">stroke</span>: <span class="prelude-val">None</span>,
-                <span class="ident">fill</span>: <span class="prelude-val">None</span>,
+            <span class="self">Self </span>{
+                geometry: ShapeGeometry::Path(builder.close().build()),
+                stroke: <span class="prelude-val">None</span>,
+                fill: <span class="prelude-val">None</span>,
             }
-        } <span class="kw">else</span> {
-            <span class="ident"><span class="self">Self</span>::default</span>()
+        } <span class="kw">else </span>{
+            <span class="self">Self</span>::default()
         }
     }
 
-    <span class="doccomment">/// Builder-style function. Set `fill` and returns self.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">fill</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">fill</span>: <span class="ident">Fill</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">fill</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">fill</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Builder-style function. Set `fill` and returns self.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>fill(<span class="kw-2">mut </span><span class="self">self</span>, fill: Fill) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.fill = <span class="prelude-val">Some</span>(fill);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Builder-style function. Set `stroke` and returns self.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">stroke</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">stroke</span>: <span class="ident">Stroke</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">stroke</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">stroke</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Builder-style function. Set `stroke` and returns self.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>stroke(<span class="kw-2">mut </span><span class="self">self</span>, stroke: Stroke) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.stroke = <span class="prelude-val">Some</span>(stroke);
+        <span class="self">self
+    </span>}
 
-    <span class="doccomment">/// Returns the shape with the geometry casted to the unit provided. This</span>
-    <span class="doccomment">/// does not change the underlying shape data at all.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cast_unit</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span>(<span class="self">self</span>) -&gt; <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span> {
-        <span class="ident">Shape</span> {
-            <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">cast_unit</span>(),
-            <span class="ident">fill</span>: <span class="self">self</span>.<span class="ident">fill</span>,
-            <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>,
+    <span class="doccomment">/// Returns the shape with the geometry casted to the unit provided. This
+    /// does not change the underlying shape data at all.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>cast_unit&lt;U&gt;(<span class="self">self</span>) -&gt; Shape&lt;U&gt; {
+        Shape {
+            geometry: <span class="self">self</span>.geometry.cast_unit(),
+            fill: <span class="self">self</span>.fill,
+            stroke: <span class="self">self</span>.stroke,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span>
-<span class="kw">where</span>
-    <span class="self">Self</span>: <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="kw">impl</span>&lt;Unit&gt; Shape&lt;Unit&gt;
+<span class="kw">where
+    </span><span class="self">Self</span>: Displayable&lt;f32, Pixels = Shape&lt;Pixels&gt;&gt;,
 {
-    <span class="doccomment">/// Renders the shape within `scene`. Uses the coordinates in the shape</span>
-    <span class="doccomment">/// without translation.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">render</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>) {
-        <span class="self">self</span>.<span class="ident">render_at</span>(<span class="kw-2">&amp;</span><span class="ident">Point</span>::<span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="ident">::default</span>(), <span class="ident">scene</span>);
+    <span class="doccomment">/// Renders the shape within `scene`. Uses the coordinates in the shape
+    /// without translation.
+    </span><span class="kw">pub fn </span>render(<span class="kw-2">&amp;</span><span class="self">self</span>, scene: <span class="kw-2">&amp;</span>Target) {
+        <span class="self">self</span>.render_at(<span class="kw-2">&amp;</span>Point::&lt;f32, Pixels&gt;::default(), scene);
     }
 
-    <span class="doccomment">/// Renders the shape at `location` within `scene`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">render_at</span>(
+    <span class="doccomment">/// Renders the shape at `location` within `scene`.
+    </span><span class="kw">pub fn </span>render_at(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">location</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>,
+        location: <span class="kw-2">&amp;</span><span class="kw">impl </span>Displayable&lt;f32, Pixels = Point&lt;f32, Pixels&gt;&gt;,
+        scene: <span class="kw-2">&amp;</span>Target,
     ) {
-        <span class="kw">let</span> <span class="ident">location</span> <span class="op">=</span> <span class="ident">location</span>.<span class="ident">to_pixels</span>(<span class="ident">scene</span>.<span class="ident">scale</span>());
-        <span class="kw">let</span> <span class="ident">pixel_shape</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">to_pixels</span>(<span class="ident">scene</span>.<span class="ident">scale</span>());
-        <span class="kw">let</span> <span class="ident">translated</span> <span class="op">=</span> <span class="ident">pixel_shape</span>.<span class="ident">convert_from_user_to_device</span>(<span class="ident">location</span>, <span class="ident">scene</span>);
-        <span class="ident">scene</span>.<span class="ident">push_element</span>(<span class="ident">Element::Shape</span>(<span class="ident">translated</span>));
+        <span class="kw">let </span>location = location.to_pixels(scene.scale());
+        <span class="kw">let </span>pixel_shape = <span class="self">self</span>.to_pixels(scene.scale());
+        <span class="kw">let </span>translated = pixel_shape.convert_from_user_to_device(location, scene);
+        scene.push_element(Element::Shape(translated));
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">convert_from_user_to_device</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>, <span class="ident">scene</span>: <span class="kw-2">&amp;</span><span class="ident">Target</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">geometry</span>: <span class="self">self</span>
-                .<span class="ident">geometry</span>
-                .<span class="ident">translate_and_convert_to_device</span>(<span class="ident">location</span>, <span class="ident">scene</span>),
-            <span class="ident">fill</span>: <span class="self">self</span>.<span class="ident">fill</span>.<span class="ident">clone</span>(),
-            <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
-        }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">build</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">builder</span>: <span class="kw-2">&amp;mut</span> <span class="ident">easygpu_lyon::ShapeBuilder</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">build</span>(<span class="ident">builder</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stroke</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">fill</span>)
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span> <span class="ident">std::ops::Mul</span><span class="op">&lt;</span><span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Src</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Dst</span><span class="op">&gt;</span>;
-
-    <span class="kw">fn</span> <span class="ident">mul</span>(<span class="self">self</span>, <span class="ident">scale</span>: <span class="ident">Scale</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Src</span>, <span class="ident">Dst</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="ident"><span class="self">Self</span>::Output</span> {
-            <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span> <span class="op">*</span> <span class="ident">scale</span>,
-            <span class="ident">fill</span>: <span class="self">self</span>.<span class="ident">fill</span>,
-            <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>,
+<span class="kw">impl </span>Shape&lt;Pixels&gt; {
+    <span class="kw">fn </span>convert_from_user_to_device(<span class="kw-2">&amp;</span><span class="self">self</span>, location: Point&lt;f32, Pixels&gt;, scene: <span class="kw-2">&amp;</span>Target) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            geometry: <span class="self">self
+                </span>.geometry
+                .translate_and_convert_to_device(location, scene),
+            fill: <span class="self">self</span>.fill.clone(),
+            stroke: <span class="self">self</span>.stroke.clone(),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Pixels</span> <span class="op">=</span> <span class="self">Self</span>;
-    <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Points</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>;
-
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Pixels</span> {
-        <span class="self">self</span>.<span class="ident">clone</span>()
+<span class="kw">impl </span>Shape&lt;Pixels&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>build(<span class="kw-2">&amp;</span><span class="self">self</span>, builder: <span class="kw-2">&amp;mut </span>easygpu_lyon::ShapeBuilder) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
+        <span class="self">self</span>.geometry.build(builder, <span class="kw-2">&amp;</span><span class="self">self</span>.stroke, <span class="kw-2">&amp;</span><span class="self">self</span>.fill)
     }
+}
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Points</span> {
-        <span class="ident">Shape</span> {
-            <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
-            <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
-            <span class="ident">fill</span>: <span class="self">self</span>.<span class="ident">fill</span>.<span class="ident">clone</span>(),
-        }
-    }
+<span class="kw">impl</span>&lt;Src, Dst&gt; std::ops::Mul&lt;Scale&lt;f32, Src, Dst&gt;&gt; <span class="kw">for </span>Shape&lt;Src&gt; {
+    <span class="kw">type </span>Output = Shape&lt;Dst&gt;;
 
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Scaled</span> {
-        <span class="ident">Shape</span> {
-            <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
-            <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
-            <span class="ident">fill</span>: <span class="self">self</span>.<span class="ident">fill</span>.<span class="ident">clone</span>(),
+    <span class="kw">fn </span>mul(<span class="self">self</span>, scale: Scale&lt;f32, Src, Dst&gt;) -&gt; <span class="self">Self</span>::Output {
+        <span class="self">Self</span>::Output {
+            geometry: <span class="self">self</span>.geometry * scale,
+            fill: <span class="self">self</span>.fill,
+            stroke: <span class="self">self</span>.stroke,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Points</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="self">Self</span>;
-    <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>Displayable&lt;f32&gt; <span class="kw">for </span>Shape&lt;Pixels&gt; {
+    <span class="kw">type </span>Pixels = <span class="self">Self</span>;
+    <span class="kw">type </span>Points = Shape&lt;Points&gt;;
+    <span class="kw">type </span>Scaled = Shape&lt;Scaled&gt;;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Pixels</span> {
-        <span class="ident">Shape</span> {
-            <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
-            <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
-            <span class="ident">fill</span>: <span class="self">self</span>.<span class="ident">fill</span>.<span class="ident">clone</span>(),
+    <span class="kw">fn </span>to_pixels(<span class="kw-2">&amp;</span><span class="self">self</span>, _scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Pixels {
+        <span class="self">self</span>.clone()
+    }
+
+    <span class="kw">fn </span>to_points(<span class="kw-2">&amp;</span><span class="self">self</span>, scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Points {
+        Shape {
+            geometry: <span class="self">self</span>.geometry.to_points(scale),
+            stroke: <span class="self">self</span>.stroke.clone(),
+            fill: <span class="self">self</span>.fill.clone(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Points</span> {
-        <span class="self">self</span>.<span class="ident">clone</span>()
-    }
-
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Scaled</span> {
-        <span class="ident">Shape</span> {
-            <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>),
-            <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
-            <span class="ident">fill</span>: <span class="self">self</span>.<span class="ident">fill</span>.<span class="ident">clone</span>(),
+    <span class="kw">fn </span>to_scaled(<span class="kw-2">&amp;</span><span class="self">self</span>, scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Scaled {
+        Shape {
+            geometry: <span class="self">self</span>.geometry.to_scaled(scale),
+            stroke: <span class="self">self</span>.stroke.clone(),
+            fill: <span class="self">self</span>.fill.clone(),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="ident">Shape</span><span class="op">&lt;</span><span class="ident">Points</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="self">Self</span>;
+<span class="kw">impl </span>Displayable&lt;f32&gt; <span class="kw">for </span>Shape&lt;Points&gt; {
+    <span class="kw">type </span>Pixels = Shape&lt;Pixels&gt;;
+    <span class="kw">type </span>Points = <span class="self">Self</span>;
+    <span class="kw">type </span>Scaled = Shape&lt;Scaled&gt;;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Pixels</span> {
-        <span class="ident">Shape</span> {
-            <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>),
-            <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
-            <span class="ident">fill</span>: <span class="self">self</span>.<span class="ident">fill</span>.<span class="ident">clone</span>(),
+    <span class="kw">fn </span>to_pixels(<span class="kw-2">&amp;</span><span class="self">self</span>, scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Pixels {
+        Shape {
+            geometry: <span class="self">self</span>.geometry.to_pixels(scale),
+            stroke: <span class="self">self</span>.stroke.clone(),
+            fill: <span class="self">self</span>.fill.clone(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Points</span> {
-        <span class="ident">Shape</span> {
-            <span class="ident">geometry</span>: <span class="self">self</span>.<span class="ident">geometry</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>),
-            <span class="ident">stroke</span>: <span class="self">self</span>.<span class="ident">stroke</span>.<span class="ident">clone</span>(),
-            <span class="ident">fill</span>: <span class="self">self</span>.<span class="ident">fill</span>.<span class="ident">clone</span>(),
-        }
+    <span class="kw">fn </span>to_points(<span class="kw-2">&amp;</span><span class="self">self</span>, _scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Points {
+        <span class="self">self</span>.clone()
     }
 
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Scaled</span> {
-        <span class="self">self</span>.<span class="ident">clone</span>()
+    <span class="kw">fn </span>to_scaled(<span class="kw-2">&amp;</span><span class="self">self</span>, scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Scaled {
+        Shape {
+            geometry: <span class="self">self</span>.geometry.to_scaled(scale),
+            stroke: <span class="self">self</span>.stroke.clone(),
+            fill: <span class="self">self</span>.fill.clone(),
+        }
     }
 }
 
-<span class="kw">const</span> <span class="kw">fn</span> <span class="ident">lyon_point</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">pt</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="ident">lyon_tessellation::math::Point</span> {
-    <span class="ident">lyon_tessellation::math::Point::new</span>(<span class="ident">pt</span>.<span class="ident">x</span>, <span class="ident">pt</span>.<span class="ident">y</span>)
+<span class="kw">impl </span>Displayable&lt;f32&gt; <span class="kw">for </span>Shape&lt;Scaled&gt; {
+    <span class="kw">type </span>Pixels = Shape&lt;Pixels&gt;;
+    <span class="kw">type </span>Points = Shape&lt;Points&gt;;
+    <span class="kw">type </span>Scaled = <span class="self">Self</span>;
+
+    <span class="kw">fn </span>to_pixels(<span class="kw-2">&amp;</span><span class="self">self</span>, scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Pixels {
+        Shape {
+            geometry: <span class="self">self</span>.geometry.to_pixels(scale),
+            stroke: <span class="self">self</span>.stroke.clone(),
+            fill: <span class="self">self</span>.fill.clone(),
+        }
+    }
+
+    <span class="kw">fn </span>to_points(<span class="kw-2">&amp;</span><span class="self">self</span>, scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Points {
+        Shape {
+            geometry: <span class="self">self</span>.geometry.to_points(scale),
+            stroke: <span class="self">self</span>.stroke.clone(),
+            fill: <span class="self">self</span>.fill.clone(),
+        }
+    }
+
+    <span class="kw">fn </span>to_scaled(<span class="kw-2">&amp;</span><span class="self">self</span>, _scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Scaled {
+        <span class="self">self</span>.clone()
+    }
+}
+
+<span class="kw">const fn </span>lyon_point&lt;T&gt;(pt: Point&lt;f32, T&gt;) -&gt; lyon_tessellation::math::Point {
+    lyon_tessellation::math::Point::new(pt.x, pt.y)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

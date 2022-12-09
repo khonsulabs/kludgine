@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/sprite.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>sprite.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../kludgine_core/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `core/src/sprite.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>sprite.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../kludgine_core/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../kludgine_core/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -652,659 +652,659 @@
 <span id="652">652</span>
 <span id="653">653</span>
 <span id="654">654</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">figures</span>::{<span class="ident">Displayable</span>, <span class="ident">Pixels</span>, <span class="ident">Points</span>, <span class="ident">Scaled</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>figures::{Displayable, Pixels, Points, Scaled};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">math</span>::{<span class="ident">Angle</span>, <span class="ident">ExtentsRect</span>, <span class="ident">Point</span>, <span class="ident">Rect</span>, <span class="ident">Size</span>},
-    <span class="ident">texture::Texture</span>,
-    <span class="ident">Error</span>,
+<span class="kw">use crate</span>::{
+    math::{Angle, ExtentsRect, Point, Rect, Size},
+    texture::Texture,
+    Error,
 };
-<span class="kw">mod</span> <span class="ident">batch</span>;
-<span class="kw">mod</span> <span class="ident">collection</span>;
-<span class="kw">mod</span> <span class="ident">gpu_batch</span>;
-<span class="kw">mod</span> <span class="ident">pipeline</span>;
-<span class="kw">mod</span> <span class="ident">sheet</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="self">self</span>::{
-    <span class="ident">batch::Batch</span>,
-    <span class="ident">gpu_batch</span>::{<span class="ident">BatchBuffers</span>, <span class="ident">GpuBatch</span>},
-    <span class="ident">pipeline::Pipeline</span>,
+<span class="kw">mod </span>batch;
+<span class="kw">mod </span>collection;
+<span class="kw">mod </span>gpu_batch;
+<span class="kw">mod </span>pipeline;
+<span class="kw">mod </span>sheet;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="self">self</span>::{
+    batch::Batch,
+    gpu_batch::{BatchBuffers, GpuBatch},
+    pipeline::Pipeline,
 };
 
-<span class="kw">mod</span> <span class="ident">source</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">iter::IntoIterator</span>, <span class="ident">sync::Arc</span>, <span class="ident">time::Duration</span>};
+<span class="kw">mod </span>source;
+<span class="kw">use </span>std::{collections::HashMap, iter::IntoIterator, sync::Arc, time::Duration};
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::{<span class="ident">collection</span>::<span class="kw-2">*</span>, <span class="ident">pipeline::VertexShaderSource</span>, <span class="ident">sheet</span>::<span class="kw-2">*</span>, <span class="ident">source</span>::<span class="kw-2">*</span>};
+<span class="kw">pub use </span><span class="self">self</span>::{collection::<span class="kw-2">*</span>, pipeline::VertexShaderSource, sheet::<span class="kw-2">*</span>, source::<span class="kw-2">*</span>};
 
-<span class="doccomment">/// Includes an [Aseprite](https://www.aseprite.org/) sprite sheet and Json</span>
-<span class="doccomment">/// export. For more information, see [`Sprite::load_aseprite_json`]. This macro</span>
-<span class="doccomment">/// will append &quot;.png&quot; and &quot;.json&quot; to the path provided and include both files</span>
-<span class="doccomment">/// in your binary.</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="macro">macro_rules!</span> <span class="ident">include_aseprite_sprite</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">path</span>:<span class="ident">expr</span>) =&gt; {{
-        <span class="macro-nonterminal">$</span><span class="macro">crate::include_texture!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">path</span>, <span class="string">&quot;.png&quot;</span>)).<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">texture</span><span class="op">|</span> {
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::sprite::Sprite::load_aseprite_json</span>(
-                <span class="macro">include_str!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">path</span>, <span class="string">&quot;.json&quot;</span>)),
-                <span class="kw-2">&amp;</span><span class="ident">texture</span>,
+<span class="doccomment">/// Includes an [Aseprite](https://www.aseprite.org/) sprite sheet and Json
+/// export. For more information, see [`Sprite::load_aseprite_json`]. This macro
+/// will append &quot;.png&quot; and &quot;.json&quot; to the path provided and include both files
+/// in your binary.
+</span><span class="attribute">#[macro_export]
+</span><span class="macro">macro_rules! </span>include_aseprite_sprite {
+    (<span class="macro-nonterminal">$path</span>:expr) =&gt; {{
+        <span class="macro-nonterminal">$</span><span class="macro">crate::include_texture!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$path</span>, <span class="string">&quot;.png&quot;</span>)).and_then(|texture| {
+            <span class="macro-nonterminal">$crate::sprite::Sprite::load_aseprite_json</span>(
+                <span class="macro">include_str!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$path</span>, <span class="string">&quot;.json&quot;</span>)),
+                <span class="kw-2">&amp;</span>texture,
             )
         })
     }};
 }
 
-<span class="doccomment">/// The animation mode of the sprite.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AnimationMode</span> {
-    <span class="doccomment">/// Iterate frames in order. When at the end, reset to the start.</span>
-    <span class="ident">Forward</span>,
-    <span class="doccomment">/// Iterate frames in reverse order. When at the start, reset to the end.</span>
-    <span class="ident">Reverse</span>,
-    <span class="doccomment">/// Iterate frames starting at the beginning and continuously iterating</span>
-    <span class="doccomment">/// forwards and backwards across the frames, changing direction whenever</span>
-    <span class="doccomment">/// the start or end are reached.</span>
-    <span class="ident">PingPong</span>,
+<span class="doccomment">/// The animation mode of the sprite.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub enum </span>AnimationMode {
+    <span class="doccomment">/// Iterate frames in order. When at the end, reset to the start.
+    </span>Forward,
+    <span class="doccomment">/// Iterate frames in reverse order. When at the start, reset to the end.
+    </span>Reverse,
+    <span class="doccomment">/// Iterate frames starting at the beginning and continuously iterating
+    /// forwards and backwards across the frames, changing direction whenever
+    /// the start or end are reached.
+    </span>PingPong,
 }
 
-<span class="kw">impl</span> <span class="ident">AnimationMode</span> {
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">default_direction</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">AnimationDirection</span> {
-        <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">AnimationMode::Forward</span> <span class="op">|</span> <span class="ident">AnimationMode::PingPong</span> =&gt; <span class="ident">AnimationDirection::Forward</span>,
-            <span class="ident">AnimationMode::Reverse</span> =&gt; <span class="ident">AnimationDirection::Reverse</span>,
+<span class="kw">impl </span>AnimationMode {
+    <span class="kw">const fn </span>default_direction(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AnimationDirection {
+        <span class="kw">match </span><span class="self">self </span>{
+            AnimationMode::Forward | AnimationMode::PingPong =&gt; AnimationDirection::Forward,
+            AnimationMode::Reverse =&gt; AnimationDirection::Reverse,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">enum</span> <span class="ident">AnimationDirection</span> {
-    <span class="ident">Forward</span>,
-    <span class="ident">Reverse</span>,
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">enum </span>AnimationDirection {
+    Forward,
+    Reverse,
 }
 
-<span class="doccomment">/// A sprite is a renderable graphic with optional animations.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Cloning a sprite is cheap. When cloning, the animations will be shared</span>
-<span class="doccomment">/// between all clones of the sprite, but each sprite will track its current</span>
-<span class="doccomment">/// frame/tag independently.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Sprite</span> {
-    <span class="doccomment">/// The animations that form this sprite.</span>
-    <span class="kw">pub</span> <span class="ident">animations</span>: <span class="ident">SpriteAnimations</span>,
-    <span class="ident">elapsed_since_frame_change</span>: <span class="ident">Duration</span>,
-    <span class="ident">current_tag</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="ident">current_frame</span>: <span class="ident">usize</span>,
-    <span class="ident">current_animation_direction</span>: <span class="ident">AnimationDirection</span>,
+<span class="doccomment">/// A sprite is a renderable graphic with optional animations.
+///
+/// Cloning a sprite is cheap. When cloning, the animations will be shared
+/// between all clones of the sprite, but each sprite will track its current
+/// frame/tag independently.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>Sprite {
+    <span class="doccomment">/// The animations that form this sprite.
+    </span><span class="kw">pub </span>animations: SpriteAnimations,
+    elapsed_since_frame_change: Duration,
+    current_tag: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    current_frame: usize,
+    current_animation_direction: AnimationDirection,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">SpriteAnimations</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Sprite</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">animations</span>: <span class="ident">SpriteAnimations</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">animations</span>)
+<span class="kw">impl </span>From&lt;SpriteAnimations&gt; <span class="kw">for </span>Sprite {
+    <span class="kw">fn </span>from(animations: SpriteAnimations) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(animations)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Sprite</span> {
-    <span class="doccomment">/// Returns a new sprite with `animations`.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">animations</span>: <span class="ident">SpriteAnimations</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">animations</span>,
-            <span class="ident">current_frame</span>: <span class="number">0</span>,
-            <span class="ident">current_tag</span>: <span class="prelude-val">None</span>,
-            <span class="ident">elapsed_since_frame_change</span>: <span class="ident">Duration::from_millis</span>(<span class="number">0</span>),
-            <span class="ident">current_animation_direction</span>: <span class="ident">AnimationDirection::Forward</span>,
+<span class="kw">impl </span>Sprite {
+    <span class="doccomment">/// Returns a new sprite with `animations`.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>new(animations: SpriteAnimations) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            animations,
+            current_frame: <span class="number">0</span>,
+            current_tag: <span class="prelude-val">None</span>,
+            elapsed_since_frame_change: Duration::from_millis(<span class="number">0</span>),
+            current_animation_direction: AnimationDirection::Forward,
         }
     }
 
-    <span class="doccomment">/// For merging multiple Sprites that have no tags within them</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">merged</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">S</span>, <span class="self">Self</span>)<span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">source</span>: <span class="ident">I</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">combined</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
-        <span class="kw">for</span> (<span class="ident">name</span>, <span class="ident">sprite</span>) <span class="kw">in</span> <span class="ident">source</span> {
-            <span class="ident">combined</span>.<span class="ident">insert</span>(
-                <span class="prelude-val">Some</span>(<span class="ident">name</span>.<span class="ident">into</span>()),
-                <span class="ident">sprite</span>
-                    .<span class="ident">animations</span>
-                    .<span class="ident">animation_for</span>(<span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span><span class="ident">::None</span>)
-                    .<span class="ident">unwrap</span>()
-                    .<span class="ident">clone</span>(),
+    <span class="doccomment">/// For merging multiple Sprites that have no tags within them
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>merged&lt;S: Into&lt;String&gt;, I: IntoIterator&lt;Item = (S, <span class="self">Self</span>)&gt;&gt;(source: I) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>combined = HashMap::new();
+        <span class="kw">for </span>(name, sprite) <span class="kw">in </span>source {
+            combined.insert(
+                <span class="prelude-val">Some</span>(name.into()),
+                sprite
+                    .animations
+                    .animation_for(<span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>::&lt;<span class="kw-2">&amp;</span>str&gt;::None)
+                    .unwrap()
+                    .clone(),
             );
         }
-        <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">SpriteAnimations::new</span>(<span class="ident">combined</span>))
+        <span class="self">Self</span>::new(SpriteAnimations::new(combined))
     }
 
-    <span class="doccomment">/// Creates an instance from a texture. This creates a `SpriteAnimation`</span>
-    <span class="doccomment">/// with no tag and a single frame.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">single_frame</span>(<span class="ident">texture</span>: <span class="ident">Texture</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">SpriteSource::entire_texture</span>(<span class="ident">texture</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
-        <span class="ident">frames</span>.<span class="ident">insert</span>(
+    <span class="doccomment">/// Creates an instance from a texture. This creates a `SpriteAnimation`
+    /// with no tag and a single frame.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>single_frame(texture: Texture) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>source = SpriteSource::entire_texture(texture);
+        <span class="kw">let </span><span class="kw-2">mut </span>frames = HashMap::new();
+        frames.insert(
             <span class="prelude-val">None</span>,
-            <span class="ident">SpriteAnimation::new</span>(<span class="macro">vec!</span>[<span class="ident">SpriteFrame</span> {
-                <span class="ident">source</span>,
-                <span class="ident">duration</span>: <span class="prelude-val">None</span>,
+            SpriteAnimation::new(<span class="macro">vec!</span>[SpriteFrame {
+                source,
+                duration: <span class="prelude-val">None</span>,
             }])
-            .<span class="ident">with_mode</span>(<span class="ident">AnimationMode::Forward</span>),
+            .with_mode(AnimationMode::Forward),
         );
-        <span class="kw">let</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">SpriteAnimations::new</span>(<span class="ident">frames</span>);
+        <span class="kw">let </span>frames = SpriteAnimations::new(frames);
 
-        <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">frames</span>)
+        <span class="self">Self</span>::new(frames)
     }
 
-    <span class="doccomment">/// Loads [Aseprite](https://www.aseprite.org/) JSON export format, when</span>
-    <span class="doccomment">/// using the correct settings.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// For the JSON data, use the Hash export option (default), and use either</span>
-    <span class="doccomment">/// spaces or underscores (_) inbetween the fields in the name. Ensure</span>
-    <span class="doccomment">/// `{frame}` is the last field in the name before the extension. E.g.,</span>
-    <span class="doccomment">/// `{tag}_{frame}.{extension}`</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::too_many_lines</span>)]</span>
-    <span class="comment">// TODO refactor. Now that I know more about serde, this probably can be parsed</span>
-    <span class="comment">// with a complex serde type.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_aseprite_json</span>(<span class="ident">raw_json</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">texture</span>: <span class="kw-2">&amp;</span><span class="ident">Texture</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">json</span> <span class="op">=</span> <span class="ident">json::parse</span>(<span class="ident">raw_json</span>)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Loads [Aseprite](https://www.aseprite.org/) JSON export format, when
+    /// using the correct settings.
+    ///
+    /// For the JSON data, use the Hash export option (default), and use either
+    /// spaces or underscores (_) inbetween the fields in the name. Ensure
+    /// `{frame}` is the last field in the name before the extension. E.g.,
+    /// `{tag}_{frame}.{extension}`
+    </span><span class="attribute">#[allow(clippy::too_many_lines)]
+    </span><span class="comment">// TODO refactor. Now that I know more about serde, this probably can be parsed
+    // with a complex serde type.
+    </span><span class="kw">pub fn </span>load_aseprite_json(raw_json: <span class="kw-2">&amp;</span>str, texture: <span class="kw-2">&amp;</span>Texture) -&gt; <span class="kw">crate</span>::Result&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>json = json::parse(raw_json)<span class="question-mark">?</span>;
 
-        <span class="comment">// Validate the data</span>
-        <span class="kw">let</span> <span class="ident">meta</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">json</span>[<span class="string">&quot;meta&quot;</span>];
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">meta</span>.<span class="ident">is_object</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::SpriteParse</span>(
-                <span class="string">&quot;invalid aseprite json: No `meta` section&quot;</span>.<span class="ident">to_owned</span>(),
+        <span class="comment">// Validate the data
+        </span><span class="kw">let </span>meta = <span class="kw-2">&amp;</span>json[<span class="string">&quot;meta&quot;</span>];
+        <span class="kw">if </span>!meta.is_object() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::SpriteParse(
+                <span class="string">&quot;invalid aseprite json: No `meta` section&quot;</span>.to_owned(),
             ));
         }
 
-        <span class="kw">let</span> <span class="ident">texture_size</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">size</span>();
-        <span class="kw">if</span> <span class="ident">meta</span>[<span class="string">&quot;size&quot;</span>][<span class="string">&quot;w&quot;</span>] <span class="op">!</span><span class="op">=</span> <span class="ident">texture_size</span>.<span class="ident">width</span> <span class="op">|</span><span class="op">|</span> <span class="ident">meta</span>[<span class="string">&quot;size&quot;</span>][<span class="string">&quot;h&quot;</span>] <span class="op">!</span><span class="op">=</span> <span class="ident">texture_size</span>.<span class="ident">height</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::SpriteParse</span>(
-                <span class="string">&quot;invalid aseprite json: Size did not match input texture&quot;</span>.<span class="ident">to_owned</span>(),
+        <span class="kw">let </span>texture_size = texture.size();
+        <span class="kw">if </span>meta[<span class="string">&quot;size&quot;</span>][<span class="string">&quot;w&quot;</span>] != texture_size.width || meta[<span class="string">&quot;size&quot;</span>][<span class="string">&quot;h&quot;</span>] != texture_size.height {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::SpriteParse(
+                <span class="string">&quot;invalid aseprite json: Size did not match input texture&quot;</span>.to_owned(),
             ));
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
-        <span class="kw">for</span> (<span class="ident">name</span>, <span class="ident">frame</span>) <span class="kw">in</span> <span class="ident">json</span>[<span class="string">&quot;frames&quot;</span>].<span class="ident">entries</span>() {
-            <span class="comment">// Remove the extension, if present</span>
-            <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">split</span>(<span class="string">&#39;.&#39;</span>).<span class="ident">next</span>().<span class="ident">unwrap</span>();
-            <span class="comment">// Split by _ or &#39; &#39;as per the documentation of this method.</span>
-            <span class="kw">let</span> <span class="ident">name_parts</span> <span class="op">=</span> <span class="ident">name</span>.<span class="ident">split</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="string">&#39;_&#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="string">&#39; &#39;</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-            <span class="kw">let</span> <span class="ident">frame_number</span> <span class="op">=</span> <span class="ident">name_parts</span>[<span class="ident">name_parts</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>]
-                .<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>()
-                .<span class="ident">or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
-                    <span class="kw">if</span> <span class="ident">json</span>[<span class="string">&quot;frames&quot;</span>].<span class="ident">len</span>() <span class="op">==</span> <span class="number">1</span> {
+        <span class="kw">let </span><span class="kw-2">mut </span>frames = HashMap::new();
+        <span class="kw">for </span>(name, frame) <span class="kw">in </span>json[<span class="string">&quot;frames&quot;</span>].entries() {
+            <span class="comment">// Remove the extension, if present
+            </span><span class="kw">let </span>name = name.split(<span class="string">&#39;.&#39;</span>).next().unwrap();
+            <span class="comment">// Split by _ or &#39; &#39;as per the documentation of this method.
+            </span><span class="kw">let </span>name_parts = name.split(|c| c == <span class="string">&#39;_&#39; </span>|| c == <span class="string">&#39; &#39;</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+            <span class="kw">let </span>frame_number = name_parts[name_parts.len() - <span class="number">1</span>]
+                .parse::&lt;usize&gt;()
+                .or_else(|<span class="kw">_</span>| {
+                    <span class="kw">if </span>json[<span class="string">&quot;frames&quot;</span>].len() == <span class="number">1 </span>{
                         <span class="prelude-val">Ok</span>(<span class="number">0</span>)
-                    } <span class="kw">else</span> {
-                        <span class="prelude-val">Err</span>(<span class="ident">Error::SpriteParse</span>(
-                            <span class="string">&quot;invalid aseprite json: frame was not numeric.&quot;</span>.<span class="ident">to_owned</span>(),
+                    } <span class="kw">else </span>{
+                        <span class="prelude-val">Err</span>(Error::SpriteParse(
+                            <span class="string">&quot;invalid aseprite json: frame was not numeric.&quot;</span>.to_owned(),
                         ))
                     }
                 })<span class="question-mark">?</span>;
 
-            <span class="kw">let</span> <span class="ident">duration</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">frame</span>[<span class="string">&quot;duration&quot;</span>].<span class="ident">as_u64</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">millis</span>) =&gt; <span class="ident">Duration::from_millis</span>(<span class="ident">millis</span>),
-                <span class="prelude-val">None</span> =&gt; {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::SpriteParse</span>(
-                        <span class="string">&quot;invalid aseprite json: invalid duration&quot;</span>.<span class="ident">to_owned</span>(),
+            <span class="kw">let </span>duration = <span class="kw">match </span>frame[<span class="string">&quot;duration&quot;</span>].as_u64() {
+                <span class="prelude-val">Some</span>(millis) =&gt; Duration::from_millis(millis),
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Error::SpriteParse(
+                        <span class="string">&quot;invalid aseprite json: invalid duration&quot;</span>.to_owned(),
                     ))
                 }
             };
 
-            <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="ident">Rect::new</span>(
-                <span class="ident">Point::new</span>(
-                    <span class="ident">frame</span>[<span class="string">&quot;frame&quot;</span>][<span class="string">&quot;x&quot;</span>].<span class="ident">as_u32</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                        <span class="ident">Error::SpriteParse</span>(
-                            <span class="string">&quot;invalid aseprite json: frame x was not valid&quot;</span>.<span class="ident">to_owned</span>(),
+            <span class="kw">let </span>frame = Rect::new(
+                Point::new(
+                    frame[<span class="string">&quot;frame&quot;</span>][<span class="string">&quot;x&quot;</span>].as_u32().ok_or_else(|| {
+                        Error::SpriteParse(
+                            <span class="string">&quot;invalid aseprite json: frame x was not valid&quot;</span>.to_owned(),
                         )
                     })<span class="question-mark">?</span>,
-                    <span class="ident">frame</span>[<span class="string">&quot;frame&quot;</span>][<span class="string">&quot;y&quot;</span>].<span class="ident">as_u32</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                        <span class="ident">Error::SpriteParse</span>(
-                            <span class="string">&quot;invalid aseprite json: frame y was not valid&quot;</span>.<span class="ident">to_owned</span>(),
+                    frame[<span class="string">&quot;frame&quot;</span>][<span class="string">&quot;y&quot;</span>].as_u32().ok_or_else(|| {
+                        Error::SpriteParse(
+                            <span class="string">&quot;invalid aseprite json: frame y was not valid&quot;</span>.to_owned(),
                         )
                     })<span class="question-mark">?</span>,
                 ),
-                <span class="ident">Size::new</span>(
-                    <span class="ident">frame</span>[<span class="string">&quot;frame&quot;</span>][<span class="string">&quot;w&quot;</span>].<span class="ident">as_u32</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                        <span class="ident">Error::SpriteParse</span>(
-                            <span class="string">&quot;invalid aseprite json: frame w was not valid&quot;</span>.<span class="ident">to_owned</span>(),
+                Size::new(
+                    frame[<span class="string">&quot;frame&quot;</span>][<span class="string">&quot;w&quot;</span>].as_u32().ok_or_else(|| {
+                        Error::SpriteParse(
+                            <span class="string">&quot;invalid aseprite json: frame w was not valid&quot;</span>.to_owned(),
                         )
                     })<span class="question-mark">?</span>,
-                    <span class="ident">frame</span>[<span class="string">&quot;frame&quot;</span>][<span class="string">&quot;h&quot;</span>].<span class="ident">as_u32</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                        <span class="ident">Error::SpriteParse</span>(
-                            <span class="string">&quot;invalid aseprite json: frame h was not valid&quot;</span>.<span class="ident">to_owned</span>(),
+                    frame[<span class="string">&quot;frame&quot;</span>][<span class="string">&quot;h&quot;</span>].as_u32().ok_or_else(|| {
+                        Error::SpriteParse(
+                            <span class="string">&quot;invalid aseprite json: frame h was not valid&quot;</span>.to_owned(),
                         )
                     })<span class="question-mark">?</span>,
                 ),
             );
 
-            <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">SpriteSource::new</span>(<span class="ident">frame</span>, <span class="ident">texture</span>.<span class="ident">clone</span>());
+            <span class="kw">let </span>source = SpriteSource::new(frame, texture.clone());
 
-            <span class="ident">frames</span>.<span class="ident">insert</span>(
-                <span class="ident">frame_number</span>,
-                <span class="ident">SpriteFrame</span> {
-                    <span class="ident">duration</span>: <span class="prelude-val">Some</span>(<span class="ident">duration</span>),
-                    <span class="ident">source</span>,
+            frames.insert(
+                frame_number,
+                SpriteFrame {
+                    duration: <span class="prelude-val">Some</span>(duration),
+                    source,
                 },
             );
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">animations</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
-        <span class="kw">for</span> <span class="ident">tag</span> <span class="kw">in</span> <span class="ident">meta</span>[<span class="string">&quot;frameTags&quot;</span>].<span class="ident">members</span>() {
-            <span class="kw">let</span> <span class="ident">direction</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">tag</span>[<span class="string">&quot;direction&quot;</span>] <span class="op">==</span> <span class="string">&quot;forward&quot;</span> {
-                <span class="ident">AnimationMode::Forward</span>
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">tag</span>[<span class="string">&quot;direction&quot;</span>] <span class="op">==</span> <span class="string">&quot;reverse&quot;</span> {
-                <span class="ident">AnimationMode::Reverse</span>
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">tag</span>[<span class="string">&quot;direction&quot;</span>] <span class="op">==</span> <span class="string">&quot;pingpong&quot;</span> {
-                <span class="ident">AnimationMode::PingPong</span>
-            } <span class="kw">else</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::SpriteParse</span>(
-                    <span class="string">&quot;invalid aseprite json: frameTags direction is an unknown value&quot;</span>.<span class="ident">to_owned</span>(),
+        <span class="kw">let </span><span class="kw-2">mut </span>animations = HashMap::new();
+        <span class="kw">for </span>tag <span class="kw">in </span>meta[<span class="string">&quot;frameTags&quot;</span>].members() {
+            <span class="kw">let </span>direction = <span class="kw">if </span>tag[<span class="string">&quot;direction&quot;</span>] == <span class="string">&quot;forward&quot; </span>{
+                AnimationMode::Forward
+            } <span class="kw">else if </span>tag[<span class="string">&quot;direction&quot;</span>] == <span class="string">&quot;reverse&quot; </span>{
+                AnimationMode::Reverse
+            } <span class="kw">else if </span>tag[<span class="string">&quot;direction&quot;</span>] == <span class="string">&quot;pingpong&quot; </span>{
+                AnimationMode::PingPong
+            } <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::SpriteParse(
+                    <span class="string">&quot;invalid aseprite json: frameTags direction is an unknown value&quot;</span>.to_owned(),
                 ));
             };
 
-            <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">tag</span>[<span class="string">&quot;name&quot;</span>].<span class="ident">as_str</span>().<span class="ident">map</span>(<span class="ident">str::to_owned</span>);
+            <span class="kw">let </span>name = tag[<span class="string">&quot;name&quot;</span>].as_str().map(str::to_owned);
 
-            <span class="kw">let</span> <span class="ident">start_frame</span> <span class="op">=</span> <span class="ident">tag</span>[<span class="string">&quot;from&quot;</span>].<span class="ident">as_usize</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                <span class="ident">Error::SpriteParse</span>(
-                    <span class="string">&quot;invalid aseprite json: frameTags from was not numeric&quot;</span>.<span class="ident">to_owned</span>(),
+            <span class="kw">let </span>start_frame = tag[<span class="string">&quot;from&quot;</span>].as_usize().ok_or_else(|| {
+                Error::SpriteParse(
+                    <span class="string">&quot;invalid aseprite json: frameTags from was not numeric&quot;</span>.to_owned(),
                 )
             })<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">end_frame</span> <span class="op">=</span> <span class="ident">tag</span>[<span class="string">&quot;to&quot;</span>].<span class="ident">as_usize</span>().<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                <span class="ident">Error::SpriteParse</span>(
-                    <span class="string">&quot;invalid aseprite json: frameTags from was not numeric&quot;</span>.<span class="ident">to_owned</span>(),
+            <span class="kw">let </span>end_frame = tag[<span class="string">&quot;to&quot;</span>].as_usize().ok_or_else(|| {
+                Error::SpriteParse(
+                    <span class="string">&quot;invalid aseprite json: frameTags from was not numeric&quot;</span>.to_owned(),
                 )
             })<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">animation_frames</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="ident">start_frame</span>..<span class="op">=</span><span class="ident">end_frame</span> {
-                <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="ident">frames</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">i</span>).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                    <span class="ident">Error::SpriteParse</span>(
-                        <span class="string">&quot;invalid aseprite json: frameTags frame was out of bounds&quot;</span>.<span class="ident">to_owned</span>(),
+            <span class="kw">let </span><span class="kw-2">mut </span>animation_frames = Vec::new();
+            <span class="kw">for </span>i <span class="kw">in </span>start_frame..=end_frame {
+                <span class="kw">let </span>frame = frames.get(<span class="kw-2">&amp;</span>i).ok_or_else(|| {
+                    Error::SpriteParse(
+                        <span class="string">&quot;invalid aseprite json: frameTags frame was out of bounds&quot;</span>.to_owned(),
                     )
                 })<span class="question-mark">?</span>;
-                <span class="ident">animation_frames</span>.<span class="ident">push</span>(<span class="ident">frame</span>.<span class="ident">clone</span>());
+                animation_frames.push(frame.clone());
             }
 
-            <span class="ident">animations</span>.<span class="ident">insert</span>(
-                <span class="ident">name</span>,
-                <span class="ident">SpriteAnimation::new</span>(<span class="ident">animation_frames</span>).<span class="ident">with_mode</span>(<span class="ident">direction</span>),
+            animations.insert(
+                name,
+                SpriteAnimation::new(animation_frames).with_mode(direction),
             );
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">frames</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">frames</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>();
-        <span class="ident">frames</span>.<span class="ident">sort_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="number">0</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="number">0</span>));
+        <span class="kw">let </span><span class="kw-2">mut </span>frames: Vec&lt;<span class="kw">_</span>&gt; = frames.into_iter().collect();
+        frames.sort_by(|a, b| a.<span class="number">0</span>.cmp(<span class="kw-2">&amp;</span>b.<span class="number">0</span>));
 
-        <span class="ident">animations</span>.<span class="ident">insert</span>(
+        animations.insert(
             <span class="prelude-val">None</span>,
-            <span class="ident">SpriteAnimation::new</span>(<span class="ident">frames</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">f</span>)<span class="op">|</span> <span class="ident">f</span>.<span class="ident">clone</span>()).<span class="ident">collect</span>())
-                .<span class="ident">with_mode</span>(<span class="ident">AnimationMode::Forward</span>),
+            SpriteAnimation::new(frames.iter().map(|(<span class="kw">_</span>, f)| f.clone()).collect())
+                .with_mode(AnimationMode::Forward),
         );
 
-        <span class="prelude-val">Ok</span>(<span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">SpriteAnimations::new</span>(<span class="ident">animations</span>)))
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span>::new(SpriteAnimations::new(animations)))
     }
 
-    <span class="doccomment">/// Sets the current tag for the animation. If the tag currently matches,</span>
-    <span class="doccomment">/// nothing will happen. If it is a new tag, the current frame and animation</span>
-    <span class="doccomment">/// direction will be switched to the values from the new tag.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_current_tag</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">tag</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">new_tag</span> <span class="op">=</span> <span class="ident">tag</span>.<span class="ident">map</span>(<span class="ident">Into::into</span>);
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current_tag</span> <span class="op">!</span><span class="op">=</span> <span class="ident">new_tag</span> {
-            <span class="self">self</span>.<span class="ident">current_animation_direction</span> <span class="op">=</span> {
-                <span class="kw">let</span> <span class="ident">animation</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">animations</span>
-                    .<span class="ident">animations</span>
-                    .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">new_tag</span>)
-                    .<span class="ident">ok_or</span>(<span class="ident">Error::InvalidSpriteTag</span>)<span class="question-mark">?</span>;
-                <span class="ident">animation</span>.<span class="ident">mode</span>.<span class="ident">default_direction</span>()
+    <span class="doccomment">/// Sets the current tag for the animation. If the tag currently matches,
+    /// nothing will happen. If it is a new tag, the current frame and animation
+    /// direction will be switched to the values from the new tag.
+    </span><span class="kw">pub fn </span>set_current_tag&lt;S: Into&lt;String&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tag: <span class="prelude-ty">Option</span>&lt;S&gt;) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
+        <span class="kw">let </span>new_tag = tag.map(Into::into);
+        <span class="kw">if </span><span class="self">self</span>.current_tag != new_tag {
+            <span class="self">self</span>.current_animation_direction = {
+                <span class="kw">let </span>animation = <span class="self">self
+                    </span>.animations
+                    .animations
+                    .get(<span class="kw-2">&amp;</span>new_tag)
+                    .ok_or(Error::InvalidSpriteTag)<span class="question-mark">?</span>;
+                animation.mode.default_direction()
             };
-            <span class="self">self</span>.<span class="ident">current_frame</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="self">self</span>.<span class="ident">current_tag</span> <span class="op">=</span> <span class="ident">new_tag</span>;
+            <span class="self">self</span>.current_frame = <span class="number">0</span>;
+            <span class="self">self</span>.current_tag = new_tag;
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Returns the current tag.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">current_tag</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">current_tag</span>.<span class="ident">as_deref</span>()
+    <span class="doccomment">/// Returns the current tag.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>current_tag(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>str&gt; {
+        <span class="self">self</span>.current_tag.as_deref()
     }
 
-    <span class="doccomment">/// Gets the current frame after advancing the animation for `elapsed`</span>
-    <span class="doccomment">/// duration. If you need to invoke this multiple times in a single frame,</span>
-    <span class="doccomment">/// pass `None` on subsequent calls. In general, you should clone sprites</span>
-    <span class="doccomment">/// rather than reuse them. Kludgine ensures that your texture and animation</span>
-    <span class="doccomment">/// data will be shared and not cloned.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_frame</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">elapsed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">SpriteSource</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">elapsed</span>) <span class="op">=</span> <span class="ident">elapsed</span> {
-            <span class="self">self</span>.<span class="ident">elapsed_since_frame_change</span> <span class="op">+</span><span class="op">=</span> <span class="ident">elapsed</span>;
+    <span class="doccomment">/// Gets the current frame after advancing the animation for `elapsed`
+    /// duration. If you need to invoke this multiple times in a single frame,
+    /// pass `None` on subsequent calls. In general, you should clone sprites
+    /// rather than reuse them. Kludgine ensures that your texture and animation
+    /// data will be shared and not cloned.
+    </span><span class="kw">pub fn </span>get_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>, elapsed: <span class="prelude-ty">Option</span>&lt;Duration&gt;) -&gt; <span class="kw">crate</span>::Result&lt;SpriteSource&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(elapsed) = elapsed {
+            <span class="self">self</span>.elapsed_since_frame_change += elapsed;
 
-            <span class="kw">let</span> <span class="ident">current_frame_duration</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">with_current_frame</span>(<span class="op">|</span><span class="ident">frame</span><span class="op">|</span> <span class="ident">frame</span>.<span class="ident">duration</span>)<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">frame_duration</span>) <span class="op">=</span> <span class="ident">current_frame_duration</span> {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">elapsed_since_frame_change</span> <span class="op">&gt;</span> <span class="ident">frame_duration</span> {
-                    <span class="self">self</span>.<span class="ident">elapsed_since_frame_change</span> <span class="op">=</span> <span class="ident">Duration::from_nanos</span>(
-                        (<span class="self">self</span>.<span class="ident">elapsed_since_frame_change</span>.<span class="ident">as_nanos</span>() <span class="op">%</span> <span class="ident">frame_duration</span>.<span class="ident">as_nanos</span>())
-                            <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="kw">let </span>current_frame_duration = <span class="self">self</span>.with_current_frame(|frame| frame.duration)<span class="question-mark">?</span>;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(frame_duration) = current_frame_duration {
+                <span class="kw">if </span><span class="self">self</span>.elapsed_since_frame_change &gt; frame_duration {
+                    <span class="self">self</span>.elapsed_since_frame_change = Duration::from_nanos(
+                        (<span class="self">self</span>.elapsed_since_frame_change.as_nanos() % frame_duration.as_nanos())
+                            <span class="kw">as </span>u64,
                     );
-                    <span class="self">self</span>.<span class="ident">advance_frame</span>()<span class="question-mark">?</span>;
+                    <span class="self">self</span>.advance_frame()<span class="question-mark">?</span>;
                 }
             }
         }
 
-        <span class="self">self</span>.<span class="ident">current_frame</span>()
+        <span class="self">self</span>.current_frame()
     }
 
-    <span class="doccomment">/// Retrieve the current animation frame, if set and valid.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">current_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">SpriteSource</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">with_current_frame</span>(<span class="op">|</span><span class="ident">frame</span><span class="op">|</span> <span class="ident">frame</span>.<span class="ident">source</span>.<span class="ident">clone</span>())
+    <span class="doccomment">/// Retrieve the current animation frame, if set and valid.
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>current_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Result&lt;SpriteSource&gt; {
+        <span class="self">self</span>.with_current_frame(|frame| frame.source.clone())
     }
 
-    <span class="doccomment">/// Returns the amount of time remaining until the next frame is due to be</span>
-    <span class="doccomment">/// shown for this sprite. Can be used to calculate redraws more efficiently</span>
-    <span class="doccomment">/// if you&#39;re not rendering at a constant framerate.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remaining_frame_duration</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">duration</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">with_current_frame</span>(<span class="op">|</span><span class="ident">frame</span><span class="op">|</span> <span class="ident">frame</span>.<span class="ident">duration</span>)<span class="question-mark">?</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">frame_duration</span><span class="op">|</span> {
-                <span class="ident">frame_duration</span>
-                    .<span class="ident">checked_sub</span>(<span class="self">self</span>.<span class="ident">elapsed_since_frame_change</span>)
-                    .<span class="ident">unwrap_or_default</span>()
+    <span class="doccomment">/// Returns the amount of time remaining until the next frame is due to be
+    /// shown for this sprite. Can be used to calculate redraws more efficiently
+    /// if you&#39;re not rendering at a constant framerate.
+    </span><span class="kw">pub fn </span>remaining_frame_duration(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Result&lt;<span class="prelude-ty">Option</span>&lt;Duration&gt;&gt; {
+        <span class="kw">let </span>duration = <span class="self">self
+            </span>.with_current_frame(|frame| frame.duration)<span class="question-mark">?
+            </span>.map(|frame_duration| {
+                frame_duration
+                    .checked_sub(<span class="self">self</span>.elapsed_since_frame_change)
+                    .unwrap_or_default()
             });
 
-        <span class="prelude-val">Ok</span>(<span class="ident">duration</span>)
+        <span class="prelude-val">Ok</span>(duration)
     }
 
-    <span class="kw">fn</span> <span class="ident">advance_frame</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">current_frame</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_frame</span>()<span class="question-mark">?</span>;
+    <span class="kw">fn </span>advance_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Result&lt;()&gt; {
+        <span class="self">self</span>.current_frame = <span class="self">self</span>.next_frame()<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::cast_possible_wrap</span>, <span class="ident">clippy::cast_sign_loss</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">next_frame</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">starting_frame</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_frame</span> <span class="kw">as</span> <span class="ident">i32</span>;
-        <span class="kw">let</span> <span class="ident">animation</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">animations</span>
-            .<span class="ident">animations</span>
-            .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">current_tag</span>)
-            .<span class="ident">ok_or</span>(<span class="ident">Error::InvalidSpriteTag</span>)<span class="question-mark">?</span>;
+    <span class="attribute">#[allow(clippy::cast_possible_wrap, clippy::cast_sign_loss)]
+    </span><span class="kw">fn </span>next_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Result&lt;usize&gt; {
+        <span class="kw">let </span>starting_frame = <span class="self">self</span>.current_frame <span class="kw">as </span>i32;
+        <span class="kw">let </span>animation = <span class="self">self
+            </span>.animations
+            .animations
+            .get(<span class="kw-2">&amp;</span><span class="self">self</span>.current_tag)
+            .ok_or(Error::InvalidSpriteTag)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">next_frame</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">current_animation_direction</span> {
-            <span class="ident">AnimationDirection::Forward</span> =&gt; <span class="ident">starting_frame</span> <span class="op">+</span> <span class="number">1</span>,
-            <span class="ident">AnimationDirection::Reverse</span> =&gt; <span class="ident">starting_frame</span> <span class="op">-</span> <span class="number">1</span>,
+        <span class="kw">let </span>next_frame = <span class="kw">match </span><span class="self">self</span>.current_animation_direction {
+            AnimationDirection::Forward =&gt; starting_frame + <span class="number">1</span>,
+            AnimationDirection::Reverse =&gt; starting_frame - <span class="number">1</span>,
         };
 
-        <span class="prelude-val">Ok</span>(<span class="kw">if</span> <span class="ident">next_frame</span> <span class="op">&lt;</span> <span class="number">0</span> {
-            <span class="kw">match</span> <span class="ident">animation</span>.<span class="ident">mode</span> {
-                <span class="ident">AnimationMode::Forward</span> =&gt; <span class="macro">unreachable!</span>(),
-                <span class="ident">AnimationMode::Reverse</span> =&gt; {
-                    <span class="comment">// Cycle back to the last frame</span>
-                    <span class="ident">animation</span>.<span class="ident">frames</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>
-                }
-                <span class="ident">AnimationMode::PingPong</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">current_animation_direction</span> <span class="op">=</span> <span class="ident">AnimationDirection::Forward</span>;
-                    <span class="number">1</span>
+        <span class="prelude-val">Ok</span>(<span class="kw">if </span>next_frame &lt; <span class="number">0 </span>{
+            <span class="kw">match </span>animation.mode {
+                AnimationMode::Forward =&gt; <span class="macro">unreachable!</span>(),
+                AnimationMode::Reverse =&gt; {
+                    <span class="comment">// Cycle back to the last frame
+                    </span>animation.frames.len() - <span class="number">1
+                </span>}
+                AnimationMode::PingPong =&gt; {
+                    <span class="self">self</span>.current_animation_direction = AnimationDirection::Forward;
+                    <span class="number">1
+                </span>}
+            }
+        } <span class="kw">else if </span>next_frame <span class="kw">as </span>usize &gt;= animation.frames.len() {
+            <span class="kw">match </span>animation.mode {
+                AnimationMode::Reverse =&gt; <span class="macro">unreachable!</span>(),
+                AnimationMode::Forward =&gt; <span class="number">0</span>,
+                AnimationMode::PingPong =&gt; {
+                    <span class="self">self</span>.current_animation_direction = AnimationDirection::Reverse;
+                    (animation.frames.len() - <span class="number">2</span>).max(<span class="number">0</span>)
                 }
             }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">next_frame</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">animation</span>.<span class="ident">frames</span>.<span class="ident">len</span>() {
-            <span class="kw">match</span> <span class="ident">animation</span>.<span class="ident">mode</span> {
-                <span class="ident">AnimationMode::Reverse</span> =&gt; <span class="macro">unreachable!</span>(),
-                <span class="ident">AnimationMode::Forward</span> =&gt; <span class="number">0</span>,
-                <span class="ident">AnimationMode::PingPong</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">current_animation_direction</span> <span class="op">=</span> <span class="ident">AnimationDirection::Reverse</span>;
-                    (<span class="ident">animation</span>.<span class="ident">frames</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">2</span>).<span class="ident">max</span>(<span class="number">0</span>)
-                }
-            }
-        } <span class="kw">else</span> {
-            <span class="ident">next_frame</span> <span class="kw">as</span> <span class="ident">usize</span>
+        } <span class="kw">else </span>{
+            next_frame <span class="kw">as </span>usize
         })
     }
 
-    <span class="doccomment">/// If tag is valid, invoke `f` with the current animation frame.</span>
-    <span class="kw">fn</span> <span class="ident">with_current_frame</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="ident">F</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">SpriteFrame</span>) -&gt; <span class="ident">R</span>,
+    <span class="doccomment">/// If tag is valid, invoke `f` with the current animation frame.
+    </span><span class="kw">fn </span>with_current_frame&lt;F, R&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, f: F) -&gt; <span class="kw">crate</span>::Result&lt;R&gt;
+    <span class="kw">where
+        </span>F: Fn(<span class="kw-2">&amp;</span>SpriteFrame) -&gt; R,
     {
-        <span class="kw">let</span> <span class="ident">animation</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">animations</span>
-            .<span class="ident">animations</span>
-            .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">current_tag</span>)
-            .<span class="ident">ok_or</span>(<span class="ident">Error::InvalidSpriteTag</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>animation = <span class="self">self
+            </span>.animations
+            .animations
+            .get(<span class="kw-2">&amp;</span><span class="self">self</span>.current_tag)
+            .ok_or(Error::InvalidSpriteTag)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">f</span>(<span class="kw-2">&amp;</span><span class="ident">animation</span>.<span class="ident">frames</span>[<span class="self">self</span>.<span class="ident">current_frame</span>]))
+        <span class="prelude-val">Ok</span>(f(<span class="kw-2">&amp;</span>animation.frames[<span class="self">self</span>.current_frame]))
     }
 }
 
-<span class="doccomment">/// A collection of [`SpriteAnimation`]s. This is an immutable object that</span>
-<span class="doccomment">/// shares data when cloned to minimize data copies.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpriteAnimations</span> {
-    <span class="ident">animations</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">SpriteAnimation</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A collection of [`SpriteAnimation`]s. This is an immutable object that
+/// shares data when cloned to minimize data copies.
+</span><span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>SpriteAnimations {
+    animations: Arc&lt;HashMap&lt;<span class="prelude-ty">Option</span>&lt;String&gt;, SpriteAnimation&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">SpriteAnimations</span> {
-    <span class="doccomment">/// Creates a new collection from `animations`.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">animations</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">SpriteAnimation</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">animations</span>: <span class="ident">Arc::new</span>(<span class="ident">animations</span>),
+<span class="kw">impl </span>SpriteAnimations {
+    <span class="doccomment">/// Creates a new collection from `animations`.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>new(animations: HashMap&lt;<span class="prelude-ty">Option</span>&lt;String&gt;, SpriteAnimation&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            animations: Arc::new(animations),
         }
     }
 
-    <span class="doccomment">/// Returns the animation for `tag`.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">animation_for</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">tag</span>: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">impl</span> <span class="ident">ToString</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;_</span> <span class="ident">SpriteAnimation</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">animations</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">tag</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="ident">ToString::to_string</span>))
+    <span class="doccomment">/// Returns the animation for `tag`.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>animation_for(<span class="kw-2">&amp;</span><span class="self">self</span>, tag: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>ToString&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>SpriteAnimation&gt; {
+        <span class="self">self</span>.animations.get(<span class="kw-2">&amp;</span>tag.as_ref().map(ToString::to_string))
     }
 }
 
-<span class="doccomment">/// An animation of one or more [`SpriteFrame`]s.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpriteAnimation</span> {
-    <span class="doccomment">/// The frames of the animation.</span>
-    <span class="kw">pub</span> <span class="ident">frames</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SpriteFrame</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The mode of the animation.</span>
-    <span class="kw">pub</span> <span class="ident">mode</span>: <span class="ident">AnimationMode</span>,
+<span class="doccomment">/// An animation of one or more [`SpriteFrame`]s.
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>SpriteAnimation {
+    <span class="doccomment">/// The frames of the animation.
+    </span><span class="kw">pub </span>frames: Vec&lt;SpriteFrame&gt;,
+    <span class="doccomment">/// The mode of the animation.
+    </span><span class="kw">pub </span>mode: AnimationMode,
 }
 
-<span class="kw">impl</span> <span class="ident">SpriteAnimation</span> {
-    <span class="doccomment">/// Creates a new animation with `frames` and [`AnimationMode::Forward`].</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">frames</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SpriteFrame</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">frames</span>,
-            <span class="ident">mode</span>: <span class="ident">AnimationMode::Forward</span>,
+<span class="kw">impl </span>SpriteAnimation {
+    <span class="doccomment">/// Creates a new animation with `frames` and [`AnimationMode::Forward`].
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>new(frames: Vec&lt;SpriteFrame&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            frames,
+            mode: AnimationMode::Forward,
         }
     }
 
-    <span class="doccomment">/// Builder-style function. Sets `mode` and returns self.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">with_mode</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">mode</span>: <span class="ident">AnimationMode</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">mode</span> <span class="op">=</span> <span class="ident">mode</span>;
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Builder-style function. Sets `mode` and returns self.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>with_mode(<span class="kw-2">mut </span><span class="self">self</span>, mode: AnimationMode) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.mode = mode;
+        <span class="self">self
+    </span>}
 }
 
-<span class="doccomment">/// A single frame for a [`SpriteAnimation`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpriteFrame</span> {
-    <span class="doccomment">/// The source to render.</span>
-    <span class="kw">pub</span> <span class="ident">source</span>: <span class="ident">SpriteSource</span>,
-    <span class="doccomment">/// The length the frame should be displayed. `None` will act as an infinite</span>
-    <span class="doccomment">/// duration.</span>
-    <span class="kw">pub</span> <span class="ident">duration</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A single frame for a [`SpriteAnimation`].
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>SpriteFrame {
+    <span class="doccomment">/// The source to render.
+    </span><span class="kw">pub </span>source: SpriteSource,
+    <span class="doccomment">/// The length the frame should be displayed. `None` will act as an infinite
+    /// duration.
+    </span><span class="kw">pub </span>duration: <span class="prelude-ty">Option</span>&lt;Duration&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">SpriteFrame</span> {
-    <span class="doccomment">/// Creates a new frame with `source` and no duration.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">source</span>: <span class="ident">SpriteSource</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">source</span>,
-            <span class="ident">duration</span>: <span class="prelude-val">None</span>,
+<span class="kw">impl </span>SpriteFrame {
+    <span class="doccomment">/// Creates a new frame with `source` and no duration.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>new(source: SpriteSource) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            source,
+            duration: <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// Builder-style function. Sets `duration` and returns self.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">with_duration</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">duration</span>: <span class="ident">Duration</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">duration</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">duration</span>);
-        <span class="self">self</span>
-    }
+    <span class="doccomment">/// Builder-style function. Sets `duration` and returns self.
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub const fn </span>with_duration(<span class="kw-2">mut </span><span class="self">self</span>, duration: Duration) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.duration = <span class="prelude-val">Some</span>(duration);
+        <span class="self">self
+    </span>}
 }
 
-<span class="doccomment">/// A rendered sprite.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderedSprite</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">data</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RenderedSpriteData</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A rendered sprite.
+</span><span class="attribute">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>RenderedSprite {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) data: Arc&lt;RenderedSpriteData&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">RenderedSprite</span> {
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(
-        <span class="ident">render_at</span>: <span class="ident">ExtentsRect</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
-        <span class="ident">rotation</span>: <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span>,
-        <span class="ident">alpha</span>: <span class="ident">f32</span>,
-        <span class="ident">source</span>: <span class="ident">SpriteSource</span>,
-    ) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">data</span>: <span class="ident">Arc::new</span>(<span class="ident">RenderedSpriteData</span> {
-                <span class="ident">render_at</span>,
-                <span class="ident">rotation</span>,
-                <span class="ident">alpha</span>,
-                <span class="ident">source</span>,
+<span class="kw">impl </span>RenderedSprite {
+    <span class="attribute">#[must_use]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
+        render_at: ExtentsRect&lt;f32, Pixels&gt;,
+        rotation: SpriteRotation&lt;Pixels&gt;,
+        alpha: f32,
+        source: SpriteSource,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            data: Arc::new(RenderedSpriteData {
+                render_at,
+                rotation,
+                alpha,
+                source,
             }),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">RenderedSpriteData</span> {
-    <span class="kw">pub</span> <span class="ident">render_at</span>: <span class="ident">ExtentsRect</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Pixels</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">rotation</span>: <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">alpha</span>: <span class="ident">f32</span>,
-    <span class="kw">pub</span> <span class="ident">source</span>: <span class="ident">SpriteSource</span>,
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>RenderedSpriteData {
+    <span class="kw">pub </span>render_at: ExtentsRect&lt;f32, Pixels&gt;,
+    <span class="kw">pub </span>rotation: SpriteRotation&lt;Pixels&gt;,
+    <span class="kw">pub </span>alpha: f32,
+    <span class="kw">pub </span>source: SpriteSource,
 }
 
-<span class="doccomment">/// A rotation of a sprite.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">must_use</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Unit</span> <span class="op">=</span> <span class="ident">Scaled</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The angle to rotate around `screen_location`.</span>
-    <span class="kw">pub</span> <span class="ident">angle</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Angle</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The location to rotate the sprite around. If not specified, the center</span>
-    <span class="doccomment">/// of the sprite is used.</span>
-    <span class="kw">pub</span> <span class="ident">location</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A rotation of a sprite.
+</span><span class="attribute">#[derive(Copy, Clone, Debug)]
+#[must_use]
+</span><span class="kw">pub struct </span>SpriteRotation&lt;Unit = Scaled&gt; {
+    <span class="doccomment">/// The angle to rotate around `screen_location`.
+    </span><span class="kw">pub </span>angle: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
+    <span class="doccomment">/// The location to rotate the sprite around. If not specified, the center
+    /// of the sprite is used.
+    </span><span class="kw">pub </span>location: <span class="prelude-ty">Option</span>&lt;Point&lt;f32, Unit&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns a value that performs no rotation.</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">none</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">angle</span>: <span class="prelude-val">None</span>,
-            <span class="ident">location</span>: <span class="prelude-val">None</span>,
+<span class="kw">impl </span>SpriteRotation&lt;Pixels&gt; {
+    <span class="doccomment">/// Returns a value that performs no rotation.
+    </span><span class="kw">pub const fn </span>none() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            angle: <span class="prelude-val">None</span>,
+            location: <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="doccomment">/// Returns a rotation around the center of the shape.</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">around_center</span>(<span class="ident">angle</span>: <span class="ident">Angle</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">angle</span>: <span class="prelude-val">Some</span>(<span class="ident">angle</span>),
-            <span class="ident">location</span>: <span class="prelude-val">None</span>,
-        }
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">angle</span>: <span class="prelude-val">None</span>,
-            <span class="ident">location</span>: <span class="prelude-val">None</span>,
+    <span class="doccomment">/// Returns a rotation around the center of the shape.
+    </span><span class="kw">pub const fn </span>around_center(angle: Angle) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            angle: <span class="prelude-val">Some</span>(angle),
+            location: <span class="prelude-val">None</span>,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Unit</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns a rotation around `location`.</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">around</span>(<span class="ident">angle</span>: <span class="ident">Angle</span>, <span class="ident">location</span>: <span class="ident">Point</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">Unit</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">angle</span>: <span class="prelude-val">Some</span>(<span class="ident">angle</span>),
-            <span class="ident">location</span>: <span class="prelude-val">Some</span>(<span class="ident">location</span>),
+<span class="kw">impl</span>&lt;Unit&gt; Default <span class="kw">for </span>SpriteRotation&lt;Unit&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            angle: <span class="prelude-val">None</span>,
+            location: <span class="prelude-val">None</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Pixels</span> <span class="op">=</span> <span class="self">Self</span>;
-    <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Points</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>;
-
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Pixels</span> {
-        <span class="kw-2">*</span><span class="self">self</span>
-    }
-
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Points</span> {
-        <span class="ident">SpriteRotation</span> {
-            <span class="ident">angle</span>: <span class="self">self</span>.<span class="ident">angle</span>,
-            <span class="ident">location</span>: <span class="self">self</span>.<span class="ident">location</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>)),
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Scaled</span> {
-        <span class="ident">SpriteRotation</span> {
-            <span class="ident">angle</span>: <span class="self">self</span>.<span class="ident">angle</span>,
-            <span class="ident">location</span>: <span class="self">self</span>.<span class="ident">location</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>)),
+<span class="kw">impl</span>&lt;Unit&gt; SpriteRotation&lt;Unit&gt; {
+    <span class="doccomment">/// Returns a rotation around `location`.
+    </span><span class="kw">pub const fn </span>around(angle: Angle, location: Point&lt;f32, Unit&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            angle: <span class="prelude-val">Some</span>(angle),
+            location: <span class="prelude-val">Some</span>(location),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Points</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="self">Self</span>;
-    <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span>;
+<span class="kw">impl </span>Displayable&lt;f32&gt; <span class="kw">for </span>SpriteRotation&lt;Pixels&gt; {
+    <span class="kw">type </span>Pixels = <span class="self">Self</span>;
+    <span class="kw">type </span>Points = SpriteRotation&lt;Points&gt;;
+    <span class="kw">type </span>Scaled = SpriteRotation&lt;Scaled&gt;;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Pixels</span> {
-        <span class="ident">SpriteRotation</span> {
-            <span class="ident">angle</span>: <span class="self">self</span>.<span class="ident">angle</span>,
-            <span class="ident">location</span>: <span class="self">self</span>.<span class="ident">location</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>)),
+    <span class="kw">fn </span>to_pixels(<span class="kw-2">&amp;</span><span class="self">self</span>, _scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Pixels {
+        <span class="kw-2">*</span><span class="self">self
+    </span>}
+
+    <span class="kw">fn </span>to_points(<span class="kw-2">&amp;</span><span class="self">self</span>, scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Points {
+        SpriteRotation {
+            angle: <span class="self">self</span>.angle,
+            location: <span class="self">self</span>.location.map(|l| l.to_points(scale)),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Points</span> {
-        <span class="kw-2">*</span><span class="self">self</span>
-    }
-
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Scaled</span> {
-        <span class="ident">SpriteRotation</span> {
-            <span class="ident">angle</span>: <span class="self">self</span>.<span class="ident">angle</span>,
-            <span class="ident">location</span>: <span class="self">self</span>.<span class="ident">location</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">to_scaled</span>(<span class="ident">scale</span>)),
+    <span class="kw">fn </span>to_scaled(<span class="kw-2">&amp;</span><span class="self">self</span>, scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Scaled {
+        SpriteRotation {
+            angle: <span class="self">self</span>.angle,
+            location: <span class="self">self</span>.location.map(|l| l.to_scaled(scale)),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Displayable</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Scaled</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Pixels</span> <span class="op">=</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Pixels</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Points</span> <span class="op">=</span> <span class="ident">SpriteRotation</span><span class="op">&lt;</span><span class="ident">Points</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Scaled</span> <span class="op">=</span> <span class="self">Self</span>;
+<span class="kw">impl </span>Displayable&lt;f32&gt; <span class="kw">for </span>SpriteRotation&lt;Points&gt; {
+    <span class="kw">type </span>Pixels = SpriteRotation&lt;Pixels&gt;;
+    <span class="kw">type </span>Points = <span class="self">Self</span>;
+    <span class="kw">type </span>Scaled = SpriteRotation&lt;Scaled&gt;;
 
-    <span class="kw">fn</span> <span class="ident">to_pixels</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Pixels</span> {
-        <span class="ident">SpriteRotation</span> {
-            <span class="ident">angle</span>: <span class="self">self</span>.<span class="ident">angle</span>,
-            <span class="ident">location</span>: <span class="self">self</span>.<span class="ident">location</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">to_pixels</span>(<span class="ident">scale</span>)),
+    <span class="kw">fn </span>to_pixels(<span class="kw-2">&amp;</span><span class="self">self</span>, scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Pixels {
+        SpriteRotation {
+            angle: <span class="self">self</span>.angle,
+            location: <span class="self">self</span>.location.map(|l| l.to_pixels(scale)),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">to_points</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Points</span> {
-        <span class="ident">SpriteRotation</span> {
-            <span class="ident">angle</span>: <span class="self">self</span>.<span class="ident">angle</span>,
-            <span class="ident">location</span>: <span class="self">self</span>.<span class="ident">location</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">to_points</span>(<span class="ident">scale</span>)),
-        }
-    }
+    <span class="kw">fn </span>to_points(<span class="kw-2">&amp;</span><span class="self">self</span>, _scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Points {
+        <span class="kw-2">*</span><span class="self">self
+    </span>}
 
-    <span class="kw">fn</span> <span class="ident">to_scaled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_scale</span>: <span class="kw-2">&amp;</span><span class="ident">figures::DisplayScale</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Scaled</span> {
-        <span class="kw-2">*</span><span class="self">self</span>
+    <span class="kw">fn </span>to_scaled(<span class="kw-2">&amp;</span><span class="self">self</span>, scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Scaled {
+        SpriteRotation {
+            angle: <span class="self">self</span>.angle,
+            location: <span class="self">self</span>.location.map(|l| l.to_scaled(scale)),
+        }
     }
 }
 
-<span class="doccomment">/// The Srgb colorspace. Used as a `VertexShaderSource` in</span>
-<span class="doccomment">/// [`FrameRenderer`](crate::frame_renderer::FrameRenderer).</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Srgb</span>;
-<span class="doccomment">/// The uncorrected Rgb colorspace. Used as a</span>
-<span class="doccomment">/// [`VertexShaderSource`](crate::sprite::VertexShaderSource) in</span>
-<span class="doccomment">/// [`FrameRenderer`](crate::frame_renderer::FrameRenderer).</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Normal</span>;
+<span class="kw">impl </span>Displayable&lt;f32&gt; <span class="kw">for </span>SpriteRotation&lt;Scaled&gt; {
+    <span class="kw">type </span>Pixels = SpriteRotation&lt;Pixels&gt;;
+    <span class="kw">type </span>Points = SpriteRotation&lt;Points&gt;;
+    <span class="kw">type </span>Scaled = <span class="self">Self</span>;
+
+    <span class="kw">fn </span>to_pixels(<span class="kw-2">&amp;</span><span class="self">self</span>, scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Pixels {
+        SpriteRotation {
+            angle: <span class="self">self</span>.angle,
+            location: <span class="self">self</span>.location.map(|l| l.to_pixels(scale)),
+        }
+    }
+
+    <span class="kw">fn </span>to_points(<span class="kw-2">&amp;</span><span class="self">self</span>, scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Points {
+        SpriteRotation {
+            angle: <span class="self">self</span>.angle,
+            location: <span class="self">self</span>.location.map(|l| l.to_points(scale)),
+        }
+    }
+
+    <span class="kw">fn </span>to_scaled(<span class="kw-2">&amp;</span><span class="self">self</span>, _scale: <span class="kw-2">&amp;</span>figures::DisplayScale&lt;f32&gt;) -&gt; <span class="self">Self</span>::Scaled {
+        <span class="kw-2">*</span><span class="self">self
+    </span>}
+}
+
+<span class="doccomment">/// The Srgb colorspace. Used as a `VertexShaderSource` in
+/// [`FrameRenderer`](crate::frame_renderer::FrameRenderer).
+</span><span class="kw">pub struct </span>Srgb;
+<span class="doccomment">/// The uncorrected Rgb colorspace. Used as a
+/// [`VertexShaderSource`](crate::sprite::VertexShaderSource) in
+/// [`FrameRenderer`](crate::frame_renderer::FrameRenderer).
+</span><span class="kw">pub struct </span>Normal;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="kludgine_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
