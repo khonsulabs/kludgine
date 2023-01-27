@@ -214,7 +214,9 @@ impl Runtime {
         let builder: winit::window::WindowBuilder = builder.into();
         let winit_window = builder.build(event_loop).unwrap();
         window_sender
-            .try_send(RuntimeWindowConfig::new(&winit_window))
+            .try_send(
+                RuntimeWindowConfig::new(&winit_window).expect("failed to create window surface"),
+            )
             .unwrap();
 
         let mut windows = WINIT_WINDOWS.write();
@@ -264,7 +266,7 @@ impl Runtime {
         }
         let (window_sender, window_receiver) = flume::bounded(1);
         window_sender
-            .send(RuntimeWindowConfig::new(&initial_window))
+            .send(RuntimeWindowConfig::new(&initial_window).expect("failed to create surface"))
             .unwrap();
 
         RuntimeWindow::open(&window_receiver, initial_system_theme, window);

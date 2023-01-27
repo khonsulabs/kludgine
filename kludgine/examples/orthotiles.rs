@@ -22,9 +22,9 @@ impl WindowCreator for OrthoTiles {
 static MAP_SIZE: u32 = 100;
 
 impl Window for OrthoTiles {
-    fn target_fps(&self) -> Option<u16> {
-        Some(60)
-    }
+    // fn target_fps(&self) -> Option<u16> {
+    //     Some(60)
+    // }
 
     fn initialize(
         &mut self,
@@ -42,7 +42,7 @@ impl Window for OrthoTiles {
     fn update(
         &mut self,
         scene: &Target,
-        _status: &mut RedrawStatus,
+        status: &mut RedrawStatus,
         _window: WindowHandle,
     ) -> kludgine::Result<()> {
         let stickguy = self.stickguy.as_mut().unwrap();
@@ -51,17 +51,24 @@ impl Window for OrthoTiles {
         if scene.keys_pressed.contains(&VirtualKeyCode::Right) {
             animation = "WalkRight";
             self.position.x += 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
+            status.set_needs_redraw();
         } else if scene.keys_pressed.contains(&VirtualKeyCode::Left) {
             animation = "WalkLeft";
             self.position.x -= 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
+            status.set_needs_redraw();
         }
 
         if scene.keys_pressed.contains(&VirtualKeyCode::Up) {
             self.position.y -= 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
+            status.set_needs_redraw();
         } else if scene.keys_pressed.contains(&VirtualKeyCode::Down) {
             self.position.y += 32.0 * scene.elapsed().unwrap_or_default().as_secs_f32();
+            status.set_needs_redraw();
         }
         stickguy.set_current_tag(Some(animation))?;
+        if let Some(duration) = stickguy.remaining_frame_duration()? {
+            status.estimate_next_frame(duration);
+        }
 
         Ok(())
     }
@@ -108,8 +115,8 @@ impl Window for OrthoTiles {
                 MouseScrollDelta::PixelDelta(point) => point.y as f32,
             };
             self.zoom = (self.zoom + zoom_amount / 100.0).min(10.0).max(0.2);
-            status.set_needs_redraw();
         }
+        status.set_needs_redraw();
         Ok(())
     }
 }

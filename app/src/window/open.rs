@@ -63,14 +63,6 @@ impl RedrawStatus {
         }
     }
 
-    /// Triggers an update as soon as possible. Does not affect redrawing.
-    pub fn set_needs_update(&mut self) {
-        if !self.needs_render {
-            self.needs_render = true;
-            let _ = self.event_sender.send(WindowEvent::WakeUp);
-        }
-    }
-
     /// Estimates the next redraw instant by adding `duration` to
     /// `Instant::now()`. If this is later than the current estimate, it
     /// will be ignored.

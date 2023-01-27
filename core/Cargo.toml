@@ -29,8 +29,8 @@ serialization = ["serde", "figures/serde", "palette/serializing"]
 
 [dependencies]
 approx = "0.5.1"
-easygpu = "0.3.0"
-easygpu-lyon = "0.3.0"
+easygpu = "0.4.0"
+easygpu-lyon = "0.4.0"
 image = { version = "0.24.0", default-features = false }
 palette = "0.6.0"
 futures-timer = "3.0.2"

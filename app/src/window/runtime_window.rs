@@ -51,18 +51,21 @@ pub struct RuntimeWindowConfig {
 }
 
 impl RuntimeWindowConfig {
-    pub fn new(window: &winit::window::Window) -> Self {
+    pub fn new(window: &winit::window::Window) -> Result<Self, wgpu::CreateSurfaceError> {
         // TODO in wasm, we need to explicity enable GL, but since wasm isn't possible
         // right now, we're just hardcoding primary
-        let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
-        let surface = unsafe { instance.create_surface(window) };
-        Self {
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends: wgpu::Backends::PRIMARY,
+            dx12_shader_compiler: wgpu::Dx12Compiler::default(),
+        });
+        let surface = unsafe { instance.create_surface(window) }?;
+        Ok(Self {
             window_id: window.id(),
             instance,
             surface,
             initial_size: Size::new(window.inner_size().width, window.inner_size().height),
             scale_factor: window.scale_factor() as f32,
-        }
+        })
     }
 }
 
@@ -263,8 +266,8 @@ impl RuntimeWindow {
                 Err(_) => return Ok(()),
             } {
                 match event {
-                    WindowEvent::WakeUp => {
-                        window.redraw_status.set_needs_update();
+                    WindowEvent::WakeUp | WindowEvent::RedrawRequested => {
+                        window.redraw_status.set_needs_redraw();
                     }
                     WindowEvent::SystemThemeChanged(system_theme) => {
                         window.scene_mut().set_system_theme(system_theme);
@@ -301,9 +304,6 @@ impl RuntimeWindow {
                     }
                     WindowEvent::ReceiveCharacter(character) => {
                         window.receive_character(character)?;
-                    }
-                    WindowEvent::RedrawRequested => {
-                        window.redraw_status.set_needs_redraw();
                     }
                 }
             }

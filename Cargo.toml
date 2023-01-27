@@ -6,8 +6,8 @@ resolver = "2"
 # easygpu = { git = "https://github.com/khonsulabs/easygpu.git", branch = "main" }
 # easygpu-lyon = { git = "https://github.com/khonsulabs/easygpu.git", branch = "main" }
 # must be commented out for CI to succeed
-# easygpu = { path = "../easygpu/easygpu", version = "0.1.0" }
-# easygpu-lyon = { path = "../easygpu/lyon", version = "0.1.0" }
+# easygpu = { path = "../easygpu/easygpu", version = "0.4.0" }
+# easygpu-lyon = { path = "../easygpu/lyon", version = "0.4.0" }
 
 # [patch."https://github.com/khonsulabs/figures.git"]
 # figures = { path = "../figures/figures" }

@@ -13,7 +13,7 @@ async fn offscreen_render_test() {
         .init();
     let (scene_sender, scene_receiver) = flume::unbounded();
 
-    let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
+    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::default());
     let adapter = instance
         .request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: wgpu::PowerPreference::default(),
