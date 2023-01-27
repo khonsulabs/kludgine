@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"kludgine_app":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.65.0/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"enum\" href=\"kludgine_app/event/enum.EventStatus.html\" title=\"enum kludgine_app::event::EventStatus\">EventStatus</a>"]]
+"kludgine_app":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.66.1/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"enum\" href=\"kludgine_app/event/enum.EventStatus.html\" title=\"enum kludgine_app::event::EventStatus\">EventStatus</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
