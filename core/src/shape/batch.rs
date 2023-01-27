@@ -1,7 +1,8 @@
 use easygpu::prelude::*;
 use easygpu_lyon::ShapeBuilder;
 
-use crate::{math::Pixels, shape::Shape};
+use crate::math::Pixels;
+use crate::shape::Shape;
 
 /// A batch of shapes that can be rendered together.
 #[derive(Debug, Default, Clone)]

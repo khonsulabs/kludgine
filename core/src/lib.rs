@@ -41,18 +41,11 @@ pub mod text;
 pub mod texture;
 
 // Re-exports
-pub use easygpu;
-pub use figures;
-pub use flume;
-pub use image;
-pub use lazy_static;
-pub use winit;
+pub use {easygpu, figures, flume, image, lazy_static, winit};
 
-pub use self::{
-    color::Color,
-    error::Error,
-    frame_renderer::{FrameRenderer, ShutdownCallback},
-};
+pub use self::color::Color;
+pub use self::error::Error;
+pub use self::frame_renderer::{FrameRenderer, ShutdownCallback};
 
 /// A collection of commonly used exports provided by this crate.
 pub mod prelude {
@@ -61,21 +54,24 @@ pub mod prelude {
         Vectorlike as _, Zero as _,
     };
 
+    pub use super::math::{
+        Angle, Figure, Pixels, Point, Rect, Scale, Scaled, Size, Unknown, Vector,
+    };
+    pub use super::scene::{Scene, Target};
+    pub use super::shape::*;
+    pub use super::sprite::{
+        AnimationMode, Sprite, SpriteAnimation, SpriteAnimations, SpriteCollection, SpriteFrame,
+        SpriteMap, SpriteRotation, SpriteSheet, SpriteSource, SpriteSourceSublocation,
+    };
     #[cfg(feature = "bundled-fonts-enabled")]
     pub use super::text::bundled_fonts;
+    pub use super::text::font::Font;
+    pub use super::text::prepared::PreparedSpan;
+    pub use super::text::Text;
+    pub use super::texture::Texture;
     pub use super::{
-        include_aseprite_sprite, include_font, include_texture,
-        math::{Angle, Figure, Pixels, Point, Rect, Scale, Scaled, Size, Unknown, Vector},
-        scene::{Scene, Target},
-        shape::*,
-        sprite::{
-            AnimationMode, Sprite, SpriteAnimation, SpriteAnimations, SpriteCollection,
-            SpriteFrame, SpriteMap, SpriteRotation, SpriteSheet, SpriteSource,
-            SpriteSourceSublocation,
-        },
-        text::{font::Font, prepared::PreparedSpan, Text},
-        texture::Texture,
-        Color, FrameRenderer, ShutdownCallback,
+        include_aseprite_sprite, include_font, include_texture, Color, FrameRenderer,
+        ShutdownCallback,
     };
 }
 

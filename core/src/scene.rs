@@ -1,18 +1,15 @@
-use std::{
-    collections::HashSet,
-    sync::Arc,
-    time::{Duration, Instant},
-};
+use std::collections::HashSet;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 use figures::{DisplayScale, Displayable, One, Pixels, Points, Rectlike, SizedRect};
-use winit::{event::VirtualKeyCode, window::Theme};
+use winit::event::VirtualKeyCode;
+use winit::window::Theme;
 
-use crate::{
-    math::{Point, Scale, Scaled, Size, Vector},
-    shape::Shape,
-    sprite::RenderedSprite,
-    text::prepared::PreparedSpan,
-};
+use crate::math::{Point, Scale, Scaled, Size, Vector};
+use crate::shape::Shape;
+use crate::sprite::RenderedSprite;
+use crate::text::prepared::PreparedSpan;
 
 /// An individual render instruction.
 #[derive(Debug)]

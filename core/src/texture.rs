@@ -1,11 +1,7 @@
-use std::{
-    convert::TryFrom,
-    path::Path,
-    sync::{
-        atomic::{AtomicU64, Ordering},
-        Arc,
-    },
-};
+use std::convert::TryFrom;
+use std::path::Path;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 
 use image::{DynamicImage, RgbaImage};
 use lazy_static::lazy_static;

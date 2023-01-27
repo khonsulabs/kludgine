@@ -1,28 +1,20 @@
-use std::{
-    collections::HashMap,
-    num::NonZeroU32,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc, Mutex,
-    },
-};
+use std::collections::HashMap;
+use std::num::NonZeroU32;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
-use easygpu::{
-    prelude::*,
-    wgpu::{
-        Buffer, Extent3d, FilterMode, Origin3d, PresentMode, TextureAspect, TextureUsages,
-        COPY_BYTES_PER_ROW_ALIGNMENT,
-    },
+use easygpu::prelude::*;
+use easygpu::wgpu::{
+    Buffer, Extent3d, FilterMode, Origin3d, PresentMode, TextureAspect, TextureUsages,
+    COPY_BYTES_PER_ROW_ALIGNMENT,
 };
 use easygpu_lyon::LyonPipeline;
 use figures::Rectlike;
 use image::DynamicImage;
 
-use crate::{
-    math::{ExtentsRect, Point, Size, Unknown},
-    scene::SceneEvent,
-    sprite::{self, VertexShaderSource},
-};
+use crate::math::{ExtentsRect, Point, Size, Unknown};
+use crate::scene::SceneEvent;
+use crate::sprite::{self, VertexShaderSource};
 
 mod frame;
 use frame::{FontUpdate, Frame, FrameCommand};

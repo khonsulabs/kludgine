@@ -1,20 +1,14 @@
-use std::{
-    sync::Arc,
-    time::{Duration, Instant},
-};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
-use kludgine_core::{
-    figures::{Points, Scaled},
-    flume::Sender,
-    math::Scale,
-    scene::{Scene, Target},
-    winit::window::WindowId,
-};
+use kludgine_core::figures::{Points, Scaled};
+use kludgine_core::flume::Sender;
+use kludgine_core::math::Scale;
+use kludgine_core::scene::{Scene, Target};
+use kludgine_core::winit::window::WindowId;
 
-use super::{
-    event::{InputEvent, WindowEvent},
-    CloseResponse, Window,
-};
+use super::event::{InputEvent, WindowEvent};
+use super::{CloseResponse, Window};
 use crate::WindowHandle;
 
 pub struct OpenWindow<T: Window> {

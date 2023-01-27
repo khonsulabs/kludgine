@@ -1,10 +1,11 @@
-use std::{collections::HashMap, fmt::Debug, hash::Hash, sync::Arc};
+use std::collections::HashMap;
+use std::fmt::Debug;
+use std::hash::Hash;
+use std::sync::Arc;
 
-use crate::{
-    math::{Point, Rect, Size},
-    sprite::{SpriteCollection, SpriteMap, SpriteSource},
-    texture::Texture,
-};
+use crate::math::{Point, Rect, Size};
+use crate::sprite::{SpriteCollection, SpriteMap, SpriteSource};
+use crate::texture::Texture;
 
 /// A collection of sprites from a single [`Texture`].
 #[derive(Debug, Clone)]

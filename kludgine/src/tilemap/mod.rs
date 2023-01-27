@@ -6,18 +6,14 @@
 //! without using a `gooey` user interface, it will just use the `Renderer`
 //! trait instead of directly interacting with a `Target`.
 
-use std::{
-    mem,
-    ops::{Deref, DerefMut},
-    time::Duration,
-};
+use std::mem;
+use std::ops::{Deref, DerefMut};
+use std::time::Duration;
 
-use kludgine_core::{
-    figures::{Displayable, One, Rectlike, SizedRect},
-    math::{ExtentsRect, Figure, Pixels, Point, Scale, Scaled, Size, Unknown},
-    scene::Target,
-    sprite::{Sprite, SpriteRotation, SpriteSource},
-};
+use kludgine_core::figures::{Displayable, One, Rectlike, SizedRect};
+use kludgine_core::math::{ExtentsRect, Figure, Pixels, Point, Scale, Scaled, Size, Unknown};
+use kludgine_core::scene::Target;
+use kludgine_core::sprite::{Sprite, SpriteRotation, SpriteSource};
 
 /// `TileMap` renders tiles retrieved from a [`TileProvider`]
 #[derive(Debug)]

@@ -1,37 +1,25 @@
-use std::{
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
-    time::{Duration, Instant},
-};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
-use kludgine_core::{
-    easygpu::prelude::*,
-    figures::{num_traits::One, DisplayScale, Displayable, Pixels},
-    flume,
-    math::{Point, Scale, Size},
-    scene::{Scene, SceneEvent},
-    winit::{
-        self,
-        dpi::{PhysicalPosition, PhysicalSize},
-        event::WindowEvent as WinitWindowEvent,
-        window::{Theme, WindowId},
-    },
-    FrameRenderer,
-};
+use kludgine_core::easygpu::prelude::*;
+use kludgine_core::figures::num_traits::One;
+use kludgine_core::figures::{DisplayScale, Displayable, Pixels};
+use kludgine_core::math::{Point, Scale, Size};
+use kludgine_core::scene::{Scene, SceneEvent};
+use kludgine_core::winit::dpi::{PhysicalPosition, PhysicalSize};
+use kludgine_core::winit::event::WindowEvent as WinitWindowEvent;
+use kludgine_core::winit::window::{Theme, WindowId};
+use kludgine_core::winit::{self};
+use kludgine_core::{flume, FrameRenderer};
 use once_cell::sync::OnceCell;
 use tracing::instrument;
 
 use super::OpenWindow;
-use crate::{
-    runtime::{Runtime, RuntimeRequest, WINDOWS},
-    window::{
-        event::{ElementState, Event, InputEvent, VirtualKeyCode, WindowEvent},
-        CloseResponse, Window, WindowMessage, WINDOW_CHANNELS,
-    },
-    Error,
-};
+use crate::runtime::{Runtime, RuntimeRequest, WINDOWS};
+use crate::window::event::{ElementState, Event, InputEvent, VirtualKeyCode, WindowEvent};
+use crate::window::{CloseResponse, Window, WindowMessage, WINDOW_CHANNELS};
+use crate::Error;
 
 pub struct RuntimeWindow {
     pub window_id: WindowId,

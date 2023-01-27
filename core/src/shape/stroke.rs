@@ -1,7 +1,8 @@
 use easygpu_lyon::lyon_tessellation::StrokeOptions;
 use figures::Figure;
 
-use crate::{color::Color, math::Scaled};
+use crate::color::Color;
+use crate::math::Scaled;
 
 /// A shape stroke (outline) options.
 #[derive(Default, Clone, Debug)]

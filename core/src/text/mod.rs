@@ -8,7 +8,9 @@ pub use font::Font;
 use rusttype::Scale;
 
 use self::prepared::{GlyphInfo, PreparedSpan};
-use crate::{color::Color, math::Scaled, prelude::Target};
+use crate::color::Color;
+use crate::math::Scaled;
+use crate::prelude::Target;
 
 /// Text rendering functionality
 pub enum Text {}

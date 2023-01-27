@@ -1,18 +1,13 @@
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
-use kludgine_core::{
-    figures::{num_traits::One, Pixels, Point, Points},
-    flume,
-    math::{Scale, Scaled, Size},
-    scene::Target,
-    winit::{
-        self,
-        window::{Theme, WindowBuilder as WinitWindowBuilder, WindowId},
-    },
-};
+use kludgine_core::figures::num_traits::One;
+use kludgine_core::figures::{Pixels, Point, Points};
+use kludgine_core::flume;
+use kludgine_core::math::{Scale, Scaled, Size};
+use kludgine_core::scene::Target;
+use kludgine_core::winit::window::{Theme, WindowBuilder as WinitWindowBuilder, WindowId};
+use kludgine_core::winit::{self};
 use lazy_static::lazy_static;
 
 use crate::{Error, Runtime};

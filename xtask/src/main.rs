@@ -1,9 +1,6 @@
 use devx_cmd::run;
-use khonsu_tools::universal::{
-    anyhow,
-    clap::{self, Parser},
-    DefaultConfig,
-};
+use khonsu_tools::universal::clap::{self, Parser};
+use khonsu_tools::universal::{anyhow, DefaultConfig};
 
 #[derive(Debug, Parser)]
 enum Args {

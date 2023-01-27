@@ -10,11 +10,12 @@ use easygpu_lyon::lyon_tessellation;
 use figures::{Displayable, Figure, Points, Rectlike, Scale};
 use geometry::ShapeGeometry;
 
-pub use self::{batch::*, fill::*, path::*, stroke::*};
-use crate::{
-    math::{Pixels, Point, Rect, Scaled},
-    scene::{Element, Target},
-};
+pub use self::batch::*;
+pub use self::fill::*;
+pub use self::path::*;
+pub use self::stroke::*;
+use crate::math::{Pixels, Point, Rect, Scaled};
+use crate::scene::{Element, Target};
 
 /// A 2d shape.
 #[derive(Debug, Clone)]

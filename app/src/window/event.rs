@@ -1,11 +1,9 @@
+use kludgine_core::figures::{Pixels, Points};
+use kludgine_core::math::{Point, Scale, Scaled, Size};
 pub use kludgine_core::winit::event::{
     DeviceId, ElementState, MouseButton, MouseScrollDelta, ScanCode, TouchPhase, VirtualKeyCode,
 };
-use kludgine_core::{
-    figures::{Pixels, Points},
-    math::{Point, Scale, Scaled, Size},
-    winit::window::Theme,
-};
+use kludgine_core::winit::window::Theme;
 
 /// Whether an event has been processed or ignored.
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]

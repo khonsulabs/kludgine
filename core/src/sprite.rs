@@ -1,25 +1,27 @@
 use figures::{Displayable, Pixels, Points, Scaled};
 
-use crate::{
-    math::{Angle, ExtentsRect, Point, Rect, Size},
-    texture::Texture,
-    Error,
-};
+use crate::math::{Angle, ExtentsRect, Point, Rect, Size};
+use crate::texture::Texture;
+use crate::Error;
 mod batch;
 mod collection;
 mod gpu_batch;
 mod pipeline;
 mod sheet;
-pub(crate) use self::{
-    batch::Batch,
-    gpu_batch::{BatchBuffers, GpuBatch},
-    pipeline::Pipeline,
-};
+pub(crate) use self::batch::Batch;
+pub(crate) use self::gpu_batch::{BatchBuffers, GpuBatch};
+pub(crate) use self::pipeline::Pipeline;
 
 mod source;
-use std::{collections::HashMap, iter::IntoIterator, sync::Arc, time::Duration};
+use std::collections::HashMap;
+use std::iter::IntoIterator;
+use std::sync::Arc;
+use std::time::Duration;
 
-pub use self::{collection::*, pipeline::VertexShaderSource, sheet::*, source::*};
+pub use self::collection::*;
+pub use self::pipeline::VertexShaderSource;
+pub use self::sheet::*;
+pub use self::source::*;
 
 /// Includes an [Aseprite](https://www.aseprite.org/) sprite sheet and Json
 /// export. For more information, see [`Sprite::load_aseprite_json`]. This macro

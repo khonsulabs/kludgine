@@ -1,7 +1,9 @@
-use std::{marker::PhantomData, ops::Deref};
+use std::marker::PhantomData;
+use std::ops::Deref;
 
 use bytemuck::{Pod, Zeroable};
-use easygpu::{prelude::*, wgpu::TextureFormat};
+use easygpu::prelude::*;
+use easygpu::wgpu::TextureFormat;
 use figures::Vectorlike;
 
 use super::{Normal, Srgb};

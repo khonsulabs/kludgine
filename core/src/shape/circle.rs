@@ -2,12 +2,10 @@ use easygpu_lyon::lyon_tessellation::{FillTessellator, StrokeTessellator};
 use figures::{Displayable, Points, Vectorlike};
 
 use super::lyon_point;
-use crate::{
-    math::{Figure, Pixels, Point, Scale, Scaled},
-    scene::Target,
-    shape::{Fill, Stroke},
-    Error,
-};
+use crate::math::{Figure, Pixels, Point, Scale, Scaled};
+use crate::scene::Target;
+use crate::shape::{Fill, Stroke};
+use crate::Error;
 #[derive(Clone, Debug)]
 pub struct Circle<S> {
     pub center: Point<f32, S>,

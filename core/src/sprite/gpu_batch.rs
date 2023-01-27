@@ -1,10 +1,9 @@
 use easygpu::prelude::*;
 use figures::{Rectlike, Round};
 
-use crate::{
-    math::{ExtentsRect, Pixels, Point, Rect, Size, Unknown},
-    sprite::{pipeline::Vertex, RenderedSprite, SpriteRotation, SpriteSourceLocation},
-};
+use crate::math::{ExtentsRect, Pixels, Point, Rect, Size, Unknown};
+use crate::sprite::pipeline::Vertex;
+use crate::sprite::{RenderedSprite, SpriteRotation, SpriteSourceLocation};
 
 pub struct GpuBatch {
     pub size: Size<u32, ScreenSpace>,

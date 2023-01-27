@@ -1,13 +1,12 @@
-use std::{ops::Deref, sync::Arc};
+use std::ops::Deref;
+use std::sync::Arc;
 
 use figures::{Displayable, Figure, Round};
 
-use crate::{
-    color::Color,
-    math::{Pixels, Point},
-    scene::{Element, Target},
-    text::Font,
-};
+use crate::color::Color;
+use crate::math::{Pixels, Point};
+use crate::scene::{Element, Target};
+use crate::text::Font;
 
 /// A vertical metrics measurement.
 #[derive(Copy, Clone, Debug)]

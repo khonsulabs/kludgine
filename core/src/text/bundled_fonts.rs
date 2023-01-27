@@ -16,7 +16,8 @@
 
 use lazy_static::lazy_static;
 
-use crate::{include_font, text::font::Font};
+use crate::include_font;
+use crate::text::font::Font;
 
 lazy_static! {
     /// Roboto Regular font, licensed under APL 2.0, feature flag `bundled-fonts-roboto`

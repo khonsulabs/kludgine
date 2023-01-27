@@ -3,11 +3,10 @@
 // rendered texture were exposed directly, it would make Kludgine's rendering be
 // buffered but still all handled on the GPU.
 
-use kludgine::core::{
-    easygpu::{renderer::Renderer, wgpu},
-    flume,
-    prelude::*,
-};
+use kludgine::core::easygpu::renderer::Renderer;
+use kludgine::core::easygpu::wgpu;
+use kludgine::core::flume;
+use kludgine::core::prelude::*;
 use kludgine_core::winit::window::Theme;
 
 #[tokio::main]

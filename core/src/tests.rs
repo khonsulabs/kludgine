@@ -3,7 +3,9 @@ use image::{GenericImageView, Rgba};
 use tracing::Level;
 use winit::window::Theme;
 
-use crate::{frame_renderer::FrameRenderer, prelude::*, sprite::Srgb};
+use crate::frame_renderer::FrameRenderer;
+use crate::prelude::*;
+use crate::sprite::Srgb;
 
 #[tokio::test]
 #[allow(clippy::semicolon_if_nothing_returned)] // false positive from tokio::test

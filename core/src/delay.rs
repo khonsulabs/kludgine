@@ -2,7 +2,8 @@
 mod implementation {
     use std::time::Duration;
 
-    use wasm_bindgen::{prelude::*, JsCast};
+    use wasm_bindgen::prelude::*;
+    use wasm_bindgen::JsCast;
 
     pub struct Delay;
 

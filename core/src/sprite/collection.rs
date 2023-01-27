@@ -1,9 +1,7 @@
-use std::{
-    collections::{hash_map, HashMap},
-    fmt::Debug,
-    hash::Hash,
-    ops::Deref,
-};
+use std::collections::{hash_map, HashMap};
+use std::fmt::Debug;
+use std::hash::Hash;
+use std::ops::Deref;
 
 use crate::sprite::{SpriteSheet, SpriteSource};
 

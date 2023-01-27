@@ -1,7 +1,5 @@
-use crate::{
-    math::{Pixels, Rect, Size},
-    sprite::RenderedSprite,
-};
+use crate::math::{Pixels, Rect, Size};
+use crate::sprite::RenderedSprite;
 
 #[derive(Debug)]
 pub struct Batch {

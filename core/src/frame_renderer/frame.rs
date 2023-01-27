@@ -4,13 +4,12 @@ use easygpu::transform::ScreenSpace;
 use figures::SizedRect;
 use tracing::instrument;
 
-use crate::{
-    math::{Pixels, Size},
-    scene::{Element, SceneEvent},
-    shape, sprite,
-    text::{font::LoadedFont, prepared::PreparedSpan},
-    texture::Texture,
-};
+use crate::math::{Pixels, Size};
+use crate::scene::{Element, SceneEvent};
+use crate::text::font::LoadedFont;
+use crate::text::prepared::PreparedSpan;
+use crate::texture::Texture;
+use crate::{shape, sprite};
 #[derive(Default, Debug)]
 pub struct Frame {
     pub size: Size<u32, ScreenSpace>,

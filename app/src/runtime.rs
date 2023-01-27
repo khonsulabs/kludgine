@@ -1,19 +1,16 @@
-use std::{collections::HashMap, sync::atomic::Ordering};
+use std::collections::HashMap;
+use std::sync::atomic::Ordering;
 
-use kludgine_core::{
-    flume,
-    winit::{
-        self,
-        event::Event,
-        event_loop::EventLoopProxy,
-        window::{Theme, WindowId},
-    },
-};
+use kludgine_core::flume;
+use kludgine_core::winit::event::Event;
+use kludgine_core::winit::event_loop::EventLoopProxy;
+use kludgine_core::winit::window::{Theme, WindowId};
+use kludgine_core::winit::{self};
 use parking_lot::{MappedRwLockReadGuard, Mutex, RwLock, RwLockReadGuard};
 
-use crate::{
-    application::Application,
-    window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig, Window, WindowBuilder},
+use crate::application::Application;
+use crate::window::{
+    opened_first_window, RuntimeWindow, RuntimeWindowConfig, Window, WindowBuilder,
 };
 
 pub enum RuntimeRequest {

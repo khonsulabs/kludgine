@@ -1,10 +1,6 @@
-use std::{
-    fmt::Debug,
-    sync::{
-        atomic::{AtomicU64, Ordering},
-        Arc,
-    },
-};
+use std::fmt::Debug;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 
 use easygpu::prelude::*;
 use figures::Figure;

@@ -1,13 +1,12 @@
-use easygpu_lyon::lyon_tessellation::{self, path::PathEvent as LyonPathEvent};
+use easygpu_lyon::lyon_tessellation::path::PathEvent as LyonPathEvent;
+use easygpu_lyon::lyon_tessellation::{self};
 use figures::{Displayable, Points};
 
 use super::lyon_point;
-use crate::{
-    math::{Pixels, Point, Scale, Scaled},
-    scene::Target,
-    shape::{Fill, Stroke},
-    Error,
-};
+use crate::math::{Pixels, Point, Scale, Scaled};
+use crate::scene::Target;
+use crate::shape::{Fill, Stroke};
+use crate::Error;
 
 /// A point on a [`Path`].
 pub type Endpoint<S> = Point<f32, S>;

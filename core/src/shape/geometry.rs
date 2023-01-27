@@ -2,11 +2,10 @@ use std::fmt::Debug;
 
 use figures::{Displayable, Points};
 
-use crate::{
-    math::{Pixels, Point, Scale, Scaled},
-    scene::Target,
-    shape::{circle::Circle, Fill, Path, Stroke},
-};
+use crate::math::{Pixels, Point, Scale, Scaled};
+use crate::scene::Target;
+use crate::shape::circle::Circle;
+use crate::shape::{Fill, Path, Stroke};
 
 #[derive(Clone, Debug)]
 pub enum ShapeGeometry<S> {

@@ -1,11 +1,9 @@
 use figures::{Displayable, Rectlike, Scaled};
 
-use crate::{
-    math::{ExtentsRect, Pixels, Point, Rect, Size},
-    scene::{Element, Target},
-    sprite::{RenderedSprite, SpriteRotation},
-    texture::Texture,
-};
+use crate::math::{ExtentsRect, Pixels, Point, Rect, Size};
+use crate::scene::{Element, Target};
+use crate::sprite::{RenderedSprite, SpriteRotation};
+use crate::texture::Texture;
 
 /// A sprite's source location and texture. Cheap to clone.
 #[derive(Debug, Clone)]

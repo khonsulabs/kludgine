@@ -1,9 +1,7 @@
 use std::marker::PhantomData;
 
-use crate::{
-    runtime::Runtime,
-    window::{RuntimeWindow, Window, WindowCreator},
-};
+use crate::runtime::Runtime;
+use crate::window::{RuntimeWindow, Window, WindowCreator};
 
 /// A trait that describes the application's behavior.
 pub trait Application: Sized + Send + Sync {

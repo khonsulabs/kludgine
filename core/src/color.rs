@@ -1,6 +1,7 @@
 use approx::relative_eq;
 use easygpu::color::{Rgba, Rgba8};
-use palette::{rgb::Srgba, Component, IntoComponent, Shade, Srgb};
+use palette::rgb::Srgba;
+use palette::{Component, IntoComponent, Shade, Srgb};
 
 /// A RGBA color with f32 components.
 #[derive(Default, Clone, Debug, Copy, PartialEq)]

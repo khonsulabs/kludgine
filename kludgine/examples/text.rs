@@ -1,4 +1,5 @@
-use kludgine::{core::text::bundled_fonts::ROBOTO, prelude::*};
+use kludgine::core::text::bundled_fonts::ROBOTO;
+use kludgine::prelude::*;
 
 fn main() {
     SingleWindowApplication::run(TextExample {});
