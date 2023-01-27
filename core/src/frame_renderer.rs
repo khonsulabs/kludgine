@@ -59,6 +59,7 @@ enum Destination {
     },
 }
 
+#[allow(clippy::large_enum_variant)] // This is an internal type that should be stored on the stack.
 enum Output<'a> {
     SwapChain(RenderFrame),
     Texture {
@@ -547,7 +548,7 @@ where
                         bytes_per_row: NonZeroU32::new(size_for_aligned_copy(
                             frame_size.width as usize * 4,
                         ) as u32),
-                        rows_per_image: NonZeroU32::new(frame_size.height as u32),
+                        rows_per_image: NonZeroU32::new(frame_size.height),
                     },
                 },
                 Extent3d {

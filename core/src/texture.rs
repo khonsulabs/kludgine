@@ -60,7 +60,7 @@ impl Texture {
     #[must_use]
     pub fn size(&self) -> Size<u32> {
         let (w, h) = self.image.dimensions();
-        Size::new(w as u32, h as u32)
+        Size::new(w, h)
     }
 
     /// Returns the raw image data.

@@ -96,10 +96,10 @@ impl GpuBatch {
             let clip_signed = clip.cast::<i32>();
             let dest_rounded = dest.round().cast::<i32>();
 
-            if !(clip_signed.origin.x as i32 <= dest_rounded.origin.x
-                && clip_signed.origin.y as i32 <= dest_rounded.origin.y
-                && clip_signed.extent.x as i32 >= dest_rounded.extent.x
-                && clip_signed.extent.y as i32 >= dest_rounded.extent.y)
+            if !(clip_signed.origin.x <= dest_rounded.origin.x
+                && clip_signed.origin.y <= dest_rounded.origin.y
+                && clip_signed.extent.x >= dest_rounded.extent.x
+                && clip_signed.extent.y >= dest_rounded.extent.y)
             {
                 if let Some(clipped_destination) = dest.intersection(&clip.cast::<f32>()) {
                     if rotation.angle.is_some() {
@@ -233,7 +233,7 @@ impl Draw for BatchBuffers {
             pass.set_binding(binding, &[]);
             pass.set_easy_vertex_buffer(&self.vertices);
             pass.set_easy_index_buffer(&self.indices);
-            pass.draw_indexed(0..self.index_count as u32, 0, 0..1);
+            pass.draw_indexed(0..self.index_count, 0, 0..1);
         }
     }
 }
