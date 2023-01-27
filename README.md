@@ -4,7 +4,7 @@ A 2d rendering engine for the [Rust](https://rust-lang.org/) language.
 
 ![Kludgine is considered experimental](https://img.shields.io/badge/status-experimental-blueviolet)
 [![crate version](https://img.shields.io/crates/v/kludgine.svg)](https://crates.io/crates/kludgine)
-[![Live Build Status](https://img.shields.io/github/workflow/status/khonsulabs/kludgine/Tests/main)](https://github.com/khonsulabs/kludgine/actions?query=workflow:Tests)
+[![Live Build Status](https://img.shields.io/github/actions/workflow/status/khonsulabs/kludgine/rust.yml?branch=main)](https://github.com/khonsulabs/kludgine/actions?query=workflow:Tests)
 [![HTML Coverage Report for `main` branch](https://khonsulabs.github.io/kludgine/coverage/badge.svg)](https://khonsulabs.github.io/kludgine/coverage/)
 [![Documentation for `main` branch](https://img.shields.io/badge/docs-main-informational)](https://khonsulabs.github.io/kludgine/main/kludgine/)
 
