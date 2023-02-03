@@ -30,7 +30,8 @@ pub use self::application::{Application, SingleWindowApplication};
 pub use self::error::Error;
 pub use self::runtime::Runtime;
 pub use self::window::{
-    event, RedrawRequester, RedrawStatus, Window, WindowBuilder, WindowCreator, WindowHandle,
+    event, CloseResponse, RedrawRequester, RedrawStatus, Window, WindowBuilder, WindowCreator,
+    WindowHandle,
 };
 
 /// A collection of commonly used exports provided by this crate.
@@ -40,8 +41,8 @@ pub mod prelude {
         ScanCode, TouchPhase, VirtualKeyCode,
     };
     pub use super::{
-        Application, Error, RedrawRequester, RedrawStatus, Runtime, SingleWindowApplication,
-        Window, WindowBuilder, WindowCreator, WindowHandle,
+        Application, CloseResponse, Error, RedrawRequester, RedrawStatus, Runtime,
+        SingleWindowApplication, Window, WindowBuilder, WindowCreator, WindowHandle,
     };
 }
 

@@ -310,6 +310,7 @@ impl RuntimeWindow {
             if window.scene().size().area().get() > 0.0 {
                 let additional_scale = window.additional_scale();
                 if additional_scale != window.scene().scale().additional_scale() {
+                    window.scene_mut().set_additional_scale(additional_scale);
                     WindowMessage::SetAdditionalScale(additional_scale).send_to(id)?;
                 }
 

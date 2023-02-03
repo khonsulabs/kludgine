@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixes
+
+- Returning a scale from `Window::additional_scale` now works.
+- `CloseResponse` is now exported.
+
+### Added
+
+- `Scene::set_additional_scale` has been added to set the scaling factor between
+  Points and Scaled. This allows application-level scaling in addition to the
+  DPI scaling Kludgine already does.
+
 ## v0.4.0
 
 ### Changes

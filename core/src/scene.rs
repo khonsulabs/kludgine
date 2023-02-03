@@ -244,6 +244,11 @@ impl Scene {
         self.scale_factor = DisplayScale::new(scale_factor, Scale::one());
     }
 
+    /// Sets the additional scaling factor.
+    pub fn set_additional_scale(&mut self, scale: Scale<f32, Scaled, Points>) {
+        self.scale_factor.set_additional_scale(scale);
+    }
+
     /// Returns the current [`DisplayScale`].
     #[must_use]
     pub const fn scale(&self) -> &DisplayScale<f32> {
