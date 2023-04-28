@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v0.5.0 (2023-04-28)
 
 ### Breaking Changes
 
@@ -36,14 +36,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Points and Scaled. This allows application-level scaling in addition to the
   DPI scaling Kludgine already does.
 
-## v0.4.0
+## v0.4.0 (2023-01-27)
 
 ### Changes
 
 - Updated `easygpu` to 0.4.0:
   - `wgpu` has been updated to 0.15.0.
 
-## v0.3.1
+## v0.3.1 (2022-11-06)
 
 ### Changes
 
@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Versions of rusttype are now pinned to prevent transient dependency upgrades
     breaking compilation.
 
-## v0.3.0
+## v0.3.0 (2022-11-06)
 
 ### Changes
 
@@ -60,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `wgpu` has been updated to 0.14.0.
   - `winit` has been updated to 0.27.4.
 
-## v0.2.0
+## v0.2.0 (2022-07-31)
 
 ### Changes
 
@@ -68,7 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `wgpu` to 0.13.1
   - Updated `lyon_tessellation` to 1.0.1
 
-## v0.1.0
+## v0.1.0 (2022-02-02)
 
 ### Changes
 
@@ -81,20 +81,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed incompatibility with image crate update.
 - Changed dependency versions to be less lenient.
 
-## v0.1.0-dev.6
+## v0.1.0-dev.6 (2021-12-07)
 
 ### Fixes
 
 - Fixed issue where render_one_frame would freeze in headless environments (#53).
 
-## v0.1.0-dev.5
+## v0.1.0-dev.5 (2021-12-06)
 
 ### Changed
 
 - Updated dependencies for compatability with wgpu 0.11.1.
 - Implemented Sprite alpha rendering. The APIs already existed, but the alpha value was being ignored.
 
-## v0.1.0-dev.4
+## v0.1.0-dev.4 (2021-10-31)
 
 ### Added
 
@@ -102,13 +102,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is equivalent to calling `Sprite::get_frame(None)` but can be used
   in non-mutable settings.
 
-## v0.1.0-dev.3
+## v0.1.0-dev.3 (2021-10-11)
 
 ### Changes
 
 - Updated `easygpu` and `easygpu-lyon`, which moves Kludgine onto `wgpu` 0.11.
 
-## v0.1.0-dev.2
+## v0.1.0-dev.2 (2021-10-11)
 
 ### Added
 
@@ -126,7 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   waiting for the OS to ask for us to redraw after resizing, rather than forcing
   a resize.
 
-## v0.1.0-dev.1
+## v0.1.0-dev.1 (2021-09-01)
 
 ### Breaking Changes
 
@@ -143,7 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it at `Scaled` resolution. This restores the behavior before the parameters
   were switched to `Displayable`.
 
-## v0.1.0-dev.0
+## v0.1.0-dev.0 (2021-08-22)
 
 ### Breaking Changes
 
