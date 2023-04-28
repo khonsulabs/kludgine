@@ -437,7 +437,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                let _ = sender.send_event(self);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                let _: Result&lt;_, _&gt; = sender.send_event(self);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -853,7 +853,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">#[cfg(feature = &quot;smol-rt&quot;)]</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(feature = &quot;smol&quot;)]</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -892,7 +892,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">#[cfg(feature = &quot;tokio-rt&quot;)]</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(feature = &quot;tokio&quot;)]</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4857,7 +4857,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    #[cfg(feature = &quot;smol-rt&quot;)]</pre>
+                <pre class="has-background-danger-light py-0 px-2">    #[cfg(feature = &quot;smol&quot;)]</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4883,7 +4883,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    #[cfg(all(feature = &quot;tokio-rt&quot;, not(feature = &quot;smol-rt&quot;)))]</pre>
+                <pre class="has-background-danger-light py-0 px-2">    #[cfg(all(feature = &quot;tokio&quot;, not(feature = &quot;smol&quot;)))]</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4966,7 +4966,7 @@
         </div></div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2023-02-03 23:45</p>
+                <p class="heading">Date: 2023-04-28 16:16</p>
             </div>
         </footer>
     </body>

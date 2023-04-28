@@ -190,7 +190,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">use kludgine_core::winit::window::{Theme, WindowId};</pre>
+                <pre class="has-background-white py-0 px-2">use kludgine_core::winit::window::{Theme, WindowId, WindowLevel};</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4792,7 +4792,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">                    let _ = self.event_sender.send(WindowEvent::CloseRequested);</pre>
+                <pre class="has-background-danger-light py-0 px-2">                    let _: Result&lt;_, _&gt; = self.event_sender.send(WindowEvent::CloseRequested);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7158,7 +7158,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Sets whether the window should always be on top of other windows.</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Sets the window level.</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7171,7 +7171,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    pub fn set_always_on_top(&amp;self, always: bool) {</pre>
+                <pre class="has-background-white py-0 px-2">    pub fn set_window_level(&amp;self, level: WindowLevel) {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7197,7 +7197,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            window.set_always_on_top(always);</pre>
+                <pre class="has-background-danger-light py-0 px-2">            window.set_window_level(level);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -7618,7 +7618,7 @@
         </div></div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2023-02-03 23:45</p>
+                <p class="heading">Date: 2023-04-28 16:16</p>
             </div>
         </footer>
     </body>

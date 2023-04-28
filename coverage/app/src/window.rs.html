@@ -151,7 +151,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">use kludgine_core::winit::window::{Theme, WindowBuilder as WinitWindowBuilder, WindowId};</pre>
+                <pre class="has-background-white py-0 px-2">use kludgine_core::winit::window::{WindowBuilder as WinitWindowBuilder, WindowId};</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -320,7 +320,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">pub use winit::window::Icon;</pre>
+                <pre class="has-background-white py-0 px-2">pub use winit::window::{Icon, Theme, WindowLevel};</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -1867,7 +1867,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            .with_always_on_top(self.always_on_top());</pre>
+                <pre class="has-background-danger-light py-0 px-2">            .with_window_level(self.window_level());</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2647,7 +2647,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    fn always_on_top(&amp;self) -&gt; bool {</pre>
+                <pre class="has-background-danger-light py-0 px-2">    fn window_level(&amp;self) -&gt; WindowLevel {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2660,7 +2660,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        false</pre>
+                <pre class="has-background-danger-light py-0 px-2">        WindowLevel::Normal</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -2946,7 +2946,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    always_on_top: Option&lt;bool&gt;,</pre>
+                <pre class="has-background-white py-0 px-2">    window_level: Option&lt;WindowLevel&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3752,7 +3752,7 @@
                 
             </div>
             <div class="column has-background-white p-0">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Builder-style function. Sets `alawys_on_top` and returns self.</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Builder-style function. Sets `window_level` and returns self.</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3778,7 +3778,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">    pub const fn with_always_on_top(mut self, always_on_top: bool) -&gt; Self {</pre>
+                <pre class="has-background-danger-light py-0 px-2">    pub const fn with_window_level(mut self, level: WindowLevel) -&gt; Self {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -3791,7 +3791,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        self.always_on_top = Some(always_on_top);</pre>
+                <pre class="has-background-danger-light py-0 px-2">        self.window_level = Some(level);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4506,7 +4506,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">        if let Some(always_on_top) = wb.always_on_top {</pre>
+                <pre class="has-background-danger-light py-0 px-2">        if let Some(level) = wb.window_level {</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -4519,7 +4519,7 @@
                 
             </div>
             <div class="column has-background-danger-light p-0">
-                <pre class="has-background-danger-light py-0 px-2">            builder = builder.with_always_on_top(always_on_top);</pre>
+                <pre class="has-background-danger-light py-0 px-2">            builder = builder.with_window_level(level);</pre>
             </div>
         </div><div class="columns p-0 m-0">
             <div
@@ -5226,7 +5226,7 @@
         </div></div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2023-02-03 23:45</p>
+                <p class="heading">Date: 2023-04-28 16:16</p>
             </div>
         </footer>
     </body>
