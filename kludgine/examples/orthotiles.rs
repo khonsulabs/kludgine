@@ -1,5 +1,5 @@
+use kludgine::app::RedrawRequester;
 use kludgine::prelude::*;
-use kludgine_app::RedrawRequester;
 
 fn main() {
     SingleWindowApplication::run(OrthoTiles::default());

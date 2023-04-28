@@ -16,6 +16,7 @@ all-features = true
 
 [features]
 default = ["bundled-fonts", "smol", "app", "multiwindow"]
+unstable-apis = []
 multiwindow = ["app/multiwindow"]
 tokio = ["app?/tokio"]
 smol = ["app?/smol"]
