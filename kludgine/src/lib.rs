@@ -25,13 +25,13 @@
 pub mod tilemap;
 #[cfg(feature = "app")]
 #[doc(inline)]
-pub use kludgine_app as app;
+pub use app;
 #[doc(inline)]
 pub use kludgine_core as core;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "app")] {
-        pub use kludgine_app::Result as Result;
+        pub use app::Result as Result;
     } else {
         pub use kludgine_core::Result as Result;
     }
