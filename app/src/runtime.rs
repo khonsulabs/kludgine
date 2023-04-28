@@ -60,10 +60,10 @@ lazy_static! {
     pub static ref GLOBAL_EVENT_HANDLER: Mutex<Option<Box<dyn EventProcessor>>> = Mutex::new(None);
 }
 
-#[cfg(feature = "smol-rt")]
+#[cfg(feature = "smol")]
 mod smol;
 
-#[cfg(feature = "tokio-rt")]
+#[cfg(feature = "tokio")]
 mod tokio;
 
 #[cfg(target_arch = "wasm32")]
@@ -368,9 +368,9 @@ impl Runtime {
 }
 
 fn initialize_async_runtime() {
-    #[cfg(feature = "smol-rt")]
+    #[cfg(feature = "smol")]
     smol::initialize();
-    #[cfg(all(feature = "tokio-rt", not(feature = "smol-rt")))]
+    #[cfg(all(feature = "tokio", not(feature = "smol")))]
     tokio::initialize();
 }
 

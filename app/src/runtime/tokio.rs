@@ -1,4 +1,4 @@
-#![cfg(not(feature = "smol-rt"))]
+#![cfg(not(feature = "smol"))]
 
 use std::time::Duration;
 

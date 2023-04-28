@@ -15,21 +15,22 @@ rust-version = "1.64.0"
 all-features = true
 
 [features]
-default = ["bundled-fonts", "smol-rt", "app", "multiwindow"]
-unstable-apis = []
-app = ["kludgine-app"]
-multiwindow = ["kludgine-app/multiwindow"]
-tokio-rt = ["kludgine-app/tokio-rt"]
-smol-rt = ["kludgine-app/smol-rt"]
+default = ["bundled-fonts", "smol", "app", "multiwindow"]
+multiwindow = ["app/multiwindow"]
+tokio = ["app?/tokio"]
+smol = ["app?/smol"]
 # Enable all bundled fonts. All bundled fonts are licensed under the Apache License 2.0.
 # For more information, see here: https://github.com/khonsulabs/kludgine/tree/master/fonts/README.md
 bundled-fonts = ["kludgine-core/bundled-fonts", "bundled-fonts-roboto"]
 bundled-fonts-roboto = ["kludgine-core/bundled-fonts-roboto"]
-serialization = ["kludgine-core/serialization"]
+serde = ["kludgine-core/serde"]
 
 [dependencies]
 kludgine-core = { version = "0.4.0", path = "../core" }
-kludgine-app = { version = "0.4.0", path = "../app", optional = true, default-features = false }
+# For some reason, changing this to app = { package = ".."} allows the dep:
+# syntax to work as expected. Using the normal kludgine-app = { version .. }
+# path causes a cryptic error when using the dep: syntax in the app feature.
+app = { package = "kludgine-app", version = "0.4.0", path = "../app", optional = true, default-features = false }
 cfg-if = "1.0.0"
 
 # [target.'cfg(target_arch = "wasm32")'.dependencies]

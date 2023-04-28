@@ -12,10 +12,10 @@ repository = "https://github.com/khonsulabs/kludgine"
 rust-version = "1.64.0"
 
 [features]
-default = ["smol-rt", "multiwindow"]
+default = ["smol", "multiwindow"]
 multiwindow = []
-tokio-rt = ["tokio"]
-smol-rt = ["smol", "smol-timeout", "easy-parallel"]
+tokio = ["dep:tokio"]
+smol = ["dep:smol", "dep:smol-timeout", "dep:easy-parallel"]
 
 [dependencies]
 kludgine-core = { version = "0.4.0", path = "../core" }

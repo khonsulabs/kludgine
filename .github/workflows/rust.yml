@@ -24,4 +24,4 @@ jobs:
           cargo test
       - name: Run tokio unit tests
         run: |
-          cargo test --no-default-features --features="tokio-rt"
+          cargo test --no-default-features --features="tokio"

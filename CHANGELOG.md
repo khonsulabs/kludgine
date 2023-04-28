@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `set_always_on_top`/`with_always_on_top`/`always_top` have been replaced with
   `set_window_level`/`with_window_level`/`window_level` respectively. This
   change was due to upgrading to the latest `winit`.
+- The MSRV has been updated to 1.64.0 due to nested dependency requirements.
+- These feature flags have been renamed:
+  - `serialization` has become `serde`
+  - `tokio-rt` has become `tokio`
+  - `smol-rt` has become `smol`
 
 ### Changes
 

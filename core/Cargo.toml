@@ -26,7 +26,7 @@ bundled-fonts = ["bundled-fonts-roboto"]
 bundled-fonts-roboto = ["bundled-fonts-enabled"]
 # Internal feature that exports the bundled_fonts module
 bundled-fonts-enabled = []
-serialization = ["serde", "figures/serde", "palette/serializing"]
+serde = ["dep:serde", "figures/serde", "palette/serializing"]
 
 [dependencies]
 approx = "0.5.1"
