@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["DepthBuffer","Z-Depth buffer."],["Framebuffer","Off-screen framebuffer. Can be used as a render target in render passes."],["IndexBuffer",""],["UniformBuffer","A uniform buffer that can be bound in a ‘BindingGroup’."],["VertexBuffer",""]]};
+window.SIDEBAR_ITEMS = {"struct":["DepthBuffer","Framebuffer","IndexBuffer","UniformBuffer","VertexBuffer"]};

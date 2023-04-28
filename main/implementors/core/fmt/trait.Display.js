@@ -1,4 +1,4 @@
 (function() {var implementors = {
-"kludgine_app":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.67.0/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"enum\" href=\"kludgine_app/prelude/enum.Error.html\" title=\"enum kludgine_app::prelude::Error\">Error</a>"]],
-"kludgine_core":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.67.0/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"enum\" href=\"kludgine_core/enum.Error.html\" title=\"enum kludgine_core::Error\">Error</a>"]]
+"kludgine_app":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.69.0/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"enum\" href=\"kludgine_app/prelude/enum.Error.html\" title=\"enum kludgine_app::prelude::Error\">Error</a>"]],
+"kludgine_core":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.69.0/core/fmt/trait.Display.html\" title=\"trait core::fmt::Display\">Display</a> for <a class=\"enum\" href=\"kludgine_core/enum.Error.html\" title=\"enum kludgine_core::Error\">Error</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

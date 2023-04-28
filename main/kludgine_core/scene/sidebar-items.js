@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["Element","An individual render instruction."],["SceneEvent","An event instructing how to render frames."]],"struct":[["Modifiers","The state of keyboard modifier keys."],["Scene","The main rendering destination, usually interacted with through [`Target`]."],["Target","A render target"]]};
+window.SIDEBAR_ITEMS = {"enum":["Element","SceneEvent"],"struct":["Modifiers","Scene","Target"]};

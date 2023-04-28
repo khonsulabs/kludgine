@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Bgra8","A BGRA color with 8-bit channels, used when dealing with framebuffers."],["Rgba",""],["Rgba8",""]]};
+window.SIDEBAR_ITEMS = {"struct":["Bgra8","Rgba","Rgba8"]};

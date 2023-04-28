@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["VertexFormat",""]],"struct":[["VertexLayout","Describes a ‘VertexBuffer’ layout."]]};
+window.SIDEBAR_ITEMS = {"enum":["VertexFormat"],"struct":["VertexLayout"]};

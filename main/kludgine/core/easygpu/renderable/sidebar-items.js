@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["Renderable",""]]};
+window.SIDEBAR_ITEMS = {"trait":["Renderable"]};
