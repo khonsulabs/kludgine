@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["app","core","prelude"],"type":["Result"]};
+window.SIDEBAR_ITEMS = {"mod":["app","core","prelude","tilemap"],"type":["Result"]};

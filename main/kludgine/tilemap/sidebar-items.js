@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["PersistentTileSource","TileSprite"],"struct":["PersistentTileProvider","Tile","TileMap"],"trait":["PersistentMap","TileProvider"],"type":["PersistentTileMap"]};
