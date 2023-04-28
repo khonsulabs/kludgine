@@ -9,6 +9,7 @@ license = "MIT OR Apache-2.0"
 keywords = ["gamedev", "graphics", "wgpu"]
 categories = ["graphics", "rendering::engine", "game-engines"]
 repository = "https://github.com/khonsulabs/kludgine"
+rust-version = "1.64.0"
 
 [features]
 default = ["smol-rt", "multiwindow"]

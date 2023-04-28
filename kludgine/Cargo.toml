@@ -2,13 +2,14 @@
 name = "kludgine"
 version = "0.4.0"
 authors = ["Jonathan Johnson <jon@khonsulabs.com>"]
-edition = "2018"
+edition = "2021"
 description = "An asynchronous app and 2d game framework"
 readme = "../README.md"
 license = "MIT OR Apache-2.0"
 keywords = ["gamedev", "graphics", "wgpu"]
 categories = ["graphics", "rendering::engine", "game-engines"]
 repository = "https://github.com/khonsulabs/kludgine"
+rust-version = "1.64.0"
 
 [package.metadata.docs.rs]
 all-features = true

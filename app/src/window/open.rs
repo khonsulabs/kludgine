@@ -28,12 +28,12 @@ impl RedrawRequester {
     /// Requests the window refresh itself. This will trigger [`Window::update`]
     /// before rendering.
     pub fn request_redraw(&self) {
-        let _ = self.event_sender.send(WindowEvent::RedrawRequested);
+        let _: Result<_, _> = self.event_sender.send(WindowEvent::RedrawRequested);
     }
 
     /// Wakes the event loop, without necessarily redrawing.
     pub fn awaken(&self) {
-        let _ = self.event_sender.send(WindowEvent::WakeUp);
+        let _: Result<_, _> = self.event_sender.send(WindowEvent::WakeUp);
     }
 }
 
@@ -53,7 +53,7 @@ impl RedrawStatus {
     pub fn set_needs_redraw(&mut self) {
         if !self.needs_render {
             self.needs_render = true;
-            let _ = self.event_sender.send(WindowEvent::WakeUp);
+            let _: Result<_, _> = self.event_sender.send(WindowEvent::WakeUp);
         }
     }
 

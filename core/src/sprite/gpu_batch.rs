@@ -227,7 +227,7 @@ pub struct BatchBuffers {
 }
 
 impl Draw for BatchBuffers {
-    fn draw<'a, 'b>(&'a self, binding: &'a BindingGroup, pass: &'b mut wgpu::RenderPass<'a>) {
+    fn draw<'a>(&'a self, binding: &'a BindingGroup, pass: &mut wgpu::RenderPass<'a>) {
         if self.index_count > 0 {
             pass.set_binding(binding, &[]);
             pass.set_easy_vertex_buffer(&self.vertices);

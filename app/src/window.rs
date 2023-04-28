@@ -6,7 +6,7 @@ use kludgine_core::figures::{Pixels, Point, Points};
 use kludgine_core::flume;
 use kludgine_core::math::{Scale, Scaled, Size};
 use kludgine_core::scene::Target;
-use kludgine_core::winit::window::{Theme, WindowBuilder as WinitWindowBuilder, WindowId};
+use kludgine_core::winit::window::{WindowBuilder as WinitWindowBuilder, WindowId};
 use kludgine_core::winit::{self};
 use lazy_static::lazy_static;
 
@@ -19,7 +19,7 @@ mod runtime_window;
 
 pub use open::{OpenWindow, RedrawRequester, RedrawStatus};
 pub use runtime_window::{opened_first_window, RuntimeWindow, RuntimeWindowConfig, WindowHandle};
-pub use winit::window::Icon;
+pub use winit::window::{Icon, Theme, WindowLevel};
 
 use self::event::InputEvent;
 
@@ -138,7 +138,7 @@ pub trait WindowCreator: Window {
             .with_visible(self.visible())
             .with_transparent(self.transparent())
             .with_decorations(self.decorations())
-            .with_always_on_top(self.always_on_top());
+            .with_window_level(self.window_level());
 
         if let Some(position) = self.initial_position() {
             builder = builder.with_position(position);
@@ -198,8 +198,8 @@ pub trait WindowCreator: Window {
 
     /// Whether the window should always be on top or not.
     #[must_use]
-    fn always_on_top(&self) -> bool {
-        false
+    fn window_level(&self) -> WindowLevel {
+        WindowLevel::Normal
     }
 
     /// The default [`Theme`] for the [`Window`] if `winit` is unable to
@@ -221,7 +221,7 @@ pub struct WindowBuilder {
     visible: Option<bool>,
     transparent: Option<bool>,
     decorations: Option<bool>,
-    always_on_top: Option<bool>,
+    window_level: Option<WindowLevel>,
     pub(crate) initial_system_theme: Option<Theme>,
     icon: Option<winit::window::Icon>,
 }
@@ -283,10 +283,10 @@ impl WindowBuilder {
         self
     }
 
-    /// Builder-style function. Sets `alawys_on_top` and returns self.
+    /// Builder-style function. Sets `window_level` and returns self.
     #[must_use]
-    pub const fn with_always_on_top(mut self, always_on_top: bool) -> Self {
-        self.always_on_top = Some(always_on_top);
+    pub const fn with_window_level(mut self, level: WindowLevel) -> Self {
+        self.window_level = Some(level);
         self
     }
 
@@ -341,8 +341,8 @@ impl From<WindowBuilder> for WinitWindowBuilder {
         if let Some(decorations) = wb.decorations {
             builder = builder.with_decorations(decorations);
         }
-        if let Some(always_on_top) = wb.always_on_top {
-            builder = builder.with_always_on_top(always_on_top);
+        if let Some(level) = wb.window_level {
+            builder = builder.with_window_level(level);
         }
 
         builder = builder.with_window_icon(wb.icon);

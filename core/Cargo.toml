@@ -16,6 +16,7 @@ include = [
     "../LICENSE-APACHE",
     "../COPYRIGHT",
 ]
+rust-version = "1.64.0"
 
 [features]
 default = ["bundled-fonts"]
@@ -29,10 +30,10 @@ serialization = ["serde", "figures/serde", "palette/serializing"]
 
 [dependencies]
 approx = "0.5.1"
-easygpu = "0.4.0"
-easygpu-lyon = "0.4.0"
+easygpu = "0.5.0"
+easygpu-lyon = "0.5.0"
 image = { version = "0.24.0", default-features = false }
-palette = "0.6.0"
+palette = "0.7.1"
 futures-timer = "3.0.2"
 figures = "0.1.2"
 futures = "0.3.19"
@@ -42,7 +43,7 @@ rusttype = { version = "=0.9.3", features = ["gpu_cache"] }
 ttf-parser = "0.15.2"
 json = "0.12.4"
 serde = { version = "1.0.136", optional = true, features = ["derive"] }
-winit = "0.27.4"
+winit = "0.28.3"
 bytemuck = { version = "1.7.3", features = ["derive"] }
 lazy_static = "1.4.0"
 thiserror = "1.0.30"

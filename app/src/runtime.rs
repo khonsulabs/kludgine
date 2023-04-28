@@ -28,7 +28,7 @@ impl RuntimeRequest {
         let guard = GLOBAL_RUNTIME_SENDER.lock();
         match *guard {
             Some(ref sender) => {
-                let _ = sender.send_event(self);
+                let _: Result<_, _> = sender.send_event(self);
             }
             None => panic!("Uninitialized runtime"),
         }

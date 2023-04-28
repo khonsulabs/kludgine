@@ -9,7 +9,7 @@ use kludgine_core::math::{Point, Scale, Size};
 use kludgine_core::scene::{Scene, SceneEvent};
 use kludgine_core::winit::dpi::{PhysicalPosition, PhysicalSize};
 use kludgine_core::winit::event::WindowEvent as WinitWindowEvent;
-use kludgine_core::winit::window::{Theme, WindowId};
+use kludgine_core::winit::window::{Theme, WindowId, WindowLevel};
 use kludgine_core::winit::{self};
 use kludgine_core::{flume, FrameRenderer};
 use once_cell::sync::OnceCell;
@@ -363,7 +363,7 @@ impl RuntimeWindow {
         while let Ok(request) = self.receiver.try_recv() {
             match request {
                 WindowMessage::RequestClose => {
-                    let _ = self.event_sender.send(WindowEvent::CloseRequested);
+                    let _: Result<_, _> = self.event_sender.send(WindowEvent::CloseRequested);
                 }
                 WindowMessage::Close => {
                     let mut channels = WINDOW_CHANNELS.lock().unwrap();
@@ -545,10 +545,10 @@ impl WindowHandle {
             .unwrap_or_default()
     }
 
-    /// Sets whether the window should always be on top of other windows.
-    pub fn set_always_on_top(&self, always: bool) {
+    /// Sets the window level.
+    pub fn set_window_level(&self, level: WindowLevel) {
         if let Some(window) = Runtime::winit_window(self.0) {
-            window.set_always_on_top(always);
+            window.set_window_level(level);
         }
     }
 

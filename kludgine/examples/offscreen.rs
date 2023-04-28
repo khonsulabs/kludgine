@@ -7,7 +7,7 @@ use kludgine::core::easygpu::renderer::Renderer;
 use kludgine::core::easygpu::wgpu;
 use kludgine::core::flume;
 use kludgine::core::prelude::*;
-use kludgine_core::winit::window::Theme;
+use kludgine::core::winit::window::Theme;
 
 #[tokio::main]
 async fn main() {

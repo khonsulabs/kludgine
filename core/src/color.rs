@@ -1,13 +1,17 @@
 use approx::relative_eq;
 use easygpu::color::{Rgba, Rgba8};
 use palette::rgb::Srgba;
-use palette::{Component, IntoComponent, Shade, Srgb};
+use palette::stimulus::IntoStimulus;
+use palette::{Darken, Lighten, Srgb};
 
 /// A RGBA color with f32 components.
 #[derive(Default, Clone, Debug, Copy, PartialEq)]
 pub struct Color(Rgba);
 
-impl<U: Component + IntoComponent<f32>> From<Srgba<U>> for Color {
+impl<U> From<Srgba<U>> for Color
+where
+    U: IntoStimulus<f32>,
+{
     fn from(color: Srgba<U>) -> Self {
         let color = color.into_format::<_, f32>();
         Self(Rgba {
@@ -19,7 +23,10 @@ impl<U: Component + IntoComponent<f32>> From<Srgba<U>> for Color {
     }
 }
 
-impl<U: Component + IntoComponent<f32>> From<Srgb<U>> for Color {
+impl<U> From<Srgb<U>> for Color
+where
+    U: IntoStimulus<f32>,
+{
     fn from(color: Srgb<U>) -> Self {
         let color = color.into_format::<f32>();
         Self(Rgba {
@@ -67,7 +74,7 @@ impl Color {
     pub fn lighten(self, amount: f32) -> Self {
         let color: Srgba = self.into();
         let linear = color.into_linear();
-        Srgba::from_linear(linear.lighten(amount)).into()
+        Srgba::<f32>::from_linear(linear.lighten(amount)).into()
     }
 
     /// Darkens the color by `amount`.
@@ -75,7 +82,7 @@ impl Color {
     pub fn darken(self, amount: f32) -> Self {
         let color: Srgba = self.into();
         let linear = color.into_linear();
-        Srgba::from_linear(linear.darken(amount)).into()
+        Srgba::<f32>::from_linear(linear.darken(amount)).into()
     }
 
     /// Returns the red component.

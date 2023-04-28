@@ -123,7 +123,6 @@ impl FrameBatch {
 
 impl Frame {
     #[instrument(name = "Frame::update", level = "trace", skip(self, event_receiver))]
-    #[must_use]
     pub fn update(&mut self, event_receiver: &flume::Receiver<SceneEvent>) -> bool {
         let elements = match self.receiver.get_latest_frame(event_receiver) {
             Some(elements) => elements,

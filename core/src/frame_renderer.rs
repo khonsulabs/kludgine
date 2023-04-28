@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -128,7 +127,7 @@ where
     ) -> crate::Result<DynamicImage> {
         let mut frame_renderer = Self::new(renderer, Arc::default(), scene_event_receiver);
         let mut frame = Frame::default();
-        let _ = frame.update(&frame_renderer.scene_event_receiver);
+        frame.update(&frame_renderer.scene_event_receiver);
         frame_renderer.render_frame(&mut frame)?;
         if let Destination::Texture { output, .. } = frame_renderer.destination {
             let data = output.slice(..);
@@ -537,10 +536,10 @@ where
                     buffer: output,
                     layout: wgpu::ImageDataLayout {
                         offset: 0,
-                        bytes_per_row: NonZeroU32::new(size_for_aligned_copy(
-                            frame_size.width as usize * 4,
-                        ) as u32),
-                        rows_per_image: NonZeroU32::new(frame_size.height),
+                        bytes_per_row: Some(
+                            size_for_aligned_copy(frame_size.width as usize * 4) as u32
+                        ),
+                        rows_per_image: Some(frame_size.height),
                     },
                 },
                 Extent3d {

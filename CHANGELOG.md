@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Breaking Changes
+
+- `set_always_on_top`/`with_always_on_top`/`always_top` have been replaced with
+  `set_window_level`/`with_window_level`/`window_level` respectively. This
+  change was due to upgrading to the latest `winit`.
+
+### Changes
+
+- Updated `easygpu` to v0.5.0.
+  - `wgpu` has been updated to v0.16.0
+- `winit` has been updated to v0.28.3
+- `palette` has been updated to v0.7.1
+
 ### Fixes
 
 - Returning a scale from `Window::additional_scale` now works.
