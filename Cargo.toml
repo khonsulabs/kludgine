@@ -1,0 +1,21 @@
+[package]
+name = "kludgine"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["app", "image"]
+app = ["dep:appit"]
+
+[dependencies]
+appit = { path = "../appit", optional = true }
+wgpu = { version = "0.16.1", features = ["expose-ids"] }
+pollster = "0.3.0"
+bytemuck = { version = "1.13.1", features = ["derive"] }
+lyon_tessellation = "1.0.1"
+image = { version = "0.24.6", optional = true, default-features = false }
+cosmic-text = { version = "0.8" }
+alot = "0.1"
+
+[dev-dependencies]
+image = { features = ["png"] }
