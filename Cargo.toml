@@ -8,7 +8,7 @@ default = ["app", "image"]
 app = ["dep:appit"]
 
 [dependencies]
-appit = { path = "../appit", optional = true }
+appit = { git = "https://github.com/khonsulabs/appit", optional = true }
 wgpu = { version = "0.16.1", features = ["expose-ids"] }
 pollster = "0.3.0"
 bytemuck = { version = "1.13.1", features = ["derive"] }

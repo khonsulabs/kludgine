@@ -1,4 +1,5 @@
 use std::mem::size_of;
+use std::panic::{AssertUnwindSafe, UnwindSafe};
 use std::sync::{Arc, OnceLock};
 
 use appit::{RunningWindow, WindowBehavior as _};
@@ -13,7 +14,7 @@ fn shared_wgpu() -> Arc<wgpu::Instance> {
 }
 
 pub trait WindowBehavior: Sized + 'static {
-    type Context: Send + 'static;
+    type Context: UnwindSafe + Send + 'static;
 
     fn initialize(
         window: &mut RunningWindow,
@@ -53,7 +54,7 @@ pub trait WindowBehavior: Sized + 'static {
     }
 
     fn run_with(context: Self::Context) -> ! {
-        KludgineWindow::<Self>::run_with((shared_wgpu(), context))
+        KludgineWindow::<Self>::run_with(AssertUnwindSafe((shared_wgpu(), context)))
     }
 }
 
@@ -73,10 +74,13 @@ impl<T> appit::WindowBehavior for KludgineWindow<T>
 where
     T: WindowBehavior + 'static,
 {
-    type Context = (Arc<wgpu::Instance>, T::Context);
+    type Context = AssertUnwindSafe<(Arc<wgpu::Instance>, T::Context)>;
 
     #[allow(unsafe_code)]
-    fn initialize(window: &mut RunningWindow, (wgpu, context): Self::Context) -> Self {
+    fn initialize(
+        window: &mut RunningWindow,
+        AssertUnwindSafe((wgpu, context)): Self::Context,
+    ) -> Self {
         // SAFETY: This function is only invoked once the window has been
         // created, and cannot be invoked after the underlying window has been
         // destroyed.
@@ -220,6 +224,8 @@ where
     }
 }
 
+impl<T> UnwindSafe for KludgineWindow<T> {}
+
 struct CallbackWindow<C> {
     callback: C,
     rendering: Rendering,
@@ -230,6 +236,7 @@ impl<T> WindowBehavior for CallbackWindow<T>
 where
     T: for<'render, 'gfx> FnMut(Renderer<'render, 'gfx>, &mut RunningWindow) -> bool
         + Send
+        + UnwindSafe
         + 'static,
 {
     type Context = T;
@@ -265,6 +272,7 @@ pub fn run<RenderFn>(render_fn: RenderFn) -> !
 where
     RenderFn: for<'render, 'gfx> FnMut(Renderer<'render, 'gfx>, &mut RunningWindow) -> bool
         + Send
+        + UnwindSafe
         + 'static,
 {
     CallbackWindow::run_with(render_fn)
