@@ -73,7 +73,7 @@ impl<Unit> Shape<Unit, true> {
         PreparedGraphic {
             vertices,
             indices,
-            texture_binding: Some(texture.bind_group(graphics)),
+            texture_binding: Some((texture.bind_group(graphics), texture.is_mask())),
         }
     }
 }
@@ -360,6 +360,20 @@ pub struct PathBuilder<Unit, const TEXTURED: bool> {
     close: bool,
 }
 
+impl<Unit, const TEXTURED: bool> From<Path<Unit, TEXTURED>> for PathBuilder<Unit, TEXTURED>
+where
+    Unit: Default,
+{
+    fn from(mut path: Path<Unit, TEXTURED>) -> Self {
+        path.events.clear();
+        Self {
+            path,
+            current_location: Point::default(),
+            close: false,
+        }
+    }
+}
+
 impl<Unit> PathBuilder<Unit, false>
 where
     Unit: Copy,
@@ -454,6 +468,20 @@ where
             })]),
             current_location: start_at,
             close: false,
+        }
+    }
+
+    pub fn reset(&mut self, start_at: Endpoint<Unit>, texture: Point<UPixels>) {
+        self.current_location = start_at;
+        let begin = PathEvent::Begin {
+            at: start_at,
+            texture,
+        };
+        if self.path.events.is_empty() {
+            self.path.events.push(begin);
+        } else {
+            self.path.events.truncate(1);
+            self.path.events[0] = begin;
         }
     }
 

@@ -4,6 +4,7 @@ use std::sync::{Arc, OnceLock};
 
 use appit::{RunningWindow, WindowBehavior as _};
 
+use crate::math::lossy_f64_to_f32;
 use crate::pipeline::PushConstants;
 use crate::render::{Renderer, Rendering};
 use crate::{Color, Graphics, Kludgine, RenderingGraphics};
@@ -276,16 +277,4 @@ where
         + 'static,
 {
     CallbackWindow::run_with(render_fn)
-}
-
-/// Performs `value as f32`.
-///
-/// This function exists solely because of clippy. The truncation of f64 -> f32
-/// isn't as severe as truncation of integer types, but it's lumped into the
-/// same lint. I don't want to disable the truncation lint, and I don't want
-/// functions that need to do this operation to not be checking for integer
-/// truncation.
-#[allow(clippy::cast_possible_truncation)] // truncation desired
-fn lossy_f64_to_f32(value: f64) -> f32 {
-    value as f32
 }

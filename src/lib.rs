@@ -15,6 +15,8 @@ use std::ops::{Add, Deref, DerefMut, Div, Neg};
 use std::sync::Arc;
 
 use bytemuck::{Pod, Zeroable};
+#[cfg(feature = "cosmic-text")]
+pub use cosmic_text;
 use wgpu::util::DeviceExt;
 
 use crate::buffer::Buffer;
@@ -27,12 +29,13 @@ pub mod app;
 mod atlas;
 mod buffer;
 pub mod math;
-mod pack;
 mod pipeline;
 mod pod;
 pub mod render;
 mod sealed;
 pub mod shapes;
+#[cfg(feature = "cosmic-text")]
+pub mod text;
 
 pub use atlas::{CollectedTexture, TextureCollection};
 pub use pipeline::{PreparedGraphic, ShaderScalable};
@@ -44,9 +47,12 @@ pub struct Kludgine {
     binding_layout: wgpu::BindGroupLayout,
     sampler: wgpu::Sampler,
     uniforms: Buffer<Uniforms>,
-    pub fonts: cosmic_text::FontSystem,
-    pub swash_cache: cosmic_text::SwashCache,
-    text_atlas: TextureCollection,
+    #[cfg(feature = "cosmic-text")]
+    fonts: cosmic_text::FontSystem,
+    #[cfg(feature = "cosmic-text")]
+    swash_cache: cosmic_text::SwashCache,
+    alpha_text_atlas: TextureCollection,
+    color_text_atlas: TextureCollection,
 }
 
 impl Kludgine {
@@ -102,10 +108,20 @@ impl Kludgine {
         let fonts = cosmic_text::FontSystem::new();
 
         Self {
-            text_atlas: TextureCollection::new_generic(
+            alpha_text_atlas: TextureCollection::new_generic(
                 Size::new(512, 512),
-                128,
-                wgpu::TextureFormat::Bgra8Unorm,
+                wgpu::TextureFormat::R8Unorm,
+                &ProtoGraphics {
+                    device,
+                    queue,
+                    binding_layout: &binding_layout,
+                    sampler: &sampler,
+                    uniforms: &uniforms.wgpu,
+                },
+            ),
+            color_text_atlas: TextureCollection::new_generic(
+                Size::new(512, 512),
+                wgpu::TextureFormat::Rgba8Unorm,
                 &ProtoGraphics {
                     device,
                     queue,
@@ -209,6 +225,22 @@ impl<'gfx> Graphics<'gfx> {
     #[must_use]
     pub const fn queue(&self) -> &'gfx wgpu::Queue {
         self.queue
+    }
+
+    pub fn font_system(&mut self) -> &mut cosmic_text::FontSystem {
+        &mut self.kludgine.fonts
+    }
+}
+
+impl AsRef<wgpu::Device> for Graphics<'_> {
+    fn as_ref(&self) -> &wgpu::Device {
+        self.device()
+    }
+}
+
+impl AsRef<wgpu::Queue> for Graphics<'_> {
+    fn as_ref(&self) -> &wgpu::Queue {
+        self.queue()
     }
 }
 
@@ -375,6 +407,13 @@ impl From<Color> for wgpu::Color {
             b: f64::from(color.blue_f32()),
             a: f64::from(color.alpha_f32()),
         }
+    }
+}
+
+#[cfg(feature = "cosmic-text")]
+impl From<cosmic_text::Color> for Color {
+    fn from(value: cosmic_text::Color) -> Self {
+        Self::new(value.r(), value.g(), value.b(), value.a())
     }
 }
 
@@ -933,5 +972,10 @@ impl sealed::TextureSource for Texture {
 
     fn id(&self) -> sealed::TextureId {
         self.id
+    }
+
+    fn is_mask(&self) -> bool {
+        // TODO this should be a flag on the texture.
+        self.wgpu.format() == wgpu::TextureFormat::R8Unorm
     }
 }

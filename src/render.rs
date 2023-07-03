@@ -8,13 +8,14 @@ use ahash::AHashMap;
 use crate::buffer::Buffer;
 use crate::math::{Point, Zero};
 use crate::pipeline::{
-    PushConstants, ShaderScalable, Vertex, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED, FLAG_TRANSLATE,
+    PushConstants, ShaderScalable, Vertex, FLAG_MASKED, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED,
+    FLAG_TRANSLATE,
 };
 use crate::shapes::Shape;
 use crate::{sealed, Graphics, RenderingGraphics, Texture, TextureSource};
 
 pub struct Renderer<'render, 'gfx> {
-    graphics: &'render mut Graphics<'gfx>,
+    pub(crate) graphics: &'render mut Graphics<'gfx>,
     data: &'render mut Rendering,
 }
 
@@ -118,6 +119,9 @@ impl Renderer<'_, '_> {
         assert_eq!(TEXTURED, texture.is_some());
         let texture = if let Some(texture) = texture {
             flags |= FLAG_TEXTURED;
+            if texture.is_mask() {
+                flags |= FLAG_MASKED;
+            }
             let id = texture.id();
             if let hash_map::Entry::Vacant(entry) = self.data.textures.entry(id) {
                 entry.insert(texture.bind_group(self.graphics));

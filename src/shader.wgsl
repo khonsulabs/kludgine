@@ -124,9 +124,15 @@ var r_sampler: sampler;
 @fragment
 fn fragment(fragment: FragmentInput) -> @location(0) vec4<f32> {
     let flag_textured = u32(1) << u32(4);
+    let flag_masked = u32(1) << u32(5);
 
     if (pc.flags & flag_textured) != u32(0) {
-        return textureSample(r_texture, r_sampler, fragment.uv) * fragment.color;
+        let sample = textureSample(r_texture, r_sampler, fragment.uv);
+        if (pc.flags & flag_masked) != u32(0) {
+            return vec4<f32>(fragment.color.x, fragment.color.y, fragment.color.z, sample.x * fragment.color.w);
+        }
+
+        return sample * fragment.color;
     }
 
     return fragment.color;

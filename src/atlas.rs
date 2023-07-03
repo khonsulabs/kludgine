@@ -3,28 +3,31 @@ use std::ops::{Add, Div, Neg};
 use std::sync::{Arc, PoisonError, RwLock};
 
 use alot::{LotId, Lots};
+use guillotiere::{AllocId, AtlasAllocator};
 
-use crate::math::{Rect, Size, ToFloat, UPixels};
-use crate::pack::{TextureAllocation, TexturePacker};
+use crate::math::{Point, Rect, Size, ToFloat, UPixels};
 use crate::pipeline::{PreparedGraphic, Vertex};
 use crate::{sealed, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct TextureCollection {
     data: Arc<RwLock<Data>>,
 }
 
-#[derive(Debug)]
 struct Data {
-    rects: TexturePacker,
+    rects: AtlasAllocator,
     texture: Texture,
-    textures: Lots<TextureAllocation>,
+    textures: Lots<AllocatedTexture>,
+}
+
+struct AllocatedTexture {
+    id: AllocId,
+    rect: Rect<UPixels>,
 }
 
 impl TextureCollection {
     pub(crate) fn new_generic(
         initial_size: Size<UPixels>,
-        minimum_column_width: u16,
         format: wgpu::TextureFormat,
         graphics: &impl WgpuDeviceAndQueue,
     ) -> Self {
@@ -37,7 +40,10 @@ impl TextureCollection {
 
         Self {
             data: Arc::new(RwLock::new(Data {
-                rects: TexturePacker::new(initial_size, minimum_column_width),
+                rects: AtlasAllocator::new(guillotiere::size2(
+                    initial_size.width.0.try_into().expect("width too large"),
+                    initial_size.height.0.try_into().expect("height too large"),
+                )),
                 texture,
                 textures: Lots::new(),
             })),
@@ -47,11 +53,10 @@ impl TextureCollection {
     #[must_use]
     pub fn new(
         initial_size: Size<UPixels>,
-        minimum_column_width: u16,
         format: wgpu::TextureFormat,
         graphics: &Graphics<'_>,
     ) -> Self {
-        Self::new_generic(initial_size, minimum_column_width, format, graphics)
+        Self::new_generic(initial_size, format, graphics)
     }
 
     pub fn push_texture(
@@ -59,20 +64,46 @@ impl TextureCollection {
         data: &[u8],
         data_layout: wgpu::ImageDataLayout,
         size: Size<UPixels>,
-        graphics: &Graphics<'_>,
+        graphics: &wgpu::Queue,
     ) -> CollectedTexture {
         let mut this = self
             .data
             .write()
             .map_or_else(PoisonError::into_inner, |g| g);
-        let allocation = this.rects.allocate(size).expect("TODO: implement growth");
-        graphics.queue().write_texture(
+        let allocation = this
+            .rects
+            .allocate(guillotiere::size2(
+                size.width.0.try_into().expect("width too large"),
+                size.height.0.try_into().expect("height too large"),
+            ))
+            .expect("TODO: implement growth");
+
+        let p1: Point<UPixels> = Point {
+            x: u32::try_from(allocation.rectangle.min.x)
+                .expect("invalid allocation")
+                .into(),
+            y: u32::try_from(allocation.rectangle.min.y)
+                .expect("invalid allocation")
+                .into(),
+        };
+
+        let p2: Point<UPixels> = Point {
+            x: u32::try_from(allocation.rectangle.max.x)
+                .expect("invalid allocation")
+                .into(),
+            y: u32::try_from(allocation.rectangle.max.y)
+                .expect("invalid allocation")
+                .into(),
+        };
+        let rect = Rect::from_extents(p1, p2);
+
+        graphics.write_texture(
             wgpu::ImageCopyTexture {
                 texture: &this.texture.wgpu,
                 mip_level: 0,
                 origin: wgpu::Origin3d {
-                    x: allocation.rect.origin.x.into(),
-                    y: allocation.rect.origin.y.into(),
+                    x: rect.origin.x.0,
+                    y: rect.origin.y.0,
                     z: 0,
                 },
                 aspect: wgpu::TextureAspect::All,
@@ -83,7 +114,11 @@ impl TextureCollection {
         );
         CollectedTexture {
             collection: self.clone(),
-            id: Arc::new(this.textures.push(allocation)),
+            id: Arc::new(this.textures.push(AllocatedTexture {
+                id: allocation.id,
+                rect,
+            })),
+            region: Rect::from_extents(p1, p2),
         }
     }
 
@@ -108,7 +143,7 @@ impl TextureCollection {
                 rows_per_image: None,
             },
             Size::new(image.width(), image.height()),
-            graphics,
+            graphics.queue,
         )
     }
 
@@ -117,18 +152,13 @@ impl TextureCollection {
         data.texture.size()
     }
 
-    pub fn pixels_allocated(&self) -> UPixels {
-        let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
-        data.rects.allocated()
-    }
-
     fn free(&mut self, id: LotId) {
         let mut data = self
             .data
             .write()
             .map_or_else(PoisonError::into_inner, |g| g);
         let allocation = data.textures.remove(id).expect("invalid texture free");
-        data.rects.free(allocation.allocation);
+        data.rects.deallocate(allocation.id);
     }
 
     fn prepare<Unit>(
@@ -186,12 +216,18 @@ impl sealed::TextureSource for TextureCollection {
         let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
         data.texture.id()
     }
+
+    fn is_mask(&self) -> bool {
+        let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        data.texture.is_mask()
+    }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct CollectedTexture {
     collection: TextureCollection,
     id: Arc<LotId>,
+    pub(crate) region: Rect<UPixels>,
 }
 
 impl CollectedTexture {
@@ -228,5 +264,9 @@ impl sealed::TextureSource for CollectedTexture {
 
     fn id(&self) -> sealed::TextureId {
         self.collection.id()
+    }
+
+    fn is_mask(&self) -> bool {
+        self.collection.is_mask()
     }
 }

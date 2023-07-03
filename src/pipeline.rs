@@ -51,6 +51,7 @@ pub(crate) const FLAG_SCALE: u32 = 1 << 1;
 pub(crate) const FLAG_ROTATE: u32 = 1 << 2;
 pub(crate) const FLAG_TRANSLATE: u32 = 1 << 3;
 pub(crate) const FLAG_TEXTURED: u32 = 1 << 4;
+pub(crate) const FLAG_MASKED: u32 = 1 << 5;
 
 #[derive(Debug, Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
@@ -63,7 +64,7 @@ pub(crate) struct PushConstants {
 
 #[derive(Debug)]
 pub struct PreparedGraphic<Unit> {
-    pub(crate) texture_binding: Option<Arc<wgpu::BindGroup>>,
+    pub(crate) texture_binding: Option<(Arc<wgpu::BindGroup>, bool)>,
     pub(crate) vertices: Buffer<Vertex<Unit>>,
     pub(crate) indices: Buffer<u16>,
 }
@@ -85,8 +86,8 @@ where
         graphics.pass.set_bind_group(
             0,
             self.texture_binding
-                .as_deref()
-                .unwrap_or(&graphics.state.default_bindings),
+                .as_ref()
+                .map_or(&graphics.state.default_bindings, |(g, _)| g.as_ref()),
             &[],
         );
 
@@ -95,8 +96,11 @@ where
             .pass
             .set_index_buffer(self.indices.as_slice(), wgpu::IndexFormat::Uint16);
         let mut flags = Unit::flags();
-        if self.texture_binding.is_some() {
+        if let Some((_, is_mask)) = &self.texture_binding {
             flags |= FLAG_TEXTURED;
+            if *is_mask {
+                flags |= FLAG_MASKED;
+            }
         }
         let scale = scale.map_or(1., |scale| {
             flags |= FLAG_SCALE;

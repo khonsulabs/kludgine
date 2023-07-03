@@ -228,9 +228,8 @@ impl Dips {
 }
 
 impl From<f32> for Dips {
-    #[allow(clippy::cast_possible_truncation)] // truncation desired
     fn from(cm: f32) -> Self {
-        Dips((cm * 1000.) as i32)
+        Dips(lossy_f32_to_i32(cm * 1000.))
     }
 }
 
@@ -361,6 +360,20 @@ impl From<appit::winit::dpi::PhysicalSize<u32>> for Size<UPixels> {
         Self {
             width: value.width.try_into().expect("width too large"),
             height: value.height.try_into().expect("height too large"),
+        }
+    }
+}
+
+impl<Unit> Add for Point<Unit>
+where
+    Unit: Add<Output = Unit>,
+{
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
         }
     }
 }
@@ -601,6 +614,23 @@ impl<Unit> Rect<Unit> {
         Self { origin, size }
     }
 
+    pub fn from_extents(p1: Point<Unit>, p2: Point<Unit>) -> Self
+    where
+        Unit: Copy + Ord + Sub<Output = Unit>,
+    {
+        let min_x = p1.x.min(p2.x);
+        let min_y = p1.y.min(p2.y);
+        let max_x = p1.x.max(p2.x);
+        let max_y = p1.y.max(p2.y);
+        Self {
+            origin: Point { x: min_x, y: min_y },
+            size: Size {
+                width: max_x - min_x,
+                height: max_y - min_y,
+            },
+        }
+    }
+
     pub fn into_u32(self) -> Rect<u32>
     where
         Point<Unit>: Into<Point<u32>>,
@@ -810,4 +840,26 @@ fn scale_factor_from_f32() {
             mul_by: 3
         }
     );
+}
+
+/// Performs `value as i32`.
+///
+/// This function exists solely because of clippy. In some situations, the only
+/// way to convert from f32 to i32 is the `as` keyword, because truncating
+/// floating point values is desired.
+#[allow(clippy::cast_possible_truncation)] // truncation desired
+pub(crate) fn lossy_f32_to_i32(value: f32) -> i32 {
+    value as i32
+}
+
+/// Performs `value as f32`.
+///
+/// This function exists solely because of clippy. The truncation of f64 -> f32
+/// isn't as severe as truncation of integer types, but it's lumped into the
+/// same lint. I don't want to disable the truncation lint, and I don't want
+/// functions that need to do this operation to not be checking for integer
+/// truncation.
+#[allow(clippy::cast_possible_truncation)] // truncation desired
+pub(crate) fn lossy_f64_to_f32(value: f64) -> f32 {
+    value as f32
 }

@@ -26,7 +26,6 @@ impl WindowBehavior for Test {
     ) -> Self {
         let mut textures = TextureCollection::new(
             Size::new(1024, 1024),
-            512,
             wgpu::TextureFormat::Rgba8UnormSrgb,
             graphics,
         );

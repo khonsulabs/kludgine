@@ -22,5 +22,6 @@ pub trait ShaderScalableSealed {
 }
 pub trait TextureSource {
     fn id(&self) -> TextureId;
+    fn is_mask(&self) -> bool;
     fn bind_group(&self, graphics: &Graphics<'_>) -> Arc<wgpu::BindGroup>;
 }
