@@ -3,8 +3,9 @@ use std::sync::{Arc, OnceLock};
 
 use appit::{RunningWindow, WindowBehavior as _};
 
-use crate::shapes::PushConstants;
-use crate::{Color, Graphics, Kludgine, Renderer, Rendering, RenderingGraphics};
+use crate::pipeline::PushConstants;
+use crate::render::{Renderer, Rendering};
+use crate::{Color, Graphics, Kludgine, RenderingGraphics};
 
 fn shared_wgpu() -> Arc<wgpu::Instance> {
     static SHARED_WGPU: OnceLock<Arc<wgpu::Instance>> = OnceLock::new();
@@ -13,6 +14,7 @@ fn shared_wgpu() -> Arc<wgpu::Instance> {
 
 pub trait WindowBehavior: Sized + 'static {
     type Context: Send + 'static;
+
     fn initialize(
         window: &mut RunningWindow,
         graphics: &mut Graphics<'_>,
@@ -28,14 +30,17 @@ pub trait WindowBehavior: Sized + 'static {
         graphics: &mut RenderingGraphics<'_, 'pass>,
     ) -> bool;
 
+    #[must_use]
     fn power_preference() -> wgpu::PowerPreference {
         wgpu::PowerPreference::default()
     }
 
+    #[must_use]
     fn limits(adapter_limits: wgpu::Limits) -> wgpu::Limits {
         wgpu::Limits::downlevel_webgl2_defaults().using_resolution(adapter_limits)
     }
 
+    #[must_use]
     fn clear_color() -> Option<Color> {
         Some(Color::BLACK)
     }
@@ -61,7 +66,7 @@ struct KludgineWindow<Behavior> {
     device: wgpu::Device,
     queue: wgpu::Queue,
     _adapter: wgpu::Adapter,
-    _wgpu: Arc<wgpu::Instance>,
+    wgpu: Arc<wgpu::Instance>,
 }
 
 impl<T> appit::WindowBehavior for KludgineWindow<T>
@@ -70,7 +75,11 @@ where
 {
     type Context = (Arc<wgpu::Instance>, T::Context);
 
+    #[allow(unsafe_code)]
     fn initialize(window: &mut RunningWindow, (wgpu, context): Self::Context) -> Self {
+        // SAFETY: This function is only invoked once the window has been
+        // created, and cannot be invoked after the underlying window has been
+        // destroyed.
         let surface = unsafe { wgpu.create_surface(window.winit()).unwrap() };
         let adapter = pollster::block_on(wgpu.request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: T::power_preference(),
@@ -79,7 +88,9 @@ where
         }))
         .unwrap();
         let mut limits = T::limits(adapter.limits());
-        limits.max_push_constant_size = size_of::<PushConstants>() as u32;
+        limits.max_push_constant_size = size_of::<PushConstants>()
+            .try_into()
+            .expect("should fit :)");
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
@@ -98,7 +109,7 @@ where
             &queue,
             swapchain_format,
             window.inner_size().into(),
-            window.scale() as f32,
+            lossy_f64_to_f32(window.scale()),
         );
         let mut graphics = Graphics::new(&mut state, &device, &queue);
 
@@ -116,7 +127,7 @@ where
         let behavior = T::initialize(window, &mut graphics, context);
 
         Self {
-            _wgpu: wgpu,
+            wgpu,
             kludgine: state,
             _adapter: adapter,
             behavior,
@@ -127,6 +138,7 @@ where
         }
     }
 
+    #[allow(unsafe_code)]
     fn redraw(&mut self, window: &mut RunningWindow) {
         let frame = loop {
             match self.surface.get_current_texture() {
@@ -140,9 +152,9 @@ where
                         return;
                     }
                     wgpu::SurfaceError::Lost => {
-                        println!("Lost surface, reconfiguring");
-                        self.surface =
-                            unsafe { self._wgpu.create_surface(window.winit()).unwrap() };
+                        // SAFETY: redraw is only called while the event loop
+                        // and window are still alive.
+                        self.surface = unsafe { self.wgpu.create_surface(window.winit()).unwrap() };
                         self.surface.configure(&self.device, &self.config);
                     }
                     wgpu::SurfaceError::OutOfMemory => {
@@ -200,7 +212,7 @@ where
         self.surface.configure(&self.device, &self.config);
         self.kludgine.resize(
             window.inner_size().into(),
-            window.scale() as f32,
+            lossy_f64_to_f32(window.scale()),
             &self.queue,
         );
         // TODO pass onto kludgine
@@ -256,4 +268,16 @@ where
         + 'static,
 {
     CallbackWindow::run_with(render_fn)
+}
+
+/// Performs `value as f32`.
+///
+/// This function exists solely because of clippy. The truncation of f64 -> f32
+/// isn't as severe as truncation of integer types, but it's lumped into the
+/// same lint. I don't want to disable the truncation lint, and I don't want
+/// functions that need to do this operation to not be checking for integer
+/// truncation.
+#[allow(clippy::cast_possible_truncation)] // truncation desired
+fn lossy_f64_to_f32(value: f64) -> f32 {
+    value as f32
 }

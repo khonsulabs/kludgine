@@ -12,7 +12,7 @@
 //! end up liking what I wrote here. The only downside of using etagere once
 //! that PR is merged is needing euclid conversions, which is really not a good
 //! reason to write your own packing algorithm.
-
+#![allow(clippy::similar_names)] // shelf and self are indeed similar, but I'm not changing the name.
 use crate::math::{Point, Rect, Size, UPixels};
 
 #[derive(Debug)]
@@ -32,6 +32,7 @@ impl TexturePacker {
             columns: Vec::new(),
         }
     }
+
     pub fn allocate(&mut self, area: Size<UPixels>) -> Option<TextureAllocation> {
         self.allocate_area(Size {
             width: area.width.0.try_into().expect("area allocated too large"),
@@ -188,7 +189,9 @@ impl Column {
             let shelf = &mut self.shelves[usize::from(*shelf_index)];
             if shelf.height < area.height {
                 continue;
-            } else if shelf.height / 2 > area.height {
+            }
+
+            if shelf.height / 2 > area.height {
                 // We want to avoid allocating into a shelf when we leave over
                 // 50% of the space empty.
                 break;

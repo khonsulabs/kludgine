@@ -1,18 +1,16 @@
-use std::marker::PhantomData;
 use std::ops::Add;
-use std::sync::Arc;
 
-use bytemuck::{Pod, Zeroable};
 use lyon_tessellation::{
     FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
     GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeVertex,
     StrokeVertexConstructor, VertexId,
 };
-use wgpu::{BufferUsages, ShaderStages};
+use wgpu::BufferUsages;
 
 use crate::buffer::Buffer;
-use crate::math::{Dips, Pixels, Point, Rect, ToFloat, UPixels, Zero};
-use crate::{sealed, Color, Graphics, RenderingGraphics, TextureSource};
+use crate::math::{Point, Rect, ToFloat, UPixels};
+use crate::pipeline::Vertex;
+use crate::{Color, Graphics, PreparedGraphic, TextureSource};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Shape<Unit, const TEXTURED: bool> {
@@ -30,6 +28,7 @@ impl<Unit, const TEXTURED: bool> Shape<Unit, TEXTURED> {
 }
 
 impl<Unit> Shape<Unit, false> {
+    #[must_use]
     pub fn prepare(&self, graphics: &Graphics<'_>) -> PreparedGraphic<Unit>
     where
         Vertex<Unit>: bytemuck::Pod,
@@ -48,7 +47,6 @@ impl<Unit> Shape<Unit, false> {
             vertices,
             indices,
             texture_binding: None,
-            _unit: PhantomData,
         }
     }
 }
@@ -76,110 +74,7 @@ impl<Unit> Shape<Unit, true> {
             vertices,
             indices,
             texture_binding: Some(texture.bind_group(graphics)),
-            _unit: PhantomData,
         }
-    }
-}
-
-pub(crate) const FLAG_DIPS: u32 = 1 << 0;
-pub(crate) const FLAG_SCALE: u32 = 1 << 1;
-pub(crate) const FLAG_ROTATE: u32 = 1 << 2;
-pub(crate) const FLAG_TRANSLATE: u32 = 1 << 3;
-pub(crate) const FLAG_TEXTURED: u32 = 1 << 4;
-
-#[derive(Debug, Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub(crate) struct PushConstants {
-    pub flags: u32,
-    pub scale: f32,
-    pub rotation: f32,
-    pub translation: Point<i32>,
-}
-
-#[derive(Debug)]
-pub struct PreparedGraphic<Unit> {
-    texture_binding: Option<Arc<wgpu::BindGroup>>,
-    vertices: Buffer<Vertex<Unit>>,
-    indices: Buffer<u16>,
-    _unit: PhantomData<Unit>,
-}
-
-impl<Unit> PreparedGraphic<Unit>
-where
-    Unit: Default + Into<i32> + ShaderScalable + Zero,
-    Vertex<Unit>: Pod,
-{
-    pub fn render<'pass>(
-        &'pass self,
-        origin: Point<Unit>,
-        scale: Option<f32>,
-        rotation: Option<f32>,
-        graphics: &mut RenderingGraphics<'_, 'pass>,
-    ) {
-        graphics.active_pipeline_if_needed();
-
-        graphics.pass.set_bind_group(
-            0,
-            self.texture_binding
-                .as_deref()
-                .unwrap_or(&graphics.state.default_bindings),
-            &[],
-        );
-
-        graphics.pass.set_vertex_buffer(0, self.vertices.as_slice());
-        graphics
-            .pass
-            .set_index_buffer(self.indices.as_slice(), wgpu::IndexFormat::Uint16);
-        let mut flags = Unit::flags();
-        if self.texture_binding.is_some() {
-            flags |= FLAG_TEXTURED;
-        }
-        let scale = scale.map_or(1., |scale| {
-            flags |= FLAG_SCALE;
-            scale
-        });
-        let rotation = rotation.map_or(0., |scale| {
-            flags |= FLAG_ROTATE;
-            scale
-        });
-        if !origin.is_zero() {
-            flags |= FLAG_TRANSLATE;
-        }
-
-        graphics.pass.set_push_constants(
-            ShaderStages::VERTEX | ShaderStages::FRAGMENT,
-            0,
-            bytemuck::bytes_of(&PushConstants {
-                flags,
-                scale,
-                rotation,
-                translation: Point {
-                    x: origin.x.into(),
-                    y: origin.y.into(),
-                },
-            }),
-        );
-        graphics
-            .pass
-            .draw_indexed(0..self.indices.len() as u32, 0, 0..1);
-    }
-}
-
-pub trait ShaderScalable: sealed::ShaderScalableSealed {}
-
-impl ShaderScalable for Pixels {}
-
-impl ShaderScalable for Dips {}
-
-impl sealed::ShaderScalableSealed for Pixels {
-    fn flags() -> u32 {
-        0
-    }
-}
-
-impl sealed::ShaderScalableSealed for Dips {
-    fn flags() -> u32 {
-        FLAG_DIPS
     }
 }
 
@@ -222,7 +117,13 @@ where
         attributes: &[f32],
     ) -> Result<VertexId, GeometryBuilderError> {
         let vertex = self.new_vertex(position, attributes);
-        let new_id = VertexId(self.shape.vertices.len() as u32);
+        let new_id = VertexId(
+            self.shape
+                .vertices
+                .len()
+                .try_into()
+                .map_err(|_| GeometryBuilderError::TooManyVertices)?,
+        );
         self.shape.vertices.push(vertex);
         if self.shape.vertices.len() > u16::MAX as usize {
             return Err(GeometryBuilderError::TooManyVertices);
@@ -308,9 +209,15 @@ where
     fn end_geometry(&mut self) {}
 
     fn add_triangle(&mut self, a: VertexId, b: VertexId, c: VertexId) {
-        self.shape.indices.push(a.0 as u16);
-        self.shape.indices.push(b.0 as u16);
-        self.shape.indices.push(c.0 as u16);
+        self.shape
+            .indices
+            .push(a.0.try_into().expect("checked in new_vertex"));
+        self.shape
+            .indices
+            .push(b.0.try_into().expect("checked in new_vertex"));
+        self.shape
+            .indices
+            .push(c.0.try_into().expect("checked in new_vertex"));
     }
 
     fn abort_geometry(&mut self) {
@@ -318,26 +225,6 @@ where
         self.shape.indices.clear();
     }
 }
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-#[repr(C)]
-pub struct Vertex<Unit> {
-    pub location: Point<Unit>,
-    pub texture: Point<UPixels>,
-    pub color: Color,
-}
-
-#[test]
-fn vertex_align() {
-    assert_eq!(std::mem::size_of::<Vertex<Dips>>(), 20);
-}
-
-unsafe impl bytemuck::Pod for Vertex<Pixels> {}
-unsafe impl bytemuck::Zeroable for Vertex<Pixels> {}
-unsafe impl bytemuck::Pod for Vertex<Dips> {}
-unsafe impl bytemuck::Zeroable for Vertex<Dips> {}
-unsafe impl bytemuck::Pod for Vertex<i32> {}
-unsafe impl bytemuck::Zeroable for Vertex<i32> {}
 
 /// A point on a [`Path`].
 pub type Endpoint<Unit> = Point<Unit>;
@@ -439,6 +326,7 @@ where
         builder.build()
     }
 
+    #[must_use]
     pub fn fill(&self, color: Color) -> Shape<Unit, TEXTURED> {
         let lyon_path = self.as_lyon();
         let mut shape_builder = ShapeBuilder::new(color);

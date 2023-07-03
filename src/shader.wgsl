@@ -16,8 +16,8 @@ struct VertexInput {
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
-    @location(0) uv: vec2<f32>,
-    @location(1) color: u32,
+    @location(0) color: vec4<f32>,
+    @location(1) uv: vec2<f32>,
 }
 
 struct Uniforms {
@@ -52,8 +52,17 @@ fn dips_to_pixels(value: i32, ratio: Ratio) -> i32 {
     return int_scale(value, ratio) * i32(96) / i32(2540);
 }
 
+fn int_to_rgba(color: u32) -> vec4<f32> {
+    let r = color >> u32(24);
+    let g = (color >> u32(16)) & u32(0xFF);
+    let b = (color >> u32(8)) & u32(0xFF);
+    let a = color & u32(0xFF);
+
+    return vec4<f32>(f32(r) / 255.0, f32(g) / 255.0, f32(b) / 255.0, f32(a) / 255.0);
+}
+
 @vertex
-fn vs_main(input: VertexInput) -> VertexOutput {
+fn vertex(input: VertexInput) -> VertexOutput {
     let flag_dips = u32(1);
     let flag_scale = flag_dips << u32(1);
     let flag_rotation = flag_dips << u32(2);
@@ -95,14 +104,14 @@ fn vs_main(input: VertexInput) -> VertexOutput {
         }
     }
     outval.position = uniforms.ortho * vec4<f32>(position, 0., 1.0);
-    outval.color = input.color;
+    outval.color = int_to_rgba(input.color);
     outval.uv = vec2<f32>(input.uv) / vec2<f32>(textureDimensions(r_texture));
     return outval;
 }
 
 struct FragmentInput {
-    @location(0) uv: vec2<f32>,
-    @location(1) color: u32,
+    @location(0) color: vec4<f32>,
+    @location(1) uv: vec2<f32>,
 }
 
 @group(0)
@@ -113,17 +122,12 @@ var r_texture: texture_2d<f32>;
 var r_sampler: sampler;
 
 @fragment
-fn fs_main(fragment: FragmentInput) -> @location(0) vec4<f32> {
+fn fragment(fragment: FragmentInput) -> @location(0) vec4<f32> {
     let flag_textured = u32(1) << u32(4);
 
     if (pc.flags & flag_textured) != u32(0) {
-        return textureSample(r_texture, r_sampler, fragment.uv);
+        return textureSample(r_texture, r_sampler, fragment.uv) * fragment.color;
     }
 
-    let r = fragment.color >> u32(24);
-    let g = (fragment.color >> u32(16)) & u32(0xFF);
-    let b = (fragment.color >> u32(8)) & u32(0xFF);
-    let a = fragment.color & u32(0xFF);
-
-    return vec4<f32>(f32(r) / 255.0, f32(g) / 255.0, f32(b) / 255.0, f32(a) / 255.0);
+    return fragment.color;
 }

@@ -3,8 +3,8 @@ use std::time::Duration;
 use appit::RunningWindow;
 use kludgine::app::WindowBehavior;
 use kludgine::math::{Dips, Pixels, Point, Rect, Size};
-use kludgine::Color;
-use kludgine::{PathBuilder, PreparedGraphic};
+use kludgine::shapes::PathBuilder;
+use kludgine::{Color, PreparedGraphic};
 
 fn main() {
     Test::run();

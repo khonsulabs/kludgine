@@ -6,9 +6,8 @@ use alot::{LotId, Lots};
 
 use crate::math::{Rect, Size, ToFloat, UPixels};
 use crate::pack::{TextureAllocation, TexturePacker};
-use crate::sealed;
-use crate::shapes::{PreparedGraphic, Vertex};
-use crate::{Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
+use crate::pipeline::{PreparedGraphic, Vertex};
+use crate::{sealed, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
 
 #[derive(Debug, Clone)]
 pub struct TextureCollection {
@@ -23,13 +22,13 @@ struct Data {
 }
 
 impl TextureCollection {
-    pub fn new(
+    pub(crate) fn new_generic(
         initial_size: Size<UPixels>,
         minimum_column_width: u16,
         format: wgpu::TextureFormat,
         graphics: &impl WgpuDeviceAndQueue,
     ) -> Self {
-        let texture = Texture::new(
+        let texture = Texture::new_generic(
             graphics,
             initial_size,
             format,
@@ -43,6 +42,16 @@ impl TextureCollection {
                 textures: Lots::new(),
             })),
         }
+    }
+
+    #[must_use]
+    pub fn new(
+        initial_size: Size<UPixels>,
+        minimum_column_width: u16,
+        format: wgpu::TextureFormat,
+        graphics: &Graphics<'_>,
+    ) -> Self {
+        Self::new_generic(initial_size, minimum_column_width, format, graphics)
     }
 
     pub fn push_texture(

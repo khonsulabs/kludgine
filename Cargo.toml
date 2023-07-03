@@ -16,6 +16,7 @@ lyon_tessellation = "1.0.1"
 image = { version = "0.24.6", optional = true, default-features = false }
 cosmic-text = { version = "0.8" }
 alot = "0.1"
+ahash = "0.8.3"
 
 [dev-dependencies]
 image = { features = ["png"] }

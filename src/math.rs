@@ -1,7 +1,8 @@
-use bytemuck::{Pod, Zeroable};
 use std::fmt;
 use std::num::TryFromIntError;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+
+use bytemuck::{Pod, Zeroable};
 
 pub trait ToFloat {
     type Float;
@@ -12,11 +13,15 @@ pub trait ToFloat {
 impl ToFloat for u32 {
     type Float = f32;
 
+    #[allow(clippy::cast_precision_loss)] // precision loss desired to best approximate the value
     fn into_float(self) -> Self::Float {
         self as f32
     }
 
+    #[allow(clippy::cast_possible_truncation)] // truncation desired
+    #[allow(clippy::cast_sign_loss)] // sign loss is asserted
     fn from_float(float: Self::Float) -> Self {
+        assert!(float.is_sign_positive());
         float as u32
     }
 }
@@ -28,28 +33,15 @@ macro_rules! define_integer_type {
         pub struct $name(pub $inner);
 
         impl $name {
+            #[must_use]
             pub const fn div(self, rhs: $inner) -> Self {
                 Self(self.0 / rhs)
-            }
-
-            pub const fn into_f32(self) -> f32 {
-                self.0 as f32
-            }
-
-            pub const fn into_f64(self) -> f64 {
-                self.0 as f64
-            }
-        }
-
-        impl From<$name> for f64 {
-            fn from(value: $name) -> Self {
-                value.into_f64()
             }
         }
 
         impl From<$name> for f32 {
             fn from(value: $name) -> Self {
-                value.into_f32()
+                value.into_float()
             }
         }
 
@@ -230,12 +222,13 @@ impl TryFrom<Pixels> for UPixels {
 }
 
 impl Dips {
-    pub const INCH: Self = Dips(2540);
     pub const CM: Self = Dips(1000);
+    pub const INCH: Self = Dips(2540);
     pub const MM: Self = Self::CM.div(10);
 }
 
 impl From<f32> for Dips {
+    #[allow(clippy::cast_possible_truncation)] // truncation desired
     fn from(cm: f32) -> Self {
         Dips((cm * 1000.) as i32)
     }
@@ -244,6 +237,7 @@ impl From<f32> for Dips {
 impl ToFloat for Dips {
     type Float = f32;
 
+    #[allow(clippy::cast_precision_loss)] // precision loss desired to best approximate the value
     fn into_float(self) -> Self::Float {
         self.0 as f32 / 1000.
     }
@@ -260,6 +254,7 @@ impl fmt::Debug for Dips {
 }
 
 impl From<f32> for Pixels {
+    #[allow(clippy::cast_possible_truncation)] // truncation desired
     fn from(pixels: f32) -> Self {
         Pixels(pixels as i32)
     }
@@ -268,6 +263,7 @@ impl From<f32> for Pixels {
 impl ToFloat for Pixels {
     type Float = f32;
 
+    #[allow(clippy::cast_precision_loss)] // precision loss desired to best approximate the value
     fn into_float(self) -> Self::Float {
         self.0 as f32
     }
@@ -284,14 +280,21 @@ impl fmt::Debug for Pixels {
 }
 
 impl From<f32> for UPixels {
+    #[allow(clippy::cast_possible_truncation)] // truncation desired
+    #[allow(clippy::cast_sign_loss)] // sign loss is handled
     fn from(pixels: f32) -> Self {
-        Self(pixels as u32)
+        if pixels < 0. {
+            Self(0)
+        } else {
+            Self(pixels as u32)
+        }
     }
 }
 
 impl ToFloat for UPixels {
     type Float = f32;
 
+    #[allow(clippy::cast_precision_loss)] // precision loss desired to best approximate the value
     fn into_float(self) -> Self::Float {
         self.0 as f32
     }
@@ -353,11 +356,11 @@ where
     }
 }
 
-impl From<appit::winit::dpi::PhysicalSize<u32>> for Size<Pixels> {
+impl From<appit::winit::dpi::PhysicalSize<u32>> for Size<UPixels> {
     fn from(value: appit::winit::dpi::PhysicalSize<u32>) -> Self {
         Self {
-            width: Pixels(value.width.try_into().expect("width too large")),
-            height: Pixels(value.height.try_into().expect("height too large")),
+            width: value.width.try_into().expect("width too large"),
+            height: value.height.try_into().expect("height too large"),
         }
     }
 }
@@ -456,15 +459,6 @@ where
         }
     }
 }
-
-unsafe impl bytemuck::Pod for Point<Pixels> {}
-unsafe impl bytemuck::Zeroable for Point<Pixels> {}
-unsafe impl bytemuck::Pod for Point<Dips> {}
-unsafe impl bytemuck::Zeroable for Point<Dips> {}
-unsafe impl bytemuck::Pod for Point<i32> {}
-unsafe impl bytemuck::Zeroable for Point<i32> {}
-unsafe impl bytemuck::Pod for Point<f32> {}
-unsafe impl bytemuck::Zeroable for Point<f32> {}
 
 #[derive(Clone, Copy, Eq, PartialEq, Hash, Debug)]
 pub struct Size<Unit> {
@@ -688,18 +682,21 @@ pub(crate) struct Ratio {
 }
 
 impl Ratio {
+    #[allow(clippy::cast_possible_truncation)] // truncation desired
+    #[allow(clippy::cast_sign_loss)] // negative scales are handled
     pub fn from_f32(scale: f32) -> Self {
+        let scale = scale.max(0.);
         let mut best = Ratio {
             div_by: 0,
             mul_by: 0,
         };
         let mut best_diff = f32::MAX;
         for div_by in 1..=u16::MAX {
-            let mul_by = (div_by as f32 * scale) as u16;
-            let test = Ratio { div_by, mul_by };
-            let delta = (test.into_f32() - scale).abs();
+            let mul_by = (f32::from(div_by) * scale) as u16;
+            let ratio = Ratio { div_by, mul_by };
+            let delta = (ratio.into_f32() - scale).abs();
             if delta < best_diff {
-                best = test;
+                best = ratio;
                 best_diff = delta;
                 if delta < 0.00001 {
                     break;
@@ -711,7 +708,7 @@ impl Ratio {
     }
 
     pub fn into_f32(self) -> f32 {
-        self.mul_by as f32 / self.div_by as f32
+        f32::from(self.mul_by) / f32::from(self.div_by)
     }
 }
 
@@ -813,45 +810,4 @@ fn scale_factor_from_f32() {
             mul_by: 3
         }
     );
-}
-
-#[derive(Clone, Copy, Debug)]
-pub(crate) struct ScreenTransformation([f32; 16]);
-
-impl ScreenTransformation {
-    pub fn ortho(left: f32, top: f32, right: f32, bottom: f32, near: f32, far: f32) -> Self {
-        let tx = -((right + left) / (right - left));
-        let ty = -((top + bottom) / (top - bottom));
-        let tz = -((far + near) / (far - near));
-
-        // I never thought I'd write this as real code
-        Self([
-            // Row one
-            2. / (right - left),
-            0.,
-            0.,
-            0.,
-            // Row two
-            0.,
-            2. / (top - bottom),
-            0.,
-            0.,
-            // Row three
-            0.,
-            0.,
-            -2. / (far - near),
-            0.,
-            // Row four
-            tx,
-            ty,
-            tz,
-            1.,
-        ])
-    }
-}
-
-impl ScreenTransformation {
-    pub fn into_array(self) -> [f32; 16] {
-        self.0
-    }
 }
