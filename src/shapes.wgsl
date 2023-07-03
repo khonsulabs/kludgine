@@ -10,14 +10,14 @@ var<push_constant> pc: PushConstants;
 
 struct VertexInput {
     @location(0) position: vec2<i32>,
-    @location(1) texture: vec2<f32>,
+    @location(1) uv: vec2<u32>,
     @location(2) color: u32,
 }
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
-    @location(0) color: u32,
-    @location(1) texture: vec2<f32>,
+    @location(0) uv: vec2<f32>,
+    @location(1) color: u32,
 }
 
 struct Uniforms {
@@ -96,13 +96,13 @@ fn vs_main(input: VertexInput) -> VertexOutput {
     }
     outval.position = uniforms.ortho * vec4<f32>(position, 0., 1.0);
     outval.color = input.color;
-    outval.texture = input.texture;
+    outval.uv = vec2<f32>(input.uv) / vec2<f32>(textureDimensions(r_texture));
     return outval;
 }
 
 struct FragmentInput {
-    @location(0) color: u32,
-    @location(1) texture: vec2<f32>,
+    @location(0) uv: vec2<f32>,
+    @location(1) color: u32,
 }
 
 @group(0)
@@ -117,7 +117,7 @@ fn fs_main(fragment: FragmentInput) -> @location(0) vec4<f32> {
     let flag_textured = u32(1) << u32(4);
 
     if (pc.flags & flag_textured) != u32(0) {
-        return textureSample(r_texture, r_sampler, fragment.texture);
+        return textureSample(r_texture, r_sampler, fragment.uv);
     }
 
     let r = fragment.color >> u32(24);

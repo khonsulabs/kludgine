@@ -6,6 +6,7 @@ use alot::{LotId, Lots};
 
 use crate::math::{Rect, Size, ToFloat, UPixels};
 use crate::pack::{TextureAllocation, TexturePacker};
+use crate::sealed;
 use crate::shapes::{PreparedGraphic, Vertex};
 use crate::{Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
 
@@ -164,13 +165,15 @@ impl TextureCollection {
     }
 }
 
-impl TextureSource for TextureCollection {
+impl TextureSource for TextureCollection {}
+
+impl sealed::TextureSource for TextureCollection {
     fn bind_group(&self, graphics: &Graphics<'_>) -> Arc<wgpu::BindGroup> {
         let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
         data.texture.bind_group(graphics)
     }
 
-    fn id(&self) -> crate::TextureId {
+    fn id(&self) -> sealed::TextureId {
         let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
         data.texture.id()
     }
@@ -207,12 +210,14 @@ impl Drop for CollectedTexture {
     }
 }
 
-impl TextureSource for CollectedTexture {
+impl TextureSource for CollectedTexture {}
+
+impl sealed::TextureSource for CollectedTexture {
     fn bind_group(&self, graphics: &Graphics<'_>) -> Arc<wgpu::BindGroup> {
         self.collection.bind_group(graphics)
     }
 
-    fn id(&self) -> crate::TextureId {
+    fn id(&self) -> sealed::TextureId {
         self.collection.id()
     }
 }

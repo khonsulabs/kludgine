@@ -4,8 +4,7 @@ use std::fmt::{self, Debug, Formatter};
 use std::hash::Hash;
 use std::mem::size_of;
 use std::ops::{Add, Div, Neg, Range};
-use std::sync::atomic::{self, AtomicUsize};
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 use bytemuck::{Pod, Zeroable};
 use wgpu::util::DeviceExt;
@@ -15,8 +14,7 @@ use crate::math::{
     Dips, Pixels, Point, Ratio, Rect, ScreenTransformation, Size, ToFloat, UPixels, Zero,
 };
 use crate::shapes::{
-    PathBuilder, PreparedGraphic, PushConstants, ShaderScalable, Shape, Vertex, FLAG_ROTATE,
-    FLAG_SCALE, FLAG_TEXTURED, FLAG_TRANSLATE,
+    PushConstants, Vertex, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED, FLAG_TRANSLATE,
 };
 
 #[cfg(feature = "app")]
@@ -25,7 +23,10 @@ mod atlas;
 mod buffer;
 pub mod math;
 mod pack;
-pub mod shapes;
+mod sealed;
+mod shapes;
+
+pub use shapes::{Path, PathBuilder, PreparedGraphic, ShaderScalable, Shape};
 
 pub use atlas::{CollectedTexture, TextureCollection};
 
@@ -82,7 +83,7 @@ impl Kludgine {
                 },
                 wgpu::BindGroupLayoutEntry {
                     binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
                     ty: wgpu::BindingType::Texture {
                         sample_type: wgpu::TextureSampleType::Float { filterable: true },
                         view_dimension: wgpu::TextureViewDimension::D2,
@@ -170,7 +171,7 @@ impl Kludgine {
                             shader_location: 0,
                         },
                         wgpu::VertexAttribute {
-                            format: wgpu::VertexFormat::Float32x2,
+                            format: wgpu::VertexFormat::Uint32x2,
                             offset: 8,
                             shader_location: 1,
                         },
@@ -793,23 +794,9 @@ struct Uniforms {
     _padding: [u32; 3],
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-pub struct TextureId(usize);
-
-impl TextureId {
-    pub fn new_unique_id() -> Self {
-        static COUNTER: OnceLock<AtomicUsize> = OnceLock::new();
-        Self(
-            COUNTER
-                .get_or_init(AtomicUsize::default)
-                .fetch_add(1, atomic::Ordering::Relaxed),
-        )
-    }
-}
-
 #[derive(Debug)]
 pub struct Texture {
-    id: TextureId,
+    id: sealed::TextureId,
     wgpu: wgpu::Texture,
     view: wgpu::TextureView,
     bind_group: Arc<wgpu::BindGroup>,
@@ -835,7 +822,7 @@ impl Texture {
         let view = wgpu.create_view(&wgpu::TextureViewDescriptor::default());
         let bind_group = Arc::new(create_bind_group(graphics, &view));
         Self {
-            id: TextureId::new_unique_id(),
+            id: sealed::TextureId::new_unique_id(),
             wgpu,
             view,
             bind_group,
@@ -866,7 +853,7 @@ impl Texture {
         let view = wgpu.create_view(&wgpu::TextureViewDescriptor::default());
         let bind_group = Arc::new(create_bind_group(graphics, &view));
         Self {
-            id: TextureId::new_unique_id(),
+            id: sealed::TextureId::new_unique_id(),
             wgpu,
             view,
             bind_group,
@@ -961,9 +948,6 @@ impl Texture {
         Vertex<Unit>: bytemuck::Pod,
     {
         let (source_top_left, source_bottom_right) = source.extents();
-        let size = self.size().into_float();
-        let source_top_left = source_top_left.into_float() / size;
-        let source_bottom_right = source_bottom_right.into_float() / size;
         let (dest_top_left, dest_bottom_right) = dest.extents();
         let path = PathBuilder::new_textured(dest_top_left, source_top_left)
             .line_to(
@@ -1049,17 +1033,16 @@ fn create_bind_group(
 //     }
 // }
 
-pub trait TextureSource {
-    fn id(&self) -> TextureId;
-    fn bind_group(&self, graphics: &Graphics<'_>) -> Arc<wgpu::BindGroup>;
-}
+pub trait TextureSource: sealed::TextureSource {}
 
-impl TextureSource for Texture {
+impl TextureSource for Texture {}
+
+impl sealed::TextureSource for Texture {
     fn bind_group(&self, _graphics: &Graphics<'_>) -> Arc<wgpu::BindGroup> {
         self.bind_group.clone()
     }
 
-    fn id(&self) -> TextureId {
+    fn id(&self) -> sealed::TextureId {
         self.id
     }
 }
@@ -1073,7 +1056,7 @@ pub struct Renderer<'render, 'gfx> {
 struct Command {
     indices: Range<u32>,
     constants: PushConstants,
-    texture: Option<TextureId>,
+    texture: Option<sealed::TextureId>,
 }
 
 #[derive(Eq, PartialEq, Debug, Clone, Copy)]
@@ -1240,7 +1223,7 @@ pub struct Rendering {
     vertices: Vec<Vertex<i32>>,
     vertex_index_by_id: HashMap<VertexId, u16>,
     indices: Vec<u16>,
-    textures: HashMap<TextureId, Arc<wgpu::BindGroup>>,
+    textures: HashMap<sealed::TextureId, Arc<wgpu::BindGroup>>,
     commands: Vec<Command>,
 }
 

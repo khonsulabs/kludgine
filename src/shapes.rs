@@ -12,7 +12,7 @@ use wgpu::{BufferUsages, ShaderStages};
 
 use crate::buffer::Buffer;
 use crate::math::{Dips, Pixels, Point, Rect, ToFloat, UPixels, Zero};
-use crate::{Color, Graphics, RenderingGraphics, TextureSource};
+use crate::{sealed, Color, Graphics, RenderingGraphics, TextureSource};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Shape<Unit, const TEXTURED: bool> {
@@ -167,12 +167,6 @@ where
 
 pub trait ShaderScalable: sealed::ShaderScalableSealed {}
 
-mod sealed {
-    pub trait ShaderScalableSealed {
-        fn flags() -> u32;
-    }
-}
-
 impl ShaderScalable for Pixels {}
 
 impl ShaderScalable for Dips {}
@@ -217,7 +211,7 @@ where
 
         Vertex {
             location: Point::new(Unit::from_float(position.x), Unit::from_float(position.y)),
-            texture: Point::new(attributes[0], attributes[1]),
+            texture: Point::new(attributes[0].round(), attributes[1].round()),
             color: self.default_color,
         }
     }
@@ -335,10 +329,7 @@ pub struct Vertex<Unit> {
 
 #[test]
 fn vertex_align() {
-    assert_eq!(
-        std::mem::size_of::<[Vertex<Dips>; 2]>(),
-        std::mem::size_of::<Vertex<Dips>>() * 2
-    );
+    assert_eq!(std::mem::size_of::<Vertex<Dips>>(), 20);
 }
 
 unsafe impl bytemuck::Pod for Vertex<Pixels> {}
@@ -360,13 +351,13 @@ pub enum PathEvent<Unit> {
     Begin {
         /// The location to begin at.
         at: Endpoint<Unit>,
-        texture: Point<f32>,
+        texture: Point<UPixels>,
     },
     /// A straight line segment.
     Line {
         /// The end location of the line.
         to: Endpoint<Unit>,
-        texture: Point<f32>,
+        texture: Point<UPixels>,
     },
     /// A quadratic curve (one control point).
     Quadratic {
@@ -374,7 +365,7 @@ pub enum PathEvent<Unit> {
         ctrl: ControlPoint<Unit>,
         /// The end location of the curve.
         to: Endpoint<Unit>,
-        texture: Point<f32>,
+        texture: Point<UPixels>,
     },
     /// A cubic curve (two control points).
     Cubic {
@@ -384,7 +375,7 @@ pub enum PathEvent<Unit> {
         ctrl2: ControlPoint<Unit>,
         /// The end location of the curve.
         to: Endpoint<Unit>,
-        texture: Point<f32>,
+        texture: Point<UPixels>,
     },
     /// Ends the path. Must be the last entry.
     End {
@@ -417,13 +408,17 @@ where
         for &event in &self.events {
             match event {
                 PathEvent::Begin { at, texture } => {
-                    builder.begin(at.into(), &[texture.x, texture.y]);
+                    builder.begin(at.into(), &[texture.x.into_float(), texture.y.into_float()]);
                 }
                 PathEvent::Line { to, texture } => {
-                    builder.line_to(to.into(), &[texture.x, texture.y]);
+                    builder.line_to(to.into(), &[texture.x.into_float(), texture.y.into_float()]);
                 }
                 PathEvent::Quadratic { ctrl, to, texture } => {
-                    builder.quadratic_bezier_to(ctrl.into(), to.into(), &[texture.x, texture.y]);
+                    builder.quadratic_bezier_to(
+                        ctrl.into(),
+                        to.into(),
+                        &[texture.x.into_float(), texture.y.into_float()],
+                    );
                 }
                 PathEvent::Cubic {
                     ctrl1,
@@ -435,7 +430,7 @@ where
                         ctrl1.into(),
                         ctrl2.into(),
                         to.into(),
-                        &[texture.x, texture.y],
+                        &[texture.x.into_float(), texture.y.into_float()],
                     );
                 }
                 PathEvent::End { close } => builder.end(close),
@@ -563,7 +558,7 @@ where
 {
     /// Creates a new path with the initial position `start_at`.
     #[must_use]
-    pub fn new_textured(start_at: Endpoint<Unit>, texture: Point<f32>) -> Self {
+    pub fn new_textured(start_at: Endpoint<Unit>, texture: Point<UPixels>) -> Self {
         Self {
             path: Path::from_iter([(PathEvent::Begin {
                 at: start_at,
@@ -583,7 +578,7 @@ where
 
     /// Create a straight line from the current location to `end_at`.
     #[must_use]
-    pub fn line_to(mut self, end_at: Endpoint<Unit>, texture: Point<f32>) -> Self {
+    pub fn line_to(mut self, end_at: Endpoint<Unit>, texture: Point<UPixels>) -> Self {
         self.path.events.push(PathEvent::Line {
             to: end_at,
             texture,
@@ -599,7 +594,7 @@ where
         mut self,
         control: ControlPoint<Unit>,
         end_at: Endpoint<Unit>,
-        texture: Point<f32>,
+        texture: Point<UPixels>,
     ) -> Self {
         self.path.events.push(PathEvent::Quadratic {
             ctrl: control,
@@ -618,7 +613,7 @@ where
         control1: ControlPoint<Unit>,
         control2: ControlPoint<Unit>,
         end_at: Endpoint<Unit>,
-        texture: Point<f32>,
+        texture: Point<UPixels>,
     ) -> Self {
         self.path.events.push(PathEvent::Cubic {
             ctrl1: control1,
