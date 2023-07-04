@@ -2,8 +2,8 @@ use std::collections::hash_map;
 
 use ahash::AHashMap;
 use cosmic_text::{fontdb, SwashContent};
+use figures::{lossy_f32_to_i32, Pixels, Point, Rect, Size};
 
-use crate::math::{lossy_f32_to_i32, Pixels, Point, Rect, Size};
 use crate::render::Rendering;
 use crate::shapes::PathBuilder;
 use crate::{CollectedTexture, Color, Graphics};

@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use appit::RunningWindow;
 use kludgine::app::WindowBehavior;
-use kludgine::math::{Dips, Pixels, Point, Rect, Size};
-use kludgine::shapes::PathBuilder;
+use kludgine::figures::{Dips, Pixels, Point, Rect, Size};
+use kludgine::shapes::{PathBuilder, Shape};
 use kludgine::{Color, PreparedGraphic};
 
 fn main() {
@@ -27,11 +27,13 @@ impl WindowBehavior for Test {
         graphics: &mut kludgine::Graphics<'_>,
         _context: Self::Context,
     ) -> Self {
-        let dips_square = Rect::new(
-            Point::new(-RED_SQUARE_SIZE / 2, -RED_SQUARE_SIZE / 2),
-            Size::new(RED_SQUARE_SIZE, RED_SQUARE_SIZE),
+        let dips_square = Shape::filled_rect(
+            Rect::new(
+                Point::new(-RED_SQUARE_SIZE / 2, -RED_SQUARE_SIZE / 2),
+                Size::new(RED_SQUARE_SIZE, RED_SQUARE_SIZE),
+            ),
+            Color::RED,
         )
-        .fill(Color::RED)
         .prepare(graphics);
         let pixels_triangle =
             PathBuilder::new(Point::new(-BLUE_TRIANGLE_SIZE, -BLUE_TRIANGLE_SIZE))

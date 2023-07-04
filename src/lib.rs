@@ -17,10 +17,11 @@ use std::sync::Arc;
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "cosmic-text")]
 pub use cosmic_text;
+pub use figures;
+use figures::{FloatConversion, Point, Rect, Size, UPixels};
 use wgpu::util::DeviceExt;
 
 use crate::buffer::Buffer;
-use crate::math::{Point, Rect, Size, ToFloat, UPixels};
 use crate::pipeline::{Uniforms, Vertex};
 use crate::shapes::PathBuilder;
 
@@ -28,7 +29,6 @@ use crate::shapes::PathBuilder;
 pub mod app;
 mod atlas;
 mod buffer;
-pub mod math;
 mod pipeline;
 mod pod;
 pub mod render;
@@ -859,7 +859,7 @@ impl Texture {
     ) -> PreparedGraphic<Unit>
     where
         Unit: Add<Output = Unit>
-            + ToFloat<Float = f32>
+            + FloatConversion<Float = f32>
             + Div<i32, Output = Unit>
             + Neg<Output = Unit>
             + Ord
@@ -876,7 +876,7 @@ impl Texture {
     pub fn prepare<Unit>(&self, dest: Rect<Unit>, graphics: &Graphics<'_>) -> PreparedGraphic<Unit>
     where
         Unit: Add<Output = Unit>
-            + ToFloat<Float = f32>
+            + FloatConversion<Float = f32>
             + Div<i32, Output = Unit>
             + Neg<Output = Unit>
             + From<i32>
@@ -897,7 +897,7 @@ impl Texture {
     ) -> PreparedGraphic<Unit>
     where
         Unit: Add<Output = Unit>
-            + ToFloat<Float = f32>
+            + FloatConversion<Float = f32>
             + Div<i32, Output = Unit>
             + Neg<Output = Unit>
             + From<i32>

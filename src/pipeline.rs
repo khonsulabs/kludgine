@@ -2,9 +2,9 @@ use std::mem::size_of;
 use std::sync::Arc;
 
 use bytemuck::{Pod, Zeroable};
+use figures::{Dips, Pixels, Point, Ratio, Size, UPixels, Zero};
 
 use crate::buffer::Buffer;
-use crate::math::{Dips, Pixels, Point, Ratio, Size, UPixels, Zero};
 use crate::{sealed, Color, RenderingGraphics};
 
 #[derive(Pod, Zeroable, Copy, Clone)]

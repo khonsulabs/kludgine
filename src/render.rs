@@ -4,9 +4,9 @@ use std::ops::Range;
 use std::sync::Arc;
 
 use ahash::AHashMap;
+use figures::{Point, Zero};
 
 use crate::buffer::Buffer;
-use crate::math::{Point, Zero};
 use crate::pipeline::{
     PushConstants, ShaderScalable, Vertex, FLAG_MASKED, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED,
     FLAG_TRANSLATE,

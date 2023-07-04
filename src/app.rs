@@ -3,8 +3,8 @@ use std::panic::{AssertUnwindSafe, UnwindSafe};
 use std::sync::{Arc, OnceLock};
 
 use appit::{RunningWindow, WindowBehavior as _};
+use figures::{lossy_f64_to_f32, Size};
 
-use crate::math::lossy_f64_to_f32;
 use crate::pipeline::PushConstants;
 use crate::render::{Renderer, Rendering};
 use crate::{Color, Graphics, Kludgine, RenderingGraphics};
@@ -113,7 +113,7 @@ where
             &device,
             &queue,
             swapchain_format,
-            window.inner_size().into(),
+            Size::new(window.inner_size().width, window.inner_size().height),
             lossy_f64_to_f32(window.scale()),
         );
         let mut graphics = Graphics::new(&mut state, &device, &queue);
@@ -216,7 +216,7 @@ where
         self.config.height = window.inner_size().height;
         self.surface.configure(&self.device, &self.config);
         self.kludgine.resize(
-            window.inner_size().into(),
+            Size::new(window.inner_size().width, window.inner_size().height),
             lossy_f64_to_f32(window.scale()),
             &self.queue,
         );

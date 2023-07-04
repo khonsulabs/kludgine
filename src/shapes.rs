@@ -1,5 +1,6 @@
 use std::ops::Add;
 
+use figures::{FloatConversion, Point, Rect, UPixels};
 use lyon_tessellation::{
     FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
     GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeVertex,
@@ -8,7 +9,6 @@ use lyon_tessellation::{
 use wgpu::BufferUsages;
 
 use crate::buffer::Buffer;
-use crate::math::{Point, Rect, ToFloat, UPixels};
 use crate::pipeline::Vertex;
 use crate::{Color, Graphics, PreparedGraphic, TextureSource};
 
@@ -28,6 +28,19 @@ impl<Unit, const TEXTURED: bool> Shape<Unit, TEXTURED> {
 }
 
 impl<Unit> Shape<Unit, false> {
+    pub fn filled_rect(rect: Rect<Unit>, color: Color) -> Shape<Unit, false>
+    where
+        Unit: Add<Output = Unit> + Ord + FloatConversion<Float = f32> + Copy,
+    {
+        let (p1, p2) = rect.extents();
+        let path = PathBuilder::new(p1)
+            .line_to(Point::new(p2.x, p1.y))
+            .line_to(p2)
+            .line_to(Point::new(p1.x, p2.y))
+            .close();
+        path.fill(color)
+    }
+
     #[must_use]
     pub fn prepare(&self, graphics: &Graphics<'_>) -> PreparedGraphic<Unit>
     where
@@ -85,7 +98,7 @@ struct ShapeBuilder<Unit, const TEXTURED: bool> {
 
 impl<Unit, const TEXTURED: bool> ShapeBuilder<Unit, TEXTURED>
 where
-    Unit: ToFloat<Float = f32>,
+    Unit: FloatConversion<Float = f32>,
 {
     fn new(default_color: Color) -> Self {
         Self {
@@ -133,25 +146,10 @@ where
     }
 }
 
-impl<Unit> Rect<Unit>
-where
-    Unit: Add<Output = Unit> + ToFloat<Float = f32> + Ord + Copy,
-{
-    pub fn fill(&self, color: Color) -> Shape<Unit, false> {
-        let (p1, p2) = self.extents();
-        let path = PathBuilder::new(p1)
-            .line_to(Point::new(p2.x, p1.y))
-            .line_to(p2)
-            .line_to(Point::new(p1.x, p2.y))
-            .close();
-        path.fill(color)
-    }
-}
-
 impl<Unit, const TEXTURED: bool> FillVertexConstructor<Vertex<Unit>>
     for ShapeBuilder<Unit, TEXTURED>
 where
-    Unit: ToFloat<Float = f32>,
+    Unit: FloatConversion<Float = f32>,
 {
     fn new_vertex(&mut self, mut vertex: FillVertex) -> Vertex<Unit> {
         let position = vertex.position();
@@ -163,7 +161,7 @@ where
 impl<Unit, const TEXTURED: bool> StrokeVertexConstructor<Vertex<Unit>>
     for ShapeBuilder<Unit, TEXTURED>
 where
-    Unit: ToFloat<Float = f32>,
+    Unit: FloatConversion<Float = f32>,
 {
     fn new_vertex(&mut self, mut vertex: StrokeVertex) -> Vertex<Unit> {
         let position = vertex.position();
@@ -174,7 +172,7 @@ where
 
 impl<Unit, const TEXTURED: bool> FillGeometryBuilder for ShapeBuilder<Unit, TEXTURED>
 where
-    Unit: ToFloat<Float = f32>,
+    Unit: FloatConversion<Float = f32>,
 {
     fn add_fill_vertex(
         &mut self,
@@ -188,7 +186,7 @@ where
 
 impl<Unit, const TEXTURED: bool> StrokeGeometryBuilder for ShapeBuilder<Unit, TEXTURED>
 where
-    Unit: ToFloat<Float = f32>,
+    Unit: FloatConversion<Float = f32>,
 {
     fn add_stroke_vertex(
         &mut self,
@@ -202,7 +200,7 @@ where
 
 impl<Unit, const TEXTURED: bool> GeometryBuilder for ShapeBuilder<Unit, TEXTURED>
 where
-    Unit: ToFloat<Float = f32>,
+    Unit: FloatConversion<Float = f32>,
 {
     fn begin_geometry(&mut self) {}
 
@@ -287,7 +285,7 @@ impl<Unit, const TEXTURED: bool> FromIterator<PathEvent<Unit>> for Path<Unit, TE
 
 impl<Unit, const TEXTURED: bool> Path<Unit, TEXTURED>
 where
-    Unit: ToFloat<Float = f32> + Copy,
+    Unit: FloatConversion<Float = f32> + Copy,
 {
     fn as_lyon(&self) -> lyon_tessellation::path::Path {
         let mut builder = lyon_tessellation::path::Path::builder_with_attributes(2);
@@ -341,15 +339,6 @@ where
             )
             .expect("should not fail to tesselat4e a rect");
         shape_builder.shape
-    }
-}
-
-impl<Unit> From<Point<Unit>> for lyon_tessellation::math::Point
-where
-    Unit: ToFloat<Float = f32>,
-{
-    fn from(value: Point<Unit>) -> Self {
-        Self::new(value.x.into_float(), value.y.into_float())
     }
 }
 

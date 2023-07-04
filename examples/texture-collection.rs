@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use appit::RunningWindow;
 use kludgine::app::WindowBehavior;
-use kludgine::math::{Dips, Pixels, Point, Rect, Size};
+use kludgine::figures::{Dips, Pixels, Point, Rect, Size};
 use kludgine::{Color, PreparedGraphic, TextureCollection};
 
 fn main() {

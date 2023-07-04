@@ -3,9 +3,9 @@ use std::ops::{Add, Div, Neg};
 use std::sync::{Arc, PoisonError, RwLock};
 
 use alot::{LotId, Lots};
-use guillotiere::{AllocId, AtlasAllocator};
+use figures::{FloatConversion, Rect, Size, UPixels};
+use shelf_packer::{Allocation, ShelfPacker};
 
-use crate::math::{Point, Rect, Size, ToFloat, UPixels};
 use crate::pipeline::{PreparedGraphic, Vertex};
 use crate::{sealed, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
 
@@ -15,14 +15,9 @@ pub struct TextureCollection {
 }
 
 struct Data {
-    rects: AtlasAllocator,
+    rects: ShelfPacker,
     texture: Texture,
-    textures: Lots<AllocatedTexture>,
-}
-
-struct AllocatedTexture {
-    id: AllocId,
-    rect: Rect<UPixels>,
+    textures: Lots<Allocation>,
 }
 
 impl TextureCollection {
@@ -40,10 +35,10 @@ impl TextureCollection {
 
         Self {
             data: Arc::new(RwLock::new(Data {
-                rects: AtlasAllocator::new(guillotiere::size2(
+                rects: ShelfPacker::new(
+                    initial_size,
                     initial_size.width.0.try_into().expect("width too large"),
-                    initial_size.height.0.try_into().expect("height too large"),
-                )),
+                ),
                 texture,
                 textures: Lots::new(),
             })),
@@ -70,42 +65,13 @@ impl TextureCollection {
             .data
             .write()
             .map_or_else(PoisonError::into_inner, |g| g);
-        let allocation = this
-            .rects
-            .allocate(guillotiere::size2(
-                size.width.0.try_into().expect("width too large"),
-                size.height.0.try_into().expect("height too large"),
-            ))
-            .expect("TODO: implement growth");
-
-        let p1: Point<UPixels> = Point {
-            x: u32::try_from(allocation.rectangle.min.x)
-                .expect("invalid allocation")
-                .into(),
-            y: u32::try_from(allocation.rectangle.min.y)
-                .expect("invalid allocation")
-                .into(),
-        };
-
-        let p2: Point<UPixels> = Point {
-            x: u32::try_from(allocation.rectangle.max.x)
-                .expect("invalid allocation")
-                .into(),
-            y: u32::try_from(allocation.rectangle.max.y)
-                .expect("invalid allocation")
-                .into(),
-        };
-        let rect = Rect::from_extents(p1, p2);
+        let allocation = this.rects.allocate(size).expect("TODO: implement growth");
 
         graphics.write_texture(
             wgpu::ImageCopyTexture {
                 texture: &this.texture.wgpu,
                 mip_level: 0,
-                origin: wgpu::Origin3d {
-                    x: rect.origin.x.0,
-                    y: rect.origin.y.0,
-                    z: 0,
-                },
+                origin: allocation.rect.origin.into(),
                 aspect: wgpu::TextureAspect::All,
             },
             data,
@@ -114,11 +80,8 @@ impl TextureCollection {
         );
         CollectedTexture {
             collection: self.clone(),
-            id: Arc::new(this.textures.push(AllocatedTexture {
-                id: allocation.id,
-                rect,
-            })),
-            region: Rect::from_extents(p1, p2),
+            id: Arc::new(this.textures.push(allocation)),
+            region: allocation.rect,
         }
     }
 
@@ -158,7 +121,7 @@ impl TextureCollection {
             .write()
             .map_or_else(PoisonError::into_inner, |g| g);
         let allocation = data.textures.remove(id).expect("invalid texture free");
-        data.rects.deallocate(allocation.id);
+        data.rects.free(allocation.id);
     }
 
     fn prepare<Unit>(
@@ -169,7 +132,7 @@ impl TextureCollection {
     ) -> PreparedGraphic<Unit>
     where
         Unit: Add<Output = Unit>
-            + ToFloat<Float = f32>
+            + FloatConversion<Float = f32>
             + Div<i32, Output = Unit>
             + Neg<Output = Unit>
             + From<i32>
@@ -190,7 +153,7 @@ impl TextureCollection {
     ) -> PreparedGraphic<Unit>
     where
         Unit: Add<Output = Unit>
-            + ToFloat<Float = f32>
+            + FloatConversion<Float = f32>
             + Div<i32, Output = Unit>
             + Neg<Output = Unit>
             + From<i32>
@@ -234,7 +197,7 @@ impl CollectedTexture {
     pub fn prepare<Unit>(&self, dest: Rect<Unit>, graphics: &Graphics<'_>) -> PreparedGraphic<Unit>
     where
         Unit: Add<Output = Unit>
-            + ToFloat<Float = f32>
+            + FloatConversion<Float = f32>
             + Div<i32, Output = Unit>
             + Neg<Output = Unit>
             + From<i32>
