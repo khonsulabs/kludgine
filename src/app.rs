@@ -18,29 +18,41 @@ fn shared_wgpu() -> Arc<wgpu::Instance> {
     SHARED_WGPU.get_or_init(Arc::default).clone()
 }
 
-pub struct Window<'window>(&'window mut RunningWindow<CreateSurfaceRequest>);
+pub struct Window<'window> {
+    window: &'window mut RunningWindow<CreateSurfaceRequest>,
+    elapsed: Duration,
+}
 
-impl Window<'_> {
+impl<'window> Window<'window> {
+    fn new(window: &'window mut RunningWindow<CreateSurfaceRequest>, elapsed: Duration) -> Self {
+        Self { window, elapsed }
+    }
+
     pub fn redraw_in(&mut self, duration: Duration) {
-        self.0.redraw_in(duration);
+        self.window.redraw_in(duration);
     }
 
     pub fn redraw_at(&mut self, time: Instant) {
-        self.0.redraw_at(time);
+        self.window.redraw_at(time);
     }
 
     pub fn set_needs_redraw(&mut self) {
-        self.0.set_needs_redraw();
+        self.window.set_needs_redraw();
     }
 
     #[must_use]
     pub fn inner_size(&self) -> Size<UPx> {
-        self.0.inner_size().into()
+        self.window.inner_size().into()
     }
 
     #[must_use]
     pub fn scale(&self) -> f32 {
-        lossy_f64_to_f32(self.0.scale())
+        lossy_f64_to_f32(self.window.scale())
+    }
+
+    #[must_use]
+    pub const fn elapsed(&self) -> Duration {
+        self.elapsed
     }
 }
 
@@ -107,6 +119,7 @@ impl Message for CreateSurfaceRequest {
 struct KludgineWindow<Behavior> {
     behavior: Behavior,
     kludgine: Kludgine,
+    last_render: Instant,
 
     config: wgpu::SurfaceConfiguration,
     surface: wgpu::Surface,
@@ -177,11 +190,20 @@ where
         };
         surface.configure(&device, &config);
 
-        let behavior = T::initialize(Window(window), &mut graphics, context);
+        let last_render = Instant::now();
+        let behavior = T::initialize(
+            Window {
+                window,
+                elapsed: Duration::from_secs(0),
+            },
+            &mut graphics,
+            context,
+        );
 
         Self {
             wgpu,
             kludgine: state,
+            last_render,
             _adapter: adapter,
             behavior,
             config,
@@ -220,9 +242,11 @@ where
         };
 
         self.kludgine.next_frame();
+        let render_start = Instant::now();
+        let elapsed = render_start - self.last_render;
 
         self.behavior.prepare(
-            Window(window),
+            Window::new(window, elapsed),
             &mut Graphics::new(&mut self.kludgine, &self.device, &self.queue),
         );
 
@@ -247,10 +271,11 @@ where
             depth_stencil_attachment: None,
         });
         let mut gfx = RenderingGraphics::new(&mut pass, &self.kludgine, &self.device, &self.queue);
-        self.behavior.render(Window(window), &mut gfx);
+        self.behavior.render(Window::new(window, elapsed), &mut gfx);
         drop(pass);
         self.queue.submit(Some(encoder.finish()));
         frame.present();
+        self.last_render = render_start;
     }
 
     fn close_requested(&mut self, _window: &mut RunningWindow<CreateSurfaceRequest>) -> bool {

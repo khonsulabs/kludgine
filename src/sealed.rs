@@ -1,8 +1,6 @@
 use std::sync::atomic::{self, AtomicUsize};
 use std::sync::{Arc, OnceLock};
 
-use crate::Graphics;
-
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct TextureId(usize);
 
@@ -23,5 +21,5 @@ pub trait ShaderScalableSealed {
 pub trait TextureSource {
     fn id(&self) -> TextureId;
     fn is_mask(&self) -> bool;
-    fn bind_group(&self, graphics: &Graphics<'_>) -> Arc<wgpu::BindGroup>;
+    fn bind_group(&self) -> Arc<wgpu::BindGroup>;
 }

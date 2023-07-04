@@ -1,5 +1,4 @@
 use std::collections::hash_map;
-use std::hash;
 use std::ops::Range;
 use std::sync::Arc;
 
@@ -13,7 +12,7 @@ use crate::pipeline::{
     FLAG_TRANSLATE,
 };
 use crate::shapes::Shape;
-use crate::{sealed, Graphics, RenderingGraphics, Texture, TextureSource};
+use crate::{sealed, Graphics, RenderingGraphics, Texture, TextureSource, VertexCollection};
 
 pub struct Renderer<'render, 'gfx> {
     pub(crate) graphics: &'render mut Graphics<'gfx>,
@@ -25,15 +24,6 @@ struct Command {
     indices: Range<u32>,
     constants: PushConstants,
     texture: Option<sealed::TextureId>,
-}
-
-#[derive(Eq, PartialEq, Debug, Clone, Copy)]
-struct VertexId(Vertex<i32>);
-
-impl hash::Hash for VertexId {
-    fn hash<H: hash::Hasher>(&self, state: &mut H) {
-        bytemuck::bytes_of(&self.0).hash(state);
-    }
 }
 
 impl Renderer<'_, '_> {
@@ -92,20 +82,7 @@ impl Renderer<'_, '_> {
                 texture: vertex.texture,
                 color: vertex.color,
             };
-            let index = *self
-                .data
-                .vertex_index_by_id
-                .entry(VertexId(vertex))
-                .or_insert_with(|| {
-                    let index = self
-                        .data
-                        .vertices
-                        .len()
-                        .try_into()
-                        .expect("too many drawn verticies");
-                    self.data.vertices.push(vertex);
-                    index
-                });
+            let index = self.data.vertices.get_or_insert(vertex);
             vertex_map.push(index);
         }
 
@@ -125,7 +102,7 @@ impl Renderer<'_, '_> {
             }
             let id = texture.id();
             if let hash_map::Entry::Vacant(entry) = self.data.textures.entry(id) {
-                entry.insert(texture.bind_group(self.graphics));
+                entry.insert(texture.bind_group());
             }
             Some(id)
         } else {
@@ -174,7 +151,7 @@ impl Drop for Renderer<'_, '_> {
         } else {
             self.data.buffers = Some(RenderingBuffers {
                 vertex: Buffer::new(
-                    &self.data.vertices,
+                    &self.data.vertices.vertices,
                     wgpu::BufferUsages::VERTEX,
                     self.graphics.device,
                 ),
@@ -191,8 +168,7 @@ impl Drop for Renderer<'_, '_> {
 #[derive(Default, Debug)]
 pub struct Rendering {
     buffers: Option<RenderingBuffers>,
-    vertices: Vec<Vertex<i32>>,
-    vertex_index_by_id: AHashMap<VertexId, u16>,
+    vertices: VertexCollection<i32>,
     indices: Vec<u16>,
     textures: AHashMap<sealed::TextureId, Arc<wgpu::BindGroup>>,
     commands: Vec<Command>,
@@ -212,8 +188,8 @@ impl Rendering {
         self.commands.clear();
         self.indices.clear();
         self.textures.clear();
-        self.vertex_index_by_id.clear();
-        self.vertices.clear();
+        self.vertices.vertex_index_by_id.clear();
+        self.vertices.vertices.clear();
         Renderer {
             graphics,
             data: self,
@@ -246,7 +222,7 @@ impl Rendering {
                     needs_texture_binding = false;
                     graphics
                         .pass
-                        .set_bind_group(0, &graphics.state.default_bindings, &[]);
+                        .set_bind_group(0, &graphics.kludgine.default_bindings, &[]);
                 }
 
                 graphics.pass.set_push_constants(

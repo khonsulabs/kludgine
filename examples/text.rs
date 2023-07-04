@@ -1,7 +1,11 @@
+use std::time::Duration;
+
+use figures::Point;
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::cosmic_text::{Attrs, AttrsList, Buffer, Edit, Editor, Metrics};
 use kludgine::figures::traits::FloatConversion;
-use kludgine::text::PreparedText;
+use kludgine::figures::units::Px;
+use kludgine::text::{PreparedText, TextOrigin};
 use kludgine::Color;
 
 fn main() {
@@ -11,6 +15,7 @@ fn main() {
 struct Test {
     text: Editor,
     prepared: PreparedText,
+    angle: f32,
 }
 
 impl WindowBehavior for Test {
@@ -45,8 +50,12 @@ impl WindowBehavior for Test {
         text.insert_string("\nI enjoyed staying -- באמת!‏ -- at his house.", None);
 
         text.shape_as_needed(graphics.font_system());
-        let prepared = graphics.prepare_text(text.buffer(), Color::WHITE);
-        Self { text, prepared }
+        let prepared = graphics.prepare_text(text.buffer(), Color::WHITE, TextOrigin::Center);
+        Self {
+            text,
+            prepared,
+            angle: 0.,
+        }
     }
 
     fn prepare(&mut self, window: Window<'_>, graphics: &mut kludgine::Graphics<'_>) {
@@ -56,15 +65,22 @@ impl WindowBehavior for Test {
             window.inner_size().height.into_float(),
         );
         self.text.shape_as_needed(graphics.font_system());
-        self.prepared = graphics.prepare_text(self.text.buffer(), Color::WHITE);
+        self.prepared = graphics.prepare_text(self.text.buffer(), Color::WHITE, TextOrigin::Center);
     }
 
     fn render<'pass>(
         &'pass mut self,
-        _window: Window<'_>,
+        mut window: Window<'_>,
         graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
     ) -> bool {
-        self.prepared.render(graphics);
+        window.redraw_in(Duration::from_millis(16));
+        self.angle += std::f32::consts::PI * window.elapsed().as_secs_f32() / 5.;
+        self.prepared.render(
+            Point::from(window.inner_size()).try_cast::<Px>().unwrap() / 2,
+            None,
+            Some(self.angle),
+            graphics,
+        );
         true
     }
 }

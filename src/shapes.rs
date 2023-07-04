@@ -11,7 +11,7 @@ use lyon_tessellation::{
 use wgpu::BufferUsages;
 
 use crate::buffer::Buffer;
-use crate::pipeline::Vertex;
+use crate::pipeline::{PreparedCommand, Vertex};
 use crate::{Color, Graphics, PreparedGraphic, TextureSource};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -61,7 +61,15 @@ impl<Unit> Shape<Unit, false> {
         PreparedGraphic {
             vertices,
             indices,
-            texture_binding: None,
+            commands: vec![PreparedCommand {
+                indices: 0..self
+                    .indices
+                    .len()
+                    .try_into()
+                    .expect("too many drawn indices"),
+                is_mask: false,
+                binding: None,
+            }],
         }
     }
 }
@@ -88,7 +96,15 @@ impl<Unit> Shape<Unit, true> {
         PreparedGraphic {
             vertices,
             indices,
-            texture_binding: Some((texture.bind_group(graphics), texture.is_mask())),
+            commands: vec![PreparedCommand {
+                indices: 0..self
+                    .indices
+                    .len()
+                    .try_into()
+                    .expect("too many drawn indices"),
+                is_mask: false,
+                binding: Some(texture.bind_group()),
+            }],
         }
     }
 }

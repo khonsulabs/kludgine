@@ -82,6 +82,6 @@ where
     }
 
     pub const fn size(&self) -> usize {
-        size_of::<T>() * self.used
+        size_of::<T>() * self.len()
     }
 }

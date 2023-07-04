@@ -172,9 +172,9 @@ impl TextureCollection {
 impl TextureSource for TextureCollection {}
 
 impl sealed::TextureSource for TextureCollection {
-    fn bind_group(&self, graphics: &Graphics<'_>) -> Arc<wgpu::BindGroup> {
+    fn bind_group(&self) -> Arc<wgpu::BindGroup> {
         let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
-        data.texture.bind_group(graphics)
+        data.texture.bind_group()
     }
 
     fn id(&self) -> sealed::TextureId {
@@ -223,8 +223,8 @@ impl Drop for CollectedTexture {
 impl TextureSource for CollectedTexture {}
 
 impl sealed::TextureSource for CollectedTexture {
-    fn bind_group(&self, graphics: &Graphics<'_>) -> Arc<wgpu::BindGroup> {
-        self.collection.bind_group(graphics)
+    fn bind_group(&self) -> Arc<wgpu::BindGroup> {
+        self.collection.bind_group()
     }
 
     fn id(&self) -> sealed::TextureId {

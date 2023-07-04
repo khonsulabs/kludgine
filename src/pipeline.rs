@@ -1,4 +1,5 @@
 use std::mem::size_of;
+use std::ops::Range;
 use std::sync::Arc;
 
 use bytemuck::{Pod, Zeroable};
@@ -46,6 +47,19 @@ pub struct Vertex<Unit> {
     pub color: Color,
 }
 
+impl From<Vertex<Px>> for Vertex<i32> {
+    fn from(value: Vertex<Px>) -> Self {
+        Self {
+            location: Point {
+                x: value.location.x.0,
+                y: value.location.y.0,
+            },
+            texture: value.texture,
+            color: value.color,
+        }
+    }
+}
+
 #[test]
 fn vertex_align() {
     assert_eq!(std::mem::size_of::<Vertex<Dip>>(), 20);
@@ -69,14 +83,21 @@ pub(crate) struct PushConstants {
 
 #[derive(Debug)]
 pub struct PreparedGraphic<Unit> {
-    pub(crate) texture_binding: Option<(Arc<wgpu::BindGroup>, bool)>,
     pub(crate) vertices: Buffer<Vertex<Unit>>,
     pub(crate) indices: Buffer<u16>,
+    pub(crate) commands: Vec<PreparedCommand>,
+}
+
+#[derive(Debug)]
+pub struct PreparedCommand {
+    pub indices: Range<u32>,
+    pub is_mask: bool,
+    pub binding: Option<Arc<wgpu::BindGroup>>,
 }
 
 impl<Unit> PreparedGraphic<Unit>
 where
-    Unit: Default + Into<i32> + ShaderScalable + Zero,
+    Unit: Copy + Default + Into<i32> + ShaderScalable + Zero,
     Vertex<Unit>: Pod,
 {
     pub fn render<'pass>(
@@ -88,59 +109,54 @@ where
     ) {
         graphics.active_pipeline_if_needed();
 
-        graphics.pass.set_bind_group(
-            0,
-            self.texture_binding
-                .as_ref()
-                .map_or(&graphics.state.default_bindings, |(g, _)| g.as_ref()),
-            &[],
-        );
+        for command in &self.commands {
+            graphics.pass.set_bind_group(
+                0,
+                command
+                    .binding
+                    .as_deref()
+                    .unwrap_or(&graphics.kludgine.default_bindings),
+                &[],
+            );
 
-        graphics.pass.set_vertex_buffer(0, self.vertices.as_slice());
-        graphics
-            .pass
-            .set_index_buffer(self.indices.as_slice(), wgpu::IndexFormat::Uint16);
-        let mut flags = Unit::flags();
-        if let Some((_, is_mask)) = &self.texture_binding {
-            flags |= FLAG_TEXTURED;
-            if *is_mask {
-                flags |= FLAG_MASKED;
+            graphics.pass.set_vertex_buffer(0, self.vertices.as_slice());
+            graphics
+                .pass
+                .set_index_buffer(self.indices.as_slice(), wgpu::IndexFormat::Uint16);
+            let mut flags = Unit::flags();
+            if command.binding.is_some() {
+                flags |= FLAG_TEXTURED;
+                if command.is_mask {
+                    flags |= FLAG_MASKED;
+                }
             }
-        }
-        let scale = scale.map_or(1., |scale| {
-            flags |= FLAG_SCALE;
-            scale
-        });
-        let rotation = rotation.map_or(0., |scale| {
-            flags |= FLAG_ROTATE;
-            scale
-        });
-        if !origin.is_zero() {
-            flags |= FLAG_TRANSLATE;
-        }
+            let scale = scale.map_or(1., |scale| {
+                flags |= FLAG_SCALE;
+                scale
+            });
+            let rotation = rotation.map_or(0., |scale| {
+                flags |= FLAG_ROTATE;
+                scale
+            });
+            if !origin.is_zero() {
+                flags |= FLAG_TRANSLATE;
+            }
 
-        graphics.pass.set_push_constants(
-            wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-            0,
-            bytemuck::bytes_of(&PushConstants {
-                flags,
-                scale,
-                rotation,
-                translation: Point {
-                    x: origin.x.into(),
-                    y: origin.y.into(),
-                },
-            }),
-        );
-        graphics.pass.draw_indexed(
-            0..self
-                .indices
-                .len()
-                .try_into()
-                .expect("too many drawn verticies"),
-            0,
-            0..1,
-        );
+            graphics.pass.set_push_constants(
+                wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                0,
+                bytemuck::bytes_of(&PushConstants {
+                    flags,
+                    scale,
+                    rotation,
+                    translation: Point {
+                        x: origin.x.into(),
+                        y: origin.y.into(),
+                    },
+                }),
+            );
+            graphics.pass.draw_indexed(command.indices.clone(), 0, 0..1);
+        }
     }
 }
 

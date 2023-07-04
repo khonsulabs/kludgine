@@ -10,10 +10,11 @@
 
 use std::borrow::Cow;
 use std::fmt::{self, Debug, Formatter};
-use std::hash::Hash;
+use std::hash::{self, Hash};
 use std::ops::{Add, Deref, DerefMut, Div, Neg};
 use std::sync::Arc;
 
+use ahash::AHashMap;
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "cosmic-text")]
 pub use cosmic_text;
@@ -260,7 +261,7 @@ impl<'gfx> Graphics<'gfx> {
 
 pub struct RenderingGraphics<'gfx, 'pass> {
     pass: &'gfx mut wgpu::RenderPass<'pass>,
-    state: &'pass Kludgine,
+    kludgine: &'pass Kludgine,
     device: &'gfx wgpu::Device,
     queue: &'gfx wgpu::Queue,
     pipeline_is_active: bool,
@@ -275,7 +276,7 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
     ) -> Self {
         Self {
             pass,
-            state,
+            kludgine: state,
             device,
             queue,
             pipeline_is_active: false,
@@ -304,7 +305,7 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
             false
         } else {
             self.pipeline_is_active = true;
-            self.pass.set_pipeline(&self.state.pipeline);
+            self.pass.set_pipeline(&self.kludgine.pipeline);
             true
         }
     }
@@ -952,7 +953,7 @@ pub trait TextureSource: sealed::TextureSource {}
 impl TextureSource for Texture {}
 
 impl sealed::TextureSource for Texture {
-    fn bind_group(&self, _graphics: &Graphics<'_>) -> Arc<wgpu::BindGroup> {
+    fn bind_group(&self) -> Arc<wgpu::BindGroup> {
         self.bind_group.clone()
     }
 
@@ -963,5 +964,41 @@ impl sealed::TextureSource for Texture {
     fn is_mask(&self) -> bool {
         // TODO this should be a flag on the texture.
         self.wgpu.format() == wgpu::TextureFormat::R8Unorm
+    }
+}
+
+#[derive(Default, Debug)]
+struct VertexCollection<T> {
+    vertices: Vec<Vertex<T>>,
+    vertex_index_by_id: AHashMap<VertexId, u16>,
+}
+
+impl<T> VertexCollection<T> {
+    fn get_or_insert(&mut self, vertex: Vertex<T>) -> u16
+    where
+        T: Copy,
+        Vertex<T>: Into<Vertex<i32>>,
+    {
+        *self
+            .vertex_index_by_id
+            .entry(VertexId(vertex.into()))
+            .or_insert_with(|| {
+                let index = self
+                    .vertices
+                    .len()
+                    .try_into()
+                    .expect("too many drawn verticies");
+                self.vertices.push(vertex);
+                index
+            })
+    }
+}
+
+#[derive(Eq, PartialEq, Debug, Clone, Copy)]
+struct VertexId(Vertex<i32>);
+
+impl hash::Hash for VertexId {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        bytemuck::bytes_of(&self.0).hash(state);
     }
 }
