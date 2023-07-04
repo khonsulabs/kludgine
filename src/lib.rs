@@ -26,6 +26,7 @@ use wgpu::util::DeviceExt;
 use crate::buffer::Buffer;
 use crate::pipeline::{Uniforms, Vertex};
 use crate::shapes::PathBuilder;
+use crate::text::TextSystem;
 
 #[cfg(feature = "app")]
 pub mod app;
@@ -50,11 +51,7 @@ pub struct Kludgine {
     sampler: wgpu::Sampler,
     uniforms: Buffer<Uniforms>,
     #[cfg(feature = "cosmic-text")]
-    fonts: cosmic_text::FontSystem,
-    #[cfg(feature = "cosmic-text")]
-    swash_cache: cosmic_text::SwashCache,
-    alpha_text_atlas: TextureCollection,
-    color_text_atlas: TextureCollection,
+    text: TextSystem,
 }
 
 impl Kludgine {
@@ -107,31 +104,15 @@ impl Kludgine {
 
         let pipeline = pipeline::new(device, &pipeline_layout, &shader, format);
 
-        let fonts = cosmic_text::FontSystem::new();
-
         Self {
-            alpha_text_atlas: TextureCollection::new_generic(
-                Size::new(512, 512),
-                wgpu::TextureFormat::R8Unorm,
-                &ProtoGraphics {
-                    device,
-                    queue,
-                    binding_layout: &binding_layout,
-                    sampler: &sampler,
-                    uniforms: &uniforms.wgpu,
-                },
-            ),
-            color_text_atlas: TextureCollection::new_generic(
-                Size::new(512, 512),
-                wgpu::TextureFormat::Rgba8Unorm,
-                &ProtoGraphics {
-                    device,
-                    queue,
-                    binding_layout: &binding_layout,
-                    sampler: &sampler,
-                    uniforms: &uniforms.wgpu,
-                },
-            ),
+            #[cfg(feature = "cosmic-text")]
+            text: TextSystem::new(&ProtoGraphics {
+                device,
+                queue,
+                binding_layout: &binding_layout,
+                sampler: &sampler,
+                uniforms: &uniforms.wgpu,
+            }),
 
             default_bindings,
             pipeline,
@@ -140,15 +121,17 @@ impl Kludgine {
 
             uniforms,
             binding_layout,
-
-            fonts,
-            swash_cache: cosmic_text::SwashCache::new(),
         }
     }
 
     pub fn resize(&self, new_size: Size<UPx>, new_scale: f32, queue: &wgpu::Queue) {
         self.uniforms
             .update(0, &[Uniforms::new(new_size, new_scale)], queue);
+    }
+
+    pub fn next_frame(&mut self) {
+        #[cfg(feature = "cosmic-text")]
+        self.text.new_frame();
     }
 }
 
@@ -229,8 +212,9 @@ impl<'gfx> Graphics<'gfx> {
         self.queue
     }
 
+    #[cfg(feature = "cosmic-text")]
     pub fn font_system(&mut self) -> &mut cosmic_text::FontSystem {
-        &mut self.kludgine.fonts
+        &mut self.kludgine.text.fonts
     }
 }
 

@@ -38,6 +38,11 @@ impl WindowBehavior for Test {
                 Attrs::new().color(cosmic_text::Color(0x808080FF)),
             )),
         );
+        // A right-to-left text string, borrowed from
+        // <https://en.wikipedia.org/wiki/Right-to-left_mark#Example_of_use_in_HTML>.
+        // The exclamation mark should be rendered to the left of the Hebrew
+        // characters.
+        text.insert_string("\nI enjoyed staying -- באמת!‏ -- at his house.", None);
 
         text.shape_as_needed(graphics.font_system());
         let prepared = graphics.prepare_text(text.buffer(), Color::WHITE);

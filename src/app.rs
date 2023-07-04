@@ -219,6 +219,8 @@ where
             }
         };
 
+        self.kludgine.next_frame();
+
         self.behavior.prepare(
             Window(window),
             &mut Graphics::new(&mut self.kludgine, &self.device, &self.queue),
