@@ -44,7 +44,7 @@ impl<'gfx> Graphics<'gfx> {
 
         let line_height = buffer.metrics().line_height;
         for run in buffer.layout_runs() {
-            let run_origin = Point::new(0, run.line_y);
+            let run_origin = Point::new(0, run.line_y - line_height);
             for glyph in run.glyphs.iter() {
                 let Some(image) = frame
                     .graphics
