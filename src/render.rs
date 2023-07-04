@@ -4,7 +4,8 @@ use std::ops::Range;
 use std::sync::Arc;
 
 use ahash::AHashMap;
-use figures::{Point, Zero};
+use figures::traits::Zero;
+use figures::Point;
 
 use crate::buffer::Buffer;
 use crate::pipeline::{

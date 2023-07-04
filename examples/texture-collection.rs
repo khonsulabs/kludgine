@@ -1,7 +1,8 @@
 use std::time::Duration;
 
 use kludgine::app::{Window, WindowBehavior};
-use kludgine::figures::{Dips, Pixels, Point, Rect, Size};
+use kludgine::figures::units::{Dip, Px};
+use kludgine::figures::{Point, Rect, Size};
 use kludgine::{Color, PreparedGraphic, TextureCollection};
 
 fn main() {
@@ -9,9 +10,9 @@ fn main() {
 }
 
 struct Test {
-    atlas: PreparedGraphic<Pixels>,
-    k: PreparedGraphic<Dips>,
-    ferris: PreparedGraphic<Dips>,
+    atlas: PreparedGraphic<Px>,
+    k: PreparedGraphic<Dip>,
+    ferris: PreparedGraphic<Dip>,
     angle: f32,
 }
 
@@ -31,8 +32,8 @@ impl WindowBehavior for Test {
         let k = textures.push_image(&image::open("./examples/k.png").unwrap(), graphics);
         let k = k.prepare(
             Rect::new(
-                Point::new(-Dips::INCH / 2, -Dips::INCH / 2),
-                Size::new(Dips::INCH, Dips::INCH),
+                Point::new(-Dip::INCH / 2, -Dip::INCH / 2),
+                Size::new(Dip::INCH, Dip::INCH),
             ),
             graphics,
         );
@@ -42,8 +43,8 @@ impl WindowBehavior for Test {
         );
         let ferris = ferris.prepare(
             Rect::new(
-                Point::new(-Dips::INCH / 2, -Dips::INCH / 2),
-                Size::new(Dips::INCH, Dips::INCH / 1.5),
+                Point::new(-Dip::INCH / 2, -Dip::INCH / 2),
+                Size::new(Dip::INCH, Dip::INCH / 1.5),
             ),
             graphics,
         );
@@ -65,13 +66,13 @@ impl WindowBehavior for Test {
         window.redraw_in(Duration::from_millis(16));
         self.angle += std::f32::consts::PI / 36.;
         self.k.render(
-            Point::new(Dips::INCH, Dips::INCH),
+            Point::new(Dip::INCH, Dip::INCH),
             None,
             Some(self.angle),
             graphics,
         );
         self.ferris.render(
-            Point::new(Dips::INCH * 2, Dips::INCH),
+            Point::new(Dip::INCH * 2, Dip::INCH),
             None,
             Some(-self.angle),
             graphics,

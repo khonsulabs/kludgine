@@ -1,6 +1,8 @@
 use std::ops::Add;
 
-use figures::{FloatConversion, Point, Rect, UPixels};
+use figures::traits::FloatConversion;
+use figures::units::UPx;
+use figures::{Point, Rect};
 use lyon_tessellation::{
     FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
     GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeVertex,
@@ -236,13 +238,13 @@ pub enum PathEvent<Unit> {
     Begin {
         /// The location to begin at.
         at: Endpoint<Unit>,
-        texture: Point<UPixels>,
+        texture: Point<UPx>,
     },
     /// A straight line segment.
     Line {
         /// The end location of the line.
         to: Endpoint<Unit>,
-        texture: Point<UPixels>,
+        texture: Point<UPx>,
     },
     /// A quadratic curve (one control point).
     Quadratic {
@@ -250,7 +252,7 @@ pub enum PathEvent<Unit> {
         ctrl: ControlPoint<Unit>,
         /// The end location of the curve.
         to: Endpoint<Unit>,
-        texture: Point<UPixels>,
+        texture: Point<UPx>,
     },
     /// A cubic curve (two control points).
     Cubic {
@@ -260,7 +262,7 @@ pub enum PathEvent<Unit> {
         ctrl2: ControlPoint<Unit>,
         /// The end location of the curve.
         to: Endpoint<Unit>,
-        texture: Point<UPixels>,
+        texture: Point<UPx>,
     },
     /// Ends the path. Must be the last entry.
     End {
@@ -449,7 +451,7 @@ where
 {
     /// Creates a new path with the initial position `start_at`.
     #[must_use]
-    pub fn new_textured(start_at: Endpoint<Unit>, texture: Point<UPixels>) -> Self {
+    pub fn new_textured(start_at: Endpoint<Unit>, texture: Point<UPx>) -> Self {
         Self {
             path: Path::from_iter([(PathEvent::Begin {
                 at: start_at,
@@ -460,7 +462,7 @@ where
         }
     }
 
-    pub fn reset(&mut self, start_at: Endpoint<Unit>, texture: Point<UPixels>) {
+    pub fn reset(&mut self, start_at: Endpoint<Unit>, texture: Point<UPx>) {
         self.current_location = start_at;
         let begin = PathEvent::Begin {
             at: start_at,
@@ -483,7 +485,7 @@ where
 
     /// Create a straight line from the current location to `end_at`.
     #[must_use]
-    pub fn line_to(mut self, end_at: Endpoint<Unit>, texture: Point<UPixels>) -> Self {
+    pub fn line_to(mut self, end_at: Endpoint<Unit>, texture: Point<UPx>) -> Self {
         self.path.events.push(PathEvent::Line {
             to: end_at,
             texture,
@@ -499,7 +501,7 @@ where
         mut self,
         control: ControlPoint<Unit>,
         end_at: Endpoint<Unit>,
-        texture: Point<UPixels>,
+        texture: Point<UPx>,
     ) -> Self {
         self.path.events.push(PathEvent::Quadratic {
             ctrl: control,
@@ -518,7 +520,7 @@ where
         control1: ControlPoint<Unit>,
         control2: ControlPoint<Unit>,
         end_at: Endpoint<Unit>,
-        texture: Point<UPixels>,
+        texture: Point<UPx>,
     ) -> Self {
         self.path.events.push(PathEvent::Cubic {
             ctrl1: control1,

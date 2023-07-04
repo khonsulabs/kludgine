@@ -3,7 +3,9 @@ use std::ops::{Add, Div, Neg};
 use std::sync::{Arc, PoisonError, RwLock};
 
 use alot::{LotId, Lots};
-use figures::{FloatConversion, Rect, Size, UPixels};
+use figures::traits::FloatConversion;
+use figures::units::UPx;
+use figures::{Rect, Size};
 use shelf_packer::{Allocation, ShelfPacker};
 
 use crate::pipeline::{PreparedGraphic, Vertex};
@@ -22,7 +24,7 @@ struct Data {
 
 impl TextureCollection {
     pub(crate) fn new_generic(
-        initial_size: Size<UPixels>,
+        initial_size: Size<UPx>,
         format: wgpu::TextureFormat,
         graphics: &impl WgpuDeviceAndQueue,
     ) -> Self {
@@ -47,7 +49,7 @@ impl TextureCollection {
 
     #[must_use]
     pub fn new(
-        initial_size: Size<UPixels>,
+        initial_size: Size<UPx>,
         format: wgpu::TextureFormat,
         graphics: &Graphics<'_>,
     ) -> Self {
@@ -58,7 +60,7 @@ impl TextureCollection {
         &mut self,
         data: &[u8],
         data_layout: wgpu::ImageDataLayout,
-        size: Size<UPixels>,
+        size: Size<UPx>,
         graphics: &wgpu::Queue,
     ) -> CollectedTexture {
         let mut this = self
@@ -110,7 +112,7 @@ impl TextureCollection {
         )
     }
 
-    pub fn size(&self) -> Size<UPixels> {
+    pub fn size(&self) -> Size<UPx> {
         let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
         data.texture.size()
     }
@@ -190,7 +192,7 @@ impl sealed::TextureSource for TextureCollection {
 pub struct CollectedTexture {
     collection: TextureCollection,
     id: Arc<LotId>,
-    pub(crate) region: Rect<UPixels>,
+    pub(crate) region: Rect<UPx>,
 }
 
 impl CollectedTexture {

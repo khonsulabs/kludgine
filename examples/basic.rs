@@ -1,10 +1,11 @@
 use std::time::Duration;
 
-use kludgine::figures::{Dips, Point, Rect, Size};
+use kludgine::figures::units::Dip;
+use kludgine::figures::{Point, Rect, Size};
 use kludgine::shapes::Shape;
 use kludgine::Color;
 
-const RED_SQUARE_SIZE: Dips = Dips::INCH;
+const RED_SQUARE_SIZE: Dip = Dip::INCH;
 
 fn main() {
     let mut angle = 0.;
@@ -13,7 +14,7 @@ fn main() {
         angle += std::f32::consts::PI / 36.;
         renderer.draw_shape(
             &Shape::filled_rect(
-                Rect::<Dips>::new(
+                Rect::<Dip>::new(
                     Point::new(-RED_SQUARE_SIZE / 2, -RED_SQUARE_SIZE / 2),
                     Size::new(RED_SQUARE_SIZE, RED_SQUARE_SIZE),
                 ),

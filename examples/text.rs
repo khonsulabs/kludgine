@@ -1,6 +1,6 @@
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::cosmic_text::{Attrs, AttrsList, Buffer, Edit, Editor, Metrics};
-use kludgine::figures::FloatConversion;
+use kludgine::figures::traits::FloatConversion;
 use kludgine::text::PreparedText;
 use kludgine::Color;
 

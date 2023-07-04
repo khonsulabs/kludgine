@@ -1,7 +1,8 @@
 use std::time::Duration;
 
 use kludgine::app::{Window, WindowBehavior};
-use kludgine::figures::{Dips, Pixels, Point, Rect, Size};
+use kludgine::figures::units::{Dip, Px};
+use kludgine::figures::{Point, Rect, Size};
 use kludgine::shapes::{PathBuilder, Shape};
 use kludgine::{Color, PreparedGraphic};
 
@@ -9,12 +10,12 @@ fn main() {
     Test::run();
 }
 
-const BLUE_TRIANGLE_SIZE: Pixels = Pixels(96);
-const RED_SQUARE_SIZE: Dips = Dips::INCH;
+const BLUE_TRIANGLE_SIZE: Px = Px(96);
+const RED_SQUARE_SIZE: Dip = Dip::INCH;
 
 struct Test {
-    dips_square: PreparedGraphic<Dips>,
-    pixels_triangle: PreparedGraphic<Pixels>,
+    dips_square: PreparedGraphic<Dip>,
+    pixels_triangle: PreparedGraphic<Px>,
     angle: f32,
 }
 

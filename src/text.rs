@@ -2,7 +2,9 @@ use std::collections::hash_map;
 
 use ahash::AHashMap;
 use cosmic_text::{fontdb, SwashContent};
-use figures::{lossy_f32_to_i32, Pixels, Point, Rect, Size};
+use figures::units::Px;
+use figures::utils::lossy_f32_to_i32;
+use figures::{Point, Rect, Size};
 
 use crate::render::Rendering;
 use crate::shapes::PathBuilder;
@@ -92,7 +94,7 @@ impl<'gfx> Graphics<'gfx> {
                 };
 
                 let (source_top_left, source_bottom_right) = texture.region.extents();
-                let (dest_top_left, dest_bottom_right) = Rect::<Pixels>::new(
+                let (dest_top_left, dest_bottom_right) = Rect::<Px>::new(
                     run_origin
                         + Point::new(
                             image.placement.left,

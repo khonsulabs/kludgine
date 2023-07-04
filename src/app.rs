@@ -5,7 +5,9 @@ use std::time::{Duration, Instant};
 
 use appit::winit::window::WindowId;
 use appit::{Application, Message, RunningWindow, WindowBehavior as _};
-use figures::{lossy_f64_to_f32, Size, UPixels};
+use figures::units::UPx;
+use figures::utils::lossy_f64_to_f32;
+use figures::Size;
 
 use crate::pipeline::PushConstants;
 use crate::render::{Renderer, Rendering};
@@ -32,7 +34,7 @@ impl Window<'_> {
     }
 
     #[must_use]
-    pub fn inner_size(&self) -> Size<UPixels> {
+    pub fn inner_size(&self) -> Size<UPx> {
         self.0.inner_size().into()
     }
 

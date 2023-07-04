@@ -18,7 +18,9 @@ use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "cosmic-text")]
 pub use cosmic_text;
 pub use figures;
-use figures::{FloatConversion, Point, Rect, Size, UPixels};
+use figures::traits::FloatConversion;
+use figures::units::UPx;
+use figures::{Point, Rect, Size};
 use wgpu::util::DeviceExt;
 
 use crate::buffer::Buffer;
@@ -61,7 +63,7 @@ impl Kludgine {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         format: wgpu::TextureFormat,
-        initial_size: Size<UPixels>,
+        initial_size: Size<UPx>,
         scale: f32,
     ) -> Self {
         let uniforms = Buffer::new(
@@ -144,7 +146,7 @@ impl Kludgine {
         }
     }
 
-    pub fn resize(&self, new_size: Size<UPixels>, new_scale: f32, queue: &wgpu::Queue) {
+    pub fn resize(&self, new_size: Size<UPx>, new_scale: f32, queue: &wgpu::Queue) {
         self.uniforms
             .update(0, &[Uniforms::new(new_size, new_scale)], queue);
     }
@@ -736,7 +738,7 @@ pub struct Texture {
 impl Texture {
     pub(crate) fn new_generic(
         graphics: &impl WgpuDeviceAndQueue,
-        size: Size<UPixels>,
+        size: Size<UPx>,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
     ) -> Self {
@@ -769,7 +771,7 @@ impl Texture {
     #[must_use]
     pub fn new(
         graphics: &Graphics<'_>,
-        size: Size<UPixels>,
+        size: Size<UPx>,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
     ) -> Self {
@@ -779,7 +781,7 @@ impl Texture {
     #[must_use]
     pub fn new_with_data(
         graphics: &Graphics<'_>,
-        size: Size<UPixels>,
+        size: Size<UPx>,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
         data: &[u8],
@@ -891,7 +893,7 @@ impl Texture {
     #[must_use]
     pub fn prepare_partial<Unit>(
         &self,
-        source: Rect<UPixels>,
+        source: Rect<UPx>,
         dest: Rect<Unit>,
         graphics: &Graphics<'_>,
     ) -> PreparedGraphic<Unit>
@@ -924,10 +926,10 @@ impl Texture {
     }
 
     #[must_use]
-    pub fn size(&self) -> Size<UPixels> {
+    pub fn size(&self) -> Size<UPx> {
         Size {
-            width: UPixels(self.wgpu.width()),
-            height: UPixels(self.wgpu.height()),
+            width: UPx(self.wgpu.width()),
+            height: UPx(self.wgpu.height()),
         }
     }
 

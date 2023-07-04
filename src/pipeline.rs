@@ -2,7 +2,9 @@ use std::mem::size_of;
 use std::sync::Arc;
 
 use bytemuck::{Pod, Zeroable};
-use figures::{Dips, Pixels, Point, Ratio, Size, UPixels, Zero};
+use figures::traits::Zero;
+use figures::units::{Dip, Px, UPx};
+use figures::{Point, Ratio, Size};
 
 use crate::buffer::Buffer;
 use crate::{sealed, Color, RenderingGraphics};
@@ -16,7 +18,7 @@ pub(crate) struct Uniforms {
 }
 
 impl Uniforms {
-    pub fn new(size: Size<UPixels>, scale: f32) -> Self {
+    pub fn new(size: Size<UPx>, scale: f32) -> Self {
         let scale = Ratio::from_f32(scale);
         let scale = u32::from(scale.denominator()) << 16
             | u32::try_from(scale.numerator()).expect("negative scaling ratio");
@@ -40,13 +42,13 @@ impl Uniforms {
 #[repr(C)]
 pub struct Vertex<Unit> {
     pub location: Point<Unit>,
-    pub texture: Point<UPixels>,
+    pub texture: Point<UPx>,
     pub color: Color,
 }
 
 #[test]
 fn vertex_align() {
-    assert_eq!(std::mem::size_of::<Vertex<Dips>>(), 20);
+    assert_eq!(std::mem::size_of::<Vertex<Dip>>(), 20);
 }
 
 pub(crate) const FLAG_DIPS: u32 = 1 << 0;
@@ -144,17 +146,17 @@ where
 
 pub trait ShaderScalable: sealed::ShaderScalableSealed {}
 
-impl ShaderScalable for Pixels {}
+impl ShaderScalable for Px {}
 
-impl ShaderScalable for Dips {}
+impl ShaderScalable for Dip {}
 
-impl sealed::ShaderScalableSealed for Pixels {
+impl sealed::ShaderScalableSealed for Px {
     fn flags() -> u32 {
         0
     }
 }
 
-impl sealed::ShaderScalableSealed for Dips {
+impl sealed::ShaderScalableSealed for Dip {
     fn flags() -> u32 {
         FLAG_DIPS
     }
@@ -295,7 +297,7 @@ pub fn new(
             module: shader,
             entry_point: "vertex",
             buffers: &[wgpu::VertexBufferLayout {
-                array_stride: size_of::<Vertex<Dips>>() as u64,
+                array_stride: size_of::<Vertex<Dip>>() as u64,
                 step_mode: wgpu::VertexStepMode::Vertex,
                 attributes: &[
                     wgpu::VertexAttribute {
