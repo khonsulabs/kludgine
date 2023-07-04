@@ -34,13 +34,13 @@ impl WindowBehavior for Test {
             Color::RED,
         )
         .prepare(graphics);
-        let pixels_triangle =
-            PathBuilder::new(Point::new(-BLUE_TRIANGLE_SIZE / 2, -BLUE_TRIANGLE_SIZE / 2))
-                .line_to(Point::new(0, BLUE_TRIANGLE_SIZE / 2))
-                .line_to(Point::new(BLUE_TRIANGLE_SIZE / 2, -BLUE_TRIANGLE_SIZE / 2))
-                .close()
-                .fill(Color::BLUE)
-                .prepare(graphics);
+        let height = (BLUE_TRIANGLE_SIZE.pow(2) - (BLUE_TRIANGLE_SIZE / 2).pow(2)).sqrt();
+        let pixels_triangle = PathBuilder::new(Point::new(-BLUE_TRIANGLE_SIZE / 2, -height / 2))
+            .line_to(Point::new(0, height / 2))
+            .line_to(Point::new(BLUE_TRIANGLE_SIZE / 2, -height / 2))
+            .close()
+            .fill(Color::BLUE)
+            .prepare(graphics);
         Self {
             dips_square,
             pixels_triangle,
@@ -62,7 +62,7 @@ impl WindowBehavior for Test {
             graphics,
         );
         self.pixels_triangle.render(
-            Point::new(BLUE_TRIANGLE_SIZE, BLUE_TRIANGLE_SIZE),
+            Point::new(BLUE_TRIANGLE_SIZE / 2, BLUE_TRIANGLE_SIZE / 2),
             None,
             Some(self.angle),
             graphics,

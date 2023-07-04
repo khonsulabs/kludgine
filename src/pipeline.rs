@@ -18,7 +18,8 @@ pub(crate) struct Uniforms {
 impl Uniforms {
     pub fn new(size: Size<UPixels>, scale: f32) -> Self {
         let scale = Ratio::from_f32(scale);
-        let scale = u32::from(scale.div_by) << 16 | u32::from(scale.mul_by);
+        let scale = u32::from(scale.denominator()) << 16
+            | u32::try_from(scale.numerator()).expect("negative scaling ratio");
         Self {
             ortho: ScreenTransformation::ortho(
                 0.,
