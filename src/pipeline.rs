@@ -11,12 +11,14 @@ use crate::{sealed, Color, RenderingGraphics};
 #[repr(C)]
 pub(crate) struct Uniforms {
     ortho: [f32; 16],
-    scale: Ratio,
+    scale: u32,
     _padding: [u32; 3],
 }
 
 impl Uniforms {
     pub fn new(size: Size<UPixels>, scale: f32) -> Self {
+        let scale = Ratio::from_f32(scale);
+        let scale = u32::from(scale.div_by) << 16 | u32::from(scale.mul_by);
         Self {
             ortho: ScreenTransformation::ortho(
                 0.,
@@ -27,7 +29,7 @@ impl Uniforms {
                 1.0,
             )
             .into_array(),
-            scale: Ratio::from_f32(scale),
+            scale,
             _padding: [0; 3],
         }
     }

@@ -7,7 +7,6 @@ struct PushConstants {
 }
 var<push_constant> pc: PushConstants;
 
-
 struct VertexInput {
     @location(0) position: vec2<i32>,
     @location(1) uv: vec2<u32>,
@@ -29,8 +28,8 @@ struct Uniforms {
 var<uniform> uniforms: Uniforms;
 
 struct Ratio {
-    mul_by: i32,
     div_by: i32,
+    mul_by: i32,
 }
 
 fn ratio(raio: u32) -> Ratio {

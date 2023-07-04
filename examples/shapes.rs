@@ -9,7 +9,7 @@ fn main() {
     Test::run();
 }
 
-const BLUE_TRIANGLE_SIZE: Pixels = Pixels(32);
+const BLUE_TRIANGLE_SIZE: Pixels = Pixels(96);
 const RED_SQUARE_SIZE: Dips = Dips::INCH;
 
 struct Test {
@@ -35,9 +35,9 @@ impl WindowBehavior for Test {
         )
         .prepare(graphics);
         let pixels_triangle =
-            PathBuilder::new(Point::new(-BLUE_TRIANGLE_SIZE, -BLUE_TRIANGLE_SIZE))
-                .line_to(Point::new(0, BLUE_TRIANGLE_SIZE))
-                .line_to(Point::new(BLUE_TRIANGLE_SIZE, -BLUE_TRIANGLE_SIZE))
+            PathBuilder::new(Point::new(-BLUE_TRIANGLE_SIZE / 2, -BLUE_TRIANGLE_SIZE / 2))
+                .line_to(Point::new(0, BLUE_TRIANGLE_SIZE / 2))
+                .line_to(Point::new(BLUE_TRIANGLE_SIZE / 2, -BLUE_TRIANGLE_SIZE / 2))
                 .close()
                 .fill(Color::BLUE)
                 .prepare(graphics);
