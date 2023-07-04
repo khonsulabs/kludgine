@@ -1,7 +1,6 @@
 use std::time::Duration;
 
-use appit::RunningWindow;
-use kludgine::app::WindowBehavior;
+use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::{Dips, Pixels, Point, Rect, Size};
 use kludgine::shapes::{PathBuilder, Shape};
 use kludgine::{Color, PreparedGraphic};
@@ -23,7 +22,7 @@ impl WindowBehavior for Test {
     type Context = ();
 
     fn initialize(
-        _window: &mut RunningWindow,
+        _window: Window<'_>,
         graphics: &mut kludgine::Graphics<'_>,
         _context: Self::Context,
     ) -> Self {
@@ -51,7 +50,7 @@ impl WindowBehavior for Test {
 
     fn render<'pass>(
         &'pass mut self,
-        window: &mut RunningWindow,
+        mut window: Window<'_>,
         graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
     ) -> bool {
         window.redraw_in(Duration::from_millis(16));

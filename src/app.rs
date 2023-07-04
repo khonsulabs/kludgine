@@ -1,9 +1,11 @@
 use std::mem::size_of;
-use std::panic::{AssertUnwindSafe, UnwindSafe};
+use std::panic::UnwindSafe;
 use std::sync::{Arc, OnceLock};
+use std::time::{Duration, Instant};
 
-use appit::{RunningWindow, WindowBehavior as _};
-use figures::{lossy_f64_to_f32, Size};
+use appit::winit::window::WindowId;
+use appit::{Application, Message, RunningWindow, WindowBehavior as _};
+use figures::{lossy_f64_to_f32, Size, UPixels};
 
 use crate::pipeline::PushConstants;
 use crate::render::{Renderer, Rendering};
@@ -14,21 +16,43 @@ fn shared_wgpu() -> Arc<wgpu::Instance> {
     SHARED_WGPU.get_or_init(Arc::default).clone()
 }
 
+pub struct Window<'window>(&'window mut RunningWindow<CreateSurfaceRequest>);
+
+impl Window<'_> {
+    pub fn redraw_in(&mut self, duration: Duration) {
+        self.0.redraw_in(duration);
+    }
+
+    pub fn redraw_at(&mut self, time: Instant) {
+        self.0.redraw_at(time);
+    }
+
+    pub fn set_needs_redraw(&mut self) {
+        self.0.set_needs_redraw();
+    }
+
+    #[must_use]
+    pub fn inner_size(&self) -> Size<UPixels> {
+        self.0.inner_size().into()
+    }
+
+    #[must_use]
+    pub fn scale(&self) -> f32 {
+        lossy_f64_to_f32(self.0.scale())
+    }
+}
+
 pub trait WindowBehavior: Sized + 'static {
     type Context: UnwindSafe + Send + 'static;
 
-    fn initialize(
-        window: &mut RunningWindow,
-        graphics: &mut Graphics<'_>,
-        context: Self::Context,
-    ) -> Self;
+    fn initialize(window: Window<'_>, graphics: &mut Graphics<'_>, context: Self::Context) -> Self;
 
     #[allow(unused_variables)]
-    fn prepare(&mut self, window: &mut RunningWindow, graphics: &mut Graphics<'_>) {}
+    fn prepare(&mut self, window: Window<'_>, graphics: &mut Graphics<'_>) {}
 
     fn render<'pass>(
         &'pass mut self,
-        window: &mut RunningWindow,
+        window: Window<'_>,
         graphics: &mut RenderingGraphics<'_, 'pass>,
     ) -> bool;
 
@@ -51,12 +75,31 @@ pub trait WindowBehavior: Sized + 'static {
     where
         Self::Context: Default,
     {
-        KludgineWindow::<Self>::run()
+        KludgineWindow::<Self>::run_with_event_callback(create_surface)
     }
 
     fn run_with(context: Self::Context) -> ! {
-        KludgineWindow::<Self>::run_with(AssertUnwindSafe((shared_wgpu(), context)))
+        KludgineWindow::<Self>::run_with_context_and_event_callback(context, create_surface)
     }
+}
+
+#[allow(unsafe_code, clippy::needless_pass_by_value)]
+fn create_surface(
+    request: CreateSurfaceRequest,
+    windows: &appit::Windows<CreateSurfaceRequest>,
+) -> wgpu::Surface {
+    let window = windows.get(request.0).expect("window not found");
+    unsafe {
+        shared_wgpu()
+            .create_surface(&*window)
+            .expect("error creating surface")
+    }
+}
+
+struct CreateSurfaceRequest(WindowId);
+
+impl Message for CreateSurfaceRequest {
+    type Response = wgpu::Surface;
 }
 
 struct KludgineWindow<Behavior> {
@@ -71,21 +114,24 @@ struct KludgineWindow<Behavior> {
     wgpu: Arc<wgpu::Instance>,
 }
 
-impl<T> appit::WindowBehavior for KludgineWindow<T>
+impl<T> appit::WindowBehavior<CreateSurfaceRequest> for KludgineWindow<T>
 where
     T: WindowBehavior + 'static,
 {
-    type Context = AssertUnwindSafe<(Arc<wgpu::Instance>, T::Context)>;
+    type Context = T::Context;
 
     #[allow(unsafe_code)]
     fn initialize(
-        window: &mut RunningWindow,
-        AssertUnwindSafe((wgpu, context)): Self::Context,
+        window: &mut RunningWindow<CreateSurfaceRequest>,
+        context: Self::Context,
     ) -> Self {
         // SAFETY: This function is only invoked once the window has been
         // created, and cannot be invoked after the underlying window has been
         // destroyed.
-        let surface = unsafe { wgpu.create_surface(window.winit()).unwrap() };
+        let surface = window
+            .send(CreateSurfaceRequest(window.winit().id()))
+            .expect("app not running");
+        let wgpu = shared_wgpu();
         let adapter = pollster::block_on(wgpu.request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: T::power_preference(),
             force_fallback_adapter: false,
@@ -129,7 +175,7 @@ where
         };
         surface.configure(&device, &config);
 
-        let behavior = T::initialize(window, &mut graphics, context);
+        let behavior = T::initialize(Window(window), &mut graphics, context);
 
         Self {
             wgpu,
@@ -144,7 +190,7 @@ where
     }
 
     #[allow(unsafe_code)]
-    fn redraw(&mut self, window: &mut RunningWindow) {
+    fn redraw(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
         let frame = loop {
             match self.surface.get_current_texture() {
                 Ok(frame) => break frame,
@@ -172,7 +218,7 @@ where
         };
 
         self.behavior.prepare(
-            window,
+            Window(window),
             &mut Graphics::new(&mut self.kludgine, &self.device, &self.queue),
         );
 
@@ -197,21 +243,21 @@ where
             depth_stencil_attachment: None,
         });
         let mut gfx = RenderingGraphics::new(&mut pass, &self.kludgine, &self.device, &self.queue);
-        self.behavior.render(window, &mut gfx);
+        self.behavior.render(Window(window), &mut gfx);
         drop(pass);
         self.queue.submit(Some(encoder.finish()));
         frame.present();
     }
 
-    fn close_requested(&mut self, _window: &mut RunningWindow) -> bool {
+    fn close_requested(&mut self, _window: &mut RunningWindow<CreateSurfaceRequest>) -> bool {
         true
     }
 
-    fn focus_changed(&mut self, _window: &mut RunningWindow) {}
+    fn focus_changed(&mut self, _window: &mut RunningWindow<CreateSurfaceRequest>) {}
 
-    fn occlusion_changed(&mut self, _window: &mut RunningWindow) {}
+    fn occlusion_changed(&mut self, _window: &mut RunningWindow<CreateSurfaceRequest>) {}
 
-    fn resized(&mut self, window: &mut RunningWindow) {
+    fn resized(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
         self.config.width = window.inner_size().width;
         self.config.height = window.inner_size().height;
         self.surface.configure(&self.device, &self.config);
@@ -235,7 +281,7 @@ struct CallbackWindow<C> {
 
 impl<T> WindowBehavior for CallbackWindow<T>
 where
-    T: for<'render, 'gfx> FnMut(Renderer<'render, 'gfx>, &mut RunningWindow) -> bool
+    T: for<'render, 'gfx, 'window> FnMut(Renderer<'render, 'gfx>, Window<'window>) -> bool
         + Send
         + UnwindSafe
         + 'static,
@@ -243,7 +289,7 @@ where
     type Context = T;
 
     fn initialize(
-        _window: &mut RunningWindow,
+        _window: Window<'_>,
         _graphics: &mut Graphics<'_>,
         context: Self::Context,
     ) -> Self {
@@ -254,14 +300,14 @@ where
         }
     }
 
-    fn prepare(&mut self, window: &mut RunningWindow, graphics: &mut Graphics<'_>) {
+    fn prepare(&mut self, window: Window<'_>, graphics: &mut Graphics<'_>) {
         let renderer = self.rendering.new_frame(graphics);
         self.keep_running = (self.callback)(renderer, window);
     }
 
     fn render<'pass>(
         &'pass mut self,
-        _window: &mut RunningWindow,
+        _window: Window<'_>,
         graphics: &mut RenderingGraphics<'_, 'pass>,
     ) -> bool {
         self.rendering.render(graphics);
@@ -271,7 +317,7 @@ where
 
 pub fn run<RenderFn>(render_fn: RenderFn) -> !
 where
-    RenderFn: for<'render, 'gfx> FnMut(Renderer<'render, 'gfx>, &mut RunningWindow) -> bool
+    RenderFn: for<'render, 'gfx, 'window> FnMut(Renderer<'render, 'gfx>, Window<'window>) -> bool
         + Send
         + UnwindSafe
         + 'static,

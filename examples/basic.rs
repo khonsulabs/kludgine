@@ -8,7 +8,7 @@ const RED_SQUARE_SIZE: Dips = Dips::INCH;
 
 fn main() {
     let mut angle = 0.;
-    kludgine::app::run(move |mut renderer, window| {
+    kludgine::app::run(move |mut renderer, mut window| {
         window.redraw_in(Duration::from_millis(16));
         angle += std::f32::consts::PI / 36.;
         renderer.draw_shape(

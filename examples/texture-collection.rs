@@ -1,7 +1,6 @@
 use std::time::Duration;
 
-use appit::RunningWindow;
-use kludgine::app::WindowBehavior;
+use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::{Dips, Pixels, Point, Rect, Size};
 use kludgine::{Color, PreparedGraphic, TextureCollection};
 
@@ -20,7 +19,7 @@ impl WindowBehavior for Test {
     type Context = ();
 
     fn initialize(
-        _window: &mut RunningWindow,
+        _window: Window<'_>,
         graphics: &mut kludgine::Graphics<'_>,
         _context: Self::Context,
     ) -> Self {
@@ -60,7 +59,7 @@ impl WindowBehavior for Test {
 
     fn render<'pass>(
         &'pass mut self,
-        window: &mut RunningWindow,
+        mut window: Window<'_>,
         graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
     ) -> bool {
         window.redraw_in(Duration::from_millis(16));
@@ -78,7 +77,7 @@ impl WindowBehavior for Test {
             graphics,
         );
         self.atlas.render(
-            Point::new(0, window.inner_size().height as i32 - 256),
+            Point::new(0, window.inner_size().height.0 as i32 - 256),
             None,
             None,
             graphics,
