@@ -263,7 +263,7 @@ impl<'gfx> Graphics<'gfx> {
 }
 
 pub struct RenderingGraphics<'gfx, 'pass> {
-    pass: &'gfx mut wgpu::RenderPass<'pass>,
+    pass: wgpu::RenderPass<'pass>,
     kludgine: &'pass Kludgine,
     device: &'gfx wgpu::Device,
     queue: &'gfx wgpu::Queue,
@@ -273,7 +273,7 @@ pub struct RenderingGraphics<'gfx, 'pass> {
 
 impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
     pub fn new(
-        pass: &'gfx mut wgpu::RenderPass<'pass>,
+        pass: wgpu::RenderPass<'pass>,
         kludgine: &'pass Kludgine,
         device: &'gfx wgpu::Device,
         queue: &'gfx wgpu::Queue,
@@ -302,7 +302,7 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
     pub fn render_pass(&mut self) -> &mut wgpu::RenderPass<'pass> {
         // When we expose the render pass, we can't guarantee we're the current pipeline anymore.
         self.pipeline_is_active = false;
-        self.pass
+        &mut self.pass
     }
 
     fn active_pipeline_if_needed(&mut self) -> bool {
@@ -333,6 +333,11 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
     #[must_use]
     pub fn size(&self) -> Size<UPx> {
         self.clip.size
+    }
+
+    #[must_use]
+    pub fn into_render_pass(self) -> wgpu::RenderPass<'pass> {
+        self.pass
     }
 }
 
@@ -979,30 +984,6 @@ impl Texture {
     }
 }
 
-// pub struct PreparedTexture<Unit> {
-//     shape: PreparedShape<Unit>,
-// }
-
-// impl<Unit> PreparedTexture<Unit> {
-//     pub fn render<'pass>(
-//         &'pass self,
-//         origin: Point<Unit>,
-//         scale: Option<f32>,
-//         rotation: Option<f32>,
-//         graphics: &mut RenderingGraphics<'_, 'pass>,
-//     ) where
-//         Unit: Default + Into<i32> + ShaderScalable + Zero,
-//         Vertex<Unit>: Pod,
-//     {
-//         if graphics.active_bindings.is_none() {
-//             graphics.active_bindings = Some(Pipeline::Texture);
-//             graphics.pass.set_pipeline(&graphics.state.shapes_pipeline);
-//         }
-//         graphics.pass.set_bind_group(0, &self.bind_group, &[]);
-//         self.shape.render_direct(origin, scale, rotation, graphics);
-//     }
-// }
-
 pub trait TextureSource: sealed::TextureSource {}
 
 impl TextureSource for Texture {}
@@ -1019,6 +1000,43 @@ impl sealed::TextureSource for Texture {
     fn is_mask(&self) -> bool {
         // TODO this should be a flag on the texture.
         self.wgpu.format() == wgpu::TextureFormat::R8Unorm
+    }
+}
+
+pub struct TextureRenderer {
+    commands: Option<wgpu::CommandEncoder>,
+}
+
+impl TextureRenderer {
+    #[must_use]
+    pub fn new(device: &wgpu::Device) -> Self {
+        Self {
+            commands: Some(
+                device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default()),
+            ),
+        }
+    }
+
+    pub fn render<'gfx, 'pass>(
+        &'pass mut self,
+        kludgine: &'pass Kludgine,
+        device: &'gfx wgpu::Device,
+        queue: &'gfx wgpu::Queue,
+        texture: &'pass Texture,
+        load_op: wgpu::LoadOp<Color>,
+    ) -> RenderingGraphics<'gfx, 'pass> {
+        let pass = texture.create_render_pass(
+            self.commands
+                .as_mut()
+                .expect("texture renderer already finished"),
+            load_op,
+        );
+        RenderingGraphics::new(pass, kludgine, device, queue)
+    }
+
+    pub fn finish(&mut self, queue: &wgpu::Queue) -> Option<wgpu::SubmissionIndex> {
+        let commands = self.commands.take()?.finish();
+        Some(queue.submit([commands]))
     }
 }
 

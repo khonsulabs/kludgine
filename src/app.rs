@@ -256,23 +256,27 @@ where
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: None,
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &view,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: T::clear_color().map_or(wgpu::LoadOp::Load, |color| {
-                        wgpu::LoadOp::Clear(color.into())
-                    }),
-                    store: true,
-                },
-            })],
-            depth_stencil_attachment: None,
-        });
-        let mut gfx = RenderingGraphics::new(&mut pass, &self.kludgine, &self.device, &self.queue);
+        let mut gfx = RenderingGraphics::new(
+            encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: None,
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: T::clear_color().map_or(wgpu::LoadOp::Load, |color| {
+                            wgpu::LoadOp::Clear(color.into())
+                        }),
+                        store: true,
+                    },
+                })],
+                depth_stencil_attachment: None,
+            }),
+            &self.kludgine,
+            &self.device,
+            &self.queue,
+        );
         self.behavior.render(Window::new(window, elapsed), &mut gfx);
-        drop(pass);
+        drop(gfx);
         self.queue.submit(Some(encoder.finish()));
         frame.present();
         self.last_render = render_start;
