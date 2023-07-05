@@ -8,12 +8,16 @@ use lyon_tessellation::{
     GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeVertex,
     StrokeVertexConstructor, VertexId,
 };
-use wgpu::BufferUsages;
 
 use crate::buffer::Buffer;
 use crate::pipeline::{PreparedCommand, Vertex};
 use crate::{Color, Graphics, PreparedGraphic, TextureSource};
 
+/// A tesselated shape.
+///
+/// This structure contains geometry that has been divided into triangles, ready
+/// to upload to the GPU. To render the shape, it must first be
+/// [prepared](Self::prepare).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Shape<Unit, const TEXTURED: bool> {
     pub(crate) vertices: Vec<Vertex<Unit>>,
@@ -30,6 +34,7 @@ impl<Unit, const TEXTURED: bool> Shape<Unit, TEXTURED> {
 }
 
 impl<Unit> Shape<Unit, false> {
+    /// Returns a rectangle that is filled solid with `color`.
     pub fn filled_rect(rect: Rect<Unit>, color: Color) -> Shape<Unit, false>
     where
         Unit: Add<Output = Unit> + Ord + FloatConversion<Float = f32> + Copy,
@@ -43,6 +48,7 @@ impl<Unit> Shape<Unit, false> {
         path.fill(color)
     }
 
+    /// Uploads the shape to the GPU.
     #[must_use]
     pub fn prepare(&self, graphics: &Graphics<'_>) -> PreparedGraphic<Unit>
     where
@@ -50,12 +56,12 @@ impl<Unit> Shape<Unit, false> {
     {
         let vertices = Buffer::new(
             &self.vertices,
-            BufferUsages::VERTEX | BufferUsages::COPY_DST,
+            wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             graphics.device,
         );
         let indices = Buffer::new(
             &self.indices,
-            BufferUsages::INDEX | BufferUsages::COPY_DST,
+            wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
             graphics.device,
         );
         PreparedGraphic {
@@ -75,6 +81,7 @@ impl<Unit> Shape<Unit, false> {
 }
 
 impl<Unit> Shape<Unit, true> {
+    /// Uploads the shape to the GPU, applying `texture` to the polygons.
     pub fn prepare(
         &self,
         texture: &impl TextureSource,
@@ -85,12 +92,12 @@ impl<Unit> Shape<Unit, true> {
     {
         let vertices = Buffer::new(
             &self.vertices,
-            BufferUsages::VERTEX | BufferUsages::COPY_DST,
+            wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             graphics.device,
         );
         let indices = Buffer::new(
             &self.indices,
-            BufferUsages::INDEX | BufferUsages::COPY_DST,
+            wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
             graphics.device,
         );
         PreparedGraphic {
@@ -254,12 +261,14 @@ pub enum PathEvent<Unit> {
     Begin {
         /// The location to begin at.
         at: Endpoint<Unit>,
+        /// The texture coordinate for this path event.
         texture: Point<UPx>,
     },
     /// A straight line segment.
     Line {
         /// The end location of the line.
         to: Endpoint<Unit>,
+        /// The texture coordinate for this path event.
         texture: Point<UPx>,
     },
     /// A quadratic curve (one control point).
@@ -268,6 +277,7 @@ pub enum PathEvent<Unit> {
         ctrl: ControlPoint<Unit>,
         /// The end location of the curve.
         to: Endpoint<Unit>,
+        /// The texture coordinate for this path event.
         texture: Point<UPx>,
     },
     /// A cubic curve (two control points).
@@ -278,6 +288,7 @@ pub enum PathEvent<Unit> {
         ctrl2: ControlPoint<Unit>,
         /// The end location of the curve.
         to: Endpoint<Unit>,
+        /// The texture coordinate for this path event.
         texture: Point<UPx>,
     },
     /// Ends the path. Must be the last entry.
@@ -342,6 +353,11 @@ where
         builder.build()
     }
 
+    /// Fills this path with `color`.
+    ///
+    /// If this is a textured image, the sampled texture colors will be
+    /// multiplied with this color. To render the image unchanged, use
+    /// [`Color::WHITE`].
     #[must_use]
     pub fn fill(&self, color: Color) -> Shape<Unit, TEXTURED> {
         let lyon_path = self.as_lyon();
@@ -395,6 +411,22 @@ where
             }]),
             current_location: start_at,
             close: false,
+        }
+    }
+
+    /// Clears this builder to a state as if it had just been created with
+    /// [`new()`](Self::new).
+    pub fn reset(&mut self, start_at: Endpoint<Unit>) {
+        self.current_location = start_at;
+        let begin = PathEvent::Begin {
+            at: start_at,
+            texture: Point::default(),
+        };
+        if self.path.events.is_empty() {
+            self.path.events.push(begin);
+        } else {
+            self.path.events.truncate(1);
+            self.path.events[0] = begin;
         }
     }
 
@@ -478,6 +510,8 @@ where
         }
     }
 
+    /// Clears this builder to a state as if it had just been created with
+    /// [`new_textured()`](Self::new_textured).
     pub fn reset(&mut self, start_at: Endpoint<Unit>, texture: Point<UPx>) {
         self.current_location = start_at;
         let begin = PathEvent::Begin {

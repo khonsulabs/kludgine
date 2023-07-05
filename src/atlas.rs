@@ -11,8 +11,20 @@ use shelf_packer::{Allocation, ShelfPacker};
 use crate::pipeline::{PreparedGraphic, Vertex};
 use crate::{sealed, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
 
+/// A collection of multiple textures, managed as a single texture on the GPU.
+/// This type is often called an atlas.
+///
+/// The collection is currently fixed-size and will panic when an allocation
+/// fails. In the future, this type will dynamically grow as more textures are
+/// added to it.
+///
+/// In general, this type should primarly be used with similarly-sized graphics,
+/// otherwise the packing may be inefficient. For example, packing many images
+/// that are multiples of 32px wide/tall will be very efficient. Interally, this
+/// type is used for caching rendered glyphs on the GPU.
 #[derive(Clone)]
 pub struct TextureCollection {
+    format: wgpu::TextureFormat,
     data: Arc<RwLock<Data>>,
 }
 
@@ -36,6 +48,7 @@ impl TextureCollection {
         );
 
         Self {
+            format,
             data: Arc::new(RwLock::new(Data {
                 rects: ShelfPacker::new(
                     initial_size,
@@ -47,6 +60,7 @@ impl TextureCollection {
         }
     }
 
+    /// Returns a new atlas of the given size and format.
     #[must_use]
     pub fn new(
         initial_size: Size<UPx>,
@@ -56,6 +70,13 @@ impl TextureCollection {
         Self::new_generic(initial_size, format, graphics)
     }
 
+    /// Pushes image data to a specific region of the texture.
+    ///
+    /// The data format must match the format of the texture, and must be sized
+    /// exactly according to the `data_layout` and `size` and format.
+    ///
+    /// The returned [`CollectedTexture`] will automatically free the space it
+    /// occupies when the last instance is dropped.
     pub fn push_texture(
         &mut self,
         data: &[u8],
@@ -87,12 +108,24 @@ impl TextureCollection {
         }
     }
 
+    /// Pushes an image to this collection.
+    ///
+    /// The returned [`CollectedTexture`] will automatically free the space it
+    /// occupies when the last instance is dropped.
+    ///
+    /// # Panics
+    ///
+    /// Currently this only supports uploading to Rgba8 formatted textures.
     #[cfg(feature = "image")]
     pub fn push_image(
         &mut self,
         image: &image::DynamicImage,
         graphics: &Graphics<'_>,
     ) -> CollectedTexture {
+        assert!(matches!(
+            self.format,
+            wgpu::TextureFormat::Rgba8Unorm | wgpu::TextureFormat::Rgba8UnormSrgb
+        ));
         // TODO this isn't correct for all texture formats, but there's limited
         // conversion format support for the image crate. We will have to create
         // our own conversion formats for other texture formats, or we could add
@@ -112,6 +145,7 @@ impl TextureCollection {
         )
     }
 
+    /// Returns the current size of the underlying texture.
     pub fn size(&self) -> Size<UPx> {
         let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
         data.texture.size()
@@ -148,6 +182,10 @@ impl TextureCollection {
         data.texture.prepare_partial(texture.rect, dest, graphics)
     }
 
+    /// Returns a [`PreparedGraphic`] for the entire texture.
+    ///
+    /// This is primarily a debugging tool, as generally the
+    /// [`CollectedTexture`]s are rendered instead.
     pub fn prepare_entire_colection<Unit>(
         &self,
         dest: Rect<Unit>,
@@ -188,6 +226,7 @@ impl sealed::TextureSource for TextureCollection {
     }
 }
 
+/// A texture that is contained within a [`TextureCollection`].
 #[derive(Clone)]
 pub struct CollectedTexture {
     collection: TextureCollection,
@@ -196,6 +235,7 @@ pub struct CollectedTexture {
 }
 
 impl CollectedTexture {
+    /// Returns a [`PreparedGraphic`] that renders this texture at `dest`.
     pub fn prepare<Unit>(&self, dest: Rect<Unit>, graphics: &Graphics<'_>) -> PreparedGraphic<Unit>
     where
         Unit: Add<Output = Unit>

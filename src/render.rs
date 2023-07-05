@@ -14,6 +14,13 @@ use crate::pipeline::{
 use crate::shapes::Shape;
 use crate::{sealed, Graphics, RenderingGraphics, Texture, TextureSource, VertexCollection};
 
+/// An easy-to-use graphics renderer that batches operations on the GPU
+/// automatically.
+///
+/// Using the draw operations on this type don't immediately draw. Instead, once
+/// this type is dropped, the [`Rendering`] that created this renderer will be
+/// updated with the new drawing instructions. All of the pending operations can
+/// be drawn using [`Rendering::render`].
 pub struct Renderer<'render, 'gfx> {
     pub(crate) graphics: &'render mut Graphics<'gfx>,
     data: &'render mut Rendering,
@@ -27,6 +34,7 @@ struct Command {
 }
 
 impl Renderer<'_, '_> {
+    /// Draws a shape at the origin, rotating and scaling as needed.
     pub fn draw_shape<Unit>(
         &mut self,
         shape: &Shape<Unit, false>,
@@ -46,6 +54,9 @@ impl Renderer<'_, '_> {
         );
     }
 
+    /// Draws a shape that was created with texture coordinates, applying the
+    /// provided texture.
+    // TODO we don't have a way to easily draw a texture here.
     pub fn draw_textured_shape<Unit>(
         &mut self,
         shape: &Shape<Unit, true>,
@@ -165,6 +176,17 @@ impl Drop for Renderer<'_, '_> {
     }
 }
 
+/// An easy-to-use renderer that combines all operations into a single GPU
+/// object.
+///
+/// The process of preparing individual graphics and then rendering them allows
+/// for efficient rendering. The downside is that it can be harder to use, and
+/// each [`PreparedGraphic`](crate::PreparedGraphic) contains its own vertex and
+/// index buffers.
+///
+/// This type allows rendering a batch of drawing operations using a
+/// [`Renderer`]. Once the renderer is dropped, this type's vertex buffer and
+/// index buffer are updated.
 #[derive(Default, Debug)]
 pub struct Rendering {
     buffers: Option<RenderingBuffers>,
@@ -181,6 +203,10 @@ struct RenderingBuffers {
 }
 
 impl Rendering {
+    /// Clears the currently prepared graphics and returns a new [`Renderer`] to
+    /// prepare new graphics.
+    ///
+    /// Once the renderer is dropped, this type is ready to be rendered.
     pub fn new_frame<'rendering, 'gfx>(
         &'rendering mut self,
         graphics: &'rendering mut Graphics<'gfx>,
@@ -196,6 +222,7 @@ impl Rendering {
         }
     }
 
+    /// Renders the prepared graphics from the last frame.
     pub fn render<'pass>(&'pass self, graphics: &mut RenderingGraphics<'_, 'pass>) {
         if let Some(buffers) = &self.buffers {
             let mut current_texture_id = None;

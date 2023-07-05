@@ -37,7 +37,7 @@ impl From<cosmic_text::CacheKey> for PixelAlignedCacheKey {
     }
 }
 
-pub struct TextSystem {
+pub(crate) struct TextSystem {
     pub fonts: cosmic_text::FontSystem,
     pub swash_cache: cosmic_text::SwashCache,
     pub alpha_text_atlas: TextureCollection,
@@ -142,12 +142,19 @@ impl Drop for CachedGlyphHandle {
 }
 
 impl<'gfx> Graphics<'gfx> {
+    /// Prepares the text layout contained in `buffer` to be rendered.
+    ///
+    /// When the text in `buffer` has no color defined, `default_color` will be
+    /// used.
+    ///
+    /// `origin` allows controlling how the text will be drawn relative to the
+    /// coordinate provided in [`render()`](PreparedGraphic::render).
     #[allow(clippy::too_many_lines)]
     pub fn prepare_text(
         &mut self,
         buffer: &cosmic_text::Buffer,
         default_color: Color,
-        origin: TextOrigin,
+        origin: TextOrigin<Px>,
     ) -> PreparedText {
         let mut glyphs = AHashMap::new();
         let queue = self.queue();
@@ -157,7 +164,8 @@ impl<'gfx> Graphics<'gfx> {
         let mut indices = Vec::new();
         let mut commands = Vec::<PreparedCommand>::new();
 
-        let relative_to: Point<Px> = match origin {
+        let relative_to = match origin {
+            TextOrigin::Custom(point) => point,
             TextOrigin::TopLeft => Point::default(),
             TextOrigin::Center => {
                 let (x, y) = buffer
@@ -292,6 +300,7 @@ impl<'gfx> Graphics<'gfx> {
     }
 }
 
+/// Text that is ready to be rendered on the GPU.
 pub struct PreparedText {
     graphic: PreparedGraphic<Px>,
     _glyphs: AHashMap<PixelAlignedCacheKey, CachedGlyphHandle>,
@@ -317,10 +326,23 @@ impl std::ops::DerefMut for PreparedText {
     }
 }
 
+/// Controls the origin of [`PreparedText`].
 #[derive(Default, Debug, Clone, Copy, Eq, PartialEq)]
-pub enum TextOrigin {
+pub enum TextOrigin<Unit> {
+    /// Render the text such that the top-left of the first line appears at the
+    /// rendered location. When rotated, the text will rotate around the
+    /// top-left of the text.
     #[default]
     TopLeft,
+    /// Render the text such that the center of the extents of the rendered text
+    /// appears at the rendered location. When rotated, the text will rotate
+    /// around the geometric center of the rendered text.
     Center,
+    /// Render the text such that the leftmost pixel of the baseline of the
+    /// first line of text appears at the rendered location. When rotated, the
+    /// text will rotate around this point.
     FirstBaseline,
+    /// Render the text such that the text is offset by a custom amount. When
+    /// rotated, the text will rotate around this point.
+    Custom(Point<Unit>),
 }

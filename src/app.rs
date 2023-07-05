@@ -18,6 +18,7 @@ fn shared_wgpu() -> Arc<wgpu::Instance> {
     SHARED_WGPU.get_or_init(Arc::default).clone()
 }
 
+/// An open window.
 pub struct Window<'window> {
     window: &'window mut RunningWindow<CreateSurfaceRequest>,
     elapsed: Duration,
@@ -28,63 +29,101 @@ impl<'window> Window<'window> {
         Self { window, elapsed }
     }
 
+    /// Sets the window to redraw after a `duration`.
+    ///
+    /// If the window is already set to redraw sooner, this function does
+    /// nothing.
     pub fn redraw_in(&mut self, duration: Duration) {
         self.window.redraw_in(duration);
     }
 
+    /// Sets the window to redraw at the provided time.
+    ///
+    /// If the window is already set to redraw sooner, this function does
+    /// nothing.
     pub fn redraw_at(&mut self, time: Instant) {
         self.window.redraw_at(time);
     }
 
+    /// Sets the window to redraw as soon as it can.
     pub fn set_needs_redraw(&mut self) {
         self.window.set_needs_redraw();
     }
 
+    /// Returns the inner size of the window.
     #[must_use]
     pub fn inner_size(&self) -> Size<UPx> {
         self.window.inner_size().into()
     }
 
+    /// Returns the current display scale factor.
     #[must_use]
     pub fn scale(&self) -> f32 {
         lossy_f64_to_f32(self.window.scale())
     }
 
+    /// Returns the duration that has elapsed since the last frame start and the
+    /// current frame start.
+    ///
+    /// This value is calculated once per frame and will not update between
+    /// calls within the same event.
     #[must_use]
     pub const fn elapsed(&self) -> Duration {
         self.elapsed
     }
 }
 
+/// The behavior of a window.
 pub trait WindowBehavior: Sized + 'static {
+    /// The type of value provided during [`initialize()`](Self::initialize).
+    ///
+    /// In Kludgine, each window runs in its own thread. Kludgine allows does
+    /// not require `WindowBehavior` implementors to implement `Send`, but it
+    /// can be useful to receive input from the thread that is opening the
+    /// window. This is where `Context` is useful: it must implement `Send`,
+    /// allowing some data to still be passed when opening the window.
     type Context: UnwindSafe + Send + 'static;
 
+    /// Initialize a new instance from the provided context.
     fn initialize(window: Window<'_>, graphics: &mut Graphics<'_>, context: Self::Context) -> Self;
 
+    /// Prepare the window to render.
+    ///
+    /// This is called directly before [`render()`](Self::render()) and is a
+    /// perfect place to update any prepared graphics as needed.
     #[allow(unused_variables)]
     fn prepare(&mut self, window: Window<'_>, graphics: &mut Graphics<'_>) {}
 
+    /// Render the contents of the window.
+    // TODO refactor away from bool return.
     fn render<'pass>(
         &'pass mut self,
         window: Window<'_>,
         graphics: &mut RenderingGraphics<'_, 'pass>,
     ) -> bool;
 
+    /// Returns the power preference to initialize `wgpu` with.
     #[must_use]
     fn power_preference() -> wgpu::PowerPreference {
         wgpu::PowerPreference::default()
     }
 
+    /// Returns the limits to apply for the `wgpu` instance.
     #[must_use]
     fn limits(adapter_limits: wgpu::Limits) -> wgpu::Limits {
         wgpu::Limits::downlevel_webgl2_defaults().using_resolution(adapter_limits)
     }
 
+    /// Returns the color to clear the window with. If None is returned, the
+    /// window will not be cleared between redraws.
+    ///
+    /// The default implementation returns `Some(Color::BLACK)`.
     #[must_use]
     fn clear_color() -> Option<Color> {
         Some(Color::BLACK)
     }
 
+    /// Launches a Kludgine app using this window as the primary window.
     fn run() -> !
     where
         Self::Context: Default,
@@ -92,6 +131,10 @@ pub trait WindowBehavior: Sized + 'static {
         KludgineWindow::<Self>::run_with_event_callback(create_surface)
     }
 
+    /// Launches a Kludgine app using this window as the primary window.
+    ///
+    /// The `context` is passed along to [`initialize()`](Self::initialize) once
+    /// the thread it is running on is spawned.
     fn run_with(context: Self::Context) -> ! {
         KludgineWindow::<Self>::run_with_context_and_event_callback(context, create_surface)
     }
@@ -273,7 +316,7 @@ where
         );
         self.behavior.render(Window::new(window, elapsed), &mut gfx);
         drop(gfx);
-        frame.finish(&self.queue);
+        frame.submit(&self.queue);
         surface.present();
         self.last_render = render_start;
     }
@@ -344,6 +387,8 @@ where
     }
 }
 
+/// Runs a callback as a single window. Continues to run until false is
+/// returned.
 pub fn run<RenderFn>(render_fn: RenderFn) -> !
 where
     RenderFn: for<'render, 'gfx, 'window> FnMut(Renderer<'render, 'gfx>, Window<'window>) -> bool

@@ -58,7 +58,7 @@ impl WindowBehavior for Test {
         outer_square.render(Point::new(256, 256), None, Some(PI / 4.), &mut rendering);
         drop(rendering);
 
-        frame.finish(graphics.queue());
+        frame.submit(graphics.queue());
 
         Self {
             prepared: prerendered.prepare(Size::new(400, 400).into(), graphics),

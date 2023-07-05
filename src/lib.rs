@@ -2,10 +2,7 @@
 // This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
 #![deny(unsafe_code)]
-#![warn(
-    // missing_docs,
-    clippy::pedantic
-)]
+#![warn(missing_docs, clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 
 use std::borrow::Cow;
@@ -19,32 +16,53 @@ use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "cosmic-text")]
 pub use cosmic_text;
 pub use figures;
-use figures::traits::FloatConversion;
+use figures::traits::{FloatConversion, IntoComponents};
 use figures::units::UPx;
 use figures::{Point, Rect, Size};
 use wgpu::util::DeviceExt;
-use wgpu::SubmissionIndex;
 
 use crate::buffer::Buffer;
 use crate::pipeline::{Uniforms, Vertex};
 use crate::shapes::PathBuilder;
 use crate::text::TextSystem;
 
+/// Application and Windowing Support.
 #[cfg(feature = "app")]
 pub mod app;
 mod atlas;
 mod buffer;
 mod pipeline;
 mod pod;
+/// An easy-to-use batching renderer.
 pub mod render;
 mod sealed;
+/// Types for drawing paths and shapes.
 pub mod shapes;
+/// Types for text rendering.
 #[cfg(feature = "cosmic-text")]
 pub mod text;
 
 pub use atlas::{CollectedTexture, TextureCollection};
 pub use pipeline::{PreparedGraphic, ShaderScalable};
 
+/// A 2d graphics instance.
+///
+/// This type contains the GPU state for a single instance of Kludgine. To
+/// render graphics correctly, it must know the size and scale of the surface
+/// being rendered to. These values are provided in the constructor, but can be
+/// updated using [`resize()`](Self::resize).
+///
+/// To draw using Kludgine, create a [`Frame`] using
+/// [`next_frame()`](Self::next_frame). [`wgpu`] has lifetime requirements on
+/// the [`wgpu::RenderPass`] which causes each item being rendered to be
+/// attached to the lifetime of the render pass. This means that no temporary
+/// variables can be used to render.
+///
+/// Instead, graphics must be prepared before rendering, and stored somewhere
+/// during the remainder of the [`RenderingGraphics`]. To prepare graphics to be
+/// rendered, call [`Frame::prepare()`] to receive a [`Graphics`] instance that
+/// can be used in various Kludgine APIs such as
+/// [`Shape::prepare`](shapes::Shape::prepare).
 pub struct Kludgine {
     default_bindings: wgpu::BindGroup,
     pipeline: wgpu::RenderPipeline,
@@ -58,6 +76,7 @@ pub struct Kludgine {
 }
 
 impl Kludgine {
+    /// Returns a new instance of Kludgine with the provided parameters.
     #[must_use]
     pub fn new(
         device: &wgpu::Device,
@@ -128,12 +147,18 @@ impl Kludgine {
         }
     }
 
+    /// Updates the size and scale of this Kludgine instance.
+    ///
+    /// This function updates data stored in the GPU that affects how graphics
+    /// are rendered. It should be called before calling `next_frame()` if the
+    /// size or scale of the underlying surface has changed.
     pub fn resize(&mut self, new_size: Size<UPx>, new_scale: f32, queue: &wgpu::Queue) {
         self.size = new_size;
         self.uniforms
             .update(0, &[Uniforms::new(new_size, new_scale)], queue);
     }
 
+    /// Begins rendering a new frame.
     pub fn next_frame(&mut self) -> Frame<'_> {
         #[cfg(feature = "cosmic-text")]
         self.text.new_frame();
@@ -142,14 +167,39 @@ impl Kludgine {
             commands: None,
         }
     }
+
+    /// Returns a mutable reference to the [`cosmic_text::FontSystem`] used when
+    /// rendering text.
+    #[cfg(feature = "cosmic-text")]
+    pub fn font_system(&mut self) -> &mut cosmic_text::FontSystem {
+        &mut self.text.fonts
+    }
 }
 
+/// A frame that can be rendered.
+///
+/// # Panics
+///
+/// After [`Frame::render()`] has been invoked, this type will panic if dropped
+/// before either [`Frame::submit()`] or [`Frame::abort()`] are invoked. This
+/// panic is designed to prevent accidentally forgetting to submit a frame to the GPU.q
 pub struct Frame<'gfx> {
     kludgine: &'gfx mut Kludgine,
     commands: Option<wgpu::CommandEncoder>,
 }
 
 impl Frame<'_> {
+    /// Creates a [`Graphics`] context for this frame that can be used to
+    /// prepare graphics for rendering:
+    ///
+    /// - [`Shape::prepare`](shapes::Shape::prepare)
+    /// - [`Texture::prepare`]
+    /// - [`Texture::prepare_partial`]
+    /// - [`CollectedTexture::prepare`]
+    /// - [`Rendering::new_frame`](render::Rendering::new_frame)
+    ///
+    /// The returned graphics provides access to the various types to update
+    /// their representation on the GPU so that they can be rendered later.
     pub fn prepare<'gfx>(
         &'gfx mut self,
         device: &'gfx wgpu::Device,
@@ -158,6 +208,12 @@ impl Frame<'_> {
         Graphics::new(self.kludgine, device, queue)
     }
 
+    /// Creates a [`RenderingGraphics`] context for this frame which is used to
+    /// render previously prepared graphics:
+    ///
+    /// - [`PreparedGraphic`]
+    /// - [`PreparedText`](text::PreparedText)
+    /// - [`Rendering`](render::Rendering)
     #[must_use]
     pub fn render<'gfx, 'pass>(
         &'pass mut self,
@@ -180,6 +236,13 @@ impl Frame<'_> {
         )
     }
 
+    /// Creates a [`RenderingGraphics`] that renders into `texture` for this
+    /// frame. The returned context can be used to render previously prepared
+    /// graphics:
+    ///
+    /// - [`PreparedGraphic`]
+    /// - [`PreparedText`](text::PreparedText)
+    /// - [`Rendering`](render::Rendering)
     pub fn render_into<'gfx, 'pass>(
         &'pass mut self,
         texture: &'pass Texture,
@@ -208,10 +271,35 @@ impl Frame<'_> {
         )
     }
 
+    /// Submits all of the commands for this frame to the GPU.
+    ///
+    /// This function does not block for the operations to finish. The returned
+    /// [`wgpu::SubmissionIndex`] can be used to block until completion if
+    /// desired.
     #[allow(clippy::must_use_candidate)]
-    pub fn finish(self, queue: &wgpu::Queue) -> Option<SubmissionIndex> {
-        let commands = self.commands?;
+    pub fn submit(mut self, queue: &wgpu::Queue) -> Option<wgpu::SubmissionIndex> {
+        let commands = self.commands.take()?;
         Some(queue.submit([commands.finish()]))
+    }
+
+    /// Aborts rendering this frame.
+    ///
+    /// If [`Frame::render()`] has been invoked, this function must be used
+    /// instead of dropping the frame. This type implements a panic-on-drop to
+    /// prevent forgetting to submit the frame to the GPU, and this function
+    /// prevents the panic from happening.
+    pub fn abort(mut self) {
+        // Clear out the commands, preventing drop from panicking.
+        self.commands.take();
+    }
+}
+
+impl Drop for Frame<'_> {
+    fn drop(&mut self) {
+        assert!(
+            self.commands.is_none(),
+            "Frame dropped without calling finish() or abort()"
+        );
     }
 }
 
@@ -275,6 +363,15 @@ impl WgpuDeviceAndQueue for Graphics<'_> {
     }
 }
 
+/// A context used to prepare graphics to render.
+///
+/// This type is used in these APIs:
+///
+/// - [`Shape::prepare`](shapes::Shape::prepare)
+/// - [`Texture::prepare`]
+/// - [`Texture::prepare_partial`]
+/// - [`CollectedTexture::prepare`]
+/// - [`Rendering::new_frame`](render::Rendering::new_frame)
 pub struct Graphics<'gfx> {
     kludgine: &'gfx mut Kludgine,
     device: &'gfx wgpu::Device,
@@ -282,19 +379,23 @@ pub struct Graphics<'gfx> {
 }
 
 impl<'gfx> Graphics<'gfx> {
+    /// Returns a reference to the underlying [`wgpu::Device`].
     #[must_use]
     pub const fn device(&self) -> &'gfx wgpu::Device {
         self.device
     }
 
+    /// Returns a reference to the underlying [`wgpu::Queue`].
     #[must_use]
     pub const fn queue(&self) -> &'gfx wgpu::Queue {
         self.queue
     }
 
+    /// Returns a mutable reference to the [`cosmic_text::FontSystem`] used when
+    /// rendering text.
     #[cfg(feature = "cosmic-text")]
     pub fn font_system(&mut self) -> &mut cosmic_text::FontSystem {
-        &mut self.kludgine.text.fonts
+        self.kludgine.font_system()
     }
 }
 
@@ -325,6 +426,7 @@ impl DerefMut for Graphics<'_> {
 }
 
 impl<'gfx> Graphics<'gfx> {
+    /// Returns a new instance.
     pub fn new(
         kludgine: &'gfx mut Kludgine,
         device: &'gfx wgpu::Device,
@@ -338,6 +440,13 @@ impl<'gfx> Graphics<'gfx> {
     }
 }
 
+/// A graphics context used to render previously prepared graphics.
+///
+/// This type is used to render these types:
+///
+/// - [`PreparedGraphic`]
+/// - [`PreparedText`](text::PreparedText)
+/// - [`Rendering`](render::Rendering)
 pub struct RenderingGraphics<'gfx, 'pass> {
     pass: wgpu::RenderPass<'pass>,
     kludgine: &'pass Kludgine,
@@ -364,21 +473,16 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
         }
     }
 
+    /// Returns a reference to the underlying [`wgpu::Device`].
     #[must_use]
     pub const fn device(&self) -> &'gfx wgpu::Device {
         self.device
     }
 
+    /// Returns a reference to the underlying [`wgpu::Queue`].
     #[must_use]
     pub const fn queue(&self) -> &'gfx wgpu::Queue {
         self.queue
-    }
-
-    #[must_use]
-    pub fn render_pass(&mut self) -> &mut wgpu::RenderPass<'pass> {
-        // When we expose the render pass, we can't guarantee we're the current pipeline anymore.
-        self.pipeline_is_active = false;
-        &mut self.pass
     }
 
     fn active_pipeline_if_needed(&mut self) -> bool {
@@ -391,8 +495,19 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
         }
     }
 
-    pub fn clipped_to(&mut self, clip: Rect<UPx>) -> ClipGuard<'_, 'gfx, 'pass> {
+    /// Returns a [`ClipGuard`] that causes all drawing operations to be offset
+    /// and clipped to `clip` until it is dropped.
+    ///
+    /// This function causes the [`RenderingGraphics`] to act as if the origin
+    /// of the context is `clip.origin`, and the size of the context is
+    /// `clip.size`. This means that rendering at 0,0 will actually render at
+    /// the effective clip rect's origin.
+    ///
+    /// `clip` is relative to the current clip rect and cannot extend the
+    /// current clipping rectangle.
+    pub fn clipped_to(&mut self, mut clip: Rect<UPx>) -> ClipGuard<'_, 'gfx, 'pass> {
         let previous_clip = self.clip;
+        clip.origin += previous_clip.origin;
         self.clip = previous_clip.intersection(&clip).unwrap_or_default();
         self.pass.set_scissor_rect(
             self.clip.origin.x.0,
@@ -406,17 +521,23 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
         }
     }
 
+    /// Returns the current size of the graphics area being rendered to.
+    ///
+    /// If the graphics has been clipped, this returns the current width of the
+    /// clipped area.
     #[must_use]
     pub fn size(&self) -> Size<UPx> {
         self.clip.size
     }
-
-    #[must_use]
-    pub fn into_render_pass(self) -> wgpu::RenderPass<'pass> {
-        self.pass
-    }
 }
 
+/// A handle to a clipped [`RenderingGraphics`].
+///
+/// When dropped, the [`RenderingGraphics`] will have its clip rect restored to
+/// the previously clipped rect. [`ClipGuard`]s can be nested.
+///
+/// This type implements [`Deref`]/[`DerefMut`] to provide access to the clipped
+/// [`RenderingGraphics`].
 pub struct ClipGuard<'clip, 'gfx, 'pass> {
     previous_clip: Rect<UPx>,
     graphics: &'clip mut RenderingGraphics<'gfx, 'pass>,
@@ -447,11 +568,13 @@ impl<'gfx, 'pass> DerefMut for ClipGuard<'_, 'gfx, 'pass> {
     }
 }
 
+/// A red, green, blue, and alpha color value stored in 32-bits.
 #[derive(Clone, Copy, Eq, PartialEq, Hash, Pod, Zeroable)]
 #[repr(C)]
 pub struct Color(u32);
 
 impl Color {
+    /// Returns a new color with the provided components.
     #[must_use]
     pub const fn new(red: u8, green: u8, blue: u8, alpha: u8) -> Self {
         Self((red as u32) << 24 | (green as u32) << 16 | (blue as u32) << 8 | alpha as u32)
@@ -471,45 +594,55 @@ impl Color {
         )
     }
 
+    /// Returns the red component of this color, range 0-255.
     #[must_use]
     #[allow(clippy::cast_possible_truncation)] // truncation desired
     pub const fn red(&self) -> u8 {
         (self.0 >> 24) as u8
     }
 
+    /// Returns the red component of this color, range 0.0-1.0.
     #[must_use]
     pub fn red_f32(&self) -> f32 {
         f32::from(self.red()) / 255.
     }
 
+    /// Returns the green component of this color, range 0-255.
     #[must_use]
     #[allow(clippy::cast_possible_truncation)] // truncation desired
     pub const fn green(&self) -> u8 {
         (self.0 >> 16) as u8
     }
 
+    /// Returns the green component of this color, range 0.0-1.0.
     #[must_use]
     pub fn green_f32(&self) -> f32 {
         f32::from(self.green()) / 255.
     }
 
+    /// Returns the blue component of this color, range 0-255.
     #[must_use]
     #[allow(clippy::cast_possible_truncation)] // truncation desired
     pub const fn blue(&self) -> u8 {
         (self.0 >> 8) as u8
     }
 
+    /// Returns the blue component of this color, range 0.0-1.0.
     #[must_use]
     pub fn blue_f32(&self) -> f32 {
         f32::from(self.blue()) / 255.
     }
 
+    /// Returns the alpha component of this color, range 0-255. A value of 255
+    /// is completely opaque.
     #[must_use]
     #[allow(clippy::cast_possible_truncation)] // truncation desired
     pub const fn alpha(&self) -> u8 {
         self.0 as u8
     }
 
+    /// Returns the alpha component of this color, range 0.0-1.0. A value of 1.0
+    /// is completely opaque.
     #[must_use]
     pub fn alpha_f32(&self) -> f32 {
         f32::from(self.alpha()) / 255.
@@ -848,6 +981,7 @@ impl Color {
     pub const YELLOWGREEN: Self = Self::new(154, 205, 50, 255);
 }
 
+/// An image stored on the GPU.
 #[derive(Debug)]
 pub struct Texture {
     id: sealed::TextureId,
@@ -889,6 +1023,7 @@ impl Texture {
         }
     }
 
+    /// Creates a new texture of the given size, format, and usages.
     #[must_use]
     pub fn new(
         graphics: &Graphics<'_>,
@@ -899,6 +1034,8 @@ impl Texture {
         Self::new_generic(graphics, size, format, usage)
     }
 
+    /// Returns a new texture of the given size, format, and usages. The texture
+    /// is initialized with `data`. `data` must match `format`.
     #[must_use]
     pub fn new_with_data(
         graphics: &Graphics<'_>,
@@ -937,33 +1074,12 @@ impl Texture {
         }
     }
 
-    #[must_use]
-    pub fn create_render_pass<'gfx>(
-        &'gfx self,
-        encoder: &'gfx mut wgpu::CommandEncoder,
-        load_op: wgpu::LoadOp<Color>,
-    ) -> wgpu::RenderPass<'gfx> {
-        let pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            label: None,
-            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view: &self.view,
-                resolve_target: None,
-                ops: wgpu::Operations {
-                    load: match load_op {
-                        wgpu::LoadOp::Clear(color) => wgpu::LoadOp::Clear(color.into()),
-                        wgpu::LoadOp::Load => wgpu::LoadOp::Load,
-                    },
-                    store: true,
-                },
-            })],
-            depth_stencil_attachment: None,
-        });
-        pass
-    }
-
+    /// Creates a texture from `image`.
     #[must_use]
     #[cfg(feature = "image")]
     pub fn from_image(image: &image::DynamicImage, graphics: &Graphics<'_>) -> Self {
+        // TODO is it better to force rgba8, or is it better to avoid the
+        // conversion and allow multiple texture formats?
         let image = image.to_rgba8();
         Self::new_with_data(
             graphics,
@@ -974,9 +1090,12 @@ impl Texture {
         )
     }
 
+    /// Prepares to render this texture with `size`. The returned graphic will
+    /// be oriented around `origin`.
     #[must_use]
     pub fn prepare_sized<Unit>(
         &self,
+        origin: Origin<Unit>,
         size: Size<Unit>,
         graphics: &Graphics<'_>,
     ) -> PreparedGraphic<Unit>
@@ -990,11 +1109,18 @@ impl Texture {
             + Copy
             + Debug
             + Default,
+        Point<Unit>: Div<i32, Output = Point<Unit>>,
         Vertex<Unit>: bytemuck::Pod,
     {
-        self.prepare(Rect::new(Point::default(), size), graphics)
+        let origin = match origin {
+            Origin::TopLeft => Point::default(),
+            Origin::Center => -(size.to::<Point<Unit>>() / 2),
+            Origin::Custom(point) => point,
+        };
+        self.prepare(Rect::new(origin, size), graphics)
     }
 
+    /// Prepares to render this texture at the given location.
     #[must_use]
     pub fn prepare<Unit>(&self, dest: Rect<Unit>, graphics: &Graphics<'_>) -> PreparedGraphic<Unit>
     where
@@ -1011,6 +1137,7 @@ impl Texture {
         self.prepare_partial(self.size().into(), dest, graphics)
     }
 
+    /// Prepares the `source` area to be rendered at `dest`.
     #[must_use]
     pub fn prepare_partial<Unit>(
         &self,
@@ -1046,6 +1173,7 @@ impl Texture {
             .prepare(self, graphics)
     }
 
+    /// The size of the texture.
     #[must_use]
     pub fn size(&self) -> Size<UPx> {
         Size {
@@ -1054,12 +1182,31 @@ impl Texture {
         }
     }
 
+    /// The format of the texture.
     #[must_use]
     pub fn format(&self) -> wgpu::TextureFormat {
         self.wgpu.format()
     }
 }
 
+/// The origin of a prepared graphic.
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+pub enum Origin<Unit> {
+    /// The graphic should be drawn so that the top-left of the graphic appears
+    /// at the rendered location. When rotating the graphic, it will rotate
+    /// around the top-left.
+    TopLeft,
+    /// The grapihc should be drawn so that the center of the graphic appears at
+    /// the rendered location. When rotating the graphic, it will rotate around
+    /// the center.
+    Center,
+    /// The graphic should be drawn so that the provided relative location
+    /// appears at the rendered location. When rotating the graphic, it will
+    /// rotate around this point.
+    Custom(Point<Unit>),
+}
+
+/// A type that is rendered using a texture.
 pub trait TextureSource: sealed::TextureSource {}
 
 impl TextureSource for Texture {}

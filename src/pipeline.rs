@@ -81,6 +81,7 @@ pub(crate) struct PushConstants {
     pub translation: Point<i32>,
 }
 
+/// A graphic that is on the GPU and ready to render.
 #[derive(Debug)]
 pub struct PreparedGraphic<Unit> {
     pub(crate) vertices: Buffer<Vertex<Unit>>,
@@ -100,6 +101,8 @@ where
     Unit: Copy + Default + Into<i32> + ShaderScalable + Zero,
     Vertex<Unit>: Pod,
 {
+    /// Renders the prepared graphic at `origin`, rotating and scaling as
+    /// requested.
     pub fn render<'pass>(
         &'pass self,
         origin: Point<Unit>,
@@ -162,6 +165,7 @@ where
     }
 }
 
+/// A unit that is able to be scaled by the GPU shader.
 pub trait ShaderScalable: sealed::ShaderScalableSealed {}
 
 impl ShaderScalable for Px {}
