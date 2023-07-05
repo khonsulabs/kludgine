@@ -109,6 +109,11 @@ where
     ) {
         graphics.active_pipeline_if_needed();
 
+        graphics.pass.set_vertex_buffer(0, self.vertices.as_slice());
+        graphics
+            .pass
+            .set_index_buffer(self.indices.as_slice(), wgpu::IndexFormat::Uint16);
+
         for command in &self.commands {
             graphics.pass.set_bind_group(
                 0,
@@ -118,11 +123,6 @@ where
                     .unwrap_or(&graphics.kludgine.default_bindings),
                 &[],
             );
-
-            graphics.pass.set_vertex_buffer(0, self.vertices.as_slice());
-            graphics
-                .pass
-                .set_index_buffer(self.indices.as_slice(), wgpu::IndexFormat::Uint16);
             let mut flags = Unit::flags();
             if command.binding.is_some() {
                 flags |= FLAG_TEXTURED;
@@ -138,7 +138,12 @@ where
                 flags |= FLAG_ROTATE;
                 scale
             });
-            if !origin.is_zero() {
+            let translation = graphics.clip.origin.try_cast().expect("clip out of bounds")
+                + Point {
+                    x: origin.x.into(),
+                    y: origin.y.into(),
+                };
+            if !translation.is_zero() {
                 flags |= FLAG_TRANSLATE;
             }
 
@@ -149,10 +154,7 @@ where
                     flags,
                     scale,
                     rotation,
-                    translation: Point {
-                        x: origin.x.into(),
-                        y: origin.y.into(),
-                    },
+                    translation,
                 }),
             );
             graphics.pass.draw_indexed(command.indices.clone(), 0, 0..1);

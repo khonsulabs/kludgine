@@ -225,10 +225,19 @@ impl Rendering {
                         .set_bind_group(0, &graphics.kludgine.default_bindings, &[]);
                 }
 
+                let mut constants = command.constants;
+                constants.translation += graphics
+                    .clip
+                    .origin
+                    .try_cast()
+                    .expect("clip rect too large");
+                if !constants.translation.is_zero() {
+                    constants.flags |= FLAG_TRANSLATE;
+                }
                 graphics.pass.set_push_constants(
                     wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
                     0,
-                    bytemuck::bytes_of(&command.constants),
+                    bytemuck::bytes_of(&constants),
                 );
                 graphics.pass.draw_indexed(command.indices.clone(), 0, 0..1);
             }

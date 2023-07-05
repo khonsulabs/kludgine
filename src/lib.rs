@@ -51,6 +51,7 @@ pub struct Kludgine {
     binding_layout: wgpu::BindGroupLayout,
     sampler: wgpu::Sampler,
     uniforms: Buffer<Uniforms>,
+    size: Size<UPx>,
     #[cfg(feature = "cosmic-text")]
     text: TextSystem,
 }
@@ -119,13 +120,15 @@ impl Kludgine {
             pipeline,
             _shader: shader,
             sampler,
+            size: initial_size,
 
             uniforms,
             binding_layout,
         }
     }
 
-    pub fn resize(&self, new_size: Size<UPx>, new_scale: f32, queue: &wgpu::Queue) {
+    pub fn resize(&mut self, new_size: Size<UPx>, new_scale: f32, queue: &wgpu::Queue) {
+        self.size = new_size;
         self.uniforms
             .update(0, &[Uniforms::new(new_size, new_scale)], queue);
     }
@@ -264,19 +267,21 @@ pub struct RenderingGraphics<'gfx, 'pass> {
     kludgine: &'pass Kludgine,
     device: &'gfx wgpu::Device,
     queue: &'gfx wgpu::Queue,
+    clip: Rect<UPx>,
     pipeline_is_active: bool,
 }
 
 impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
     pub fn new(
         pass: &'gfx mut wgpu::RenderPass<'pass>,
-        state: &'pass Kludgine,
+        kludgine: &'pass Kludgine,
         device: &'gfx wgpu::Device,
         queue: &'gfx wgpu::Queue,
     ) -> Self {
         Self {
             pass,
-            kludgine: state,
+            clip: kludgine.size.into(),
+            kludgine,
             device,
             queue,
             pipeline_is_active: false,
@@ -308,6 +313,56 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
             self.pass.set_pipeline(&self.kludgine.pipeline);
             true
         }
+    }
+
+    pub fn clipped_to(&mut self, clip: Rect<UPx>) -> ClipGuard<'_, 'gfx, 'pass> {
+        let previous_clip = self.clip;
+        self.clip = previous_clip.intersection(&clip).unwrap_or_default();
+        self.pass.set_scissor_rect(
+            self.clip.origin.x.0,
+            self.clip.origin.y.0,
+            self.clip.size.width.0,
+            self.clip.size.height.0,
+        );
+        ClipGuard {
+            previous_clip,
+            graphics: self,
+        }
+    }
+
+    #[must_use]
+    pub fn size(&self) -> Size<UPx> {
+        self.clip.size
+    }
+}
+
+pub struct ClipGuard<'clip, 'gfx, 'pass> {
+    previous_clip: Rect<UPx>,
+    graphics: &'clip mut RenderingGraphics<'gfx, 'pass>,
+}
+
+impl<'clip, 'gfx, 'pass> Drop for ClipGuard<'clip, 'gfx, 'pass> {
+    fn drop(&mut self) {
+        self.graphics.clip = self.previous_clip;
+        self.graphics.pass.set_scissor_rect(
+            self.previous_clip.origin.x.0,
+            self.previous_clip.origin.y.0,
+            self.previous_clip.size.width.0,
+            self.previous_clip.size.height.0,
+        );
+    }
+}
+impl<'gfx, 'pass> Deref for ClipGuard<'_, 'gfx, 'pass> {
+    type Target = RenderingGraphics<'gfx, 'pass>;
+
+    fn deref(&self) -> &Self::Target {
+        self.graphics
+    }
+}
+
+impl<'gfx, 'pass> DerefMut for ClipGuard<'_, 'gfx, 'pass> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.graphics
     }
 }
 
