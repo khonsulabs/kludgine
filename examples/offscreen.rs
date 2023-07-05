@@ -4,7 +4,7 @@ use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::Px;
 use kludgine::figures::{Point, Rect, Size};
 use kludgine::shapes::Shape;
-use kludgine::{Color, Graphics, Kludgine, PreparedGraphic, Texture, TextureRenderer};
+use kludgine::{Color, Graphics, Kludgine, PreparedGraphic, RenderingGraphics, Texture};
 
 fn main() {
     Test::run();
@@ -19,7 +19,7 @@ impl WindowBehavior for Test {
 
     fn initialize(
         _window: Window<'_>,
-        graphics: &mut kludgine::Graphics<'_>,
+        graphics: &mut Graphics<'_>,
         _context: Self::Context,
     ) -> Self {
         let prerendered = Texture::new(
@@ -35,10 +35,9 @@ impl WindowBehavior for Test {
             Size::new(512, 512),
             1.0,
         );
-
-        let mut renderer = TextureRenderer::new(graphics.device());
+        let mut frame = kludgine.next_frame();
         // Prepare the graphics.
-        let preparing = Graphics::new(&mut kludgine, graphics.device(), graphics.queue());
+        let preparing = frame.prepare(graphics.device(), graphics.queue());
         let square_size = (512f32.powf(2.) / 2.).sqrt() as i32;
         let outer_square = Shape::filled_rect(
             Rect::<Px>::new(
@@ -50,17 +49,16 @@ impl WindowBehavior for Test {
         .prepare(&preparing);
 
         // Render the texture
-        let mut rendering = renderer.render(
-            &kludgine,
-            graphics.device(),
-            graphics.queue(),
+        let mut rendering = frame.render_into(
             &prerendered,
             wgpu::LoadOp::Clear(Color::WHITE),
+            graphics.device(),
+            graphics.queue(),
         );
         outer_square.render(Point::new(256, 256), None, Some(PI / 4.), &mut rendering);
         drop(rendering);
 
-        renderer.finish(graphics.queue());
+        frame.finish(graphics.queue());
 
         Self {
             prepared: prerendered.prepare(Size::new(400, 400).into(), graphics),
@@ -70,7 +68,7 @@ impl WindowBehavior for Test {
     fn render<'pass>(
         &'pass mut self,
         _window: Window<'_>,
-        graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
+        graphics: &mut RenderingGraphics<'_, 'pass>,
     ) -> bool {
         self.prepared.render(Point::default(), None, None, graphics);
 

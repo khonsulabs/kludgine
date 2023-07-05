@@ -23,6 +23,7 @@ use figures::traits::FloatConversion;
 use figures::units::UPx;
 use figures::{Point, Rect, Size};
 use wgpu::util::DeviceExt;
+use wgpu::SubmissionIndex;
 
 use crate::buffer::Buffer;
 use crate::pipeline::{Uniforms, Vertex};
@@ -133,9 +134,84 @@ impl Kludgine {
             .update(0, &[Uniforms::new(new_size, new_scale)], queue);
     }
 
-    pub fn next_frame(&mut self) {
+    pub fn next_frame(&mut self) -> Frame<'_> {
         #[cfg(feature = "cosmic-text")]
         self.text.new_frame();
+        Frame {
+            kludgine: self,
+            commands: None,
+        }
+    }
+}
+
+pub struct Frame<'gfx> {
+    kludgine: &'gfx mut Kludgine,
+    commands: Option<wgpu::CommandEncoder>,
+}
+
+impl Frame<'_> {
+    pub fn prepare<'gfx>(
+        &'gfx mut self,
+        device: &'gfx wgpu::Device,
+        queue: &'gfx wgpu::Queue,
+    ) -> Graphics<'gfx> {
+        Graphics::new(self.kludgine, device, queue)
+    }
+
+    #[must_use]
+    pub fn render<'gfx, 'pass>(
+        &'pass mut self,
+        pass: &wgpu::RenderPassDescriptor<'pass, '_>,
+        device: &'gfx wgpu::Device,
+        queue: &'gfx wgpu::Queue,
+    ) -> RenderingGraphics<'gfx, 'pass> {
+        if self.commands.is_none() {
+            self.commands =
+                Some(device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default()));
+        }
+        RenderingGraphics::new(
+            self.commands
+                .as_mut()
+                .expect("initialized above")
+                .begin_render_pass(pass),
+            self.kludgine,
+            device,
+            queue,
+        )
+    }
+
+    pub fn render_into<'gfx, 'pass>(
+        &'pass mut self,
+        texture: &'pass Texture,
+        load_op: wgpu::LoadOp<Color>,
+        device: &'gfx wgpu::Device,
+        queue: &'gfx wgpu::Queue,
+    ) -> RenderingGraphics<'gfx, 'pass> {
+        self.render(
+            &wgpu::RenderPassDescriptor {
+                label: None,
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &texture.view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: match load_op {
+                            wgpu::LoadOp::Clear(color) => wgpu::LoadOp::Clear(color.into()),
+                            wgpu::LoadOp::Load => wgpu::LoadOp::Load,
+                        },
+                        store: true,
+                    },
+                })],
+                depth_stencil_attachment: None,
+            },
+            device,
+            queue,
+        )
+    }
+
+    #[allow(clippy::must_use_candidate)]
+    pub fn finish(self, queue: &wgpu::Queue) -> Option<SubmissionIndex> {
+        let commands = self.commands?;
+        Some(queue.submit([commands.finish()]))
     }
 }
 
@@ -272,7 +348,7 @@ pub struct RenderingGraphics<'gfx, 'pass> {
 }
 
 impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
-    pub fn new(
+    fn new(
         pass: wgpu::RenderPass<'pass>,
         kludgine: &'pass Kludgine,
         device: &'gfx wgpu::Device,
@@ -1000,43 +1076,6 @@ impl sealed::TextureSource for Texture {
     fn is_mask(&self) -> bool {
         // TODO this should be a flag on the texture.
         self.wgpu.format() == wgpu::TextureFormat::R8Unorm
-    }
-}
-
-pub struct TextureRenderer {
-    commands: Option<wgpu::CommandEncoder>,
-}
-
-impl TextureRenderer {
-    #[must_use]
-    pub fn new(device: &wgpu::Device) -> Self {
-        Self {
-            commands: Some(
-                device.create_command_encoder(&wgpu::CommandEncoderDescriptor::default()),
-            ),
-        }
-    }
-
-    pub fn render<'gfx, 'pass>(
-        &'pass mut self,
-        kludgine: &'pass Kludgine,
-        device: &'gfx wgpu::Device,
-        queue: &'gfx wgpu::Queue,
-        texture: &'pass Texture,
-        load_op: wgpu::LoadOp<Color>,
-    ) -> RenderingGraphics<'gfx, 'pass> {
-        let pass = texture.create_render_pass(
-            self.commands
-                .as_mut()
-                .expect("texture renderer already finished"),
-            load_op,
-        );
-        RenderingGraphics::new(pass, kludgine, device, queue)
-    }
-
-    pub fn finish(&mut self, queue: &wgpu::Queue) -> Option<wgpu::SubmissionIndex> {
-        let commands = self.commands.take()?.finish();
-        Some(queue.submit([commands]))
     }
 }
 

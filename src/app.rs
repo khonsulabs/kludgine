@@ -215,7 +215,7 @@ where
 
     #[allow(unsafe_code)]
     fn redraw(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
-        let frame = loop {
+        let surface = loop {
             match self.surface.get_current_texture() {
                 Ok(frame) => break frame,
                 Err(other) => match other {
@@ -241,23 +241,20 @@ where
             }
         };
 
-        self.kludgine.next_frame();
+        let mut frame = self.kludgine.next_frame();
         let render_start = Instant::now();
         let elapsed = render_start - self.last_render;
 
         self.behavior.prepare(
             Window::new(window, elapsed),
-            &mut Graphics::new(&mut self.kludgine, &self.device, &self.queue),
+            &mut frame.prepare(&self.device, &self.queue),
         );
 
-        let view = frame
+        let view = surface
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
-        let mut gfx = RenderingGraphics::new(
-            encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        let mut gfx = frame.render(
+            &wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: &view,
@@ -270,15 +267,14 @@ where
                     },
                 })],
                 depth_stencil_attachment: None,
-            }),
-            &self.kludgine,
+            },
             &self.device,
             &self.queue,
         );
         self.behavior.render(Window::new(window, elapsed), &mut gfx);
         drop(gfx);
-        self.queue.submit(Some(encoder.finish()));
-        frame.present();
+        frame.finish(&self.queue);
+        surface.present();
         self.last_render = render_start;
     }
 
