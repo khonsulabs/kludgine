@@ -29,7 +29,7 @@ fn main() {
             "Hello, World!",
             TextOrigin::Center,
             Point::<Lp>::new(RED_SQUARE_SIZE / 2, RED_SQUARE_SIZE / 2),
-            None,
+            Some(angle),
             None,
         );
         true

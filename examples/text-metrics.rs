@@ -13,12 +13,12 @@ fn main() {
 
         let inset = Point::new(Lp::cm(1), Lp::cm(1));
 
-        let metrics = renderer.measure_text::<Lp>("Kludgine");
+        let measured = renderer.measure_text::<Lp>("Kludgine", Color::WHITE);
         renderer.draw_shape(
             &Shape::filled_rect(
                 Rect::new(
-                    Point::new(metrics.left, line_height - metrics.ascent),
-                    Size::new(metrics.width - metrics.left, metrics.ascent),
+                    Point::new(measured.left, line_height - measured.ascent),
+                    Size::new(measured.size.width - measured.left, measured.ascent),
                 ),
                 Color::new(0, 40, 0, 255),
             ),
@@ -29,8 +29,8 @@ fn main() {
         renderer.draw_shape(
             &Shape::filled_rect(
                 Rect::new(
-                    Point::new(metrics.left, line_height),
-                    Size::new(metrics.width - metrics.left, -metrics.descent),
+                    Point::new(measured.left, line_height),
+                    Size::new(measured.size.width - measured.left, -measured.descent),
                 ),
                 Color::new(0, 0, 40, 255),
             ),
@@ -39,7 +39,7 @@ fn main() {
             None,
         );
 
-        renderer.draw_text("Kludgine", TextOrigin::TopLeft, inset, None, None);
+        renderer.draw_measured_text(&measured, TextOrigin::TopLeft, inset, None, None);
 
         true
     })

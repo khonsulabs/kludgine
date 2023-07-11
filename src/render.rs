@@ -12,7 +12,6 @@ use crate::pipeline::{
     FLAG_TRANSLATE,
 };
 use crate::shapes::Shape;
-use crate::text::{CachedGlyphHandle, PixelAlignedCacheKey};
 use crate::{
     sealed, Color, Graphics, RenderingGraphics, ShapeSource, Texture, TextureBlit, TextureSource,
     VertexCollection,
@@ -233,8 +232,10 @@ impl Renderer<'_, '_> {
 #[cfg(feature = "cosmic-text")]
 mod text {
     use std::collections::hash_map;
-    use std::ops::Sub;
+    use std::ops::{Add, Neg, Sub};
+    use std::sync::Arc;
 
+    use ahash::AHashMap;
     use figures::traits::ScreenScale;
     use figures::units::{Lp, Px};
 
@@ -242,18 +243,22 @@ mod text {
         Angle, Color, Command, IntoSigned, IsZero, Point, PushConstants, Renderer, Vertex,
         FLAG_MASKED, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED, FLAG_TRANSLATE,
     };
-    use crate::sealed::{ShaderScalableSealed, ShapeSource, TextureSource};
-    use crate::text::{map_each_glyph, measure_text, MeasuredText, TextOrigin};
+    use crate::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
+    use crate::text::{map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, TextOrigin};
+    use crate::{TextureBlit, VertexCollection};
 
     impl<'gfx> Renderer<'_, 'gfx> {
         /// Measures `text` using the current text settings.
-        pub fn measure_text<Unit>(&mut self, text: &str) -> MeasuredText<Unit>
+        ///
+        /// `default_color` does not affect the
+        pub fn measure_text<Unit>(&mut self, text: &str, default_color: Color) -> MeasuredText<Unit>
         where
             Unit: ScreenScale<Px = Px, Lp = Lp> + Sub<Output = Unit> + Copy + std::fmt::Debug,
         {
             self.update_scratch_buffer(text);
-            measure_text(
+            measure_text::<Unit, true>(
                 None,
+                default_color,
                 self.graphics.kludgine,
                 self.graphics.queue,
                 &mut self.data.glyphs,
@@ -310,6 +315,53 @@ mod text {
             );
         }
 
+        /// Prepares the text layout contained in `buffer` to be rendered.
+        ///
+        /// When the text in `buffer` has no color defined, `default_color` will be
+        /// used.
+        ///
+        /// `origin` allows controlling how the text will be drawn relative to the
+        /// coordinate provided in [`render()`](crate::PreparedGraphic::render).
+        pub fn draw_measured_text<Unit>(
+            &mut self,
+            text: &MeasuredText<Unit>,
+            origin: TextOrigin<Unit>,
+            translate: Point<Unit>,
+            rotation: Option<Angle>,
+            scale: Option<f32>,
+        ) where
+            Unit: ScreenScale<Px = Px, Lp = Lp>
+                + Copy
+                + Neg<Output = Unit>
+                + Sub<Output = Unit>
+                + Add<Output = Unit>
+                + std::fmt::Debug,
+        {
+            let scaling_factor = self.scale;
+            let translation = translate.into_px(scaling_factor).cast();
+            let origin = match origin {
+                TextOrigin::TopLeft => Point::default(),
+                TextOrigin::Center => Point::from(text.size).into_px(scaling_factor).cast() / 2,
+                TextOrigin::FirstBaseline => Point::new(Px(0), text.ascent.into_px(scaling_factor)),
+                TextOrigin::Custom(offset) => offset.into_px(scaling_factor).cast(),
+            };
+            for (blit, cached, _is_first_line) in &text.glyphs {
+                let mut blit = *blit;
+                blit.translate_by(-origin);
+                render_one_glyph(
+                    translation,
+                    rotation,
+                    scale,
+                    blit,
+                    cached,
+                    &mut self.data.vertices,
+                    &mut self.data.indices,
+                    &mut self.data.textures,
+                    &mut self.data.commands,
+                );
+            }
+        }
+
         fn draw_text_buffer_inner<Unit>(
             &mut self,
             buffer: Option<&cosmic_text::Buffer>,
@@ -331,65 +383,86 @@ mod text {
                 self.graphics.kludgine,
                 queue,
                 &mut self.data.glyphs,
-                |blit, cached| {
-                    let mut corners = [0; 4];
-                    for (&corner, index) in blit.vertices().iter().zip(corners.iter_mut()) {
-                        *index = self.data.vertices.get_or_insert(Vertex {
-                            location: corner.location.into_signed().cast(),
-                            texture: corner.texture,
-                            color: corner.color,
-                        });
-                    }
-                    let start_index =
-                        u32::try_from(self.data.indices.len()).expect("too many drawn indices");
-                    for &index in blit.indices() {
-                        self.data.indices.push(corners[usize::from(index)]);
-                    }
-                    let mut flags = Px::flags() | FLAG_TEXTURED;
-                    if let hash_map::Entry::Vacant(vacant) =
-                        self.data.textures.entry(cached.texture.id())
-                    {
-                        vacant.insert(cached.texture.bind_group());
-                    }
-
-                    if cached.is_mask {
-                        flags |= FLAG_MASKED;
-                    }
-                    let scale = scale.map_or(1., |scale| {
-                        flags |= FLAG_SCALE;
-                        scale
-                    });
-                    let rotation = rotation.map_or(0., |scale| {
-                        flags |= FLAG_ROTATE;
-                        scale.into_raidans_f()
-                    });
-                    if !translation.is_zero() {
-                        flags |= FLAG_TRANSLATE;
-                    }
-
-                    let constants = PushConstants {
-                        flags,
-                        scale,
-                        rotation,
+                |blit, cached, _is_first_line| {
+                    render_one_glyph(
                         translation,
-                    };
-                    let end_index =
-                        u32::try_from(self.data.indices.len()).expect("too many drawn indices");
-                    match self.data.commands.last_mut() {
-                        Some(last_command) if last_command.constants == constants => {
-                            // The last command was from the same texture source, we can stend the previous range to the new end.
-                            last_command.indices.end = end_index;
-                        }
-                        _ => {
-                            self.data.commands.push(Command {
-                                indices: start_index..end_index,
-                                constants,
-                                texture: Some(cached.texture.id()),
-                            });
-                        }
-                    }
+                        rotation,
+                        scale,
+                        blit,
+                        cached,
+                        &mut self.data.vertices,
+                        &mut self.data.indices,
+                        &mut self.data.textures,
+                        &mut self.data.commands,
+                    );
                 },
             );
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn render_one_glyph(
+        translation: Point<i32>,
+        rotation: Option<Angle>,
+        scale: Option<f32>,
+        blit: TextureBlit<Px>,
+        cached: &CachedGlyphHandle,
+        vertices: &mut VertexCollection<i32>,
+        indices: &mut Vec<u16>,
+        textures: &mut AHashMap<TextureId, Arc<wgpu::BindGroup>>,
+        commands: &mut Vec<Command>,
+    ) {
+        let mut corners = [0; 4];
+        for (&corner, index) in blit.vertices().iter().zip(corners.iter_mut()) {
+            *index = vertices.get_or_insert(Vertex {
+                location: corner.location.into_signed().cast(),
+                texture: corner.texture,
+                color: corner.color,
+            });
+        }
+        let start_index = u32::try_from(indices.len()).expect("too many drawn indices");
+        for &index in blit.indices() {
+            indices.push(corners[usize::from(index)]);
+        }
+        let mut flags = Px::flags() | FLAG_TEXTURED;
+        if let hash_map::Entry::Vacant(vacant) = textures.entry(cached.texture.id()) {
+            vacant.insert(cached.texture.bind_group());
+        }
+
+        if cached.is_mask {
+            flags |= FLAG_MASKED;
+        }
+        let scale = scale.map_or(1., |scale| {
+            flags |= FLAG_SCALE;
+            scale
+        });
+        let rotation = rotation.map_or(0., |scale| {
+            flags |= FLAG_ROTATE;
+            scale.into_raidans_f()
+        });
+        if !translation.is_zero() {
+            flags |= FLAG_TRANSLATE;
+        }
+
+        let constants = PushConstants {
+            flags,
+            scale,
+            rotation,
+            translation,
+        };
+        let end_index = u32::try_from(indices.len()).expect("too many drawn indices");
+        match commands.last_mut() {
+            Some(last_command) if last_command.constants == constants => {
+                // The last command was from the same texture source, we can stend the previous range to the new end.
+                last_command.indices.end = end_index;
+            }
+            _ => {
+                commands.push(Command {
+                    indices: start_index..end_index,
+                    constants,
+                    texture: Some(cached.texture.id()),
+                });
+            }
         }
     }
 }
@@ -433,7 +506,8 @@ pub struct Rendering {
     indices: Vec<u16>,
     textures: AHashMap<sealed::TextureId, Arc<wgpu::BindGroup>>,
     commands: Vec<Command>,
-    glyphs: AHashMap<PixelAlignedCacheKey, CachedGlyphHandle>,
+    #[cfg(feature = "cosmic-text")]
+    glyphs: AHashMap<crate::text::PixelAlignedCacheKey, crate::text::CachedGlyphHandle>,
 }
 
 #[derive(Debug)]
@@ -456,6 +530,7 @@ impl Rendering {
         self.textures.clear();
         self.vertices.vertex_index_by_id.clear();
         self.vertices.vertices.clear();
+        #[cfg(feature = "cosmic-text")]
         self.glyphs.clear();
         Renderer {
             graphics,

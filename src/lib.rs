@@ -8,7 +8,7 @@
 use std::borrow::Cow;
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{self, Hash};
-use std::ops::{Add, Deref, DerefMut, Div, Neg};
+use std::ops::{Add, AddAssign, Deref, DerefMut, Div, Neg};
 use std::sync::Arc;
 
 use ahash::AHashMap;
@@ -24,7 +24,6 @@ use wgpu::util::DeviceExt;
 
 use crate::buffer::Buffer;
 use crate::pipeline::{Uniforms, Vertex};
-use crate::text::TextSystem;
 
 /// Application and Windowing Support.
 #[cfg(feature = "app")]
@@ -73,12 +72,13 @@ pub struct Kludgine {
     size: Size<UPx>,
     scale: Fraction,
     #[cfg(feature = "cosmic-text")]
-    text: TextSystem,
+    text: text::TextSystem,
 }
 
 impl Kludgine {
     /// Returns a new instance of Kludgine with the provided parameters.
     #[must_use]
+    #[cfg_attr(not(feature = "cosmic-text"), allow(unused_variables))]
     pub fn new(
         device: &wgpu::Device,
         queue: &wgpu::Queue,
@@ -130,7 +130,7 @@ impl Kludgine {
 
         Self {
             #[cfg(feature = "cosmic-text")]
-            text: TextSystem::new(&ProtoGraphics {
+            text: text::TextSystem::new(&ProtoGraphics {
                 device,
                 queue,
                 binding_layout: &binding_layout,
@@ -178,13 +178,6 @@ impl Kludgine {
         }
     }
 
-    /// Returns a mutable reference to the [`cosmic_text::FontSystem`] used when
-    /// rendering text.
-    #[cfg(feature = "cosmic-text")]
-    pub fn font_system(&mut self) -> &mut cosmic_text::FontSystem {
-        &mut self.text.fonts
-    }
-
     /// Returns the currently configured size to render.
     pub const fn size(&self) -> Size<UPx> {
         self.size
@@ -194,47 +187,6 @@ impl Kludgine {
     /// rendering to.
     pub const fn scale(&self) -> Fraction {
         self.scale
-    }
-
-    #[cfg(feature = "cosmic-text")]
-    pub(crate) fn update_scratch_buffer(&mut self, text: &str) {
-        self.text.update_scratch_buffer(text, self.scale);
-    }
-
-    /// Sets the font size.
-    #[cfg(feature = "cosmic-text")]
-    pub fn set_font_size(
-        &mut self,
-        size: impl figures::traits::ScreenScale<Lp = figures::units::Lp>,
-    ) {
-        self.text.set_font_size(
-            figures::traits::ScreenScale::into_lp(size, self.scale),
-            self.scale,
-        );
-    }
-
-    /// Returns the current font size.
-    #[cfg(feature = "cosmic-text")]
-    pub fn font_size(&self) -> figures::units::Lp {
-        self.text.font_size
-    }
-
-    /// Sets the line height for multi-line layout.
-    #[cfg(feature = "cosmic-text")]
-    pub fn set_line_height(
-        &mut self,
-        size: impl figures::traits::ScreenScale<Lp = figures::units::Lp>,
-    ) {
-        self.text.set_line_height(
-            figures::traits::ScreenScale::into_lp(size, self.scale),
-            self.scale,
-        );
-    }
-
-    /// Returns the current line height.
-    #[cfg(feature = "cosmic-text")]
-    pub fn line_height(&self) -> figures::units::Lp {
-        self.text.line_height
     }
 }
 
@@ -1342,11 +1294,12 @@ where
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct TextureBlit<Unit> {
     verticies: [Vertex<Unit>; 4],
 }
 
+#[cfg_attr(not(feature = "cosmic-text"), allow(dead_code))]
 impl<Unit> TextureBlit<Unit> {
     pub fn new(source: Rect<UPx>, dest: Rect<Unit>, color: Color) -> Self
     where
@@ -1394,5 +1347,14 @@ impl<Unit> TextureBlit<Unit> {
 
     pub const fn bottom_right(&self) -> &Vertex<Unit> {
         &self.verticies[3]
+    }
+
+    pub fn translate_by(&mut self, offset: Point<Unit>)
+    where
+        Unit: AddAssign + Copy,
+    {
+        for vertex in &mut self.verticies {
+            vertex.location += offset;
+        }
     }
 }

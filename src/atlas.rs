@@ -205,6 +205,12 @@ impl TextureCollection {
         let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
         data.texture.prepare(dest, graphics)
     }
+
+    /// Returns the format of the texture backing this collection.
+    #[must_use]
+    pub const fn format(&self) -> wgpu::TextureFormat {
+        self.format
+    }
 }
 
 impl TextureSource for TextureCollection {}

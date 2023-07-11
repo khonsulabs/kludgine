@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use ahash::AHashMap;
 use cosmic_text::{fontdb, Attrs, AttrsOwned, SwashContent};
-use figures::traits::{FloatConversion, ScreenScale};
+use figures::traits::ScreenScale;
 use figures::units::{Lp, Px};
 use figures::utils::lossy_f32_to_i32;
 use figures::{Fraction, Point, Rect, Size};
@@ -17,6 +17,107 @@ use crate::{
     CollectedTexture, Color, Graphics, Kludgine, PreparedGraphic, ProtoGraphics, TextureBlit,
     TextureCollection, VertexCollection,
 };
+
+impl Kludgine {
+    /// Returns a mutable reference to the [`cosmic_text::FontSystem`] used when
+    /// rendering text.
+    pub fn font_system(&mut self) -> &mut cosmic_text::FontSystem {
+        &mut self.text.fonts
+    }
+
+    pub(crate) fn update_scratch_buffer(&mut self, text: &str) {
+        self.text.update_scratch_buffer(text, self.scale);
+    }
+
+    /// Sets the font size.
+    pub fn set_font_size(
+        &mut self,
+        size: impl figures::traits::ScreenScale<Lp = figures::units::Lp>,
+    ) {
+        self.text.set_font_size(
+            figures::traits::ScreenScale::into_lp(size, self.scale),
+            self.scale,
+        );
+    }
+
+    /// Returns the current font size.
+    pub fn font_size(&self) -> figures::units::Lp {
+        self.text.font_size
+    }
+
+    /// Sets the line height for multi-line layout.
+    pub fn set_line_height(
+        &mut self,
+        size: impl figures::traits::ScreenScale<Lp = figures::units::Lp>,
+    ) {
+        self.text.set_line_height(
+            figures::traits::ScreenScale::into_lp(size, self.scale),
+            self.scale,
+        );
+    }
+
+    /// Returns the current line height.
+    pub fn line_height(&self) -> figures::units::Lp {
+        self.text.line_height
+    }
+
+    /// Sets the current font family.
+    pub fn set_font_family(&mut self, family: cosmic_text::FamilyOwned) {
+        self.text.attrs.family_owned = family;
+    }
+
+    /// Returns the current font family.
+    pub fn font_family(&self) -> cosmic_text::Family<'_> {
+        self.text.attrs.family_owned.as_family()
+    }
+
+    /// Sets the current font style.
+    pub fn set_font_style(&mut self, style: cosmic_text::Style) {
+        self.text.attrs.style = style;
+    }
+
+    /// Returns the current font style.
+    pub fn font_style(&self) -> cosmic_text::Style {
+        self.text.attrs.style
+    }
+
+    /// Sets the current font weight.
+    pub fn set_font_weight(&mut self, weight: cosmic_text::Weight) {
+        self.text.attrs.weight = weight;
+    }
+
+    /// Returns the current font weight.
+    pub fn font_weight(&self) -> cosmic_text::Weight {
+        self.text.attrs.weight
+    }
+
+    /// Sets the current text stretching.
+    pub fn set_text_stretch(&mut self, width: cosmic_text::Stretch) {
+        self.text.attrs.stretch = width;
+    }
+
+    /// Returns the current text stretch.
+    pub fn text_stretch(&self) -> cosmic_text::Stretch {
+        self.text.attrs.stretch
+    }
+
+    /// Returns the current text attributes.
+    pub fn text_attrs(&self) -> cosmic_text::Attrs<'_> {
+        self.text.attrs.as_attrs()
+    }
+
+    /// Sets the current text attributes.
+    pub fn set_text_attributes(&mut self, attrs: Attrs<'_>) {
+        self.text.attrs = AttrsOwned::new(attrs);
+    }
+
+    /// Resets all of the text related properties to their default settings.
+    pub fn reset_text_attributes(&mut self) {
+        self.set_text_attributes(Attrs::new());
+        self.text.font_size = DEFAULT_FONT_SIZE;
+        self.text.line_height = DEFAULT_FONT_SIZE;
+    }
+}
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
 pub(crate) struct PixelAlignedCacheKey {
@@ -50,6 +151,8 @@ pub(crate) struct TextSystem {
     glyphs: GlyphCache,
 }
 
+const DEFAULT_FONT_SIZE: Lp = Lp::points(12);
+
 impl TextSystem {
     pub(crate) fn new(graphics: &ProtoGraphics<'_>) -> Self {
         let fonts = cosmic_text::FontSystem::new();
@@ -68,8 +171,8 @@ impl TextSystem {
             swash_cache: cosmic_text::SwashCache::new(),
             scratch: None,
             fonts,
-            font_size: Lp::points(12),
-            line_height: Lp::points(14),
+            font_size: DEFAULT_FONT_SIZE,
+            line_height: DEFAULT_FONT_SIZE,
             glyphs: GlyphCache::default(),
             attrs: AttrsOwned::new(Attrs::new().color(Color::WHITE.into())),
         }
@@ -190,6 +293,26 @@ impl Debug for CachedGlyphHandle {
     }
 }
 
+impl Clone for CachedGlyphHandle {
+    fn clone(&self) -> Self {
+        let mut data = self
+            .cache
+            .glyphs
+            .lock()
+            .map_or_else(PoisonError::into_inner, |g| g);
+        let cached = data.get_mut(&self.key).expect("cached glyph missing");
+        cached.ref_count += 1;
+        drop(data);
+
+        Self {
+            key: self.key,
+            is_mask: self.is_mask,
+            cache: self.cache.clone(),
+            texture: self.texture.clone(),
+        }
+    }
+}
+
 impl Drop for CachedGlyphHandle {
     fn drop(&mut self) {
         let mut data = self
@@ -228,7 +351,7 @@ impl<'gfx> Graphics<'gfx> {
             self.kludgine,
             self.queue,
             &mut glyphs,
-            |blit, cached| {
+            |blit, cached, _is_first_line| {
                 let mut corners = [0; 4];
                 for (&corner, index) in blit.vertices().iter().zip(corners.iter_mut()) {
                     *index = verticies.get_or_insert(corner);
@@ -273,50 +396,27 @@ pub(crate) fn map_each_glyph(
     kludgine: &mut Kludgine,
     queue: &wgpu::Queue,
     glyphs: &mut AHashMap<PixelAlignedCacheKey, CachedGlyphHandle>,
-    mut map: impl for<'a> FnMut(TextureBlit<Px>, &'a CachedGlyphHandle),
+    mut map: impl for<'a> FnMut(TextureBlit<Px>, &'a CachedGlyphHandle, bool),
 ) {
-    let buffer = buffer.unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"));
-    let line_height = buffer.metrics().line_height;
+    let metrics = buffer
+        .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"))
+        .metrics();
 
+    let line_height_offset = Point::new(0., metrics.line_height);
     let relative_to = match origin {
-        TextOrigin::Custom(point) => point,
+        TextOrigin::Custom(point) => point.cast(),
         TextOrigin::TopLeft => Point::default(),
         TextOrigin::Center => {
-            let (min_x, min_y, max_x, max_y) = buffer
-                .layout_runs()
-                .flat_map(|run| {
-                    run.glyphs.iter().map(move |glyph| {
-                        (
-                            glyph.x,
-                            glyph.x + glyph.w,
-                            run.line_y - line_height,
-                            run.line_y + glyph.y_offset,
-                        )
-                    })
-                })
-                .fold(
-                    (f32::MAX, f32::MAX, 0f32, 0f32),
-                    |(min_x, min_y, max_x, max_y), (run_min_x, run_max_x, run_min_y, run_max_y)| {
-                        (
-                            min_x.min(run_min_x),
-                            min_y.min(run_min_y),
-                            max_x.max(run_max_x),
-                            max_y.max(run_max_y),
-                        )
-                    },
-                );
-            let x = (max_x + min_x) / 2.;
-            let y = (max_y + min_y) / 2.;
-            Point {
-                x: Px::from_float(x),
-                y: Px::from_float(y),
-            }
+            let measured =
+                measure_text::<Px, false>(buffer, default_color, kludgine, queue, glyphs);
+            Point::from(measured.size).cast() / 2.
         }
-        TextOrigin::FirstBaseline => Point::new(Px(0), Px::from_float(buffer.metrics().font_size)),
-    };
+        TextOrigin::FirstBaseline => line_height_offset,
+    } + line_height_offset;
 
+    let buffer = buffer.unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"));
     for run in buffer.layout_runs() {
-        let run_origin = Point::new(0., run.line_y - line_height);
+        let run_origin = Point::new(0., run.line_y) - relative_to;
         for glyph in run.glyphs.iter() {
             let Some(image) = kludgine.text
                 .swash_cache
@@ -366,10 +466,9 @@ pub(crate) fn map_each_glyph(
                     (Point::new(glyph.x, glyph.y_offset) + run_origin).cast::<Px>()
                         + Point::new(
                             image.placement.left,
-                            lossy_f32_to_i32(line_height) - image.placement.top,
+                            lossy_f32_to_i32(metrics.line_height) - image.placement.top,
                         )
-                        .cast()
-                        - relative_to,
+                        .cast(),
                     Size::new(
                         i32::try_from(image.placement.width).expect("width out of range of i32"),
                         i32::try_from(image.placement.height).expect("height out of range of i32"),
@@ -377,7 +476,7 @@ pub(crate) fn map_each_glyph(
                 ),
                 color,
             );
-            map(blit, &cached);
+            map(blit, &cached, run.line_i == 0);
 
             glyphs
                 .entry(glyph.cache_key.into())
@@ -386,8 +485,9 @@ pub(crate) fn map_each_glyph(
     }
 }
 
-pub(crate) fn measure_text<Unit>(
+pub(crate) fn measure_text<Unit, const COLLECT_GLYPHS: bool>(
     buffer: Option<&cosmic_text::Buffer>,
+    color: Color,
     kludgine: &mut Kludgine,
     queue: &wgpu::Queue,
     glyphs: &mut AHashMap<PixelAlignedCacheKey, CachedGlyphHandle>,
@@ -398,25 +498,38 @@ where
     // TODO the returned type should be able to be drawn, so that we don't have to call update_scratch_buffer again.
     let line_height = Unit::from_lp(kludgine.text.line_height, kludgine.scale);
     let mut min = Point::new(Px::MAX, Px::MAX);
+    let mut first_line_max_y = Px::MIN;
     let mut max = Point::new(Px::MIN, Px::MIN);
+    let mut measured_glyphs = Vec::new();
     map_each_glyph(
         buffer,
-        Color::WHITE,
+        color,
         TextOrigin::TopLeft,
         kludgine,
         queue,
         glyphs,
-        |blit, _cached| {
+        |blit, cached, is_first_line| {
             min = min.min(blit.top_left().location);
             max = max.max(blit.bottom_right().location);
+            if is_first_line {
+                first_line_max_y = first_line_max_y.max(blit.bottom_right().location.y);
+            }
+            if COLLECT_GLYPHS {
+                measured_glyphs.push((blit, cached.clone(), is_first_line));
+            }
         },
     );
 
     MeasuredText {
         ascent: line_height - Unit::from_px(min.y, kludgine.scale),
-        descent: line_height - Unit::from_px(max.y, kludgine.scale),
+        descent: line_height - Unit::from_px(first_line_max_y, kludgine.scale),
         left: Unit::from_px(min.x, kludgine.scale),
-        width: Unit::from_px(max.x, kludgine.scale),
+        size: Size {
+            width: Unit::from_px(max.x, kludgine.scale),
+            height: Unit::from_px(max.y, kludgine.scale),
+        },
+        line_height,
+        glyphs: measured_glyphs,
     }
 }
 
@@ -512,7 +625,7 @@ where
 }
 
 /// The dimensions of a measured text block.
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct MeasuredText<Unit> {
     /// The measurement above the baseline of the text.
     pub ascent: Unit,
@@ -520,6 +633,9 @@ pub struct MeasuredText<Unit> {
     pub descent: Unit,
     /// The measurement to the leftmost pixel of the text.
     pub left: Unit,
-    /// The width of the measured text.
-    pub width: Unit,
+    /// The measurement above the baseline of the text.
+    pub line_height: Unit,
+    /// The total size of the measured text, encompassing all lines.
+    pub size: Size<Unit>,
+    pub(crate) glyphs: Vec<(TextureBlit<Px>, CachedGlyphHandle, bool)>,
 }

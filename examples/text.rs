@@ -70,7 +70,7 @@ impl WindowBehavior for Test {
         );
         self.text.buffer_mut().set_metrics(
             graphics.font_system(),
-            Metrics::new(24.0, 32.0).scale(scale.into_f32()),
+            Metrics::new(24.0, 24.0).scale(scale.into_f32()),
         );
         self.text.shape_as_needed(graphics.font_system());
         self.prepared = graphics.prepare_text(self.text.buffer(), Color::WHITE, TextOrigin::Center);
