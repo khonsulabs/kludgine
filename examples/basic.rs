@@ -13,6 +13,7 @@ fn main() {
     kludgine::app::run(move |mut renderer, mut window| {
         window.redraw_in(Duration::from_millis(16));
         angle += Angle::degrees(180) * window.elapsed().as_secs_f32();
+        let shape_center = Point::new(RED_SQUARE_SIZE / 2, RED_SQUARE_SIZE / 2);
         renderer.draw_shape(
             &Shape::filled_rect(
                 Rect::<Lp>::new(
@@ -21,14 +22,14 @@ fn main() {
                 ),
                 Color::RED,
             ),
-            Point::<Lp>::new(RED_SQUARE_SIZE / 2, RED_SQUARE_SIZE / 2),
+            shape_center,
             Some(angle),
             None,
         );
         renderer.draw_text(
             "Hello, World!",
             TextOrigin::Center,
-            Point::<Lp>::new(RED_SQUARE_SIZE / 2, RED_SQUARE_SIZE / 2),
+            shape_center,
             Some(angle),
             None,
         );
