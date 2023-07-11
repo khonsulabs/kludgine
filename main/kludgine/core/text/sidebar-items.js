@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Text"],"mod":["bundled_fonts","prepared"],"struct":["Font"]};

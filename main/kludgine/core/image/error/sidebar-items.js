@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ImageError","ImageFormatHint","LimitErrorKind","ParameterErrorKind","UnsupportedErrorKind"],"struct":["DecodingError","EncodingError","LimitError","ParameterError","UnsupportedError"],"type":["ImageResult"]};

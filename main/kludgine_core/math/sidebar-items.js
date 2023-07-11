@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["ExtentsRect","Figure","Scale","Unknown"],"type":["Angle","Pixels","Point","Rect","Scaled","Size","Vector"]};

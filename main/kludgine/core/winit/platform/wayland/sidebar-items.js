@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Theme"],"trait":["EventLoopBuilderExtWayland","EventLoopWindowTargetExtWayland","MonitorHandleExtWayland","WindowBuilderExtWayland","WindowExtWayland"]};

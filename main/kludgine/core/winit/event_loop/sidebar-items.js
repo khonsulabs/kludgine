@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ControlFlow","DeviceEventFilter"],"struct":["EventLoop","EventLoopBuilder","EventLoopClosed","EventLoopProxy","EventLoopWindowTarget"]};

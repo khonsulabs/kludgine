@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["binding","buffers","canvas","color","device","error","figures","frame","pipeline","prelude","renderable","renderer","sampler","shader","texture","transform","vertex"]};

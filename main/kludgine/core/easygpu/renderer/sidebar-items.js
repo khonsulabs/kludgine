@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Op","PassOp"],"struct":["RenderFrame","Renderer"],"trait":["Draw","RenderPassExt","RenderTarget"]};

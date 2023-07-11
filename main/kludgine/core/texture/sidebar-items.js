@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"macro":["include_texture"],"struct":["Texture"]};

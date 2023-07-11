@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Error"],"macro":["include_aseprite_sprite","include_font","include_texture"],"mod":["easygpu","flume","frame_renderer","image","lazy_static","math","prelude","scene","shape","sprite","text","texture","winit"],"struct":["Color","FrameRenderer"],"trait":["ShutdownCallback"],"type":["Result"]};

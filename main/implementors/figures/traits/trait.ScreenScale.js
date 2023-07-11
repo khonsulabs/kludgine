@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"kludgine":[["impl&lt;Unit&gt; ScreenScale for <a class=\"enum\" href=\"kludgine/text/enum.TextOrigin.html\" title=\"enum kludgine::text::TextOrigin\">TextOrigin</a>&lt;Unit&gt;<span class=\"where fmt-newline\">where\n    Unit: ScreenScale&lt;Px = Px, Lp = Lp&gt;,</span>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

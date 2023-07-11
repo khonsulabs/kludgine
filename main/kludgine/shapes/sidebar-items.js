@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["LineCap","LineJoin","PathEvent"],"struct":["Path","PathBuilder","Shape","StrokeOptions"],"trait":["DefaultStrokeWidth"],"type":["ControlPoint","Endpoint"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["BadIcon","CursorGrabMode","CursorIcon","Fullscreen","ImePurpose","ResizeDirection","Theme","UserAttentionType","WindowLevel"],"struct":["Icon","Window","WindowAttributes","WindowBuilder","WindowButtons","WindowId"]};

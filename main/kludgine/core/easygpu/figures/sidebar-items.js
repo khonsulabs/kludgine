@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Angle","Rect"],"mod":["approx","num_traits"],"struct":["DisplayScale","ExtentsRect","Figure","Pixels","Point","Points","Scale","Scaled","Size","SizedRect","Vector"],"trait":["Approx","Ceil","Displayable","Floor","One","Rectlike","Round","Vectorlike","Zero"]};

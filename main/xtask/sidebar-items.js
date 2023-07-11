@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Args"],"fn":["compile_shaders","main"],"struct":["Config"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"macro":["include_aseprite_sprite","include_font","include_texture"],"struct":["Color","Figure","Font","Scale","SpriteMap","SpriteSheet","SpriteSource","SpriteSourceSublocation"],"trait":["SpriteCollection"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["CloseResponse","Error"],"mod":["event","prelude"],"struct":["RedrawRequester","RedrawStatus","Runtime","SingleWindowApplication","WindowBuilder","WindowHandle"],"trait":["Application","OpenableWindow","Window","WindowCreator"],"type":["Result"]};
+window.SIDEBAR_ITEMS = {"fn":["run"],"struct":["Window"],"trait":["WindowBehavior"]};

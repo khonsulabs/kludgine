@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["kludgine","kludgine_app","kludgine_core","xtask"];
+window.ALL_CRATES = ["kludgine"];

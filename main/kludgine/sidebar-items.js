@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["app","core","prelude","tilemap"],"type":["Result"]};
+window.SIDEBAR_ITEMS = {"enum":["Origin"],"mod":["app","render","shapes","text"],"struct":["ClipGuard","CollectedTexture","Color","Frame","Graphics","Kludgine","PreparedGraphic","RenderingGraphics","Texture","TextureCollection"],"trait":["ShaderScalable","ShapeSource","TextureSource"]};

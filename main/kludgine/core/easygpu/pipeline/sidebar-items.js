@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["BlendFactor","BlendOp"],"struct":["Blending","Pipeline","PipelineCore","PipelineDescription","PipelineLayout","Set"],"trait":["AbstractPipeline"]};

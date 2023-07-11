@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["ScreenTransformation"],"type":["ScreenSpace","WorldSpace"]};

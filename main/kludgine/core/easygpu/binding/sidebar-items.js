@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["BindingType"],"struct":["Binding","BindingGroup","BindingGroupLayout"],"trait":["Bind"]};

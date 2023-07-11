@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Element","SceneEvent"],"struct":["Modifiers","Scene","Target"]};
