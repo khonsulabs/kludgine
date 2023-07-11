@@ -2,12 +2,12 @@ use std::sync::OnceLock;
 use std::time::Duration;
 
 use kludgine::figures::traits::{IntoComponents, ScreenScale};
-use kludgine::figures::units::Dips;
+use kludgine::figures::units::Lp;
 use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::shapes::Shape;
 use kludgine::{Color, Texture};
 
-const RED_SQUARE_SIZE: Dips = Dips::inches(1);
+const RED_SQUARE_SIZE: Lp = Lp::inches(1);
 
 fn main() {
     // This example shows how Kludgine automatically batches drawing calls.
@@ -39,13 +39,13 @@ fn main() {
 
         renderer.draw_shape(
             &Shape::filled_rect(
-                Rect::<Dips>::new(
+                Rect::<Lp>::new(
                     Point::new(-RED_SQUARE_SIZE / 2, -RED_SQUARE_SIZE / 2),
                     Size::new(RED_SQUARE_SIZE, RED_SQUARE_SIZE),
                 ),
                 Color::RED,
             ),
-            (renderer.size().into_dips(renderer.scale()) / 2).to_vec(),
+            (renderer.size().into_lp(renderer.scale()) / 2).to_vec(),
             Some(angle),
             None,
         );

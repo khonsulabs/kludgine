@@ -48,7 +48,7 @@ fn int_scale(value: i32, ratio: Fraction) -> i32 {
 }
 
 fn dips_to_pixels(value: i32, ratio: Fraction) -> i32 {
-    return int_scale(value, ratio) * i32(96) / i32(2540);
+    return (int_scale(value, ratio) * i32(96) + 91439) / i32(182880);
 }
 
 fn int_to_rgba(color: u32) -> vec4<f32> {

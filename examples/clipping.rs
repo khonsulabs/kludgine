@@ -26,12 +26,12 @@ impl WindowBehavior for Test {
         _context: Self::Context,
     ) -> Self {
         let outer_square = Shape::filled_rect(
-            Rect::new(Point::new(-200, -200), Size::new(400, 400)),
+            Rect::new(Point::new(Px(-200), Px(-200)), Size::new(Px(400), Px(400))),
             Color::RED,
         )
         .prepare(graphics);
         let inner_square = Shape::filled_rect(
-            Rect::new(Point::new(-50, -50), Size::new(100, 100)),
+            Rect::new(Point::new(Px(-50), Px(-50)), Size::new(Px(100), Px(100))),
             Color::BLUE,
         )
         .prepare(graphics);

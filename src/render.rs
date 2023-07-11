@@ -236,7 +236,7 @@ mod text {
     use std::ops::Sub;
 
     use figures::traits::ScreenScale;
-    use figures::units::{Dips, Px};
+    use figures::units::{Lp, Px};
 
     use super::{
         Angle, Color, Command, IntoSigned, IsZero, Point, PushConstants, Renderer, Vertex,
@@ -249,7 +249,7 @@ mod text {
         /// Measures `text` using the current text settings.
         pub fn measure_text<Unit>(&mut self, text: &str) -> MeasuredText<Unit>
         where
-            Unit: ScreenScale<Px = Px, Dips = Dips> + Sub<Output = Unit> + Copy,
+            Unit: ScreenScale<Px = Px, Lp = Lp> + Sub<Output = Unit> + Copy + std::fmt::Debug,
         {
             self.update_scratch_buffer(text);
             measure_text(
@@ -269,7 +269,7 @@ mod text {
             rotation: Option<Angle>,
             scale: Option<f32>,
         ) where
-            Unit: ScreenScale<Px = Px, Dips = Dips> + Copy + std::fmt::Debug,
+            Unit: ScreenScale<Px = Px, Lp = Lp> + Copy + std::fmt::Debug,
         {
             self.graphics.kludgine.update_scratch_buffer(text);
             self.draw_text_buffer_inner(
@@ -298,7 +298,7 @@ mod text {
             rotation: Option<Angle>,
             scale: Option<f32>,
         ) where
-            Unit: ScreenScale<Px = Px, Dips = Dips> + Copy + std::fmt::Debug,
+            Unit: ScreenScale<Px = Px, Lp = Lp> + Copy + std::fmt::Debug,
         {
             self.draw_text_buffer_inner(
                 Some(buffer),
@@ -319,7 +319,7 @@ mod text {
             rotation: Option<Angle>,
             scale: Option<f32>,
         ) where
-            Unit: ScreenScale<Px = Px, Dips = Dips> + Copy + std::fmt::Debug,
+            Unit: ScreenScale<Px = Px, Lp = Lp> + Copy + std::fmt::Debug,
         {
             let queue = self.queue;
             let scaling_factor = self.scale;

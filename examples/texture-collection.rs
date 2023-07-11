@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::traits::ScreenScale;
-use kludgine::figures::units::{Dips, Px};
+use kludgine::figures::units::{Lp, Px};
 use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::{Color, PreparedGraphic, TextureCollection};
 
@@ -12,8 +12,8 @@ fn main() {
 
 struct Test {
     atlas: PreparedGraphic<Px>,
-    k: PreparedGraphic<Dips>,
-    ferris: PreparedGraphic<Dips>,
+    k: PreparedGraphic<Lp>,
+    ferris: PreparedGraphic<Lp>,
     angle: Angle,
 }
 
@@ -33,8 +33,8 @@ impl WindowBehavior for Test {
         let k = textures.push_image(&image::open("./examples/k.png").unwrap(), graphics);
         let k = k.prepare(
             Rect::new(
-                Point::new(-Dips::inches(1) / 2, -Dips::inches(1) / 2),
-                Size::new(Dips::inches(1), Dips::inches(1)),
+                Point::new(-Lp::inches(1) / 2, -Lp::inches(1) / 2),
+                Size::new(Lp::inches(1), Lp::inches(1)),
             ),
             graphics,
         );
@@ -44,8 +44,8 @@ impl WindowBehavior for Test {
         );
         let ferris = ferris.prepare(
             Rect::new(
-                Point::new(-Dips::inches(1) / 2, -Dips::inches(1) / 2),
-                Size::new(Dips::inches(1), Dips::inches(1) / 1.5),
+                Point::new(-Lp::inches(1) / 2, -Lp::inches(1) / 2),
+                Size::new(Lp::inches(1), Lp::inches(1) / 1.5),
             ),
             graphics,
         );
@@ -67,19 +67,19 @@ impl WindowBehavior for Test {
         window.redraw_in(Duration::from_millis(16));
         self.angle += Angle::degrees(180) * window.elapsed();
         self.k.render(
-            Point::new(Dips::inches(1), Dips::inches(1)),
+            Point::new(Lp::inches(1), Lp::inches(1)),
             None,
             Some(self.angle),
             graphics,
         );
         self.ferris.render(
-            Point::new(Dips::inches(1) * 2, Dips::inches(1)),
+            Point::new(Lp::inches(1) * 2, Lp::inches(1)),
             None,
             Some(-self.angle),
             graphics,
         );
         self.atlas.render(
-            Point::new(0, graphics.size().height.into_px(graphics.scale()).0 - 256),
+            Point::new(0, graphics.size().height.into_px(graphics.scale()).0 - 256).cast(),
             None,
             None,
             graphics,

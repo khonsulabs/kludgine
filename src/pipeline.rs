@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use bytemuck::{Pod, Zeroable};
 use figures::traits::{IntoSigned, IsZero};
-use figures::units::{Dips, Px, UPx};
+use figures::units::{Lp, Px, UPx};
 use figures::{Angle, Fraction, Point, Size};
 
 use crate::buffer::Buffer;
@@ -58,7 +58,7 @@ impl From<Vertex<Px>> for Vertex<i32> {
 
 #[test]
 fn vertex_align() {
-    assert_eq!(std::mem::size_of::<Vertex<Dips>>(), 20);
+    assert_eq!(std::mem::size_of::<Vertex<Lp>>(), 20);
 }
 
 pub(crate) const FLAG_DIPS: u32 = 1 << 0;
@@ -164,7 +164,7 @@ pub trait ShaderScalable: sealed::ShaderScalableSealed {}
 
 impl ShaderScalable for Px {}
 
-impl ShaderScalable for Dips {}
+impl ShaderScalable for Lp {}
 
 impl ShaderScalable for UPx {}
 
@@ -180,7 +180,7 @@ impl sealed::ShaderScalableSealed for Px {
     }
 }
 
-impl sealed::ShaderScalableSealed for Dips {
+impl sealed::ShaderScalableSealed for Lp {
     fn flags() -> u32 {
         FLAG_DIPS
     }
@@ -321,7 +321,7 @@ pub fn new(
             module: shader,
             entry_point: "vertex",
             buffers: &[wgpu::VertexBufferLayout {
-                array_stride: size_of::<Vertex<Dips>>() as u64,
+                array_stride: size_of::<Vertex<Lp>>() as u64,
                 step_mode: wgpu::VertexStepMode::Vertex,
                 attributes: &[
                     wgpu::VertexAttribute {

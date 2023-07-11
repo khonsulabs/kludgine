@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex, PoisonError};
 use ahash::AHashMap;
 use cosmic_text::{fontdb, Attrs, AttrsOwned, SwashContent};
 use figures::traits::{FloatConversion, ScreenScale};
-use figures::units::{Dips, Px};
+use figures::units::{Lp, Px};
 use figures::utils::lossy_f32_to_i32;
 use figures::{Fraction, Point, Rect, Size};
 
@@ -44,8 +44,8 @@ pub(crate) struct TextSystem {
     pub alpha_text_atlas: TextureCollection,
     pub color_text_atlas: TextureCollection,
     pub scratch: Option<cosmic_text::Buffer>,
-    pub font_size: Dips,
-    pub line_height: Dips,
+    pub font_size: Lp,
+    pub line_height: Lp,
     pub attrs: AttrsOwned,
     glyphs: GlyphCache,
 }
@@ -68,8 +68,8 @@ impl TextSystem {
             swash_cache: cosmic_text::SwashCache::new(),
             scratch: None,
             fonts,
-            font_size: Dips::points(12),
-            line_height: Dips::points(14),
+            font_size: Lp::points(12),
+            line_height: Lp::points(14),
             glyphs: GlyphCache::default(),
             attrs: AttrsOwned::new(Attrs::new().color(Color::WHITE.into())),
         }
@@ -86,12 +86,12 @@ impl TextSystem {
         cosmic_text::Metrics::new(font_size.into(), line_height.into())
     }
 
-    pub fn set_text_size(&mut self, size: Dips, scale: Fraction) {
+    pub fn set_font_size(&mut self, size: Lp, scale: Fraction) {
         self.font_size = size;
         self.update_buffer_metrics(scale);
     }
 
-    pub fn set_line_height(&mut self, size: Dips, scale: Fraction) {
+    pub fn set_line_height(&mut self, size: Lp, scale: Fraction) {
         self.line_height = size;
         self.update_buffer_metrics(scale);
     }
@@ -107,7 +107,6 @@ impl TextSystem {
         }
     }
 
-    #[cfg(feature = "cosmic-text")]
     pub fn update_scratch_buffer(&mut self, text: &str, scale: Fraction) {
         if self.scratch.is_none() {
             let metrics = self.metrics(scale);
@@ -313,11 +312,11 @@ pub(crate) fn map_each_glyph(
                 y: Px::from_float(y),
             }
         }
-        TextOrigin::FirstBaseline => Point::new(0, Px::from_float(buffer.metrics().font_size)),
+        TextOrigin::FirstBaseline => Point::new(Px(0), Px::from_float(buffer.metrics().font_size)),
     };
 
     for run in buffer.layout_runs() {
-        let run_origin = Point::new(0, run.line_y - line_height);
+        let run_origin = Point::new(0., run.line_y - line_height);
         for glyph in run.glyphs.iter() {
             let Some(image) = kludgine.text
                 .swash_cache
@@ -364,12 +363,12 @@ pub(crate) fn map_each_glyph(
             let blit = TextureBlit::new(
                 cached.texture.region,
                 Rect::new(
-                    Point::new(glyph.x, glyph.y_int)
-                        + run_origin
+                    (Point::new(glyph.x, glyph.y_offset) + run_origin).cast::<Px>()
                         + Point::new(
                             image.placement.left,
                             lossy_f32_to_i32(line_height) - image.placement.top,
                         )
+                        .cast()
                         - relative_to,
                     Size::new(
                         i32::try_from(image.placement.width).expect("width out of range of i32"),
@@ -394,10 +393,10 @@ pub(crate) fn measure_text<Unit>(
     glyphs: &mut AHashMap<PixelAlignedCacheKey, CachedGlyphHandle>,
 ) -> MeasuredText<Unit>
 where
-    Unit: ScreenScale<Px = Px, Dips = Dips> + Sub<Output = Unit> + Copy,
+    Unit: ScreenScale<Px = Px, Lp = Lp> + Sub<Output = Unit> + Copy + Debug,
 {
     // TODO the returned type should be able to be drawn, so that we don't have to call update_scratch_buffer again.
-    let line_height = Unit::from_dips(kludgine.text.line_height, kludgine.scale);
+    let line_height = dbg!(Unit::from_lp(kludgine.text.line_height, kludgine.scale));
     let mut min = Point::new(Px::MAX, Px::MAX);
     let mut max = Point::new(Px::MIN, Px::MIN);
     map_each_glyph(
@@ -414,8 +413,9 @@ where
     );
 
     MeasuredText {
-        ascent: line_height - Unit::from_px(min.y, kludgine.scale),
-        descent: line_height - Unit::from_px(max.y, kludgine.scale),
+        ascent: line_height - dbg!(Unit::from_px(min.y, kludgine.scale)),
+        descent: line_height - dbg!(Unit::from_px(max.y, kludgine.scale)),
+        left: Unit::from_px(min.x, kludgine.scale),
         width: Unit::from_px(max.x, kludgine.scale),
     }
 }
@@ -469,9 +469,9 @@ pub enum TextOrigin<Unit> {
 
 impl<Unit> ScreenScale for TextOrigin<Unit>
 where
-    Unit: ScreenScale<Px = Px, Dips = Dips>,
+    Unit: ScreenScale<Px = Px, Lp = Lp>,
 {
-    type Dips = TextOrigin<Unit::Dips>;
+    type Lp = TextOrigin<Unit::Lp>;
     type Px = TextOrigin<Unit::Px>;
 
     fn into_px(self, scale: Fraction) -> Self::Px {
@@ -492,21 +492,21 @@ where
         }
     }
 
-    fn into_dips(self, scale: Fraction) -> Self::Dips {
+    fn into_lp(self, scale: Fraction) -> Self::Lp {
         match self {
             TextOrigin::TopLeft => TextOrigin::TopLeft,
             TextOrigin::Center => TextOrigin::Center,
             TextOrigin::FirstBaseline => TextOrigin::FirstBaseline,
-            TextOrigin::Custom(pt) => TextOrigin::Custom(pt.into_dips(scale)),
+            TextOrigin::Custom(pt) => TextOrigin::Custom(pt.into_lp(scale)),
         }
     }
 
-    fn from_dips(dips: Self::Dips, scale: Fraction) -> Self {
+    fn from_lp(dips: Self::Lp, scale: Fraction) -> Self {
         match dips {
             TextOrigin::TopLeft => TextOrigin::TopLeft,
             TextOrigin::Center => TextOrigin::Center,
             TextOrigin::FirstBaseline => TextOrigin::FirstBaseline,
-            TextOrigin::Custom(pt) => TextOrigin::Custom(Point::from_dips(pt, scale)),
+            TextOrigin::Custom(pt) => TextOrigin::Custom(Point::from_lp(pt, scale)),
         }
     }
 }
@@ -518,6 +518,8 @@ pub struct MeasuredText<Unit> {
     pub ascent: Unit,
     /// The measurement below the baseline of the text.
     pub descent: Unit,
+    /// The measurement to the leftmost pixel of the text.
+    pub left: Unit,
     /// The width of the measured text.
     pub width: Unit,
 }

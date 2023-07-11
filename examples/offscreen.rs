@@ -36,7 +36,7 @@ impl WindowBehavior for Test {
         let mut frame = kludgine.next_frame();
         // Prepare the graphics.
         let preparing = frame.prepare(graphics.device(), graphics.queue());
-        let square_size = (512f32.powf(2.) / 2.).sqrt() as i32;
+        let square_size = Px::from((512f32.powf(2.) / 2.).sqrt());
         let outer_square = Shape::filled_rect(
             Rect::<Px>::new(
                 Point::new(-square_size / 2, -square_size / 2),
@@ -54,7 +54,7 @@ impl WindowBehavior for Test {
             graphics.queue(),
         );
         outer_square.render(
-            Point::new(256, 256),
+            Point::new(Px(256), Px(256)),
             None,
             Some(Angle::degrees(45)),
             &mut rendering,

@@ -201,28 +201,40 @@ impl Kludgine {
         self.text.update_scratch_buffer(text, self.scale);
     }
 
-    /// Sets the text size.
+    /// Sets the font size.
     #[cfg(feature = "cosmic-text")]
-    pub fn set_text_size(
+    pub fn set_font_size(
         &mut self,
-        size: impl figures::traits::ScreenScale<Dips = figures::units::Dips>,
+        size: impl figures::traits::ScreenScale<Lp = figures::units::Lp>,
     ) {
-        self.text.set_text_size(
-            figures::traits::ScreenScale::into_dips(size, self.scale),
+        self.text.set_font_size(
+            figures::traits::ScreenScale::into_lp(size, self.scale),
             self.scale,
         );
+    }
+
+    /// Returns the current font size.
+    #[cfg(feature = "cosmic-text")]
+    pub fn font_size(&self) -> figures::units::Lp {
+        self.text.font_size
     }
 
     /// Sets the line height for multi-line layout.
     #[cfg(feature = "cosmic-text")]
     pub fn set_line_height(
         &mut self,
-        size: impl figures::traits::ScreenScale<Dips = figures::units::Dips>,
+        size: impl figures::traits::ScreenScale<Lp = figures::units::Lp>,
     ) {
         self.text.set_line_height(
-            figures::traits::ScreenScale::into_dips(size, self.scale),
+            figures::traits::ScreenScale::into_lp(size, self.scale),
             self.scale,
         );
+    }
+
+    /// Returns the current line height.
+    #[cfg(feature = "cosmic-text")]
+    pub fn line_height(&self) -> figures::units::Lp {
+        self.text.line_height
     }
 }
 

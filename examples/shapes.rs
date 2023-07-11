@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use kludgine::app::{Window, WindowBehavior};
-use kludgine::figures::units::{Dips, Px};
+use kludgine::figures::units::{Lp, Px};
 use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::shapes::{PathBuilder, Shape};
 use kludgine::{Color, PreparedGraphic};
@@ -11,10 +11,10 @@ fn main() {
 }
 
 const BLUE_TRIANGLE_SIZE: Px = Px(96);
-const RED_SQUARE_SIZE: Dips = Dips::inches(1);
+const RED_SQUARE_SIZE: Lp = Lp::inches(1);
 
 struct Test {
-    dips_square: PreparedGraphic<Dips>,
+    dips_square: PreparedGraphic<Lp>,
     pixels_triangle: PreparedGraphic<Px>,
     angle: Angle,
 }
@@ -37,7 +37,7 @@ impl WindowBehavior for Test {
         .prepare(graphics);
         let height = (BLUE_TRIANGLE_SIZE.pow(2) - (BLUE_TRIANGLE_SIZE / 2).pow(2)).sqrt();
         let pixels_triangle = PathBuilder::new(Point::new(-BLUE_TRIANGLE_SIZE / 2, -height / 2))
-            .line_to(Point::new(0, height / 2))
+            .line_to(Point::new(Px(0), height / 2))
             .line_to(Point::new(BLUE_TRIANGLE_SIZE / 2, -height / 2))
             .close()
             .fill(Color::BLUE)

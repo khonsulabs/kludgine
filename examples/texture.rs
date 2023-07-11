@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use kludgine::app::{Window, WindowBehavior};
-use kludgine::figures::units::Dips;
+use kludgine::figures::units::Lp;
 use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::{PreparedGraphic, Texture};
 
@@ -10,7 +10,7 @@ fn main() {
 }
 
 struct Test {
-    texture: PreparedGraphic<Dips>,
+    texture: PreparedGraphic<Lp>,
     angle: Angle,
 }
 
@@ -25,8 +25,8 @@ impl WindowBehavior for Test {
         let texture = Texture::from_image(&image::open("./examples/k.png").unwrap(), graphics)
             .prepare(
                 Rect::new(
-                    Point::new(-Dips::inches(1) / 2, -Dips::inches(1) / 2),
-                    Size::new(Dips::inches(1), Dips::inches(1)),
+                    Point::new(-Lp::inches(1) / 2, -Lp::inches(1) / 2),
+                    Size::new(Lp::inches(1), Lp::inches(1)),
                 ),
                 graphics,
             );
@@ -44,7 +44,7 @@ impl WindowBehavior for Test {
         window.redraw_in(Duration::from_millis(16));
         self.angle += Angle::degrees(180) * window.elapsed();
         self.texture.render(
-            Point::new(Dips::inches(1), Dips::inches(1)),
+            Point::new(Lp::inches(1), Lp::inches(1)),
             None,
             Some(self.angle),
             graphics,

@@ -119,7 +119,7 @@ where
 
         Vertex {
             location: Point::new(Unit::from_float(position.x), Unit::from_float(position.y)),
-            texture: Point::new(attributes[0].round(), attributes[1].round()),
+            texture: Point::new(attributes[0].round(), attributes[1].round()).cast(),
             color: self.default_color,
         }
     }
