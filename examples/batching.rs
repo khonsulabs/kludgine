@@ -1,0 +1,62 @@
+use std::sync::OnceLock;
+use std::time::Duration;
+
+use kludgine::figures::traits::{IntoComponents, ScreenScale};
+use kludgine::figures::units::Dips;
+use kludgine::figures::{Angle, Point, Rect, Size};
+use kludgine::shapes::Shape;
+use kludgine::{Color, Texture};
+
+const RED_SQUARE_SIZE: Dips = Dips::inches(1);
+
+fn main() {
+    // This example shows how Kludgine automatically batches drawing calls.
+    // Despite the texture being drawn hundreds or thousands of times, depending
+    // on the window size, the drawing calls are batched in such a way that only
+    // two calls are needed to draw the entire scene.
+    let mut angle = Angle::degrees(0);
+    kludgine::app::run(move |mut renderer, mut window| {
+        static TEXTURE: OnceLock<Texture> = OnceLock::new();
+        let texture = TEXTURE.get_or_init(|| {
+            Texture::from_image(&image::open("./examples/k.png").unwrap(), &renderer)
+        });
+
+        window.redraw_in(Duration::from_millis(16));
+        angle += Angle::degrees(180) * window.elapsed();
+
+        let texture_size = texture.size();
+        for y in 0..(renderer.size().height / texture_size.height).0 {
+            for x in 0..(renderer.size().width / texture_size.width).0 {
+                renderer.draw_texture(
+                    texture,
+                    Rect::new(
+                        Point::new(texture_size.width * x, texture_size.height * y),
+                        texture_size,
+                    ),
+                );
+            }
+        }
+
+        renderer.draw_shape(
+            &Shape::filled_rect(
+                Rect::<Dips>::new(
+                    Point::new(-RED_SQUARE_SIZE / 2, -RED_SQUARE_SIZE / 2),
+                    Size::new(RED_SQUARE_SIZE, RED_SQUARE_SIZE),
+                ),
+                Color::RED,
+            ),
+            (renderer.size().into_dips(renderer.scale()) / 2).to_vec(),
+            Some(angle),
+            None,
+        );
+
+        println!(
+            "Rendering {} verticies as {} triangles in {} GPU commands. Last frame render time: {:0.02}ms",
+            renderer.vertex_count(),
+            renderer.triangle_count(),
+            renderer.command_count(),
+            window.last_frame_rendered_in().as_secs_f32() * 1000.
+        );
+        true
+    })
+}

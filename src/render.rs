@@ -1,10 +1,10 @@
 use std::collections::hash_map;
-use std::ops::Range;
+use std::ops::{Add, Deref, DerefMut, Range};
 use std::sync::Arc;
 
 use ahash::AHashMap;
-use figures::traits::Zero;
-use figures::Point;
+use figures::traits::{FloatConversion, IntoSigned, IsZero};
+use figures::{Angle, Point, Rect};
 
 use crate::buffer::Buffer;
 use crate::pipeline::{
@@ -12,7 +12,11 @@ use crate::pipeline::{
     FLAG_TRANSLATE,
 };
 use crate::shapes::Shape;
-use crate::{sealed, Graphics, RenderingGraphics, Texture, TextureSource, VertexCollection};
+use crate::text::{CachedGlyphHandle, PixelAlignedCacheKey};
+use crate::{
+    sealed, Color, Graphics, RenderingGraphics, ShapeSource, Texture, TextureBlit, TextureSource,
+    VertexCollection,
+};
 
 /// An easy-to-use graphics renderer that batches operations on the GPU
 /// automatically.
@@ -24,6 +28,20 @@ use crate::{sealed, Graphics, RenderingGraphics, Texture, TextureSource, VertexC
 pub struct Renderer<'render, 'gfx> {
     pub(crate) graphics: &'render mut Graphics<'gfx>,
     data: &'render mut Rendering,
+}
+
+impl<'gfx> Deref for Renderer<'_, 'gfx> {
+    type Target = Graphics<'gfx>;
+
+    fn deref(&self) -> &Self::Target {
+        self.graphics
+    }
+}
+
+impl<'gfx> DerefMut for Renderer<'_, 'gfx> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.graphics
+    }
 }
 
 #[derive(Debug)]
@@ -39,11 +57,11 @@ impl Renderer<'_, '_> {
         &mut self,
         shape: &Shape<Unit, false>,
         origin: Point<Unit>,
-        rotation_rads: Option<f32>,
+        rotation_rads: Option<Angle>,
         scale: Option<f32>,
     ) where
-        Unit: Into<i32> + Zero + Copy,
-        Unit: ShaderScalable,
+        Unit: IsZero + ShaderScalable + IntoSigned + Copy,
+        i32: From<<Unit as IntoSigned>::Signed>,
     {
         self.inner_draw(
             shape,
@@ -54,42 +72,63 @@ impl Renderer<'_, '_> {
         );
     }
 
+    /// Draws `texture` at `destination`, scaling as necessary.
+    pub fn draw_texture<Unit>(&mut self, texture: &impl TextureSource, destination: Rect<Unit>)
+    where
+        Unit: Default
+            + FloatConversion<Float = f32>
+            + Add<Output = Unit>
+            + Ord
+            + IsZero
+            + Copy
+            + IsZero
+            + ShaderScalable
+            + IntoSigned
+            + Copy,
+        i32: From<<Unit as IntoSigned>::Signed>,
+    {
+        self.draw_textured_shape(
+            &TextureBlit::new(texture.default_rect(), destination, Color::WHITE),
+            texture,
+            Point::default(),
+            None,
+            None,
+        );
+    }
+
     /// Draws a shape that was created with texture coordinates, applying the
     /// provided texture.
-    // TODO we don't have a way to easily draw a texture here.
     pub fn draw_textured_shape<Unit>(
         &mut self,
-        shape: &Shape<Unit, true>,
+        shape: &impl ShapeSource<Unit, true>,
         texture: &impl TextureSource,
         origin: Point<Unit>,
-        rotation_rads: Option<f32>,
+        rotation: Option<Angle>,
         scale: Option<f32>,
     ) where
-        Unit: Into<i32> + Zero + Copy,
-        Unit: ShaderScalable,
+        Unit: IsZero + ShaderScalable + IntoSigned + Copy,
+        i32: From<<Unit as IntoSigned>::Signed>,
     {
-        self.inner_draw(shape, Some(texture), origin, rotation_rads, scale);
+        self.inner_draw(shape, Some(texture), origin, rotation, scale);
     }
 
     fn inner_draw<Unit, const TEXTURED: bool>(
         &mut self,
-        shape: &Shape<Unit, TEXTURED>,
+        shape: &impl ShapeSource<Unit, TEXTURED>,
         texture: Option<&impl TextureSource>,
         origin: Point<Unit>,
-        rotation_rads: Option<f32>,
+        rotation: Option<Angle>,
         scale: Option<f32>,
     ) where
-        Unit: Into<i32> + Zero + Copy,
-        Unit: ShaderScalable,
+        Unit: IsZero + ShaderScalable + IntoSigned + Copy,
+        i32: From<<Unit as IntoSigned>::Signed>,
     {
         // Merge the vertices into the graphics
-        let mut vertex_map = Vec::with_capacity(shape.vertices.len());
-        for vertex in shape.vertices.iter().copied() {
+        let vertices = shape.vertices();
+        let mut vertex_map = Vec::with_capacity(vertices.len());
+        for vertex in vertices {
             let vertex = Vertex {
-                location: Point {
-                    x: vertex.location.x.into(),
-                    y: vertex.location.y.into(),
-                },
+                location: vertex.location.into_signed().cast(),
                 texture: vertex.texture,
                 color: vertex.color,
             };
@@ -98,7 +137,7 @@ impl Renderer<'_, '_> {
         }
 
         let first_index_drawn = self.data.indices.len();
-        for &vertex_index in &shape.indices {
+        for &vertex_index in shape.indices() {
             self.data
                 .indices
                 .push(vertex_map[usize::from(vertex_index)]);
@@ -123,35 +162,235 @@ impl Renderer<'_, '_> {
             flags |= FLAG_SCALE;
             scale
         });
-        let rotation = rotation_rads.map_or(0., |scale| {
+        let rotation = rotation.map_or(0., |scale| {
             flags |= FLAG_ROTATE;
-            scale
+            scale.into_raidans_f()
         });
         if !origin.is_zero() {
             flags |= FLAG_TRANSLATE;
         }
 
-        self.data.commands.push(Command {
-            indices: first_index_drawn
-                .try_into()
-                .expect("too many drawn verticies")
-                ..self
+        let constants = PushConstants {
+            flags,
+            scale,
+            rotation,
+            translation: origin.into_signed().cast(),
+        };
+
+        match self.data.commands.last_mut() {
+            Some(Command {
+                texture: last_texture,
+                indices,
+                constants: last_constants,
+            }) if last_texture == &texture && last_constants == &constants => {
+                // Batch this draw operation with the previous one.
+                indices.end = self
                     .data
                     .indices
                     .len()
                     .try_into()
-                    .expect("too many drawn verticies"),
-            constants: PushConstants {
-                flags,
-                scale,
+                    .expect("too many drawn verticies");
+            }
+            _ => {
+                self.data.commands.push(Command {
+                    indices: first_index_drawn
+                        .try_into()
+                        .expect("too many drawn verticies")
+                        ..self
+                            .data
+                            .indices
+                            .len()
+                            .try_into()
+                            .expect("too many drawn verticies"),
+                    constants,
+                    texture,
+                });
+            }
+        }
+    }
+
+    /// Returns the number of vertexes that compose the drawing commands.
+    #[must_use]
+    pub fn vertex_count(&self) -> usize {
+        self.data.vertices.vertices.len()
+    }
+
+    /// Returns the number of triangles that are being rendered in the drawing
+    /// commands.
+    #[must_use]
+    pub fn triangle_count(&self) -> usize {
+        self.data.indices.len() / 3
+    }
+
+    /// Returns the number of drawing operations that will be sent to the GPU
+    /// during [`render()`](Rendering::render).
+    #[must_use]
+    pub fn command_count(&self) -> usize {
+        self.data.commands.len()
+    }
+}
+
+#[cfg(feature = "cosmic-text")]
+mod text {
+    use std::collections::hash_map;
+    use std::ops::Sub;
+
+    use figures::traits::ScreenScale;
+    use figures::units::{Dips, Px};
+
+    use super::{
+        Angle, Color, Command, IntoSigned, IsZero, Point, PushConstants, Renderer, Vertex,
+        FLAG_MASKED, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED, FLAG_TRANSLATE,
+    };
+    use crate::sealed::{ShaderScalableSealed, ShapeSource, TextureSource};
+    use crate::text::{map_each_glyph, measure_text, MeasuredText, TextOrigin};
+
+    impl<'gfx> Renderer<'_, 'gfx> {
+        /// Measures `text` using the current text settings.
+        pub fn measure_text<Unit>(&mut self, text: &str) -> MeasuredText<Unit>
+        where
+            Unit: ScreenScale<Px = Px, Dips = Dips> + Sub<Output = Unit> + Copy,
+        {
+            self.update_scratch_buffer(text);
+            measure_text(
+                None,
+                self.graphics.kludgine,
+                self.graphics.queue,
+                &mut self.data.glyphs,
+            )
+        }
+
+        /// Draws `text` using the current text settings.
+        pub fn draw_text<Unit>(
+            &mut self,
+            text: &str,
+            origin: TextOrigin<Unit>,
+            translate: Point<Unit>,
+            rotation: Option<Angle>,
+            scale: Option<f32>,
+        ) where
+            Unit: ScreenScale<Px = Px, Dips = Dips> + Copy + std::fmt::Debug,
+        {
+            self.graphics.kludgine.update_scratch_buffer(text);
+            self.draw_text_buffer_inner(
+                None,
+                Color::WHITE,
+                origin.into_px(self.scale()),
+                translate,
                 rotation,
-                translation: Point {
-                    x: origin.x.into(),
-                    y: origin.y.into(),
+                scale,
+            );
+        }
+
+        /// Prepares the text layout contained in `buffer` to be rendered.
+        ///
+        /// When the text in `buffer` has no color defined, `default_color` will be
+        /// used.
+        ///
+        /// `origin` allows controlling how the text will be drawn relative to the
+        /// coordinate provided in [`render()`](PreparedGraphic::render).
+        pub fn draw_text_buffer<Unit>(
+            &mut self,
+            buffer: &cosmic_text::Buffer,
+            default_color: Color,
+            origin: TextOrigin<Px>,
+            translate: Point<Unit>,
+            rotation: Option<Angle>,
+            scale: Option<f32>,
+        ) where
+            Unit: ScreenScale<Px = Px, Dips = Dips> + Copy + std::fmt::Debug,
+        {
+            self.draw_text_buffer_inner(
+                Some(buffer),
+                default_color,
+                origin,
+                translate,
+                rotation,
+                scale,
+            );
+        }
+
+        fn draw_text_buffer_inner<Unit>(
+            &mut self,
+            buffer: Option<&cosmic_text::Buffer>,
+            default_color: Color,
+            origin: TextOrigin<Px>,
+            translate: Point<Unit>,
+            rotation: Option<Angle>,
+            scale: Option<f32>,
+        ) where
+            Unit: ScreenScale<Px = Px, Dips = Dips> + Copy + std::fmt::Debug,
+        {
+            let queue = self.queue;
+            let scaling_factor = self.scale;
+            let translation = translate.into_px(scaling_factor).cast();
+            map_each_glyph(
+                buffer,
+                default_color,
+                origin,
+                self.graphics.kludgine,
+                queue,
+                &mut self.data.glyphs,
+                |blit, cached| {
+                    let mut corners = [0; 4];
+                    for (&corner, index) in blit.vertices().iter().zip(corners.iter_mut()) {
+                        *index = self.data.vertices.get_or_insert(Vertex {
+                            location: corner.location.into_signed().cast(),
+                            texture: corner.texture,
+                            color: corner.color,
+                        });
+                    }
+                    let start_index =
+                        u32::try_from(self.data.indices.len()).expect("too many drawn indices");
+                    for &index in blit.indices() {
+                        self.data.indices.push(corners[usize::from(index)]);
+                    }
+                    let mut flags = Px::flags() | FLAG_TEXTURED;
+                    if let hash_map::Entry::Vacant(vacant) =
+                        self.data.textures.entry(cached.texture.id())
+                    {
+                        vacant.insert(cached.texture.bind_group());
+                    }
+
+                    if cached.is_mask {
+                        flags |= FLAG_MASKED;
+                    }
+                    let scale = scale.map_or(1., |scale| {
+                        flags |= FLAG_SCALE;
+                        scale
+                    });
+                    let rotation = rotation.map_or(0., |scale| {
+                        flags |= FLAG_ROTATE;
+                        scale.into_raidans_f()
+                    });
+                    if !translation.is_zero() {
+                        flags |= FLAG_TRANSLATE;
+                    }
+
+                    let constants = PushConstants {
+                        flags,
+                        scale,
+                        rotation,
+                        translation,
+                    };
+                    let end_index =
+                        u32::try_from(self.data.indices.len()).expect("too many drawn indices");
+                    match self.data.commands.last_mut() {
+                        Some(last_command) if last_command.constants == constants => {
+                            // The last command was from the same texture source, we can stend the previous range to the new end.
+                            last_command.indices.end = end_index;
+                        }
+                        _ => {
+                            self.data.commands.push(Command {
+                                indices: start_index..end_index,
+                                constants,
+                                texture: Some(cached.texture.id()),
+                            });
+                        }
+                    }
                 },
-            },
-            texture,
-        });
+            );
+        }
     }
 }
 
@@ -194,6 +433,7 @@ pub struct Rendering {
     indices: Vec<u16>,
     textures: AHashMap<sealed::TextureId, Arc<wgpu::BindGroup>>,
     commands: Vec<Command>,
+    glyphs: AHashMap<PixelAlignedCacheKey, CachedGlyphHandle>,
 }
 
 #[derive(Debug)]
@@ -216,6 +456,7 @@ impl Rendering {
         self.textures.clear();
         self.vertices.vertex_index_by_id.clear();
         self.vertices.vertices.clear();
+        self.glyphs.clear();
         Renderer {
             graphics,
             data: self,

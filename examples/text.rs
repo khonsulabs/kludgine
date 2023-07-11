@@ -1,10 +1,10 @@
 use std::time::Duration;
 
-use figures::Point;
+use figures::traits::FromComponents;
+use figures::{Angle, Point};
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::cosmic_text::{Attrs, AttrsList, Buffer, Edit, Editor, Metrics};
-use kludgine::figures::traits::FloatConversion;
-use kludgine::figures::units::Px;
+use kludgine::figures::traits::{FloatConversion, ScreenScale};
 use kludgine::text::{PreparedText, TextOrigin};
 use kludgine::Color;
 
@@ -15,25 +15,27 @@ fn main() {
 struct Test {
     text: Editor,
     prepared: PreparedText,
-    angle: f32,
+    angle: Angle,
 }
 
 impl WindowBehavior for Test {
     type Context = ();
 
     fn initialize(
-        window: Window<'_>,
+        _window: Window<'_>,
         graphics: &mut kludgine::Graphics<'_>,
         _context: Self::Context,
     ) -> Self {
+        let scale = graphics.scale();
+        let size = graphics.size();
         let mut text = Buffer::new(
             graphics.font_system(),
-            Metrics::new(24.0, 32.0).scale(window.scale()),
+            Metrics::new(24.0, 24.0).scale(scale.into_f32()),
         );
         text.set_size(
             graphics.font_system(),
-            window.inner_size().width.into_float(),
-            window.inner_size().height.into_float(),
+            size.width.into_float(),
+            size.height.into_float(),
         );
         let mut text = Editor::new(text);
         text.insert_string("Hello, ", None);
@@ -54,15 +56,21 @@ impl WindowBehavior for Test {
         Self {
             text,
             prepared,
-            angle: 0.,
+            angle: Angle::degrees(0),
         }
     }
 
-    fn prepare(&mut self, window: Window<'_>, graphics: &mut kludgine::Graphics<'_>) {
+    fn prepare(&mut self, _window: Window<'_>, graphics: &mut kludgine::Graphics<'_>) {
+        let scale = graphics.scale();
+        let size = graphics.size();
         self.text.buffer_mut().set_size(
             graphics.font_system(),
-            window.inner_size().width.into_float(),
-            window.inner_size().height.into_float(),
+            size.width.into_float(),
+            size.height.into_float(),
+        );
+        self.text.buffer_mut().set_metrics(
+            graphics.font_system(),
+            Metrics::new(24.0, 32.0).scale(scale.into_f32()),
         );
         self.text.shape_as_needed(graphics.font_system());
         self.prepared = graphics.prepare_text(self.text.buffer(), Color::WHITE, TextOrigin::Center);
@@ -74,9 +82,9 @@ impl WindowBehavior for Test {
         graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
     ) -> bool {
         window.redraw_in(Duration::from_millis(16));
-        self.angle += std::f32::consts::PI * window.elapsed().as_secs_f32() / 5.;
+        self.angle += Angle::degrees(180) * window.elapsed() / 5;
         self.prepared.render(
-            Point::from(window.inner_size()).try_cast::<Px>().unwrap() / 2,
+            Point::from_vec(graphics.size().into_px(graphics.scale())) / 2,
             None,
             Some(self.angle),
             graphics,

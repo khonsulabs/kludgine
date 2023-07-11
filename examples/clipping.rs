@@ -1,8 +1,9 @@
 use std::time::Duration;
 
 use kludgine::app::{Window, WindowBehavior};
+use kludgine::figures::traits::ScreenScale;
 use kludgine::figures::units::Px;
-use kludgine::figures::{Point, Rect, Size};
+use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::shapes::Shape;
 use kludgine::{Color, PreparedGraphic};
 
@@ -13,7 +14,7 @@ fn main() {
 struct Test {
     red_square: PreparedGraphic<Px>,
     blue_square: PreparedGraphic<Px>,
-    angle: f32,
+    angle: Angle,
 }
 
 impl WindowBehavior for Test {
@@ -38,7 +39,7 @@ impl WindowBehavior for Test {
         Self {
             red_square: outer_square,
             blue_square: inner_square,
-            angle: 0.,
+            angle: Angle::degrees(0),
         }
     }
 
@@ -48,7 +49,7 @@ impl WindowBehavior for Test {
         graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
     ) -> bool {
         window.redraw_in(Duration::from_millis(16));
-        self.angle += std::f32::consts::PI * window.elapsed().as_secs_f32() / 5.;
+        self.angle += window.elapsed().as_secs_f32() / 5.;
 
         let mut clipped = graphics.clipped_to(Rect::new(
             Point::from(graphics.size()) / 4,
@@ -57,7 +58,7 @@ impl WindowBehavior for Test {
         // `clipped` now acts as if 0,0 is at `clip_origin`. The borrow checker
         // prevents using `graphics` until `clipped` is dropped.
         self.red_square.render(
-            Point::from(clipped.size()).try_cast::<Px>().unwrap() / 2,
+            Point::from(clipped.size()).into_px(clipped.scale()) / 2,
             None,
             Some(self.angle),
             &mut clipped,
@@ -68,7 +69,7 @@ impl WindowBehavior for Test {
 
         // Now `graphics` can be used without clipping again.
         self.blue_square.render(
-            Point::from(graphics.size().try_cast::<Px>().unwrap()) / 4 * 3,
+            Point::from(graphics.size().into_px(graphics.scale())) / 4 * 3,
             None,
             Some(self.angle),
             graphics,

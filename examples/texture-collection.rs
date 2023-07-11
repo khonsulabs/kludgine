@@ -1,8 +1,9 @@
 use std::time::Duration;
 
 use kludgine::app::{Window, WindowBehavior};
-use kludgine::figures::units::{Dip, Px};
-use kludgine::figures::{Point, Rect, Size};
+use kludgine::figures::traits::ScreenScale;
+use kludgine::figures::units::{Dips, Px};
+use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::{Color, PreparedGraphic, TextureCollection};
 
 fn main() {
@@ -11,9 +12,9 @@ fn main() {
 
 struct Test {
     atlas: PreparedGraphic<Px>,
-    k: PreparedGraphic<Dip>,
-    ferris: PreparedGraphic<Dip>,
-    angle: f32,
+    k: PreparedGraphic<Dips>,
+    ferris: PreparedGraphic<Dips>,
+    angle: Angle,
 }
 
 impl WindowBehavior for Test {
@@ -32,8 +33,8 @@ impl WindowBehavior for Test {
         let k = textures.push_image(&image::open("./examples/k.png").unwrap(), graphics);
         let k = k.prepare(
             Rect::new(
-                Point::new(-Dip::INCH / 2, -Dip::INCH / 2),
-                Size::new(Dip::INCH, Dip::INCH),
+                Point::new(-Dips::inches(1) / 2, -Dips::inches(1) / 2),
+                Size::new(Dips::inches(1), Dips::inches(1)),
             ),
             graphics,
         );
@@ -43,8 +44,8 @@ impl WindowBehavior for Test {
         );
         let ferris = ferris.prepare(
             Rect::new(
-                Point::new(-Dip::INCH / 2, -Dip::INCH / 2),
-                Size::new(Dip::INCH, Dip::INCH / 1.5),
+                Point::new(-Dips::inches(1) / 2, -Dips::inches(1) / 2),
+                Size::new(Dips::inches(1), Dips::inches(1) / 1.5),
             ),
             graphics,
         );
@@ -54,7 +55,7 @@ impl WindowBehavior for Test {
             atlas,
             k,
             ferris,
-            angle: 0.,
+            angle: Angle::degrees(0),
         }
     }
 
@@ -64,21 +65,21 @@ impl WindowBehavior for Test {
         graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
     ) -> bool {
         window.redraw_in(Duration::from_millis(16));
-        self.angle += std::f32::consts::PI / 36.;
+        self.angle += Angle::degrees(180) * window.elapsed();
         self.k.render(
-            Point::new(Dip::INCH, Dip::INCH),
+            Point::new(Dips::inches(1), Dips::inches(1)),
             None,
             Some(self.angle),
             graphics,
         );
         self.ferris.render(
-            Point::new(Dip::INCH * 2, Dip::INCH),
+            Point::new(Dips::inches(1) * 2, Dips::inches(1)),
             None,
             Some(-self.angle),
             graphics,
         );
         self.atlas.render(
-            Point::new(0, window.inner_size().height.0 as i32 - 256),
+            Point::new(0, graphics.size().height.into_px(graphics.scale()).0 - 256),
             None,
             None,
             graphics,

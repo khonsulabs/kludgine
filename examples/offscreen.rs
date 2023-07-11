@@ -1,8 +1,6 @@
-use std::f32::consts::PI;
-
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::Px;
-use kludgine::figures::{Point, Rect, Size};
+use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::shapes::Shape;
 use kludgine::{Color, Graphics, Kludgine, PreparedGraphic, RenderingGraphics, Texture};
 
@@ -55,7 +53,12 @@ impl WindowBehavior for Test {
             graphics.device(),
             graphics.queue(),
         );
-        outer_square.render(Point::new(256, 256), None, Some(PI / 4.), &mut rendering);
+        outer_square.render(
+            Point::new(256, 256),
+            None,
+            Some(Angle::degrees(45)),
+            &mut rendering,
+        );
         drop(rendering);
 
         frame.submit(graphics.queue());

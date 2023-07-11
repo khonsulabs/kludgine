@@ -9,9 +9,8 @@ use lyon_tessellation::{
     StrokeVertexConstructor, VertexId,
 };
 
-use crate::buffer::Buffer;
-use crate::pipeline::{PreparedCommand, Vertex};
-use crate::{Color, Graphics, PreparedGraphic, TextureSource};
+use crate::pipeline::Vertex;
+use crate::{sealed, Color, Graphics, PreparedGraphic, ShapeSource, Texture, TextureSource};
 
 /// A tesselated shape.
 ///
@@ -52,31 +51,10 @@ impl<Unit> Shape<Unit, false> {
     #[must_use]
     pub fn prepare(&self, graphics: &Graphics<'_>) -> PreparedGraphic<Unit>
     where
+        Unit: Copy,
         Vertex<Unit>: bytemuck::Pod,
     {
-        let vertices = Buffer::new(
-            &self.vertices,
-            wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            graphics.device,
-        );
-        let indices = Buffer::new(
-            &self.indices,
-            wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
-            graphics.device,
-        );
-        PreparedGraphic {
-            vertices,
-            indices,
-            commands: vec![PreparedCommand {
-                indices: 0..self
-                    .indices
-                    .len()
-                    .try_into()
-                    .expect("too many drawn indices"),
-                is_mask: false,
-                binding: None,
-            }],
-        }
+        sealed::ShapeSource::prepare(self, Option::<&Texture>::None, graphics)
     }
 }
 
@@ -88,31 +66,28 @@ impl<Unit> Shape<Unit, true> {
         graphics: &Graphics<'_>,
     ) -> PreparedGraphic<Unit>
     where
+        Unit: Copy,
         Vertex<Unit>: bytemuck::Pod,
     {
-        let vertices = Buffer::new(
-            &self.vertices,
-            wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            graphics.device,
-        );
-        let indices = Buffer::new(
-            &self.indices,
-            wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
-            graphics.device,
-        );
-        PreparedGraphic {
-            vertices,
-            indices,
-            commands: vec![PreparedCommand {
-                indices: 0..self
-                    .indices
-                    .len()
-                    .try_into()
-                    .expect("too many drawn indices"),
-                is_mask: false,
-                binding: Some(texture.bind_group()),
-            }],
-        }
+        sealed::ShapeSource::prepare(self, Some(texture), graphics)
+    }
+}
+
+impl<Unit, const TEXTURED: bool> ShapeSource<Unit, TEXTURED> for Shape<Unit, TEXTURED> where
+    Unit: Copy
+{
+}
+
+impl<Unit, const TEXTURED: bool> sealed::ShapeSource<Unit> for Shape<Unit, TEXTURED>
+where
+    Unit: Copy,
+{
+    fn vertices(&self) -> &[Vertex<Unit>] {
+        &self.vertices
+    }
+
+    fn indices(&self) -> &[u16] {
+        &self.indices
     }
 }
 

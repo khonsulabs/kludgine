@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use kludgine::app::{Window, WindowBehavior};
-use kludgine::figures::units::{Dip, Px};
-use kludgine::figures::{Point, Rect, Size};
+use kludgine::figures::units::{Dips, Px};
+use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::shapes::{PathBuilder, Shape};
 use kludgine::{Color, PreparedGraphic};
 
@@ -11,12 +11,12 @@ fn main() {
 }
 
 const BLUE_TRIANGLE_SIZE: Px = Px(96);
-const RED_SQUARE_SIZE: Dip = Dip::INCH;
+const RED_SQUARE_SIZE: Dips = Dips::inches(1);
 
 struct Test {
-    dips_square: PreparedGraphic<Dip>,
+    dips_square: PreparedGraphic<Dips>,
     pixels_triangle: PreparedGraphic<Px>,
-    angle: f32,
+    angle: Angle,
 }
 
 impl WindowBehavior for Test {
@@ -45,7 +45,7 @@ impl WindowBehavior for Test {
         Self {
             dips_square,
             pixels_triangle,
-            angle: 0.,
+            angle: Angle::degrees(0),
         }
     }
 
@@ -55,7 +55,7 @@ impl WindowBehavior for Test {
         graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
     ) -> bool {
         window.redraw_in(Duration::from_millis(16));
-        self.angle += std::f32::consts::PI / 36.;
+        self.angle += Angle::degrees(180) * window.elapsed();
         self.dips_square.render(
             Point::new(RED_SQUARE_SIZE / 2, RED_SQUARE_SIZE / 2),
             None,

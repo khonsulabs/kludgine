@@ -224,6 +224,11 @@ impl sealed::TextureSource for TextureCollection {
         let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
         data.texture.is_mask()
     }
+
+    fn default_rect(&self) -> Rect<UPx> {
+        let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        data.texture.default_rect()
+    }
 }
 
 /// A texture that is contained within a [`TextureCollection`].
@@ -273,5 +278,9 @@ impl sealed::TextureSource for CollectedTexture {
 
     fn is_mask(&self) -> bool {
         self.collection.is_mask()
+    }
+
+    fn default_rect(&self) -> Rect<UPx> {
+        self.region
     }
 }

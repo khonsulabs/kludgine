@@ -27,27 +27,27 @@ struct Uniforms {
 @group(0) @binding(0)
 var<uniform> uniforms: Uniforms;
 
-struct Ratio {
+struct Fraction {
     div_by: i32,
     mul_by: i32,
 }
 
-fn ratio(raio: u32) -> Ratio {
-    var ratio: Ratio;
+fn ratio(raio: u32) -> Fraction {
+    var ratio: Fraction;
     ratio.div_by = i32(uniforms.dips_scale >> u32(16));
     ratio.mul_by = i32(uniforms.dips_scale & u32(0xFFFF));
     return ratio;
 }
 
-fn ratio_to_f32(ratio: Ratio) -> f32 {
+fn ratio_to_f32(ratio: Fraction) -> f32 {
     return f32(ratio.mul_by) / f32(ratio.div_by);
 }
 
-fn int_scale(value: i32, ratio: Ratio) -> i32 {
+fn int_scale(value: i32, ratio: Fraction) -> i32 {
     return value * ratio.mul_by / ratio.div_by;
 }
 
-fn dips_to_pixels(value: i32, ratio: Ratio) -> i32 {
+fn dips_to_pixels(value: i32, ratio: Fraction) -> i32 {
     return int_scale(value, ratio) * i32(96) / i32(2540);
 }
 

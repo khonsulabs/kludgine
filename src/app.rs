@@ -5,7 +5,6 @@ use std::time::{Duration, Instant};
 
 use appit::winit::window::WindowId;
 use appit::{Application, Message, RunningWindow, WindowBehavior as _};
-use figures::units::UPx;
 use figures::utils::lossy_f64_to_f32;
 use figures::Size;
 
@@ -22,11 +21,20 @@ fn shared_wgpu() -> Arc<wgpu::Instance> {
 pub struct Window<'window> {
     window: &'window mut RunningWindow<CreateSurfaceRequest>,
     elapsed: Duration,
+    last_frame_rendered_in: Duration,
 }
 
 impl<'window> Window<'window> {
-    fn new(window: &'window mut RunningWindow<CreateSurfaceRequest>, elapsed: Duration) -> Self {
-        Self { window, elapsed }
+    fn new(
+        window: &'window mut RunningWindow<CreateSurfaceRequest>,
+        elapsed: Duration,
+        last_frame_rendered_in: Duration,
+    ) -> Self {
+        Self {
+            window,
+            elapsed,
+            last_frame_rendered_in,
+        }
     }
 
     /// Sets the window to redraw after a `duration`.
@@ -50,18 +58,6 @@ impl<'window> Window<'window> {
         self.window.set_needs_redraw();
     }
 
-    /// Returns the inner size of the window.
-    #[must_use]
-    pub fn inner_size(&self) -> Size<UPx> {
-        self.window.inner_size().into()
-    }
-
-    /// Returns the current display scale factor.
-    #[must_use]
-    pub fn scale(&self) -> f32 {
-        lossy_f64_to_f32(self.window.scale())
-    }
-
     /// Returns the duration that has elapsed since the last frame start and the
     /// current frame start.
     ///
@@ -70,6 +66,13 @@ impl<'window> Window<'window> {
     #[must_use]
     pub const fn elapsed(&self) -> Duration {
         self.elapsed
+    }
+
+    /// Returns the duration taken between when the last frame's redraw started
+    /// and when the surface's frame was presented.
+    #[must_use]
+    pub const fn last_frame_rendered_in(&self) -> Duration {
+        self.last_frame_rendered_in
     }
 }
 
@@ -163,6 +166,7 @@ struct KludgineWindow<Behavior> {
     behavior: Behavior,
     kludgine: Kludgine,
     last_render: Instant,
+    last_render_duration: Duration,
 
     config: wgpu::SurfaceConfiguration,
     surface: wgpu::Surface,
@@ -237,7 +241,8 @@ where
         let behavior = T::initialize(
             Window {
                 window,
-                elapsed: Duration::from_secs(0),
+                elapsed: Duration::ZERO,
+                last_frame_rendered_in: Duration::ZERO,
             },
             &mut graphics,
             context,
@@ -247,6 +252,7 @@ where
             wgpu,
             kludgine: state,
             last_render,
+            last_render_duration: Duration::ZERO,
             _adapter: adapter,
             behavior,
             config,
@@ -289,7 +295,7 @@ where
         let elapsed = render_start - self.last_render;
 
         self.behavior.prepare(
-            Window::new(window, elapsed),
+            Window::new(window, elapsed, self.last_render_duration),
             &mut frame.prepare(&self.device, &self.queue),
         );
 
@@ -314,10 +320,14 @@ where
             &self.device,
             &self.queue,
         );
-        self.behavior.render(Window::new(window, elapsed), &mut gfx);
+        self.behavior.render(
+            Window::new(window, elapsed, self.last_render_duration),
+            &mut gfx,
+        );
         drop(gfx);
         frame.submit(&self.queue);
         surface.present();
+        self.last_render_duration = render_start.elapsed();
         self.last_render = render_start;
     }
 

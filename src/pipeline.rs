@@ -3,9 +3,9 @@ use std::ops::Range;
 use std::sync::Arc;
 
 use bytemuck::{Pod, Zeroable};
-use figures::traits::Zero;
-use figures::units::{Dip, Px, UPx};
-use figures::{Point, Ratio, Size};
+use figures::traits::{IntoSigned, IsZero};
+use figures::units::{Dips, Px, UPx};
+use figures::{Angle, Fraction, Point, Size};
 
 use crate::buffer::Buffer;
 use crate::{sealed, Color, RenderingGraphics};
@@ -19,9 +19,8 @@ pub(crate) struct Uniforms {
 }
 
 impl Uniforms {
-    pub fn new(size: Size<UPx>, scale: f32) -> Self {
-        let scale = Ratio::from_f32(scale);
-        let scale = u32::from(scale.denominator()) << 16
+    pub fn new(size: Size<UPx>, scale: Fraction) -> Self {
+        let scale = u32::from(scale.denominator().unsigned_abs()) << 16
             | u32::try_from(scale.numerator()).expect("negative scaling ratio");
         Self {
             ortho: ScreenTransformation::ortho(
@@ -50,10 +49,7 @@ pub struct Vertex<Unit> {
 impl From<Vertex<Px>> for Vertex<i32> {
     fn from(value: Vertex<Px>) -> Self {
         Self {
-            location: Point {
-                x: value.location.x.0,
-                y: value.location.y.0,
-            },
+            location: value.location.cast(),
             texture: value.texture,
             color: value.color,
         }
@@ -62,7 +58,7 @@ impl From<Vertex<Px>> for Vertex<i32> {
 
 #[test]
 fn vertex_align() {
-    assert_eq!(std::mem::size_of::<Vertex<Dip>>(), 20);
+    assert_eq!(std::mem::size_of::<Vertex<Dips>>(), 20);
 }
 
 pub(crate) const FLAG_DIPS: u32 = 1 << 0;
@@ -72,7 +68,7 @@ pub(crate) const FLAG_TRANSLATE: u32 = 1 << 3;
 pub(crate) const FLAG_TEXTURED: u32 = 1 << 4;
 pub(crate) const FLAG_MASKED: u32 = 1 << 5;
 
-#[derive(Debug, Clone, Copy, Pod, Zeroable)]
+#[derive(Debug, Clone, Copy, Pod, Zeroable, PartialEq)]
 #[repr(C)]
 pub(crate) struct PushConstants {
     pub flags: u32,
@@ -98,7 +94,8 @@ pub struct PreparedCommand {
 
 impl<Unit> PreparedGraphic<Unit>
 where
-    Unit: Copy + Default + Into<i32> + ShaderScalable + Zero,
+    Unit: IntoSigned + Copy + Default + ShaderScalable + IsZero,
+    i32: From<Unit::Signed>,
     Vertex<Unit>: Pod,
 {
     /// Renders the prepared graphic at `origin`, rotating and scaling as
@@ -107,7 +104,7 @@ where
         &'pass self,
         origin: Point<Unit>,
         scale: Option<f32>,
-        rotation: Option<f32>,
+        rotation: Option<Angle>,
         graphics: &mut RenderingGraphics<'_, 'pass>,
     ) {
         graphics.active_pipeline_if_needed();
@@ -139,13 +136,10 @@ where
             });
             let rotation = rotation.map_or(0., |scale| {
                 flags |= FLAG_ROTATE;
-                scale
+                scale.into_raidans_f()
             });
-            let translation = graphics.clip.origin.try_cast().expect("clip out of bounds")
-                + Point {
-                    x: origin.x.into(),
-                    y: origin.y.into(),
-                };
+            let translation =
+                graphics.clip.origin.into_signed().cast() + origin.into_signed().cast();
             if !translation.is_zero() {
                 flags |= FLAG_TRANSLATE;
             }
@@ -170,7 +164,15 @@ pub trait ShaderScalable: sealed::ShaderScalableSealed {}
 
 impl ShaderScalable for Px {}
 
-impl ShaderScalable for Dip {}
+impl ShaderScalable for Dips {}
+
+impl ShaderScalable for UPx {}
+
+impl sealed::ShaderScalableSealed for UPx {
+    fn flags() -> u32 {
+        0
+    }
+}
 
 impl sealed::ShaderScalableSealed for Px {
     fn flags() -> u32 {
@@ -178,7 +180,7 @@ impl sealed::ShaderScalableSealed for Px {
     }
 }
 
-impl sealed::ShaderScalableSealed for Dip {
+impl sealed::ShaderScalableSealed for Dips {
     fn flags() -> u32 {
         FLAG_DIPS
     }
@@ -319,7 +321,7 @@ pub fn new(
             module: shader,
             entry_point: "vertex",
             buffers: &[wgpu::VertexBufferLayout {
-                array_stride: size_of::<Vertex<Dip>>() as u64,
+                array_stride: size_of::<Vertex<Dips>>() as u64,
                 step_mode: wgpu::VertexStepMode::Vertex,
                 attributes: &[
                     wgpu::VertexAttribute {
