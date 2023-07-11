@@ -288,7 +288,7 @@ mod text {
         /// used.
         ///
         /// `origin` allows controlling how the text will be drawn relative to the
-        /// coordinate provided in [`render()`](PreparedGraphic::render).
+        /// coordinate provided in [`render()`](crate::PreparedGraphic::render).
         pub fn draw_text_buffer<Unit>(
             &mut self,
             buffer: &cosmic_text::Buffer,

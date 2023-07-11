@@ -5,9 +5,10 @@ use figures::units::UPx;
 use figures::{Point, Rect};
 use lyon_tessellation::{
     FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
-    GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeVertex,
+    GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeTessellator, StrokeVertex,
     StrokeVertexConstructor, VertexId,
 };
+pub use lyon_tessellation::{LineCap, LineJoin};
 
 use crate::pipeline::Vertex;
 use crate::{sealed, Color, Graphics, PreparedGraphic, ShapeSource, Texture, TextureSource};
@@ -45,6 +46,25 @@ impl<Unit> Shape<Unit, false> {
             .line_to(Point::new(p1.x, p2.y))
             .close();
         path.fill(color)
+    }
+
+    /// Returns a rectangle that has its outline stroked with `color` and
+    /// `options`.
+    pub fn stroked_rect(
+        rect: Rect<Unit>,
+        color: Color,
+        options: StrokeOptions<Unit>,
+    ) -> Shape<Unit, false>
+    where
+        Unit: Add<Output = Unit> + Ord + FloatConversion<Float = f32> + Copy,
+    {
+        let (p1, p2) = rect.extents();
+        let path = PathBuilder::new(p1)
+            .line_to(Point::new(p2.x, p1.y))
+            .line_to(p2)
+            .line_to(Point::new(p1.x, p2.y))
+            .close();
+        path.stroke(color, options)
     }
 
     /// Uploads the shape to the GPU.
@@ -349,6 +369,29 @@ where
             .expect("should not fail to tesselat4e a rect");
         shape_builder.shape
     }
+
+    /// Strokes this path with `color` and `options`.
+    ///
+    /// If this is a textured image, the sampled texture colors will be
+    /// multiplied with this color. To render the image unchanged, use
+    /// [`Color::WHITE`].
+    #[must_use]
+    pub fn stroke(&self, color: Color, options: StrokeOptions<Unit>) -> Shape<Unit, TEXTURED> {
+        let lyon_path = self.as_lyon();
+        let mut shape_builder = ShapeBuilder::new(color);
+        let mut tesselator = StrokeTessellator::new();
+
+        tesselator
+            .tessellate_with_ids(
+                lyon_path.id_iter(),
+                &lyon_path,
+                Some(&lyon_path),
+                &options.into(),
+                &mut shape_builder,
+            )
+            .expect("should not fail to tesselat4e a rect");
+        shape_builder.shape
+    }
 }
 
 /// Builds a [`Path`].
@@ -563,5 +606,95 @@ where
     pub fn close(mut self) -> Path<Unit, true> {
         self.close = true;
         self.build()
+    }
+}
+
+/// Options for stroking lines on a path.
+pub struct StrokeOptions<Unit> {
+    /// The width of the line.
+    pub line_width: Unit,
+
+    /// See the SVG specification.
+    ///
+    /// Default value: `LineJoin::Miter`.
+    pub line_join: LineJoin,
+
+    /// What cap to use at the start of each sub-path.
+    ///
+    /// Default value: `LineCap::Butt`.
+    pub start_cap: LineCap,
+
+    /// What cap to use at the end of each sub-path.
+    ///
+    /// Default value: `LineCap::Butt`.
+    pub end_cap: LineCap,
+
+    /// See the SVG specification.
+    ///
+    /// Must be greater than or equal to 1.0.
+    /// Default value: `StrokeOptions::DEFAULT_MITER_LIMIT`.
+    pub miter_limit: f32,
+
+    /// Maximum allowed distance to the path when building an approximation.
+    ///
+    /// See [Flattening and tolerance](index.html#flattening-and-tolerance).
+    /// Default value: `StrokeOptions::DEFAULT_TOLERANCE`.
+    pub tolerance: f32,
+}
+
+impl<Unit> Default for StrokeOptions<Unit>
+where
+    Unit: DefaultStrokeWidth,
+{
+    fn default() -> Self {
+        Self {
+            line_width: Unit::default_stroke_width(),
+            line_join: lyon_tessellation::StrokeOptions::DEFAULT_LINE_JOIN,
+            start_cap: lyon_tessellation::StrokeOptions::DEFAULT_LINE_CAP,
+            end_cap: lyon_tessellation::StrokeOptions::DEFAULT_LINE_CAP,
+            miter_limit: lyon_tessellation::StrokeOptions::DEFAULT_MITER_LIMIT,
+            tolerance: Default::default(),
+        }
+    }
+}
+
+/// Controls the default stroke width for a given unit.
+pub trait DefaultStrokeWidth {
+    /// Returns the default width of a line stroked in this unit.
+    fn default_stroke_width() -> Self;
+}
+
+impl DefaultStrokeWidth for figures::units::Lp {
+    /// Returns [`Self::points(1)`].
+    fn default_stroke_width() -> Self {
+        Self::points(1)
+    }
+}
+impl DefaultStrokeWidth for figures::units::Px {
+    fn default_stroke_width() -> Self {
+        Self(1)
+    }
+}
+
+impl<Unit> From<StrokeOptions<Unit>> for lyon_tessellation::StrokeOptions
+where
+    Unit: FloatConversion<Float = f32>,
+{
+    fn from(options: StrokeOptions<Unit>) -> Self {
+        let StrokeOptions {
+            line_width,
+            line_join,
+            start_cap,
+            end_cap,
+            miter_limit,
+            tolerance,
+        } = options;
+        Self::default()
+            .with_line_width(line_width.into_float())
+            .with_line_join(line_join)
+            .with_start_cap(start_cap)
+            .with_end_cap(end_cap)
+            .with_miter_limit(miter_limit)
+            .with_tolerance(tolerance)
     }
 }

@@ -396,7 +396,7 @@ where
     Unit: ScreenScale<Px = Px, Lp = Lp> + Sub<Output = Unit> + Copy + Debug,
 {
     // TODO the returned type should be able to be drawn, so that we don't have to call update_scratch_buffer again.
-    let line_height = dbg!(Unit::from_lp(kludgine.text.line_height, kludgine.scale));
+    let line_height = Unit::from_lp(kludgine.text.line_height, kludgine.scale);
     let mut min = Point::new(Px::MAX, Px::MAX);
     let mut max = Point::new(Px::MIN, Px::MIN);
     map_each_glyph(
@@ -413,8 +413,8 @@ where
     );
 
     MeasuredText {
-        ascent: line_height - dbg!(Unit::from_px(min.y, kludgine.scale)),
-        descent: line_height - dbg!(Unit::from_px(max.y, kludgine.scale)),
+        ascent: line_height - Unit::from_px(min.y, kludgine.scale),
+        descent: line_height - Unit::from_px(max.y, kludgine.scale),
         left: Unit::from_px(min.x, kludgine.scale),
         width: Unit::from_px(max.x, kludgine.scale),
     }
