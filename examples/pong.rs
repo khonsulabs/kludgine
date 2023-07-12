@@ -1,10 +1,10 @@
 use std::cmp::Ordering;
 use std::time::Duration;
 
-use appit::winit::event::VirtualKeyCode;
-use figures::traits::{FloatConversion, IntoSigned};
-use figures::units::{Lp, Px};
+use kludgine::app::winit::event::VirtualKeyCode;
 use kludgine::app::Window;
+use kludgine::figures::traits::{FloatConversion, IntoSigned};
+use kludgine::figures::units::{Lp, Px};
 use kludgine::figures::{Point, Rect, Size};
 use kludgine::render::Renderer;
 use kludgine::shapes::Shape;
