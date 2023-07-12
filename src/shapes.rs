@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Neg};
 
 use figures::traits::FloatConversion;
 use figures::units::UPx;
@@ -9,9 +9,12 @@ use lyon_tessellation::{
     StrokeVertexConstructor, VertexId,
 };
 pub use lyon_tessellation::{LineCap, LineJoin};
+use smallvec::SmallVec;
 
 use crate::pipeline::Vertex;
-use crate::{sealed, Color, Graphics, PreparedGraphic, ShapeSource, Texture, TextureSource};
+use crate::{
+    sealed, Color, Graphics, Origin, PreparedGraphic, ShapeSource, Texture, TextureSource,
+};
 
 /// A tesselated shape.
 ///
@@ -20,20 +23,53 @@ use crate::{sealed, Color, Graphics, PreparedGraphic, ShapeSource, Texture, Text
 /// [prepared](Self::prepare).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Shape<Unit, const TEXTURED: bool> {
-    pub(crate) vertices: Vec<Vertex<Unit>>,
-    pub(crate) indices: Vec<u16>,
+    pub(crate) vertices: SmallVec<[Vertex<Unit>; 6]>,
+    pub(crate) indices: SmallVec<[u16; 20]>,
 }
 
-impl<Unit, const TEXTURED: bool> Shape<Unit, TEXTURED> {
-    const fn new() -> Self {
+#[test]
+fn shape_size() {
+    assert_eq!(std::mem::size_of::<Shape<i32, true>>(), 176);
+}
+
+impl<Unit, const TEXTURED: bool> Default for Shape<Unit, TEXTURED> {
+    fn default() -> Self {
         Self {
-            vertices: Vec::new(),
-            indices: Vec::new(),
+            vertices: SmallVec::new(),
+            indices: SmallVec::new(),
         }
     }
 }
 
 impl<Unit> Shape<Unit, false> {
+    /// Returns a circle that is filled solid with `color`.
+    pub fn filled_circle(radius: Unit, color: Color, origin: Origin<Unit>) -> Shape<Unit, false>
+    where
+        Unit: Default
+            + Neg<Output = Unit>
+            + Add<Output = Unit>
+            + Ord
+            + FloatConversion<Float = f32>
+            + Copy,
+    {
+        let center = match origin {
+            Origin::TopLeft => Point::new(radius, radius),
+            Origin::Center => Point::default(),
+            Origin::Custom(pt) => pt,
+        };
+        let mut shape_builder = ShapeBuilder::new(color);
+        let mut tesselator = FillTessellator::new();
+        tesselator
+            .tessellate_circle(
+                lyon_tessellation::math::point(center.x.into_float(), center.y.into_float()),
+                radius.into_float(),
+                &FillOptions::DEFAULT,
+                &mut shape_builder,
+            )
+            .expect("should not fail to tesselat4e a rect");
+        shape_builder.shape
+    }
+
     /// Returns a rectangle that is filled solid with `color`.
     pub fn filled_rect(rect: Rect<Unit>, color: Color) -> Shape<Unit, false>
     where
@@ -122,7 +158,7 @@ where
 {
     fn new(default_color: Color) -> Self {
         Self {
-            shape: Shape::new(),
+            shape: Shape::default(),
             default_color,
         }
     }
@@ -132,14 +168,15 @@ where
         position: lyon_tessellation::math::Point,
         attributes: &[f32],
     ) -> Vertex<Unit> {
-        assert!(
-            attributes.len() == 2,
-            "Attributes should be texture coordinate"
-        );
+        let texture = match attributes.len() {
+            0 => Point::default(),
+            2 => Point::new(attributes[0].round(), attributes[1].round()).cast(),
+            _ => unreachable!("Attributes should be empty or 2"),
+        };
 
         Vertex {
             location: Point::new(Unit::from_float(position.x), Unit::from_float(position.y)),
-            texture: Point::new(attributes[0].round(), attributes[1].round()).cast(),
+            texture,
             color: self.default_color,
         }
     }
@@ -296,7 +333,17 @@ pub enum PathEvent<Unit> {
 /// A geometric shape defined by a path.
 #[derive(Default, Debug, Clone)]
 pub struct Path<Unit, const TEXTURED: bool> {
-    events: Vec<PathEvent<Unit>>,
+    /// A small-vec of path events. Contains enough stack space to contain the
+    /// path of a hexagon, because it's the bestagon.
+    events: SmallVec<[PathEvent<Unit>; 7]>,
+}
+
+#[test]
+fn path_size() {
+    assert_eq!(std::mem::size_of::<PathEvent<i32>>(), 36);
+    // This is a pretty big structure with the inline path events, but it allows
+    // drawing most common polygons without heap allocations.
+    assert_eq!(std::mem::size_of::<Path<i32, true>>(), 264);
 }
 
 impl<Unit, const TEXTURED: bool> FromIterator<PathEvent<Unit>> for Path<Unit, TEXTURED> {

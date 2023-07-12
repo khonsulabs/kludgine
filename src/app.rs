@@ -1,15 +1,23 @@
 use std::mem::size_of;
 use std::panic::UnwindSafe;
+use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
+pub use appit::winit;
+use appit::winit::dpi::PhysicalPosition;
+use appit::winit::event::{
+    AxisId, DeviceId, ElementState, Ime, KeyboardInput, MouseButton, MouseScrollDelta, Touch,
+    TouchPhase, VirtualKeyCode,
+};
 use appit::winit::window::WindowId;
 use appit::{Application, Message, RunningWindow, WindowBehavior as _};
+use figures::units::Px;
 use figures::utils::lossy_f64_to_f32;
-use figures::Size;
+use figures::{Point, Size};
 
 use crate::pipeline::PushConstants;
-use crate::render::{Renderer, Rendering};
+use crate::render::{Drawing, Renderer};
 use crate::{Color, Graphics, Kludgine, RenderingGraphics};
 
 fn shared_wgpu() -> Arc<wgpu::Instance> {
@@ -73,6 +81,24 @@ impl<'window> Window<'window> {
     #[must_use]
     pub const fn last_frame_rendered_in(&self) -> Duration {
         self.last_frame_rendered_in
+    }
+
+    /// Returns the location of the mouse cursor within this window, if the
+    /// cursor is currently above the window.
+    pub fn cursor_position(&self) -> Option<Point<Px>> {
+        self.window.cursor_location().map(Point::from)
+    }
+
+    /// Returns true if the given button is currently pressed.
+    #[must_use]
+    pub fn mouse_button_pressed(&self, button: MouseButton) -> bool {
+        self.window.mouse_button_pressed(&button)
+    }
+
+    /// Returns true if the given virtual key code is currently pressed.
+    #[must_use]
+    pub fn key_pressed(&self, key: &VirtualKeyCode) -> bool {
+        self.window.key_pressed(key)
     }
 }
 
@@ -140,6 +166,162 @@ pub trait WindowBehavior: Sized + 'static {
     /// the thread it is running on is spawned.
     fn run_with(context: Self::Context) -> ! {
         KludgineWindow::<Self>::run_with_context_and_event_callback(context, create_surface)
+    }
+
+    /// The window has been requested to be closed. This can happen as a result
+    /// of the user clicking the close button.
+    ///
+    /// If the window should be closed, return true. To prevent closing the
+    /// window, return false.
+    #[allow(unused_variables)]
+    fn close_requested(&mut self, window: Window<'_>) -> bool {
+        true
+    }
+
+    /// The window has gained or lost keyboard focus.
+    /// [`RunningWindow::focused()`] returns the current state.
+    #[allow(unused_variables)]
+    fn focus_changed(&mut self, window: Window<'_>) {}
+
+    /// The window has been occluded or revealed. [`RunningWindow::occluded()`]
+    /// returns the current state.
+    #[allow(unused_variables)]
+    fn occlusion_changed(&mut self, window: Window<'_>) {}
+
+    /// The window's scale factor has changed. [`RunningWindow::scale()`]
+    /// returns the current scale.
+    #[allow(unused_variables)]
+    fn scale_factor_changed(&mut self, window: Window<'_>) {}
+
+    /// The window has been resized. [`RunningWindow::inner_size()`]
+    /// returns the current size.
+    #[allow(unused_variables)]
+    fn resized(&mut self, window: Window<'_>) {}
+
+    /// The window's theme has been updated. [`RunningWindow::theme()`]
+    /// returns the current theme.
+    #[allow(unused_variables)]
+    fn theme_changed(&mut self, window: Window<'_>) {}
+
+    /// A file has been dropped on the window.
+    #[allow(unused_variables)]
+    fn dropped_file(&mut self, window: Window<'_>, path: PathBuf) {}
+
+    /// A file is hovering over the window.
+    #[allow(unused_variables)]
+    fn hovered_file(&mut self, window: Window<'_>, path: PathBuf) {}
+
+    /// A file being overed has been cancelled.
+    #[allow(unused_variables)]
+    fn hovered_file_cancelled(&mut self, window: Window<'_>) {}
+
+    /// An input event has generated a character.
+    #[allow(unused_variables)]
+    fn received_character(&mut self, window: Window<'_>, char: char) {}
+
+    /// A keyboard event occurred while the window was focused.
+    #[allow(unused_variables)]
+    fn keyboard_input(
+        &mut self,
+        window: Window<'_>,
+        device_id: DeviceId,
+        input: KeyboardInput,
+        is_synthetic: bool,
+    ) {
+    }
+
+    /// The keyboard modifier keys have changed. [`RunningWindow::modifiers()`]
+    /// returns the current modifier keys state.
+    #[allow(unused_variables)]
+    fn modifiers_changed(&mut self, window: Window<'_>) {}
+
+    /// An international input even thas occurred for the window.
+    #[allow(unused_variables)]
+    fn ime(&mut self, window: Window<'_>, ime: Ime) {}
+
+    /// A cursor has moved over the window.
+    #[allow(unused_variables)]
+    fn cursor_moved(
+        &mut self,
+        window: Window<'_>,
+        device_id: DeviceId,
+        position: PhysicalPosition<f64>,
+    ) {
+    }
+
+    /// A cursor has hovered over the window.
+    #[allow(unused_variables)]
+    fn cursor_entered(&mut self, window: Window<'_>, device_id: DeviceId) {}
+
+    /// A cursor is no longer hovering over the window.
+    #[allow(unused_variables)]
+    fn cursor_left(&mut self, window: Window<'_>, device_id: DeviceId) {}
+
+    /// An event from a mouse wheel.
+    #[allow(unused_variables)]
+    fn mouse_wheel(
+        &mut self,
+        window: Window<'_>,
+        device_id: DeviceId,
+        delta: MouseScrollDelta,
+        phase: TouchPhase,
+    ) {
+    }
+
+    /// A mouse button was pressed or released.
+    #[allow(unused_variables)]
+    fn mouse_input(
+        &mut self,
+        window: Window<'_>,
+        device_id: DeviceId,
+        state: ElementState,
+        button: MouseButton,
+    ) {
+    }
+
+    /// A pressure-sensitive touchpad was touched.
+    #[allow(unused_variables)]
+    fn touchpad_pressure(
+        &mut self,
+        window: Window<'_>,
+        device_id: DeviceId,
+        pressure: f32,
+        stage: i64,
+    ) {
+    }
+
+    /// A multi-axis input device has registered motion.
+    #[allow(unused_variables)]
+    fn axis_motion(&mut self, window: Window<'_>, device_id: DeviceId, axis: AxisId, value: f64) {}
+
+    /// A touch event.
+    #[allow(unused_variables)]
+    fn touch(&mut self, window: Window<'_>, touch: Touch) {}
+
+    /// A touchpad-originated magnification gesture.
+    #[allow(unused_variables)]
+    fn touchpad_magnify(
+        &mut self,
+        window: Window<'_>,
+        device_id: DeviceId,
+        delta: f64,
+        phase: TouchPhase,
+    ) {
+    }
+
+    /// A request to smart-magnify the window.
+    #[allow(unused_variables)]
+    fn smart_magnify(&mut self, window: Window<'_>, device_id: DeviceId) {}
+
+    /// A touchpad-originated rotation gesture.
+    #[allow(unused_variables)]
+    fn touchpad_rotate(
+        &mut self,
+        window: Window<'_>,
+        device_id: DeviceId,
+        delta: f32,
+        phase: TouchPhase,
+    ) {
     }
 }
 
@@ -331,13 +513,29 @@ where
         self.last_render = render_start;
     }
 
-    fn close_requested(&mut self, _window: &mut RunningWindow<CreateSurfaceRequest>) -> bool {
-        true
+    fn close_requested(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) -> bool {
+        self.behavior.close_requested(Window::new(
+            window,
+            self.last_render.elapsed(),
+            self.last_render_duration,
+        ))
     }
 
-    fn focus_changed(&mut self, _window: &mut RunningWindow<CreateSurfaceRequest>) {}
+    fn focus_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+        self.behavior.focus_changed(Window::new(
+            window,
+            self.last_render.elapsed(),
+            self.last_render_duration,
+        ));
+    }
 
-    fn occlusion_changed(&mut self, _window: &mut RunningWindow<CreateSurfaceRequest>) {}
+    fn occlusion_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+        self.behavior.occlusion_changed(Window::new(
+            window,
+            self.last_render.elapsed(),
+            self.last_render_duration,
+        ));
+    }
 
     fn resized(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
         self.config.width = window.inner_size().width;
@@ -348,8 +546,294 @@ where
             lossy_f64_to_f32(window.scale()),
             &self.queue,
         );
-        // TODO pass onto kludgine
         window.set_needs_redraw();
+        self.behavior.resized(Window::new(
+            window,
+            self.last_render.elapsed(),
+            self.last_render_duration,
+        ));
+    }
+
+    fn scale_factor_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+        self.behavior.scale_factor_changed(Window::new(
+            window,
+            self.last_render.elapsed(),
+            self.last_render_duration,
+        ));
+    }
+
+    fn theme_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+        self.behavior.theme_changed(Window::new(
+            window,
+            self.last_render.elapsed(),
+            self.last_render_duration,
+        ));
+    }
+
+    fn dropped_file(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>, path: PathBuf) {
+        self.behavior.dropped_file(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            path,
+        );
+    }
+
+    fn hovered_file(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>, path: PathBuf) {
+        self.behavior.hovered_file(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            path,
+        );
+    }
+
+    fn hovered_file_cancelled(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+        self.behavior.hovered_file_cancelled(Window::new(
+            window,
+            self.last_render.elapsed(),
+            self.last_render_duration,
+        ));
+    }
+
+    fn received_character(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>, char: char) {
+        self.behavior.received_character(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            char,
+        );
+    }
+
+    fn keyboard_input(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest>,
+        device_id: DeviceId,
+        input: KeyboardInput,
+        is_synthetic: bool,
+    ) {
+        self.behavior.keyboard_input(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            device_id,
+            input,
+            is_synthetic,
+        );
+    }
+
+    fn modifiers_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+        self.behavior.modifiers_changed(Window::new(
+            window,
+            self.last_render.elapsed(),
+            self.last_render_duration,
+        ));
+    }
+
+    fn ime(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>, ime: Ime) {
+        self.behavior.ime(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            ime,
+        );
+    }
+
+    fn cursor_moved(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest>,
+        device_id: DeviceId,
+        position: PhysicalPosition<f64>,
+    ) {
+        self.behavior.cursor_moved(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            device_id,
+            position,
+        );
+    }
+
+    fn cursor_entered(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest>,
+        device_id: DeviceId,
+    ) {
+        self.behavior.cursor_entered(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            device_id,
+        );
+    }
+
+    fn cursor_left(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest>,
+        device_id: DeviceId,
+    ) {
+        self.behavior.cursor_left(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            device_id,
+        );
+    }
+
+    fn mouse_wheel(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest>,
+        device_id: DeviceId,
+        delta: MouseScrollDelta,
+        phase: TouchPhase,
+    ) {
+        self.behavior.mouse_wheel(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            device_id,
+            delta,
+            phase,
+        );
+    }
+
+    fn mouse_input(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest>,
+        device_id: DeviceId,
+        state: ElementState,
+        button: MouseButton,
+    ) {
+        self.behavior.mouse_input(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            device_id,
+            state,
+            button,
+        );
+    }
+
+    fn touchpad_pressure(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest>,
+        device_id: DeviceId,
+        pressure: f32,
+        stage: i64,
+    ) {
+        self.behavior.touchpad_pressure(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            device_id,
+            pressure,
+            stage,
+        );
+    }
+
+    fn axis_motion(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest>,
+        device_id: DeviceId,
+        axis: AxisId,
+        value: f64,
+    ) {
+        self.behavior.axis_motion(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            device_id,
+            axis,
+            value,
+        );
+    }
+
+    fn touch(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>, touch: Touch) {
+        self.behavior.touch(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            touch,
+        );
+    }
+
+    fn touchpad_magnify(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest>,
+        device_id: DeviceId,
+        delta: f64,
+        phase: TouchPhase,
+    ) {
+        self.behavior.touchpad_magnify(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            device_id,
+            delta,
+            phase,
+        );
+    }
+
+    fn smart_magnify(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest>,
+        device_id: DeviceId,
+    ) {
+        self.behavior.smart_magnify(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            device_id,
+        );
+    }
+
+    fn touchpad_rotate(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest>,
+        device_id: DeviceId,
+        delta: f32,
+        phase: TouchPhase,
+    ) {
+        self.behavior.touchpad_rotate(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            device_id,
+            delta,
+            phase,
+        );
     }
 }
 
@@ -357,7 +841,7 @@ impl<T> UnwindSafe for KludgineWindow<T> {}
 
 struct CallbackWindow<C> {
     callback: C,
-    rendering: Rendering,
+    rendering: Drawing,
     keep_running: bool,
 }
 
@@ -377,7 +861,7 @@ where
     ) -> Self {
         Self {
             callback: context,
-            rendering: Rendering::default(),
+            rendering: Drawing::default(),
             keep_running: true,
         }
     }

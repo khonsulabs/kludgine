@@ -24,6 +24,7 @@ figures = { git = "https://github.com/khonsulabs/figures", branch = "redux", fea
     "bytemuck",
     "euclid",
 ] }
+smallvec = "1.11.0"
 
 [dev-dependencies]
 image = { version = "0.24.6", features = ["png"] }

@@ -6,7 +6,7 @@ use ahash::AHashMap;
 use figures::traits::{FloatConversion, IntoSigned, IsZero};
 use figures::{Angle, Point, Rect};
 
-use crate::buffer::Buffer;
+use crate::buffer::DiffableBuffer;
 use crate::pipeline::{
     PushConstants, ShaderScalable, Vertex, FLAG_MASKED, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED,
     FLAG_TRANSLATE,
@@ -26,7 +26,7 @@ use crate::{
 /// be drawn using [`Rendering::render`].
 pub struct Renderer<'render, 'gfx> {
     pub(crate) graphics: &'render mut Graphics<'gfx>,
-    data: &'render mut Rendering,
+    data: &'render mut Drawing,
 }
 
 impl<'gfx> Deref for Renderer<'_, 'gfx> {
@@ -231,6 +231,7 @@ impl Renderer<'_, '_> {
 
 #[cfg(feature = "cosmic-text")]
 mod text {
+    use std::array;
     use std::collections::hash_map;
     use std::ops::{Add, Neg, Sub};
     use std::sync::Arc;
@@ -269,6 +270,7 @@ mod text {
         pub fn draw_text<Unit>(
             &mut self,
             text: &str,
+            color: Color,
             origin: TextOrigin<Unit>,
             translate: Point<Unit>,
             rotation: Option<Angle>,
@@ -279,7 +281,7 @@ mod text {
             self.graphics.kludgine.update_scratch_buffer(text);
             self.draw_text_buffer_inner(
                 None,
-                Color::WHITE,
+                color,
                 origin.into_px(self.scale()),
                 translate,
                 rotation,
@@ -412,14 +414,14 @@ mod text {
         textures: &mut AHashMap<TextureId, Arc<wgpu::BindGroup>>,
         commands: &mut Vec<Command>,
     ) {
-        let mut corners = [0; 4];
-        for (&corner, index) in blit.vertices().iter().zip(corners.iter_mut()) {
-            *index = vertices.get_or_insert(Vertex {
-                location: corner.location.into_signed().cast(),
-                texture: corner.texture,
-                color: corner.color,
-            });
-        }
+        let corners: [u16; 4] = array::from_fn(|index| {
+            let vertex = &blit.verticies[index];
+            vertices.get_or_insert(Vertex {
+                location: vertex.location.into_signed().cast(),
+                texture: vertex.texture,
+                color: vertex.color,
+            })
+        });
         let start_index = u32::try_from(indices.len()).expect("too many drawn indices");
         for &index in blit.indices() {
             indices.push(corners[usize::from(index)]);
@@ -469,27 +471,39 @@ mod text {
 
 impl Drop for Renderer<'_, '_> {
     fn drop(&mut self) {
-        if self.data.indices.is_empty() {
-            self.data.buffers = None;
-        } else {
-            self.data.buffers = Some(RenderingBuffers {
-                vertex: Buffer::new(
+        if !self.data.indices.is_empty() {
+            if let Some(buffers) = &mut self.data.buffers {
+                buffers.vertex.update(
                     &self.data.vertices.vertices,
-                    wgpu::BufferUsages::VERTEX,
                     self.graphics.device,
-                ),
-                index: Buffer::new(
+                    self.graphics.queue,
+                );
+                buffers.index.update(
                     &self.data.indices,
-                    wgpu::BufferUsages::INDEX,
                     self.graphics.device,
-                ),
-            });
+                    self.graphics.queue,
+                );
+            } else {
+                // Create new buffers
+                self.data.buffers = Some(RenderingBuffers {
+                    vertex: DiffableBuffer::new(
+                        &self.data.vertices.vertices,
+                        wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                        self.graphics.device,
+                    ),
+                    index: DiffableBuffer::new(
+                        &self.data.indices,
+                        wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+                        self.graphics.device,
+                    ),
+                });
+            }
         }
     }
 }
 
-/// An easy-to-use renderer that combines all operations into a single GPU
-/// object.
+/// A composite, multi-operation graphic, created with an easy-to-use
+/// [`Renderer`]-driven API.
 ///
 /// The process of preparing individual graphics and then rendering them allows
 /// for efficient rendering. The downside is that it can be harder to use, and
@@ -500,7 +514,7 @@ impl Drop for Renderer<'_, '_> {
 /// [`Renderer`]. Once the renderer is dropped, this type's vertex buffer and
 /// index buffer are updated.
 #[derive(Default, Debug)]
-pub struct Rendering {
+pub struct Drawing {
     buffers: Option<RenderingBuffers>,
     vertices: VertexCollection<i32>,
     indices: Vec<u16>,
@@ -512,11 +526,11 @@ pub struct Rendering {
 
 #[derive(Debug)]
 struct RenderingBuffers {
-    vertex: Buffer<Vertex<i32>>,
-    index: Buffer<u16>,
+    vertex: DiffableBuffer<Vertex<i32>>,
+    index: DiffableBuffer<u16>,
 }
 
-impl Rendering {
+impl Drawing {
     /// Clears the currently prepared graphics and returns a new [`Renderer`] to
     /// prepare new graphics.
     ///

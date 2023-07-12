@@ -6,6 +6,7 @@ use bytemuck::{Pod, Zeroable};
 use figures::traits::{IntoSigned, IsZero};
 use figures::units::{Lp, Px, UPx};
 use figures::{Angle, Fraction, Point, Size};
+use smallvec::SmallVec;
 
 use crate::buffer::Buffer;
 use crate::{sealed, Color, RenderingGraphics};
@@ -38,7 +39,7 @@ impl Uniforms {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub struct Vertex<Unit> {
     pub location: Point<Unit>,
@@ -82,7 +83,7 @@ pub(crate) struct PushConstants {
 pub struct PreparedGraphic<Unit> {
     pub(crate) vertices: Buffer<Vertex<Unit>>,
     pub(crate) indices: Buffer<u16>,
-    pub(crate) commands: Vec<PreparedCommand>,
+    pub(crate) commands: SmallVec<[PreparedCommand; 2]>,
 }
 
 #[derive(Debug)]

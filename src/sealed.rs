@@ -3,6 +3,7 @@ use std::sync::{Arc, OnceLock};
 
 use figures::units::UPx;
 use figures::Rect;
+use smallvec::smallvec;
 
 use crate::buffer::Buffer;
 use crate::pipeline::{PreparedCommand, Vertex};
@@ -56,7 +57,7 @@ pub trait ShapeSource<Unit> {
         PreparedGraphic {
             vertices,
             indices,
-            commands: vec![PreparedCommand {
+            commands: smallvec![PreparedCommand {
                 indices: 0..self
                     .indices()
                     .len()

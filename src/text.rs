@@ -1,3 +1,4 @@
+use std::array;
 use std::collections::hash_map;
 use std::fmt::{self, Debug};
 use std::ops::Sub;
@@ -9,6 +10,7 @@ use figures::traits::ScreenScale;
 use figures::units::{Lp, Px};
 use figures::utils::lossy_f32_to_i32;
 use figures::{Fraction, Point, Rect, Size};
+use smallvec::SmallVec;
 
 use crate::buffer::Buffer;
 use crate::pipeline::PreparedCommand;
@@ -174,7 +176,7 @@ impl TextSystem {
             font_size: DEFAULT_FONT_SIZE,
             line_height: DEFAULT_FONT_SIZE,
             glyphs: GlyphCache::default(),
-            attrs: AttrsOwned::new(Attrs::new().color(Color::WHITE.into())),
+            attrs: AttrsOwned::new(Attrs::new()),
         }
     }
 
@@ -340,9 +342,9 @@ impl<'gfx> Graphics<'gfx> {
         origin: TextOrigin<Px>,
     ) -> PreparedText {
         let mut glyphs = AHashMap::new();
-        let mut verticies = VertexCollection::default();
+        let mut vertices = VertexCollection::default();
         let mut indices = Vec::new();
-        let mut commands = Vec::<PreparedCommand>::new();
+        let mut commands = SmallVec::<[PreparedCommand; 2]>::new();
 
         map_each_glyph(
             Some(buffer),
@@ -352,10 +354,8 @@ impl<'gfx> Graphics<'gfx> {
             self.queue,
             &mut glyphs,
             |blit, cached, _is_first_line| {
-                let mut corners = [0; 4];
-                for (&corner, index) in blit.vertices().iter().zip(corners.iter_mut()) {
-                    *index = verticies.get_or_insert(corner);
-                }
+                let corners: [u16; 4] =
+                    array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
                 let start_index = u32::try_from(indices.len()).expect("too many drawn indices");
                 for &index in blit.indices() {
                     indices.push(corners[usize::from(index)]);
@@ -379,7 +379,7 @@ impl<'gfx> Graphics<'gfx> {
 
         PreparedText {
             graphic: PreparedGraphic {
-                vertices: Buffer::new(&verticies.vertices, wgpu::BufferUsages::VERTEX, self.device),
+                vertices: Buffer::new(&vertices.vertices, wgpu::BufferUsages::VERTEX, self.device),
                 indices: Buffer::new(&indices, wgpu::BufferUsages::INDEX, self.device),
                 commands,
             },

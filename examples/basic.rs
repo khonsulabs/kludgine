@@ -28,6 +28,7 @@ fn main() {
         );
         renderer.draw_text(
             "Hello, World!",
+            Color::WHITE,
             TextOrigin::Center,
             shape_center,
             Some(angle),
