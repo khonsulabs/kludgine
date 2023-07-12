@@ -14,7 +14,7 @@ prepare graphics for rendering:</p>
 <li><a href="struct.Texture.html#method.prepare" title="method kludgine::Texture::prepare"><code>Texture::prepare</code></a></li>
 <li><a href="struct.Texture.html#method.prepare_partial" title="method kludgine::Texture::prepare_partial"><code>Texture::prepare_partial</code></a></li>
 <li><a href="struct.CollectedTexture.html#method.prepare" title="method kludgine::CollectedTexture::prepare"><code>CollectedTexture::prepare</code></a></li>
-<li><a href="render/struct.Rendering.html#method.new_frame" title="method kludgine::render::Rendering::new_frame"><code>Rendering::new_frame</code></a></li>
+<li><a href="render::Rendering::new_frame"><code>Rendering::new_frame</code></a></li>
 </ul>
 <p>The returned graphics provides access to the various types to update
 their representation on the GPU so that they can be rendered later.</p>
@@ -28,7 +28,7 @@ render previously prepared graphics:</p>
 <ul>
 <li><a href="struct.PreparedGraphic.html" title="struct kludgine::PreparedGraphic"><code>PreparedGraphic</code></a></li>
 <li><a href="text/struct.PreparedText.html" title="struct kludgine::text::PreparedText"><code>PreparedText</code></a></li>
-<li><a href="render/struct.Rendering.html" title="struct kludgine::render::Rendering"><code>Rendering</code></a></li>
+<li><a href="render::Rendering"><code>Rendering</code></a></li>
 </ul>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.render_into" class="method"><a class="srclink rightside" href="../src/kludgine/lib.rs.html#260-286">source</a><h4 class="code-header">pub fn <a href="#method.render_into" class="fn">render_into</a>&lt;'gfx, 'pass&gt;(
     &amp;'pass mut self,
@@ -42,7 +42,7 @@ graphics:</p>
 <ul>
 <li><a href="struct.PreparedGraphic.html" title="struct kludgine::PreparedGraphic"><code>PreparedGraphic</code></a></li>
 <li><a href="text/struct.PreparedText.html" title="struct kludgine::text::PreparedText"><code>PreparedText</code></a></li>
-<li><a href="render/struct.Rendering.html" title="struct kludgine::render::Rendering"><code>Rendering</code></a></li>
+<li><a href="render::Rendering"><code>Rendering</code></a></li>
 </ul>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.submit" class="method"><a class="srclink rightside" href="../src/kludgine/lib.rs.html#294-297">source</a><h4 class="code-header">pub fn <a href="#method.submit" class="fn">submit</a>(self, queue: &amp;Queue) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.70.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;SubmissionIndex&gt;</h4></section></summary><div class="docblock"><p>Submits all of the commands for this frame to the GPU.</p>
 <p>This function does not block for the operations to finish. The returned

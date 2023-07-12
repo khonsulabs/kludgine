@@ -639,7 +639,8 @@
 <a href="#639" id="639">639</a>
 <a href="#640" id="640">640</a>
 <a href="#641" id="641">641</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map;
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
+<span class="kw">use </span>std::collections::hash_map;
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
 <span class="kw">use </span>std::ops::Sub;
 <span class="kw">use </span>std::sync::{Arc, Mutex, PoisonError};
@@ -650,6 +651,7 @@
 <span class="kw">use </span>figures::units::{Lp, Px};
 <span class="kw">use </span>figures::utils::lossy_f32_to_i32;
 <span class="kw">use </span>figures::{Fraction, Point, Rect, Size};
+<span class="kw">use </span>smallvec::SmallVec;
 
 <span class="kw">use </span><span class="kw">crate</span>::buffer::Buffer;
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::PreparedCommand;
@@ -815,7 +817,7 @@
             font_size: DEFAULT_FONT_SIZE,
             line_height: DEFAULT_FONT_SIZE,
             glyphs: GlyphCache::default(),
-            attrs: AttrsOwned::new(Attrs::new().color(Color::WHITE.into())),
+            attrs: AttrsOwned::new(Attrs::new()),
         }
     }
 
@@ -981,9 +983,9 @@
         origin: TextOrigin&lt;Px&gt;,
     ) -&gt; PreparedText {
         <span class="kw">let </span><span class="kw-2">mut </span>glyphs = AHashMap::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>verticies = VertexCollection::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>vertices = VertexCollection::default();
         <span class="kw">let </span><span class="kw-2">mut </span>indices = Vec::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>commands = Vec::&lt;PreparedCommand&gt;::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>commands = SmallVec::&lt;[PreparedCommand; <span class="number">2</span>]&gt;::new();
 
         map_each_glyph(
             <span class="prelude-val">Some</span>(buffer),
@@ -993,10 +995,8 @@
             <span class="self">self</span>.queue,
             <span class="kw-2">&amp;mut </span>glyphs,
             |blit, cached, _is_first_line| {
-                <span class="kw">let </span><span class="kw-2">mut </span>corners = [<span class="number">0</span>; <span class="number">4</span>];
-                <span class="kw">for </span>(<span class="kw-2">&amp;</span>corner, index) <span class="kw">in </span>blit.vertices().iter().zip(corners.iter_mut()) {
-                    <span class="kw-2">*</span>index = verticies.get_or_insert(corner);
-                }
+                <span class="kw">let </span>corners: [u16; <span class="number">4</span>] =
+                    array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
                 <span class="kw">let </span>start_index = u32::try_from(indices.len()).expect(<span class="string">&quot;too many drawn indices&quot;</span>);
                 <span class="kw">for </span><span class="kw-2">&amp;</span>index <span class="kw">in </span>blit.indices() {
                     indices.push(corners[usize::from(index)]);
@@ -1020,7 +1020,7 @@
 
         PreparedText {
             graphic: PreparedGraphic {
-                vertices: Buffer::new(<span class="kw-2">&amp;</span>verticies.vertices, wgpu::BufferUsages::VERTEX, <span class="self">self</span>.device),
+                vertices: Buffer::new(<span class="kw-2">&amp;</span>vertices.vertices, wgpu::BufferUsages::VERTEX, <span class="self">self</span>.device),
                 indices: Buffer::new(<span class="kw-2">&amp;</span>indices, wgpu::BufferUsages::INDEX, <span class="self">self</span>.device),
                 commands,
             },

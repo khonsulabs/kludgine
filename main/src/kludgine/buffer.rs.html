@@ -85,8 +85,81 @@
 <a href="#85" id="85">85</a>
 <a href="#86" id="86">86</a>
 <a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
+<span class="kw">use </span>std::ops::Deref;
 
 <span class="kw">use </span>wgpu::util::DeviceExt;
 
@@ -170,6 +243,77 @@
 
     <span class="kw">pub const fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         size_of::&lt;T&gt;() * <span class="self">self</span>.len()
+    }
+}
+
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>DiffableBuffer&lt;T&gt; {
+    buffer: Buffer&lt;T&gt;,
+    usage: wgpu::BufferUsages,
+    data: Vec&lt;T&gt;,
+}
+
+<span class="kw">impl</span>&lt;T&gt; DiffableBuffer&lt;T&gt;
+<span class="kw">where
+    </span>T: bytemuck::Pod + Clone + Eq,
+{
+    <span class="kw">pub fn </span>new(contents: <span class="kw-2">&amp;</span>[T], usage: wgpu::BufferUsages, device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>usage = usage | wgpu::BufferUsages::COPY_DST;
+        <span class="kw">let </span>buffer = Buffer::new(contents, usage, device);
+        <span class="self">Self </span>{
+            buffer,
+            usage,
+            data: contents.to_vec(),
+        }
+    }
+
+    <span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_contents: <span class="kw-2">&amp;</span>[T], device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
+        <span class="kw">if </span>new_contents.len() &gt; <span class="self">self</span>.buffer.len() {
+            <span class="comment">// We need to grow to store the new data. There is no grow operation
+            // in wgpu, so we might as well just allocate a new buffer with the new contents immediately.
+            </span><span class="self">self</span>.buffer = Buffer::new(new_contents, <span class="self">self</span>.usage, device);
+            <span class="self">self</span>.data.clear();
+            <span class="self">self</span>.data.extend_from_slice(new_contents);
+        } <span class="kw">else </span>{
+            <span class="macro">assert!</span>(new_contents.len() &lt;= <span class="self">self</span>.data.len());
+            <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
+
+            <span class="kw">while </span>index &lt; new_contents.len() {
+                <span class="kw">if </span>new_contents[index] != <span class="self">self</span>.data[index] {
+                    <span class="kw">let </span>start_index = index;
+                    <span class="comment">// We found a changed element. Find where we should stop.
+                    </span><span class="kw">let </span><span class="kw-2">mut </span>last_changed = start_index;
+                    <span class="kw">while </span>index &lt; new_contents.len() {
+                        <span class="kw">if </span>new_contents[index] == <span class="self">self</span>.data[index] {
+                            <span class="comment">// We found a matching element that we don&#39;t need to
+                            // update. We might want to overwrite it anyways,
+                            // however, to minimize the number of GPU writes we&#39;re
+                            // performing.
+                            </span><span class="kw">if </span>last_changed - start_index &gt;= <span class="number">16 </span>{
+                                <span class="kw">break</span>;
+                            }
+                        } <span class="kw">else </span>{
+                            last_changed = index;
+                        }
+                        index += <span class="number">1</span>;
+                    }
+
+                    <span class="comment">// Update the changed range in the buffers.
+                    </span><span class="kw">let </span>copy_range = <span class="kw-2">&amp;</span>new_contents[start_index..=last_changed];
+                    <span class="self">self</span>.buffer.update(start_index, copy_range, queue);
+                    <span class="self">self</span>.data[start_index..=last_changed].copy_from_slice(copy_range);
+                }
+                index += <span class="number">1</span>;
+            }
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;T&gt; Deref <span class="kw">for </span>DiffableBuffer&lt;T&gt; {
+    <span class="kw">type </span>Target = Buffer&lt;T&gt;;
+
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.buffer
     }
 }
 </code></pre></div></section></main></body></html>

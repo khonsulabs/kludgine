@@ -587,6 +587,20 @@
 <a href="#587" id="587">587</a>
 <a href="#588" id="588">588</a>
 <a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map;
 <span class="kw">use </span>std::ops::{Add, Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
@@ -595,7 +609,7 @@
 <span class="kw">use </span>figures::traits::{FloatConversion, IntoSigned, IsZero};
 <span class="kw">use </span>figures::{Angle, Point, Rect};
 
-<span class="kw">use </span><span class="kw">crate</span>::buffer::Buffer;
+<span class="kw">use </span><span class="kw">crate</span>::buffer::DiffableBuffer;
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{
     PushConstants, ShaderScalable, Vertex, FLAG_MASKED, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED,
     FLAG_TRANSLATE,
@@ -615,7 +629,7 @@
 /// be drawn using [`Rendering::render`].
 </span><span class="kw">pub struct </span>Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) graphics: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt;,
-    data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Rendering,
+    data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Drawing,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>&gt; Deref <span class="kw">for </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;gfx</span>&gt; {
@@ -820,6 +834,7 @@
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
 </span><span class="kw">mod </span>text {
+    <span class="kw">use </span>std::array;
     <span class="kw">use </span>std::collections::hash_map;
     <span class="kw">use </span>std::ops::{Add, Neg, Sub};
     <span class="kw">use </span>std::sync::Arc;
@@ -858,6 +873,7 @@
         </span><span class="kw">pub fn </span>draw_text&lt;Unit&gt;(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>,
             text: <span class="kw-2">&amp;</span>str,
+            color: Color,
             origin: TextOrigin&lt;Unit&gt;,
             translate: Point&lt;Unit&gt;,
             rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
@@ -868,7 +884,7 @@
             <span class="self">self</span>.graphics.kludgine.update_scratch_buffer(text);
             <span class="self">self</span>.draw_text_buffer_inner(
                 <span class="prelude-val">None</span>,
-                Color::WHITE,
+                color,
                 origin.into_px(<span class="self">self</span>.scale()),
                 translate,
                 rotation,
@@ -1001,14 +1017,14 @@
         textures: <span class="kw-2">&amp;mut </span>AHashMap&lt;TextureId, Arc&lt;wgpu::BindGroup&gt;&gt;,
         commands: <span class="kw-2">&amp;mut </span>Vec&lt;Command&gt;,
     ) {
-        <span class="kw">let </span><span class="kw-2">mut </span>corners = [<span class="number">0</span>; <span class="number">4</span>];
-        <span class="kw">for </span>(<span class="kw-2">&amp;</span>corner, index) <span class="kw">in </span>blit.vertices().iter().zip(corners.iter_mut()) {
-            <span class="kw-2">*</span>index = vertices.get_or_insert(Vertex {
-                location: corner.location.into_signed().cast(),
-                texture: corner.texture,
-                color: corner.color,
-            });
-        }
+        <span class="kw">let </span>corners: [u16; <span class="number">4</span>] = array::from_fn(|index| {
+            <span class="kw">let </span>vertex = <span class="kw-2">&amp;</span>blit.verticies[index];
+            vertices.get_or_insert(Vertex {
+                location: vertex.location.into_signed().cast(),
+                texture: vertex.texture,
+                color: vertex.color,
+            })
+        });
         <span class="kw">let </span>start_index = u32::try_from(indices.len()).expect(<span class="string">&quot;too many drawn indices&quot;</span>);
         <span class="kw">for </span><span class="kw-2">&amp;</span>index <span class="kw">in </span>blit.indices() {
             indices.push(corners[usize::from(index)]);
@@ -1058,27 +1074,39 @@
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if </span><span class="self">self</span>.data.indices.is_empty() {
-            <span class="self">self</span>.data.buffers = <span class="prelude-val">None</span>;
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.data.buffers = <span class="prelude-val">Some</span>(RenderingBuffers {
-                vertex: Buffer::new(
+        <span class="kw">if </span>!<span class="self">self</span>.data.indices.is_empty() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(buffers) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.buffers {
+                buffers.vertex.update(
                     <span class="kw-2">&amp;</span><span class="self">self</span>.data.vertices.vertices,
-                    wgpu::BufferUsages::VERTEX,
                     <span class="self">self</span>.graphics.device,
-                ),
-                index: Buffer::new(
+                    <span class="self">self</span>.graphics.queue,
+                );
+                buffers.index.update(
                     <span class="kw-2">&amp;</span><span class="self">self</span>.data.indices,
-                    wgpu::BufferUsages::INDEX,
                     <span class="self">self</span>.graphics.device,
-                ),
-            });
+                    <span class="self">self</span>.graphics.queue,
+                );
+            } <span class="kw">else </span>{
+                <span class="comment">// Create new buffers
+                </span><span class="self">self</span>.data.buffers = <span class="prelude-val">Some</span>(RenderingBuffers {
+                    vertex: DiffableBuffer::new(
+                        <span class="kw-2">&amp;</span><span class="self">self</span>.data.vertices.vertices,
+                        wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                        <span class="self">self</span>.graphics.device,
+                    ),
+                    index: DiffableBuffer::new(
+                        <span class="kw-2">&amp;</span><span class="self">self</span>.data.indices,
+                        wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST,
+                        <span class="self">self</span>.graphics.device,
+                    ),
+                });
+            }
         }
     }
 }
 
-<span class="doccomment">/// An easy-to-use renderer that combines all operations into a single GPU
-/// object.
+<span class="doccomment">/// A composite, multi-operation graphic, created with an easy-to-use
+/// [`Renderer`]-driven API.
 ///
 /// The process of preparing individual graphics and then rendering them allows
 /// for efficient rendering. The downside is that it can be harder to use, and
@@ -1089,7 +1117,7 @@
 /// [`Renderer`]. Once the renderer is dropped, this type&#39;s vertex buffer and
 /// index buffer are updated.
 </span><span class="attr">#[derive(Default, Debug)]
-</span><span class="kw">pub struct </span>Rendering {
+</span><span class="kw">pub struct </span>Drawing {
     buffers: <span class="prelude-ty">Option</span>&lt;RenderingBuffers&gt;,
     vertices: VertexCollection&lt;i32&gt;,
     indices: Vec&lt;u16&gt;,
@@ -1101,11 +1129,11 @@
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>RenderingBuffers {
-    vertex: Buffer&lt;Vertex&lt;i32&gt;&gt;,
-    index: Buffer&lt;u16&gt;,
+    vertex: DiffableBuffer&lt;Vertex&lt;i32&gt;&gt;,
+    index: DiffableBuffer&lt;u16&gt;,
 }
 
-<span class="kw">impl </span>Rendering {
+<span class="kw">impl </span>Drawing {
     <span class="doccomment">/// Clears the currently prepared graphics and returns a new [`Renderer`] to
     /// prepare new graphics.
     ///

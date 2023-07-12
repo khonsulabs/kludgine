@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Renderer","Rendering"]};
+window.SIDEBAR_ITEMS = {"struct":["Drawing","Renderer"]};

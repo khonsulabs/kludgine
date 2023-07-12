@@ -68,11 +68,13 @@
 <a href="#68" id="68">68</a>
 <a href="#69" id="69">69</a>
 <a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::atomic::{<span class="self">self</span>, AtomicUsize};
 <span class="kw">use </span>std::sync::{Arc, OnceLock};
 
 <span class="kw">use </span>figures::units::UPx;
 <span class="kw">use </span>figures::Rect;
+<span class="kw">use </span>smallvec::smallvec;
 
 <span class="kw">use </span><span class="kw">crate</span>::buffer::Buffer;
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{PreparedCommand, Vertex};
@@ -126,7 +128,7 @@
         PreparedGraphic {
             vertices,
             indices,
-            commands: <span class="macro">vec!</span>[PreparedCommand {
+            commands: <span class="macro">smallvec!</span>[PreparedCommand {
                 indices: <span class="number">0</span>..<span class="self">self
                     </span>.indices()
                     .len()
