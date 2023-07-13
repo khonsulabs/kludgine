@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/render.rs`."><title>render.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0 (90c541806 2023-05-31)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../kludgine/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/render.rs`."><title>render.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0 (8ede3aae2 2023-07-12)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../kludgine/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -601,6 +601,74 @@
 <a href="#601" id="601">601</a>
 <a href="#602" id="602">602</a>
 <a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map;
 <span class="kw">use </span>std::ops::{Add, Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
@@ -608,6 +676,7 @@
 <span class="kw">use </span>ahash::AHashMap;
 <span class="kw">use </span>figures::traits::{FloatConversion, IntoSigned, IsZero};
 <span class="kw">use </span>figures::{Angle, Point, Rect};
+<span class="kw">use </span>shelf_packer::UPx;
 
 <span class="kw">use </span><span class="kw">crate</span>::buffer::DiffableBuffer;
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{
@@ -616,8 +685,8 @@
 };
 <span class="kw">use </span><span class="kw">crate</span>::shapes::Shape;
 <span class="kw">use crate</span>::{
-    sealed, Color, Graphics, RenderingGraphics, ShapeSource, Texture, TextureBlit, TextureSource,
-    VertexCollection,
+    sealed, ClipGuard, ClipRect, Clipped, Color, Graphics, RenderingGraphics, ShapeSource, Texture,
+    TextureBlit, TextureSource, VertexCollection,
 };
 
 <span class="doccomment">/// An easy-to-use graphics renderer that batches operations on the GPU
@@ -630,6 +699,7 @@
 </span><span class="kw">pub struct </span>Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) graphics: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt;,
     data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Drawing,
+    clip_index: u32,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>&gt; Deref <span class="kw">for </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;gfx</span>&gt; {
@@ -648,12 +718,13 @@
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>Command {
+    clip_index: u32,
     indices: Range&lt;u32&gt;,
     constants: PushConstants,
     texture: <span class="prelude-ty">Option</span>&lt;sealed::TextureId&gt;,
 }
 
-<span class="kw">impl </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; {
     <span class="doccomment">/// Draws a shape at the origin, rotating and scaling as needed.
     </span><span class="kw">pub fn </span>draw_shape&lt;Unit&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
@@ -781,10 +852,14 @@
 
         <span class="kw">match </span><span class="self">self</span>.data.commands.last_mut() {
             <span class="prelude-val">Some</span>(Command {
+                clip_index,
                 texture: last_texture,
                 indices,
                 constants: last_constants,
-            }) <span class="kw">if </span>last_texture == <span class="kw-2">&amp;</span>texture &amp;&amp; last_constants == <span class="kw-2">&amp;</span>constants =&gt; {
+            }) <span class="kw">if </span>clip_index == <span class="kw-2">&amp;</span><span class="self">self</span>.clip_index
+                &amp;&amp; last_texture == <span class="kw-2">&amp;</span>texture
+                &amp;&amp; last_constants == <span class="kw-2">&amp;</span>constants =&gt;
+            {
                 <span class="comment">// Batch this draw operation with the previous one.
                 </span>indices.end = <span class="self">self
                     </span>.data
@@ -795,6 +870,7 @@
             }
             <span class="kw">_ </span>=&gt; {
                 <span class="self">self</span>.data.commands.push(Command {
+                    clip_index: <span class="self">self</span>.clip_index,
                     indices: first_index_drawn
                         .try_into()
                         .expect(<span class="string">&quot;too many drawn verticies&quot;</span>)
@@ -829,6 +905,36 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>command_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.data.commands.len()
+    }
+
+    <span class="doccomment">/// Returns a [`ClipGuard`] that causes all drawing operations to be offset
+    /// and clipped to `clip` until it is dropped.
+    ///
+    /// This function causes the [`Renderer`] to act as if the origin of the
+    /// context is `clip.origin`, and the size of the context is `clip.size`.
+    /// This means that rendering at 0,0 will actually render at the effective
+    /// clip rect&#39;s origin.
+    ///
+    /// `clip` is relative to the current clip rect and cannot extend the
+    /// current clipping rectangle.
+    </span><span class="kw">pub fn </span>clipped_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) -&gt; ClipGuard&lt;<span class="lifetime">&#39;_</span>, <span class="self">Self</span>&gt; {
+        <span class="kw">let </span>previous_clip = <span class="self">self</span>.clip;
+        <span class="self">self</span>.clip = previous_clip.clip_to(clip);
+        <span class="self">self</span>.clip_index = <span class="self">self</span>.data.get_or_lookup_clip(<span class="self">self</span>.clip);
+
+        ClipGuard {
+            previous_clip,
+            clipped: <span class="self">self</span>,
+        }
+    }
+}
+
+<span class="kw">impl </span>Clipped <span class="kw">for </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {}
+
+<span class="kw">impl </span>sealed::Clipped <span class="kw">for </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">fn </span>restore_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, previous_clip: ClipRect) {
+        <span class="self">self</span>.graphics.restore_clip(previous_clip);
+        <span class="self">self</span>.clip_index = <span class="self">self</span>.data.get_or_lookup_clip(previous_clip);
     }
 }
 
@@ -959,6 +1065,7 @@
                     scale,
                     blit,
                     cached,
+                    <span class="self">self</span>.clip_index,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.vertices,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.indices,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.textures,
@@ -995,6 +1102,7 @@
                         scale,
                         blit,
                         cached,
+                        <span class="self">self</span>.clip_index,
                         <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.vertices,
                         <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.indices,
                         <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.textures,
@@ -1012,6 +1120,7 @@
         scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         blit: TextureBlit&lt;Px&gt;,
         cached: <span class="kw-2">&amp;</span>CachedGlyphHandle,
+        clip_index: u32,
         vertices: <span class="kw-2">&amp;mut </span>VertexCollection&lt;i32&gt;,
         indices: <span class="kw-2">&amp;mut </span>Vec&lt;u16&gt;,
         textures: <span class="kw-2">&amp;mut </span>AHashMap&lt;TextureId, Arc&lt;wgpu::BindGroup&gt;&gt;,
@@ -1063,6 +1172,7 @@
             }
             <span class="kw">_ </span>=&gt; {
                 commands.push(Command {
+                    clip_index,
                     indices: start_index..end_index,
                     constants,
                     texture: <span class="prelude-val">Some</span>(cached.texture.id()),
@@ -1120,6 +1230,8 @@
 </span><span class="kw">pub struct </span>Drawing {
     buffers: <span class="prelude-ty">Option</span>&lt;RenderingBuffers&gt;,
     vertices: VertexCollection&lt;i32&gt;,
+    clips: Vec&lt;Rect&lt;UPx&gt;&gt;,
+    clip_lookup: AHashMap&lt;Rect&lt;UPx&gt;, u32&gt;,
     indices: Vec&lt;u16&gt;,
     textures: AHashMap&lt;sealed::TextureId, Arc&lt;wgpu::BindGroup&gt;&gt;,
     commands: Vec&lt;Command&gt;,
@@ -1147,12 +1259,25 @@
         <span class="self">self</span>.textures.clear();
         <span class="self">self</span>.vertices.vertex_index_by_id.clear();
         <span class="self">self</span>.vertices.vertices.clear();
+        <span class="self">self</span>.clip_lookup.clear();
+        <span class="self">self</span>.clips.clear();
+        <span class="self">self</span>.get_or_lookup_clip(graphics.clip);
         <span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
         </span><span class="self">self</span>.glyphs.clear();
+
         Renderer {
             graphics,
+            clip_index: <span class="number">0</span>,
             data: <span class="self">self</span>,
         }
+    }
+
+    <span class="kw">fn </span>get_or_lookup_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: ClipRect) -&gt; u32 {
+        <span class="kw-2">*</span><span class="self">self</span>.clip_lookup.entry(clip.<span class="number">0</span>).or_insert_with(|| {
+            <span class="kw">let </span>id = u32::try_from(<span class="self">self</span>.clips.len()).expect(<span class="string">&quot;too many clips&quot;</span>);
+            <span class="self">self</span>.clips.push(clip.<span class="number">0</span>);
+            id
+        })
     }
 
     <span class="doccomment">/// Renders the prepared graphics from the last frame.
@@ -1167,6 +1292,9 @@
             graphics
                 .pass
                 .set_index_buffer(buffers.index.as_slice(), wgpu::IndexFormat::Uint16);
+
+            <span class="kw">let </span><span class="kw-2">mut </span>current_clip_index = <span class="number">0</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>current_clip = graphics.clip.<span class="number">0</span>;
 
             <span class="kw">for </span>command <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.commands {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(texture_id) = <span class="kw-2">&amp;</span>command.texture {
@@ -1185,12 +1313,20 @@
                         .set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span>graphics.kludgine.default_bindings, <span class="kw-2">&amp;</span>[]);
                 }
 
+                <span class="kw">if </span>current_clip_index != command.clip_index {
+                    current_clip = <span class="self">self</span>.clips[command.clip_index <span class="kw">as </span>usize];
+                    current_clip_index = command.clip_index;
+                    graphics.pass.set_scissor_rect(
+                        current_clip.origin.x.<span class="number">0</span>,
+                        current_clip.origin.y.<span class="number">0</span>,
+                        current_clip.size.width.<span class="number">0</span>,
+                        current_clip.size.height.<span class="number">0</span>,
+                    );
+                }
+
                 <span class="kw">let </span><span class="kw-2">mut </span>constants = command.constants;
-                constants.translation += graphics
-                    .clip
-                    .origin
-                    .try_cast()
-                    .expect(<span class="string">&quot;clip rect too large&quot;</span>);
+                constants.translation +=
+                    current_clip.origin.try_cast().expect(<span class="string">&quot;clip rect too large&quot;</span>);
                 <span class="kw">if </span>!constants.translation.is_zero() {
                     constants.flags |= FLAG_TRANSLATE;
                 }
