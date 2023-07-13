@@ -1,8 +1,9 @@
+use std::ops::Deref;
 use std::sync::atomic::{self, AtomicUsize};
 use std::sync::{Arc, OnceLock};
 
 use figures::units::UPx;
-use figures::Rect;
+use figures::{Rect, Size};
 use smallvec::smallvec;
 
 use crate::buffer::Buffer;
@@ -67,5 +68,32 @@ pub trait ShapeSource<Unit> {
                 binding: texture.map(TextureSource::bind_group),
             }],
         }
+    }
+}
+
+pub trait Clipped {
+    fn restore_clip(&mut self, previous_clip: ClipRect);
+}
+
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+pub struct ClipRect(pub(crate) Rect<UPx>);
+
+impl ClipRect {
+    pub fn clip_to(&self, mut new: Rect<UPx>) -> Self {
+        new.origin += self.0.origin;
+        Self(self.0.intersection(&new).unwrap_or_default())
+    }
+}
+
+impl From<Size<UPx>> for ClipRect {
+    fn from(value: Size<UPx>) -> Self {
+        Self(value.into())
+    }
+}
+impl Deref for ClipRect {
+    type Target = Rect<UPx>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }

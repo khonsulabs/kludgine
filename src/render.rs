@@ -5,6 +5,7 @@ use std::sync::Arc;
 use ahash::AHashMap;
 use figures::traits::{FloatConversion, IntoSigned, IsZero};
 use figures::{Angle, Point, Rect};
+use shelf_packer::UPx;
 
 use crate::buffer::DiffableBuffer;
 use crate::pipeline::{
@@ -13,8 +14,8 @@ use crate::pipeline::{
 };
 use crate::shapes::Shape;
 use crate::{
-    sealed, Color, Graphics, RenderingGraphics, ShapeSource, Texture, TextureBlit, TextureSource,
-    VertexCollection,
+    sealed, ClipGuard, ClipRect, Clipped, Color, Graphics, RenderingGraphics, ShapeSource, Texture,
+    TextureBlit, TextureSource, VertexCollection,
 };
 
 /// An easy-to-use graphics renderer that batches operations on the GPU
@@ -27,6 +28,7 @@ use crate::{
 pub struct Renderer<'render, 'gfx> {
     pub(crate) graphics: &'render mut Graphics<'gfx>,
     data: &'render mut Drawing,
+    clip_index: u32,
 }
 
 impl<'gfx> Deref for Renderer<'_, 'gfx> {
@@ -45,12 +47,13 @@ impl<'gfx> DerefMut for Renderer<'_, 'gfx> {
 
 #[derive(Debug)]
 struct Command {
+    clip_index: u32,
     indices: Range<u32>,
     constants: PushConstants,
     texture: Option<sealed::TextureId>,
 }
 
-impl Renderer<'_, '_> {
+impl<'render, 'gfx> Renderer<'render, 'gfx> {
     /// Draws a shape at the origin, rotating and scaling as needed.
     pub fn draw_shape<Unit>(
         &mut self,
@@ -178,10 +181,14 @@ impl Renderer<'_, '_> {
 
         match self.data.commands.last_mut() {
             Some(Command {
+                clip_index,
                 texture: last_texture,
                 indices,
                 constants: last_constants,
-            }) if last_texture == &texture && last_constants == &constants => {
+            }) if clip_index == &self.clip_index
+                && last_texture == &texture
+                && last_constants == &constants =>
+            {
                 // Batch this draw operation with the previous one.
                 indices.end = self
                     .data
@@ -192,6 +199,7 @@ impl Renderer<'_, '_> {
             }
             _ => {
                 self.data.commands.push(Command {
+                    clip_index: self.clip_index,
                     indices: first_index_drawn
                         .try_into()
                         .expect("too many drawn verticies")
@@ -226,6 +234,36 @@ impl Renderer<'_, '_> {
     #[must_use]
     pub fn command_count(&self) -> usize {
         self.data.commands.len()
+    }
+
+    /// Returns a [`ClipGuard`] that causes all drawing operations to be offset
+    /// and clipped to `clip` until it is dropped.
+    ///
+    /// This function causes the [`Renderer`] to act as if the origin of the
+    /// context is `clip.origin`, and the size of the context is `clip.size`.
+    /// This means that rendering at 0,0 will actually render at the effective
+    /// clip rect's origin.
+    ///
+    /// `clip` is relative to the current clip rect and cannot extend the
+    /// current clipping rectangle.
+    pub fn clipped_to(&mut self, clip: Rect<UPx>) -> ClipGuard<'_, Self> {
+        let previous_clip = self.clip;
+        self.clip = previous_clip.clip_to(clip);
+        self.clip_index = self.data.get_or_lookup_clip(self.clip);
+
+        ClipGuard {
+            previous_clip,
+            clipped: self,
+        }
+    }
+}
+
+impl Clipped for Renderer<'_, '_> {}
+
+impl sealed::Clipped for Renderer<'_, '_> {
+    fn restore_clip(&mut self, previous_clip: ClipRect) {
+        self.graphics.restore_clip(previous_clip);
+        self.clip_index = self.data.get_or_lookup_clip(previous_clip);
     }
 }
 
@@ -356,6 +394,7 @@ mod text {
                     scale,
                     blit,
                     cached,
+                    self.clip_index,
                     &mut self.data.vertices,
                     &mut self.data.indices,
                     &mut self.data.textures,
@@ -392,6 +431,7 @@ mod text {
                         scale,
                         blit,
                         cached,
+                        self.clip_index,
                         &mut self.data.vertices,
                         &mut self.data.indices,
                         &mut self.data.textures,
@@ -409,6 +449,7 @@ mod text {
         scale: Option<f32>,
         blit: TextureBlit<Px>,
         cached: &CachedGlyphHandle,
+        clip_index: u32,
         vertices: &mut VertexCollection<i32>,
         indices: &mut Vec<u16>,
         textures: &mut AHashMap<TextureId, Arc<wgpu::BindGroup>>,
@@ -460,6 +501,7 @@ mod text {
             }
             _ => {
                 commands.push(Command {
+                    clip_index,
                     indices: start_index..end_index,
                     constants,
                     texture: Some(cached.texture.id()),
@@ -517,6 +559,8 @@ impl Drop for Renderer<'_, '_> {
 pub struct Drawing {
     buffers: Option<RenderingBuffers>,
     vertices: VertexCollection<i32>,
+    clips: Vec<Rect<UPx>>,
+    clip_lookup: AHashMap<Rect<UPx>, u32>,
     indices: Vec<u16>,
     textures: AHashMap<sealed::TextureId, Arc<wgpu::BindGroup>>,
     commands: Vec<Command>,
@@ -544,12 +588,25 @@ impl Drawing {
         self.textures.clear();
         self.vertices.vertex_index_by_id.clear();
         self.vertices.vertices.clear();
+        self.clip_lookup.clear();
+        self.clips.clear();
+        self.get_or_lookup_clip(graphics.clip);
         #[cfg(feature = "cosmic-text")]
         self.glyphs.clear();
+
         Renderer {
             graphics,
+            clip_index: 0,
             data: self,
         }
+    }
+
+    fn get_or_lookup_clip(&mut self, clip: ClipRect) -> u32 {
+        *self.clip_lookup.entry(clip.0).or_insert_with(|| {
+            let id = u32::try_from(self.clips.len()).expect("too many clips");
+            self.clips.push(clip.0);
+            id
+        })
     }
 
     /// Renders the prepared graphics from the last frame.
@@ -564,6 +621,9 @@ impl Drawing {
             graphics
                 .pass
                 .set_index_buffer(buffers.index.as_slice(), wgpu::IndexFormat::Uint16);
+
+            let mut current_clip_index = 0;
+            let mut current_clip = graphics.clip.0;
 
             for command in &self.commands {
                 if let Some(texture_id) = &command.texture {
@@ -582,12 +642,20 @@ impl Drawing {
                         .set_bind_group(0, &graphics.kludgine.default_bindings, &[]);
                 }
 
+                if current_clip_index != command.clip_index {
+                    current_clip = self.clips[command.clip_index as usize];
+                    current_clip_index = command.clip_index;
+                    graphics.pass.set_scissor_rect(
+                        current_clip.origin.x.0,
+                        current_clip.origin.y.0,
+                        current_clip.size.width.0,
+                        current_clip.size.height.0,
+                    );
+                }
+
                 let mut constants = command.constants;
-                constants.translation += graphics
-                    .clip
-                    .origin
-                    .try_cast()
-                    .expect("clip rect too large");
+                constants.translation +=
+                    current_clip.origin.try_cast().expect("clip rect too large");
                 if !constants.translation.is_zero() {
                     constants.flags |= FLAG_TRANSLATE;
                 }

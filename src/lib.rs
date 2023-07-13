@@ -24,6 +24,7 @@ use wgpu::util::DeviceExt;
 
 use crate::buffer::Buffer;
 use crate::pipeline::{Uniforms, Vertex};
+use crate::sealed::ClipRect;
 
 /// Application and Windowing Support.
 #[cfg(feature = "app")]
@@ -210,7 +211,7 @@ impl Frame<'_> {
     /// - [`Texture::prepare`]
     /// - [`Texture::prepare_partial`]
     /// - [`CollectedTexture::prepare`]
-    /// - [`Rendering::new_frame`](render::Rendering::new_frame)
+    /// - [`Drawing::new_frame`](render::Drawing::new_frame)
     ///
     /// The returned graphics provides access to the various types to update
     /// their representation on the GPU so that they can be rendered later.
@@ -227,7 +228,7 @@ impl Frame<'_> {
     ///
     /// - [`PreparedGraphic`]
     /// - [`PreparedText`](text::PreparedText)
-    /// - [`Rendering`](render::Rendering)
+    /// - [`Drawing`](render::Drawing)
     #[must_use]
     pub fn render<'gfx, 'pass>(
         &'pass mut self,
@@ -256,7 +257,7 @@ impl Frame<'_> {
     ///
     /// - [`PreparedGraphic`]
     /// - [`PreparedText`](text::PreparedText)
-    /// - [`Rendering`](render::Rendering)
+    /// - [`Drawing`](render::Drawing)
     pub fn render_into<'gfx, 'pass>(
         &'pass mut self,
         texture: &'pass Texture,
@@ -385,14 +386,29 @@ impl WgpuDeviceAndQueue for Graphics<'_> {
 /// - [`Texture::prepare`]
 /// - [`Texture::prepare_partial`]
 /// - [`CollectedTexture::prepare`]
-/// - [`Rendering::new_frame`](render::Rendering::new_frame)
+/// - [`Drawing::new_frame`](render::Drawing::new_frame)
 pub struct Graphics<'gfx> {
     kludgine: &'gfx mut Kludgine,
     device: &'gfx wgpu::Device,
     queue: &'gfx wgpu::Queue, // Need this eventually to be able to have dynamic shape collections
+    clip: ClipRect,
 }
 
 impl<'gfx> Graphics<'gfx> {
+    /// Returns a new instance.
+    pub fn new(
+        kludgine: &'gfx mut Kludgine,
+        device: &'gfx wgpu::Device,
+        queue: &'gfx wgpu::Queue,
+    ) -> Self {
+        Self {
+            clip: kludgine.size.into(),
+            kludgine,
+            device,
+            queue,
+        }
+    }
+
     /// Returns a reference to the underlying [`wgpu::Device`].
     #[must_use]
     pub const fn device(&self) -> &'gfx wgpu::Device {
@@ -410,6 +426,34 @@ impl<'gfx> Graphics<'gfx> {
     #[cfg(feature = "cosmic-text")]
     pub fn font_system(&mut self) -> &mut cosmic_text::FontSystem {
         self.kludgine.font_system()
+    }
+
+    /// Returns the current clipped size of the context.
+    ///
+    /// If this context has not been clipped, the value returned will be
+    /// equivalent to [`Kludgine::size`].
+    #[must_use]
+    pub const fn size(&self) -> Size<UPx> {
+        self.clip.0.size
+    }
+
+    /// Returns a [`ClipGuard`] that causes all drawing operations to be offset
+    /// and clipped to `clip` until it is dropped.
+    ///
+    /// This function causes the [`Graphics`] to act as if the origin of the
+    /// context is `clip.origin`, and the size of the context is `clip.size`.
+    /// This means that rendering at 0,0 will actually render at the effective
+    /// clip rect's origin.
+    ///
+    /// `clip` is relative to the current clip rect and cannot extend the
+    /// current clipping rectangle.
+    pub fn clipped_to(&mut self, clip: Rect<UPx>) -> ClipGuard<'_, Self> {
+        let previous_clip = self.clip;
+        self.clip = self.clip.clip_to(clip);
+        ClipGuard {
+            clipped: self,
+            previous_clip,
+        }
     }
 }
 
@@ -439,18 +483,11 @@ impl DerefMut for Graphics<'_> {
     }
 }
 
-impl<'gfx> Graphics<'gfx> {
-    /// Returns a new instance.
-    pub fn new(
-        kludgine: &'gfx mut Kludgine,
-        device: &'gfx wgpu::Device,
-        queue: &'gfx wgpu::Queue,
-    ) -> Self {
-        Self {
-            kludgine,
-            device,
-            queue,
-        }
+impl Clipped for Graphics<'_> {}
+
+impl sealed::Clipped for Graphics<'_> {
+    fn restore_clip(&mut self, previous_clip: ClipRect) {
+        self.clip = previous_clip;
     }
 }
 
@@ -460,13 +497,13 @@ impl<'gfx> Graphics<'gfx> {
 ///
 /// - [`PreparedGraphic`]
 /// - [`PreparedText`](text::PreparedText)
-/// - [`Rendering`](render::Rendering)
+/// - [`Drawing`](render::Drawing)
 pub struct RenderingGraphics<'gfx, 'pass> {
     pass: wgpu::RenderPass<'pass>,
     kludgine: &'pass Kludgine,
     device: &'gfx wgpu::Device,
     queue: &'gfx wgpu::Queue,
-    clip: Rect<UPx>,
+    clip: ClipRect,
     pipeline_is_active: bool,
 }
 
@@ -519,10 +556,9 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
     ///
     /// `clip` is relative to the current clip rect and cannot extend the
     /// current clipping rectangle.
-    pub fn clipped_to(&mut self, mut clip: Rect<UPx>) -> ClipGuard<'_, 'gfx, 'pass> {
+    pub fn clipped_to(&mut self, clip: Rect<UPx>) -> ClipGuard<'_, Self> {
         let previous_clip = self.clip;
-        clip.origin += previous_clip.origin;
-        self.clip = previous_clip.intersection(&clip).unwrap_or_default();
+        self.clip = self.clip.clip_to(clip);
         self.pass.set_scissor_rect(
             self.clip.origin.x.0,
             self.clip.origin.y.0,
@@ -531,7 +567,7 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
         );
         ClipGuard {
             previous_clip,
-            graphics: self,
+            clipped: self,
         }
     }
 
@@ -541,7 +577,7 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
     /// clipped area.
     #[must_use]
     pub const fn size(&self) -> Size<UPx> {
-        self.clip.size
+        self.clip.0.size
     }
 
     /// Returns the current scaling factor of the display being rendered to.
@@ -551,40 +587,64 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
     }
 }
 
-/// A handle to a clipped [`RenderingGraphics`].
-///
-/// When dropped, the [`RenderingGraphics`] will have its clip rect restored to
-/// the previously clipped rect. [`ClipGuard`]s can be nested.
-///
-/// This type implements [`Deref`]/[`DerefMut`] to provide access to the clipped
-/// [`RenderingGraphics`].
-pub struct ClipGuard<'clip, 'gfx, 'pass> {
-    previous_clip: Rect<UPx>,
-    graphics: &'clip mut RenderingGraphics<'gfx, 'pass>,
-}
+/// A graphics context that has been clipped.
+pub trait Clipped: sealed::Clipped {}
 
-impl<'clip, 'gfx, 'pass> Drop for ClipGuard<'clip, 'gfx, 'pass> {
-    fn drop(&mut self) {
-        self.graphics.clip = self.previous_clip;
-        self.graphics.pass.set_scissor_rect(
-            self.previous_clip.origin.x.0,
-            self.previous_clip.origin.y.0,
-            self.previous_clip.size.width.0,
-            self.previous_clip.size.height.0,
+impl Clipped for RenderingGraphics<'_, '_> {}
+
+impl sealed::Clipped for RenderingGraphics<'_, '_> {
+    fn restore_clip(&mut self, previous_clip: ClipRect) {
+        self.clip = previous_clip;
+        self.pass.set_scissor_rect(
+            previous_clip.origin.x.0,
+            previous_clip.origin.y.0,
+            previous_clip.size.width.0,
+            previous_clip.size.height.0,
         );
     }
 }
-impl<'gfx, 'pass> Deref for ClipGuard<'_, 'gfx, 'pass> {
-    type Target = RenderingGraphics<'gfx, 'pass>;
 
-    fn deref(&self) -> &Self::Target {
-        self.graphics
+/// A clipped surface.
+///
+/// When dropped, the clipped type will have its clip rect restored to the
+/// previously clipped rect. [`ClipGuard`]s can be nested.
+///
+/// This type implements [`Deref`]/[`DerefMut`] to provide access to the
+/// underyling clipped type.
+pub struct ClipGuard<'clip, T>
+where
+    T: Clipped,
+{
+    clipped: &'clip mut T,
+    previous_clip: ClipRect,
+}
+
+impl<T> Drop for ClipGuard<'_, T>
+where
+    T: Clipped,
+{
+    fn drop(&mut self) {
+        self.clipped.restore_clip(self.previous_clip);
     }
 }
 
-impl<'gfx, 'pass> DerefMut for ClipGuard<'_, 'gfx, 'pass> {
+impl<T> Deref for ClipGuard<'_, T>
+where
+    T: Clipped,
+{
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        self.clipped
+    }
+}
+
+impl<T> DerefMut for ClipGuard<'_, T>
+where
+    T: Clipped,
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.graphics
+        self.clipped
     }
 }
 
