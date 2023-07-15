@@ -1,10 +1,11 @@
+use std::any::TypeId;
 use std::mem::size_of;
 use std::ops::Range;
 use std::sync::Arc;
 
 use bytemuck::{Pod, Zeroable};
 use figures::units::{Lp, Px, UPx};
-use figures::{Angle, Fraction, IntoSigned, IsZero, Point, Size};
+use figures::{Angle, Fraction, IntoSigned, IsZero, Point, ScreenUnit, Size};
 use smallvec::SmallVec;
 
 use crate::buffer::Buffer;
@@ -162,27 +163,18 @@ where
 /// A unit that is able to be scaled by the GPU shader.
 pub trait ShaderScalable: sealed::ShaderScalableSealed {}
 
-impl ShaderScalable for Px {}
+impl<T> ShaderScalable for T where T: ScreenUnit {}
 
-impl ShaderScalable for Lp {}
-
-impl ShaderScalable for UPx {}
-
-impl sealed::ShaderScalableSealed for UPx {
+impl<T> sealed::ShaderScalableSealed for T
+where
+    T: ScreenUnit,
+{
     fn flags() -> u32 {
-        0
-    }
-}
-
-impl sealed::ShaderScalableSealed for Px {
-    fn flags() -> u32 {
-        0
-    }
-}
-
-impl sealed::ShaderScalableSealed for Lp {
-    fn flags() -> u32 {
-        FLAG_DIPS
+        if TypeId::of::<T>() == TypeId::of::<Lp>() {
+            FLAG_DIPS
+        } else {
+            0
+        }
     }
 }
 

@@ -6,12 +6,13 @@
 #![allow(clippy::module_name_repetitions)]
 
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::fmt::{self, Debug, Formatter};
-use std::hash::{self, Hash};
+use std::hash::{self, BuildHasher, Hash};
 use std::ops::{Add, AddAssign, Deref, DerefMut};
 use std::sync::Arc;
 
-use ahash::AHashMap;
+use ahash::AHasher;
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "cosmic-text")]
 pub use cosmic_text;
@@ -1280,10 +1281,21 @@ impl sealed::TextureSource for Texture {
     }
 }
 
+#[derive(Default)]
+struct DefaultHasher(AHasher);
+
+impl BuildHasher for DefaultHasher {
+    type Hasher = AHasher;
+
+    fn build_hasher(&self) -> Self::Hasher {
+        self.0.clone()
+    }
+}
+
 #[derive(Default, Debug)]
 struct VertexCollection<T> {
     vertices: Vec<Vertex<T>>,
-    vertex_index_by_id: AHashMap<VertexId, u16>,
+    vertex_index_by_id: HashMap<VertexId, u16, DefaultHasher>,
 }
 
 impl<T> VertexCollection<T> {

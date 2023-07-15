@@ -1,9 +1,8 @@
 use std::array;
-use std::collections::hash_map;
+use std::collections::{hash_map, HashMap};
 use std::fmt::{self, Debug};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use ahash::AHashMap;
 use cosmic_text::{fontdb, Attrs, AttrsOwned, SwashContent};
 use figures::units::{Lp, Px};
 use figures::utils::lossy_f32_to_i32;
@@ -14,8 +13,8 @@ use crate::buffer::Buffer;
 use crate::pipeline::PreparedCommand;
 use crate::sealed::{ShapeSource, TextureSource};
 use crate::{
-    CollectedTexture, Color, Graphics, Kludgine, PreparedGraphic, ProtoGraphics, TextureBlit,
-    TextureCollection, VertexCollection,
+    CollectedTexture, Color, DefaultHasher, Graphics, Kludgine, PreparedGraphic, ProtoGraphics,
+    TextureBlit, TextureCollection, VertexCollection,
 };
 
 impl Kludgine {
@@ -227,7 +226,7 @@ impl TextSystem {
 
 #[derive(Debug, Default, Clone)]
 struct GlyphCache {
-    glyphs: Arc<Mutex<AHashMap<PixelAlignedCacheKey, CachedGlyph>>>,
+    glyphs: Arc<Mutex<HashMap<PixelAlignedCacheKey, CachedGlyph, DefaultHasher>>>,
 }
 
 impl GlyphCache {
@@ -341,7 +340,7 @@ impl<'gfx> Graphics<'gfx> {
         default_color: Color,
         origin: TextOrigin<Px>,
     ) -> PreparedText {
-        let mut glyphs = AHashMap::new();
+        let mut glyphs = HashMap::default();
         let mut vertices = VertexCollection::default();
         let mut indices = Vec::new();
         let mut commands = SmallVec::<[PreparedCommand; 2]>::new();
@@ -395,7 +394,7 @@ pub(crate) fn map_each_glyph(
     origin: TextOrigin<Px>,
     kludgine: &mut Kludgine,
     queue: &wgpu::Queue,
-    glyphs: &mut AHashMap<PixelAlignedCacheKey, CachedGlyphHandle>,
+    glyphs: &mut HashMap<PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher>,
     mut map: impl for<'a> FnMut(TextureBlit<Px>, &'a CachedGlyphHandle, bool),
 ) {
     let metrics = buffer
@@ -490,7 +489,7 @@ pub(crate) fn measure_text<Unit, const COLLECT_GLYPHS: bool>(
     color: Color,
     kludgine: &mut Kludgine,
     queue: &wgpu::Queue,
-    glyphs: &mut AHashMap<PixelAlignedCacheKey, CachedGlyphHandle>,
+    glyphs: &mut HashMap<PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher>,
 ) -> MeasuredText<Unit>
 where
     Unit: figures::ScreenUnit,
@@ -536,7 +535,7 @@ where
 /// Text that is ready to be rendered on the GPU.
 pub struct PreparedText {
     graphic: PreparedGraphic<Px>,
-    _glyphs: AHashMap<PixelAlignedCacheKey, CachedGlyphHandle>,
+    _glyphs: HashMap<PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher>,
 }
 
 impl fmt::Debug for PreparedText {

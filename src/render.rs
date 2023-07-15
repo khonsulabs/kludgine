@@ -1,9 +1,8 @@
-use std::collections::hash_map;
-use std::ops::{Add, Deref, DerefMut, Range};
+use std::collections::{hash_map, HashMap};
+use std::ops::{Deref, DerefMut, Range};
 use std::sync::Arc;
 
-use ahash::AHashMap;
-use figures::{Angle, FloatConversion, IntoSigned, IsZero, Point, Rect};
+use figures::{Angle, IntoSigned, IsZero, Point, Rect};
 use shelf_packer::UPx;
 
 use crate::buffer::DiffableBuffer;
@@ -13,8 +12,8 @@ use crate::pipeline::{
 };
 use crate::shapes::Shape;
 use crate::{
-    sealed, ClipGuard, ClipRect, Clipped, Color, Graphics, RenderingGraphics, ShapeSource, Texture,
-    TextureBlit, TextureSource, VertexCollection,
+    sealed, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Graphics, RenderingGraphics,
+    ShapeSource, Texture, TextureBlit, TextureSource, VertexCollection,
 };
 
 /// An easy-to-use graphics renderer that batches operations on the GPU
@@ -62,8 +61,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         rotation_rads: Option<Angle>,
         scale: Option<f32>,
     ) where
-        Unit: IsZero + ShaderScalable + IntoSigned + Copy,
-        i32: From<<Unit as IntoSigned>::Signed>,
+        Unit: IsZero + ShaderScalable + figures::Unit + Copy,
     {
         self.inner_draw(
             shape,
@@ -77,16 +75,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
     /// Draws `texture` at `destination`, scaling as necessary.
     pub fn draw_texture<Unit>(&mut self, texture: &impl TextureSource, destination: Rect<Unit>)
     where
-        Unit: Default
-            + FloatConversion<Float = f32>
-            + Add<Output = Unit>
-            + Ord
-            + IsZero
-            + Copy
-            + IsZero
-            + ShaderScalable
-            + IntoSigned
-            + Copy,
+        Unit: figures::Unit + ShaderScalable,
         i32: From<<Unit as IntoSigned>::Signed>,
     {
         self.draw_textured_shape(
@@ -108,7 +97,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         rotation: Option<Angle>,
         scale: Option<f32>,
     ) where
-        Unit: IsZero + ShaderScalable + IntoSigned + Copy,
+        Unit: IsZero + ShaderScalable + figures::Unit + Copy,
         i32: From<<Unit as IntoSigned>::Signed>,
     {
         self.inner_draw(shape, Some(texture), origin, rotation, scale);
@@ -122,15 +111,17 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         rotation: Option<Angle>,
         scale: Option<f32>,
     ) where
-        Unit: IsZero + ShaderScalable + IntoSigned + Copy,
-        i32: From<<Unit as IntoSigned>::Signed>,
+        Unit: IsZero + ShaderScalable + figures::Unit + Copy,
     {
         // Merge the vertices into the graphics
         let vertices = shape.vertices();
         let mut vertex_map = Vec::with_capacity(vertices.len());
         for vertex in vertices {
             let vertex = Vertex {
-                location: vertex.location.into_signed().cast(),
+                location: vertex
+                    .location
+                    .try_cast()
+                    .unwrap_or(Point::new(i32::MAX, i32::MAX)),
                 texture: vertex.texture,
                 color: vertex.color,
             };
@@ -176,7 +167,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
             flags,
             scale,
             rotation,
-            translation: origin.into_signed().cast(),
+            translation: origin.try_cast().unwrap_or(Point::new(i32::MAX, i32::MAX)),
         };
 
         match self.data.commands.last_mut() {
@@ -270,10 +261,9 @@ impl sealed::Clipped for Renderer<'_, '_> {
 #[cfg(feature = "cosmic-text")]
 mod text {
     use std::array;
-    use std::collections::hash_map;
+    use std::collections::{hash_map, HashMap};
     use std::sync::Arc;
 
-    use ahash::AHashMap;
     use figures::units::Px;
     use figures::{ScreenScale, ScreenUnit};
 
@@ -283,7 +273,7 @@ mod text {
     };
     use crate::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
     use crate::text::{map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, TextOrigin};
-    use crate::{TextureBlit, VertexCollection};
+    use crate::{DefaultHasher, TextureBlit, VertexCollection};
 
     impl<'gfx> Renderer<'_, 'gfx> {
         /// Measures `text` using the current text settings.
@@ -446,7 +436,7 @@ mod text {
         clip_index: u32,
         vertices: &mut VertexCollection<i32>,
         indices: &mut Vec<u16>,
-        textures: &mut AHashMap<TextureId, Arc<wgpu::BindGroup>>,
+        textures: &mut HashMap<TextureId, Arc<wgpu::BindGroup>, DefaultHasher>,
         commands: &mut Vec<Command>,
     ) {
         let corners: [u16; 4] = array::from_fn(|index| {
@@ -554,12 +544,13 @@ pub struct Drawing {
     buffers: Option<RenderingBuffers>,
     vertices: VertexCollection<i32>,
     clips: Vec<Rect<UPx>>,
-    clip_lookup: AHashMap<Rect<UPx>, u32>,
+    clip_lookup: HashMap<Rect<UPx>, u32, DefaultHasher>,
     indices: Vec<u16>,
-    textures: AHashMap<sealed::TextureId, Arc<wgpu::BindGroup>>,
+    textures: HashMap<sealed::TextureId, Arc<wgpu::BindGroup>, DefaultHasher>,
     commands: Vec<Command>,
     #[cfg(feature = "cosmic-text")]
-    glyphs: AHashMap<crate::text::PixelAlignedCacheKey, crate::text::CachedGlyphHandle>,
+    glyphs:
+        HashMap<crate::text::PixelAlignedCacheKey, crate::text::CachedGlyphHandle, DefaultHasher>,
 }
 
 #[derive(Debug)]

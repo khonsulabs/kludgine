@@ -13,7 +13,7 @@ use appit::winit::event::{
 use appit::winit::window::WindowId;
 pub use appit::{winit, Message};
 use appit::{Application, RunningWindow, WindowBehavior as _};
-use figures::units::Px;
+use figures::units::{Px, UPx};
 use figures::utils::lossy_f64_to_f32;
 use figures::{Point, Size};
 
@@ -57,6 +57,12 @@ where
     #[must_use]
     pub fn handle(&self) -> WindowHandle<WindowEvent> {
         WindowHandle(self.window.handle())
+    }
+
+    /// Returns the inner size of the window.
+    #[must_use]
+    pub fn inner_size(&self) -> Size<UPx> {
+        self.window.inner_size().into()
     }
 
     /// Sets the window to redraw after a `duration`.
