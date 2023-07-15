@@ -892,20 +892,115 @@
 <a href="#892" id="892">892</a>
 <a href="#893" id="893">893</a>
 <a href="#894" id="894">894</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::mem::size_of;
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
+<a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
+<a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+<a href="#944" id="944">944</a>
+<a href="#945" id="945">945</a>
+<a href="#946" id="946">946</a>
+<a href="#947" id="947">947</a>
+<a href="#948" id="948">948</a>
+<a href="#949" id="949">949</a>
+<a href="#950" id="950">950</a>
+<a href="#951" id="951">951</a>
+<a href="#952" id="952">952</a>
+<a href="#953" id="953">953</a>
+<a href="#954" id="954">954</a>
+<a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
+<a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
+<span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::panic::UnwindSafe;
 <span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>std::sync::{Arc, OnceLock};
 <span class="kw">use </span>std::time::{Duration, Instant};
 
-<span class="kw">pub use </span>appit::winit;
 <span class="kw">use </span>appit::winit::dpi::PhysicalPosition;
 <span class="kw">use </span>appit::winit::event::{
     AxisId, DeviceId, ElementState, Ime, KeyboardInput, MouseButton, MouseScrollDelta, Touch,
     TouchPhase, VirtualKeyCode,
 };
 <span class="kw">use </span>appit::winit::window::WindowId;
-<span class="kw">use </span>appit::{Application, Message, RunningWindow, WindowBehavior <span class="kw">as _</span>};
+<span class="kw">pub use </span>appit::{winit, Message};
+<span class="kw">use </span>appit::{Application, RunningWindow, WindowBehavior <span class="kw">as _</span>};
 <span class="kw">use </span>figures::units::Px;
 <span class="kw">use </span>figures::utils::lossy_f64_to_f32;
 <span class="kw">use </span>figures::{Point, Size};
@@ -920,15 +1015,21 @@
 }
 
 <span class="doccomment">/// An open window.
-</span><span class="kw">pub struct </span>Window&lt;<span class="lifetime">&#39;window</span>&gt; {
-    window: <span class="kw-2">&amp;</span><span class="lifetime">&#39;window </span><span class="kw-2">mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+</span><span class="kw">pub struct </span>Window&lt;<span class="lifetime">&#39;window</span>, WindowEvent = ()&gt;
+<span class="kw">where
+    </span>WindowEvent: Send + <span class="lifetime">&#39;static</span>,
+{
+    window: <span class="kw-2">&amp;</span><span class="lifetime">&#39;window </span><span class="kw-2">mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;WindowEvent&gt;&gt;,
     elapsed: Duration,
     last_frame_rendered_in: Duration,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;window</span>&gt; Window&lt;<span class="lifetime">&#39;window</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;window</span>, WindowEvent&gt; Window&lt;<span class="lifetime">&#39;window</span>, WindowEvent&gt;
+<span class="kw">where
+    </span>WindowEvent: Send + <span class="lifetime">&#39;static</span>,
+{
     <span class="kw">fn </span>new(
-        window: <span class="kw-2">&amp;</span><span class="lifetime">&#39;window </span><span class="kw-2">mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;</span><span class="lifetime">&#39;window </span><span class="kw-2">mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;WindowEvent&gt;&gt;,
         elapsed: Duration,
         last_frame_rendered_in: Duration,
     ) -&gt; <span class="self">Self </span>{
@@ -937,6 +1038,13 @@
             elapsed,
             last_frame_rendered_in,
         }
+    }
+
+    <span class="doccomment">/// Returns a handle to this window, which can be used to send
+    /// `WindowEvent`s to it.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>handle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WindowHandle&lt;WindowEvent&gt; {
+        WindowHandle(<span class="self">self</span>.window.handle())
     }
 
     <span class="doccomment">/// Sets the window to redraw after a `duration`.
@@ -997,7 +1105,10 @@
 }
 
 <span class="doccomment">/// The behavior of a window.
-</span><span class="kw">pub trait </span>WindowBehavior: Sized + <span class="lifetime">&#39;static </span>{
+</span><span class="kw">pub trait </span>WindowBehavior&lt;WindowEvent = ()&gt;: Sized + <span class="lifetime">&#39;static
+</span><span class="kw">where
+    </span>WindowEvent: Send + <span class="lifetime">&#39;static</span>,
+{
     <span class="doccomment">/// The type of value provided during [`initialize()`](Self::initialize).
     ///
     /// In Kludgine, each window runs in its own thread. Kludgine allows does
@@ -1008,20 +1119,24 @@
     </span><span class="kw">type </span>Context: UnwindSafe + Send + <span class="lifetime">&#39;static</span>;
 
     <span class="doccomment">/// Initialize a new instance from the provided context.
-    </span><span class="kw">fn </span>initialize(window: Window&lt;<span class="lifetime">&#39;_</span>&gt;, graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;, context: <span class="self">Self</span>::Context) -&gt; <span class="self">Self</span>;
+    </span><span class="kw">fn </span>initialize(
+        window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;,
+        graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;,
+        context: <span class="self">Self</span>::Context,
+    ) -&gt; <span class="self">Self</span>;
 
     <span class="doccomment">/// Prepare the window to render.
     ///
     /// This is called directly before [`render()`](Self::render()) and is a
     /// perfect place to update any prepared graphics as needed.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>prepare(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;, graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;) {}
+    </span><span class="kw">fn </span>prepare(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;, graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;) {}
 
     <span class="doccomment">/// Render the contents of the window.
     </span><span class="comment">// TODO refactor away from bool return.
     </span><span class="kw">fn </span>render&lt;<span class="lifetime">&#39;pass</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span><span class="kw-2">mut </span><span class="self">self</span>,
-        window: Window&lt;<span class="lifetime">&#39;_</span>&gt;,
+        window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;,
         graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;pass</span>&gt;,
     ) -&gt; bool;
 
@@ -1051,7 +1166,7 @@
     <span class="kw">where
         </span><span class="self">Self</span>::Context: Default,
     {
-        KludgineWindow::&lt;<span class="self">Self</span>&gt;::run_with_event_callback(create_surface)
+        KludgineWindow::&lt;<span class="self">Self</span>&gt;::run_with_event_callback(handle_window_message)
     }
 
     <span class="doccomment">/// Launches a Kludgine app using this window as the primary window.
@@ -1059,7 +1174,7 @@
     /// The `context` is passed along to [`initialize()`](Self::initialize) once
     /// the thread it is running on is spawned.
     </span><span class="kw">fn </span>run_with(context: <span class="self">Self</span>::Context) -&gt; ! {
-        KludgineWindow::&lt;<span class="self">Self</span>&gt;::run_with_context_and_event_callback(context, create_surface)
+        KludgineWindow::&lt;<span class="self">Self</span>&gt;::run_with_context_and_event_callback(context, handle_window_message)
     }
 
     <span class="doccomment">/// The window has been requested to be closed. This can happen as a result
@@ -1068,56 +1183,56 @@
     /// If the window should be closed, return true. To prevent closing the
     /// window, return false.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>close_requested(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; bool {
+    </span><span class="kw">fn </span>close_requested(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;) -&gt; bool {
         <span class="bool-val">true
     </span>}
 
     <span class="doccomment">/// The window has gained or lost keyboard focus.
     /// [`RunningWindow::focused()`] returns the current state.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>focus_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;) {}
+    </span><span class="kw">fn </span>focus_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;) {}
 
     <span class="doccomment">/// The window has been occluded or revealed. [`RunningWindow::occluded()`]
     /// returns the current state.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>occlusion_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;) {}
+    </span><span class="kw">fn </span>occlusion_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;) {}
 
     <span class="doccomment">/// The window&#39;s scale factor has changed. [`RunningWindow::scale()`]
     /// returns the current scale.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>scale_factor_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;) {}
+    </span><span class="kw">fn </span>scale_factor_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;) {}
 
     <span class="doccomment">/// The window has been resized. [`RunningWindow::inner_size()`]
     /// returns the current size.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>resized(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;) {}
+    </span><span class="kw">fn </span>resized(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;) {}
 
     <span class="doccomment">/// The window&#39;s theme has been updated. [`RunningWindow::theme()`]
     /// returns the current theme.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>theme_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;) {}
+    </span><span class="kw">fn </span>theme_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;) {}
 
     <span class="doccomment">/// A file has been dropped on the window.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>dropped_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;, path: PathBuf) {}
+    </span><span class="kw">fn </span>dropped_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;, path: PathBuf) {}
 
     <span class="doccomment">/// A file is hovering over the window.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>hovered_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;, path: PathBuf) {}
+    </span><span class="kw">fn </span>hovered_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;, path: PathBuf) {}
 
     <span class="doccomment">/// A file being overed has been cancelled.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>hovered_file_cancelled(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;) {}
+    </span><span class="kw">fn </span>hovered_file_cancelled(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;) {}
 
     <span class="doccomment">/// An input event has generated a character.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>received_character(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;, char: char) {}
+    </span><span class="kw">fn </span>received_character(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;, char: char) {}
 
     <span class="doccomment">/// A keyboard event occurred while the window was focused.
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>keyboard_input(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: Window&lt;<span class="lifetime">&#39;_</span>&gt;,
+        window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;,
         device_id: DeviceId,
         input: KeyboardInput,
         is_synthetic: bool,
@@ -1127,17 +1242,17 @@
     <span class="doccomment">/// The keyboard modifier keys have changed. [`RunningWindow::modifiers()`]
     /// returns the current modifier keys state.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>modifiers_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;) {}
+    </span><span class="kw">fn </span>modifiers_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;) {}
 
     <span class="doccomment">/// An international input even thas occurred for the window.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>ime(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;, ime: Ime) {}
+    </span><span class="kw">fn </span>ime(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;, ime: Ime) {}
 
     <span class="doccomment">/// A cursor has moved over the window.
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>cursor_moved(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: Window&lt;<span class="lifetime">&#39;_</span>&gt;,
+        window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;,
         device_id: DeviceId,
         position: PhysicalPosition&lt;f64&gt;,
     ) {
@@ -1145,17 +1260,17 @@
 
     <span class="doccomment">/// A cursor has hovered over the window.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>cursor_entered(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;, device_id: DeviceId) {}
+    </span><span class="kw">fn </span>cursor_entered(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;, device_id: DeviceId) {}
 
     <span class="doccomment">/// A cursor is no longer hovering over the window.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>cursor_left(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;, device_id: DeviceId) {}
+    </span><span class="kw">fn </span>cursor_left(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;, device_id: DeviceId) {}
 
     <span class="doccomment">/// An event from a mouse wheel.
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>mouse_wheel(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: Window&lt;<span class="lifetime">&#39;_</span>&gt;,
+        window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;,
         device_id: DeviceId,
         delta: MouseScrollDelta,
         phase: TouchPhase,
@@ -1166,7 +1281,7 @@
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>mouse_input(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: Window&lt;<span class="lifetime">&#39;_</span>&gt;,
+        window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;,
         device_id: DeviceId,
         state: ElementState,
         button: MouseButton,
@@ -1177,7 +1292,7 @@
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>touchpad_pressure(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: Window&lt;<span class="lifetime">&#39;_</span>&gt;,
+        window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;,
         device_id: DeviceId,
         pressure: f32,
         stage: i64,
@@ -1186,17 +1301,24 @@
 
     <span class="doccomment">/// A multi-axis input device has registered motion.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>axis_motion(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;, device_id: DeviceId, axis: AxisId, value: f64) {}
+    </span><span class="kw">fn </span>axis_motion(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;,
+        device_id: DeviceId,
+        axis: AxisId,
+        value: f64,
+    ) {
+    }
 
     <span class="doccomment">/// A touch event.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>touch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;, touch: Touch) {}
+    </span><span class="kw">fn </span>touch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;, touch: Touch) {}
 
     <span class="doccomment">/// A touchpad-originated magnification gesture.
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>touchpad_magnify(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: Window&lt;<span class="lifetime">&#39;_</span>&gt;,
+        window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;,
         device_id: DeviceId,
         delta: f64,
         phase: TouchPhase,
@@ -1205,26 +1327,33 @@
 
     <span class="doccomment">/// A request to smart-magnify the window.
     </span><span class="attr">#[allow(unused_variables)]
-    </span><span class="kw">fn </span>smart_magnify(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>&gt;, device_id: DeviceId) {}
+    </span><span class="kw">fn </span>smart_magnify(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;, device_id: DeviceId) {}
 
     <span class="doccomment">/// A touchpad-originated rotation gesture.
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>touchpad_rotate(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: Window&lt;<span class="lifetime">&#39;_</span>&gt;,
+        window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;,
         device_id: DeviceId,
         delta: f32,
         phase: TouchPhase,
     ) {
     }
+
+    <span class="doccomment">/// A `WindowEvent` has been received by this window.
+    </span><span class="attr">#[allow(unused_variables)]
+    </span><span class="kw">fn </span>event(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: WindowEvent, window: Window&lt;<span class="lifetime">&#39;_</span>, WindowEvent&gt;) {}
 }
 
 <span class="attr">#[allow(unsafe_code, clippy::needless_pass_by_value)]
-</span><span class="kw">fn </span>create_surface(
-    request: CreateSurfaceRequest,
-    windows: <span class="kw-2">&amp;</span>appit::Windows&lt;CreateSurfaceRequest&gt;,
-) -&gt; wgpu::Surface {
-    <span class="kw">let </span>window = windows.get(request.<span class="number">0</span>).expect(<span class="string">&quot;window not found&quot;</span>);
+</span><span class="kw">fn </span>handle_window_message&lt;User&gt;(
+    request: CreateSurfaceRequest&lt;User&gt;,
+    windows: <span class="kw-2">&amp;</span>appit::Windows&lt;User&gt;,
+) -&gt; wgpu::Surface
+<span class="kw">where
+    </span>User: Send + <span class="lifetime">&#39;static</span>,
+{
+    <span class="kw">let </span>window = windows.get(request.window).expect(<span class="string">&quot;window not found&quot;</span>);
     <span class="kw">unsafe </span>{
         shared_wgpu()
             .create_surface(<span class="kw-2">&amp;*</span>window)
@@ -1232,10 +1361,17 @@
     }
 }
 
-<span class="kw">struct </span>CreateSurfaceRequest(WindowId);
+<span class="kw">struct </span>CreateSurfaceRequest&lt;User&gt; {
+    window: WindowId,
+    data: PhantomData&lt;User&gt;,
+}
 
-<span class="kw">impl </span>Message <span class="kw">for </span>CreateSurfaceRequest {
+<span class="kw">impl</span>&lt;User&gt; Message <span class="kw">for </span>CreateSurfaceRequest&lt;User&gt;
+<span class="kw">where
+    </span>User: Send + <span class="lifetime">&#39;static</span>,
+{
     <span class="kw">type </span>Response = wgpu::Surface;
+    <span class="kw">type </span>Window = User;
 }
 
 <span class="kw">struct </span>KludgineWindow&lt;Behavior&gt; {
@@ -1252,22 +1388,26 @@
     wgpu: Arc&lt;wgpu::Instance&gt;,
 }
 
-<span class="kw">impl</span>&lt;T&gt; appit::WindowBehavior&lt;CreateSurfaceRequest&gt; <span class="kw">for </span>KludgineWindow&lt;T&gt;
+<span class="kw">impl</span>&lt;T, User&gt; appit::WindowBehavior&lt;CreateSurfaceRequest&lt;User&gt;&gt; <span class="kw">for </span>KludgineWindow&lt;T&gt;
 <span class="kw">where
-    </span>T: WindowBehavior + <span class="lifetime">&#39;static</span>,
+    </span>T: WindowBehavior&lt;User&gt; + <span class="lifetime">&#39;static</span>,
+    User: Send + <span class="lifetime">&#39;static</span>,
 {
     <span class="kw">type </span>Context = T::Context;
 
     <span class="attr">#[allow(unsafe_code)]
     </span><span class="kw">fn </span>initialize(
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
         context: <span class="self">Self</span>::Context,
     ) -&gt; <span class="self">Self </span>{
         <span class="comment">// SAFETY: This function is only invoked once the window has been
         // created, and cannot be invoked after the underlying window has been
         // destroyed.
         </span><span class="kw">let </span>surface = window
-            .send(CreateSurfaceRequest(window.winit().id()))
+            .send(CreateSurfaceRequest {
+                window: window.winit().id(),
+                data: PhantomData,
+            })
             .expect(<span class="string">&quot;app not running&quot;</span>);
         <span class="kw">let </span>wgpu = shared_wgpu();
         <span class="kw">let </span>adapter = pollster::block_on(wgpu.request_adapter(<span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
@@ -1339,7 +1479,7 @@
     }
 
     <span class="attr">#[allow(unsafe_code)]
-    </span><span class="kw">fn </span>redraw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;) {
+    </span><span class="kw">fn </span>redraw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
         <span class="kw">let </span>surface = <span class="kw">loop </span>{
             <span class="kw">match </span><span class="self">self</span>.surface.get_current_texture() {
                 <span class="prelude-val">Ok</span>(frame) =&gt; <span class="kw">break </span>frame,
@@ -1407,7 +1547,7 @@
         <span class="self">self</span>.last_render = render_start;
     }
 
-    <span class="kw">fn </span>close_requested(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;) -&gt; bool {
+    <span class="kw">fn </span>close_requested(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) -&gt; bool {
         <span class="self">self</span>.behavior.close_requested(Window::new(
             window,
             <span class="self">self</span>.last_render.elapsed(),
@@ -1415,7 +1555,7 @@
         ))
     }
 
-    <span class="kw">fn </span>focus_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;) {
+    <span class="kw">fn </span>focus_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
         <span class="self">self</span>.behavior.focus_changed(Window::new(
             window,
             <span class="self">self</span>.last_render.elapsed(),
@@ -1423,7 +1563,7 @@
         ));
     }
 
-    <span class="kw">fn </span>occlusion_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;) {
+    <span class="kw">fn </span>occlusion_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
         <span class="self">self</span>.behavior.occlusion_changed(Window::new(
             window,
             <span class="self">self</span>.last_render.elapsed(),
@@ -1431,7 +1571,7 @@
         ));
     }
 
-    <span class="kw">fn </span>resized(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;) {
+    <span class="kw">fn </span>resized(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
         <span class="self">self</span>.config.width = window.inner_size().width;
         <span class="self">self</span>.config.height = window.inner_size().height;
         <span class="self">self</span>.surface.configure(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.config);
@@ -1448,7 +1588,7 @@
         ));
     }
 
-    <span class="kw">fn </span>scale_factor_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;) {
+    <span class="kw">fn </span>scale_factor_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
         <span class="self">self</span>.behavior.scale_factor_changed(Window::new(
             window,
             <span class="self">self</span>.last_render.elapsed(),
@@ -1456,7 +1596,7 @@
         ));
     }
 
-    <span class="kw">fn </span>theme_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;) {
+    <span class="kw">fn </span>theme_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
         <span class="self">self</span>.behavior.theme_changed(Window::new(
             window,
             <span class="self">self</span>.last_render.elapsed(),
@@ -1464,7 +1604,11 @@
         ));
     }
 
-    <span class="kw">fn </span>dropped_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;, path: PathBuf) {
+    <span class="kw">fn </span>dropped_file(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
+        path: PathBuf,
+    ) {
         <span class="self">self</span>.behavior.dropped_file(
             Window::new(
                 window,
@@ -1475,7 +1619,11 @@
         );
     }
 
-    <span class="kw">fn </span>hovered_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;, path: PathBuf) {
+    <span class="kw">fn </span>hovered_file(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
+        path: PathBuf,
+    ) {
         <span class="self">self</span>.behavior.hovered_file(
             Window::new(
                 window,
@@ -1486,7 +1634,7 @@
         );
     }
 
-    <span class="kw">fn </span>hovered_file_cancelled(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;) {
+    <span class="kw">fn </span>hovered_file_cancelled(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
         <span class="self">self</span>.behavior.hovered_file_cancelled(Window::new(
             window,
             <span class="self">self</span>.last_render.elapsed(),
@@ -1494,7 +1642,11 @@
         ));
     }
 
-    <span class="kw">fn </span>received_character(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;, char: char) {
+    <span class="kw">fn </span>received_character(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
+        char: char,
+    ) {
         <span class="self">self</span>.behavior.received_character(
             Window::new(
                 window,
@@ -1507,7 +1659,7 @@
 
     <span class="kw">fn </span>keyboard_input(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
         device_id: DeviceId,
         input: KeyboardInput,
         is_synthetic: bool,
@@ -1524,7 +1676,7 @@
         );
     }
 
-    <span class="kw">fn </span>modifiers_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;) {
+    <span class="kw">fn </span>modifiers_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
         <span class="self">self</span>.behavior.modifiers_changed(Window::new(
             window,
             <span class="self">self</span>.last_render.elapsed(),
@@ -1532,7 +1684,7 @@
         ));
     }
 
-    <span class="kw">fn </span>ime(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;, ime: Ime) {
+    <span class="kw">fn </span>ime(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;, ime: Ime) {
         <span class="self">self</span>.behavior.ime(
             Window::new(
                 window,
@@ -1545,7 +1697,7 @@
 
     <span class="kw">fn </span>cursor_moved(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
         device_id: DeviceId,
         position: PhysicalPosition&lt;f64&gt;,
     ) {
@@ -1562,7 +1714,7 @@
 
     <span class="kw">fn </span>cursor_entered(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
         device_id: DeviceId,
     ) {
         <span class="self">self</span>.behavior.cursor_entered(
@@ -1577,7 +1729,7 @@
 
     <span class="kw">fn </span>cursor_left(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
         device_id: DeviceId,
     ) {
         <span class="self">self</span>.behavior.cursor_left(
@@ -1592,7 +1744,7 @@
 
     <span class="kw">fn </span>mouse_wheel(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
         device_id: DeviceId,
         delta: MouseScrollDelta,
         phase: TouchPhase,
@@ -1611,7 +1763,7 @@
 
     <span class="kw">fn </span>mouse_input(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
         device_id: DeviceId,
         state: ElementState,
         button: MouseButton,
@@ -1630,7 +1782,7 @@
 
     <span class="kw">fn </span>touchpad_pressure(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
         device_id: DeviceId,
         pressure: f32,
         stage: i64,
@@ -1649,7 +1801,7 @@
 
     <span class="kw">fn </span>axis_motion(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
         device_id: DeviceId,
         axis: AxisId,
         value: f64,
@@ -1666,7 +1818,7 @@
         );
     }
 
-    <span class="kw">fn </span>touch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;, touch: Touch) {
+    <span class="kw">fn </span>touch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;, touch: Touch) {
         <span class="self">self</span>.behavior.touch(
             Window::new(
                 window,
@@ -1679,7 +1831,7 @@
 
     <span class="kw">fn </span>touchpad_magnify(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
         device_id: DeviceId,
         delta: f64,
         phase: TouchPhase,
@@ -1698,7 +1850,7 @@
 
     <span class="kw">fn </span>smart_magnify(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
         device_id: DeviceId,
     ) {
         <span class="self">self</span>.behavior.smart_magnify(
@@ -1713,7 +1865,7 @@
 
     <span class="kw">fn </span>touchpad_rotate(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
         device_id: DeviceId,
         delta: f32,
         phase: TouchPhase,
@@ -1727,6 +1879,21 @@
             device_id,
             delta,
             phase,
+        );
+    }
+
+    <span class="kw">fn </span>event(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
+        event: &lt;CreateSurfaceRequest&lt;User&gt; <span class="kw">as </span>Message&gt;::Window,
+    ) {
+        <span class="self">self</span>.behavior.event(
+            event,
+            Window::new(
+                window,
+                <span class="self">self</span>.last_render.elapsed(),
+                <span class="self">self</span>.last_render_duration,
+            ),
         );
     }
 }
@@ -1785,5 +1952,26 @@
         + <span class="lifetime">&#39;static</span>,
 {
     CallbackWindow::run_with(render_fn)
+}
+
+<span class="doccomment">/// A handle to a window.
+///
+/// This handle does not prevent the window from being closed.
+</span><span class="attr">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>WindowHandle&lt;Message = ()&gt;(appit::Window&lt;Message&gt;);
+
+<span class="kw">impl</span>&lt;Message&gt; WindowHandle&lt;Message&gt; {
+    <span class="doccomment">/// Sends `message` to the window. If the message cannot be
+    ///
+    /// Returns `Ok` if the message was successfully sent. The message may not
+    /// be received even if this function returns `Ok`, if the window closes
+    /// between when the message was sent and when the message is received.
+    ///
+    /// # Errors
+    ///
+    /// If the window is already closed, this function returns `Err(message)`.
+    </span><span class="kw">pub fn </span>send(<span class="kw-2">&amp;</span><span class="self">self</span>, message: Message) -&gt; <span class="prelude-ty">Result</span>&lt;(), Message&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.send(message)
+    }
 }
 </code></pre></div></section></main></body></html>

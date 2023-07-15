@@ -377,21 +377,19 @@
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
 <a href="#379" id="379">379</a>
-<a href="#380" id="380">380</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::ops::Range;
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>bytemuck::{Pod, Zeroable};
-<span class="kw">use </span>figures::traits::{IntoSigned, IsZero};
 <span class="kw">use </span>figures::units::{Lp, Px, UPx};
-<span class="kw">use </span>figures::{Angle, Fraction, Point, Size};
+<span class="kw">use </span>figures::{Angle, Fraction, IntoSigned, IsZero, Point, Size};
 <span class="kw">use </span>smallvec::SmallVec;
 
 <span class="kw">use </span><span class="kw">crate</span>::buffer::Buffer;
 <span class="kw">use crate</span>::{sealed, Color, RenderingGraphics};
 
-<span class="attr">#[derive(Pod, Zeroable, Copy, Clone)]
+<span class="attr">#[derive(Pod, Zeroable, Copy, Clone, Debug)]
 #[repr(C)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>Uniforms {
     ortho: [f32; <span class="number">16</span>],

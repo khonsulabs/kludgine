@@ -642,15 +642,13 @@
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::hash_map;
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
-<span class="kw">use </span>std::ops::Sub;
 <span class="kw">use </span>std::sync::{Arc, Mutex, PoisonError};
 
 <span class="kw">use </span>ahash::AHashMap;
 <span class="kw">use </span>cosmic_text::{fontdb, Attrs, AttrsOwned, SwashContent};
-<span class="kw">use </span>figures::traits::ScreenScale;
 <span class="kw">use </span>figures::units::{Lp, Px};
 <span class="kw">use </span>figures::utils::lossy_f32_to_i32;
-<span class="kw">use </span>figures::{Fraction, Point, Rect, Size};
+<span class="kw">use </span>figures::{Fraction, Point, Rect, ScreenScale, Size};
 <span class="kw">use </span>smallvec::SmallVec;
 
 <span class="kw">use </span><span class="kw">crate</span>::buffer::Buffer;
@@ -673,14 +671,9 @@
     }
 
     <span class="doccomment">/// Sets the font size.
-    </span><span class="kw">pub fn </span>set_font_size(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        size: <span class="kw">impl </span>figures::traits::ScreenScale&lt;Lp = figures::units::Lp&gt;,
-    ) {
-        <span class="self">self</span>.text.set_font_size(
-            figures::traits::ScreenScale::into_lp(size, <span class="self">self</span>.scale),
-            <span class="self">self</span>.scale,
-        );
+    </span><span class="kw">pub fn </span>set_font_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: <span class="kw">impl </span>figures::ScreenScale&lt;Lp = figures::units::Lp&gt;) {
+        <span class="self">self</span>.text
+            .set_font_size(figures::ScreenScale::into_lp(size, <span class="self">self</span>.scale), <span class="self">self</span>.scale);
     }
 
     <span class="doccomment">/// Returns the current font size.
@@ -689,14 +682,9 @@
     }
 
     <span class="doccomment">/// Sets the line height for multi-line layout.
-    </span><span class="kw">pub fn </span>set_line_height(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        size: <span class="kw">impl </span>figures::traits::ScreenScale&lt;Lp = figures::units::Lp&gt;,
-    ) {
-        <span class="self">self</span>.text.set_line_height(
-            figures::traits::ScreenScale::into_lp(size, <span class="self">self</span>.scale),
-            <span class="self">self</span>.scale,
-        );
+    </span><span class="kw">pub fn </span>set_line_height(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: <span class="kw">impl </span>figures::ScreenScale&lt;Lp = figures::units::Lp&gt;) {
+        <span class="self">self</span>.text
+            .set_line_height(figures::ScreenScale::into_lp(size, <span class="self">self</span>.scale), <span class="self">self</span>.scale);
     }
 
     <span class="doccomment">/// Returns the current line height.
@@ -794,6 +782,17 @@
     glyphs: GlyphCache,
 }
 
+<span class="kw">impl </span>Debug <span class="kw">for </span>TextSystem {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;TextSystem&quot;</span>)
+            .field(<span class="string">&quot;font_size&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.font_size)
+            .field(<span class="string">&quot;line_height&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.line_height)
+            .field(<span class="string">&quot;attrs&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.attrs)
+            .field(<span class="string">&quot;glyphs&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.glyphs)
+            .finish()
+    }
+}
+
 <span class="kw">const </span>DEFAULT_FONT_SIZE: Lp = Lp::points(<span class="number">12</span>);
 
 <span class="kw">impl </span>TextSystem {
@@ -867,7 +866,7 @@
     }
 }
 
-<span class="attr">#[derive(Default, Clone)]
+<span class="attr">#[derive(Debug, Default, Clone)]
 </span><span class="kw">struct </span>GlyphCache {
     glyphs: Arc&lt;Mutex&lt;AHashMap&lt;PixelAlignedCacheKey, CachedGlyph&gt;&gt;&gt;,
 }
@@ -914,7 +913,8 @@
     }
 }
 
-<span class="kw">struct </span>CachedGlyph {
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">struct </span>CachedGlyph {
     texture: CollectedTexture,
     is_mask: bool,
     ref_count: usize,
@@ -1134,7 +1134,7 @@
     glyphs: <span class="kw-2">&amp;mut </span>AHashMap&lt;PixelAlignedCacheKey, CachedGlyphHandle&gt;,
 ) -&gt; MeasuredText&lt;Unit&gt;
 <span class="kw">where
-    </span>Unit: ScreenScale&lt;Px = Px, Lp = Lp&gt; + Sub&lt;Output = Unit&gt; + Copy + Debug,
+    </span>Unit: figures::ScreenUnit,
 {
     <span class="comment">// TODO the returned type should be able to be drawn, so that we don&#39;t have to call update_scratch_buffer again.
     </span><span class="kw">let </span>line_height = Unit::from_lp(kludgine.text.line_height, kludgine.scale);

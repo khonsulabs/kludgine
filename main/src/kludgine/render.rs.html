@@ -663,19 +663,12 @@
 <a href="#663" id="663">663</a>
 <a href="#664" id="664">664</a>
 <a href="#665" id="665">665</a>
-<a href="#666" id="666">666</a>
-<a href="#667" id="667">667</a>
-<a href="#668" id="668">668</a>
-<a href="#669" id="669">669</a>
-<a href="#670" id="670">670</a>
-<a href="#671" id="671">671</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map;
 <span class="kw">use </span>std::ops::{Add, Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>ahash::AHashMap;
-<span class="kw">use </span>figures::traits::{FloatConversion, IntoSigned, IsZero};
-<span class="kw">use </span>figures::{Angle, Point, Rect};
+<span class="kw">use </span>figures::{Angle, FloatConversion, IntoSigned, IsZero, Point, Rect};
 <span class="kw">use </span>shelf_packer::UPx;
 
 <span class="kw">use </span><span class="kw">crate</span>::buffer::DiffableBuffer;
@@ -696,6 +689,7 @@
 /// this type is dropped, the [`Rendering`] that created this renderer will be
 /// updated with the new drawing instructions. All of the pending operations can
 /// be drawn using [`Rendering::render`].
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) graphics: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt;,
     data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Drawing,
@@ -942,12 +936,11 @@
 </span><span class="kw">mod </span>text {
     <span class="kw">use </span>std::array;
     <span class="kw">use </span>std::collections::hash_map;
-    <span class="kw">use </span>std::ops::{Add, Neg, Sub};
     <span class="kw">use </span>std::sync::Arc;
 
     <span class="kw">use </span>ahash::AHashMap;
-    <span class="kw">use </span>figures::traits::ScreenScale;
-    <span class="kw">use </span>figures::units::{Lp, Px};
+    <span class="kw">use </span>figures::units::Px;
+    <span class="kw">use </span>figures::{ScreenScale, ScreenUnit};
 
     <span class="kw">use super</span>::{
         Angle, Color, Command, IntoSigned, IsZero, Point, PushConstants, Renderer, Vertex,
@@ -963,7 +956,7 @@
         /// `default_color` does not affect the
         </span><span class="kw">pub fn </span>measure_text&lt;Unit&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, text: <span class="kw-2">&amp;</span>str, default_color: Color) -&gt; MeasuredText&lt;Unit&gt;
         <span class="kw">where
-            </span>Unit: ScreenScale&lt;Px = Px, Lp = Lp&gt; + Sub&lt;Output = Unit&gt; + Copy + std::fmt::Debug,
+            </span>Unit: figures::ScreenUnit,
         {
             <span class="self">self</span>.update_scratch_buffer(text);
             measure_text::&lt;Unit, <span class="bool-val">true</span>&gt;(
@@ -985,7 +978,7 @@
             rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
             scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         ) <span class="kw">where
-            </span>Unit: ScreenScale&lt;Px = Px, Lp = Lp&gt; + Copy + std::fmt::Debug,
+            </span>Unit: ScreenUnit,
         {
             <span class="self">self</span>.graphics.kludgine.update_scratch_buffer(text);
             <span class="self">self</span>.draw_text_buffer_inner(
@@ -1014,7 +1007,7 @@
             rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
             scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         ) <span class="kw">where
-            </span>Unit: ScreenScale&lt;Px = Px, Lp = Lp&gt; + Copy + std::fmt::Debug,
+            </span>Unit: ScreenUnit,
         {
             <span class="self">self</span>.draw_text_buffer_inner(
                 <span class="prelude-val">Some</span>(buffer),
@@ -1041,12 +1034,7 @@
             rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
             scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         ) <span class="kw">where
-            </span>Unit: ScreenScale&lt;Px = Px, Lp = Lp&gt;
-                + Copy
-                + Neg&lt;Output = Unit&gt;
-                + Sub&lt;Output = Unit&gt;
-                + Add&lt;Output = Unit&gt;
-                + std::fmt::Debug,
+            </span>Unit: ScreenUnit,
         {
             <span class="kw">let </span>scaling_factor = <span class="self">self</span>.scale;
             <span class="kw">let </span>translation = translate.into_px(scaling_factor).cast();
@@ -1083,7 +1071,7 @@
             rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
             scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         ) <span class="kw">where
-            </span>Unit: ScreenScale&lt;Px = Px, Lp = Lp&gt; + Copy + std::fmt::Debug,
+            </span>Unit: ScreenUnit,
         {
             <span class="kw">let </span>queue = <span class="self">self</span>.queue;
             <span class="kw">let </span>scaling_factor = <span class="self">self</span>.scale;

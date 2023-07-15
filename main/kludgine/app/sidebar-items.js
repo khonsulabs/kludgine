@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["run"],"struct":["Window"],"trait":["WindowBehavior"]};
+window.SIDEBAR_ITEMS = {"fn":["run"],"struct":["Window","WindowHandle"],"trait":["Message","WindowBehavior"]};
