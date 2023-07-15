@@ -1,15 +1,13 @@
 use std::array;
 use std::collections::hash_map;
 use std::fmt::{self, Debug};
-use std::ops::Sub;
 use std::sync::{Arc, Mutex, PoisonError};
 
 use ahash::AHashMap;
 use cosmic_text::{fontdb, Attrs, AttrsOwned, SwashContent};
-use figures::traits::ScreenScale;
 use figures::units::{Lp, Px};
 use figures::utils::lossy_f32_to_i32;
-use figures::{Fraction, Point, Rect, Size};
+use figures::{Fraction, Point, Rect, ScreenScale, Size};
 use smallvec::SmallVec;
 
 use crate::buffer::Buffer;
@@ -32,14 +30,9 @@ impl Kludgine {
     }
 
     /// Sets the font size.
-    pub fn set_font_size(
-        &mut self,
-        size: impl figures::traits::ScreenScale<Lp = figures::units::Lp>,
-    ) {
-        self.text.set_font_size(
-            figures::traits::ScreenScale::into_lp(size, self.scale),
-            self.scale,
-        );
+    pub fn set_font_size(&mut self, size: impl figures::ScreenScale<Lp = figures::units::Lp>) {
+        self.text
+            .set_font_size(figures::ScreenScale::into_lp(size, self.scale), self.scale);
     }
 
     /// Returns the current font size.
@@ -48,14 +41,9 @@ impl Kludgine {
     }
 
     /// Sets the line height for multi-line layout.
-    pub fn set_line_height(
-        &mut self,
-        size: impl figures::traits::ScreenScale<Lp = figures::units::Lp>,
-    ) {
-        self.text.set_line_height(
-            figures::traits::ScreenScale::into_lp(size, self.scale),
-            self.scale,
-        );
+    pub fn set_line_height(&mut self, size: impl figures::ScreenScale<Lp = figures::units::Lp>) {
+        self.text
+            .set_line_height(figures::ScreenScale::into_lp(size, self.scale), self.scale);
     }
 
     /// Returns the current line height.
@@ -153,6 +141,17 @@ pub(crate) struct TextSystem {
     glyphs: GlyphCache,
 }
 
+impl Debug for TextSystem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("TextSystem")
+            .field("font_size", &self.font_size)
+            .field("line_height", &self.line_height)
+            .field("attrs", &self.attrs)
+            .field("glyphs", &self.glyphs)
+            .finish()
+    }
+}
+
 const DEFAULT_FONT_SIZE: Lp = Lp::points(12);
 
 impl TextSystem {
@@ -226,7 +225,7 @@ impl TextSystem {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 struct GlyphCache {
     glyphs: Arc<Mutex<AHashMap<PixelAlignedCacheKey, CachedGlyph>>>,
 }
@@ -273,6 +272,7 @@ impl GlyphCache {
     }
 }
 
+#[derive(Debug)]
 struct CachedGlyph {
     texture: CollectedTexture,
     is_mask: bool,
@@ -493,7 +493,7 @@ pub(crate) fn measure_text<Unit, const COLLECT_GLYPHS: bool>(
     glyphs: &mut AHashMap<PixelAlignedCacheKey, CachedGlyphHandle>,
 ) -> MeasuredText<Unit>
 where
-    Unit: ScreenScale<Px = Px, Lp = Lp> + Sub<Output = Unit> + Copy + Debug,
+    Unit: figures::ScreenUnit,
 {
     // TODO the returned type should be able to be drawn, so that we don't have to call update_scratch_buffer again.
     let line_height = Unit::from_lp(kludgine.text.line_height, kludgine.scale);

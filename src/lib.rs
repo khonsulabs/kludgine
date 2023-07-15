@@ -8,7 +8,7 @@
 use std::borrow::Cow;
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{self, Hash};
-use std::ops::{Add, AddAssign, Deref, DerefMut, Div, Neg};
+use std::ops::{Add, AddAssign, Deref, DerefMut};
 use std::sync::Arc;
 
 use ahash::AHashMap;
@@ -16,9 +16,8 @@ use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "cosmic-text")]
 pub use cosmic_text;
 pub use figures;
-use figures::traits::{FloatConversion, FromComponents};
 use figures::units::UPx;
-use figures::{Fraction, Point, Rect, Size};
+use figures::{Fraction, FromComponents, IntoComponents, Point, Rect, Size};
 use sealed::ShapeSource as _;
 use wgpu::util::DeviceExt;
 
@@ -63,6 +62,7 @@ pub use pipeline::{PreparedGraphic, ShaderScalable};
 /// rendered, call [`Frame::prepare()`] to receive a [`Graphics`] instance that
 /// can be used in various Kludgine APIs such as
 /// [`Shape::prepare`](shapes::Shape::prepare).
+#[derive(Debug)]
 pub struct Kludgine {
     default_bindings: wgpu::BindGroup,
     pipeline: wgpu::RenderPipeline,
@@ -387,6 +387,7 @@ impl WgpuDeviceAndQueue for Graphics<'_> {
 /// - [`Texture::prepare_partial`]
 /// - [`CollectedTexture::prepare`]
 /// - [`Drawing::new_frame`](render::Drawing::new_frame)
+#[derive(Debug)]
 pub struct Graphics<'gfx> {
     kludgine: &'gfx mut Kludgine,
     device: &'gfx wgpu::Device,
@@ -611,6 +612,7 @@ impl sealed::Clipped for RenderingGraphics<'_, '_> {
 ///
 /// This type implements [`Deref`]/[`DerefMut`] to provide access to the
 /// underyling clipped type.
+#[derive(Debug)]
 pub struct ClipGuard<'clip, T>
 where
     T: Clipped,
@@ -1187,21 +1189,13 @@ impl Texture {
         graphics: &Graphics<'_>,
     ) -> PreparedGraphic<Unit>
     where
-        Unit: Add<Output = Unit>
-            + FloatConversion<Float = f32>
-            + Div<i32, Output = Unit>
-            + Neg<Output = Unit>
-            + Ord
-            + From<i32>
-            + Copy
-            + Debug
-            + Default,
-        Point<Unit>: Div<i32, Output = Point<Unit>>,
+        Unit: figures::Unit,
+        i32: IntoComponents<Unit>,
         Vertex<Unit>: bytemuck::Pod,
     {
         let origin = match origin {
             Origin::TopLeft => Point::default(),
-            Origin::Center => -(Point::from_vec(size) / 2),
+            Origin::Center => Point::default() - (Point::from_vec(size) / 2),
             Origin::Custom(point) => point,
         };
         self.prepare(Rect::new(origin, size), graphics)
@@ -1211,14 +1205,7 @@ impl Texture {
     #[must_use]
     pub fn prepare<Unit>(&self, dest: Rect<Unit>, graphics: &Graphics<'_>) -> PreparedGraphic<Unit>
     where
-        Unit: Add<Output = Unit>
-            + FloatConversion<Float = f32>
-            + Div<i32, Output = Unit>
-            + Neg<Output = Unit>
-            + From<i32>
-            + Ord
-            + Copy
-            + Debug,
+        Unit: figures::Unit,
         Vertex<Unit>: bytemuck::Pod,
     {
         self.prepare_partial(self.size().into(), dest, graphics)
@@ -1233,14 +1220,7 @@ impl Texture {
         graphics: &Graphics<'_>,
     ) -> PreparedGraphic<Unit>
     where
-        Unit: Add<Output = Unit>
-            + FloatConversion<Float = f32>
-            + Div<i32, Output = Unit>
-            + Neg<Output = Unit>
-            + From<i32>
-            + Ord
-            + Copy
-            + Debug,
+        Unit: figures::Unit,
         Vertex<Unit>: bytemuck::Pod,
     {
         TextureBlit::new(source, dest, Color::WHITE).prepare(Some(self), graphics)

@@ -1,8 +1,7 @@
 use std::ops::{Add, Neg};
 
-use figures::traits::FloatConversion;
 use figures::units::UPx;
-use figures::{Point, Rect};
+use figures::{FloatConversion, Point, Rect};
 use lyon_tessellation::{
     FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
     GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeTessellator, StrokeVertex,

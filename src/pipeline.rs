@@ -3,15 +3,14 @@ use std::ops::Range;
 use std::sync::Arc;
 
 use bytemuck::{Pod, Zeroable};
-use figures::traits::{IntoSigned, IsZero};
 use figures::units::{Lp, Px, UPx};
-use figures::{Angle, Fraction, Point, Size};
+use figures::{Angle, Fraction, IntoSigned, IsZero, Point, Size};
 use smallvec::SmallVec;
 
 use crate::buffer::Buffer;
 use crate::{sealed, Color, RenderingGraphics};
 
-#[derive(Pod, Zeroable, Copy, Clone)]
+#[derive(Pod, Zeroable, Copy, Clone, Debug)]
 #[repr(C)]
 pub(crate) struct Uniforms {
     ortho: [f32; 16],

@@ -1,17 +1,18 @@
+use std::marker::PhantomData;
 use std::mem::size_of;
 use std::panic::UnwindSafe;
 use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
-pub use appit::winit;
 use appit::winit::dpi::PhysicalPosition;
 use appit::winit::event::{
     AxisId, DeviceId, ElementState, Ime, KeyboardInput, MouseButton, MouseScrollDelta, Touch,
     TouchPhase, VirtualKeyCode,
 };
 use appit::winit::window::WindowId;
-use appit::{Application, Message, RunningWindow, WindowBehavior as _};
+pub use appit::{winit, Message};
+use appit::{Application, RunningWindow, WindowBehavior as _};
 use figures::units::Px;
 use figures::utils::lossy_f64_to_f32;
 use figures::{Point, Size};
@@ -26,15 +27,21 @@ fn shared_wgpu() -> Arc<wgpu::Instance> {
 }
 
 /// An open window.
-pub struct Window<'window> {
-    window: &'window mut RunningWindow<CreateSurfaceRequest>,
+pub struct Window<'window, WindowEvent = ()>
+where
+    WindowEvent: Send + 'static,
+{
+    window: &'window mut RunningWindow<CreateSurfaceRequest<WindowEvent>>,
     elapsed: Duration,
     last_frame_rendered_in: Duration,
 }
 
-impl<'window> Window<'window> {
+impl<'window, WindowEvent> Window<'window, WindowEvent>
+where
+    WindowEvent: Send + 'static,
+{
     fn new(
-        window: &'window mut RunningWindow<CreateSurfaceRequest>,
+        window: &'window mut RunningWindow<CreateSurfaceRequest<WindowEvent>>,
         elapsed: Duration,
         last_frame_rendered_in: Duration,
     ) -> Self {
@@ -43,6 +50,13 @@ impl<'window> Window<'window> {
             elapsed,
             last_frame_rendered_in,
         }
+    }
+
+    /// Returns a handle to this window, which can be used to send
+    /// `WindowEvent`s to it.
+    #[must_use]
+    pub fn handle(&self) -> WindowHandle<WindowEvent> {
+        WindowHandle(self.window.handle())
     }
 
     /// Sets the window to redraw after a `duration`.
@@ -103,7 +117,10 @@ impl<'window> Window<'window> {
 }
 
 /// The behavior of a window.
-pub trait WindowBehavior: Sized + 'static {
+pub trait WindowBehavior<WindowEvent = ()>: Sized + 'static
+where
+    WindowEvent: Send + 'static,
+{
     /// The type of value provided during [`initialize()`](Self::initialize).
     ///
     /// In Kludgine, each window runs in its own thread. Kludgine allows does
@@ -114,20 +131,24 @@ pub trait WindowBehavior: Sized + 'static {
     type Context: UnwindSafe + Send + 'static;
 
     /// Initialize a new instance from the provided context.
-    fn initialize(window: Window<'_>, graphics: &mut Graphics<'_>, context: Self::Context) -> Self;
+    fn initialize(
+        window: Window<'_, WindowEvent>,
+        graphics: &mut Graphics<'_>,
+        context: Self::Context,
+    ) -> Self;
 
     /// Prepare the window to render.
     ///
     /// This is called directly before [`render()`](Self::render()) and is a
     /// perfect place to update any prepared graphics as needed.
     #[allow(unused_variables)]
-    fn prepare(&mut self, window: Window<'_>, graphics: &mut Graphics<'_>) {}
+    fn prepare(&mut self, window: Window<'_, WindowEvent>, graphics: &mut Graphics<'_>) {}
 
     /// Render the contents of the window.
     // TODO refactor away from bool return.
     fn render<'pass>(
         &'pass mut self,
-        window: Window<'_>,
+        window: Window<'_, WindowEvent>,
         graphics: &mut RenderingGraphics<'_, 'pass>,
     ) -> bool;
 
@@ -157,7 +178,7 @@ pub trait WindowBehavior: Sized + 'static {
     where
         Self::Context: Default,
     {
-        KludgineWindow::<Self>::run_with_event_callback(create_surface)
+        KludgineWindow::<Self>::run_with_event_callback(handle_window_message)
     }
 
     /// Launches a Kludgine app using this window as the primary window.
@@ -165,7 +186,7 @@ pub trait WindowBehavior: Sized + 'static {
     /// The `context` is passed along to [`initialize()`](Self::initialize) once
     /// the thread it is running on is spawned.
     fn run_with(context: Self::Context) -> ! {
-        KludgineWindow::<Self>::run_with_context_and_event_callback(context, create_surface)
+        KludgineWindow::<Self>::run_with_context_and_event_callback(context, handle_window_message)
     }
 
     /// The window has been requested to be closed. This can happen as a result
@@ -174,56 +195,56 @@ pub trait WindowBehavior: Sized + 'static {
     /// If the window should be closed, return true. To prevent closing the
     /// window, return false.
     #[allow(unused_variables)]
-    fn close_requested(&mut self, window: Window<'_>) -> bool {
+    fn close_requested(&mut self, window: Window<'_, WindowEvent>) -> bool {
         true
     }
 
     /// The window has gained or lost keyboard focus.
     /// [`RunningWindow::focused()`] returns the current state.
     #[allow(unused_variables)]
-    fn focus_changed(&mut self, window: Window<'_>) {}
+    fn focus_changed(&mut self, window: Window<'_, WindowEvent>) {}
 
     /// The window has been occluded or revealed. [`RunningWindow::occluded()`]
     /// returns the current state.
     #[allow(unused_variables)]
-    fn occlusion_changed(&mut self, window: Window<'_>) {}
+    fn occlusion_changed(&mut self, window: Window<'_, WindowEvent>) {}
 
     /// The window's scale factor has changed. [`RunningWindow::scale()`]
     /// returns the current scale.
     #[allow(unused_variables)]
-    fn scale_factor_changed(&mut self, window: Window<'_>) {}
+    fn scale_factor_changed(&mut self, window: Window<'_, WindowEvent>) {}
 
     /// The window has been resized. [`RunningWindow::inner_size()`]
     /// returns the current size.
     #[allow(unused_variables)]
-    fn resized(&mut self, window: Window<'_>) {}
+    fn resized(&mut self, window: Window<'_, WindowEvent>) {}
 
     /// The window's theme has been updated. [`RunningWindow::theme()`]
     /// returns the current theme.
     #[allow(unused_variables)]
-    fn theme_changed(&mut self, window: Window<'_>) {}
+    fn theme_changed(&mut self, window: Window<'_, WindowEvent>) {}
 
     /// A file has been dropped on the window.
     #[allow(unused_variables)]
-    fn dropped_file(&mut self, window: Window<'_>, path: PathBuf) {}
+    fn dropped_file(&mut self, window: Window<'_, WindowEvent>, path: PathBuf) {}
 
     /// A file is hovering over the window.
     #[allow(unused_variables)]
-    fn hovered_file(&mut self, window: Window<'_>, path: PathBuf) {}
+    fn hovered_file(&mut self, window: Window<'_, WindowEvent>, path: PathBuf) {}
 
     /// A file being overed has been cancelled.
     #[allow(unused_variables)]
-    fn hovered_file_cancelled(&mut self, window: Window<'_>) {}
+    fn hovered_file_cancelled(&mut self, window: Window<'_, WindowEvent>) {}
 
     /// An input event has generated a character.
     #[allow(unused_variables)]
-    fn received_character(&mut self, window: Window<'_>, char: char) {}
+    fn received_character(&mut self, window: Window<'_, WindowEvent>, char: char) {}
 
     /// A keyboard event occurred while the window was focused.
     #[allow(unused_variables)]
     fn keyboard_input(
         &mut self,
-        window: Window<'_>,
+        window: Window<'_, WindowEvent>,
         device_id: DeviceId,
         input: KeyboardInput,
         is_synthetic: bool,
@@ -233,17 +254,17 @@ pub trait WindowBehavior: Sized + 'static {
     /// The keyboard modifier keys have changed. [`RunningWindow::modifiers()`]
     /// returns the current modifier keys state.
     #[allow(unused_variables)]
-    fn modifiers_changed(&mut self, window: Window<'_>) {}
+    fn modifiers_changed(&mut self, window: Window<'_, WindowEvent>) {}
 
     /// An international input even thas occurred for the window.
     #[allow(unused_variables)]
-    fn ime(&mut self, window: Window<'_>, ime: Ime) {}
+    fn ime(&mut self, window: Window<'_, WindowEvent>, ime: Ime) {}
 
     /// A cursor has moved over the window.
     #[allow(unused_variables)]
     fn cursor_moved(
         &mut self,
-        window: Window<'_>,
+        window: Window<'_, WindowEvent>,
         device_id: DeviceId,
         position: PhysicalPosition<f64>,
     ) {
@@ -251,17 +272,17 @@ pub trait WindowBehavior: Sized + 'static {
 
     /// A cursor has hovered over the window.
     #[allow(unused_variables)]
-    fn cursor_entered(&mut self, window: Window<'_>, device_id: DeviceId) {}
+    fn cursor_entered(&mut self, window: Window<'_, WindowEvent>, device_id: DeviceId) {}
 
     /// A cursor is no longer hovering over the window.
     #[allow(unused_variables)]
-    fn cursor_left(&mut self, window: Window<'_>, device_id: DeviceId) {}
+    fn cursor_left(&mut self, window: Window<'_, WindowEvent>, device_id: DeviceId) {}
 
     /// An event from a mouse wheel.
     #[allow(unused_variables)]
     fn mouse_wheel(
         &mut self,
-        window: Window<'_>,
+        window: Window<'_, WindowEvent>,
         device_id: DeviceId,
         delta: MouseScrollDelta,
         phase: TouchPhase,
@@ -272,7 +293,7 @@ pub trait WindowBehavior: Sized + 'static {
     #[allow(unused_variables)]
     fn mouse_input(
         &mut self,
-        window: Window<'_>,
+        window: Window<'_, WindowEvent>,
         device_id: DeviceId,
         state: ElementState,
         button: MouseButton,
@@ -283,7 +304,7 @@ pub trait WindowBehavior: Sized + 'static {
     #[allow(unused_variables)]
     fn touchpad_pressure(
         &mut self,
-        window: Window<'_>,
+        window: Window<'_, WindowEvent>,
         device_id: DeviceId,
         pressure: f32,
         stage: i64,
@@ -292,17 +313,24 @@ pub trait WindowBehavior: Sized + 'static {
 
     /// A multi-axis input device has registered motion.
     #[allow(unused_variables)]
-    fn axis_motion(&mut self, window: Window<'_>, device_id: DeviceId, axis: AxisId, value: f64) {}
+    fn axis_motion(
+        &mut self,
+        window: Window<'_, WindowEvent>,
+        device_id: DeviceId,
+        axis: AxisId,
+        value: f64,
+    ) {
+    }
 
     /// A touch event.
     #[allow(unused_variables)]
-    fn touch(&mut self, window: Window<'_>, touch: Touch) {}
+    fn touch(&mut self, window: Window<'_, WindowEvent>, touch: Touch) {}
 
     /// A touchpad-originated magnification gesture.
     #[allow(unused_variables)]
     fn touchpad_magnify(
         &mut self,
-        window: Window<'_>,
+        window: Window<'_, WindowEvent>,
         device_id: DeviceId,
         delta: f64,
         phase: TouchPhase,
@@ -311,26 +339,33 @@ pub trait WindowBehavior: Sized + 'static {
 
     /// A request to smart-magnify the window.
     #[allow(unused_variables)]
-    fn smart_magnify(&mut self, window: Window<'_>, device_id: DeviceId) {}
+    fn smart_magnify(&mut self, window: Window<'_, WindowEvent>, device_id: DeviceId) {}
 
     /// A touchpad-originated rotation gesture.
     #[allow(unused_variables)]
     fn touchpad_rotate(
         &mut self,
-        window: Window<'_>,
+        window: Window<'_, WindowEvent>,
         device_id: DeviceId,
         delta: f32,
         phase: TouchPhase,
     ) {
     }
+
+    /// A `WindowEvent` has been received by this window.
+    #[allow(unused_variables)]
+    fn event(&mut self, event: WindowEvent, window: Window<'_, WindowEvent>) {}
 }
 
 #[allow(unsafe_code, clippy::needless_pass_by_value)]
-fn create_surface(
-    request: CreateSurfaceRequest,
-    windows: &appit::Windows<CreateSurfaceRequest>,
-) -> wgpu::Surface {
-    let window = windows.get(request.0).expect("window not found");
+fn handle_window_message<User>(
+    request: CreateSurfaceRequest<User>,
+    windows: &appit::Windows<User>,
+) -> wgpu::Surface
+where
+    User: Send + 'static,
+{
+    let window = windows.get(request.window).expect("window not found");
     unsafe {
         shared_wgpu()
             .create_surface(&*window)
@@ -338,10 +373,17 @@ fn create_surface(
     }
 }
 
-struct CreateSurfaceRequest(WindowId);
+struct CreateSurfaceRequest<User> {
+    window: WindowId,
+    data: PhantomData<User>,
+}
 
-impl Message for CreateSurfaceRequest {
+impl<User> Message for CreateSurfaceRequest<User>
+where
+    User: Send + 'static,
+{
     type Response = wgpu::Surface;
+    type Window = User;
 }
 
 struct KludgineWindow<Behavior> {
@@ -358,22 +400,26 @@ struct KludgineWindow<Behavior> {
     wgpu: Arc<wgpu::Instance>,
 }
 
-impl<T> appit::WindowBehavior<CreateSurfaceRequest> for KludgineWindow<T>
+impl<T, User> appit::WindowBehavior<CreateSurfaceRequest<User>> for KludgineWindow<T>
 where
-    T: WindowBehavior + 'static,
+    T: WindowBehavior<User> + 'static,
+    User: Send + 'static,
 {
     type Context = T::Context;
 
     #[allow(unsafe_code)]
     fn initialize(
-        window: &mut RunningWindow<CreateSurfaceRequest>,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         context: Self::Context,
     ) -> Self {
         // SAFETY: This function is only invoked once the window has been
         // created, and cannot be invoked after the underlying window has been
         // destroyed.
         let surface = window
-            .send(CreateSurfaceRequest(window.winit().id()))
+            .send(CreateSurfaceRequest {
+                window: window.winit().id(),
+                data: PhantomData,
+            })
             .expect("app not running");
         let wgpu = shared_wgpu();
         let adapter = pollster::block_on(wgpu.request_adapter(&wgpu::RequestAdapterOptions {
@@ -445,7 +491,7 @@ where
     }
 
     #[allow(unsafe_code)]
-    fn redraw(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+    fn redraw(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
         let surface = loop {
             match self.surface.get_current_texture() {
                 Ok(frame) => break frame,
@@ -513,7 +559,7 @@ where
         self.last_render = render_start;
     }
 
-    fn close_requested(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) -> bool {
+    fn close_requested(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) -> bool {
         self.behavior.close_requested(Window::new(
             window,
             self.last_render.elapsed(),
@@ -521,7 +567,7 @@ where
         ))
     }
 
-    fn focus_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+    fn focus_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
         self.behavior.focus_changed(Window::new(
             window,
             self.last_render.elapsed(),
@@ -529,7 +575,7 @@ where
         ));
     }
 
-    fn occlusion_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+    fn occlusion_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
         self.behavior.occlusion_changed(Window::new(
             window,
             self.last_render.elapsed(),
@@ -537,7 +583,7 @@ where
         ));
     }
 
-    fn resized(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+    fn resized(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
         self.config.width = window.inner_size().width;
         self.config.height = window.inner_size().height;
         self.surface.configure(&self.device, &self.config);
@@ -554,7 +600,7 @@ where
         ));
     }
 
-    fn scale_factor_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+    fn scale_factor_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
         self.behavior.scale_factor_changed(Window::new(
             window,
             self.last_render.elapsed(),
@@ -562,7 +608,7 @@ where
         ));
     }
 
-    fn theme_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+    fn theme_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
         self.behavior.theme_changed(Window::new(
             window,
             self.last_render.elapsed(),
@@ -570,7 +616,11 @@ where
         ));
     }
 
-    fn dropped_file(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>, path: PathBuf) {
+    fn dropped_file(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
+        path: PathBuf,
+    ) {
         self.behavior.dropped_file(
             Window::new(
                 window,
@@ -581,7 +631,11 @@ where
         );
     }
 
-    fn hovered_file(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>, path: PathBuf) {
+    fn hovered_file(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
+        path: PathBuf,
+    ) {
         self.behavior.hovered_file(
             Window::new(
                 window,
@@ -592,7 +646,7 @@ where
         );
     }
 
-    fn hovered_file_cancelled(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+    fn hovered_file_cancelled(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
         self.behavior.hovered_file_cancelled(Window::new(
             window,
             self.last_render.elapsed(),
@@ -600,7 +654,11 @@ where
         ));
     }
 
-    fn received_character(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>, char: char) {
+    fn received_character(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
+        char: char,
+    ) {
         self.behavior.received_character(
             Window::new(
                 window,
@@ -613,7 +671,7 @@ where
 
     fn keyboard_input(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest>,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         device_id: DeviceId,
         input: KeyboardInput,
         is_synthetic: bool,
@@ -630,7 +688,7 @@ where
         );
     }
 
-    fn modifiers_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>) {
+    fn modifiers_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
         self.behavior.modifiers_changed(Window::new(
             window,
             self.last_render.elapsed(),
@@ -638,7 +696,7 @@ where
         ));
     }
 
-    fn ime(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>, ime: Ime) {
+    fn ime(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>, ime: Ime) {
         self.behavior.ime(
             Window::new(
                 window,
@@ -651,7 +709,7 @@ where
 
     fn cursor_moved(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest>,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         device_id: DeviceId,
         position: PhysicalPosition<f64>,
     ) {
@@ -668,7 +726,7 @@ where
 
     fn cursor_entered(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest>,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         device_id: DeviceId,
     ) {
         self.behavior.cursor_entered(
@@ -683,7 +741,7 @@ where
 
     fn cursor_left(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest>,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         device_id: DeviceId,
     ) {
         self.behavior.cursor_left(
@@ -698,7 +756,7 @@ where
 
     fn mouse_wheel(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest>,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         device_id: DeviceId,
         delta: MouseScrollDelta,
         phase: TouchPhase,
@@ -717,7 +775,7 @@ where
 
     fn mouse_input(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest>,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         device_id: DeviceId,
         state: ElementState,
         button: MouseButton,
@@ -736,7 +794,7 @@ where
 
     fn touchpad_pressure(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest>,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         device_id: DeviceId,
         pressure: f32,
         stage: i64,
@@ -755,7 +813,7 @@ where
 
     fn axis_motion(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest>,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         device_id: DeviceId,
         axis: AxisId,
         value: f64,
@@ -772,7 +830,7 @@ where
         );
     }
 
-    fn touch(&mut self, window: &mut RunningWindow<CreateSurfaceRequest>, touch: Touch) {
+    fn touch(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>, touch: Touch) {
         self.behavior.touch(
             Window::new(
                 window,
@@ -785,7 +843,7 @@ where
 
     fn touchpad_magnify(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest>,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         device_id: DeviceId,
         delta: f64,
         phase: TouchPhase,
@@ -804,7 +862,7 @@ where
 
     fn smart_magnify(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest>,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         device_id: DeviceId,
     ) {
         self.behavior.smart_magnify(
@@ -819,7 +877,7 @@ where
 
     fn touchpad_rotate(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest>,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         device_id: DeviceId,
         delta: f32,
         phase: TouchPhase,
@@ -833,6 +891,21 @@ where
             device_id,
             delta,
             phase,
+        );
+    }
+
+    fn event(
+        &mut self,
+        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
+        event: <CreateSurfaceRequest<User> as Message>::Window,
+    ) {
+        self.behavior.event(
+            event,
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
         );
     }
 }
@@ -891,4 +964,25 @@ where
         + 'static,
 {
     CallbackWindow::run_with(render_fn)
+}
+
+/// A handle to a window.
+///
+/// This handle does not prevent the window from being closed.
+#[derive(Debug, Clone)]
+pub struct WindowHandle<Message = ()>(appit::Window<Message>);
+
+impl<Message> WindowHandle<Message> {
+    /// Sends `message` to the window. If the message cannot be
+    ///
+    /// Returns `Ok` if the message was successfully sent. The message may not
+    /// be received even if this function returns `Ok`, if the window closes
+    /// between when the message was sent and when the message is received.
+    ///
+    /// # Errors
+    ///
+    /// If the window is already closed, this function returns `Err(message)`.
+    pub fn send(&self, message: Message) -> Result<(), Message> {
+        self.0.send(message)
+    }
 }

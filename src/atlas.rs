@@ -1,9 +1,8 @@
 use std::fmt::Debug;
-use std::ops::{Add, Div, Neg};
+use std::ops::Div;
 use std::sync::{Arc, PoisonError, RwLock};
 
 use alot::{LotId, Lots};
-use figures::traits::FloatConversion;
 use figures::units::UPx;
 use figures::{Rect, Size};
 use shelf_packer::{Allocation, ShelfPacker};
@@ -167,14 +166,7 @@ impl TextureCollection {
         graphics: &Graphics<'_>,
     ) -> PreparedGraphic<Unit>
     where
-        Unit: Add<Output = Unit>
-            + FloatConversion<Float = f32>
-            + Div<i32, Output = Unit>
-            + Neg<Output = Unit>
-            + From<i32>
-            + Ord
-            + Copy
-            + Debug,
+        Unit: figures::Unit + Div<i32, Output = Unit>,
         Vertex<Unit>: bytemuck::Pod,
     {
         let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
@@ -192,14 +184,7 @@ impl TextureCollection {
         graphics: &Graphics<'_>,
     ) -> PreparedGraphic<Unit>
     where
-        Unit: Add<Output = Unit>
-            + FloatConversion<Float = f32>
-            + Div<i32, Output = Unit>
-            + Neg<Output = Unit>
-            + From<i32>
-            + Ord
-            + Copy
-            + Debug,
+        Unit: figures::Unit,
         Vertex<Unit>: bytemuck::Pod,
     {
         let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
@@ -245,18 +230,20 @@ pub struct CollectedTexture {
     pub(crate) region: Rect<UPx>,
 }
 
+impl Debug for CollectedTexture {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CollectedTexture")
+            .field("id", &self.id)
+            .field("region", &self.region)
+            .finish()
+    }
+}
+
 impl CollectedTexture {
     /// Returns a [`PreparedGraphic`] that renders this texture at `dest`.
     pub fn prepare<Unit>(&self, dest: Rect<Unit>, graphics: &Graphics<'_>) -> PreparedGraphic<Unit>
     where
-        Unit: Add<Output = Unit>
-            + FloatConversion<Float = f32>
-            + Div<i32, Output = Unit>
-            + Neg<Output = Unit>
-            + From<i32>
-            + Ord
-            + Copy
-            + Debug,
+        Unit: figures::Unit + Div<i32, Output = Unit>,
         Vertex<Unit>: bytemuck::Pod,
     {
         self.collection.prepare(*self.id, dest, graphics)

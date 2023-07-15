@@ -3,8 +3,7 @@ use std::ops::{Add, Deref, DerefMut, Range};
 use std::sync::Arc;
 
 use ahash::AHashMap;
-use figures::traits::{FloatConversion, IntoSigned, IsZero};
-use figures::{Angle, Point, Rect};
+use figures::{Angle, FloatConversion, IntoSigned, IsZero, Point, Rect};
 use shelf_packer::UPx;
 
 use crate::buffer::DiffableBuffer;
@@ -25,6 +24,7 @@ use crate::{
 /// this type is dropped, the [`Rendering`] that created this renderer will be
 /// updated with the new drawing instructions. All of the pending operations can
 /// be drawn using [`Rendering::render`].
+#[derive(Debug)]
 pub struct Renderer<'render, 'gfx> {
     pub(crate) graphics: &'render mut Graphics<'gfx>,
     data: &'render mut Drawing,
@@ -271,12 +271,11 @@ impl sealed::Clipped for Renderer<'_, '_> {
 mod text {
     use std::array;
     use std::collections::hash_map;
-    use std::ops::{Add, Neg, Sub};
     use std::sync::Arc;
 
     use ahash::AHashMap;
-    use figures::traits::ScreenScale;
-    use figures::units::{Lp, Px};
+    use figures::units::Px;
+    use figures::{ScreenScale, ScreenUnit};
 
     use super::{
         Angle, Color, Command, IntoSigned, IsZero, Point, PushConstants, Renderer, Vertex,
@@ -292,7 +291,7 @@ mod text {
         /// `default_color` does not affect the
         pub fn measure_text<Unit>(&mut self, text: &str, default_color: Color) -> MeasuredText<Unit>
         where
-            Unit: ScreenScale<Px = Px, Lp = Lp> + Sub<Output = Unit> + Copy + std::fmt::Debug,
+            Unit: figures::ScreenUnit,
         {
             self.update_scratch_buffer(text);
             measure_text::<Unit, true>(
@@ -314,7 +313,7 @@ mod text {
             rotation: Option<Angle>,
             scale: Option<f32>,
         ) where
-            Unit: ScreenScale<Px = Px, Lp = Lp> + Copy + std::fmt::Debug,
+            Unit: ScreenUnit,
         {
             self.graphics.kludgine.update_scratch_buffer(text);
             self.draw_text_buffer_inner(
@@ -343,7 +342,7 @@ mod text {
             rotation: Option<Angle>,
             scale: Option<f32>,
         ) where
-            Unit: ScreenScale<Px = Px, Lp = Lp> + Copy + std::fmt::Debug,
+            Unit: ScreenUnit,
         {
             self.draw_text_buffer_inner(
                 Some(buffer),
@@ -370,12 +369,7 @@ mod text {
             rotation: Option<Angle>,
             scale: Option<f32>,
         ) where
-            Unit: ScreenScale<Px = Px, Lp = Lp>
-                + Copy
-                + Neg<Output = Unit>
-                + Sub<Output = Unit>
-                + Add<Output = Unit>
-                + std::fmt::Debug,
+            Unit: ScreenUnit,
         {
             let scaling_factor = self.scale;
             let translation = translate.into_px(scaling_factor).cast();
@@ -412,7 +406,7 @@ mod text {
             rotation: Option<Angle>,
             scale: Option<f32>,
         ) where
-            Unit: ScreenScale<Px = Px, Lp = Lp> + Copy + std::fmt::Debug,
+            Unit: ScreenUnit,
         {
             let queue = self.queue;
             let scaling_factor = self.scale;

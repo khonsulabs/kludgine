@@ -1,10 +1,9 @@
 use std::time::Duration;
 
-use figures::traits::FromComponents;
-use figures::{Angle, Point};
+use figures::{Angle, FromComponents, Point};
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::cosmic_text::{Attrs, AttrsList, Buffer, Edit, Editor, Metrics};
-use kludgine::figures::traits::{FloatConversion, ScreenScale};
+use kludgine::figures::{FloatConversion, ScreenScale};
 use kludgine::text::{PreparedText, TextOrigin};
 use kludgine::Color;
 

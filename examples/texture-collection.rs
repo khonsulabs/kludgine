@@ -1,9 +1,8 @@
 use std::time::Duration;
 
 use kludgine::app::{Window, WindowBehavior};
-use kludgine::figures::traits::ScreenScale;
 use kludgine::figures::units::{Lp, Px};
-use kludgine::figures::{Angle, Point, Rect, Size};
+use kludgine::figures::{Angle, Point, Rect, ScreenScale, Size};
 use kludgine::{Color, PreparedGraphic, TextureCollection};
 
 fn main() {

@@ -1,9 +1,8 @@
 use std::sync::OnceLock;
 use std::time::Duration;
 
-use kludgine::figures::traits::{IntoComponents, ScreenScale};
 use kludgine::figures::units::Lp;
-use kludgine::figures::{Angle, Point, Rect, Size};
+use kludgine::figures::{Angle, IntoComponents, Point, Rect, ScreenScale, Size};
 use kludgine::shapes::Shape;
 use kludgine::{Color, Texture};
 

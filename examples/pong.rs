@@ -3,9 +3,8 @@ use std::time::Duration;
 
 use kludgine::app::winit::event::VirtualKeyCode;
 use kludgine::app::Window;
-use kludgine::figures::traits::{FloatConversion, IntoSigned};
 use kludgine::figures::units::{Lp, Px};
-use kludgine::figures::{Point, Rect, Size};
+use kludgine::figures::{FloatConversion, IntoSigned, Point, Rect, Size};
 use kludgine::render::Renderer;
 use kludgine::shapes::Shape;
 use kludgine::text::TextOrigin;
