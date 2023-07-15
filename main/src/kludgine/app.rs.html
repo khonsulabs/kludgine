@@ -986,6 +986,12 @@
 <a href="#986" id="986">986</a>
 <a href="#987" id="987">987</a>
 <a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::panic::UnwindSafe;
@@ -1001,7 +1007,7 @@
 <span class="kw">use </span>appit::winit::window::WindowId;
 <span class="kw">pub use </span>appit::{winit, Message};
 <span class="kw">use </span>appit::{Application, RunningWindow, WindowBehavior <span class="kw">as _</span>};
-<span class="kw">use </span>figures::units::Px;
+<span class="kw">use </span>figures::units::{Px, UPx};
 <span class="kw">use </span>figures::utils::lossy_f64_to_f32;
 <span class="kw">use </span>figures::{Point, Size};
 
@@ -1045,6 +1051,12 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>handle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WindowHandle&lt;WindowEvent&gt; {
         WindowHandle(<span class="self">self</span>.window.handle())
+    }
+
+    <span class="doccomment">/// Returns the inner size of the window.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>inner_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;UPx&gt; {
+        <span class="self">self</span>.window.inner_size().into()
     }
 
     <span class="doccomment">/// Sets the window to redraw after a `duration`.

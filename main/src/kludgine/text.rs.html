@@ -638,13 +638,11 @@
 <a href="#638" id="638">638</a>
 <a href="#639" id="639">639</a>
 <a href="#640" id="640">640</a>
-<a href="#641" id="641">641</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
-<span class="kw">use </span>std::collections::hash_map;
+<span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
 <span class="kw">use </span>std::sync::{Arc, Mutex, PoisonError};
 
-<span class="kw">use </span>ahash::AHashMap;
 <span class="kw">use </span>cosmic_text::{fontdb, Attrs, AttrsOwned, SwashContent};
 <span class="kw">use </span>figures::units::{Lp, Px};
 <span class="kw">use </span>figures::utils::lossy_f32_to_i32;
@@ -655,8 +653,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::PreparedCommand;
 <span class="kw">use </span><span class="kw">crate</span>::sealed::{ShapeSource, TextureSource};
 <span class="kw">use crate</span>::{
-    CollectedTexture, Color, Graphics, Kludgine, PreparedGraphic, ProtoGraphics, TextureBlit,
-    TextureCollection, VertexCollection,
+    CollectedTexture, Color, DefaultHasher, Graphics, Kludgine, PreparedGraphic, ProtoGraphics,
+    TextureBlit, TextureCollection, VertexCollection,
 };
 
 <span class="kw">impl </span>Kludgine {
@@ -868,7 +866,7 @@
 
 <span class="attr">#[derive(Debug, Default, Clone)]
 </span><span class="kw">struct </span>GlyphCache {
-    glyphs: Arc&lt;Mutex&lt;AHashMap&lt;PixelAlignedCacheKey, CachedGlyph&gt;&gt;&gt;,
+    glyphs: Arc&lt;Mutex&lt;HashMap&lt;PixelAlignedCacheKey, CachedGlyph, DefaultHasher&gt;&gt;&gt;,
 }
 
 <span class="kw">impl </span>GlyphCache {
@@ -982,7 +980,7 @@
         default_color: Color,
         origin: TextOrigin&lt;Px&gt;,
     ) -&gt; PreparedText {
-        <span class="kw">let </span><span class="kw-2">mut </span>glyphs = AHashMap::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>glyphs = HashMap::default();
         <span class="kw">let </span><span class="kw-2">mut </span>vertices = VertexCollection::default();
         <span class="kw">let </span><span class="kw-2">mut </span>indices = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>commands = SmallVec::&lt;[PreparedCommand; <span class="number">2</span>]&gt;::new();
@@ -1036,7 +1034,7 @@
     origin: TextOrigin&lt;Px&gt;,
     kludgine: <span class="kw-2">&amp;mut </span>Kludgine,
     queue: <span class="kw-2">&amp;</span>wgpu::Queue,
-    glyphs: <span class="kw-2">&amp;mut </span>AHashMap&lt;PixelAlignedCacheKey, CachedGlyphHandle&gt;,
+    glyphs: <span class="kw-2">&amp;mut </span>HashMap&lt;PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher&gt;,
     <span class="kw-2">mut </span>map: <span class="kw">impl for</span>&lt;<span class="lifetime">&#39;a</span>&gt; FnMut(TextureBlit&lt;Px&gt;, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>CachedGlyphHandle, bool),
 ) {
     <span class="kw">let </span>metrics = buffer
@@ -1131,7 +1129,7 @@
     color: Color,
     kludgine: <span class="kw-2">&amp;mut </span>Kludgine,
     queue: <span class="kw-2">&amp;</span>wgpu::Queue,
-    glyphs: <span class="kw-2">&amp;mut </span>AHashMap&lt;PixelAlignedCacheKey, CachedGlyphHandle&gt;,
+    glyphs: <span class="kw-2">&amp;mut </span>HashMap&lt;PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher&gt;,
 ) -&gt; MeasuredText&lt;Unit&gt;
 <span class="kw">where
     </span>Unit: figures::ScreenUnit,
@@ -1177,7 +1175,7 @@
 <span class="doccomment">/// Text that is ready to be rendered on the GPU.
 </span><span class="kw">pub struct </span>PreparedText {
     graphic: PreparedGraphic&lt;Px&gt;,
-    _glyphs: AHashMap&lt;PixelAlignedCacheKey, CachedGlyphHandle&gt;,
+    _glyphs: HashMap&lt;PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher&gt;,
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>PreparedText {

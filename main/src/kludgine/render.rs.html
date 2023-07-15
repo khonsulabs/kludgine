@@ -654,21 +654,11 @@
 <a href="#654" id="654">654</a>
 <a href="#655" id="655">655</a>
 <a href="#656" id="656">656</a>
-<a href="#657" id="657">657</a>
-<a href="#658" id="658">658</a>
-<a href="#659" id="659">659</a>
-<a href="#660" id="660">660</a>
-<a href="#661" id="661">661</a>
-<a href="#662" id="662">662</a>
-<a href="#663" id="663">663</a>
-<a href="#664" id="664">664</a>
-<a href="#665" id="665">665</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::hash_map;
-<span class="kw">use </span>std::ops::{Add, Deref, DerefMut, Range};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
+<span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use </span>ahash::AHashMap;
-<span class="kw">use </span>figures::{Angle, FloatConversion, IntoSigned, IsZero, Point, Rect};
+<span class="kw">use </span>figures::{Angle, IntoSigned, IsZero, Point, Rect};
 <span class="kw">use </span>shelf_packer::UPx;
 
 <span class="kw">use </span><span class="kw">crate</span>::buffer::DiffableBuffer;
@@ -678,8 +668,8 @@
 };
 <span class="kw">use </span><span class="kw">crate</span>::shapes::Shape;
 <span class="kw">use crate</span>::{
-    sealed, ClipGuard, ClipRect, Clipped, Color, Graphics, RenderingGraphics, ShapeSource, Texture,
-    TextureBlit, TextureSource, VertexCollection,
+    sealed, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Graphics, RenderingGraphics,
+    ShapeSource, Texture, TextureBlit, TextureSource, VertexCollection,
 };
 
 <span class="doccomment">/// An easy-to-use graphics renderer that batches operations on the GPU
@@ -727,8 +717,7 @@
         rotation_rads: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
         scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
     ) <span class="kw">where
-        </span>Unit: IsZero + ShaderScalable + IntoSigned + Copy,
-        i32: From&lt;&lt;Unit <span class="kw">as </span>IntoSigned&gt;::Signed&gt;,
+        </span>Unit: IsZero + ShaderScalable + figures::Unit + Copy,
     {
         <span class="self">self</span>.inner_draw(
             shape,
@@ -742,16 +731,7 @@
     <span class="doccomment">/// Draws `texture` at `destination`, scaling as necessary.
     </span><span class="kw">pub fn </span>draw_texture&lt;Unit&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource, destination: Rect&lt;Unit&gt;)
     <span class="kw">where
-        </span>Unit: Default
-            + FloatConversion&lt;Float = f32&gt;
-            + Add&lt;Output = Unit&gt;
-            + Ord
-            + IsZero
-            + Copy
-            + IsZero
-            + ShaderScalable
-            + IntoSigned
-            + Copy,
+        </span>Unit: figures::Unit + ShaderScalable,
         i32: From&lt;&lt;Unit <span class="kw">as </span>IntoSigned&gt;::Signed&gt;,
     {
         <span class="self">self</span>.draw_textured_shape(
@@ -773,7 +753,7 @@
         rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
         scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
     ) <span class="kw">where
-        </span>Unit: IsZero + ShaderScalable + IntoSigned + Copy,
+        </span>Unit: IsZero + ShaderScalable + figures::Unit + Copy,
         i32: From&lt;&lt;Unit <span class="kw">as </span>IntoSigned&gt;::Signed&gt;,
     {
         <span class="self">self</span>.inner_draw(shape, <span class="prelude-val">Some</span>(texture), origin, rotation, scale);
@@ -787,15 +767,17 @@
         rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
         scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
     ) <span class="kw">where
-        </span>Unit: IsZero + ShaderScalable + IntoSigned + Copy,
-        i32: From&lt;&lt;Unit <span class="kw">as </span>IntoSigned&gt;::Signed&gt;,
+        </span>Unit: IsZero + ShaderScalable + figures::Unit + Copy,
     {
         <span class="comment">// Merge the vertices into the graphics
         </span><span class="kw">let </span>vertices = shape.vertices();
         <span class="kw">let </span><span class="kw-2">mut </span>vertex_map = Vec::with_capacity(vertices.len());
         <span class="kw">for </span>vertex <span class="kw">in </span>vertices {
             <span class="kw">let </span>vertex = Vertex {
-                location: vertex.location.into_signed().cast(),
+                location: vertex
+                    .location
+                    .try_cast()
+                    .unwrap_or(Point::new(i32::MAX, i32::MAX)),
                 texture: vertex.texture,
                 color: vertex.color,
             };
@@ -841,7 +823,7 @@
             flags,
             scale,
             rotation,
-            translation: origin.into_signed().cast(),
+            translation: origin.try_cast().unwrap_or(Point::new(i32::MAX, i32::MAX)),
         };
 
         <span class="kw">match </span><span class="self">self</span>.data.commands.last_mut() {
@@ -935,10 +917,9 @@
 <span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
 </span><span class="kw">mod </span>text {
     <span class="kw">use </span>std::array;
-    <span class="kw">use </span>std::collections::hash_map;
+    <span class="kw">use </span>std::collections::{hash_map, HashMap};
     <span class="kw">use </span>std::sync::Arc;
 
-    <span class="kw">use </span>ahash::AHashMap;
     <span class="kw">use </span>figures::units::Px;
     <span class="kw">use </span>figures::{ScreenScale, ScreenUnit};
 
@@ -948,7 +929,7 @@
     };
     <span class="kw">use </span><span class="kw">crate</span>::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
     <span class="kw">use </span><span class="kw">crate</span>::text::{map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, TextOrigin};
-    <span class="kw">use crate</span>::{TextureBlit, VertexCollection};
+    <span class="kw">use crate</span>::{DefaultHasher, TextureBlit, VertexCollection};
 
     <span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>&gt; Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;gfx</span>&gt; {
         <span class="doccomment">/// Measures `text` using the current text settings.
@@ -1111,7 +1092,7 @@
         clip_index: u32,
         vertices: <span class="kw-2">&amp;mut </span>VertexCollection&lt;i32&gt;,
         indices: <span class="kw-2">&amp;mut </span>Vec&lt;u16&gt;,
-        textures: <span class="kw-2">&amp;mut </span>AHashMap&lt;TextureId, Arc&lt;wgpu::BindGroup&gt;&gt;,
+        textures: <span class="kw-2">&amp;mut </span>HashMap&lt;TextureId, Arc&lt;wgpu::BindGroup&gt;, DefaultHasher&gt;,
         commands: <span class="kw-2">&amp;mut </span>Vec&lt;Command&gt;,
     ) {
         <span class="kw">let </span>corners: [u16; <span class="number">4</span>] = array::from_fn(|index| {
@@ -1219,12 +1200,13 @@
     buffers: <span class="prelude-ty">Option</span>&lt;RenderingBuffers&gt;,
     vertices: VertexCollection&lt;i32&gt;,
     clips: Vec&lt;Rect&lt;UPx&gt;&gt;,
-    clip_lookup: AHashMap&lt;Rect&lt;UPx&gt;, u32&gt;,
+    clip_lookup: HashMap&lt;Rect&lt;UPx&gt;, u32, DefaultHasher&gt;,
     indices: Vec&lt;u16&gt;,
-    textures: AHashMap&lt;sealed::TextureId, Arc&lt;wgpu::BindGroup&gt;&gt;,
+    textures: HashMap&lt;sealed::TextureId, Arc&lt;wgpu::BindGroup&gt;, DefaultHasher&gt;,
     commands: Vec&lt;Command&gt;,
     <span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
-    </span>glyphs: AHashMap&lt;<span class="kw">crate</span>::text::PixelAlignedCacheKey, <span class="kw">crate</span>::text::CachedGlyphHandle&gt;,
+    </span>glyphs:
+        HashMap&lt;<span class="kw">crate</span>::text::PixelAlignedCacheKey, <span class="kw">crate</span>::text::CachedGlyphHandle, DefaultHasher&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
