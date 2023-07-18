@@ -480,7 +480,11 @@ mod text {
         };
         let end_index = u32::try_from(indices.len()).expect("too many drawn indices");
         match commands.last_mut() {
-            Some(last_command) if last_command.constants == constants => {
+            Some(last_command)
+                if clip_index == last_command.clip_index
+                    && last_command.texture == Some(cached.texture.id())
+                    && last_command.constants == constants =>
+            {
                 // The last command was from the same texture source, we can stend the previous range to the new end.
                 last_command.indices.end = end_index;
             }
@@ -614,6 +618,7 @@ impl Drawing {
             for command in &self.commands {
                 if let Some(texture_id) = &command.texture {
                     if current_texture_id != Some(*texture_id) {
+                        needs_texture_binding = false;
                         current_texture_id = Some(*texture_id);
                         graphics.pass.set_bind_group(
                             0,
@@ -623,18 +628,19 @@ impl Drawing {
                     }
                 } else if needs_texture_binding {
                     needs_texture_binding = false;
+                    current_texture_id = None;
                     graphics
                         .pass
                         .set_bind_group(0, &graphics.kludgine.default_bindings, &[]);
                 }
 
                 if current_clip_index != command.clip_index {
+                    current_clip_index = command.clip_index;
                     current_clip = self.clips[command.clip_index as usize];
                     if current_clip.size.is_zero() {
                         continue;
                     }
 
-                    current_clip_index = command.clip_index;
                     graphics.pass.set_scissor_rect(
                         current_clip.origin.x.0,
                         current_clip.origin.y.0,
