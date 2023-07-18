@@ -116,6 +116,9 @@ where
             .set_index_buffer(self.indices.as_slice(), wgpu::IndexFormat::Uint16);
 
         for command in &self.commands {
+            if graphics.clip.current.size.is_zero() {
+                continue;
+            }
             graphics.pass.set_bind_group(
                 0,
                 command
@@ -140,7 +143,7 @@ where
                 scale.into_raidans_f()
             });
             let translation =
-                graphics.clip.origin.into_signed().cast() + origin.into_signed().cast();
+                graphics.clip.current.origin.into_signed().cast() + origin.into_signed().cast();
             if !translation.is_zero() {
                 flags |= FLAG_TRANSLATE;
             }

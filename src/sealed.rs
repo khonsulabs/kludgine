@@ -71,9 +71,7 @@ pub trait ShapeSource<Unit> {
     }
 }
 
-pub trait Clipped {
-    fn restore_clip(&mut self, previous_clip: ClipRect);
-}
+pub trait Clipped {}
 
 #[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub struct ClipRect(pub(crate) Rect<UPx>);

@@ -379,6 +379,31 @@ impl WgpuDeviceAndQueue for Graphics<'_> {
     }
 }
 
+#[derive(Debug)]
+struct ClipStack {
+    current: ClipRect,
+    previous_clips: Vec<ClipRect>,
+}
+
+impl ClipStack {
+    pub fn new(size: Size<UPx>) -> Self {
+        Self {
+            current: size.into(),
+            previous_clips: Vec::new(),
+        }
+    }
+
+    pub fn push_clip(&mut self, clip: Rect<UPx>) {
+        let previous_clip = self.current;
+        self.current = previous_clip.clip_to(clip);
+        self.previous_clips.push(previous_clip);
+    }
+
+    pub fn pop_clip(&mut self) {
+        self.current = self.previous_clips.pop().expect("unpaired pop_clip");
+    }
+}
+
 /// A context used to prepare graphics to render.
 ///
 /// This type is used in these APIs:
@@ -393,7 +418,7 @@ pub struct Graphics<'gfx> {
     kludgine: &'gfx mut Kludgine,
     device: &'gfx wgpu::Device,
     queue: &'gfx wgpu::Queue, // Need this eventually to be able to have dynamic shape collections
-    clip: ClipRect,
+    clip: ClipStack,
 }
 
 impl<'gfx> Graphics<'gfx> {
@@ -404,7 +429,7 @@ impl<'gfx> Graphics<'gfx> {
         queue: &'gfx wgpu::Queue,
     ) -> Self {
         Self {
-            clip: kludgine.size.into(),
+            clip: ClipStack::new(kludgine.size),
             kludgine,
             device,
             queue,
@@ -436,26 +461,7 @@ impl<'gfx> Graphics<'gfx> {
     /// equivalent to [`Kludgine::size`].
     #[must_use]
     pub const fn size(&self) -> Size<UPx> {
-        self.clip.0.size
-    }
-
-    /// Returns a [`ClipGuard`] that causes all drawing operations to be offset
-    /// and clipped to `clip` until it is dropped.
-    ///
-    /// This function causes the [`Graphics`] to act as if the origin of the
-    /// context is `clip.origin`, and the size of the context is `clip.size`.
-    /// This means that rendering at 0,0 will actually render at the effective
-    /// clip rect's origin.
-    ///
-    /// `clip` is relative to the current clip rect and cannot extend the
-    /// current clipping rectangle.
-    pub fn clipped_to(&mut self, clip: Rect<UPx>) -> ClipGuard<'_, Self> {
-        let previous_clip = self.clip;
-        self.clip = self.clip.clip_to(clip);
-        ClipGuard {
-            clipped: self,
-            previous_clip,
-        }
+        self.clip.current.0.size
     }
 }
 
@@ -485,13 +491,17 @@ impl DerefMut for Graphics<'_> {
     }
 }
 
-impl Clipped for Graphics<'_> {}
+impl Clipped for Graphics<'_> {
+    fn push_clip(&mut self, clip: Rect<UPx>) {
+        self.clip.push_clip(clip);
+    }
 
-impl sealed::Clipped for Graphics<'_> {
-    fn restore_clip(&mut self, previous_clip: ClipRect) {
-        self.clip = previous_clip;
+    fn pop_clip(&mut self) {
+        self.clip.pop_clip();
     }
 }
+
+impl sealed::Clipped for Graphics<'_> {}
 
 /// A graphics context used to render previously prepared graphics.
 ///
@@ -505,7 +515,7 @@ pub struct RenderingGraphics<'gfx, 'pass> {
     kludgine: &'pass Kludgine,
     device: &'gfx wgpu::Device,
     queue: &'gfx wgpu::Queue,
-    clip: ClipRect,
+    clip: ClipStack,
     pipeline_is_active: bool,
 }
 
@@ -518,7 +528,7 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
     ) -> Self {
         Self {
             pass,
-            clip: kludgine.size.into(),
+            clip: ClipStack::new(kludgine.size),
             kludgine,
             device,
             queue,
@@ -559,18 +569,8 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
     /// `clip` is relative to the current clip rect and cannot extend the
     /// current clipping rectangle.
     pub fn clipped_to(&mut self, clip: Rect<UPx>) -> ClipGuard<'_, Self> {
-        let previous_clip = self.clip;
-        self.clip = self.clip.clip_to(clip);
-        self.pass.set_scissor_rect(
-            self.clip.origin.x.0,
-            self.clip.origin.y.0,
-            self.clip.size.width.0,
-            self.clip.size.height.0,
-        );
-        ClipGuard {
-            previous_clip,
-            clipped: self,
-        }
+        self.push_clip(clip);
+        ClipGuard { clipped: self }
     }
 
     /// Returns the current size of the graphics area being rendered to.
@@ -579,7 +579,7 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
     /// clipped area.
     #[must_use]
     pub const fn size(&self) -> Size<UPx> {
-        self.clip.0.size
+        self.clip.current.0.size
     }
 
     /// Returns the current scaling factor of the display being rendered to.
@@ -590,21 +590,72 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
 }
 
 /// A graphics context that has been clipped.
-pub trait Clipped: sealed::Clipped {}
+pub trait Clipped: Sized + sealed::Clipped {
+    /// Pushes a new clipping state to the clipping stack.
+    ///
+    /// This function causes this type to act as if the origin of the context is
+    /// `clip.origin`, and the size of the context is `clip.size`. This means
+    /// that rendering at 0,0 will actually render at the effective clip rect's
+    /// origin.
+    ///
+    /// `clip` is relative to the current clip rect and cannot extend the
+    /// current clipping rectangle.
+    ///
+    /// To restore the clipping rect to the state it was before this function
+    /// was called, use [`Clipped::pop_clip()`].
+    fn push_clip(&mut self, clip: Rect<UPx>);
+    /// Restores the clipping rect to the previous state before the last call to
+    /// [`Clipped::push_clip()`].
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if it is called more times than
+    /// [`Clipped::push_clip()`].
+    fn pop_clip(&mut self);
 
-impl Clipped for RenderingGraphics<'_, '_> {}
-
-impl sealed::Clipped for RenderingGraphics<'_, '_> {
-    fn restore_clip(&mut self, previous_clip: ClipRect) {
-        self.clip = previous_clip;
-        self.pass.set_scissor_rect(
-            previous_clip.origin.x.0,
-            previous_clip.origin.y.0,
-            previous_clip.size.width.0,
-            previous_clip.size.height.0,
-        );
+    /// Returns a [`ClipGuard`] that causes all drawing operations to be offset
+    /// and clipped to `clip` until it is dropped.
+    ///
+    /// This function causes this type to act as if the origin of the context is
+    /// `clip.origin`, and the size of the context is `clip.size`. This means
+    /// that rendering at 0,0 will actually render at the effective clip rect's
+    /// origin.
+    ///
+    /// `clip` is relative to the current clip rect and cannot extend the
+    /// current clipping rectangle.
+    fn clipped_to(&mut self, clip: Rect<UPx>) -> ClipGuard<'_, Self> {
+        self.push_clip(clip);
+        ClipGuard { clipped: self }
     }
 }
+
+impl Clipped for RenderingGraphics<'_, '_> {
+    fn pop_clip(&mut self) {
+        self.clip.pop_clip();
+        if self.clip.current.size.width > 0 && self.clip.current.size.height > 0 {
+            self.pass.set_scissor_rect(
+                self.clip.current.origin.x.0,
+                self.clip.current.origin.y.0,
+                self.clip.current.size.width.0,
+                self.clip.current.size.height.0,
+            );
+        }
+    }
+
+    fn push_clip(&mut self, clip: Rect<UPx>) {
+        self.clip.push_clip(clip);
+        if self.clip.current.size.width > 0 && self.clip.current.size.height > 0 {
+            self.pass.set_scissor_rect(
+                self.clip.current.origin.x.0,
+                self.clip.current.origin.y.0,
+                self.clip.current.size.width.0,
+                self.clip.current.size.height.0,
+            );
+        }
+    }
+}
+
+impl sealed::Clipped for RenderingGraphics<'_, '_> {}
 
 /// A clipped surface.
 ///
@@ -619,7 +670,6 @@ where
     T: Clipped,
 {
     clipped: &'clip mut T,
-    previous_clip: ClipRect,
 }
 
 impl<T> Drop for ClipGuard<'_, T>
@@ -627,7 +677,7 @@ where
     T: Clipped,
 {
     fn drop(&mut self) {
-        self.clipped.restore_clip(self.previous_clip);
+        self.clipped.pop_clip();
     }
 }
 

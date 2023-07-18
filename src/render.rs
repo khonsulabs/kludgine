@@ -238,25 +238,26 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
     /// `clip` is relative to the current clip rect and cannot extend the
     /// current clipping rectangle.
     pub fn clipped_to(&mut self, clip: Rect<UPx>) -> ClipGuard<'_, Self> {
-        let previous_clip = self.clip;
-        self.clip = previous_clip.clip_to(clip);
-        self.clip_index = self.data.get_or_lookup_clip(self.clip);
+        self.push_clip(clip);
+        self.clip_index = self.data.get_or_lookup_clip(self.clip.current);
 
-        ClipGuard {
-            previous_clip,
-            clipped: self,
-        }
+        ClipGuard { clipped: self }
     }
 }
 
-impl Clipped for Renderer<'_, '_> {}
+impl Clipped for Renderer<'_, '_> {
+    fn push_clip(&mut self, clip: Rect<UPx>) {
+        self.clip.push_clip(clip);
+        self.clip_index = self.data.get_or_lookup_clip(self.clip.current);
+    }
 
-impl sealed::Clipped for Renderer<'_, '_> {
-    fn restore_clip(&mut self, previous_clip: ClipRect) {
-        self.graphics.restore_clip(previous_clip);
-        self.clip_index = self.data.get_or_lookup_clip(previous_clip);
+    fn pop_clip(&mut self) {
+        self.graphics.pop_clip();
+        self.clip_index = self.data.get_or_lookup_clip(self.clip.current);
     }
 }
+
+impl sealed::Clipped for Renderer<'_, '_> {}
 
 #[cfg(feature = "cosmic-text")]
 mod text {
@@ -575,7 +576,7 @@ impl Drawing {
         self.vertices.vertices.clear();
         self.clip_lookup.clear();
         self.clips.clear();
-        self.get_or_lookup_clip(graphics.clip);
+        self.get_or_lookup_clip(graphics.clip.current);
         #[cfg(feature = "cosmic-text")]
         self.glyphs.clear();
 
@@ -608,7 +609,7 @@ impl Drawing {
                 .set_index_buffer(buffers.index.as_slice(), wgpu::IndexFormat::Uint16);
 
             let mut current_clip_index = 0;
-            let mut current_clip = graphics.clip.0;
+            let mut current_clip = graphics.clip.current.0;
 
             for command in &self.commands {
                 if let Some(texture_id) = &command.texture {
@@ -629,6 +630,10 @@ impl Drawing {
 
                 if current_clip_index != command.clip_index {
                     current_clip = self.clips[command.clip_index as usize];
+                    if current_clip.size.is_zero() {
+                        continue;
+                    }
+
                     current_clip_index = command.clip_index;
                     graphics.pass.set_scissor_rect(
                         current_clip.origin.x.0,
