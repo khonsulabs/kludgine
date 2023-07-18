@@ -659,6 +659,12 @@
 <a href="#659" id="659">659</a>
 <a href="#660" id="660">660</a>
 <a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
@@ -1141,7 +1147,11 @@
         };
         <span class="kw">let </span>end_index = u32::try_from(indices.len()).expect(<span class="string">&quot;too many drawn indices&quot;</span>);
         <span class="kw">match </span>commands.last_mut() {
-            <span class="prelude-val">Some</span>(last_command) <span class="kw">if </span>last_command.constants == constants =&gt; {
+            <span class="prelude-val">Some</span>(last_command)
+                <span class="kw">if </span>clip_index == last_command.clip_index
+                    &amp;&amp; last_command.texture == <span class="prelude-val">Some</span>(cached.texture.id())
+                    &amp;&amp; last_command.constants == constants =&gt;
+            {
                 <span class="comment">// The last command was from the same texture source, we can stend the previous range to the new end.
                 </span>last_command.indices.end = end_index;
             }
@@ -1275,6 +1285,7 @@
             <span class="kw">for </span>command <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.commands {
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(texture_id) = <span class="kw-2">&amp;</span>command.texture {
                     <span class="kw">if </span>current_texture_id != <span class="prelude-val">Some</span>(<span class="kw-2">*</span>texture_id) {
+                        needs_texture_binding = <span class="bool-val">false</span>;
                         current_texture_id = <span class="prelude-val">Some</span>(<span class="kw-2">*</span>texture_id);
                         graphics.pass.set_bind_group(
                             <span class="number">0</span>,
@@ -1284,18 +1295,19 @@
                     }
                 } <span class="kw">else if </span>needs_texture_binding {
                     needs_texture_binding = <span class="bool-val">false</span>;
+                    current_texture_id = <span class="prelude-val">None</span>;
                     graphics
                         .pass
                         .set_bind_group(<span class="number">0</span>, <span class="kw-2">&amp;</span>graphics.kludgine.default_bindings, <span class="kw-2">&amp;</span>[]);
                 }
 
                 <span class="kw">if </span>current_clip_index != command.clip_index {
+                    current_clip_index = command.clip_index;
                     current_clip = <span class="self">self</span>.clips[command.clip_index <span class="kw">as </span>usize];
                     <span class="kw">if </span>current_clip.size.is_zero() {
                         <span class="kw">continue</span>;
                     }
 
-                    current_clip_index = command.clip_index;
                     graphics.pass.set_scissor_rect(
                         current_clip.origin.x.<span class="number">0</span>,
                         current_clip.origin.y.<span class="number">0</span>,
