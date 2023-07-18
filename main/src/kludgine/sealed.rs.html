@@ -95,8 +95,6 @@
 <a href="#95" id="95">95</a>
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Deref;
 <span class="kw">use </span>std::sync::atomic::{<span class="self">self</span>, AtomicUsize};
 <span class="kw">use </span>std::sync::{Arc, OnceLock};
@@ -170,9 +168,7 @@
     }
 }
 
-<span class="kw">pub trait </span>Clipped {
-    <span class="kw">fn </span>restore_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, previous_clip: ClipRect);
-}
+<span class="kw">pub trait </span>Clipped {}
 
 <span class="attr">#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 </span><span class="kw">pub struct </span>ClipRect(<span class="kw">pub</span>(<span class="kw">crate</span>) Rect&lt;UPx&gt;);

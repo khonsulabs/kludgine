@@ -1410,6 +1410,56 @@
 <a href="#1410" id="1410">1410</a>
 <a href="#1411" id="1411">1411</a>
 <a href="#1412" id="1412">1412</a>
+<a href="#1413" id="1413">1413</a>
+<a href="#1414" id="1414">1414</a>
+<a href="#1415" id="1415">1415</a>
+<a href="#1416" id="1416">1416</a>
+<a href="#1417" id="1417">1417</a>
+<a href="#1418" id="1418">1418</a>
+<a href="#1419" id="1419">1419</a>
+<a href="#1420" id="1420">1420</a>
+<a href="#1421" id="1421">1421</a>
+<a href="#1422" id="1422">1422</a>
+<a href="#1423" id="1423">1423</a>
+<a href="#1424" id="1424">1424</a>
+<a href="#1425" id="1425">1425</a>
+<a href="#1426" id="1426">1426</a>
+<a href="#1427" id="1427">1427</a>
+<a href="#1428" id="1428">1428</a>
+<a href="#1429" id="1429">1429</a>
+<a href="#1430" id="1430">1430</a>
+<a href="#1431" id="1431">1431</a>
+<a href="#1432" id="1432">1432</a>
+<a href="#1433" id="1433">1433</a>
+<a href="#1434" id="1434">1434</a>
+<a href="#1435" id="1435">1435</a>
+<a href="#1436" id="1436">1436</a>
+<a href="#1437" id="1437">1437</a>
+<a href="#1438" id="1438">1438</a>
+<a href="#1439" id="1439">1439</a>
+<a href="#1440" id="1440">1440</a>
+<a href="#1441" id="1441">1441</a>
+<a href="#1442" id="1442">1442</a>
+<a href="#1443" id="1443">1443</a>
+<a href="#1444" id="1444">1444</a>
+<a href="#1445" id="1445">1445</a>
+<a href="#1446" id="1446">1446</a>
+<a href="#1447" id="1447">1447</a>
+<a href="#1448" id="1448">1448</a>
+<a href="#1449" id="1449">1449</a>
+<a href="#1450" id="1450">1450</a>
+<a href="#1451" id="1451">1451</a>
+<a href="#1452" id="1452">1452</a>
+<a href="#1453" id="1453">1453</a>
+<a href="#1454" id="1454">1454</a>
+<a href="#1455" id="1455">1455</a>
+<a href="#1456" id="1456">1456</a>
+<a href="#1457" id="1457">1457</a>
+<a href="#1458" id="1458">1458</a>
+<a href="#1459" id="1459">1459</a>
+<a href="#1460" id="1460">1460</a>
+<a href="#1461" id="1461">1461</a>
+<a href="#1462" id="1462">1462</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -1791,6 +1841,31 @@
     }
 }
 
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">struct </span>ClipStack {
+    current: ClipRect,
+    previous_clips: Vec&lt;ClipRect&gt;,
+}
+
+<span class="kw">impl </span>ClipStack {
+    <span class="kw">pub fn </span>new(size: Size&lt;UPx&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            current: size.into(),
+            previous_clips: Vec::new(),
+        }
+    }
+
+    <span class="kw">pub fn </span>push_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) {
+        <span class="kw">let </span>previous_clip = <span class="self">self</span>.current;
+        <span class="self">self</span>.current = previous_clip.clip_to(clip);
+        <span class="self">self</span>.previous_clips.push(previous_clip);
+    }
+
+    <span class="kw">pub fn </span>pop_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.current = <span class="self">self</span>.previous_clips.pop().expect(<span class="string">&quot;unpaired pop_clip&quot;</span>);
+    }
+}
+
 <span class="doccomment">/// A context used to prepare graphics to render.
 ///
 /// This type is used in these APIs:
@@ -1805,7 +1880,7 @@
     kludgine: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span><span class="kw-2">mut </span>Kludgine,
     device: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device,
     queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue, <span class="comment">// Need this eventually to be able to have dynamic shape collections
-    </span>clip: ClipRect,
+    </span>clip: ClipStack,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>&gt; Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt; {
@@ -1816,7 +1891,7 @@
         queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            clip: kludgine.size.into(),
+            clip: ClipStack::new(kludgine.size),
             kludgine,
             device,
             queue,
@@ -1848,26 +1923,7 @@
     /// equivalent to [`Kludgine::size`].
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;UPx&gt; {
-        <span class="self">self</span>.clip.<span class="number">0</span>.size
-    }
-
-    <span class="doccomment">/// Returns a [`ClipGuard`] that causes all drawing operations to be offset
-    /// and clipped to `clip` until it is dropped.
-    ///
-    /// This function causes the [`Graphics`] to act as if the origin of the
-    /// context is `clip.origin`, and the size of the context is `clip.size`.
-    /// This means that rendering at 0,0 will actually render at the effective
-    /// clip rect&#39;s origin.
-    ///
-    /// `clip` is relative to the current clip rect and cannot extend the
-    /// current clipping rectangle.
-    </span><span class="kw">pub fn </span>clipped_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) -&gt; ClipGuard&lt;<span class="lifetime">&#39;_</span>, <span class="self">Self</span>&gt; {
-        <span class="kw">let </span>previous_clip = <span class="self">self</span>.clip;
-        <span class="self">self</span>.clip = <span class="self">self</span>.clip.clip_to(clip);
-        ClipGuard {
-            clipped: <span class="self">self</span>,
-            previous_clip,
-        }
+        <span class="self">self</span>.clip.current.<span class="number">0</span>.size
     }
 }
 
@@ -1897,13 +1953,17 @@
     }
 }
 
-<span class="kw">impl </span>Clipped <span class="kw">for </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt; {}
+<span class="kw">impl </span>Clipped <span class="kw">for </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">fn </span>push_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) {
+        <span class="self">self</span>.clip.push_clip(clip);
+    }
 
-<span class="kw">impl </span>sealed::Clipped <span class="kw">for </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt; {
-    <span class="kw">fn </span>restore_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, previous_clip: ClipRect) {
-        <span class="self">self</span>.clip = previous_clip;
+    <span class="kw">fn </span>pop_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.clip.pop_clip();
     }
 }
+
+<span class="kw">impl </span>sealed::Clipped <span class="kw">for </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt; {}
 
 <span class="doccomment">/// A graphics context used to render previously prepared graphics.
 ///
@@ -1917,7 +1977,7 @@
     kludgine: <span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span>Kludgine,
     device: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device,
     queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue,
-    clip: ClipRect,
+    clip: ClipStack,
     pipeline_is_active: bool,
 }
 
@@ -1930,7 +1990,7 @@
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             pass,
-            clip: kludgine.size.into(),
+            clip: ClipStack::new(kludgine.size),
             kludgine,
             device,
             queue,
@@ -1971,18 +2031,8 @@
     /// `clip` is relative to the current clip rect and cannot extend the
     /// current clipping rectangle.
     </span><span class="kw">pub fn </span>clipped_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) -&gt; ClipGuard&lt;<span class="lifetime">&#39;_</span>, <span class="self">Self</span>&gt; {
-        <span class="kw">let </span>previous_clip = <span class="self">self</span>.clip;
-        <span class="self">self</span>.clip = <span class="self">self</span>.clip.clip_to(clip);
-        <span class="self">self</span>.pass.set_scissor_rect(
-            <span class="self">self</span>.clip.origin.x.<span class="number">0</span>,
-            <span class="self">self</span>.clip.origin.y.<span class="number">0</span>,
-            <span class="self">self</span>.clip.size.width.<span class="number">0</span>,
-            <span class="self">self</span>.clip.size.height.<span class="number">0</span>,
-        );
-        ClipGuard {
-            previous_clip,
-            clipped: <span class="self">self</span>,
-        }
+        <span class="self">self</span>.push_clip(clip);
+        ClipGuard { clipped: <span class="self">self </span>}
     }
 
     <span class="doccomment">/// Returns the current size of the graphics area being rendered to.
@@ -1991,7 +2041,7 @@
     /// clipped area.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;UPx&gt; {
-        <span class="self">self</span>.clip.<span class="number">0</span>.size
+        <span class="self">self</span>.clip.current.<span class="number">0</span>.size
     }
 
     <span class="doccomment">/// Returns the current scaling factor of the display being rendered to.
@@ -2002,21 +2052,72 @@
 }
 
 <span class="doccomment">/// A graphics context that has been clipped.
-</span><span class="kw">pub trait </span>Clipped: sealed::Clipped {}
+</span><span class="kw">pub trait </span>Clipped: Sized + sealed::Clipped {
+    <span class="doccomment">/// Pushes a new clipping state to the clipping stack.
+    ///
+    /// This function causes this type to act as if the origin of the context is
+    /// `clip.origin`, and the size of the context is `clip.size`. This means
+    /// that rendering at 0,0 will actually render at the effective clip rect&#39;s
+    /// origin.
+    ///
+    /// `clip` is relative to the current clip rect and cannot extend the
+    /// current clipping rectangle.
+    ///
+    /// To restore the clipping rect to the state it was before this function
+    /// was called, use [`Clipped::pop_clip()`].
+    </span><span class="kw">fn </span>push_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;);
+    <span class="doccomment">/// Restores the clipping rect to the previous state before the last call to
+    /// [`Clipped::push_clip()`].
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if it is called more times than
+    /// [`Clipped::push_clip()`].
+    </span><span class="kw">fn </span>pop_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
 
-<span class="kw">impl </span>Clipped <span class="kw">for </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {}
-
-<span class="kw">impl </span>sealed::Clipped <span class="kw">for </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
-    <span class="kw">fn </span>restore_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, previous_clip: ClipRect) {
-        <span class="self">self</span>.clip = previous_clip;
-        <span class="self">self</span>.pass.set_scissor_rect(
-            previous_clip.origin.x.<span class="number">0</span>,
-            previous_clip.origin.y.<span class="number">0</span>,
-            previous_clip.size.width.<span class="number">0</span>,
-            previous_clip.size.height.<span class="number">0</span>,
-        );
+    <span class="doccomment">/// Returns a [`ClipGuard`] that causes all drawing operations to be offset
+    /// and clipped to `clip` until it is dropped.
+    ///
+    /// This function causes this type to act as if the origin of the context is
+    /// `clip.origin`, and the size of the context is `clip.size`. This means
+    /// that rendering at 0,0 will actually render at the effective clip rect&#39;s
+    /// origin.
+    ///
+    /// `clip` is relative to the current clip rect and cannot extend the
+    /// current clipping rectangle.
+    </span><span class="kw">fn </span>clipped_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) -&gt; ClipGuard&lt;<span class="lifetime">&#39;_</span>, <span class="self">Self</span>&gt; {
+        <span class="self">self</span>.push_clip(clip);
+        ClipGuard { clipped: <span class="self">self </span>}
     }
 }
+
+<span class="kw">impl </span>Clipped <span class="kw">for </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">fn </span>pop_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.clip.pop_clip();
+        <span class="kw">if </span><span class="self">self</span>.clip.current.size.width &gt; <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.clip.current.size.height &gt; <span class="number">0 </span>{
+            <span class="self">self</span>.pass.set_scissor_rect(
+                <span class="self">self</span>.clip.current.origin.x.<span class="number">0</span>,
+                <span class="self">self</span>.clip.current.origin.y.<span class="number">0</span>,
+                <span class="self">self</span>.clip.current.size.width.<span class="number">0</span>,
+                <span class="self">self</span>.clip.current.size.height.<span class="number">0</span>,
+            );
+        }
+    }
+
+    <span class="kw">fn </span>push_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) {
+        <span class="self">self</span>.clip.push_clip(clip);
+        <span class="kw">if </span><span class="self">self</span>.clip.current.size.width &gt; <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.clip.current.size.height &gt; <span class="number">0 </span>{
+            <span class="self">self</span>.pass.set_scissor_rect(
+                <span class="self">self</span>.clip.current.origin.x.<span class="number">0</span>,
+                <span class="self">self</span>.clip.current.origin.y.<span class="number">0</span>,
+                <span class="self">self</span>.clip.current.size.width.<span class="number">0</span>,
+                <span class="self">self</span>.clip.current.size.height.<span class="number">0</span>,
+            );
+        }
+    }
+}
+
+<span class="kw">impl </span>sealed::Clipped <span class="kw">for </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {}
 
 <span class="doccomment">/// A clipped surface.
 ///
@@ -2031,7 +2132,6 @@
     </span>T: Clipped,
 {
     clipped: <span class="kw-2">&amp;</span><span class="lifetime">&#39;clip </span><span class="kw-2">mut </span>T,
-    previous_clip: ClipRect,
 }
 
 <span class="kw">impl</span>&lt;T&gt; Drop <span class="kw">for </span>ClipGuard&lt;<span class="lifetime">&#39;_</span>, T&gt;
@@ -2039,7 +2139,7 @@
     </span>T: Clipped,
 {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.clipped.restore_clip(<span class="self">self</span>.previous_clip);
+        <span class="self">self</span>.clipped.pop_clip();
     }
 }
 
