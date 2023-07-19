@@ -219,7 +219,12 @@ impl TextSystem {
         }
 
         let scratch = self.scratch.as_mut().expect("initialized above");
-        scratch.set_text(&mut self.fonts, text, self.attrs.as_attrs());
+        scratch.set_text(
+            &mut self.fonts,
+            text,
+            self.attrs.as_attrs(),
+            cosmic_text::Shaping::Advanced, // TODO maybe this should be configurable?
+        );
         scratch.shape_until_scroll(&mut self.fonts);
     }
 }
@@ -417,9 +422,10 @@ pub(crate) fn map_each_glyph(
     for run in buffer.layout_runs() {
         let run_origin = Point::new(0., run.line_y) - relative_to;
         for glyph in run.glyphs.iter() {
+            let physical = glyph.physical((run_origin.x, run_origin.y), 1.);
             let Some(image) = kludgine.text
                 .swash_cache
-                .get_image(&mut kludgine.text.fonts, glyph.cache_key) else { continue };
+                .get_image(&mut kludgine.text.fonts, physical.cache_key) else { continue };
             if image.placement.width == 0 || image.placement.height == 0 {
                 continue;
             }
@@ -427,7 +433,7 @@ pub(crate) fn map_each_glyph(
             let mut color = glyph.color_opt.map_or(default_color, Color::from);
 
             let Some(cached) = kludgine.text.glyphs.get_or_insert(
-                glyph.cache_key.into(),
+                physical.cache_key.into(),
                 || match image.content {
                     SwashContent::Mask => {
                         Some((kludgine.text.alpha_text_atlas.push_texture(
@@ -462,7 +468,7 @@ pub(crate) fn map_each_glyph(
             let blit = TextureBlit::new(
                 cached.texture.region,
                 Rect::new(
-                    (Point::new(glyph.x, glyph.y_offset) + run_origin).cast::<Px>()
+                    (Point::new(physical.x, physical.y)).cast::<Px>()
                         + Point::new(
                             image.placement.left,
                             lossy_f32_to_i32(metrics.line_height) - image.placement.top,
@@ -478,7 +484,7 @@ pub(crate) fn map_each_glyph(
             map(blit, &cached, run.line_i == 0);
 
             glyphs
-                .entry(glyph.cache_key.into())
+                .entry(physical.cache_key.into())
                 .or_insert_with(|| cached);
         }
     }
