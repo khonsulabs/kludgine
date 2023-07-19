@@ -638,6 +638,12 @@
 <a href="#638" id="638">638</a>
 <a href="#639" id="639">639</a>
 <a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -859,7 +865,12 @@
         }
 
         <span class="kw">let </span>scratch = <span class="self">self</span>.scratch.as_mut().expect(<span class="string">&quot;initialized above&quot;</span>);
-        scratch.set_text(<span class="kw-2">&amp;mut </span><span class="self">self</span>.fonts, text, <span class="self">self</span>.attrs.as_attrs());
+        scratch.set_text(
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.fonts,
+            text,
+            <span class="self">self</span>.attrs.as_attrs(),
+            cosmic_text::Shaping::Advanced, <span class="comment">// TODO maybe this should be configurable?
+        </span>);
         scratch.shape_until_scroll(<span class="kw-2">&amp;mut </span><span class="self">self</span>.fonts);
     }
 }
@@ -1057,9 +1068,10 @@
     <span class="kw">for </span>run <span class="kw">in </span>buffer.layout_runs() {
         <span class="kw">let </span>run_origin = Point::new(<span class="number">0.</span>, run.line_y) - relative_to;
         <span class="kw">for </span>glyph <span class="kw">in </span>run.glyphs.iter() {
+            <span class="kw">let </span>physical = glyph.physical((run_origin.x, run_origin.y), <span class="number">1.</span>);
             <span class="kw">let </span><span class="prelude-val">Some</span>(image) = kludgine.text
                 .swash_cache
-                .get_image(<span class="kw-2">&amp;mut </span>kludgine.text.fonts, glyph.cache_key) <span class="kw">else </span>{ <span class="kw">continue </span>};
+                .get_image(<span class="kw-2">&amp;mut </span>kludgine.text.fonts, physical.cache_key) <span class="kw">else </span>{ <span class="kw">continue </span>};
             <span class="kw">if </span>image.placement.width == <span class="number">0 </span>|| image.placement.height == <span class="number">0 </span>{
                 <span class="kw">continue</span>;
             }
@@ -1067,7 +1079,7 @@
             <span class="kw">let </span><span class="kw-2">mut </span>color = glyph.color_opt.map_or(default_color, Color::from);
 
             <span class="kw">let </span><span class="prelude-val">Some</span>(cached) = kludgine.text.glyphs.get_or_insert(
-                glyph.cache_key.into(),
+                physical.cache_key.into(),
                 || <span class="kw">match </span>image.content {
                     SwashContent::Mask =&gt; {
                         <span class="prelude-val">Some</span>((kludgine.text.alpha_text_atlas.push_texture(
@@ -1102,7 +1114,7 @@
             <span class="kw">let </span>blit = TextureBlit::new(
                 cached.texture.region,
                 Rect::new(
-                    (Point::new(glyph.x, glyph.y_offset) + run_origin).cast::&lt;Px&gt;()
+                    (Point::new(physical.x, physical.y)).cast::&lt;Px&gt;()
                         + Point::new(
                             image.placement.left,
                             lossy_f32_to_i32(metrics.line_height) - image.placement.top,
@@ -1118,7 +1130,7 @@
             map(blit, <span class="kw-2">&amp;</span>cached, run.line_i == <span class="number">0</span>);
 
             glyphs
-                .entry(glyph.cache_key.into())
+                .entry(physical.cache_key.into())
                 .or_insert_with(|| cached);
         }
     }
