@@ -157,6 +157,41 @@
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
 <a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::ops::Deref;
@@ -268,19 +303,13 @@
     }
 
     <span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_contents: <span class="kw-2">&amp;</span>[T], device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
-        <span class="kw">if </span>new_contents.len() &gt; <span class="self">self</span>.buffer.len() {
-            <span class="comment">// We need to grow to store the new data. There is no grow operation
-            // in wgpu, so we might as well just allocate a new buffer with the new contents immediately.
-            </span><span class="self">self</span>.buffer = Buffer::new(new_contents, <span class="self">self</span>.usage, device);
-            <span class="self">self</span>.data.clear();
-            <span class="self">self</span>.data.extend_from_slice(new_contents);
-        } <span class="kw">else </span>{
-            <span class="macro">assert!</span>(new_contents.len() &lt;= <span class="self">self</span>.data.len());
+        <span class="kw">if </span>new_contents.len() &lt;= <span class="self">self</span>.buffer.len() {
             <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>cant_align = <span class="bool-val">false</span>;
 
             <span class="kw">while </span>index &lt; new_contents.len() {
                 <span class="kw">if </span>new_contents[index] != <span class="self">self</span>.data[index] {
-                    <span class="kw">let </span>start_index = index;
+                    <span class="kw">let </span><span class="kw-2">mut </span>start_index = index;
                     <span class="comment">// We found a changed element. Find where we should stop.
                     </span><span class="kw">let </span><span class="kw-2">mut </span>last_changed = start_index;
                     <span class="kw">while </span>index &lt; new_contents.len() {
@@ -298,6 +327,35 @@
                         index += <span class="number">1</span>;
                     }
 
+                    <span class="kw">if </span>(size_of::&lt;T&gt;() * (last_changed + <span class="number">1 </span>- start_index)) <span class="kw">as </span>u64
+                        % wgpu::COPY_BUFFER_ALIGNMENT
+                        != <span class="number">0
+                    </span>{
+                        <span class="kw">if </span>(size_of::&lt;T&gt;() * (last_changed + <span class="number">2 </span>- start_index)) <span class="kw">as </span>u64
+                            % wgpu::COPY_BUFFER_ALIGNMENT
+                            == <span class="number">0
+                        </span>{
+                            <span class="comment">// Extend the copy range by 1
+                            </span><span class="kw">if </span>last_changed + <span class="number">1 </span>&lt; <span class="self">self</span>.len() {
+                                last_changed += <span class="number">1</span>;
+                            } <span class="kw">else if </span>start_index &gt; <span class="number">0 </span>{
+                                start_index -= <span class="number">1</span>;
+                            } <span class="kw">else </span>{
+                                <span class="comment">// Currently this shouldn&#39;t be reachable, but
+                                // this is the proper behavior if it is
+                                // reachable someday.
+                                </span>cant_align = <span class="bool-val">true</span>;
+                                <span class="kw">break</span>;
+                            }
+                        } <span class="kw">else </span>{
+                            <span class="comment">// What weird alignment is this? Internally Vertex
+                            // is aligned to 4 bytes, and u16 is the only
+                            // odd-man out.
+                            </span>cant_align = <span class="bool-val">true</span>;
+                            <span class="kw">break</span>;
+                        }
+                    }
+
                     <span class="comment">// Update the changed range in the buffers.
                     </span><span class="kw">let </span>copy_range = <span class="kw-2">&amp;</span>new_contents[start_index..=last_changed];
                     <span class="self">self</span>.buffer.update(start_index, copy_range, queue);
@@ -305,7 +363,19 @@
                 }
                 index += <span class="number">1</span>;
             }
+
+            <span class="comment">// If we were able to do delta updates without alignment issues, we
+            // can avoid creating the new buffer.
+            </span><span class="kw">if </span>!cant_align {
+                <span class="kw">return</span>;
+            }
         }
+
+        <span class="comment">// We need to grow to store the new data, or we had alignment issues
+        // when trying to do a delta update.
+        </span><span class="self">self</span>.buffer = Buffer::new(new_contents, <span class="self">self</span>.usage, device);
+        <span class="self">self</span>.data.clear();
+        <span class="self">self</span>.data.extend_from_slice(new_contents);
     }
 }
 
