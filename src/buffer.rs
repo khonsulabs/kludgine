@@ -133,26 +133,30 @@ where
                         index += 1;
                     }
 
+                    if (size_of::<T>() * start_index) as u64 % wgpu::COPY_BUFFER_ALIGNMENT != 0 {
+                        if start_index > 0
+                            && (size_of::<T>() * (start_index - 1)) as u64
+                                % wgpu::COPY_BUFFER_ALIGNMENT
+                                == 0
+                        {
+                            start_index -= 1;
+                        } else {
+                            cant_align = true;
+                            break;
+                        }
+                    }
+
                     if (size_of::<T>() * (last_changed + 1 - start_index)) as u64
                         % wgpu::COPY_BUFFER_ALIGNMENT
                         != 0
                     {
-                        if (size_of::<T>() * (last_changed + 2 - start_index)) as u64
-                            % wgpu::COPY_BUFFER_ALIGNMENT
-                            == 0
+                        if last_changed + 1 < self.len()
+                            && (size_of::<T>() * (last_changed + 2 - start_index)) as u64
+                                % wgpu::COPY_BUFFER_ALIGNMENT
+                                == 0
                         {
                             // Extend the copy range by 1
-                            if last_changed + 1 < self.len() {
-                                last_changed += 1;
-                            } else if start_index > 0 {
-                                start_index -= 1;
-                            } else {
-                                // Currently this shouldn't be reachable, but
-                                // this is the proper behavior if it is
-                                // reachable someday.
-                                cant_align = true;
-                                break;
-                            }
+                            last_changed += 1;
                         } else {
                             // What weird alignment is this? Internally Vertex
                             // is aligned to 4 bytes, and u16 is the only
