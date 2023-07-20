@@ -192,6 +192,10 @@
 <a href="#192" id="192">192</a>
 <a href="#193" id="193">193</a>
 <a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::ops::Deref;
@@ -327,26 +331,30 @@
                         index += <span class="number">1</span>;
                     }
 
+                    <span class="kw">if </span>(size_of::&lt;T&gt;() * start_index) <span class="kw">as </span>u64 % wgpu::COPY_BUFFER_ALIGNMENT != <span class="number">0 </span>{
+                        <span class="kw">if </span>start_index &gt; <span class="number">0
+                            </span>&amp;&amp; (size_of::&lt;T&gt;() * (start_index - <span class="number">1</span>)) <span class="kw">as </span>u64
+                                % wgpu::COPY_BUFFER_ALIGNMENT
+                                == <span class="number">0
+                        </span>{
+                            start_index -= <span class="number">1</span>;
+                        } <span class="kw">else </span>{
+                            cant_align = <span class="bool-val">true</span>;
+                            <span class="kw">break</span>;
+                        }
+                    }
+
                     <span class="kw">if </span>(size_of::&lt;T&gt;() * (last_changed + <span class="number">1 </span>- start_index)) <span class="kw">as </span>u64
                         % wgpu::COPY_BUFFER_ALIGNMENT
                         != <span class="number">0
                     </span>{
-                        <span class="kw">if </span>(size_of::&lt;T&gt;() * (last_changed + <span class="number">2 </span>- start_index)) <span class="kw">as </span>u64
-                            % wgpu::COPY_BUFFER_ALIGNMENT
-                            == <span class="number">0
+                        <span class="kw">if </span>last_changed + <span class="number">1 </span>&lt; <span class="self">self</span>.len()
+                            &amp;&amp; (size_of::&lt;T&gt;() * (last_changed + <span class="number">2 </span>- start_index)) <span class="kw">as </span>u64
+                                % wgpu::COPY_BUFFER_ALIGNMENT
+                                == <span class="number">0
                         </span>{
                             <span class="comment">// Extend the copy range by 1
-                            </span><span class="kw">if </span>last_changed + <span class="number">1 </span>&lt; <span class="self">self</span>.len() {
-                                last_changed += <span class="number">1</span>;
-                            } <span class="kw">else if </span>start_index &gt; <span class="number">0 </span>{
-                                start_index -= <span class="number">1</span>;
-                            } <span class="kw">else </span>{
-                                <span class="comment">// Currently this shouldn&#39;t be reachable, but
-                                // this is the proper behavior if it is
-                                // reachable someday.
-                                </span>cant_align = <span class="bool-val">true</span>;
-                                <span class="kw">break</span>;
-                            }
+                            </span>last_changed += <span class="number">1</span>;
                         } <span class="kw">else </span>{
                             <span class="comment">// What weird alignment is this? Internally Vertex
                             // is aligned to 4 bytes, and u16 is the only
