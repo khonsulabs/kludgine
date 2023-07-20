@@ -109,19 +109,13 @@ where
     }
 
     pub fn update(&mut self, new_contents: &[T], device: &wgpu::Device, queue: &wgpu::Queue) {
-        if new_contents.len() > self.buffer.len() {
-            // We need to grow to store the new data. There is no grow operation
-            // in wgpu, so we might as well just allocate a new buffer with the new contents immediately.
-            self.buffer = Buffer::new(new_contents, self.usage, device);
-            self.data.clear();
-            self.data.extend_from_slice(new_contents);
-        } else {
-            assert!(new_contents.len() <= self.data.len());
+        if new_contents.len() <= self.buffer.len() {
             let mut index = 0;
+            let mut cant_align = false;
 
             while index < new_contents.len() {
                 if new_contents[index] != self.data[index] {
-                    let start_index = index;
+                    let mut start_index = index;
                     // We found a changed element. Find where we should stop.
                     let mut last_changed = start_index;
                     while index < new_contents.len() {
@@ -139,6 +133,35 @@ where
                         index += 1;
                     }
 
+                    if (size_of::<T>() * (last_changed + 1 - start_index)) as u64
+                        % wgpu::COPY_BUFFER_ALIGNMENT
+                        != 0
+                    {
+                        if (size_of::<T>() * (last_changed + 2 - start_index)) as u64
+                            % wgpu::COPY_BUFFER_ALIGNMENT
+                            == 0
+                        {
+                            // Extend the copy range by 1
+                            if last_changed + 1 < self.len() {
+                                last_changed += 1;
+                            } else if start_index > 0 {
+                                start_index -= 1;
+                            } else {
+                                // Currently this shouldn't be reachable, but
+                                // this is the proper behavior if it is
+                                // reachable someday.
+                                cant_align = true;
+                                break;
+                            }
+                        } else {
+                            // What weird alignment is this? Internally Vertex
+                            // is aligned to 4 bytes, and u16 is the only
+                            // odd-man out.
+                            cant_align = true;
+                            break;
+                        }
+                    }
+
                     // Update the changed range in the buffers.
                     let copy_range = &new_contents[start_index..=last_changed];
                     self.buffer.update(start_index, copy_range, queue);
@@ -146,7 +169,19 @@ where
                 }
                 index += 1;
             }
+
+            // If we were able to do delta updates without alignment issues, we
+            // can avoid creating the new buffer.
+            if !cant_align {
+                return;
+            }
         }
+
+        // We need to grow to store the new data, or we had alignment issues
+        // when trying to do a delta update.
+        self.buffer = Buffer::new(new_contents, self.usage, device);
+        self.data.clear();
+        self.data.extend_from_slice(new_contents);
     }
 }
 
