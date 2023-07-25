@@ -9,13 +9,13 @@ app = ["dep:appit"]
 
 [dependencies]
 appit = { git = "https://github.com/khonsulabs/appit", optional = true }
-wgpu = { version = "0.16.1", features = ["expose-ids"] }
+wgpu = { version = "0.17.0", features = ["expose-ids"] }
 pollster = "0.3.0"
 bytemuck = { version = "1.13.1", features = ["derive"] }
 lyon_tessellation = "1.0.1"
 image = { version = "0.24.6", optional = true, default-features = false }
 cosmic-text = { version = "0.9.0", optional = true }
-alot = "0.2.0"
+alot = "0.3.0"
 ahash = { version = "0.8.3", default-features = false }
 shelf-packer = { git = "https://github.com/khonsulabs/shelf-packer" }
 figures = { git = "https://github.com/khonsulabs/figures", features = [
@@ -31,3 +31,12 @@ features = ["webgl"]
 
 [dev-dependencies]
 image = { version = "0.24.6", features = ["png"] }
+
+[patch."https://github.com/khonsulabs/appit"]
+appit = { path = "../appit" }
+
+[patch."https://github.com/khonsulabs/figures"]
+figures = { path = "../figures" }
+
+[patch."https://github.com/khonsulabs/shelf-packer"]
+shelf-packer = { path = "../shelf-packer" }
