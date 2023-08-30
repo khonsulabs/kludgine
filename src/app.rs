@@ -11,8 +11,8 @@ use appit::winit::event::{
     TouchPhase, VirtualKeyCode,
 };
 use appit::winit::window::WindowId;
-pub use appit::{winit, Message};
-use appit::{Application, RunningWindow, WindowBehavior as _};
+pub use appit::{winit, Message, WindowAttributes};
+use appit::{Application, PendingApp, RunningWindow, WindowBehavior as _};
 use figures::units::{Px, UPx};
 use figures::utils::lossy_f64_to_f32;
 use figures::{Point, Size};
@@ -59,10 +59,37 @@ where
         WindowHandle(self.window.handle())
     }
 
+    /// Returns the current location of the window.
+    #[must_use]
+    pub fn location(&self) -> Point<Px> {
+        self.window.location().into()
+    }
+
+    /// Sets the current location of the window.
+    pub fn set_location(&self, location: Point<Px>) {
+        self.window.set_location(location.into());
+    }
+
     /// Returns the inner size of the window.
     #[must_use]
     pub fn inner_size(&self) -> Size<UPx> {
         self.window.inner_size().into()
+    }
+
+    /// Sets the inner size of the window.
+    pub fn set_inner_size(&self, inner_size: Size<UPx>) {
+        self.window.set_inner_size(inner_size.into());
+    }
+
+    /// Returns the current title of the window.
+    #[must_use]
+    pub fn title(&self) -> String {
+        self.window.title()
+    }
+
+    /// Sets the title of the window.
+    pub fn set_title(&mut self, new_title: &str) {
+        self.window.set_title(new_title);
     }
 
     /// Sets the window to redraw after a `duration`.
@@ -143,6 +170,13 @@ where
         context: Self::Context,
     ) -> Self;
 
+    /// Returns the window attributes to use when creating the window.
+    #[must_use]
+    #[allow(unused_variables)]
+    fn initial_window_attributes(context: &Self::Context) -> WindowAttributes<WindowEvent> {
+        WindowAttributes::default()
+    }
+
     /// Prepare the window to render.
     ///
     /// This is called directly before [`render()`](Self::render()) and is a
@@ -184,7 +218,7 @@ where
     where
         Self::Context: Default,
     {
-        KludgineWindow::<Self>::run_with_event_callback(handle_window_message)
+        Self::run_with(<Self::Context>::default())
     }
 
     /// Launches a Kludgine app using this window as the primary window.
@@ -192,7 +226,13 @@ where
     /// The `context` is passed along to [`initialize()`](Self::initialize) once
     /// the thread it is running on is spawned.
     fn run_with(context: Self::Context) -> ! {
-        KludgineWindow::<Self>::run_with_context_and_event_callback(context, handle_window_message)
+        let window_attributes = Self::initial_window_attributes(&context);
+
+        let app = PendingApp::new_with_event_callback(handle_window_message);
+        let mut window = KludgineWindow::<Self>::build_with(&app, context);
+        *window = window_attributes;
+        window.open().expect("error opening initial window");
+        app.run()
     }
 
     /// The window has been requested to be closed. This can happen as a result

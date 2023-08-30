@@ -235,7 +235,7 @@ impl Debug for CollectedTexture {
         f.debug_struct("CollectedTexture")
             .field("id", &self.id)
             .field("region", &self.region)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 

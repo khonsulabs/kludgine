@@ -147,7 +147,7 @@ impl Debug for TextSystem {
             .field("line_height", &self.line_height)
             .field("attrs", &self.attrs)
             .field("glyphs", &self.glyphs)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -295,7 +295,7 @@ impl Debug for CachedGlyphHandle {
         f.debug_struct("CachedGlyphHandle")
             .field("key", &self.key)
             .field("is_mask", &self.is_mask)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
@@ -421,49 +421,61 @@ pub(crate) fn map_each_glyph(
     let buffer = buffer.unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"));
     for run in buffer.layout_runs() {
         let run_origin = Point::new(0., run.line_y) - relative_to;
-        for glyph in run.glyphs.iter() {
+        for glyph in run.glyphs {
             let physical = glyph.physical((run_origin.x, run_origin.y), 1.);
-            let Some(image) = kludgine.text
+            let Some(image) = kludgine
+                .text
                 .swash_cache
-                .get_image(&mut kludgine.text.fonts, physical.cache_key) else { continue };
+                .get_image(&mut kludgine.text.fonts, physical.cache_key)
+            else {
+                continue;
+            };
             if image.placement.width == 0 || image.placement.height == 0 {
                 continue;
             }
 
             let mut color = glyph.color_opt.map_or(default_color, Color::from);
 
-            let Some(cached) = kludgine.text.glyphs.get_or_insert(
-                physical.cache_key.into(),
-                || match image.content {
-                    SwashContent::Mask => {
-                        Some((kludgine.text.alpha_text_atlas.push_texture(
-                            &image.data,
-                            wgpu::ImageDataLayout {
-                                offset: 0,
-                                bytes_per_row: Some(image.placement.width),
-                                rows_per_image: None,
-                            },
-                            Size::new(image.placement.width, image.placement.height),
-                            queue,
-                        ), true))
-                    }
-                    SwashContent::Color => {
-                        // Set the color to full white to avoid mixing.
-                        color = Color::WHITE;
-                        Some((kludgine.text.color_text_atlas.push_texture(
-                            &image.data,
-                            wgpu::ImageDataLayout {
-                                offset: 0,
-                                bytes_per_row: Some(image.placement.width * 4),
-                                rows_per_image: None,
-                            },
-                            Size::new(image.placement.width, image.placement.height),
-                            queue,
-                        ), false))
-                    }
-                    SwashContent::SubpixelMask => None,
-                },
-            ) else { continue };
+            let Some(cached) =
+                kludgine
+                    .text
+                    .glyphs
+                    .get_or_insert(physical.cache_key.into(), || match image.content {
+                        SwashContent::Mask => Some((
+                            kludgine.text.alpha_text_atlas.push_texture(
+                                &image.data,
+                                wgpu::ImageDataLayout {
+                                    offset: 0,
+                                    bytes_per_row: Some(image.placement.width),
+                                    rows_per_image: None,
+                                },
+                                Size::new(image.placement.width, image.placement.height),
+                                queue,
+                            ),
+                            true,
+                        )),
+                        SwashContent::Color => {
+                            // Set the color to full white to avoid mixing.
+                            color = Color::WHITE;
+                            Some((
+                                kludgine.text.color_text_atlas.push_texture(
+                                    &image.data,
+                                    wgpu::ImageDataLayout {
+                                        offset: 0,
+                                        bytes_per_row: Some(image.placement.width * 4),
+                                        rows_per_image: None,
+                                    },
+                                    Size::new(image.placement.width, image.placement.height),
+                                    queue,
+                                ),
+                                false,
+                            ))
+                        }
+                        SwashContent::SubpixelMask => None,
+                    })
+            else {
+                continue;
+            };
 
             let blit = TextureBlit::new(
                 cached.texture.region,
