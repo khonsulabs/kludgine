@@ -59,15 +59,15 @@ where
         WindowHandle(self.window.handle())
     }
 
-    /// Returns the current location of the window.
+    /// Returns the current position of the window.
     #[must_use]
-    pub fn location(&self) -> Point<Px> {
-        self.window.location().into()
+    pub fn position(&self) -> Point<Px> {
+        self.window.position().into()
     }
 
-    /// Sets the current location of the window.
-    pub fn set_location(&self, location: Point<Px>) {
-        self.window.set_location(location.into());
+    /// Sets the current position of the window.
+    pub fn set_position(&self, position: Point<Px>) {
+        self.window.set_position(position.into());
     }
 
     /// Returns the inner size of the window.
@@ -130,10 +130,10 @@ where
         self.last_frame_rendered_in
     }
 
-    /// Returns the location of the mouse cursor within this window, if the
+    /// Returns the position of the mouse cursor within this window, if the
     /// cursor is currently above the window.
     pub fn cursor_position(&self) -> Option<Point<Px>> {
-        self.window.cursor_location().map(Point::from)
+        self.window.cursor_position().map(Point::from)
     }
 
     /// Returns true if the given button is currently pressed.
