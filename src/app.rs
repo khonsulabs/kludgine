@@ -7,9 +7,9 @@ use std::time::{Duration, Instant};
 
 use appit::winit::dpi::PhysicalPosition;
 use appit::winit::event::{
-    AxisId, DeviceId, ElementState, Ime, KeyboardInput, MouseButton, MouseScrollDelta, Touch,
-    TouchPhase, VirtualKeyCode,
+    AxisId, DeviceId, ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, Touch, TouchPhase,
 };
+use appit::winit::keyboard::KeyCode;
 use appit::winit::window::WindowId;
 pub use appit::{winit, Message, WindowAttributes};
 use appit::{Application, PendingApp, RunningWindow, WindowBehavior as _};
@@ -144,7 +144,7 @@ where
 
     /// Returns true if the given virtual key code is currently pressed.
     #[must_use]
-    pub fn key_pressed(&self, key: &VirtualKeyCode) -> bool {
+    pub fn key_pressed(&self, key: &KeyCode) -> bool {
         self.window.key_pressed(key)
     }
 }
@@ -292,7 +292,7 @@ where
         &mut self,
         window: Window<'_, WindowEvent>,
         device_id: DeviceId,
-        input: KeyboardInput,
+        input: KeyEvent,
         is_synthetic: bool,
     ) {
     }
@@ -719,7 +719,7 @@ where
         &mut self,
         window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         device_id: DeviceId,
-        input: KeyboardInput,
+        event: KeyEvent,
         is_synthetic: bool,
     ) {
         self.behavior.keyboard_input(
@@ -729,7 +729,7 @@ where
                 self.last_render_duration,
             ),
             device_id,
-            input,
+            event,
             is_synthetic,
         );
     }
