@@ -463,6 +463,15 @@ impl<'gfx> Graphics<'gfx> {
     pub const fn size(&self) -> Size<UPx> {
         self.clip.current.0.size
     }
+
+    /// Returns the current rectangular area of the context.
+    ///
+    /// If this context has not been clipped, the value returned will be
+    /// equivalent to [`Kludgine::size`] with an origin of `0,0`.
+    #[must_use]
+    pub const fn clip_rect(&self) -> Rect<UPx> {
+        self.clip.current.0
+    }
 }
 
 impl AsRef<wgpu::Device> for Graphics<'_> {
