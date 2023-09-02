@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use appit::winit::error::EventLoopError;
 use figures::{Angle, FromComponents, Point};
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::cosmic_text::{Attrs, AttrsList, Buffer, Edit, Editor, Metrics};
@@ -7,8 +8,8 @@ use kludgine::figures::{FloatConversion, ScreenScale};
 use kludgine::text::{PreparedText, TextOrigin};
 use kludgine::Color;
 
-fn main() {
-    Test::run();
+fn main() -> Result<(), EventLoopError> {
+    Test::run()
 }
 
 struct Test {

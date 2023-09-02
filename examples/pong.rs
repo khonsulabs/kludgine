@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::time::Duration;
 
+use appit::winit::error::EventLoopError;
 use appit::winit::keyboard::KeyCode;
 use kludgine::app::Window;
 use kludgine::figures::units::{Lp, Px};
@@ -16,7 +17,7 @@ const PADDLE_WIDTH: Px = Px(20);
 const BALL_SIZE: Px = Px(PADDLE_WIDTH.0 / 2);
 const BASE_VELOCITY: Px = PADDLE_SPEED;
 
-fn main() {
+fn main() -> Result<(), EventLoopError> {
     let mut state = GameState::default();
     kludgine::app::run(move |renderer, mut window| {
         window.redraw_in(Duration::from_millis(16));

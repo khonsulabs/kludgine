@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use appit::winit::error::EventLoopError;
 use kludgine::figures::units::Lp;
 use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::shapes::Shape;
@@ -8,7 +9,7 @@ use kludgine::Color;
 
 const RED_SQUARE_SIZE: Lp = Lp::inches(1);
 
-fn main() {
+fn main() -> Result<(), EventLoopError> {
     let mut angle = Angle::degrees(0);
     kludgine::app::run(move |mut renderer, mut window| {
         window.redraw_in(Duration::from_millis(16));

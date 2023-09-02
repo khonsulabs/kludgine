@@ -1,3 +1,4 @@
+use appit::winit::error::EventLoopError;
 use figures::{Rect, Size};
 use kludgine::figures::units::Lp;
 use kludgine::figures::Point;
@@ -5,7 +6,7 @@ use kludgine::shapes::Shape;
 use kludgine::text::TextOrigin;
 use kludgine::Color;
 
-fn main() {
+fn main() -> Result<(), EventLoopError> {
     kludgine::app::run(move |mut renderer, _window| {
         renderer.set_font_size(Lp::points(72));
         let line_height = Lp::points(72);

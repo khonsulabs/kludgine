@@ -1,13 +1,14 @@
 use std::time::Duration;
 
+use appit::winit::error::EventLoopError;
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::Px;
 use kludgine::figures::{Angle, Point, Rect, ScreenScale, Size};
 use kludgine::shapes::Shape;
 use kludgine::{Color, PreparedGraphic};
 
-fn main() {
-    Test::run();
+fn main() -> Result<(), EventLoopError> {
+    Test::run()
 }
 
 struct Test {

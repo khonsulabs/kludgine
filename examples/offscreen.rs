@@ -1,11 +1,12 @@
+use appit::winit::error::EventLoopError;
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::Px;
 use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::shapes::Shape;
 use kludgine::{Color, Graphics, Kludgine, PreparedGraphic, RenderingGraphics, Texture};
 
-fn main() {
-    Test::run();
+fn main() -> Result<(), EventLoopError> {
+    Test::run()
 }
 
 struct Test {

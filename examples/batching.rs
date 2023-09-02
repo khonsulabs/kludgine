@@ -1,6 +1,7 @@
 use std::sync::OnceLock;
 use std::time::Duration;
 
+use appit::winit::error::EventLoopError;
 use kludgine::figures::units::Lp;
 use kludgine::figures::{Angle, IntoComponents, Point, Rect, ScreenScale, Size};
 use kludgine::shapes::Shape;
@@ -8,7 +9,7 @@ use kludgine::{Color, Texture};
 
 const RED_SQUARE_SIZE: Lp = Lp::inches(1);
 
-fn main() {
+fn main() -> Result<(), EventLoopError> {
     // This example shows how Kludgine automatically batches drawing calls.
     // Despite the texture being drawn hundreds or thousands of times, depending
     // on the window size, the drawing calls are batched in such a way that only

@@ -6,6 +6,7 @@ use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
 use appit::winit::dpi::PhysicalPosition;
+use appit::winit::error::EventLoopError;
 use appit::winit::event::{
     AxisId, DeviceId, ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, Touch, TouchPhase,
 };
@@ -214,7 +215,12 @@ where
     }
 
     /// Launches a Kludgine app using this window as the primary window.
-    fn run() -> !
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
+    /// [`EventLoop::run`] for more information.
+    fn run() -> Result<(), EventLoopError>
     where
         Self::Context: Default,
     {
@@ -225,7 +231,12 @@ where
     ///
     /// The `context` is passed along to [`initialize()`](Self::initialize) once
     /// the thread it is running on is spawned.
-    fn run_with(context: Self::Context) -> ! {
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
+    /// [`EventLoop::run`] for more information.
+    fn run_with(context: Self::Context) -> Result<(), EventLoopError> {
         let window_attributes = Self::initial_window_attributes(&context);
 
         let app = PendingApp::new_with_event_callback(handle_window_message);
@@ -1002,7 +1013,12 @@ where
 
 /// Runs a callback as a single window. Continues to run until false is
 /// returned.
-pub fn run<RenderFn>(render_fn: RenderFn) -> !
+///
+/// # Errors
+///
+/// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
+/// [`EventLoop::run`] for more information.
+pub fn run<RenderFn>(render_fn: RenderFn) -> Result<(), EventLoopError>
 where
     RenderFn: for<'render, 'gfx, 'window> FnMut(Renderer<'render, 'gfx>, Window<'window>) -> bool
         + Send
