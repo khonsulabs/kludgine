@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::time::Duration;
 
-use kludgine::app::winit::event::VirtualKeyCode;
+use appit::winit::keyboard::KeyCode;
 use kludgine::app::Window;
 use kludgine::figures::units::{Lp, Px};
 use kludgine::figures::{FloatConversion, IntoSigned, Point, Rect, Size};
@@ -49,11 +49,11 @@ impl GameState {
 
         // Handle keyboard inputs
         let paddle_movement = PADDLE_SPEED * elapsed_seconds;
-        if window.key_pressed(&VirtualKeyCode::Up) || window.key_pressed(&VirtualKeyCode::W) {
+        if window.key_pressed(&KeyCode::ArrowUp) || window.key_pressed(&KeyCode::KeyW) {
             self.player_paddle_position -= paddle_movement;
         }
 
-        if window.key_pressed(&VirtualKeyCode::Down) || window.key_pressed(&VirtualKeyCode::D) {
+        if window.key_pressed(&KeyCode::ArrowDown) || window.key_pressed(&KeyCode::KeyS) {
             self.player_paddle_position += paddle_movement;
         }
         self.player_paddle_position = self.player_paddle_position.clamp(Px(0), size.height);
