@@ -1048,6 +1048,13 @@
 <a href="#1048" id="1048">1048</a>
 <a href="#1049" id="1049">1049</a>
 <a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
+<a href="#1054" id="1054">1054</a>
+<a href="#1055" id="1055">1055</a>
+<a href="#1056" id="1056">1056</a>
+<a href="#1057" id="1057">1057</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::panic::UnwindSafe;
@@ -1058,7 +1065,8 @@
 <span class="kw">use </span>appit::winit::dpi::PhysicalPosition;
 <span class="kw">use </span>appit::winit::error::EventLoopError;
 <span class="kw">use </span>appit::winit::event::{
-    AxisId, DeviceId, ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, Touch, TouchPhase,
+    AxisId, DeviceId, ElementState, Ime, KeyEvent, Modifiers, MouseButton, MouseScrollDelta, Touch,
+    TouchPhase,
 };
 <span class="kw">use </span>appit::winit::keyboard::KeyCode;
 <span class="kw">use </span>appit::winit::window::WindowId;
@@ -1197,6 +1205,12 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>key_pressed(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>KeyCode) -&gt; bool {
         <span class="self">self</span>.window.key_pressed(key)
+    }
+
+    <span class="doccomment">/// Returns currently active modifiers.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>modifiers(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Modifiers {
+        <span class="self">self</span>.window.modifiers()
     }
 }
 
