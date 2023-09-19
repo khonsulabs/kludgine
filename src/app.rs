@@ -8,7 +8,8 @@ use std::time::{Duration, Instant};
 use appit::winit::dpi::PhysicalPosition;
 use appit::winit::error::EventLoopError;
 use appit::winit::event::{
-    AxisId, DeviceId, ElementState, Ime, KeyEvent, MouseButton, MouseScrollDelta, Touch, TouchPhase,
+    AxisId, DeviceId, ElementState, Ime, KeyEvent, Modifiers, MouseButton, MouseScrollDelta, Touch,
+    TouchPhase,
 };
 use appit::winit::keyboard::KeyCode;
 use appit::winit::window::WindowId;
@@ -147,6 +148,12 @@ where
     #[must_use]
     pub fn key_pressed(&self, key: &KeyCode) -> bool {
         self.window.key_pressed(key)
+    }
+
+    /// Returns currently active modifiers.
+    #[must_use]
+    pub fn modifiers(&self) -> Modifiers {
+        self.window.modifiers()
     }
 }
 
