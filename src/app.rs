@@ -612,7 +612,7 @@ where
             &self.device,
             &self.queue,
         );
-        self.behavior.render(
+        let close_after_frame = !self.behavior.render(
             Window::new(window, elapsed, self.last_render_duration),
             &mut gfx,
         );
@@ -621,6 +621,9 @@ where
         surface.present();
         self.last_render_duration = render_start.elapsed();
         self.last_render = render_start;
+        if close_after_frame {
+            window.close();
+        }
     }
 
     fn close_requested(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) -> bool {
