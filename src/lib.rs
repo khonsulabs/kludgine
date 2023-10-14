@@ -16,11 +16,11 @@ use ahash::AHasher;
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "cosmic-text")]
 pub use cosmic_text;
-pub use figures;
 use figures::units::UPx;
 use figures::{Fraction, FromComponents, IntoComponents, Point, Rect, Size};
 use sealed::ShapeSource as _;
 use wgpu::util::DeviceExt;
+pub use {figures, wgpu};
 
 use crate::buffer::Buffer;
 use crate::pipeline::{Uniforms, Vertex};
