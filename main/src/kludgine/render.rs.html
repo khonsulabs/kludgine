@@ -665,6 +665,15 @@
 <a href="#665" id="665">665</a>
 <a href="#666" id="666">666</a>
 <a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
@@ -947,11 +956,17 @@
         <span class="doccomment">/// Measures `text` using the current text settings.
         ///
         /// `default_color` does not affect the
-        </span><span class="kw">pub fn </span>measure_text&lt;Unit&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, text: <span class="kw-2">&amp;</span>str, default_color: Color) -&gt; MeasuredText&lt;Unit&gt;
+        </span><span class="kw">pub fn </span>measure_text&lt;Unit&gt;(
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+            text: <span class="kw-2">&amp;</span>str,
+            default_color: Color,
+            width: <span class="prelude-ty">Option</span>&lt;Unit&gt;,
+        ) -&gt; MeasuredText&lt;Unit&gt;
         <span class="kw">where
             </span>Unit: figures::ScreenUnit,
         {
-            <span class="self">self</span>.update_scratch_buffer(text);
+            <span class="kw">let </span>scale = <span class="self">self</span>.graphics.scale;
+            <span class="self">self</span>.update_scratch_buffer(text, width.map(|width| width.into_px(scale)));
             measure_text::&lt;Unit, <span class="bool-val">true</span>&gt;(
                 <span class="prelude-val">None</span>,
                 default_color,
@@ -970,10 +985,13 @@
             translate: Point&lt;Unit&gt;,
             rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
             scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+            width: <span class="prelude-ty">Option</span>&lt;Unit&gt;,
         ) <span class="kw">where
             </span>Unit: ScreenUnit,
         {
-            <span class="self">self</span>.graphics.kludgine.update_scratch_buffer(text);
+            <span class="self">self</span>.graphics
+                .kludgine
+                .update_scratch_buffer(text, width.map(|width| width.into_px(<span class="self">self</span>.graphics.scale)));
             <span class="self">self</span>.draw_text_buffer_inner(
                 <span class="prelude-val">None</span>,
                 color,
