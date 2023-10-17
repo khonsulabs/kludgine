@@ -137,6 +137,7 @@ impl GameState {
             Point::new(size.width / 4, size.height / 4),
             None,
             None,
+            None,
         );
 
         renderer.draw_text(
@@ -144,6 +145,7 @@ impl GameState {
             Color::RED,
             TextOrigin::Center,
             Point::new(size.width / 4 * 3, size.height / 4),
+            None,
             None,
             None,
         );

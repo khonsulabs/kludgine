@@ -721,6 +721,11 @@ impl DefaultStrokeWidth for figures::units::Px {
         Self(1)
     }
 }
+impl DefaultStrokeWidth for figures::units::UPx {
+    fn default_stroke_width() -> Self {
+        Self(1)
+    }
+}
 
 impl<Unit> From<StrokeOptions<Unit>> for lyon_tessellation::StrokeOptions
 where

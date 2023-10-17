@@ -24,8 +24,8 @@ impl Kludgine {
         &mut self.text.fonts
     }
 
-    pub(crate) fn update_scratch_buffer(&mut self, text: &str) {
-        self.text.update_scratch_buffer(text, self.scale);
+    pub(crate) fn update_scratch_buffer(&mut self, text: &str, width: Option<Px>) {
+        self.text.update_scratch_buffer(text, self.scale, width);
     }
 
     /// Sets the font size.
@@ -210,11 +210,10 @@ impl TextSystem {
         }
     }
 
-    pub fn update_scratch_buffer(&mut self, text: &str, scale: Fraction) {
+    pub fn update_scratch_buffer(&mut self, text: &str, scale: Fraction, width: Option<Px>) {
         if self.scratch.is_none() {
             let metrics = self.metrics(scale);
-            let mut buffer = cosmic_text::Buffer::new(&mut self.fonts, metrics);
-            buffer.set_size(&mut self.fonts, f32::MAX, f32::MAX);
+            let buffer = cosmic_text::Buffer::new(&mut self.fonts, metrics);
             self.scratch = Some(buffer);
         }
 
@@ -225,8 +224,18 @@ impl TextSystem {
             self.attrs.as_attrs(),
             cosmic_text::Shaping::Advanced, // TODO maybe this should be configurable?
         );
+        scratch.set_size(
+            &mut self.fonts,
+            width.map_or(f32::MAX, |width| lossy_i32_to_f32(width.0)),
+            f32::MAX,
+        );
         scratch.shape_until_scroll(&mut self.fonts);
     }
+}
+
+#[allow(clippy::cast_precision_loss)]
+fn lossy_i32_to_f32(value: i32) -> f32 {
+    value as f32
 }
 
 #[derive(Debug, Default, Clone)]

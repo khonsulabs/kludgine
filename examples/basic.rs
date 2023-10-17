@@ -34,6 +34,7 @@ fn main() -> Result<(), EventLoopError> {
             shape_center,
             Some(angle),
             None,
+            None,
         );
         true
     })

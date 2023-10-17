@@ -280,11 +280,17 @@ mod text {
         /// Measures `text` using the current text settings.
         ///
         /// `default_color` does not affect the
-        pub fn measure_text<Unit>(&mut self, text: &str, default_color: Color) -> MeasuredText<Unit>
+        pub fn measure_text<Unit>(
+            &mut self,
+            text: &str,
+            default_color: Color,
+            width: Option<Unit>,
+        ) -> MeasuredText<Unit>
         where
             Unit: figures::ScreenUnit,
         {
-            self.update_scratch_buffer(text);
+            let scale = self.graphics.scale;
+            self.update_scratch_buffer(text, width.map(|width| width.into_px(scale)));
             measure_text::<Unit, true>(
                 None,
                 default_color,
@@ -303,10 +309,13 @@ mod text {
             translate: Point<Unit>,
             rotation: Option<Angle>,
             scale: Option<f32>,
+            width: Option<Unit>,
         ) where
             Unit: ScreenUnit,
         {
-            self.graphics.kludgine.update_scratch_buffer(text);
+            self.graphics
+                .kludgine
+                .update_scratch_buffer(text, width.map(|width| width.into_px(self.graphics.scale)));
             self.draw_text_buffer_inner(
                 None,
                 color,
