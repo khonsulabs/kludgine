@@ -1060,6 +1060,22 @@
 <a href="#1060" id="1060">1060</a>
 <a href="#1061" id="1061">1061</a>
 <a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
+<a href="#1067" id="1067">1067</a>
+<a href="#1068" id="1068">1068</a>
+<a href="#1069" id="1069">1069</a>
+<a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a>
+<a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::panic::UnwindSafe;
@@ -1067,19 +1083,19 @@
 <span class="kw">use </span>std::sync::{Arc, OnceLock};
 <span class="kw">use </span>std::time::{Duration, Instant};
 
-<span class="kw">use </span>appit::winit::dpi::PhysicalPosition;
+<span class="kw">use </span>appit::winit::dpi::{PhysicalPosition, PhysicalSize};
 <span class="kw">use </span>appit::winit::error::EventLoopError;
 <span class="kw">use </span>appit::winit::event::{
     AxisId, DeviceId, ElementState, Ime, KeyEvent, Modifiers, MouseButton, MouseScrollDelta, Touch,
     TouchPhase,
 };
 <span class="kw">use </span>appit::winit::keyboard::KeyCode;
-<span class="kw">use </span>appit::winit::window::WindowId;
+<span class="kw">use </span>appit::winit::window::{ImePurpose, WindowId};
 <span class="kw">pub use </span>appit::{winit, Message, WindowAttributes};
 <span class="kw">use </span>appit::{Application, PendingApp, RunningWindow, WindowBehavior <span class="kw">as _</span>};
 <span class="kw">use </span>figures::units::{Px, UPx};
 <span class="kw">use </span>figures::utils::lossy_f64_to_f32;
-<span class="kw">use </span>figures::{Point, Size};
+<span class="kw">use </span>figures::{IntoSigned, Point, Rect, Size};
 
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::PushConstants;
 <span class="kw">use </span><span class="kw">crate</span>::render::{Drawing, Renderer};
@@ -1154,6 +1170,22 @@
     <span class="doccomment">/// Sets the title of the window.
     </span><span class="kw">pub fn </span>set_title(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_title: <span class="kw-2">&amp;</span>str) {
         <span class="self">self</span>.window.set_title(new_title);
+    }
+
+    <span class="kw">pub fn </span>set_ime_allowed(<span class="kw-2">&amp;</span><span class="self">self</span>, allowed: bool) {
+        <span class="self">self</span>.window.winit().set_ime_allowed(allowed);
+    }
+
+    <span class="kw">pub fn </span>set_ime_purpose(<span class="kw-2">&amp;</span><span class="self">self</span>, purpose: ImePurpose) {
+        <span class="self">self</span>.window.winit().set_ime_purpose(purpose);
+    }
+
+    <span class="kw">pub fn </span>set_ime_cursor_area(<span class="kw-2">&amp;</span><span class="self">self</span>, area: Rect&lt;UPx&gt;) {
+        <span class="kw">let </span>area = area.into_signed();
+        <span class="self">self</span>.window.winit().set_ime_cursor_area(
+            PhysicalPosition::new(area.origin.x.<span class="number">0</span>, area.origin.y.<span class="number">0</span>),
+            PhysicalSize::new(area.size.width.<span class="number">0</span>, area.size.height.<span class="number">0</span>),
+        );
     }
 
     <span class="doccomment">/// Sets the window to redraw after a `duration`.
