@@ -5,19 +5,19 @@ use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
-use appit::winit::dpi::PhysicalPosition;
+use appit::winit::dpi::{PhysicalPosition, PhysicalSize};
 use appit::winit::error::EventLoopError;
 use appit::winit::event::{
     AxisId, DeviceId, ElementState, Ime, KeyEvent, Modifiers, MouseButton, MouseScrollDelta, Touch,
     TouchPhase,
 };
 use appit::winit::keyboard::KeyCode;
-use appit::winit::window::WindowId;
+use appit::winit::window::{ImePurpose, WindowId};
 pub use appit::{winit, Message, WindowAttributes};
 use appit::{Application, PendingApp, RunningWindow, WindowBehavior as _};
 use figures::units::{Px, UPx};
 use figures::utils::lossy_f64_to_f32;
-use figures::{Point, Size};
+use figures::{IntoSigned, Point, Rect, Size};
 
 use crate::pipeline::PushConstants;
 use crate::render::{Drawing, Renderer};
@@ -92,6 +92,22 @@ where
     /// Sets the title of the window.
     pub fn set_title(&mut self, new_title: &str) {
         self.window.set_title(new_title);
+    }
+
+    pub fn set_ime_allowed(&self, allowed: bool) {
+        self.window.winit().set_ime_allowed(allowed);
+    }
+
+    pub fn set_ime_purpose(&self, purpose: ImePurpose) {
+        self.window.winit().set_ime_purpose(purpose);
+    }
+
+    pub fn set_ime_cursor_area(&self, area: Rect<UPx>) {
+        let area = area.into_signed();
+        self.window.winit().set_ime_cursor_area(
+            PhysicalPosition::new(area.origin.x.0, area.origin.y.0),
+            PhysicalSize::new(area.size.width.0, area.size.height.0),
+        );
     }
 
     /// Sets the window to redraw after a `duration`.
