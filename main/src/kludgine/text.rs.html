@@ -665,6 +665,8 @@
 <a href="#665" id="665">665</a>
 <a href="#666" id="666">666</a>
 <a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -1033,7 +1035,7 @@
             <span class="self">self</span>.kludgine,
             <span class="self">self</span>.queue,
             <span class="kw-2">&amp;mut </span>glyphs,
-            |blit, cached, _is_first_line| {
+            |blit, cached, _is_first_line, _baseline| {
                 <span class="kw">let </span>corners: [u16; <span class="number">4</span>] =
                     array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
                 <span class="kw">let </span>start_index = u32::try_from(indices.len()).expect(<span class="string">&quot;too many drawn indices&quot;</span>);
@@ -1076,7 +1078,7 @@
     kludgine: <span class="kw-2">&amp;mut </span>Kludgine,
     queue: <span class="kw-2">&amp;</span>wgpu::Queue,
     glyphs: <span class="kw-2">&amp;mut </span>HashMap&lt;PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher&gt;,
-    <span class="kw-2">mut </span>map: <span class="kw">impl for</span>&lt;<span class="lifetime">&#39;a</span>&gt; FnMut(TextureBlit&lt;Px&gt;, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>CachedGlyphHandle, bool),
+    <span class="kw-2">mut </span>map: <span class="kw">impl for</span>&lt;<span class="lifetime">&#39;a</span>&gt; FnMut(TextureBlit&lt;Px&gt;, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>CachedGlyphHandle, bool, Px),
 ) {
     <span class="kw">let </span>metrics = buffer
         .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect(<span class="string">&quot;no buffer&quot;</span>))
@@ -1169,7 +1171,7 @@
                 ),
                 color,
             );
-            map(blit, <span class="kw-2">&amp;</span>cached, run.line_i == <span class="number">0</span>);
+            map(blit, <span class="kw-2">&amp;</span>cached, run.line_i == <span class="number">0</span>, Px::from(relative_to.y));
 
             glyphs
                 .entry(physical.cache_key.into())
@@ -1192,6 +1194,7 @@
     </span><span class="kw">let </span>line_height = Unit::from_lp(kludgine.text.line_height, kludgine.scale);
     <span class="kw">let </span><span class="kw-2">mut </span>min = Point::new(Px::MAX, Px::MAX);
     <span class="kw">let </span><span class="kw-2">mut </span>first_line_max_y = Px::MIN;
+    <span class="kw">let </span><span class="kw-2">mut </span>last_baseline = Px::MIN;
     <span class="kw">let </span><span class="kw-2">mut </span>max = Point::new(Px::MIN, Px::MIN);
     <span class="kw">let </span><span class="kw-2">mut </span>measured_glyphs = Vec::new();
     map_each_glyph(
@@ -1201,7 +1204,8 @@
         kludgine,
         queue,
         glyphs,
-        |blit, cached, is_first_line| {
+        |blit, cached, is_first_line, baseline| {
+            last_baseline = last_baseline.max(baseline);
             min = min.min(blit.top_left().location);
             max = max.max(blit.bottom_right().location);
             <span class="kw">if </span>is_first_line {
@@ -1215,11 +1219,11 @@
 
     MeasuredText {
         ascent: line_height - Unit::from_px(min.y, kludgine.scale),
-        descent: line_height - Unit::from_px(first_line_max_y, kludgine.scale),
+        descent: Unit::from_px(first_line_max_y, kludgine.scale) - line_height,
         left: Unit::from_px(min.x, kludgine.scale),
         size: Size {
             width: Unit::from_px(max.x, kludgine.scale),
-            height: Unit::from_px(max.y, kludgine.scale),
+            height: Unit::from_px(max.y.max(last_baseline), kludgine.scale),
         },
         line_height,
         glyphs: measured_glyphs,

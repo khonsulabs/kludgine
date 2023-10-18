@@ -1058,6 +1058,8 @@
 <a href="#1058" id="1058">1058</a>
 <a href="#1059" id="1059">1059</a>
 <a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::panic::UnwindSafe;
@@ -1372,6 +1374,7 @@
         device_id: DeviceId,
         input: KeyEvent,
         is_synthetic: bool,
+        kludgine: <span class="kw-2">&amp;mut </span>Kludgine,
     ) {
     }
 
@@ -1812,6 +1815,7 @@
             device_id,
             event,
             is_synthetic,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.kludgine,
         );
     }
 
