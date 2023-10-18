@@ -312,6 +312,7 @@ where
         device_id: DeviceId,
         input: KeyEvent,
         is_synthetic: bool,
+        kludgine: &mut Kludgine,
     ) {
     }
 
@@ -752,6 +753,7 @@ where
             device_id,
             event,
             is_synthetic,
+            &mut self.kludgine,
         );
     }
 

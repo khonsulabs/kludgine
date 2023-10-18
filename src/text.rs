@@ -366,7 +366,7 @@ impl<'gfx> Graphics<'gfx> {
             self.kludgine,
             self.queue,
             &mut glyphs,
-            |blit, cached, _is_first_line| {
+            |blit, cached, _is_first_line, _baseline| {
                 let corners: [u16; 4] =
                     array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
                 let start_index = u32::try_from(indices.len()).expect("too many drawn indices");
@@ -409,7 +409,7 @@ pub(crate) fn map_each_glyph(
     kludgine: &mut Kludgine,
     queue: &wgpu::Queue,
     glyphs: &mut HashMap<PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher>,
-    mut map: impl for<'a> FnMut(TextureBlit<Px>, &'a CachedGlyphHandle, bool),
+    mut map: impl for<'a> FnMut(TextureBlit<Px>, &'a CachedGlyphHandle, bool, Px),
 ) {
     let metrics = buffer
         .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"))
@@ -502,7 +502,7 @@ pub(crate) fn map_each_glyph(
                 ),
                 color,
             );
-            map(blit, &cached, run.line_i == 0);
+            map(blit, &cached, run.line_i == 0, Px::from(relative_to.y));
 
             glyphs
                 .entry(physical.cache_key.into())
@@ -525,6 +525,7 @@ where
     let line_height = Unit::from_lp(kludgine.text.line_height, kludgine.scale);
     let mut min = Point::new(Px::MAX, Px::MAX);
     let mut first_line_max_y = Px::MIN;
+    let mut last_baseline = Px::MIN;
     let mut max = Point::new(Px::MIN, Px::MIN);
     let mut measured_glyphs = Vec::new();
     map_each_glyph(
@@ -534,7 +535,8 @@ where
         kludgine,
         queue,
         glyphs,
-        |blit, cached, is_first_line| {
+        |blit, cached, is_first_line, baseline| {
+            last_baseline = last_baseline.max(baseline);
             min = min.min(blit.top_left().location);
             max = max.max(blit.bottom_right().location);
             if is_first_line {
@@ -548,11 +550,11 @@ where
 
     MeasuredText {
         ascent: line_height - Unit::from_px(min.y, kludgine.scale),
-        descent: line_height - Unit::from_px(first_line_max_y, kludgine.scale),
+        descent: Unit::from_px(first_line_max_y, kludgine.scale) - line_height,
         left: Unit::from_px(min.x, kludgine.scale),
         size: Size {
             width: Unit::from_px(max.x, kludgine.scale),
-            height: Unit::from_px(max.y, kludgine.scale),
+            height: Unit::from_px(max.y.max(last_baseline), kludgine.scale),
         },
         line_height,
         glyphs: measured_glyphs,

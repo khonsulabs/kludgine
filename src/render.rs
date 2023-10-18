@@ -354,6 +354,24 @@ mod text {
             );
         }
 
+        pub fn measure_text_buffer<Unit>(
+            &mut self,
+            buffer: &cosmic_text::Buffer,
+            default_color: Color,
+        ) -> MeasuredText<Unit>
+        where
+            Unit: figures::ScreenUnit,
+        {
+            let scale = self.graphics.scale;
+            measure_text::<Unit, true>(
+                Some(buffer),
+                default_color,
+                self.graphics.kludgine,
+                self.graphics.queue,
+                &mut self.data.glyphs,
+            )
+        }
+
         /// Prepares the text layout contained in `buffer` to be rendered.
         ///
         /// When the text in `buffer` has no color defined, `default_color` will be
@@ -418,7 +436,7 @@ mod text {
                 self.graphics.kludgine,
                 queue,
                 &mut self.data.glyphs,
-                |blit, cached, _is_first_line| {
+                |blit, cached, _is_first_line, _baseline| {
                     render_one_glyph(
                         translation,
                         rotation,
