@@ -275,77 +275,101 @@ where
     /// If the window should be closed, return true. To prevent closing the
     /// window, return false.
     #[allow(unused_variables)]
-    fn close_requested(&mut self, window: Window<'_, WindowEvent>) -> bool {
+    fn close_requested(
+        &mut self,
+        window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
+    ) -> bool {
         true
     }
 
     /// The window has gained or lost keyboard focus.
     /// [`RunningWindow::focused()`] returns the current state.
     #[allow(unused_variables)]
-    fn focus_changed(&mut self, window: Window<'_, WindowEvent>) {}
+    fn focus_changed(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
     /// The window has been occluded or revealed. [`RunningWindow::occluded()`]
     /// returns the current state.
     #[allow(unused_variables)]
-    fn occlusion_changed(&mut self, window: Window<'_, WindowEvent>) {}
+    fn occlusion_changed(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
     /// The window's scale factor has changed. [`RunningWindow::scale()`]
     /// returns the current scale.
     #[allow(unused_variables)]
-    fn scale_factor_changed(&mut self, window: Window<'_, WindowEvent>) {}
+    fn scale_factor_changed(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
     /// The window has been resized. [`RunningWindow::inner_size()`]
     /// returns the current size.
     #[allow(unused_variables)]
-    fn resized(&mut self, window: Window<'_, WindowEvent>) {}
+    fn resized(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
     /// The window's theme has been updated. [`RunningWindow::theme()`]
     /// returns the current theme.
     #[allow(unused_variables)]
-    fn theme_changed(&mut self, window: Window<'_, WindowEvent>) {}
+    fn theme_changed(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
     /// A file has been dropped on the window.
     #[allow(unused_variables)]
-    fn dropped_file(&mut self, window: Window<'_, WindowEvent>, path: PathBuf) {}
+    fn dropped_file(
+        &mut self,
+        window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
+        path: PathBuf,
+    ) {
+    }
 
     /// A file is hovering over the window.
     #[allow(unused_variables)]
-    fn hovered_file(&mut self, window: Window<'_, WindowEvent>, path: PathBuf) {}
+    fn hovered_file(
+        &mut self,
+        window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
+        path: PathBuf,
+    ) {
+    }
 
     /// A file being overed has been cancelled.
     #[allow(unused_variables)]
-    fn hovered_file_cancelled(&mut self, window: Window<'_, WindowEvent>) {}
+    fn hovered_file_cancelled(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {
+    }
 
     /// An input event has generated a character.
     #[allow(unused_variables)]
-    fn received_character(&mut self, window: Window<'_, WindowEvent>, char: char) {}
+    fn received_character(
+        &mut self,
+        window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
+        char: char,
+    ) {
+    }
 
     /// A keyboard event occurred while the window was focused.
     #[allow(unused_variables)]
     fn keyboard_input(
         &mut self,
         window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
         device_id: DeviceId,
         input: KeyEvent,
         is_synthetic: bool,
-        kludgine: &mut Kludgine,
     ) {
     }
 
     /// The keyboard modifier keys have changed. [`RunningWindow::modifiers()`]
     /// returns the current modifier keys state.
     #[allow(unused_variables)]
-    fn modifiers_changed(&mut self, window: Window<'_, WindowEvent>) {}
+    fn modifiers_changed(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
     /// An international input even thas occurred for the window.
     #[allow(unused_variables)]
-    fn ime(&mut self, window: Window<'_, WindowEvent>, ime: Ime) {}
+    fn ime(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine, ime: Ime) {}
 
     /// A cursor has moved over the window.
     #[allow(unused_variables)]
     fn cursor_moved(
         &mut self,
         window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
         device_id: DeviceId,
         position: PhysicalPosition<f64>,
     ) {
@@ -353,17 +377,30 @@ where
 
     /// A cursor has hovered over the window.
     #[allow(unused_variables)]
-    fn cursor_entered(&mut self, window: Window<'_, WindowEvent>, device_id: DeviceId) {}
+    fn cursor_entered(
+        &mut self,
+        window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
+        device_id: DeviceId,
+    ) {
+    }
 
     /// A cursor is no longer hovering over the window.
     #[allow(unused_variables)]
-    fn cursor_left(&mut self, window: Window<'_, WindowEvent>, device_id: DeviceId) {}
+    fn cursor_left(
+        &mut self,
+        window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
+        device_id: DeviceId,
+    ) {
+    }
 
     /// An event from a mouse wheel.
     #[allow(unused_variables)]
     fn mouse_wheel(
         &mut self,
         window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
         device_id: DeviceId,
         delta: MouseScrollDelta,
         phase: TouchPhase,
@@ -375,6 +412,7 @@ where
     fn mouse_input(
         &mut self,
         window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
         device_id: DeviceId,
         state: ElementState,
         button: MouseButton,
@@ -386,6 +424,7 @@ where
     fn touchpad_pressure(
         &mut self,
         window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
         device_id: DeviceId,
         pressure: f32,
         stage: i64,
@@ -397,6 +436,7 @@ where
     fn axis_motion(
         &mut self,
         window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
         device_id: DeviceId,
         axis: AxisId,
         value: f64,
@@ -405,13 +445,14 @@ where
 
     /// A touch event.
     #[allow(unused_variables)]
-    fn touch(&mut self, window: Window<'_, WindowEvent>, touch: Touch) {}
+    fn touch(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine, touch: Touch) {}
 
     /// A touchpad-originated magnification gesture.
     #[allow(unused_variables)]
     fn touchpad_magnify(
         &mut self,
         window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
         device_id: DeviceId,
         delta: f64,
         phase: TouchPhase,
@@ -420,13 +461,20 @@ where
 
     /// A request to smart-magnify the window.
     #[allow(unused_variables)]
-    fn smart_magnify(&mut self, window: Window<'_, WindowEvent>, device_id: DeviceId) {}
+    fn smart_magnify(
+        &mut self,
+        window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
+        device_id: DeviceId,
+    ) {
+    }
 
     /// A touchpad-originated rotation gesture.
     #[allow(unused_variables)]
     fn touchpad_rotate(
         &mut self,
         window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
         device_id: DeviceId,
         delta: f32,
         phase: TouchPhase,
@@ -435,7 +483,13 @@ where
 
     /// A `WindowEvent` has been received by this window.
     #[allow(unused_variables)]
-    fn event(&mut self, event: WindowEvent, window: Window<'_, WindowEvent>) {}
+    fn event(
+        &mut self,
+        window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
+        event: WindowEvent,
+    ) {
+    }
 }
 
 #[allow(unsafe_code, clippy::needless_pass_by_value)]
@@ -644,27 +698,36 @@ where
     }
 
     fn close_requested(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) -> bool {
-        self.behavior.close_requested(Window::new(
-            window,
-            self.last_render.elapsed(),
-            self.last_render_duration,
-        ))
+        self.behavior.close_requested(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            &mut self.kludgine,
+        )
     }
 
     fn focus_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
-        self.behavior.focus_changed(Window::new(
-            window,
-            self.last_render.elapsed(),
-            self.last_render_duration,
-        ));
+        self.behavior.focus_changed(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            &mut self.kludgine,
+        );
     }
 
     fn occlusion_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
-        self.behavior.occlusion_changed(Window::new(
-            window,
-            self.last_render.elapsed(),
-            self.last_render_duration,
-        ));
+        self.behavior.occlusion_changed(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            &mut self.kludgine,
+        );
     }
 
     fn resized(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
@@ -677,27 +740,36 @@ where
             &self.queue,
         );
         window.set_needs_redraw();
-        self.behavior.resized(Window::new(
-            window,
-            self.last_render.elapsed(),
-            self.last_render_duration,
-        ));
+        self.behavior.resized(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            &mut self.kludgine,
+        );
     }
 
     fn scale_factor_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
-        self.behavior.scale_factor_changed(Window::new(
-            window,
-            self.last_render.elapsed(),
-            self.last_render_duration,
-        ));
+        self.behavior.scale_factor_changed(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            &mut self.kludgine,
+        );
     }
 
     fn theme_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
-        self.behavior.theme_changed(Window::new(
-            window,
-            self.last_render.elapsed(),
-            self.last_render_duration,
-        ));
+        self.behavior.theme_changed(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            &mut self.kludgine,
+        );
     }
 
     fn dropped_file(
@@ -711,6 +783,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             path,
         );
     }
@@ -726,16 +799,20 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             path,
         );
     }
 
     fn hovered_file_cancelled(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
-        self.behavior.hovered_file_cancelled(Window::new(
-            window,
-            self.last_render.elapsed(),
-            self.last_render_duration,
-        ));
+        self.behavior.hovered_file_cancelled(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            &mut self.kludgine,
+        );
     }
 
     fn received_character(
@@ -749,6 +826,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             char,
         );
     }
@@ -766,19 +844,22 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             device_id,
             event,
             is_synthetic,
-            &mut self.kludgine,
         );
     }
 
     fn modifiers_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
-        self.behavior.modifiers_changed(Window::new(
-            window,
-            self.last_render.elapsed(),
-            self.last_render_duration,
-        ));
+        self.behavior.modifiers_changed(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            &mut self.kludgine,
+        );
     }
 
     fn ime(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>, ime: Ime) {
@@ -788,6 +869,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             ime,
         );
     }
@@ -804,6 +886,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             device_id,
             position,
         );
@@ -820,6 +903,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             device_id,
         );
     }
@@ -835,6 +919,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             device_id,
         );
     }
@@ -852,6 +937,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             device_id,
             delta,
             phase,
@@ -871,6 +957,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             device_id,
             state,
             button,
@@ -890,6 +977,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             device_id,
             pressure,
             stage,
@@ -909,6 +997,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             device_id,
             axis,
             value,
@@ -922,6 +1011,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             touch,
         );
     }
@@ -939,6 +1029,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             device_id,
             delta,
             phase,
@@ -956,6 +1047,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             device_id,
         );
     }
@@ -973,6 +1065,7 @@ where
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
             device_id,
             delta,
             phase,
@@ -985,12 +1078,13 @@ where
         event: <CreateSurfaceRequest<User> as Message>::Window,
     ) {
         self.behavior.event(
-            event,
             Window::new(
                 window,
                 self.last_render.elapsed(),
                 self.last_render_duration,
             ),
+            &mut self.kludgine,
+            event,
         );
     }
 }

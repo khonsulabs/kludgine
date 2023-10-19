@@ -362,7 +362,6 @@ mod text {
         where
             Unit: figures::ScreenUnit,
         {
-            let scale = self.graphics.scale;
             measure_text::<Unit, true>(
                 Some(buffer),
                 default_color,
