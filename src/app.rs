@@ -675,10 +675,12 @@ where
                         load: T::clear_color().map_or(wgpu::LoadOp::Load, |color| {
                             wgpu::LoadOp::Clear(color.into())
                         }),
-                        store: true,
+                        store: wgpu::StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
             },
             &self.device,
             &self.queue,
