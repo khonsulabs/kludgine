@@ -1469,6 +1469,8 @@
 <a href="#1469" id="1469">1469</a>
 <a href="#1470" id="1470">1470</a>
 <a href="#1471" id="1471">1471</a>
+<a href="#1472" id="1472">1472</a>
+<a href="#1473" id="1473">1473</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -1748,10 +1750,12 @@
                             wgpu::LoadOp::Clear(color) =&gt; wgpu::LoadOp::Clear(color.into()),
                             wgpu::LoadOp::Load =&gt; wgpu::LoadOp::Load,
                         },
-                        store: <span class="bool-val">true</span>,
+                        store: wgpu::StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: <span class="prelude-val">None</span>,
+                timestamp_writes: <span class="prelude-val">None</span>,
+                occlusion_query_set: <span class="prelude-val">None</span>,
             },
             device,
             queue,

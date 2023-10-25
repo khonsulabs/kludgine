@@ -1170,6 +1170,8 @@
 <a href="#1170" id="1170">1170</a>
 <a href="#1171" id="1171">1171</a>
 <a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::panic::UnwindSafe;
@@ -1847,10 +1849,12 @@
                         load: T::clear_color().map_or(wgpu::LoadOp::Load, |color| {
                             wgpu::LoadOp::Clear(color.into())
                         }),
-                        store: <span class="bool-val">true</span>,
+                        store: wgpu::StoreOp::Store,
                     },
                 })],
                 depth_stencil_attachment: <span class="prelude-val">None</span>,
+                timestamp_writes: <span class="prelude-val">None</span>,
+                occlusion_query_set: <span class="prelude-val">None</span>,
             },
             <span class="kw-2">&amp;</span><span class="self">self</span>.device,
             <span class="kw-2">&amp;</span><span class="self">self</span>.queue,
