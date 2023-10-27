@@ -41,6 +41,7 @@ pub mod shapes;
 /// Types for text rendering.
 #[cfg(feature = "cosmic-text")]
 pub mod text;
+pub mod tilemap;
 
 pub use atlas::{CollectedTexture, TextureCollection};
 pub use pipeline::{PreparedGraphic, ShaderScalable};
