@@ -244,7 +244,7 @@ impl Frame<'_> {
         RenderingGraphics::new(
             self.commands
                 .as_mut()
-                .expect("initialized above")
+                .assert("initialized above")
                 .begin_render_pass(pass),
             self.kludgine,
             device,
@@ -1342,6 +1342,145 @@ impl sealed::TextureSource for Texture {
     }
 }
 
+/// A cloneable texture.
+#[derive(Clone, Debug)]
+pub struct SharedTexture(Arc<Texture>);
+
+impl Eq for SharedTexture {}
+
+impl PartialEq for SharedTexture {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.id == other.0.id
+    }
+}
+
+impl From<Texture> for SharedTexture {
+    fn from(value: Texture) -> Self {
+        Self(Arc::new(value))
+    }
+}
+
+impl SharedTexture {
+    /// Returns a reference to this texture that only renders a region of the
+    /// texture when drawn.
+    #[must_use]
+    pub fn region(&self, region: Rect<UPx>) -> TextureRegion {
+        TextureRegion {
+            texture: self.clone(),
+            region,
+        }
+    }
+}
+
+impl Deref for SharedTexture {
+    type Target = Texture;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+/// A region of a [`SharedTexture`].
+///
+/// When this type is drawn, only a region of the source texture will be drawn.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TextureRegion {
+    texture: SharedTexture,
+    region: Rect<UPx>,
+}
+
+impl TextureRegion {
+    /// Returns the size of the region being drawn.
+    #[must_use]
+    pub const fn size(&self) -> Size<UPx> {
+        self.region.size
+    }
+}
+
+impl TextureSource for TextureRegion {}
+
+impl sealed::TextureSource for TextureRegion {
+    fn id(&self) -> sealed::TextureId {
+        self.texture.id()
+    }
+
+    fn is_mask(&self) -> bool {
+        self.texture.is_mask()
+    }
+
+    fn bind_group(&self) -> Arc<wgpu::BindGroup> {
+        self.texture.bind_group()
+    }
+
+    fn default_rect(&self) -> Rect<UPx> {
+        self.region
+    }
+}
+
+/// A type that can be any [`TextureSource`] implementation that is provided by
+/// Kludgine.
+///
+/// This type is useful if you are designing a type that supports drawing a
+/// configurable texture, but you don't care whether it's a [`Texture`],
+/// [`SharedTexture`], [`TextureRegion`], or [`CollectedTexture`].
+#[derive(Debug)]
+pub enum AnyTexture {
+    /// A [`Texture`].
+    Texture(Texture),
+    /// A [`SharedTexture`].
+    Shared(SharedTexture),
+    /// A [`TextureRegion`].
+    Region(TextureRegion),
+    /// A [`CollectedTexture`].
+    Collected(CollectedTexture),
+}
+
+impl From<Texture> for AnyTexture {
+    fn from(texture: Texture) -> Self {
+        Self::Texture(texture)
+    }
+}
+
+impl TextureSource for AnyTexture {}
+
+impl sealed::TextureSource for AnyTexture {
+    fn id(&self) -> sealed::TextureId {
+        match self {
+            AnyTexture::Texture(texture) => texture.id(),
+            AnyTexture::Collected(texture) => texture.id(),
+            AnyTexture::Shared(texture) => texture.id(),
+            AnyTexture::Region(texture) => texture.id(),
+        }
+    }
+
+    fn is_mask(&self) -> bool {
+        match self {
+            AnyTexture::Texture(texture) => texture.is_mask(),
+            AnyTexture::Collected(texture) => texture.is_mask(),
+            AnyTexture::Shared(texture) => texture.is_mask(),
+            AnyTexture::Region(texture) => texture.is_mask(),
+        }
+    }
+
+    fn bind_group(&self) -> Arc<wgpu::BindGroup> {
+        match self {
+            AnyTexture::Texture(texture) => texture.bind_group(),
+            AnyTexture::Collected(texture) => texture.bind_group(),
+            AnyTexture::Shared(texture) => texture.bind_group(),
+            AnyTexture::Region(texture) => texture.bind_group(),
+        }
+    }
+
+    fn default_rect(&self) -> Rect<UPx> {
+        match self {
+            AnyTexture::Texture(texture) => texture.default_rect(),
+            AnyTexture::Collected(texture) => texture.default_rect(),
+            AnyTexture::Shared(texture) => texture.default_rect(),
+            AnyTexture::Region(texture) => texture.default_rect(),
+        }
+    }
+}
+
 #[derive(Default)]
 struct DefaultHasher(AHasher);
 
@@ -1469,5 +1608,32 @@ impl<Unit> TextureBlit<Unit> {
         for vertex in &mut self.verticies {
             vertex.location += offset;
         }
+    }
+}
+
+/// Assert instead of expect
+///
+/// See <https://github.com/rust-lang/rust-clippy/issues/11436>
+trait Assert {
+    type Asserted;
+    fn assert(self, msg: &str) -> Self::Asserted;
+}
+
+impl<T> Assert for Option<T> {
+    type Asserted = T;
+
+    fn assert(self, msg: &str) -> Self::Asserted {
+        self.expect(msg)
+    }
+}
+
+impl<T, E> Assert for Result<T, E>
+where
+    E: Debug,
+{
+    type Asserted = T;
+
+    fn assert(self, msg: &str) -> Self::Asserted {
+        self.expect(msg)
     }
 }

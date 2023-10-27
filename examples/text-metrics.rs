@@ -14,7 +14,7 @@ fn main() -> Result<(), EventLoopError> {
 
         let inset = Point::new(Lp::cm(1), Lp::cm(1));
 
-        let measured = renderer.measure_text::<Lp>("Kludgine", Color::WHITE, None);
+        let measured = renderer.measure_text::<Lp>("Kludgine");
         renderer.draw_shape(
             &Shape::filled_rect(
                 Rect::new(

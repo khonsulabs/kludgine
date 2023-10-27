@@ -13,8 +13,8 @@ use crate::buffer::Buffer;
 use crate::pipeline::PreparedCommand;
 use crate::sealed::{ShapeSource, TextureSource};
 use crate::{
-    CollectedTexture, Color, DefaultHasher, Graphics, Kludgine, PreparedGraphic, ProtoGraphics,
-    TextureBlit, TextureCollection, VertexCollection,
+    Assert, CollectedTexture, Color, DefaultHasher, Graphics, Kludgine, PreparedGraphic,
+    ProtoGraphics, TextureBlit, TextureCollection, VertexCollection,
 };
 
 impl Kludgine {
@@ -372,11 +372,11 @@ impl<'gfx> Graphics<'gfx> {
             |blit, cached, _is_first_line, _baseline| {
                 let corners: [u16; 4] =
                     array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
-                let start_index = u32::try_from(indices.len()).expect("too many drawn indices");
+                let start_index = u32::try_from(indices.len()).assert("too many drawn indices");
                 for &index in blit.indices() {
                     indices.push(corners[usize::from(index)]);
                 }
-                let end_index = u32::try_from(indices.len()).expect("too many drawn indices");
+                let end_index = u32::try_from(indices.len()).assert("too many drawn indices");
                 match commands.last_mut() {
                     Some(last_command) if last_command.is_mask == cached.is_mask => {
                         // The last command was from the same texture source, we can stend the previous range to the new end.
@@ -669,4 +669,57 @@ pub struct MeasuredText<Unit> {
     /// The total size of the measured text, encompassing all lines.
     pub size: Size<Unit>,
     pub(crate) glyphs: Vec<(TextureBlit<Px>, CachedGlyphHandle, bool)>,
+}
+
+/// A text drawing command.
+#[derive(Clone, Copy, Debug)]
+#[non_exhaustive]
+pub struct Text<'a, Unit> {
+    /// The text to be drawn.
+    pub text: &'a str,
+    /// The color to draw the text using.
+    pub color: Color,
+    /// The origin to draw the text around.
+    pub origin: TextOrigin<Unit>,
+    /// The width to wrap the text at. If `None`, no wrapping is performed.
+    pub wrap_at: Option<Unit>,
+}
+
+impl<'a, Unit> Text<'a, Unit> {
+    /// Returns a text command that draws `text` with `color`.
+    #[must_use]
+    pub const fn new(text: &'a str, color: Color) -> Self {
+        Self {
+            text,
+            color,
+            origin: TextOrigin::TopLeft,
+            wrap_at: None,
+        }
+    }
+
+    /// Sets the origin for the text drawing operation and returns self.
+    #[must_use]
+    pub fn origin(mut self, origin: TextOrigin<Unit>) -> Self {
+        self.origin = origin;
+        self
+    }
+
+    /// Sets the width to wrap text at and returns self.
+    #[must_use]
+    pub fn wrap_at(mut self, width: Unit) -> Self {
+        self.wrap_at = Some(width);
+        self
+    }
+}
+
+impl<'a, Unit> From<&'a str> for Text<'a, Unit> {
+    fn from(value: &'a str) -> Self {
+        Self::new(value, Color::WHITE)
+    }
+}
+
+impl<'a, Unit> From<&'a String> for Text<'a, Unit> {
+    fn from(value: &'a String) -> Self {
+        Self::new(value, Color::WHITE)
+    }
 }

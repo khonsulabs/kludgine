@@ -12,8 +12,8 @@ use crate::pipeline::{
 };
 use crate::shapes::Shape;
 use crate::{
-    sealed, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Graphics, RenderingGraphics,
-    ShapeSource, Texture, TextureBlit, TextureSource, VertexCollection,
+    sealed, Assert, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Graphics,
+    RenderingGraphics, ShapeSource, Texture, TextureBlit, TextureSource, VertexCollection,
 };
 
 /// An easy-to-use graphics renderer that batches operations on the GPU
@@ -273,27 +273,28 @@ mod text {
         FLAG_MASKED, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED, FLAG_TRANSLATE,
     };
     use crate::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
-    use crate::text::{map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, TextOrigin};
+    use crate::text::{
+        map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, Text, TextOrigin,
+    };
     use crate::{DefaultHasher, TextureBlit, VertexCollection};
 
     impl<'gfx> Renderer<'_, 'gfx> {
         /// Measures `text` using the current text settings.
         ///
         /// `default_color` does not affect the
-        pub fn measure_text<Unit>(
+        pub fn measure_text<'a, Unit>(
             &mut self,
-            text: &str,
-            default_color: Color,
-            width: Option<Unit>,
+            text: impl Into<Text<'a, Unit>>,
         ) -> MeasuredText<Unit>
         where
             Unit: figures::ScreenUnit,
         {
+            let text = text.into();
             let scale = self.graphics.scale;
-            self.update_scratch_buffer(text, width.map(|width| width.into_px(scale)));
+            self.update_scratch_buffer(text.text, text.wrap_at.map(|width| width.into_px(scale)));
             measure_text::<Unit, true>(
                 None,
-                default_color,
+                text.color,
                 self.graphics.kludgine,
                 self.graphics.queue,
                 &mut self.data.glyphs,
@@ -301,25 +302,24 @@ mod text {
         }
 
         /// Draws `text` using the current text settings.
-        pub fn draw_text<Unit>(
+        pub fn draw_text<'a, Unit>(
             &mut self,
-            text: &str,
-            color: Color,
-            origin: TextOrigin<Unit>,
+            text: impl Into<Text<'a, Unit>>,
             translate: Point<Unit>,
             rotation: Option<Angle>,
             scale: Option<f32>,
-            width: Option<Unit>,
         ) where
             Unit: ScreenUnit,
         {
-            self.graphics
-                .kludgine
-                .update_scratch_buffer(text, width.map(|width| width.into_px(self.graphics.scale)));
+            let text = text.into();
+            self.graphics.kludgine.update_scratch_buffer(
+                text.text,
+                text.wrap_at.map(|width| width.into_px(self.graphics.scale)),
+            );
             self.draw_text_buffer_inner(
                 None,
-                color,
-                origin.into_px(self.scale()),
+                text.color,
+                text.origin.into_px(self.scale()),
                 translate,
                 rotation,
                 scale,
@@ -354,6 +354,8 @@ mod text {
             );
         }
 
+        /// Measures `buffer` and caches the results using `default_color` when
+        /// the buffer has no color associated with text.
         pub fn measure_text_buffer<Unit>(
             &mut self,
             buffer: &cosmic_text::Buffer,
@@ -648,7 +650,7 @@ impl Drawing {
                         current_texture_id = Some(*texture_id);
                         graphics.pass.set_bind_group(
                             0,
-                            self.textures.get(texture_id).expect("texture missing"),
+                            self.textures.get(texture_id).assert("texture missing"),
                             &[],
                         );
                     }
@@ -677,7 +679,7 @@ impl Drawing {
 
                 let mut constants = command.constants;
                 constants.translation +=
-                    current_clip.origin.try_cast().expect("clip rect too large");
+                    current_clip.origin.try_cast().assert("clip rect too large");
                 if !constants.translation.is_zero() {
                     constants.flags |= FLAG_TRANSLATE;
                 }

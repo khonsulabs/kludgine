@@ -94,14 +94,17 @@ where
         self.window.set_title(new_title);
     }
 
+    /// Sets whether IME input is allowed on the window.
     pub fn set_ime_allowed(&self, allowed: bool) {
         self.window.winit().set_ime_allowed(allowed);
     }
 
+    /// Sets the IME purpose.
     pub fn set_ime_purpose(&self, purpose: ImePurpose) {
         self.window.winit().set_ime_purpose(purpose);
     }
 
+    /// Sets the cursor area for IME input suggestions.
     pub fn set_ime_cursor_area(&self, area: Rect<UPx>) {
         let area = area.into_signed();
         self.window.winit().set_ime_cursor_area(

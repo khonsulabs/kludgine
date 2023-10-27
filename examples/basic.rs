@@ -4,7 +4,7 @@ use appit::winit::error::EventLoopError;
 use kludgine::figures::units::Lp;
 use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::shapes::Shape;
-use kludgine::text::TextOrigin;
+use kludgine::text::{Text, TextOrigin};
 use kludgine::Color;
 
 const RED_SQUARE_SIZE: Lp = Lp::inches(1);
@@ -28,12 +28,9 @@ fn main() -> Result<(), EventLoopError> {
             None,
         );
         renderer.draw_text(
-            "Hello, World!",
-            Color::WHITE,
-            TextOrigin::Center,
+            Text::new("Hello, World!", Color::WHITE).origin(TextOrigin::Center),
             shape_center,
             Some(angle),
-            None,
             None,
         );
         true

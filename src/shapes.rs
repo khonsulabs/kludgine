@@ -12,7 +12,7 @@ use smallvec::SmallVec;
 
 use crate::pipeline::Vertex;
 use crate::{
-    sealed, Color, Graphics, Origin, PreparedGraphic, ShapeSource, Texture, TextureSource,
+    sealed, Assert, Color, Graphics, Origin, PreparedGraphic, ShapeSource, Texture, TextureSource,
 };
 
 /// A tesselated shape.
@@ -65,7 +65,7 @@ impl<Unit> Shape<Unit, false> {
                 &FillOptions::DEFAULT,
                 &mut shape_builder,
             )
-            .expect("should not fail to tesselat4e a rect");
+            .assert("should not fail to tesselat4e a rect");
         shape_builder.shape
     }
 
@@ -412,7 +412,7 @@ where
                 &FillOptions::DEFAULT,
                 &mut shape_builder,
             )
-            .expect("should not fail to tesselat4e a rect");
+            .assert("should not fail to tesselat4e a rect");
         shape_builder.shape
     }
 
@@ -435,7 +435,7 @@ where
                 &options.into(),
                 &mut shape_builder,
             )
-            .expect("should not fail to tesselat4e a rect");
+            .assert("should not fail to tesselat4e a rect");
         shape_builder.shape
     }
 }

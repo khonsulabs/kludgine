@@ -8,7 +8,7 @@ use kludgine::figures::units::{Lp, Px};
 use kludgine::figures::{FloatConversion, IntoSigned, Point, Rect, Size};
 use kludgine::render::Renderer;
 use kludgine::shapes::Shape;
-use kludgine::text::TextOrigin;
+use kludgine::text::{Text, TextOrigin};
 use kludgine::{Color, Origin};
 
 const PADDLE_SPEED: Px = Px(300);
@@ -131,21 +131,15 @@ impl GameState {
         renderer.set_font_size(Lp::inches(1));
         renderer.set_line_height(Lp::inches(1));
         renderer.draw_text(
-            &self.player_score.to_string(),
-            Color::BLUE,
-            TextOrigin::Center,
+            Text::new(&self.player_score.to_string(), Color::BLUE).origin(TextOrigin::Center),
             Point::new(size.width / 4, size.height / 4),
-            None,
             None,
             None,
         );
 
         renderer.draw_text(
-            &self.bot_score.to_string(),
-            Color::RED,
-            TextOrigin::Center,
+            Text::new(&self.bot_score.to_string(), Color::RED).origin(TextOrigin::Center),
             Point::new(size.width / 4 * 3, size.height / 4),
-            None,
             None,
             None,
         );

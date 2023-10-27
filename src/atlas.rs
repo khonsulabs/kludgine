@@ -8,7 +8,7 @@ use figures::{Rect, Size};
 use shelf_packer::{Allocation, ShelfPacker};
 
 use crate::pipeline::{PreparedGraphic, Vertex};
-use crate::{sealed, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
+use crate::{sealed, Assert, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
 
 /// A collection of multiple textures, managed as a single texture on the GPU.
 /// This type is often called an atlas.
@@ -87,7 +87,7 @@ impl TextureCollection {
             .data
             .write()
             .map_or_else(PoisonError::into_inner, |g| g);
-        let allocation = this.rects.allocate(size).expect("TODO: implement growth");
+        let allocation = this.rects.allocate(size).assert("TODO: implement growth");
 
         graphics.write_texture(
             wgpu::ImageCopyTexture {
