@@ -691,6 +691,8 @@
 <a href="#691" id="691">691</a>
 <a href="#692" id="692">692</a>
 <a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
@@ -705,8 +707,8 @@
 };
 <span class="kw">use </span><span class="kw">crate</span>::shapes::Shape;
 <span class="kw">use crate</span>::{
-    sealed, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Graphics, RenderingGraphics,
-    ShapeSource, Texture, TextureBlit, TextureSource, VertexCollection,
+    sealed, Assert, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Graphics,
+    RenderingGraphics, ShapeSource, Texture, TextureBlit, TextureSource, VertexCollection,
 };
 
 <span class="doccomment">/// An easy-to-use graphics renderer that batches operations on the GPU
@@ -966,27 +968,28 @@
         FLAG_MASKED, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED, FLAG_TRANSLATE,
     };
     <span class="kw">use </span><span class="kw">crate</span>::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
-    <span class="kw">use </span><span class="kw">crate</span>::text::{map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, TextOrigin};
+    <span class="kw">use </span><span class="kw">crate</span>::text::{
+        map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, Text, TextOrigin,
+    };
     <span class="kw">use crate</span>::{DefaultHasher, TextureBlit, VertexCollection};
 
     <span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>&gt; Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;gfx</span>&gt; {
         <span class="doccomment">/// Measures `text` using the current text settings.
         ///
         /// `default_color` does not affect the
-        </span><span class="kw">pub fn </span>measure_text&lt;Unit&gt;(
+        </span><span class="kw">pub fn </span>measure_text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-            text: <span class="kw-2">&amp;</span>str,
-            default_color: Color,
-            width: <span class="prelude-ty">Option</span>&lt;Unit&gt;,
+            text: <span class="kw">impl </span>Into&lt;Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;&gt;,
         ) -&gt; MeasuredText&lt;Unit&gt;
         <span class="kw">where
             </span>Unit: figures::ScreenUnit,
         {
+            <span class="kw">let </span>text = text.into();
             <span class="kw">let </span>scale = <span class="self">self</span>.graphics.scale;
-            <span class="self">self</span>.update_scratch_buffer(text, width.map(|width| width.into_px(scale)));
+            <span class="self">self</span>.update_scratch_buffer(text.text, text.wrap_at.map(|width| width.into_px(scale)));
             measure_text::&lt;Unit, <span class="bool-val">true</span>&gt;(
                 <span class="prelude-val">None</span>,
-                default_color,
+                text.color,
                 <span class="self">self</span>.graphics.kludgine,
                 <span class="self">self</span>.graphics.queue,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.glyphs,
@@ -994,25 +997,24 @@
         }
 
         <span class="doccomment">/// Draws `text` using the current text settings.
-        </span><span class="kw">pub fn </span>draw_text&lt;Unit&gt;(
+        </span><span class="kw">pub fn </span>draw_text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-            text: <span class="kw-2">&amp;</span>str,
-            color: Color,
-            origin: TextOrigin&lt;Unit&gt;,
+            text: <span class="kw">impl </span>Into&lt;Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;&gt;,
             translate: Point&lt;Unit&gt;,
             rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
             scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
-            width: <span class="prelude-ty">Option</span>&lt;Unit&gt;,
         ) <span class="kw">where
             </span>Unit: ScreenUnit,
         {
-            <span class="self">self</span>.graphics
-                .kludgine
-                .update_scratch_buffer(text, width.map(|width| width.into_px(<span class="self">self</span>.graphics.scale)));
+            <span class="kw">let </span>text = text.into();
+            <span class="self">self</span>.graphics.kludgine.update_scratch_buffer(
+                text.text,
+                text.wrap_at.map(|width| width.into_px(<span class="self">self</span>.graphics.scale)),
+            );
             <span class="self">self</span>.draw_text_buffer_inner(
                 <span class="prelude-val">None</span>,
-                color,
-                origin.into_px(<span class="self">self</span>.scale()),
+                text.color,
+                text.origin.into_px(<span class="self">self</span>.scale()),
                 translate,
                 rotation,
                 scale,
@@ -1047,7 +1049,9 @@
             );
         }
 
-        <span class="kw">pub fn </span>measure_text_buffer&lt;Unit&gt;(
+        <span class="doccomment">/// Measures `buffer` and caches the results using `default_color` when
+        /// the buffer has no color associated with text.
+        </span><span class="kw">pub fn </span>measure_text_buffer&lt;Unit&gt;(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>,
             buffer: <span class="kw-2">&amp;</span>cosmic_text::Buffer,
             default_color: Color,
@@ -1341,7 +1345,7 @@
                         current_texture_id = <span class="prelude-val">Some</span>(<span class="kw-2">*</span>texture_id);
                         graphics.pass.set_bind_group(
                             <span class="number">0</span>,
-                            <span class="self">self</span>.textures.get(texture_id).expect(<span class="string">&quot;texture missing&quot;</span>),
+                            <span class="self">self</span>.textures.get(texture_id).assert(<span class="string">&quot;texture missing&quot;</span>),
                             <span class="kw-2">&amp;</span>[],
                         );
                     }
@@ -1370,7 +1374,7 @@
 
                 <span class="kw">let </span><span class="kw-2">mut </span>constants = command.constants;
                 constants.translation +=
-                    current_clip.origin.try_cast().expect(<span class="string">&quot;clip rect too large&quot;</span>);
+                    current_clip.origin.try_cast().assert(<span class="string">&quot;clip rect too large&quot;</span>);
                 <span class="kw">if </span>!constants.translation.is_zero() {
                     constants.flags |= FLAG_TRANSLATE;
                 }

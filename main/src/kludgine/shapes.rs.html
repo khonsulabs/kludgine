@@ -763,7 +763,7 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::Vertex;
 <span class="kw">use crate</span>::{
-    sealed, Color, Graphics, Origin, PreparedGraphic, ShapeSource, Texture, TextureSource,
+    sealed, Assert, Color, Graphics, Origin, PreparedGraphic, ShapeSource, Texture, TextureSource,
 };
 
 <span class="doccomment">/// A tesselated shape.
@@ -816,7 +816,7 @@
                 <span class="kw-2">&amp;</span>FillOptions::DEFAULT,
                 <span class="kw-2">&amp;mut </span>shape_builder,
             )
-            .expect(<span class="string">&quot;should not fail to tesselat4e a rect&quot;</span>);
+            .assert(<span class="string">&quot;should not fail to tesselat4e a rect&quot;</span>);
         shape_builder.shape
     }
 
@@ -1163,7 +1163,7 @@
                 <span class="kw-2">&amp;</span>FillOptions::DEFAULT,
                 <span class="kw-2">&amp;mut </span>shape_builder,
             )
-            .expect(<span class="string">&quot;should not fail to tesselat4e a rect&quot;</span>);
+            .assert(<span class="string">&quot;should not fail to tesselat4e a rect&quot;</span>);
         shape_builder.shape
     }
 
@@ -1186,7 +1186,7 @@
                 <span class="kw-2">&amp;</span>options.into(),
                 <span class="kw-2">&amp;mut </span>shape_builder,
             )
-            .expect(<span class="string">&quot;should not fail to tesselat4e a rect&quot;</span>);
+            .assert(<span class="string">&quot;should not fail to tesselat4e a rect&quot;</span>);
         shape_builder.shape
     }
 }

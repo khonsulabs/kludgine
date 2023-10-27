@@ -287,7 +287,7 @@
 <span class="kw">use </span>shelf_packer::{Allocation, ShelfPacker};
 
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{PreparedGraphic, Vertex};
-<span class="kw">use crate</span>::{sealed, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
+<span class="kw">use crate</span>::{sealed, Assert, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
 
 <span class="doccomment">/// A collection of multiple textures, managed as a single texture on the GPU.
 /// This type is often called an atlas.
@@ -366,7 +366,7 @@
             </span>.data
             .write()
             .map_or_else(PoisonError::into_inner, |g| g);
-        <span class="kw">let </span>allocation = this.rects.allocate(size).expect(<span class="string">&quot;TODO: implement growth&quot;</span>);
+        <span class="kw">let </span>allocation = this.rects.allocate(size).assert(<span class="string">&quot;TODO: implement growth&quot;</span>);
 
         graphics.write_texture(
             wgpu::ImageCopyTexture {

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["TextOrigin"],"struct":["MeasuredText","PreparedText"]};
+window.SIDEBAR_ITEMS = {"enum":["TextOrigin"],"struct":["MeasuredText","PreparedText","Text"]};
