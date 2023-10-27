@@ -1637,6 +1637,7 @@
 <a href="#1637" id="1637">1637</a>
 <a href="#1638" id="1638">1638</a>
 <a href="#1639" id="1639">1639</a>
+<a href="#1640" id="1640">1640</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -1680,6 +1681,7 @@
 <span class="doccomment">/// Types for text rendering.
 </span><span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
 </span><span class="kw">pub mod </span>text;
+<span class="kw">pub mod </span>tilemap;
 
 <span class="kw">pub use </span>atlas::{CollectedTexture, TextureCollection};
 <span class="kw">pub use </span>pipeline::{PreparedGraphic, ShaderScalable};
