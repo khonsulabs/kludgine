@@ -277,14 +277,30 @@
 <a href="#277" id="277">277</a>
 <a href="#278" id="278">278</a>
 <a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::Div;
 <span class="kw">use </span>std::sync::{Arc, PoisonError, RwLock};
 
 <span class="kw">use </span>alot::{LotId, Lots};
-<span class="kw">use </span>figures::units::UPx;
-<span class="kw">use </span>figures::{Rect, Size};
-<span class="kw">use </span>shelf_packer::{Allocation, ShelfPacker};
+<span class="kw">use </span>etagere::{Allocation, BucketedAtlasAllocator};
+<span class="kw">use </span>figures::units::{Px, UPx};
+<span class="kw">use </span>figures::{IntoSigned, IntoUnsigned, Point, Rect, Size};
 
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{PreparedGraphic, Vertex};
 <span class="kw">use crate</span>::{sealed, Assert, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
@@ -307,7 +323,7 @@
 }
 
 <span class="kw">struct </span>Data {
-    rects: ShelfPacker,
+    rects: BucketedAtlasAllocator,
     texture: Texture,
     textures: Lots&lt;Allocation&gt;,
 }
@@ -325,13 +341,14 @@
             wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
         );
 
+        <span class="kw">let </span>initial_size = initial_size.into_signed();
         <span class="self">Self </span>{
             format,
             data: Arc::new(RwLock::new(Data {
-                rects: ShelfPacker::new(
-                    initial_size,
-                    initial_size.width.<span class="number">0</span>.try_into().expect(<span class="string">&quot;width too large&quot;</span>),
-                ),
+                rects: BucketedAtlasAllocator::new(etagere::euclid::Size2D::new(
+                    initial_size.width.<span class="number">0</span>,
+                    initial_size.height.<span class="number">0</span>,
+                )),
                 texture,
                 textures: Lots::new(),
             })),
@@ -366,13 +383,29 @@
             </span>.data
             .write()
             .map_or_else(PoisonError::into_inner, |g| g);
-        <span class="kw">let </span>allocation = this.rects.allocate(size).assert(<span class="string">&quot;TODO: implement growth&quot;</span>);
+        <span class="kw">let </span>signed_size = size.into_signed();
+        <span class="kw">let </span>allocation = this
+            .rects
+            .allocate(etagere::euclid::Size2D::new(
+                signed_size.width.<span class="number">0</span>,
+                signed_size.height.<span class="number">0</span>,
+            ))
+            .assert(<span class="string">&quot;TODO: implement growth&quot;</span>);
+
+        <span class="kw">let </span>region = Rect::new(
+            Point::new(
+                Px(allocation.rectangle.min.x),
+                Px(allocation.rectangle.min.y),
+            )
+            .into_unsigned(),
+            size,
+        );
 
         graphics.write_texture(
             wgpu::ImageCopyTexture {
                 texture: <span class="kw-2">&amp;</span>this.texture.wgpu,
                 mip_level: <span class="number">0</span>,
-                origin: allocation.rect.origin.into(),
+                origin: region.origin.into(),
                 aspect: wgpu::TextureAspect::All,
             },
             data,
@@ -382,7 +415,7 @@
         CollectedTexture {
             collection: <span class="self">self</span>.clone(),
             id: Arc::new(this.textures.push(allocation)),
-            region: allocation.rect,
+            region,
         }
     }
 
@@ -435,12 +468,12 @@
             .write()
             .map_or_else(PoisonError::into_inner, |g| g);
         <span class="kw">let </span>allocation = data.textures.remove(id).expect(<span class="string">&quot;invalid texture free&quot;</span>);
-        data.rects.free(allocation.id);
+        data.rects.deallocate(allocation.id);
     }
 
     <span class="kw">fn </span>prepare&lt;Unit&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id: LotId,
+        src: Rect&lt;UPx&gt;,
         dest: Rect&lt;Unit&gt;,
         graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;,
     ) -&gt; PreparedGraphic&lt;Unit&gt;
@@ -449,8 +482,7 @@
         Vertex&lt;Unit&gt;: bytemuck::Pod,
     {
         <span class="kw">let </span>data = <span class="self">self</span>.data.read().map_or_else(PoisonError::into_inner, |g| g);
-        <span class="kw">let </span>texture = <span class="kw-2">&amp;</span>data.textures[id];
-        data.texture.prepare_partial(texture.rect, dest, graphics)
+        data.texture.prepare_partial(src, dest, graphics)
     }
 
     <span class="doccomment">/// Returns a [`PreparedGraphic`] for the entire texture.
@@ -525,7 +557,7 @@
         </span>Unit: figures::Unit + Div&lt;i32, Output = Unit&gt;,
         Vertex&lt;Unit&gt;: bytemuck::Pod,
     {
-        <span class="self">self</span>.collection.prepare(<span class="kw-2">*</span><span class="self">self</span>.id, dest, graphics)
+        <span class="self">self</span>.collection.prepare(<span class="self">self</span>.region, dest, graphics)
     }
 }
 

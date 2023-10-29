@@ -720,9 +720,6 @@
 <a href="#720" id="720">720</a>
 <a href="#721" id="721">721</a>
 <a href="#722" id="722">722</a>
-<a href="#723" id="723">723</a>
-<a href="#724" id="724">724</a>
-<a href="#725" id="725">725</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -1062,9 +1059,6 @@
             .map_or_else(PoisonError::into_inner, |g| g);
         <span class="kw">let </span>cached = data.get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.key).expect(<span class="string">&quot;cached glyph missing&quot;</span>);
         cached.ref_count -= <span class="number">1</span>;
-        <span class="kw">if </span>cached.ref_count == <span class="number">0 </span>{
-            data.remove(<span class="kw-2">&amp;</span><span class="self">self</span>.key);
-        }
     }
 }
 
