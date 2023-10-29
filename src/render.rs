@@ -2,8 +2,8 @@ use std::collections::{hash_map, HashMap};
 use std::ops::{Deref, DerefMut, Range};
 use std::sync::Arc;
 
+use figures::units::UPx;
 use figures::{Angle, IntoSigned, IsZero, Point, Rect};
-use shelf_packer::UPx;
 
 use crate::buffer::DiffableBuffer;
 use crate::pipeline::{

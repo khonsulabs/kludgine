@@ -3,9 +3,9 @@ use std::ops::Div;
 use std::sync::{Arc, PoisonError, RwLock};
 
 use alot::{LotId, Lots};
-use figures::units::UPx;
-use figures::{Rect, Size};
-use shelf_packer::{Allocation, ShelfPacker};
+use etagere::{Allocation, BucketedAtlasAllocator};
+use figures::units::{Px, UPx};
+use figures::{IntoSigned, IntoUnsigned, Point, Rect, Size};
 
 use crate::pipeline::{PreparedGraphic, Vertex};
 use crate::{sealed, Assert, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
@@ -28,7 +28,7 @@ pub struct TextureCollection {
 }
 
 struct Data {
-    rects: ShelfPacker,
+    rects: BucketedAtlasAllocator,
     texture: Texture,
     textures: Lots<Allocation>,
 }
@@ -46,13 +46,14 @@ impl TextureCollection {
             wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
         );
 
+        let initial_size = initial_size.into_signed();
         Self {
             format,
             data: Arc::new(RwLock::new(Data {
-                rects: ShelfPacker::new(
-                    initial_size,
-                    initial_size.width.0.try_into().expect("width too large"),
-                ),
+                rects: BucketedAtlasAllocator::new(etagere::euclid::Size2D::new(
+                    initial_size.width.0,
+                    initial_size.height.0,
+                )),
                 texture,
                 textures: Lots::new(),
             })),
@@ -87,13 +88,29 @@ impl TextureCollection {
             .data
             .write()
             .map_or_else(PoisonError::into_inner, |g| g);
-        let allocation = this.rects.allocate(size).assert("TODO: implement growth");
+        let signed_size = size.into_signed();
+        let allocation = this
+            .rects
+            .allocate(etagere::euclid::Size2D::new(
+                signed_size.width.0,
+                signed_size.height.0,
+            ))
+            .assert("TODO: implement growth");
+
+        let region = Rect::new(
+            Point::new(
+                Px(allocation.rectangle.min.x),
+                Px(allocation.rectangle.min.y),
+            )
+            .into_unsigned(),
+            size,
+        );
 
         graphics.write_texture(
             wgpu::ImageCopyTexture {
                 texture: &this.texture.wgpu,
                 mip_level: 0,
-                origin: allocation.rect.origin.into(),
+                origin: region.origin.into(),
                 aspect: wgpu::TextureAspect::All,
             },
             data,
@@ -103,7 +120,7 @@ impl TextureCollection {
         CollectedTexture {
             collection: self.clone(),
             id: Arc::new(this.textures.push(allocation)),
-            region: allocation.rect,
+            region,
         }
     }
 
@@ -156,12 +173,12 @@ impl TextureCollection {
             .write()
             .map_or_else(PoisonError::into_inner, |g| g);
         let allocation = data.textures.remove(id).expect("invalid texture free");
-        data.rects.free(allocation.id);
+        data.rects.deallocate(allocation.id);
     }
 
     fn prepare<Unit>(
         &self,
-        id: LotId,
+        src: Rect<UPx>,
         dest: Rect<Unit>,
         graphics: &Graphics<'_>,
     ) -> PreparedGraphic<Unit>
@@ -170,8 +187,7 @@ impl TextureCollection {
         Vertex<Unit>: bytemuck::Pod,
     {
         let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
-        let texture = &data.textures[id];
-        data.texture.prepare_partial(texture.rect, dest, graphics)
+        data.texture.prepare_partial(src, dest, graphics)
     }
 
     /// Returns a [`PreparedGraphic`] for the entire texture.
@@ -246,7 +262,7 @@ impl CollectedTexture {
         Unit: figures::Unit + Div<i32, Output = Unit>,
         Vertex<Unit>: bytemuck::Pod,
     {
-        self.collection.prepare(*self.id, dest, graphics)
+        self.collection.prepare(self.region, dest, graphics)
     }
 }
 

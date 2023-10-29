@@ -337,9 +337,6 @@ impl Drop for CachedGlyphHandle {
             .map_or_else(PoisonError::into_inner, |g| g);
         let cached = data.get_mut(&self.key).expect("cached glyph missing");
         cached.ref_count -= 1;
-        if cached.ref_count == 0 {
-            data.remove(&self.key);
-        }
     }
 }
 
