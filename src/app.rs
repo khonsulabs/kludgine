@@ -174,6 +174,16 @@ where
     pub fn modifiers(&self) -> Modifiers {
         self.window.modifiers()
     }
+
+    /// Sets the window's minimum inner size.
+    pub fn set_min_inner_size(&self, min_size: Option<Size<UPx>>) {
+        self.window.set_min_inner_size(min_size.map(Into::into));
+    }
+
+    /// Sets the window's maximum inner size.
+    pub fn set_max_inner_size(&self, max_size: Option<Size<UPx>>) {
+        self.window.set_max_inner_size(max_size.map(Into::into));
+    }
 }
 
 /// The behavior of a window.

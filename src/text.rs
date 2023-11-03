@@ -104,7 +104,7 @@ impl Kludgine {
     pub fn reset_text_attributes(&mut self) {
         self.set_text_attributes(Attrs::new());
         self.text.font_size = DEFAULT_FONT_SIZE;
-        self.text.line_height = DEFAULT_FONT_SIZE;
+        self.text.line_height = DEFAULT_LINE_SIZE;
     }
 }
 
@@ -152,6 +152,7 @@ impl Debug for TextSystem {
 }
 
 const DEFAULT_FONT_SIZE: Lp = Lp::points(12);
+const DEFAULT_LINE_SIZE: Lp = Lp::points(16);
 
 impl TextSystem {
     pub(crate) fn new(graphics: &ProtoGraphics<'_>) -> Self {
@@ -172,7 +173,7 @@ impl TextSystem {
             scratch: None,
             fonts,
             font_size: DEFAULT_FONT_SIZE,
-            line_height: DEFAULT_FONT_SIZE,
+            line_height: DEFAULT_LINE_SIZE,
             glyphs: GlyphCache::default(),
             attrs: AttrsOwned::new(Attrs::new()),
         }
@@ -548,16 +549,27 @@ where
         },
     );
 
-    MeasuredText {
-        ascent: line_height - Unit::from_px(min.y, kludgine.scale),
-        descent: Unit::from_px(first_line_max_y, kludgine.scale) - line_height,
-        left: Unit::from_px(min.x, kludgine.scale),
-        size: Size {
-            width: Unit::from_px(max.x, kludgine.scale),
-            height: Unit::from_px(max.y.max(last_baseline), kludgine.scale),
-        },
-        line_height,
-        glyphs: measured_glyphs,
+    if min == Point::new(Px::MAX, Px::MAX) {
+        MeasuredText {
+            ascent: Unit::default(),
+            descent: Unit::default(),
+            left: Unit::default(),
+            line_height,
+            size: Size::new(Unit::default(), line_height),
+            glyphs: Vec::new(),
+        }
+    } else {
+        MeasuredText {
+            ascent: line_height - Unit::from_px(min.y, kludgine.scale),
+            descent: Unit::from_px(first_line_max_y, kludgine.scale) - line_height,
+            left: Unit::from_px(min.x, kludgine.scale),
+            size: Size {
+                width: Unit::from_px(max.x, kludgine.scale),
+                height: Unit::from_px(max.y.max(last_baseline), kludgine.scale).max(line_height),
+            },
+            line_height,
+            glyphs: measured_glyphs,
+        }
     }
 }
 
