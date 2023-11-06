@@ -5,8 +5,8 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use cosmic_text::{fontdb, Attrs, AttrsOwned, SwashContent};
 use figures::units::{Lp, Px};
-use figures::utils::lossy_f32_to_i32;
 use figures::{Fraction, Point, Rect, ScreenScale, Size};
+use intentional::Cast;
 use smallvec::SmallVec;
 
 use crate::buffer::Buffer;
@@ -227,16 +227,11 @@ impl TextSystem {
         );
         scratch.set_size(
             &mut self.fonts,
-            width.map_or(f32::MAX, |width| lossy_i32_to_f32(width.0)),
+            width.map_or(f32::MAX, |width| width.0.cast()),
             f32::MAX,
         );
         scratch.shape_until_scroll(&mut self.fonts);
     }
-}
-
-#[allow(clippy::cast_precision_loss)]
-fn lossy_i32_to_f32(value: i32) -> f32 {
-    value as f32
 }
 
 #[derive(Debug, Default, Clone)]
@@ -493,7 +488,7 @@ pub(crate) fn map_each_glyph(
                     (Point::new(physical.x, physical.y)).cast::<Px>()
                         + Point::new(
                             image.placement.left,
-                            lossy_f32_to_i32(metrics.line_height) - image.placement.top,
+                            metrics.line_height.cast::<i32>() - image.placement.top,
                         )
                         .cast(),
                     Size::new(

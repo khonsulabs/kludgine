@@ -18,6 +18,7 @@ use bytemuck::{Pod, Zeroable};
 pub use cosmic_text;
 use figures::units::UPx;
 use figures::{Fraction, FromComponents, IntoComponents, Point, Rect, Size};
+use intentional::Assert;
 use sealed::ShapeSource as _;
 use wgpu::util::DeviceExt;
 pub use {figures, wgpu};
@@ -1609,32 +1610,5 @@ impl<Unit> TextureBlit<Unit> {
         for vertex in &mut self.verticies {
             vertex.location += offset;
         }
-    }
-}
-
-/// Assert instead of expect
-///
-/// See <https://github.com/rust-lang/rust-clippy/issues/11436>
-trait Assert {
-    type Asserted;
-    fn assert(self, msg: &str) -> Self::Asserted;
-}
-
-impl<T> Assert for Option<T> {
-    type Asserted = T;
-
-    fn assert(self, msg: &str) -> Self::Asserted {
-        self.expect(msg)
-    }
-}
-
-impl<T, E> Assert for Result<T, E>
-where
-    E: Debug,
-{
-    type Asserted = T;
-
-    fn assert(self, msg: &str) -> Self::Asserted {
-        self.expect(msg)
     }
 }

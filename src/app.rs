@@ -16,8 +16,8 @@ use appit::winit::window::{ImePurpose, WindowId};
 pub use appit::{winit, Message, WindowAttributes};
 use appit::{Application, PendingApp, RunningWindow, WindowBehavior as _};
 use figures::units::{Px, UPx};
-use figures::utils::lossy_f64_to_f32;
 use figures::{IntoSigned, Point, Rect, Size};
+use intentional::Cast;
 
 use crate::pipeline::PushConstants;
 use crate::render::{Drawing, Renderer};
@@ -598,7 +598,7 @@ where
             &queue,
             swapchain_format,
             Size::new(window.inner_size().width, window.inner_size().height),
-            lossy_f64_to_f32(window.scale()),
+            window.scale().cast::<f32>(),
         );
         let mut graphics = Graphics::new(&mut state, &device, &queue);
 
@@ -751,7 +751,7 @@ where
         self.surface.configure(&self.device, &self.config);
         self.kludgine.resize(
             Size::new(window.inner_size().width, window.inner_size().height),
-            lossy_f64_to_f32(window.scale()),
+            window.scale().cast::<f32>(),
             &self.queue,
         );
         window.set_needs_redraw();

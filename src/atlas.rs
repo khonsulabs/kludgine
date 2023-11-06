@@ -6,9 +6,10 @@ use alot::{LotId, Lots};
 use etagere::{Allocation, BucketedAtlasAllocator};
 use figures::units::{Px, UPx};
 use figures::{IntoSigned, IntoUnsigned, Point, Rect, Size};
+use intentional::Assert;
 
 use crate::pipeline::{PreparedGraphic, Vertex};
-use crate::{sealed, Assert, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
+use crate::{sealed, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
 
 /// A collection of multiple textures, managed as a single texture on the GPU.
 /// This type is often called an atlas.
