@@ -12,7 +12,7 @@ use appit::winit::event::{
     TouchPhase,
 };
 use appit::winit::keyboard::KeyCode;
-use appit::winit::window::{ImePurpose, WindowId};
+use appit::winit::window::{ImePurpose, Theme, WindowId};
 pub use appit::{winit, Message, WindowAttributes};
 use appit::{Application, PendingApp, RunningWindow, WindowBehavior as _};
 use figures::units::{Px, UPx};
@@ -81,6 +81,25 @@ where
     /// Sets the inner size of the window.
     pub fn set_inner_size(&self, inner_size: Size<UPx>) {
         self.window.set_inner_size(inner_size.into());
+    }
+
+    /// Returns true if the window is currently focused for keyboard input.
+    #[must_use]
+    pub const fn focused(&self) -> bool {
+        self.window.focused()
+    }
+
+    /// Returns the current user interface theme for the window.
+    #[must_use]
+    pub const fn theme(&self) -> Theme {
+        self.window.theme()
+    }
+
+    /// Returns true if the window is currenly not visible because it is
+    /// completely hidden behind other windows, offcreen, or minimized.
+    #[must_use]
+    pub const fn ocluded(&self) -> bool {
+        self.window.occluded()
     }
 
     /// Returns the current title of the window.
