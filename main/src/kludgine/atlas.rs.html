@@ -293,6 +293,7 @@
 <a href="#293" id="293">293</a>
 <a href="#294" id="294">294</a>
 <a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::Div;
 <span class="kw">use </span>std::sync::{Arc, PoisonError, RwLock};
@@ -301,9 +302,10 @@
 <span class="kw">use </span>etagere::{Allocation, BucketedAtlasAllocator};
 <span class="kw">use </span>figures::units::{Px, UPx};
 <span class="kw">use </span>figures::{IntoSigned, IntoUnsigned, Point, Rect, Size};
+<span class="kw">use </span>intentional::Assert;
 
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{PreparedGraphic, Vertex};
-<span class="kw">use crate</span>::{sealed, Assert, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
+<span class="kw">use crate</span>::{sealed, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
 
 <span class="doccomment">/// A collection of multiple textures, managed as a single texture on the GPU.
 /// This type is often called an atlas.

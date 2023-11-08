@@ -1185,6 +1185,25 @@
 <a href="#1185" id="1185">1185</a>
 <a href="#1186" id="1186">1186</a>
 <a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::panic::UnwindSafe;
@@ -1199,12 +1218,12 @@
     TouchPhase,
 };
 <span class="kw">use </span>appit::winit::keyboard::KeyCode;
-<span class="kw">use </span>appit::winit::window::{ImePurpose, WindowId};
+<span class="kw">use </span>appit::winit::window::{ImePurpose, Theme, WindowId};
 <span class="kw">pub use </span>appit::{winit, Message, WindowAttributes};
 <span class="kw">use </span>appit::{Application, PendingApp, RunningWindow, WindowBehavior <span class="kw">as _</span>};
 <span class="kw">use </span>figures::units::{Px, UPx};
-<span class="kw">use </span>figures::utils::lossy_f64_to_f32;
 <span class="kw">use </span>figures::{IntoSigned, Point, Rect, Size};
+<span class="kw">use </span>intentional::Cast;
 
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::PushConstants;
 <span class="kw">use </span><span class="kw">crate</span>::render::{Drawing, Renderer};
@@ -1268,6 +1287,25 @@
     <span class="doccomment">/// Sets the inner size of the window.
     </span><span class="kw">pub fn </span>set_inner_size(<span class="kw-2">&amp;</span><span class="self">self</span>, inner_size: Size&lt;UPx&gt;) {
         <span class="self">self</span>.window.set_inner_size(inner_size.into());
+    }
+
+    <span class="doccomment">/// Returns true if the window is currently focused for keyboard input.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>focused(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.window.focused()
+    }
+
+    <span class="doccomment">/// Returns the current user interface theme for the window.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>theme(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Theme {
+        <span class="self">self</span>.window.theme()
+    }
+
+    <span class="doccomment">/// Returns true if the window is currenly not visible because it is
+    /// completely hidden behind other windows, offcreen, or minimized.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>ocluded(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.window.occluded()
     }
 
     <span class="doccomment">/// Returns the current title of the window.
@@ -1785,7 +1823,7 @@
             <span class="kw-2">&amp;</span>queue,
             swapchain_format,
             Size::new(window.inner_size().width, window.inner_size().height),
-            lossy_f64_to_f32(window.scale()),
+            window.scale().cast::&lt;f32&gt;(),
         );
         <span class="kw">let </span><span class="kw-2">mut </span>graphics = Graphics::new(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue);
 
@@ -1938,7 +1976,7 @@
         <span class="self">self</span>.surface.configure(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.config);
         <span class="self">self</span>.kludgine.resize(
             Size::new(window.inner_size().width, window.inner_size().height),
-            lossy_f64_to_f32(window.scale()),
+            window.scale().cast::&lt;f32&gt;(),
             <span class="kw-2">&amp;</span><span class="self">self</span>.queue,
         );
         window.set_needs_redraw();
