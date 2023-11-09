@@ -78,6 +78,11 @@ where
         self.window.inner_size().into()
     }
 
+    /// Returns a reference to the underlying winit window.
+    pub fn winit(&self) -> &winit::window::Window {
+        self.window.winit()
+    }
+
     /// Sets the inner size of the window.
     pub fn set_inner_size(&self, inner_size: Size<UPx>) {
         self.window.set_inner_size(inner_size.into());
