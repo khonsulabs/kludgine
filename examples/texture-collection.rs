@@ -87,7 +87,7 @@ impl WindowBehavior for Test {
         true
     }
 
-    fn clear_color() -> Option<Color> {
+    fn clear_color(&self) -> Option<Color> {
         Some(Color::new(10, 0, 0, 255))
     }
 }

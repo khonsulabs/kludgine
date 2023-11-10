@@ -271,7 +271,7 @@ where
     ///
     /// The default implementation returns `Some(Color::BLACK)`.
     #[must_use]
-    fn clear_color() -> Option<Color> {
+    fn clear_color(&self) -> Option<Color> {
         Some(Color::BLACK)
     }
 
@@ -282,6 +282,7 @@ where
     /// the surface.
     #[must_use]
     fn composite_alpha_mode(
+        &self,
         supported_modes: &[wgpu::CompositeAlphaMode],
     ) -> wgpu::CompositeAlphaMode {
         supported_modes[0]
@@ -639,17 +640,6 @@ where
         );
         let mut graphics = Graphics::new(&mut state, &device, &queue);
 
-        let config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: swapchain_format,
-            width: window.inner_size().width,
-            height: window.inner_size().height,
-            present_mode: wgpu::PresentMode::Fifo,
-            alpha_mode: T::composite_alpha_mode(&swapchain_capabilities.alpha_modes),
-            view_formats: vec![],
-        };
-        surface.configure(&device, &config);
-
         let last_render = Instant::now();
         let behavior = T::initialize(
             Window {
@@ -660,6 +650,17 @@ where
             &mut graphics,
             context,
         );
+
+        let config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: swapchain_format,
+            width: window.inner_size().width,
+            height: window.inner_size().height,
+            present_mode: wgpu::PresentMode::Fifo,
+            alpha_mode: behavior.composite_alpha_mode(&swapchain_capabilities.alpha_modes),
+            view_formats: vec![],
+        };
+        surface.configure(&device, &config);
 
         Self {
             wgpu,
@@ -722,9 +723,12 @@ where
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: T::clear_color().map_or(wgpu::LoadOp::Load, |color| {
-                            wgpu::LoadOp::Clear(color.into())
-                        }),
+                        load: self
+                            .behavior
+                            .clear_color()
+                            .map_or(wgpu::LoadOp::Load, |color| {
+                                wgpu::LoadOp::Clear(color.into())
+                            }),
                         store: wgpu::StoreOp::Store,
                     },
                 })],
