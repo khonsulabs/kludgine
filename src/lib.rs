@@ -743,39 +743,39 @@ impl Color {
     /// Returns the red component of this color, range 0-255.
     #[must_use]
     #[allow(clippy::cast_possible_truncation)] // truncation desired
-    pub const fn red(&self) -> u8 {
+    pub const fn red(self) -> u8 {
         (self.0 >> 24) as u8
     }
 
     /// Returns the red component of this color, range 0.0-1.0.
     #[must_use]
-    pub fn red_f32(&self) -> f32 {
+    pub fn red_f32(self) -> f32 {
         f32::from(self.red()) / 255.
     }
 
     /// Returns the green component of this color, range 0-255.
     #[must_use]
     #[allow(clippy::cast_possible_truncation)] // truncation desired
-    pub const fn green(&self) -> u8 {
+    pub const fn green(self) -> u8 {
         (self.0 >> 16) as u8
     }
 
     /// Returns the green component of this color, range 0.0-1.0.
     #[must_use]
-    pub fn green_f32(&self) -> f32 {
+    pub fn green_f32(self) -> f32 {
         f32::from(self.green()) / 255.
     }
 
     /// Returns the blue component of this color, range 0-255.
     #[must_use]
     #[allow(clippy::cast_possible_truncation)] // truncation desired
-    pub const fn blue(&self) -> u8 {
+    pub const fn blue(self) -> u8 {
         (self.0 >> 8) as u8
     }
 
     /// Returns the blue component of this color, range 0.0-1.0.
     #[must_use]
-    pub fn blue_f32(&self) -> f32 {
+    pub fn blue_f32(self) -> f32 {
         f32::from(self.blue()) / 255.
     }
 
@@ -783,15 +783,39 @@ impl Color {
     /// is completely opaque.
     #[must_use]
     #[allow(clippy::cast_possible_truncation)] // truncation desired
-    pub const fn alpha(&self) -> u8 {
+    pub const fn alpha(self) -> u8 {
         self.0 as u8
     }
 
     /// Returns the alpha component of this color, range 0.0-1.0. A value of 1.0
     /// is completely opaque.
     #[must_use]
-    pub fn alpha_f32(&self) -> f32 {
+    pub fn alpha_f32(self) -> f32 {
         f32::from(self.alpha()) / 255.
+    }
+
+    /// Returns a new color replacing this colors red channel with `red`.
+    #[must_use]
+    pub const fn with_red(self, red: u8) -> Self {
+        Self(self.0 & 0x00FF_FFFF | ((red as u32) << 24))
+    }
+
+    /// Returns a new color replacing this colors green channel with `green`.
+    #[must_use]
+    pub const fn with_green(self, red: u8) -> Self {
+        Self(self.0 & 0xFF00_FFFF | ((red as u32) << 16))
+    }
+
+    /// Returns a new color replacing this colors blue channel with `blue`.
+    #[must_use]
+    pub const fn with_blue(self, blue: u8) -> Self {
+        Self(self.0 & 0xFFFF_00FF | ((blue as u32) << 8))
+    }
+
+    /// Returns a new color replacing this colors alpha channel with `alpha`.
+    #[must_use]
+    pub const fn with_alpha(self, alpha: u8) -> Self {
+        Self(self.0 & 0xFFFF_FF00 | alpha as u32)
     }
 }
 

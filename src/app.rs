@@ -79,6 +79,7 @@ where
     }
 
     /// Returns a reference to the underlying winit window.
+    #[must_use]
     pub fn winit(&self) -> &winit::window::Window {
         self.window.winit()
     }

@@ -57,7 +57,13 @@ fn int_to_rgba(color: u32) -> vec4<f32> {
     let b = (color >> u32(8)) & u32(0xFF);
     let a = color & u32(0xFF);
 
-    return vec4<f32>(f32(r) / 255.0, f32(g) / 255.0, f32(b) / 255.0, f32(a) / 255.0);
+    return srg_to_linear(vec4<f32>(f32(r) / 255.0, f32(g) / 255.0, f32(b) / 255.0, f32(a) / 255.0));
+}
+
+const GAMMA = 2.200000048;
+
+fn srg_to_linear(srgb : vec4<f32>) -> vec4<f32> {
+  return vec4<f32>(pow(srgb.rgb, vec3(GAMMA)), srgb.a);
 }
 
 @vertex
