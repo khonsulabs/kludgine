@@ -275,6 +275,18 @@ where
         Some(Color::BLACK)
     }
 
+    /// Returns the composite alpha mode to use for rendering the wgpu surface
+    /// on the window.
+    ///
+    /// `supported_modes` contains the list of detected alpha modes supported by
+    /// the surface.
+    #[must_use]
+    fn composite_alpha_mode(
+        supported_modes: &[wgpu::CompositeAlphaMode],
+    ) -> wgpu::CompositeAlphaMode {
+        supported_modes[0]
+    }
+
     /// Launches a Kludgine app using this window as the primary window.
     ///
     /// # Errors
@@ -633,7 +645,7 @@ where
             width: window.inner_size().width,
             height: window.inner_size().height,
             present_mode: wgpu::PresentMode::Fifo,
-            alpha_mode: swapchain_capabilities.alpha_modes[0],
+            alpha_mode: T::composite_alpha_mode(&swapchain_capabilities.alpha_modes),
             view_formats: vec![],
         };
         surface.configure(&device, &config);
