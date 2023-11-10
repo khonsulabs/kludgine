@@ -1210,6 +1210,22 @@
 <a href="#1210" id="1210">1210</a>
 <a href="#1211" id="1211">1211</a>
 <a href="#1212" id="1212">1212</a>
+<a href="#1213" id="1213">1213</a>
+<a href="#1214" id="1214">1214</a>
+<a href="#1215" id="1215">1215</a>
+<a href="#1216" id="1216">1216</a>
+<a href="#1217" id="1217">1217</a>
+<a href="#1218" id="1218">1218</a>
+<a href="#1219" id="1219">1219</a>
+<a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
+<a href="#1222" id="1222">1222</a>
+<a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::panic::UnwindSafe;
@@ -1483,8 +1499,21 @@
     ///
     /// The default implementation returns `Some(Color::BLACK)`.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">fn </span>clear_color() -&gt; <span class="prelude-ty">Option</span>&lt;Color&gt; {
+    </span><span class="kw">fn </span>clear_color(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Color&gt; {
         <span class="prelude-val">Some</span>(Color::BLACK)
+    }
+
+    <span class="doccomment">/// Returns the composite alpha mode to use for rendering the wgpu surface
+    /// on the window.
+    ///
+    /// `supported_modes` contains the list of detected alpha modes supported by
+    /// the surface.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">fn </span>composite_alpha_mode(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        supported_modes: <span class="kw-2">&amp;</span>[wgpu::CompositeAlphaMode],
+    ) -&gt; wgpu::CompositeAlphaMode {
+        supported_modes[<span class="number">0</span>]
     }
 
     <span class="doccomment">/// Launches a Kludgine app using this window as the primary window.
@@ -1839,17 +1868,6 @@
         );
         <span class="kw">let </span><span class="kw-2">mut </span>graphics = Graphics::new(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue);
 
-        <span class="kw">let </span>config = wgpu::SurfaceConfiguration {
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: swapchain_format,
-            width: window.inner_size().width,
-            height: window.inner_size().height,
-            present_mode: wgpu::PresentMode::Fifo,
-            alpha_mode: swapchain_capabilities.alpha_modes[<span class="number">0</span>],
-            view_formats: <span class="macro">vec!</span>[],
-        };
-        surface.configure(<span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>config);
-
         <span class="kw">let </span>last_render = Instant::now();
         <span class="kw">let </span>behavior = T::initialize(
             Window {
@@ -1860,6 +1878,17 @@
             <span class="kw-2">&amp;mut </span>graphics,
             context,
         );
+
+        <span class="kw">let </span>config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: swapchain_format,
+            width: window.inner_size().width,
+            height: window.inner_size().height,
+            present_mode: wgpu::PresentMode::Fifo,
+            alpha_mode: behavior.composite_alpha_mode(<span class="kw-2">&amp;</span>swapchain_capabilities.alpha_modes),
+            view_formats: <span class="macro">vec!</span>[],
+        };
+        surface.configure(<span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>config);
 
         <span class="self">Self </span>{
             wgpu,
@@ -1922,9 +1951,12 @@
                     view: <span class="kw-2">&amp;</span>view,
                     resolve_target: <span class="prelude-val">None</span>,
                     ops: wgpu::Operations {
-                        load: T::clear_color().map_or(wgpu::LoadOp::Load, |color| {
-                            wgpu::LoadOp::Clear(color.into())
-                        }),
+                        load: <span class="self">self
+                            </span>.behavior
+                            .clear_color()
+                            .map_or(wgpu::LoadOp::Load, |color| {
+                                wgpu::LoadOp::Clear(color.into())
+                            }),
                         store: wgpu::StoreOp::Store,
                     },
                 })],
