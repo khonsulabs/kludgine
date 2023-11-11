@@ -749,10 +749,82 @@
 <a href="#749" id="749">749</a>
 <a href="#750" id="750">750</a>
 <a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
+<a href="#802" id="802">802</a>
+<a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
+<a href="#806" id="806">806</a>
+<a href="#807" id="807">807</a>
+<a href="#808" id="808">808</a>
+<a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::{Add, Neg};
 
-<span class="kw">use </span>figures::units::UPx;
-<span class="kw">use </span>figures::{FloatConversion, Point, Rect};
+<span class="kw">use </span>figures::units::{Lp, Px, UPx};
+<span class="kw">use </span>figures::{FloatConversion, Point, Rect, ScreenScale};
 <span class="kw">use </span>lyon_tessellation::{
     FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
     GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeTessellator, StrokeVertex,
@@ -1455,6 +1527,26 @@
     }
 }
 
+<span class="kw">impl </span>StrokeOptions&lt;Px&gt; {
+    <span class="doccomment">/// Returns the default options with a line width of `px`.
+    </span><span class="kw">pub fn </span>px_wide(px: <span class="kw">impl </span>Into&lt;Px&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            line_width: px.into(),
+            ..<span class="self">Self</span>::default()
+        }
+    }
+}
+
+<span class="kw">impl </span>StrokeOptions&lt;Lp&gt; {
+    <span class="doccomment">/// Returns the default options with a line width of `lp`.
+    </span><span class="kw">pub fn </span>lp_wide(lp: <span class="kw">impl </span>Into&lt;Lp&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            line_width: lp.into(),
+            ..<span class="self">Self</span>::default()
+        }
+    }
+}
+
 <span class="doccomment">/// Controls the default stroke width for a given unit.
 </span><span class="kw">pub trait </span>DefaultStrokeWidth {
     <span class="doccomment">/// Returns the default width of a line stroked in this unit.
@@ -1475,6 +1567,58 @@
 <span class="kw">impl </span>DefaultStrokeWidth <span class="kw">for </span>figures::units::UPx {
     <span class="kw">fn </span>default_stroke_width() -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(<span class="number">1</span>)
+    }
+}
+
+<span class="kw">impl</span>&lt;Unit&gt; ScreenScale <span class="kw">for </span>StrokeOptions&lt;Unit&gt;
+<span class="kw">where
+    </span>Unit: ScreenScale&lt;Px = Px, Lp = Lp&gt;,
+{
+    <span class="kw">type </span>Lp = StrokeOptions&lt;Lp&gt;;
+    <span class="kw">type </span>Px = StrokeOptions&lt;Px&gt;;
+
+    <span class="kw">fn </span>into_px(<span class="self">self</span>, scale: figures::Fraction) -&gt; <span class="self">Self</span>::Px {
+        StrokeOptions {
+            line_width: <span class="self">self</span>.line_width.into_px(scale),
+            line_join: <span class="self">self</span>.line_join,
+            start_cap: <span class="self">self</span>.start_cap,
+            end_cap: <span class="self">self</span>.end_cap,
+            miter_limit: <span class="self">self</span>.miter_limit,
+            tolerance: <span class="self">self</span>.tolerance,
+        }
+    }
+
+    <span class="kw">fn </span>from_px(px: <span class="self">Self</span>::Px, scale: figures::Fraction) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            line_width: Unit::from_px(px.line_width, scale),
+            line_join: px.line_join,
+            start_cap: px.start_cap,
+            end_cap: px.end_cap,
+            miter_limit: px.miter_limit,
+            tolerance: px.tolerance,
+        }
+    }
+
+    <span class="kw">fn </span>into_lp(<span class="self">self</span>, scale: figures::Fraction) -&gt; <span class="self">Self</span>::Lp {
+        StrokeOptions {
+            line_width: <span class="self">self</span>.line_width.into_lp(scale),
+            line_join: <span class="self">self</span>.line_join,
+            start_cap: <span class="self">self</span>.start_cap,
+            end_cap: <span class="self">self</span>.end_cap,
+            miter_limit: <span class="self">self</span>.miter_limit,
+            tolerance: <span class="self">self</span>.tolerance,
+        }
+    }
+
+    <span class="kw">fn </span>from_lp(lp: <span class="self">Self</span>::Lp, scale: figures::Fraction) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            line_width: Unit::from_lp(lp.line_width, scale),
+            line_join: lp.line_join,
+            start_cap: lp.start_cap,
+            end_cap: lp.end_cap,
+            miter_limit: lp.miter_limit,
+            tolerance: lp.tolerance,
+        }
     }
 }
 
