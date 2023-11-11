@@ -1,7 +1,7 @@
 use std::ops::{Add, Neg};
 
-use figures::units::UPx;
-use figures::{FloatConversion, Point, Rect};
+use figures::units::{Lp, Px, UPx};
+use figures::{FloatConversion, Point, Rect, ScreenScale};
 use lyon_tessellation::{
     FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
     GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeTessellator, StrokeVertex,
@@ -704,6 +704,26 @@ where
     }
 }
 
+impl StrokeOptions<Px> {
+    /// Returns the default options with a line width of `px`.
+    pub fn px_wide(px: impl Into<Px>) -> Self {
+        Self {
+            line_width: px.into(),
+            ..Self::default()
+        }
+    }
+}
+
+impl StrokeOptions<Lp> {
+    /// Returns the default options with a line width of `lp`.
+    pub fn lp_wide(lp: impl Into<Lp>) -> Self {
+        Self {
+            line_width: lp.into(),
+            ..Self::default()
+        }
+    }
+}
+
 /// Controls the default stroke width for a given unit.
 pub trait DefaultStrokeWidth {
     /// Returns the default width of a line stroked in this unit.
@@ -724,6 +744,58 @@ impl DefaultStrokeWidth for figures::units::Px {
 impl DefaultStrokeWidth for figures::units::UPx {
     fn default_stroke_width() -> Self {
         Self(1)
+    }
+}
+
+impl<Unit> ScreenScale for StrokeOptions<Unit>
+where
+    Unit: ScreenScale<Px = Px, Lp = Lp>,
+{
+    type Lp = StrokeOptions<Lp>;
+    type Px = StrokeOptions<Px>;
+
+    fn into_px(self, scale: figures::Fraction) -> Self::Px {
+        StrokeOptions {
+            line_width: self.line_width.into_px(scale),
+            line_join: self.line_join,
+            start_cap: self.start_cap,
+            end_cap: self.end_cap,
+            miter_limit: self.miter_limit,
+            tolerance: self.tolerance,
+        }
+    }
+
+    fn from_px(px: Self::Px, scale: figures::Fraction) -> Self {
+        Self {
+            line_width: Unit::from_px(px.line_width, scale),
+            line_join: px.line_join,
+            start_cap: px.start_cap,
+            end_cap: px.end_cap,
+            miter_limit: px.miter_limit,
+            tolerance: px.tolerance,
+        }
+    }
+
+    fn into_lp(self, scale: figures::Fraction) -> Self::Lp {
+        StrokeOptions {
+            line_width: self.line_width.into_lp(scale),
+            line_join: self.line_join,
+            start_cap: self.start_cap,
+            end_cap: self.end_cap,
+            miter_limit: self.miter_limit,
+            tolerance: self.tolerance,
+        }
+    }
+
+    fn from_lp(lp: Self::Lp, scale: figures::Fraction) -> Self {
+        Self {
+            line_width: Unit::from_lp(lp.line_width, scale),
+            line_join: lp.line_join,
+            start_cap: lp.start_cap,
+            end_cap: lp.end_cap,
+            miter_limit: lp.miter_limit,
+            tolerance: lp.tolerance,
+        }
     }
 }
 
