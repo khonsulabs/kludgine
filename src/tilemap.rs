@@ -5,6 +5,7 @@ use std::ops::{Index, IndexMut};
 use std::panic::{AssertUnwindSafe, UnwindSafe};
 
 use alot::{LotId, OrderedLots};
+use figures::Fraction;
 
 use crate::figures::units::Px;
 use crate::figures::{IntoSigned, Point, Rect, Size};
@@ -15,17 +16,27 @@ use crate::{AnyTexture, Assert, Color};
 
 pub const TILE_SIZE: Px = Px(32);
 
+// At the time of writing, this is is used to translate from
+// tilemap coords to world coords
+// TB: 2023-11-14
+pub fn translate_coordinates(
+    coordinate: Point<Px>,
+    offset: Point<Px>,
+    scale: Fraction,
+    zoom: f32,
+    size: Size<Px>,
+) -> Point<Px> {
+    let center = Point::new(size.width / 2, size.height / 2);
+    let coordinate = coordinate - center;
+    let effective_zoom = scale.into_f32() * zoom;
+    let coordinate = Point::new(coordinate.x / effective_zoom, coordinate.y / effective_zoom);
+    coordinate
+}
+
 pub fn draw(layers: &impl Layers, focus: TileMapFocus, zoom: f32, graphics: &mut Renderer<'_, '_>) {
     let effective_zoom = graphics.scale().into_f32() * zoom;
 
-    let offset = match focus {
-        TileMapFocus::Point(focus) => focus,
-        TileMapFocus::Object { layer, id } => layers
-            .layer(layer)
-            .assert("invalid focus layer")
-            .find_object(id)
-            .assert("focus not found"),
-    };
+    let offset = focus.world_coordinate(layers);
     let offset = Point::new(offset.x * effective_zoom, offset.y * effective_zoom);
 
     let visible_size = graphics.clip_rect().size.into_signed();
@@ -380,6 +391,22 @@ pub struct ObjectInfo<O> {
 pub enum TileMapFocus {
     Point(Point<Px>),
     Object { layer: usize, id: ObjectId },
+}
+
+impl TileMapFocus {
+    // Get the world coordinate of the selected focus.
+    // Zoom in / out etc. will not change the world coordinate.
+    // TB: 2023-11-14
+    pub fn world_coordinate(self, layers: &impl Layers) -> Point<Px> {
+        match self {
+            TileMapFocus::Point(focus) => focus,
+            TileMapFocus::Object { layer, id } => layers
+                .layer(layer)
+                .assert("invalid focus layer")
+                .find_object(id)
+                .assert("focus not found"),
+        }
+    }
 }
 
 impl Default for TileMapFocus {
