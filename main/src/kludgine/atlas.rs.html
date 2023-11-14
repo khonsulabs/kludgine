@@ -453,7 +453,7 @@
                 bytes_per_row: <span class="prelude-val">Some</span>(image.width() * <span class="number">4</span>),
                 rows_per_image: <span class="prelude-val">None</span>,
             },
-            Size::new(image.width(), image.height()),
+            Size::new(UPx(image.width()), UPx(image.height())),
             graphics.queue,
         )
     }

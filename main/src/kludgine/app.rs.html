@@ -1863,7 +1863,7 @@
             <span class="kw-2">&amp;</span>device,
             <span class="kw-2">&amp;</span>queue,
             swapchain_format,
-            Size::new(window.inner_size().width, window.inner_size().height),
+            window.inner_size().into(),
             window.scale().cast::&lt;f32&gt;(),
         );
         <span class="kw">let </span><span class="kw-2">mut </span>graphics = Graphics::new(<span class="kw-2">&amp;mut </span>state, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue);
@@ -2019,7 +2019,7 @@
         <span class="self">self</span>.config.height = window.inner_size().height;
         <span class="self">self</span>.surface.configure(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.config);
         <span class="self">self</span>.kludgine.resize(
-            Size::new(window.inner_size().width, window.inner_size().height),
+            window.inner_size().into(),
             window.scale().cast::&lt;f32&gt;(),
             <span class="kw-2">&amp;</span><span class="self">self</span>.queue,
         );

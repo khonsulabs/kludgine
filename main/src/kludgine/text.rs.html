@@ -727,13 +727,33 @@
 <a href="#727" id="727">727</a>
 <a href="#728" id="728">728</a>
 <a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
 <span class="kw">use </span>std::sync::{Arc, Mutex, PoisonError};
 
 <span class="kw">use </span>cosmic_text::{fontdb, Attrs, AttrsOwned, SwashContent};
-<span class="kw">use </span>figures::units::{Lp, Px};
+<span class="kw">use </span>figures::units::{Lp, Px, UPx};
 <span class="kw">use </span>figures::{Fraction, Point, Rect, ScreenScale, Size};
 <span class="kw">use </span>intentional::Cast;
 <span class="kw">use </span>smallvec::SmallVec;
@@ -889,12 +909,12 @@
 
         <span class="self">Self </span>{
             alpha_text_atlas: TextureCollection::new_generic(
-                Size::new(<span class="number">512</span>, <span class="number">512</span>),
+                Size::new(<span class="number">512</span>, <span class="number">512</span>).cast(),
                 wgpu::TextureFormat::R8Unorm,
                 graphics,
             ),
             color_text_atlas: TextureCollection::new_generic(
-                Size::new(<span class="number">512</span>, <span class="number">512</span>),
+                Size::new(<span class="number">512</span>, <span class="number">512</span>).cast(),
                 wgpu::TextureFormat::Rgba8Unorm,
                 graphics,
             ),
@@ -1183,7 +1203,7 @@
                                     bytes_per_row: <span class="prelude-val">Some</span>(image.placement.width),
                                     rows_per_image: <span class="prelude-val">None</span>,
                                 },
-                                Size::new(image.placement.width, image.placement.height),
+                                Size::new(image.placement.width, image.placement.height).cast(),
                                 queue,
                             ),
                             <span class="bool-val">true</span>,
@@ -1199,7 +1219,7 @@
                                         bytes_per_row: <span class="prelude-val">Some</span>(image.placement.width * <span class="number">4</span>),
                                         rows_per_image: <span class="prelude-val">None</span>,
                                     },
-                                    Size::new(image.placement.width, image.placement.height),
+                                    Size::new(image.placement.width, image.placement.height).cast(),
                                     queue,
                                 ),
                                 <span class="bool-val">false</span>,
@@ -1223,7 +1243,8 @@
                     Size::new(
                         i32::try_from(image.placement.width).expect(<span class="string">&quot;width out of range of i32&quot;</span>),
                         i32::try_from(image.placement.height).expect(<span class="string">&quot;height out of range of i32&quot;</span>),
-                    ),
+                    )
+                    .cast(),
                 ),
                 color,
             );
@@ -1346,10 +1367,11 @@
 
 <span class="kw">impl</span>&lt;Unit&gt; ScreenScale <span class="kw">for </span>TextOrigin&lt;Unit&gt;
 <span class="kw">where
-    </span>Unit: ScreenScale&lt;Px = Px, Lp = Lp&gt;,
+    </span>Unit: ScreenScale&lt;Px = Px, Lp = Lp, UPx = UPx&gt;,
 {
     <span class="kw">type </span>Lp = TextOrigin&lt;Unit::Lp&gt;;
     <span class="kw">type </span>Px = TextOrigin&lt;Unit::Px&gt;;
+    <span class="kw">type </span>UPx = TextOrigin&lt;Unit::UPx&gt;;
 
     <span class="kw">fn </span>into_px(<span class="self">self</span>, scale: Fraction) -&gt; <span class="self">Self</span>::Px {
         <span class="kw">match </span><span class="self">self </span>{
@@ -1384,6 +1406,24 @@
             TextOrigin::Center =&gt; TextOrigin::Center,
             TextOrigin::FirstBaseline =&gt; TextOrigin::FirstBaseline,
             TextOrigin::Custom(pt) =&gt; TextOrigin::Custom(Point::from_lp(pt, scale)),
+        }
+    }
+
+    <span class="kw">fn </span>into_upx(<span class="self">self</span>, scale: Fraction) -&gt; <span class="self">Self</span>::UPx {
+        <span class="kw">match </span><span class="self">self </span>{
+            TextOrigin::TopLeft =&gt; TextOrigin::TopLeft,
+            TextOrigin::Center =&gt; TextOrigin::Center,
+            TextOrigin::FirstBaseline =&gt; TextOrigin::FirstBaseline,
+            TextOrigin::Custom(pt) =&gt; TextOrigin::Custom(pt.into_upx(scale)),
+        }
+    }
+
+    <span class="kw">fn </span>from_upx(px: <span class="self">Self</span>::UPx, scale: Fraction) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>px {
+            TextOrigin::TopLeft =&gt; TextOrigin::TopLeft,
+            TextOrigin::Center =&gt; TextOrigin::Center,
+            TextOrigin::FirstBaseline =&gt; TextOrigin::FirstBaseline,
+            TextOrigin::Custom(px) =&gt; TextOrigin::Custom(Point::from_upx(px, scale)),
         }
     }
 }

@@ -821,6 +821,29 @@
 <a href="#821" id="821">821</a>
 <a href="#822" id="822">822</a>
 <a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::{Add, Neg};
 
 <span class="kw">use </span>figures::units::{Lp, Px, UPx};
@@ -1572,10 +1595,11 @@
 
 <span class="kw">impl</span>&lt;Unit&gt; ScreenScale <span class="kw">for </span>StrokeOptions&lt;Unit&gt;
 <span class="kw">where
-    </span>Unit: ScreenScale&lt;Px = Px, Lp = Lp&gt;,
+    </span>Unit: ScreenScale&lt;Px = Px, Lp = Lp, UPx = UPx&gt;,
 {
     <span class="kw">type </span>Lp = StrokeOptions&lt;Lp&gt;;
     <span class="kw">type </span>Px = StrokeOptions&lt;Px&gt;;
+    <span class="kw">type </span>UPx = StrokeOptions&lt;UPx&gt;;
 
     <span class="kw">fn </span>into_px(<span class="self">self</span>, scale: figures::Fraction) -&gt; <span class="self">Self</span>::Px {
         StrokeOptions {
@@ -1618,6 +1642,28 @@
             end_cap: lp.end_cap,
             miter_limit: lp.miter_limit,
             tolerance: lp.tolerance,
+        }
+    }
+
+    <span class="kw">fn </span>into_upx(<span class="self">self</span>, scale: <span class="kw">crate</span>::Fraction) -&gt; <span class="self">Self</span>::UPx {
+        StrokeOptions {
+            line_width: <span class="self">self</span>.line_width.into_upx(scale),
+            line_join: <span class="self">self</span>.line_join,
+            start_cap: <span class="self">self</span>.start_cap,
+            end_cap: <span class="self">self</span>.end_cap,
+            miter_limit: <span class="self">self</span>.miter_limit,
+            tolerance: <span class="self">self</span>.tolerance,
+        }
+    }
+
+    <span class="kw">fn </span>from_upx(upx: <span class="self">Self</span>::UPx, scale: <span class="kw">crate</span>::Fraction) -&gt; <span class="self">Self </span>{
+        StrokeOptions {
+            line_width: Unit::from_upx(upx.line_width, scale),
+            line_join: upx.line_join,
+            start_cap: upx.start_cap,
+            end_cap: upx.end_cap,
+            miter_limit: upx.miter_limit,
+            tolerance: upx.tolerance,
         }
     }
 }

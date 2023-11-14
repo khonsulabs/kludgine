@@ -2898,7 +2898,7 @@
         </span><span class="kw">let </span>image = image.to_rgba8();
         <span class="self">Self</span>::new_with_data(
             graphics,
-            Size::new(image.width(), image.height()),
+            Size::new(UPx(image.width()), UPx(image.height())),
             wgpu::TextureFormat::Rgba8Unorm,
             wgpu::TextureUsages::TEXTURE_BINDING,
             image.as_raw(),
@@ -2955,7 +2955,7 @@
     <span class="doccomment">/// The size of the texture.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;UPx&gt; {
-        Size::new(<span class="self">self</span>.wgpu.width(), <span class="self">self</span>.wgpu.height())
+        Size::new(UPx(<span class="self">self</span>.wgpu.width()), UPx(<span class="self">self</span>.wgpu.height()))
     }
 
     <span class="doccomment">/// The format of the texture.
