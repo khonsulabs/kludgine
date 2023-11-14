@@ -26,7 +26,7 @@ impl WindowBehavior for Test {
         _context: Self::Context,
     ) -> Self {
         let mut textures = TextureCollection::new(
-            Size::new(1024, 1024),
+            Size::new(1024, 1024).cast(),
             wgpu::TextureFormat::Rgba8UnormSrgb,
             graphics,
         );
@@ -49,7 +49,7 @@ impl WindowBehavior for Test {
             ),
             graphics,
         );
-        let atlas = textures.prepare_entire_colection(Size::new(256, 256).into(), graphics);
+        let atlas = textures.prepare_entire_colection(Size::new(256, 256).cast().into(), graphics);
 
         Self {
             atlas,

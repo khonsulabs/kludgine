@@ -749,10 +749,11 @@ impl DefaultStrokeWidth for figures::units::UPx {
 
 impl<Unit> ScreenScale for StrokeOptions<Unit>
 where
-    Unit: ScreenScale<Px = Px, Lp = Lp>,
+    Unit: ScreenScale<Px = Px, Lp = Lp, UPx = UPx>,
 {
     type Lp = StrokeOptions<Lp>;
     type Px = StrokeOptions<Px>;
+    type UPx = StrokeOptions<UPx>;
 
     fn into_px(self, scale: figures::Fraction) -> Self::Px {
         StrokeOptions {
@@ -795,6 +796,28 @@ where
             end_cap: lp.end_cap,
             miter_limit: lp.miter_limit,
             tolerance: lp.tolerance,
+        }
+    }
+
+    fn into_upx(self, scale: crate::Fraction) -> Self::UPx {
+        StrokeOptions {
+            line_width: self.line_width.into_upx(scale),
+            line_join: self.line_join,
+            start_cap: self.start_cap,
+            end_cap: self.end_cap,
+            miter_limit: self.miter_limit,
+            tolerance: self.tolerance,
+        }
+    }
+
+    fn from_upx(upx: Self::UPx, scale: crate::Fraction) -> Self {
+        StrokeOptions {
+            line_width: Unit::from_upx(upx.line_width, scale),
+            line_join: upx.line_join,
+            start_cap: upx.start_cap,
+            end_cap: upx.end_cap,
+            miter_limit: upx.miter_limit,
+            tolerance: upx.tolerance,
         }
     }
 }

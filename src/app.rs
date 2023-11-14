@@ -635,7 +635,7 @@ where
             &device,
             &queue,
             swapchain_format,
-            Size::new(window.inner_size().width, window.inner_size().height),
+            window.inner_size().into(),
             window.scale().cast::<f32>(),
         );
         let mut graphics = Graphics::new(&mut state, &device, &queue);
@@ -791,7 +791,7 @@ where
         self.config.height = window.inner_size().height;
         self.surface.configure(&self.device, &self.config);
         self.kludgine.resize(
-            Size::new(window.inner_size().width, window.inner_size().height),
+            window.inner_size().into(),
             window.scale().cast::<f32>(),
             &self.queue,
         );

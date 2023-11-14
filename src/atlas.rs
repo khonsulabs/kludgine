@@ -157,7 +157,7 @@ impl TextureCollection {
                 bytes_per_row: Some(image.width() * 4),
                 rows_per_image: None,
             },
-            Size::new(image.width(), image.height()),
+            Size::new(UPx(image.width()), UPx(image.height())),
             graphics.queue,
         )
     }

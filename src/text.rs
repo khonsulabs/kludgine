@@ -4,7 +4,7 @@ use std::fmt::{self, Debug};
 use std::sync::{Arc, Mutex, PoisonError};
 
 use cosmic_text::{fontdb, Attrs, AttrsOwned, SwashContent};
-use figures::units::{Lp, Px};
+use figures::units::{Lp, Px, UPx};
 use figures::{Fraction, Point, Rect, ScreenScale, Size};
 use intentional::Cast;
 use smallvec::SmallVec;
@@ -160,12 +160,12 @@ impl TextSystem {
 
         Self {
             alpha_text_atlas: TextureCollection::new_generic(
-                Size::new(512, 512),
+                Size::new(512, 512).cast(),
                 wgpu::TextureFormat::R8Unorm,
                 graphics,
             ),
             color_text_atlas: TextureCollection::new_generic(
-                Size::new(512, 512),
+                Size::new(512, 512).cast(),
                 wgpu::TextureFormat::Rgba8Unorm,
                 graphics,
             ),
@@ -454,7 +454,7 @@ pub(crate) fn map_each_glyph(
                                     bytes_per_row: Some(image.placement.width),
                                     rows_per_image: None,
                                 },
-                                Size::new(image.placement.width, image.placement.height),
+                                Size::new(image.placement.width, image.placement.height).cast(),
                                 queue,
                             ),
                             true,
@@ -470,7 +470,7 @@ pub(crate) fn map_each_glyph(
                                         bytes_per_row: Some(image.placement.width * 4),
                                         rows_per_image: None,
                                     },
-                                    Size::new(image.placement.width, image.placement.height),
+                                    Size::new(image.placement.width, image.placement.height).cast(),
                                     queue,
                                 ),
                                 false,
@@ -494,7 +494,8 @@ pub(crate) fn map_each_glyph(
                     Size::new(
                         i32::try_from(image.placement.width).expect("width out of range of i32"),
                         i32::try_from(image.placement.height).expect("height out of range of i32"),
-                    ),
+                    )
+                    .cast(),
                 ),
                 color,
             );
@@ -617,10 +618,11 @@ pub enum TextOrigin<Unit> {
 
 impl<Unit> ScreenScale for TextOrigin<Unit>
 where
-    Unit: ScreenScale<Px = Px, Lp = Lp>,
+    Unit: ScreenScale<Px = Px, Lp = Lp, UPx = UPx>,
 {
     type Lp = TextOrigin<Unit::Lp>;
     type Px = TextOrigin<Unit::Px>;
+    type UPx = TextOrigin<Unit::UPx>;
 
     fn into_px(self, scale: Fraction) -> Self::Px {
         match self {
@@ -655,6 +657,24 @@ where
             TextOrigin::Center => TextOrigin::Center,
             TextOrigin::FirstBaseline => TextOrigin::FirstBaseline,
             TextOrigin::Custom(pt) => TextOrigin::Custom(Point::from_lp(pt, scale)),
+        }
+    }
+
+    fn into_upx(self, scale: Fraction) -> Self::UPx {
+        match self {
+            TextOrigin::TopLeft => TextOrigin::TopLeft,
+            TextOrigin::Center => TextOrigin::Center,
+            TextOrigin::FirstBaseline => TextOrigin::FirstBaseline,
+            TextOrigin::Custom(pt) => TextOrigin::Custom(pt.into_upx(scale)),
+        }
+    }
+
+    fn from_upx(px: Self::UPx, scale: Fraction) -> Self {
+        match px {
+            TextOrigin::TopLeft => TextOrigin::TopLeft,
+            TextOrigin::Center => TextOrigin::Center,
+            TextOrigin::FirstBaseline => TextOrigin::FirstBaseline,
+            TextOrigin::Custom(px) => TextOrigin::Custom(Point::from_upx(px, scale)),
         }
     }
 }

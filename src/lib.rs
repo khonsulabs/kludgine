@@ -1260,7 +1260,7 @@ impl Texture {
         let image = image.to_rgba8();
         Self::new_with_data(
             graphics,
-            Size::new(image.width(), image.height()),
+            Size::new(UPx(image.width()), UPx(image.height())),
             wgpu::TextureFormat::Rgba8Unorm,
             wgpu::TextureUsages::TEXTURE_BINDING,
             image.as_raw(),
@@ -1317,7 +1317,7 @@ impl Texture {
     /// The size of the texture.
     #[must_use]
     pub fn size(&self) -> Size<UPx> {
-        Size::new(self.wgpu.width(), self.wgpu.height())
+        Size::new(UPx(self.wgpu.width()), UPx(self.wgpu.height()))
     }
 
     /// The format of the texture.

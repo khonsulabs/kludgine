@@ -23,7 +23,7 @@ impl WindowBehavior for Test {
     ) -> Self {
         let prerendered = Texture::new(
             graphics,
-            Size::new(512, 512),
+            Size::new(512, 512).cast(),
             wgpu::TextureFormat::Bgra8Unorm,
             wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT,
         );
@@ -31,7 +31,7 @@ impl WindowBehavior for Test {
             graphics.device(),
             graphics.queue(),
             prerendered.format(),
-            Size::new(512, 512),
+            Size::new(512, 512).cast(),
             1.0,
         );
         let mut frame = kludgine.next_frame();
@@ -65,7 +65,7 @@ impl WindowBehavior for Test {
         frame.submit(graphics.queue());
 
         Self {
-            prepared: prerendered.prepare(Size::new(400, 400).into(), graphics),
+            prepared: prerendered.prepare(Size::new(400, 400).cast().into(), graphics),
         }
     }
 
