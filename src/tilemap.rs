@@ -19,9 +19,9 @@ pub const TILE_SIZE: Px = Px(32);
 // At the time of writing, this is is used to translate from
 // tilemap coords to world coords
 // TB: 2023-11-14
+#[must_use]
 pub fn translate_coordinates(
     coordinate: Point<Px>,
-    offset: Point<Px>,
     scale: Fraction,
     zoom: f32,
     size: Size<Px>,
@@ -29,8 +29,7 @@ pub fn translate_coordinates(
     let center = Point::new(size.width / 2, size.height / 2);
     let coordinate = coordinate - center;
     let effective_zoom = scale.into_f32() * zoom;
-    let coordinate = Point::new(coordinate.x / effective_zoom, coordinate.y / effective_zoom);
-    coordinate
+    Point::new(coordinate.x / effective_zoom, coordinate.y / effective_zoom)
 }
 
 pub fn draw(layers: &impl Layers, focus: TileMapFocus, zoom: f32, graphics: &mut Renderer<'_, '_>) {
