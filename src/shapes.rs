@@ -656,6 +656,7 @@ where
 }
 
 /// Options for stroking lines on a path.
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct StrokeOptions<Unit> {
     /// The width of the line.
     pub line_width: Unit,
