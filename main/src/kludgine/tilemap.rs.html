@@ -418,7 +418,6 @@
 <a href="#418" id="418">418</a>
 <a href="#419" id="419">419</a>
 <a href="#420" id="420">420</a>
-<a href="#421" id="421">421</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(missing_docs, clippy::missing_panics_doc)] </span><span class="comment">// This file is a work in progress.
 
 </span><span class="kw">use </span>std::fmt::Debug;
@@ -440,9 +439,9 @@
 <span class="comment">// At the time of writing, this is is used to translate from
 // tilemap coords to world coords
 // TB: 2023-11-14
+</span><span class="attr">#[must_use]
 </span><span class="kw">pub fn </span>translate_coordinates(
     coordinate: Point&lt;Px&gt;,
-    offset: Point&lt;Px&gt;,
     scale: Fraction,
     zoom: f32,
     size: Size&lt;Px&gt;,
@@ -450,8 +449,7 @@
     <span class="kw">let </span>center = Point::new(size.width / <span class="number">2</span>, size.height / <span class="number">2</span>);
     <span class="kw">let </span>coordinate = coordinate - center;
     <span class="kw">let </span>effective_zoom = scale.into_f32() * zoom;
-    <span class="kw">let </span>coordinate = Point::new(coordinate.x / effective_zoom, coordinate.y / effective_zoom);
-    coordinate
+    Point::new(coordinate.x / effective_zoom, coordinate.y / effective_zoom)
 }
 
 <span class="kw">pub fn </span>draw(layers: <span class="kw-2">&amp;</span><span class="kw">impl </span>Layers, focus: TileMapFocus, zoom: f32, graphics: <span class="kw-2">&amp;mut </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;) {

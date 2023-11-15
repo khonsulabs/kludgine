@@ -844,6 +844,7 @@
 <a href="#844" id="844">844</a>
 <a href="#845" id="845">845</a>
 <a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::{Add, Neg};
 
 <span class="kw">use </span>figures::units::{Lp, Px, UPx};
@@ -1502,6 +1503,7 @@
 }
 
 <span class="doccomment">/// Options for stroking lines on a path.
+</span><span class="attr">#[derive(Clone, Copy, Debug, PartialEq)]
 </span><span class="kw">pub struct </span>StrokeOptions&lt;Unit&gt; {
     <span class="doccomment">/// The width of the line.
     </span><span class="kw">pub </span>line_width: Unit,
