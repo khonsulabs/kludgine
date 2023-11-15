@@ -3,7 +3,7 @@ use std::collections::{hash_map, HashMap};
 use std::fmt::{self, Debug};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use cosmic_text::{fontdb, Attrs, AttrsOwned, SwashContent};
+use cosmic_text::{fontdb, Attrs, AttrsOwned, LayoutGlyph, SwashContent};
 use figures::units::{Lp, Px, UPx};
 use figures::{Fraction, Point, Rect, ScreenScale, Size};
 use intentional::Cast;
@@ -362,7 +362,7 @@ impl<'gfx> Graphics<'gfx> {
             self.kludgine,
             self.queue,
             &mut glyphs,
-            |blit, cached, _is_first_line, _baseline| {
+            |blit, cached, _glyph, _is_first_line, _baseline| {
                 let corners: [u16; 4] =
                     array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
                 let start_index = u32::try_from(indices.len()).assert("too many drawn indices");
@@ -405,7 +405,7 @@ pub(crate) fn map_each_glyph(
     kludgine: &mut Kludgine,
     queue: &wgpu::Queue,
     glyphs: &mut HashMap<PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher>,
-    mut map: impl for<'a> FnMut(TextureBlit<Px>, &'a CachedGlyphHandle, bool, Px),
+    mut map: impl for<'a> FnMut(TextureBlit<Px>, &'a CachedGlyphHandle, &'a LayoutGlyph, bool, Px),
 ) {
     let metrics = buffer
         .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"))
@@ -499,7 +499,13 @@ pub(crate) fn map_each_glyph(
                 ),
                 color,
             );
-            map(blit, &cached, run.line_i == 0, Px::from(relative_to.y));
+            map(
+                blit,
+                &cached,
+                glyph,
+                run.line_i == 0,
+                Px::from(relative_to.y),
+            );
 
             glyphs
                 .entry(physical.cache_key.into())
@@ -532,7 +538,7 @@ where
         kludgine,
         queue,
         glyphs,
-        |blit, cached, is_first_line, baseline| {
+        |blit, cached, glyph, is_first_line, baseline| {
             last_baseline = last_baseline.max(baseline);
             min = min.min(blit.top_left().location);
             max = max.max(blit.bottom_right().location);
@@ -540,7 +546,12 @@ where
                 first_line_max_y = first_line_max_y.max(blit.bottom_right().location.y);
             }
             if COLLECT_GLYPHS {
-                measured_glyphs.push((blit, cached.clone(), is_first_line));
+                measured_glyphs.push(MeasuredGlyph {
+                    blit,
+                    cached: cached.clone(),
+                    is_first_line,
+                    info: GlyphInfo::from(glyph),
+                });
             }
         },
     );
@@ -692,7 +703,61 @@ pub struct MeasuredText<Unit> {
     pub line_height: Unit,
     /// The total size of the measured text, encompassing all lines.
     pub size: Size<Unit>,
-    pub(crate) glyphs: Vec<(TextureBlit<Px>, CachedGlyphHandle, bool)>,
+    pub(crate) glyphs: Vec<MeasuredGlyph>,
+}
+
+/// Instructions for drawing a laid out glyph.
+#[derive(Clone)]
+pub struct MeasuredGlyph {
+    pub(crate) blit: TextureBlit<Px>,
+    pub(crate) cached: CachedGlyphHandle,
+    pub(crate) is_first_line: bool,
+    /// Information about what glyph this is.
+    pub info: GlyphInfo,
+}
+
+impl Debug for MeasuredGlyph {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("MeasuredGlyph")
+            .field("blit", &self.blit)
+            .field("info", &self.info)
+            .finish_non_exhaustive()
+    }
+}
+
+impl MeasuredGlyph {
+    /// Returns the destination rectangle for this glyph.
+    #[must_use]
+    pub fn rect(&self) -> Rect<Px> {
+        Rect::from_extents(
+            self.blit.top_left().location,
+            self.blit.bottom_right().location,
+        )
+    }
+}
+
+/// Information about a glyph in a [`MeasuredText`].
+#[derive(Debug, Clone, Copy)]
+pub struct GlyphInfo {
+    /// Start index of cluster in original line
+    pub start: usize,
+    /// End index of cluster in original line
+    pub end: usize,
+    /// Unicode BiDi embedding level, character is left-to-right if `level` is divisible by 2
+    pub level: unicode_bidi::Level,
+    /// Custom metadata set in [`cosmic_text::Attrs`].
+    pub metadata: usize,
+}
+
+impl From<&LayoutGlyph> for GlyphInfo {
+    fn from(glyph: &LayoutGlyph) -> Self {
+        Self {
+            start: glyph.start,
+            end: glyph.end,
+            metadata: glyph.metadata,
+            level: glyph.level,
+        }
+    }
 }
 
 /// A text drawing command.

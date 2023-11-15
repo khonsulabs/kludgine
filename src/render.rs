@@ -274,7 +274,8 @@ mod text {
     };
     use crate::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
     use crate::text::{
-        map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, Text, TextOrigin,
+        map_each_glyph, measure_text, CachedGlyphHandle, MeasuredGlyph, MeasuredText, Text,
+        TextOrigin,
     };
     use crate::{DefaultHasher, TextureBlit, VertexCollection};
 
@@ -398,7 +399,13 @@ mod text {
                 TextOrigin::FirstBaseline => Point::new(Px(0), text.ascent.into_px(scaling_factor)),
                 TextOrigin::Custom(offset) => offset.into_px(scaling_factor).cast(),
             };
-            for (blit, cached, _is_first_line) in &text.glyphs {
+            for MeasuredGlyph {
+                blit,
+                cached,
+                is_first_line: _is_first_line,
+                ..
+            } in &text.glyphs
+            {
                 let mut blit = *blit;
                 blit.translate_by(-origin);
                 render_one_glyph(
@@ -437,7 +444,7 @@ mod text {
                 self.graphics.kludgine,
                 queue,
                 &mut self.data.glyphs,
-                |blit, cached, _is_first_line, _baseline| {
+                |blit, cached, _glyph, _is_first_line, _baseline| {
                     render_one_glyph(
                         translation,
                         rotation,
