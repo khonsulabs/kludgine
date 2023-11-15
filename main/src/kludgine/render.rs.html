@@ -693,6 +693,13 @@
 <a href="#693" id="693">693</a>
 <a href="#694" id="694">694</a>
 <a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
@@ -969,7 +976,8 @@
     };
     <span class="kw">use </span><span class="kw">crate</span>::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
     <span class="kw">use </span><span class="kw">crate</span>::text::{
-        map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, Text, TextOrigin,
+        map_each_glyph, measure_text, CachedGlyphHandle, MeasuredGlyph, MeasuredText, Text,
+        TextOrigin,
     };
     <span class="kw">use crate</span>::{DefaultHasher, TextureBlit, VertexCollection};
 
@@ -1093,7 +1101,13 @@
                 TextOrigin::FirstBaseline =&gt; Point::new(Px(<span class="number">0</span>), text.ascent.into_px(scaling_factor)),
                 TextOrigin::Custom(offset) =&gt; offset.into_px(scaling_factor).cast(),
             };
-            <span class="kw">for </span>(blit, cached, _is_first_line) <span class="kw">in </span><span class="kw-2">&amp;</span>text.glyphs {
+            <span class="kw">for </span>MeasuredGlyph {
+                blit,
+                cached,
+                is_first_line: _is_first_line,
+                ..
+            } <span class="kw">in </span><span class="kw-2">&amp;</span>text.glyphs
+            {
                 <span class="kw">let </span><span class="kw-2">mut </span>blit = <span class="kw-2">*</span>blit;
                 blit.translate_by(-origin);
                 render_one_glyph(
@@ -1132,7 +1146,7 @@
                 <span class="self">self</span>.graphics.kludgine,
                 queue,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.glyphs,
-                |blit, cached, _is_first_line, _baseline| {
+                |blit, cached, _glyph, _is_first_line, _baseline| {
                     render_one_glyph(
                         translation,
                         rotation,
