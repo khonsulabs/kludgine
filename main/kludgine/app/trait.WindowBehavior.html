@@ -1,6 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The behavior of a window."><title>WindowBehavior in kludgine::app - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../../kludgine/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../../kludgine/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">WindowBehavior</a></h2><div class="sidebar-elems"><section><h3><a href="#required-associated-types">Required Associated Types</a></h3><ul class="block"><li><a href="#associatedtype.Context">Context</a></li></ul><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.initialize">initialize</a></li><li><a href="#tymethod.render">render</a></li></ul><h3><a href="#provided-methods">Provided Methods</a></h3><ul class="block"><li><a href="#method.axis_motion">axis_motion</a></li><li><a href="#method.clear_color">clear_color</a></li><li><a href="#method.close_requested">close_requested</a></li><li><a href="#method.composite_alpha_mode">composite_alpha_mode</a></li><li><a href="#method.cursor_entered">cursor_entered</a></li><li><a href="#method.cursor_left">cursor_left</a></li><li><a href="#method.cursor_moved">cursor_moved</a></li><li><a href="#method.dropped_file">dropped_file</a></li><li><a href="#method.event">event</a></li><li><a href="#method.focus_changed">focus_changed</a></li><li><a href="#method.hovered_file">hovered_file</a></li><li><a href="#method.hovered_file_cancelled">hovered_file_cancelled</a></li><li><a href="#method.ime">ime</a></li><li><a href="#method.initial_window_attributes">initial_window_attributes</a></li><li><a href="#method.keyboard_input">keyboard_input</a></li><li><a href="#method.limits">limits</a></li><li><a href="#method.modifiers_changed">modifiers_changed</a></li><li><a href="#method.mouse_input">mouse_input</a></li><li><a href="#method.mouse_wheel">mouse_wheel</a></li><li><a href="#method.occlusion_changed">occlusion_changed</a></li><li><a href="#method.power_preference">power_preference</a></li><li><a href="#method.prepare">prepare</a></li><li><a href="#method.received_character">received_character</a></li><li><a href="#method.resized">resized</a></li><li><a href="#method.run">run</a></li><li><a href="#method.run_with">run_with</a></li><li><a href="#method.scale_factor_changed">scale_factor_changed</a></li><li><a href="#method.smart_magnify">smart_magnify</a></li><li><a href="#method.theme_changed">theme_changed</a></li><li><a href="#method.touch">touch</a></li><li><a href="#method.touchpad_magnify">touchpad_magnify</a></li><li><a href="#method.touchpad_pressure">touchpad_pressure</a></li><li><a href="#method.touchpad_rotate">touchpad_rotate</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><h2><a href="index.html">In kludgine::app</a></h2></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Trait <a href="../index.html">kludgine</a>::<wbr><a href="index.html">app</a>::<wbr><a class="trait" href="#">WindowBehavior</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../../src/kludgine/app.rs.html#215-544">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><pre class="rust item-decl"><code>pub trait WindowBehavior&lt;WindowEvent = <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.unit.html">()</a>&gt;: <a class="trait" href="https://doc.rust-lang.org/1.73.0/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + 'static<span class="where fmt-newline">where
-    WindowEvent: <a class="trait" href="https://doc.rust-lang.org/1.73.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'static,</span>{
-    type <a href="#associatedtype.Context" class="associatedtype">Context</a>: <a class="trait" href="https://doc.rust-lang.org/1.73.0/core/panic/unwind_safe/trait.UnwindSafe.html" title="trait core::panic::unwind_safe::UnwindSafe">UnwindSafe</a> + <a class="trait" href="https://doc.rust-lang.org/1.73.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'static;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="The behavior of a window."><title>WindowBehavior in kludgine::app - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0 (79e9716c9 2023-11-13)" data-channel="1.74.0" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../../kludgine/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a></nav><nav class="sidebar"><a class="logo-container" href="../../kludgine/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">WindowBehavior</a></h2><div class="sidebar-elems"><section><h3><a href="#required-associated-types">Required Associated Types</a></h3><ul class="block"><li><a href="#associatedtype.Context">Context</a></li></ul><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.initialize">initialize</a></li><li><a href="#tymethod.render">render</a></li></ul><h3><a href="#provided-methods">Provided Methods</a></h3><ul class="block"><li><a href="#method.axis_motion">axis_motion</a></li><li><a href="#method.clear_color">clear_color</a></li><li><a href="#method.close_requested">close_requested</a></li><li><a href="#method.composite_alpha_mode">composite_alpha_mode</a></li><li><a href="#method.cursor_entered">cursor_entered</a></li><li><a href="#method.cursor_left">cursor_left</a></li><li><a href="#method.cursor_moved">cursor_moved</a></li><li><a href="#method.dropped_file">dropped_file</a></li><li><a href="#method.event">event</a></li><li><a href="#method.focus_changed">focus_changed</a></li><li><a href="#method.hovered_file">hovered_file</a></li><li><a href="#method.hovered_file_cancelled">hovered_file_cancelled</a></li><li><a href="#method.ime">ime</a></li><li><a href="#method.initial_window_attributes">initial_window_attributes</a></li><li><a href="#method.keyboard_input">keyboard_input</a></li><li><a href="#method.limits">limits</a></li><li><a href="#method.modifiers_changed">modifiers_changed</a></li><li><a href="#method.mouse_input">mouse_input</a></li><li><a href="#method.mouse_wheel">mouse_wheel</a></li><li><a href="#method.occlusion_changed">occlusion_changed</a></li><li><a href="#method.power_preference">power_preference</a></li><li><a href="#method.prepare">prepare</a></li><li><a href="#method.received_character">received_character</a></li><li><a href="#method.resized">resized</a></li><li><a href="#method.run">run</a></li><li><a href="#method.run_with">run_with</a></li><li><a href="#method.scale_factor_changed">scale_factor_changed</a></li><li><a href="#method.smart_magnify">smart_magnify</a></li><li><a href="#method.theme_changed">theme_changed</a></li><li><a href="#method.touch">touch</a></li><li><a href="#method.touchpad_magnify">touchpad_magnify</a></li><li><a href="#method.touchpad_pressure">touchpad_pressure</a></li><li><a href="#method.touchpad_rotate">touchpad_rotate</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><h2><a href="index.html">In kludgine::app</a></h2></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Trait <a href="../index.html">kludgine</a>::<wbr><a href="index.html">app</a>::<wbr><a class="trait" href="#">WindowBehavior</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../../src/kludgine/app.rs.html#215-544">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><pre class="rust item-decl"><code>pub trait WindowBehavior&lt;WindowEvent = <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.unit.html">()</a>&gt;: <a class="trait" href="https://doc.rust-lang.org/1.74.0/core/marker/trait.Sized.html" title="trait core::marker::Sized">Sized</a> + 'static<span class="where fmt-newline">where
+    WindowEvent: <a class="trait" href="https://doc.rust-lang.org/1.74.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'static,</span>{
+    type <a href="#associatedtype.Context" class="associatedtype">Context</a>: <a class="trait" href="https://doc.rust-lang.org/1.74.0/core/panic/unwind_safe/trait.UnwindSafe.html" title="trait core::panic::unwind_safe::UnwindSafe">UnwindSafe</a> + <a class="trait" href="https://doc.rust-lang.org/1.74.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'static;
 
 <details class="toggle type-contents-toggle"><summary class="hideme"><span>Show 35 methods</span></summary>    // Required methods
     fn <a href="#tymethod.initialize" class="fn">initialize</a>(
@@ -12,7 +12,7 @@
         &amp;'pass mut self,
         window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
         graphics: &amp;mut <a class="struct" href="../struct.RenderingGraphics.html" title="struct kludgine::RenderingGraphics">RenderingGraphics</a>&lt;'_, 'pass&gt;
-    ) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.bool.html">bool</a>;
+    ) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.bool.html">bool</a>;
 
     // Provided methods
     fn <a href="#method.initial_window_attributes" class="fn">initial_window_attributes</a>(
@@ -25,19 +25,19 @@
     ) { ... }
 <span class="item-spacer"></span>    fn <a href="#method.power_preference" class="fn">power_preference</a>() -&gt; PowerPreference { ... }
 <span class="item-spacer"></span>    fn <a href="#method.limits" class="fn">limits</a>(adapter_limits: Limits) -&gt; Limits { ... }
-<span class="item-spacer"></span>    fn <a href="#method.clear_color" class="fn">clear_color</a>(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.73.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../struct.Color.html" title="struct kludgine::Color">Color</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.clear_color" class="fn">clear_color</a>(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.74.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../struct.Color.html" title="struct kludgine::Color">Color</a>&gt; { ... }
 <span class="item-spacer"></span>    fn <a href="#method.composite_alpha_mode" class="fn">composite_alpha_mode</a>(
         &amp;self,
         supported_modes: &amp;[CompositeAlphaMode]
     ) -&gt; CompositeAlphaMode { ... }
-<span class="item-spacer"></span>    fn <a href="#method.run" class="fn">run</a>() -&gt; <a class="enum" href="https://doc.rust-lang.org/1.73.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.unit.html">()</a>, EventLoopError&gt;
-       <span class="where">where Self::<a class="associatedtype" href="trait.WindowBehavior.html#associatedtype.Context" title="type kludgine::app::WindowBehavior::Context">Context</a>: <a class="trait" href="https://doc.rust-lang.org/1.73.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a></span> { ... }
-<span class="item-spacer"></span>    fn <a href="#method.run_with" class="fn">run_with</a>(context: Self::<a class="associatedtype" href="trait.WindowBehavior.html#associatedtype.Context" title="type kludgine::app::WindowBehavior::Context">Context</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.73.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.unit.html">()</a>, EventLoopError&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.run" class="fn">run</a>() -&gt; <a class="enum" href="https://doc.rust-lang.org/1.74.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.unit.html">()</a>, EventLoopError&gt;
+       <span class="where">where Self::<a class="associatedtype" href="trait.WindowBehavior.html#associatedtype.Context" title="type kludgine::app::WindowBehavior::Context">Context</a>: <a class="trait" href="https://doc.rust-lang.org/1.74.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a></span> { ... }
+<span class="item-spacer"></span>    fn <a href="#method.run_with" class="fn">run_with</a>(context: Self::<a class="associatedtype" href="trait.WindowBehavior.html#associatedtype.Context" title="type kludgine::app::WindowBehavior::Context">Context</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.74.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.unit.html">()</a>, EventLoopError&gt; { ... }
 <span class="item-spacer"></span>    fn <a href="#method.close_requested" class="fn">close_requested</a>(
         &amp;mut self,
         window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
         kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>
-    ) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.bool.html">bool</a> { ... }
+    ) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.bool.html">bool</a> { ... }
 <span class="item-spacer"></span>    fn <a href="#method.focus_changed" class="fn">focus_changed</a>(
         &amp;mut self,
         window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
@@ -67,13 +67,13 @@
         &amp;mut self,
         window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
         kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
-        path: <a class="struct" href="https://doc.rust-lang.org/1.73.0/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>
+        path: <a class="struct" href="https://doc.rust-lang.org/1.74.0/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>
     ) { ... }
 <span class="item-spacer"></span>    fn <a href="#method.hovered_file" class="fn">hovered_file</a>(
         &amp;mut self,
         window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
         kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
-        path: <a class="struct" href="https://doc.rust-lang.org/1.73.0/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>
+        path: <a class="struct" href="https://doc.rust-lang.org/1.74.0/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>
     ) { ... }
 <span class="item-spacer"></span>    fn <a href="#method.hovered_file_cancelled" class="fn">hovered_file_cancelled</a>(
         &amp;mut self,
@@ -84,7 +84,7 @@
         &amp;mut self,
         window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
         kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
-        char: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.char.html">char</a>
+        char: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.char.html">char</a>
     ) { ... }
 <span class="item-spacer"></span>    fn <a href="#method.keyboard_input" class="fn">keyboard_input</a>(
         &amp;mut self,
@@ -92,7 +92,7 @@
         kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
         device_id: DeviceId,
         input: KeyEvent,
-        is_synthetic: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.bool.html">bool</a>
+        is_synthetic: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.bool.html">bool</a>
     ) { ... }
 <span class="item-spacer"></span>    fn <a href="#method.modifiers_changed" class="fn">modifiers_changed</a>(
         &amp;mut self,
@@ -110,7 +110,7 @@
         window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
         kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
         device_id: DeviceId,
-        position: PhysicalPosition&lt;<a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.f64.html">f64</a>&gt;
+        position: PhysicalPosition&lt;<a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.f64.html">f64</a>&gt;
     ) { ... }
 <span class="item-spacer"></span>    fn <a href="#method.cursor_entered" class="fn">cursor_entered</a>(
         &amp;mut self,
@@ -145,8 +145,8 @@
         window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
         kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
         device_id: DeviceId,
-        pressure: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.f32.html">f32</a>,
-        stage: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.i64.html">i64</a>
+        pressure: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.f32.html">f32</a>,
+        stage: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.i64.html">i64</a>
     ) { ... }
 <span class="item-spacer"></span>    fn <a href="#method.axis_motion" class="fn">axis_motion</a>(
         &amp;mut self,
@@ -154,7 +154,7 @@
         kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
         device_id: DeviceId,
         axis: AxisId,
-        value: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.f64.html">f64</a>
+        value: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.f64.html">f64</a>
     ) { ... }
 <span class="item-spacer"></span>    fn <a href="#method.touch" class="fn">touch</a>(
         &amp;mut self,
@@ -167,7 +167,7 @@
         window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
         kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
         device_id: DeviceId,
-        delta: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.f64.html">f64</a>,
+        delta: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.f64.html">f64</a>,
         phase: TouchPhase
     ) { ... }
 <span class="item-spacer"></span>    fn <a href="#method.smart_magnify" class="fn">smart_magnify</a>(
@@ -181,7 +181,7 @@
         window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
         kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
         device_id: DeviceId,
-        delta: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.f32.html">f32</a>,
+        delta: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.f32.html">f32</a>,
         phase: TouchPhase
     ) { ... }
 <span class="item-spacer"></span>    fn <a href="#method.event" class="fn">event</a>(
@@ -191,7 +191,7 @@
         event: WindowEvent
     ) { ... }
 </details>}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>The behavior of a window.</p>
-</div></details><h2 id="required-associated-types" class="small-section-header">Required Associated Types<a href="#required-associated-types" class="anchor">§</a></h2><div class="methods"><details class="toggle" open><summary><section id="associatedtype.Context" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#226">source</a><h4 class="code-header">type <a href="#associatedtype.Context" class="associatedtype">Context</a>: <a class="trait" href="https://doc.rust-lang.org/1.73.0/core/panic/unwind_safe/trait.UnwindSafe.html" title="trait core::panic::unwind_safe::UnwindSafe">UnwindSafe</a> + <a class="trait" href="https://doc.rust-lang.org/1.73.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'static</h4></section></summary><div class="docblock"><p>The type of value provided during <a href="trait.WindowBehavior.html#tymethod.initialize"><code>initialize()</code></a>.</p>
+</div></details><h2 id="required-associated-types" class="small-section-header">Required Associated Types<a href="#required-associated-types" class="anchor">§</a></h2><div class="methods"><details class="toggle" open><summary><section id="associatedtype.Context" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#226">source</a><h4 class="code-header">type <a href="#associatedtype.Context" class="associatedtype">Context</a>: <a class="trait" href="https://doc.rust-lang.org/1.74.0/core/panic/unwind_safe/trait.UnwindSafe.html" title="trait core::panic::unwind_safe::UnwindSafe">UnwindSafe</a> + <a class="trait" href="https://doc.rust-lang.org/1.74.0/core/marker/trait.Send.html" title="trait core::marker::Send">Send</a> + 'static</h4></section></summary><div class="docblock"><p>The type of value provided during <a href="trait.WindowBehavior.html#tymethod.initialize"><code>initialize()</code></a>.</p>
 <p>In Kludgine, each window runs in its own thread. Kludgine allows does
 not require <code>WindowBehavior</code> implementors to implement <code>Send</code>, but it
 can be useful to receive input from the thread that is opening the
@@ -206,7 +206,7 @@ allowing some data to still be passed when opening the window.</p>
     &amp;'pass mut self,
     window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
     graphics: &amp;mut <a class="struct" href="../struct.RenderingGraphics.html" title="struct kludgine::RenderingGraphics">RenderingGraphics</a>&lt;'_, 'pass&gt;
-) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Render the contents of the window.</p>
+) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Render the contents of the window.</p>
 </div></details></div><h2 id="provided-methods" class="small-section-header">Provided Methods<a href="#provided-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="method.initial_window_attributes" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#238-240">source</a><h4 class="code-header">fn <a href="#method.initial_window_attributes" class="fn">initial_window_attributes</a>(
     context: &amp;Self::<a class="associatedtype" href="trait.WindowBehavior.html#associatedtype.Context" title="type kludgine::app::WindowBehavior::Context">Context</a>
 ) -&gt; <a class="struct" href="struct.WindowAttributes.html" title="struct kludgine::app::WindowAttributes">WindowAttributes</a>&lt;WindowEvent&gt;</h4></section></summary><div class="docblock"><p>Returns the window attributes to use when creating the window.</p>
@@ -219,7 +219,7 @@ allowing some data to still be passed when opening the window.</p>
 perfect place to update any prepared graphics as needed.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.power_preference" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#259-261">source</a><h4 class="code-header">fn <a href="#method.power_preference" class="fn">power_preference</a>() -&gt; PowerPreference</h4></section></summary><div class="docblock"><p>Returns the power preference to initialize <code>wgpu</code> with.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.limits" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#265-267">source</a><h4 class="code-header">fn <a href="#method.limits" class="fn">limits</a>(adapter_limits: Limits) -&gt; Limits</h4></section></summary><div class="docblock"><p>Returns the limits to apply for the <code>wgpu</code> instance.</p>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.clear_color" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#274-276">source</a><h4 class="code-header">fn <a href="#method.clear_color" class="fn">clear_color</a>(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.73.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../struct.Color.html" title="struct kludgine::Color">Color</a>&gt;</h4></section></summary><div class="docblock"><p>Returns the color to clear the window with. If None is returned, the
+</div></details><details class="toggle method-toggle" open><summary><section id="method.clear_color" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#274-276">source</a><h4 class="code-header">fn <a href="#method.clear_color" class="fn">clear_color</a>(&amp;self) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.74.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;<a class="struct" href="../struct.Color.html" title="struct kludgine::Color">Color</a>&gt;</h4></section></summary><div class="docblock"><p>Returns the color to clear the window with. If None is returned, the
 window will not be cleared between redraws.</p>
 <p>The default implementation returns <code>Some(Color::BLACK)</code>.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.composite_alpha_mode" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#284-289">source</a><h4 class="code-header">fn <a href="#method.composite_alpha_mode" class="fn">composite_alpha_mode</a>(
@@ -229,12 +229,12 @@ window will not be cleared between redraws.</p>
 on the window.</p>
 <p><code>supported_modes</code> contains the list of detected alpha modes supported by
 the surface.</p>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.run" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#297-302">source</a><h4 class="code-header">fn <a href="#method.run" class="fn">run</a>() -&gt; <a class="enum" href="https://doc.rust-lang.org/1.73.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.unit.html">()</a>, EventLoopError&gt;<span class="where fmt-newline">where
-    Self::<a class="associatedtype" href="trait.WindowBehavior.html#associatedtype.Context" title="type kludgine::app::WindowBehavior::Context">Context</a>: <a class="trait" href="https://doc.rust-lang.org/1.73.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a>,</span></h4></section></summary><div class="docblock"><p>Launches a Kludgine app using this window as the primary window.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.run" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#297-302">source</a><h4 class="code-header">fn <a href="#method.run" class="fn">run</a>() -&gt; <a class="enum" href="https://doc.rust-lang.org/1.74.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.unit.html">()</a>, EventLoopError&gt;<span class="where fmt-newline">where
+    Self::<a class="associatedtype" href="trait.WindowBehavior.html#associatedtype.Context" title="type kludgine::app::WindowBehavior::Context">Context</a>: <a class="trait" href="https://doc.rust-lang.org/1.74.0/core/default/trait.Default.html" title="trait core::default::Default">Default</a>,</span></h4></section></summary><div class="docblock"><p>Launches a Kludgine app using this window as the primary window.</p>
 <h5 id="errors"><a href="#errors">Errors</a></h5>
 <p>Returns an [<code>EventLoopError</code>] upon the loop exiting due to an error. See
 [<code>EventLoop::run</code>] for more information.</p>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.run_with" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#313-321">source</a><h4 class="code-header">fn <a href="#method.run_with" class="fn">run_with</a>(context: Self::<a class="associatedtype" href="trait.WindowBehavior.html#associatedtype.Context" title="type kludgine::app::WindowBehavior::Context">Context</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.73.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.unit.html">()</a>, EventLoopError&gt;</h4></section></summary><div class="docblock"><p>Launches a Kludgine app using this window as the primary window.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.run_with" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#313-321">source</a><h4 class="code-header">fn <a href="#method.run_with" class="fn">run_with</a>(context: Self::<a class="associatedtype" href="trait.WindowBehavior.html#associatedtype.Context" title="type kludgine::app::WindowBehavior::Context">Context</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.74.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.unit.html">()</a>, EventLoopError&gt;</h4></section></summary><div class="docblock"><p>Launches a Kludgine app using this window as the primary window.</p>
 <p>The <code>context</code> is passed along to <a href="trait.WindowBehavior.html#tymethod.initialize"><code>initialize()</code></a> once
 the thread it is running on is spawned.</p>
 <h5 id="errors-1"><a href="#errors-1">Errors</a></h5>
@@ -244,7 +244,7 @@ the thread it is running on is spawned.</p>
     &amp;mut self,
     window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
     kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>
-) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>The window has been requested to be closed. This can happen as a result
+) -&gt; <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>The window has been requested to be closed. This can happen as a result
 of the user clicking the close button.</p>
 <p>If the window should be closed, return true. To prevent closing the
 window, return false.</p>
@@ -278,13 +278,13 @@ returns the current theme.</p>
     &amp;mut self,
     window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
     kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
-    path: <a class="struct" href="https://doc.rust-lang.org/1.73.0/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>
+    path: <a class="struct" href="https://doc.rust-lang.org/1.74.0/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>
 )</h4></section></summary><div class="docblock"><p>A file has been dropped on the window.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.hovered_file" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#374-380">source</a><h4 class="code-header">fn <a href="#method.hovered_file" class="fn">hovered_file</a>(
     &amp;mut self,
     window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
     kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
-    path: <a class="struct" href="https://doc.rust-lang.org/1.73.0/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>
+    path: <a class="struct" href="https://doc.rust-lang.org/1.74.0/std/path/struct.PathBuf.html" title="struct std::path::PathBuf">PathBuf</a>
 )</h4></section></summary><div class="docblock"><p>A file is hovering over the window.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.hovered_file_cancelled" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#384-385">source</a><h4 class="code-header">fn <a href="#method.hovered_file_cancelled" class="fn">hovered_file_cancelled</a>(
     &amp;mut self,
@@ -295,7 +295,7 @@ returns the current theme.</p>
     &amp;mut self,
     window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
     kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
-    char: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.char.html">char</a>
+    char: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.char.html">char</a>
 )</h4></section></summary><div class="docblock"><p>An input event has generated a character.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.keyboard_input" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#399-407">source</a><h4 class="code-header">fn <a href="#method.keyboard_input" class="fn">keyboard_input</a>(
     &amp;mut self,
@@ -303,7 +303,7 @@ returns the current theme.</p>
     kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
     device_id: DeviceId,
     input: KeyEvent,
-    is_synthetic: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.bool.html">bool</a>
+    is_synthetic: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.bool.html">bool</a>
 )</h4></section></summary><div class="docblock"><p>A keyboard event occurred while the window was focused.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.modifiers_changed" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#412">source</a><h4 class="code-header">fn <a href="#method.modifiers_changed" class="fn">modifiers_changed</a>(
     &amp;mut self,
@@ -322,7 +322,7 @@ returns the current modifier keys state.</p>
     window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
     kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
     device_id: DeviceId,
-    position: PhysicalPosition&lt;<a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.f64.html">f64</a>&gt;
+    position: PhysicalPosition&lt;<a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.f64.html">f64</a>&gt;
 )</h4></section></summary><div class="docblock"><p>A cursor has moved over the window.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.cursor_entered" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#431-437">source</a><h4 class="code-header">fn <a href="#method.cursor_entered" class="fn">cursor_entered</a>(
     &amp;mut self,
@@ -357,8 +357,8 @@ returns the current modifier keys state.</p>
     window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
     kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
     device_id: DeviceId,
-    pressure: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.f32.html">f32</a>,
-    stage: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.i64.html">i64</a>
+    pressure: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.f32.html">f32</a>,
+    stage: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.i64.html">i64</a>
 )</h4></section></summary><div class="docblock"><p>A pressure-sensitive touchpad was touched.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.axis_motion" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#487-495">source</a><h4 class="code-header">fn <a href="#method.axis_motion" class="fn">axis_motion</a>(
     &amp;mut self,
@@ -366,7 +366,7 @@ returns the current modifier keys state.</p>
     kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
     device_id: DeviceId,
     axis: AxisId,
-    value: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.f64.html">f64</a>
+    value: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.f64.html">f64</a>
 )</h4></section></summary><div class="docblock"><p>A multi-axis input device has registered motion.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.touch" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#499">source</a><h4 class="code-header">fn <a href="#method.touch" class="fn">touch</a>(
     &amp;mut self,
@@ -379,7 +379,7 @@ returns the current modifier keys state.</p>
     window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
     kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
     device_id: DeviceId,
-    delta: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.f64.html">f64</a>,
+    delta: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.f64.html">f64</a>,
     phase: TouchPhase
 )</h4></section></summary><div class="docblock"><p>A touchpad-originated magnification gesture.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.smart_magnify" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#515-521">source</a><h4 class="code-header">fn <a href="#method.smart_magnify" class="fn">smart_magnify</a>(
@@ -393,7 +393,7 @@ returns the current modifier keys state.</p>
     window: <a class="struct" href="struct.Window.html" title="struct kludgine::app::Window">Window</a>&lt;'_, WindowEvent&gt;,
     kludgine: &amp;mut <a class="struct" href="../struct.Kludgine.html" title="struct kludgine::Kludgine">Kludgine</a>,
     device_id: DeviceId,
-    delta: <a class="primitive" href="https://doc.rust-lang.org/1.73.0/std/primitive.f32.html">f32</a>,
+    delta: <a class="primitive" href="https://doc.rust-lang.org/1.74.0/std/primitive.f32.html">f32</a>,
     phase: TouchPhase
 )</h4></section></summary><div class="docblock"><p>A touchpad-originated rotation gesture.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.event" class="method"><a class="src rightside" href="../../src/kludgine/app.rs.html#537-543">source</a><h4 class="code-header">fn <a href="#method.event" class="fn">event</a>(

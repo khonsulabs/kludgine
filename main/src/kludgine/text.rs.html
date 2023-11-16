@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/text.rs`."><title>text.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../kludgine/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/text.rs`."><title>text.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0 (79e9716c9 2023-11-13)" data-channel="1.74.0" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../kludgine/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -813,6 +813,15 @@
 <a href="#813" id="813">813</a>
 <a href="#814" id="814">814</a>
 <a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -1177,7 +1186,7 @@
             <span class="self">self</span>.kludgine,
             <span class="self">self</span>.queue,
             <span class="kw-2">&amp;mut </span>glyphs,
-            |blit, cached, _glyph, _is_first_line, _baseline| {
+            |blit, cached, _glyph, _is_first_line, _baseline, _line_w| {
                 <span class="kw">let </span>corners: [u16; <span class="number">4</span>] =
                     array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
                 <span class="kw">let </span>start_index = u32::try_from(indices.len()).assert(<span class="string">&quot;too many drawn indices&quot;</span>);
@@ -1220,7 +1229,7 @@
     kludgine: <span class="kw-2">&amp;mut </span>Kludgine,
     queue: <span class="kw-2">&amp;</span>wgpu::Queue,
     glyphs: <span class="kw-2">&amp;mut </span>HashMap&lt;PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher&gt;,
-    <span class="kw-2">mut </span>map: <span class="kw">impl for</span>&lt;<span class="lifetime">&#39;a</span>&gt; FnMut(TextureBlit&lt;Px&gt;, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>CachedGlyphHandle, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>LayoutGlyph, bool, Px),
+    <span class="kw-2">mut </span>map: <span class="kw">impl for</span>&lt;<span class="lifetime">&#39;a</span>&gt; FnMut(TextureBlit&lt;Px&gt;, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>CachedGlyphHandle, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>LayoutGlyph, usize, Px, Px),
 ) {
     <span class="kw">let </span>metrics = buffer
         .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect(<span class="string">&quot;no buffer&quot;</span>))
@@ -1318,8 +1327,9 @@
                 blit,
                 <span class="kw-2">&amp;</span>cached,
                 glyph,
-                run.line_i == <span class="number">0</span>,
+                (run.line_top / metrics.line_height).round().cast::&lt;usize&gt;(),
                 Px::from(relative_to.y),
+                Px::from(run.line_w),
             );
 
             glyphs
@@ -1353,19 +1363,19 @@
         kludgine,
         queue,
         glyphs,
-        |blit, cached, glyph, is_first_line, baseline| {
+        |blit, cached, glyph, line_index, baseline, line_width| {
             last_baseline = last_baseline.max(baseline);
             min = min.min(blit.top_left().location);
-            max = max.max(blit.bottom_right().location);
-            <span class="kw">if </span>is_first_line {
+            max.x = max.x.max(line_width);
+            max.y = max.y.max(blit.bottom_right().location.y);
+            <span class="kw">if </span>line_index == <span class="number">0 </span>{
                 first_line_max_y = first_line_max_y.max(blit.bottom_right().location.y);
             }
             <span class="kw">if </span>COLLECT_GLYPHS {
                 measured_glyphs.push(MeasuredGlyph {
                     blit,
                     cached: cached.clone(),
-                    is_first_line,
-                    info: GlyphInfo::from(glyph),
+                    info: GlyphInfo::new(glyph, line_index, line_width),
                 });
             }
         },
@@ -1527,7 +1537,6 @@
 </span><span class="kw">pub struct </span>MeasuredGlyph {
     <span class="kw">pub</span>(<span class="kw">crate</span>) blit: TextureBlit&lt;Px&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) cached: CachedGlyphHandle,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) is_first_line: bool,
     <span class="doccomment">/// Information about what glyph this is.
     </span><span class="kw">pub </span>info: GlyphInfo,
 }
@@ -1559,17 +1568,26 @@
     </span><span class="kw">pub </span>start: usize,
     <span class="doccomment">/// End index of cluster in original line
     </span><span class="kw">pub </span>end: usize,
+    <span class="doccomment">/// The line index this glyph is visually laid out on.
+    </span><span class="kw">pub </span>line: usize,
+    <span class="doccomment">/// The width of the line this glyph is on.
+    ///
+    /// Because whitespace does not have glyphs, this width may be useful in
+    /// measuring whitespace at the end of a line.
+    </span><span class="kw">pub </span>line_width: Px,
     <span class="doccomment">/// Unicode BiDi embedding level, character is left-to-right if `level` is divisible by 2
     </span><span class="kw">pub </span>level: unicode_bidi::Level,
     <span class="doccomment">/// Custom metadata set in [`cosmic_text::Attrs`].
     </span><span class="kw">pub </span>metadata: usize,
 }
 
-<span class="kw">impl </span>From&lt;<span class="kw-2">&amp;</span>LayoutGlyph&gt; <span class="kw">for </span>GlyphInfo {
-    <span class="kw">fn </span>from(glyph: <span class="kw-2">&amp;</span>LayoutGlyph) -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>GlyphInfo {
+    <span class="kw">fn </span>new(glyph: <span class="kw-2">&amp;</span>LayoutGlyph, line: usize, line_width: Px) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             start: glyph.start,
             end: glyph.end,
+            line,
+            line_width,
             metadata: glyph.metadata,
             level: glyph.level,
         }
