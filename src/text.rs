@@ -703,7 +703,8 @@ pub struct MeasuredText<Unit> {
     pub line_height: Unit,
     /// The total size of the measured text, encompassing all lines.
     pub size: Size<Unit>,
-    pub(crate) glyphs: Vec<MeasuredGlyph>,
+    /// The individual glyhs that were laid out.
+    pub glyphs: Vec<MeasuredGlyph>,
 }
 
 /// Instructions for drawing a laid out glyph.
