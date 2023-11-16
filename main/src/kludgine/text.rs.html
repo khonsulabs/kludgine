@@ -812,6 +812,7 @@
 <a href="#812" id="812">812</a>
 <a href="#813" id="813">813</a>
 <a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -1517,7 +1518,8 @@
     </span><span class="kw">pub </span>line_height: Unit,
     <span class="doccomment">/// The total size of the measured text, encompassing all lines.
     </span><span class="kw">pub </span>size: Size&lt;Unit&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) glyphs: Vec&lt;MeasuredGlyph&gt;,
+    <span class="doccomment">/// The individual glyhs that were laid out.
+    </span><span class="kw">pub </span>glyphs: Vec&lt;MeasuredGlyph&gt;,
 }
 
 <span class="doccomment">/// Instructions for drawing a laid out glyph.
