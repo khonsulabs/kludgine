@@ -399,13 +399,7 @@ mod text {
                 TextOrigin::FirstBaseline => Point::new(Px(0), text.ascent.into_px(scaling_factor)),
                 TextOrigin::Custom(offset) => offset.into_px(scaling_factor).cast(),
             };
-            for MeasuredGlyph {
-                blit,
-                cached,
-                is_first_line: _is_first_line,
-                ..
-            } in &text.glyphs
-            {
+            for MeasuredGlyph { blit, cached, .. } in &text.glyphs {
                 let mut blit = *blit;
                 blit.translate_by(-origin);
                 render_one_glyph(
@@ -444,7 +438,7 @@ mod text {
                 self.graphics.kludgine,
                 queue,
                 &mut self.data.glyphs,
-                |blit, cached, _glyph, _is_first_line, _baseline| {
+                |blit, cached, _glyph, _is_first_line, _baseline, _line_w| {
                     render_one_glyph(
                         translation,
                         rotation,

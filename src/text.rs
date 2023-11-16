@@ -362,7 +362,7 @@ impl<'gfx> Graphics<'gfx> {
             self.kludgine,
             self.queue,
             &mut glyphs,
-            |blit, cached, _glyph, _is_first_line, _baseline| {
+            |blit, cached, _glyph, _is_first_line, _baseline, _line_w| {
                 let corners: [u16; 4] =
                     array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
                 let start_index = u32::try_from(indices.len()).assert("too many drawn indices");
@@ -405,7 +405,7 @@ pub(crate) fn map_each_glyph(
     kludgine: &mut Kludgine,
     queue: &wgpu::Queue,
     glyphs: &mut HashMap<PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher>,
-    mut map: impl for<'a> FnMut(TextureBlit<Px>, &'a CachedGlyphHandle, &'a LayoutGlyph, bool, Px),
+    mut map: impl for<'a> FnMut(TextureBlit<Px>, &'a CachedGlyphHandle, &'a LayoutGlyph, usize, Px, Px),
 ) {
     let metrics = buffer
         .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"))
@@ -503,8 +503,9 @@ pub(crate) fn map_each_glyph(
                 blit,
                 &cached,
                 glyph,
-                run.line_i == 0,
+                (run.line_top / metrics.line_height).round().cast::<usize>(),
                 Px::from(relative_to.y),
+                Px::from(run.line_w),
             );
 
             glyphs
@@ -538,19 +539,19 @@ where
         kludgine,
         queue,
         glyphs,
-        |blit, cached, glyph, is_first_line, baseline| {
+        |blit, cached, glyph, line_index, baseline, line_width| {
             last_baseline = last_baseline.max(baseline);
             min = min.min(blit.top_left().location);
-            max = max.max(blit.bottom_right().location);
-            if is_first_line {
+            max.x = max.x.max(line_width);
+            max.y = max.y.max(blit.bottom_right().location.y);
+            if line_index == 0 {
                 first_line_max_y = first_line_max_y.max(blit.bottom_right().location.y);
             }
             if COLLECT_GLYPHS {
                 measured_glyphs.push(MeasuredGlyph {
                     blit,
                     cached: cached.clone(),
-                    is_first_line,
-                    info: GlyphInfo::from(glyph),
+                    info: GlyphInfo::new(glyph, line_index, line_width),
                 });
             }
         },
@@ -712,7 +713,6 @@ pub struct MeasuredText<Unit> {
 pub struct MeasuredGlyph {
     pub(crate) blit: TextureBlit<Px>,
     pub(crate) cached: CachedGlyphHandle,
-    pub(crate) is_first_line: bool,
     /// Information about what glyph this is.
     pub info: GlyphInfo,
 }
@@ -744,17 +744,26 @@ pub struct GlyphInfo {
     pub start: usize,
     /// End index of cluster in original line
     pub end: usize,
+    /// The line index this glyph is visually laid out on.
+    pub line: usize,
+    /// The width of the line this glyph is on.
+    ///
+    /// Because whitespace does not have glyphs, this width may be useful in
+    /// measuring whitespace at the end of a line.
+    pub line_width: Px,
     /// Unicode BiDi embedding level, character is left-to-right if `level` is divisible by 2
     pub level: unicode_bidi::Level,
     /// Custom metadata set in [`cosmic_text::Attrs`].
     pub metadata: usize,
 }
 
-impl From<&LayoutGlyph> for GlyphInfo {
-    fn from(glyph: &LayoutGlyph) -> Self {
+impl GlyphInfo {
+    fn new(glyph: &LayoutGlyph, line: usize, line_width: Px) -> Self {
         Self {
             start: glyph.start,
             end: glyph.end,
+            line,
+            line_width,
             metadata: glyph.metadata,
             level: glyph.level,
         }
