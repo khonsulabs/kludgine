@@ -5,7 +5,7 @@ use kludgine::figures::units::Lp;
 use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::shapes::Shape;
 use kludgine::text::{Text, TextOrigin};
-use kludgine::Color;
+use kludgine::{Color, DrawableExt};
 
 const RED_SQUARE_SIZE: Lp = Lp::inches(1);
 
@@ -16,22 +16,21 @@ fn main() -> Result<(), EventLoopError> {
         angle += Angle::degrees(180) * window.elapsed().as_secs_f32();
         let shape_center = Point::new(RED_SQUARE_SIZE / 2, RED_SQUARE_SIZE / 2);
         renderer.draw_shape(
-            &Shape::filled_rect(
+            (&Shape::filled_rect(
                 Rect::<Lp>::new(
                     Point::new(-RED_SQUARE_SIZE / 2, -RED_SQUARE_SIZE / 2),
                     Size::new(RED_SQUARE_SIZE, RED_SQUARE_SIZE),
                 ),
                 Color::RED,
-            ),
-            shape_center,
-            Some(angle),
-            None,
+            ))
+                .translate_by(shape_center)
+                .rotate_by(angle),
         );
         renderer.draw_text(
-            Text::new("Hello, World!", Color::WHITE).origin(TextOrigin::Center),
-            shape_center,
-            Some(angle),
-            None,
+            Text::new("Hello, World!", Color::WHITE)
+                .origin(TextOrigin::Center)
+                .translate_by(shape_center)
+                .rotate_by(angle),
         );
         true
     })

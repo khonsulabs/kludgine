@@ -5,7 +5,7 @@ use appit::winit::error::EventLoopError;
 use kludgine::figures::units::Lp;
 use kludgine::figures::{Angle, IntoComponents, Point, Rect, ScreenScale, Size};
 use kludgine::shapes::Shape;
-use kludgine::{Color, Texture};
+use kludgine::{Color, DrawableExt, Texture};
 
 const RED_SQUARE_SIZE: Lp = Lp::inches(1);
 
@@ -38,16 +38,15 @@ fn main() -> Result<(), EventLoopError> {
         }
 
         renderer.draw_shape(
-            &Shape::filled_rect(
+            Shape::filled_rect(
                 Rect::<Lp>::new(
                     Point::new(-RED_SQUARE_SIZE / 2, -RED_SQUARE_SIZE / 2),
                     Size::new(RED_SQUARE_SIZE, RED_SQUARE_SIZE),
                 ),
                 Color::RED,
-            ),
-            (renderer.size().into_lp(renderer.scale()) / 2).to_vec(),
-            Some(angle),
-            None,
+            )
+            .translate_by((renderer.size().into_lp(renderer.scale()) / 2).to_vec())
+            .rotate_by(angle),
         );
 
         println!(

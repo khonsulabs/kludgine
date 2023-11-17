@@ -12,7 +12,8 @@ use smallvec::SmallVec;
 
 use crate::pipeline::Vertex;
 use crate::{
-    sealed, Assert, Color, Graphics, Origin, PreparedGraphic, ShapeSource, Texture, TextureSource,
+    sealed, Assert, Color, DrawableSource, Graphics, Origin, PreparedGraphic, ShapeSource, Texture,
+    TextureSource,
 };
 
 /// A tesselated shape.
@@ -132,6 +133,8 @@ impl<Unit, const TEXTURED: bool> ShapeSource<Unit, TEXTURED> for Shape<Unit, TEX
     Unit: Copy
 {
 }
+
+impl<Unit, const TEXTURED: bool> DrawableSource for Shape<Unit, TEXTURED> where Unit: Copy {}
 
 impl<Unit, const TEXTURED: bool> sealed::ShapeSource<Unit> for Shape<Unit, TEXTURED>
 where

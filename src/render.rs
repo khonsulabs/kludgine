@@ -12,7 +12,7 @@ use crate::pipeline::{
 };
 use crate::shapes::Shape;
 use crate::{
-    sealed, Assert, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Graphics,
+    sealed, Assert, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Drawable, Graphics,
     RenderingGraphics, ShapeSource, Texture, TextureBlit, TextureSource, VertexCollection,
 };
 
@@ -54,22 +54,13 @@ struct Command {
 
 impl<'render, 'gfx> Renderer<'render, 'gfx> {
     /// Draws a shape at the origin, rotating and scaling as needed.
-    pub fn draw_shape<Unit>(
+    pub fn draw_shape<'shape, Unit>(
         &mut self,
-        shape: &Shape<Unit, false>,
-        origin: Point<Unit>,
-        rotation_rads: Option<Angle>,
-        scale: Option<f32>,
+        shape: impl Into<Drawable<&'shape Shape<Unit, false>, Unit>>,
     ) where
         Unit: IsZero + ShaderScalable + figures::Unit + Copy,
     {
-        self.inner_draw(
-            shape,
-            Option::<&Texture>::None,
-            origin,
-            rotation_rads,
-            scale,
-        );
+        self.inner_draw(&shape.into(), Option::<&Texture>::None);
     }
 
     /// Draws `texture` at `destination`, scaling as necessary.
@@ -81,40 +72,33 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         self.draw_textured_shape(
             &TextureBlit::new(texture.default_rect(), destination, Color::WHITE),
             texture,
-            Point::default(),
-            None,
-            None,
         );
     }
 
     /// Draws a shape that was created with texture coordinates, applying the
     /// provided texture.
-    pub fn draw_textured_shape<Unit>(
+    pub fn draw_textured_shape<'shape, Unit, Shape>(
         &mut self,
-        shape: &impl ShapeSource<Unit, true>,
+        shape: impl Into<Drawable<&'shape Shape, Unit>>,
         texture: &impl TextureSource,
-        origin: Point<Unit>,
-        rotation: Option<Angle>,
-        scale: Option<f32>,
     ) where
         Unit: IsZero + ShaderScalable + figures::Unit + Copy,
         i32: From<<Unit as IntoSigned>::Signed>,
+        Shape: ShapeSource<Unit, true> + 'shape,
     {
-        self.inner_draw(shape, Some(texture), origin, rotation, scale);
+        self.inner_draw(&shape.into(), Some(texture));
     }
 
-    fn inner_draw<Unit, const TEXTURED: bool>(
+    fn inner_draw<Shape, Unit, const TEXTURED: bool>(
         &mut self,
-        shape: &impl ShapeSource<Unit, TEXTURED>,
+        shape: &Drawable<&'_ Shape, Unit>,
         texture: Option<&impl TextureSource>,
-        origin: Point<Unit>,
-        rotation: Option<Angle>,
-        scale: Option<f32>,
     ) where
         Unit: IsZero + ShaderScalable + figures::Unit + Copy,
+        Shape: ShapeSource<Unit, TEXTURED>,
     {
         // Merge the vertices into the graphics
-        let vertices = shape.vertices();
+        let vertices = shape.source.vertices();
         let mut vertex_map = Vec::with_capacity(vertices.len());
         for vertex in vertices {
             let vertex = Vertex {
@@ -130,7 +114,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         }
 
         let first_index_drawn = self.data.indices.len();
-        for &vertex_index in shape.indices() {
+        for &vertex_index in shape.source.indices() {
             self.data
                 .indices
                 .push(vertex_map[usize::from(vertex_index)]);
@@ -151,15 +135,15 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         } else {
             None
         };
-        let scale = scale.map_or(1., |scale| {
+        let scale = shape.scale.map_or(1., |scale| {
             flags |= FLAG_SCALE;
             scale
         });
-        let rotation = rotation.map_or(0., |scale| {
+        let rotation = shape.rotation.map_or(0., |scale| {
             flags |= FLAG_ROTATE;
             scale.into_raidans_f()
         });
-        if !origin.is_zero() {
+        if !shape.translation.is_zero() {
             flags |= FLAG_TRANSLATE;
         }
 
@@ -167,7 +151,10 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
             flags,
             scale,
             rotation,
-            translation: origin.try_cast().unwrap_or(Point::new(i32::MAX, i32::MAX)),
+            translation: shape
+                .translation
+                .try_cast()
+                .unwrap_or(Point::new(i32::MAX, i32::MAX)),
         };
 
         match self.data.commands.last_mut() {
@@ -277,7 +264,7 @@ mod text {
         map_each_glyph, measure_text, CachedGlyphHandle, MeasuredGlyph, MeasuredText, Text,
         TextOrigin,
     };
-    use crate::{DefaultHasher, TextureBlit, VertexCollection};
+    use crate::{DefaultHasher, Drawable, TextureBlit, VertexCollection};
 
     impl<'gfx> Renderer<'_, 'gfx> {
         /// Measures `text` using the current text settings.
@@ -303,27 +290,25 @@ mod text {
         }
 
         /// Draws `text` using the current text settings.
-        pub fn draw_text<'a, Unit>(
-            &mut self,
-            text: impl Into<Text<'a, Unit>>,
-            translate: Point<Unit>,
-            rotation: Option<Angle>,
-            scale: Option<f32>,
-        ) where
+        pub fn draw_text<'a, Unit, Source>(&mut self, text: Source)
+        where
             Unit: ScreenUnit,
+            Source: Into<Drawable<Text<'a, Unit>, Unit>>,
         {
             let text = text.into();
             self.graphics.kludgine.update_scratch_buffer(
-                text.text,
-                text.wrap_at.map(|width| width.into_px(self.graphics.scale)),
+                text.source.text,
+                text.source
+                    .wrap_at
+                    .map(|width| width.into_px(self.graphics.scale)),
             );
             self.draw_text_buffer_inner(
                 None,
-                text.color,
-                text.origin.into_px(self.scale()),
-                translate,
-                rotation,
-                scale,
+                text.source.color,
+                text.source.origin.into_px(self.scale()),
+                text.translation,
+                text.rotation,
+                text.scale,
             );
         }
 
@@ -334,24 +319,22 @@ mod text {
         ///
         /// `origin` allows controlling how the text will be drawn relative to the
         /// coordinate provided in [`render()`](crate::PreparedGraphic::render).
-        pub fn draw_text_buffer<Unit>(
+        pub fn draw_text_buffer<'a, Unit>(
             &mut self,
-            buffer: &cosmic_text::Buffer,
+            buffer: impl Into<Drawable<&'a cosmic_text::Buffer, Unit>>,
             default_color: Color,
             origin: TextOrigin<Px>,
-            translate: Point<Unit>,
-            rotation: Option<Angle>,
-            scale: Option<f32>,
         ) where
             Unit: ScreenUnit,
         {
+            let buffer = buffer.into();
             self.draw_text_buffer_inner(
-                Some(buffer),
+                Some(buffer.source),
                 default_color,
                 origin,
-                translate,
-                rotation,
-                scale,
+                buffer.translation,
+                buffer.rotation,
+                buffer.scale,
             );
         }
 
@@ -381,31 +364,33 @@ mod text {
         ///
         /// `origin` allows controlling how the text will be drawn relative to the
         /// coordinate provided in [`render()`](crate::PreparedGraphic::render).
-        pub fn draw_measured_text<Unit>(
+        pub fn draw_measured_text<'a, Unit>(
             &mut self,
-            text: &MeasuredText<Unit>,
+            text: impl Into<Drawable<&'a MeasuredText<Unit>, Unit>>,
             origin: TextOrigin<Unit>,
-            translate: Point<Unit>,
-            rotation: Option<Angle>,
-            scale: Option<f32>,
         ) where
             Unit: ScreenUnit,
         {
+            let text = text.into();
             let scaling_factor = self.scale;
-            let translation = translate.into_px(scaling_factor).cast();
+            let translation = text.translation.into_px(scaling_factor).cast();
             let origin = match origin {
                 TextOrigin::TopLeft => Point::default(),
-                TextOrigin::Center => Point::from(text.size).into_px(scaling_factor).cast() / 2,
-                TextOrigin::FirstBaseline => Point::new(Px(0), text.ascent.into_px(scaling_factor)),
+                TextOrigin::Center => {
+                    Point::from(text.source.size).into_px(scaling_factor).cast() / 2
+                }
+                TextOrigin::FirstBaseline => {
+                    Point::new(Px(0), text.source.ascent.into_px(scaling_factor))
+                }
                 TextOrigin::Custom(offset) => offset.into_px(scaling_factor).cast(),
             };
-            for MeasuredGlyph { blit, cached, .. } in &text.glyphs {
+            for MeasuredGlyph { blit, cached, .. } in &text.source.glyphs {
                 let mut blit = *blit;
                 blit.translate_by(-origin);
                 render_one_glyph(
                     translation,
-                    rotation,
-                    scale,
+                    text.rotation,
+                    text.scale,
                     blit,
                     cached,
                     self.clip_index,

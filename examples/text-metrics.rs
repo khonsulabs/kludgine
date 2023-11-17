@@ -4,7 +4,7 @@ use kludgine::figures::units::Lp;
 use kludgine::figures::Point;
 use kludgine::shapes::Shape;
 use kludgine::text::TextOrigin;
-use kludgine::Color;
+use kludgine::{Color, DrawableExt};
 
 fn main() -> Result<(), EventLoopError> {
     kludgine::app::run(move |mut renderer, _window| {
@@ -16,31 +16,27 @@ fn main() -> Result<(), EventLoopError> {
 
         let measured = renderer.measure_text::<Lp>("Kludgine");
         renderer.draw_shape(
-            &Shape::filled_rect(
+            Shape::filled_rect(
                 Rect::new(
                     Point::new(measured.left, line_height - measured.ascent),
                     Size::new(measured.size.width - measured.left, measured.ascent),
                 ),
                 Color::new(0, 40, 0, 255),
-            ),
-            inset,
-            None,
-            None,
+            )
+            .translate_by(inset),
         );
         renderer.draw_shape(
-            &Shape::filled_rect(
+            Shape::filled_rect(
                 Rect::new(
                     Point::new(measured.left, line_height),
                     Size::new(measured.size.width - measured.left, -measured.descent),
                 ),
                 Color::new(0, 0, 40, 255),
-            ),
-            inset,
-            None,
-            None,
+            )
+            .translate_by(inset),
         );
 
-        renderer.draw_measured_text(&measured, TextOrigin::TopLeft, inset, None, None);
+        renderer.draw_measured_text(measured.translate_by(inset), TextOrigin::TopLeft);
 
         true
     })

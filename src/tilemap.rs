@@ -58,26 +58,21 @@ pub fn draw(layers: &impl Layers, focus: TileMapFocus, zoom: f32, graphics: &mut
         );
     }
 
-    graphics.draw_text(
-        Text::<Px>::new(
-            &format!(
-                "Tile {}: Vis: {},{},{},{} - TL: {},{} / {},{}",
-                tile_size,
-                visible_region.origin.x,
-                visible_region.origin.y,
-                visible_region.size.width,
-                visible_region.size.height,
-                top_left.index.x,
-                top_left.index.y,
-                top_left.tile_offset.x,
-                top_left.tile_offset.y
-            ),
-            Color::RED,
+    graphics.draw_text(Text::<Px>::new(
+        &format!(
+            "Tile {}: Vis: {},{},{},{} - TL: {},{} / {},{}",
+            tile_size,
+            visible_region.origin.x,
+            visible_region.origin.y,
+            visible_region.size.width,
+            visible_region.size.height,
+            top_left.index.x,
+            top_left.index.y,
+            top_left.tile_offset.x,
+            top_left.tile_offset.y
         ),
-        Point::default(),
-        None,
-        None,
-    );
+        Color::RED,
+    ));
 }
 
 pub struct TileOffset {
@@ -251,12 +246,9 @@ impl Layer for Tiles {
                             // TODO aspect-fit rather than fill.
                             context.draw_texture(texture, tile_rect);
                         }
-                        TileKind::Color(color) => context.draw_shape(
-                            &Shape::filled_rect(tile_rect, *color),
-                            Point::default(),
-                            None,
-                            None,
-                        ),
+                        TileKind::Color(color) => {
+                            context.draw_shape(&Shape::filled_rect(tile_rect, *color));
+                        }
                     };
                     x += tile_size;
                 }

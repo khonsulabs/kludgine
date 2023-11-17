@@ -17,7 +17,7 @@ use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "cosmic-text")]
 pub use cosmic_text;
 use figures::units::UPx;
-use figures::{Fraction, FromComponents, IntoComponents, Point, Rect, Size};
+use figures::{Angle, Fraction, FromComponents, IntoComponents, Point, Rect, Size};
 use intentional::Assert;
 use sealed::ShapeSource as _;
 use wgpu::util::DeviceExt;
@@ -26,6 +26,7 @@ pub use {figures, wgpu};
 use crate::buffer::Buffer;
 use crate::pipeline::{Uniforms, Vertex};
 use crate::sealed::ClipRect;
+use crate::text::Text;
 
 /// Application and Windowing Support.
 #[cfg(feature = "app")]
@@ -1555,9 +1556,13 @@ impl hash::Hash for VertexId {
 }
 
 /// A source of triangle data for a shape.
-pub trait ShapeSource<Unit, const TEXTURED: bool>: sealed::ShapeSource<Unit> {}
+pub trait ShapeSource<Unit, const TEXTURED: bool>:
+    DrawableSource + sealed::ShapeSource<Unit>
+{
+}
 
 impl<Unit> ShapeSource<Unit, true> for TextureBlit<Unit> where Unit: Add<Output = Unit> + Ord + Copy {}
+impl<Unit> DrawableSource for TextureBlit<Unit> where Unit: Add<Output = Unit> + Ord + Copy {}
 
 impl<Unit> sealed::ShapeSource<Unit> for TextureBlit<Unit>
 where
@@ -1634,5 +1639,94 @@ impl<Unit> TextureBlit<Unit> {
         for vertex in &mut self.verticies {
             vertex.location += offset;
         }
+    }
+}
+
+/// A type that can be drawn in Kludgine.
+pub trait DrawableSource {}
+
+/// A drawable source with optional translation, rotation, and scaling.
+pub struct Drawable<T, Unit> {
+    /// The source to draw.
+    pub source: T,
+    /// Translate the source before rendering.
+    pub translation: Point<Unit>,
+    /// Rotate the source before rendering.
+    pub rotation: Option<Angle>,
+    /// Scale the source before rendering.
+    pub scale: Option<f32>,
+}
+
+impl<'a, Unit> From<Text<'a, Unit>> for Drawable<Text<'a, Unit>, Unit>
+where
+    Unit: Default,
+{
+    fn from(what: Text<'a, Unit>) -> Self {
+        Self {
+            source: what,
+            translation: Point::default(),
+            rotation: None,
+            scale: None,
+        }
+    }
+}
+
+impl<'a, T, Unit> From<&'a T> for Drawable<&'a T, Unit>
+where
+    T: DrawableSource,
+    Unit: Default,
+{
+    fn from(what: &'a T) -> Self {
+        Self {
+            source: what,
+            translation: Point::default(),
+            rotation: None,
+            scale: None,
+        }
+    }
+}
+
+/// Translation, rotation, and scaling for drawable types.
+pub trait DrawableExt<Source, Unit> {
+    /// Translates `self` by `point`.
+    fn translate_by(self, point: Point<Unit>) -> Drawable<Source, Unit>;
+    /// Rotates `self` by `angle`.
+    fn rotate_by(self, angle: Angle) -> Drawable<Source, Unit>;
+    /// Scales `self` by `factor`.
+    fn scale(self, factor: f32) -> Drawable<Source, Unit>;
+}
+
+impl<T, Unit> DrawableExt<T, Unit> for Drawable<T, Unit> {
+    fn translate_by(mut self, point: Point<Unit>) -> Drawable<T, Unit> {
+        self.translation = point;
+        self
+    }
+
+    fn rotate_by(mut self, angle: Angle) -> Drawable<T, Unit> {
+        self.rotation = Some(angle);
+        self
+    }
+
+    fn scale(mut self, factor: f32) -> Drawable<T, Unit> {
+        self.scale = Some(factor);
+        self
+    }
+}
+
+impl<T, Unit> DrawableExt<T, Unit> for T
+where
+    Drawable<T, Unit>: From<T>,
+    Unit: Default,
+{
+    fn translate_by(self, point: Point<Unit>) -> Drawable<T, Unit> {
+        Drawable::from(self).translate_by(point)
+    }
+
+    fn rotate_by(self, angle: Angle) -> Drawable<T, Unit> {
+        Drawable::from(self).rotate_by(angle)
+    }
+
+    fn scale(self, factor: f32) -> Drawable<T, Unit> {
+        Drawable::from(self).scale(factor)
     }
 }

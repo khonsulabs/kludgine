@@ -13,8 +13,8 @@ use crate::buffer::Buffer;
 use crate::pipeline::PreparedCommand;
 use crate::sealed::{ShapeSource, TextureSource};
 use crate::{
-    Assert, CollectedTexture, Color, DefaultHasher, Graphics, Kludgine, PreparedGraphic,
-    ProtoGraphics, TextureBlit, TextureCollection, VertexCollection,
+    Assert, CollectedTexture, Color, DefaultHasher, DrawableSource, Graphics, Kludgine,
+    PreparedGraphic, ProtoGraphics, TextureBlit, TextureCollection, VertexCollection,
 };
 
 impl Kludgine {
@@ -708,6 +708,8 @@ pub struct MeasuredText<Unit> {
     pub glyphs: Vec<MeasuredGlyph>,
 }
 
+impl<Unit> DrawableSource for MeasuredText<Unit> {}
+
 /// Instructions for drawing a laid out glyph.
 #[derive(Clone)]
 pub struct MeasuredGlyph {
@@ -822,3 +824,5 @@ impl<'a, Unit> From<&'a String> for Text<'a, Unit> {
         Self::new(value, Color::WHITE)
     }
 }
+
+impl<'a, Unit> DrawableSource for Text<'a, Unit> {}

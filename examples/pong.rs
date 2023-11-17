@@ -9,7 +9,7 @@ use kludgine::figures::{FloatConversion, IntoSigned, Point, Rect, Size};
 use kludgine::render::Renderer;
 use kludgine::shapes::Shape;
 use kludgine::text::{Text, TextOrigin};
-use kludgine::{Color, Origin};
+use kludgine::{Color, DrawableExt, Origin};
 
 const PADDLE_SPEED: Px = Px(300);
 const PADDLE_HEIGHT: Px = Px(100);
@@ -92,56 +92,42 @@ impl GameState {
             self.reset_after_score(size);
         }
 
-        renderer.draw_shape(
-            &Shape::filled_rect(
-                Rect::new(
-                    Point::new(Px(0), self.player_paddle_position - PADDLE_HEIGHT / 2),
-                    Size::new(PADDLE_WIDTH, PADDLE_HEIGHT),
-                ),
-                Color::BLUE,
+        renderer.draw_shape(&Shape::filled_rect(
+            Rect::new(
+                Point::new(Px(0), self.player_paddle_position - PADDLE_HEIGHT / 2),
+                Size::new(PADDLE_WIDTH, PADDLE_HEIGHT),
             ),
-            Point::default(),
-            None,
-            None,
-        );
+            Color::BLUE,
+        ));
+
+        renderer.draw_shape(&Shape::filled_rect(
+            Rect::new(
+                Point::new(
+                    renderer.size().width.into_signed() - PADDLE_WIDTH,
+                    self.bot_paddle_position - PADDLE_HEIGHT / 2,
+                ),
+                Size::new(PADDLE_WIDTH, PADDLE_HEIGHT),
+            ),
+            Color::RED,
+        ));
 
         renderer.draw_shape(
-            &Shape::filled_rect(
-                Rect::new(
-                    Point::new(
-                        renderer.size().width.into_signed() - PADDLE_WIDTH,
-                        self.bot_paddle_position - PADDLE_HEIGHT / 2,
-                    ),
-                    Size::new(PADDLE_WIDTH, PADDLE_HEIGHT),
-                ),
-                Color::RED,
-            ),
-            Point::default(),
-            None,
-            None,
-        );
-
-        renderer.draw_shape(
-            &Shape::filled_circle(BALL_SIZE, Color::WHITE, Origin::Center),
-            self.ball_pos,
-            None,
-            None,
+            Shape::filled_circle(BALL_SIZE, Color::WHITE, Origin::Center)
+                .translate_by(self.ball_pos),
         );
 
         renderer.set_font_size(Lp::inches(1));
         renderer.set_line_height(Lp::inches(1));
         renderer.draw_text(
-            Text::new(&self.player_score.to_string(), Color::BLUE).origin(TextOrigin::Center),
-            Point::new(size.width / 4, size.height / 4),
-            None,
-            None,
+            Text::new(&self.player_score.to_string(), Color::BLUE)
+                .origin(TextOrigin::Center)
+                .translate_by(Point::new(size.width / 4, size.height / 4)),
         );
 
         renderer.draw_text(
-            Text::new(&self.bot_score.to_string(), Color::RED).origin(TextOrigin::Center),
-            Point::new(size.width / 4 * 3, size.height / 4),
-            None,
-            None,
+            Text::new(&self.bot_score.to_string(), Color::RED)
+                .origin(TextOrigin::Center)
+                .translate_by(Point::new(size.width / 4 * 3, size.height / 4)),
         );
     }
 
