@@ -679,21 +679,6 @@
 <a href="#679" id="679">679</a>
 <a href="#680" id="680">680</a>
 <a href="#681" id="681">681</a>
-<a href="#682" id="682">682</a>
-<a href="#683" id="683">683</a>
-<a href="#684" id="684">684</a>
-<a href="#685" id="685">685</a>
-<a href="#686" id="686">686</a>
-<a href="#687" id="687">687</a>
-<a href="#688" id="688">688</a>
-<a href="#689" id="689">689</a>
-<a href="#690" id="690">690</a>
-<a href="#691" id="691">691</a>
-<a href="#692" id="692">692</a>
-<a href="#693" id="693">693</a>
-<a href="#694" id="694">694</a>
-<a href="#695" id="695">695</a>
-<a href="#696" id="696">696</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
@@ -708,7 +693,7 @@
 };
 <span class="kw">use </span><span class="kw">crate</span>::shapes::Shape;
 <span class="kw">use crate</span>::{
-    sealed, Assert, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Graphics,
+    sealed, Assert, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Drawable, Graphics,
     RenderingGraphics, ShapeSource, Texture, TextureBlit, TextureSource, VertexCollection,
 };
 
@@ -750,22 +735,13 @@
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; {
     <span class="doccomment">/// Draws a shape at the origin, rotating and scaling as needed.
-    </span><span class="kw">pub fn </span>draw_shape&lt;Unit&gt;(
+    </span><span class="kw">pub fn </span>draw_shape&lt;<span class="lifetime">&#39;shape</span>, Unit&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        shape: <span class="kw-2">&amp;</span>Shape&lt;Unit, <span class="bool-val">false</span>&gt;,
-        origin: Point&lt;Unit&gt;,
-        rotation_rads: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
-        scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+        shape: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;shape </span>Shape&lt;Unit, <span class="bool-val">false</span>&gt;, Unit&gt;&gt;,
     ) <span class="kw">where
         </span>Unit: IsZero + ShaderScalable + figures::Unit + Copy,
     {
-        <span class="self">self</span>.inner_draw(
-            shape,
-            <span class="prelude-ty">Option</span>::&lt;<span class="kw-2">&amp;</span>Texture&gt;::None,
-            origin,
-            rotation_rads,
-            scale,
-        );
+        <span class="self">self</span>.inner_draw(<span class="kw-2">&amp;</span>shape.into(), <span class="prelude-ty">Option</span>::&lt;<span class="kw-2">&amp;</span>Texture&gt;::None);
     }
 
     <span class="doccomment">/// Draws `texture` at `destination`, scaling as necessary.
@@ -777,40 +753,33 @@
         <span class="self">self</span>.draw_textured_shape(
             <span class="kw-2">&amp;</span>TextureBlit::new(texture.default_rect(), destination, Color::WHITE),
             texture,
-            Point::default(),
-            <span class="prelude-val">None</span>,
-            <span class="prelude-val">None</span>,
         );
     }
 
     <span class="doccomment">/// Draws a shape that was created with texture coordinates, applying the
     /// provided texture.
-    </span><span class="kw">pub fn </span>draw_textured_shape&lt;Unit&gt;(
+    </span><span class="kw">pub fn </span>draw_textured_shape&lt;<span class="lifetime">&#39;shape</span>, Unit, Shape&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        shape: <span class="kw-2">&amp;</span><span class="kw">impl </span>ShapeSource&lt;Unit, <span class="bool-val">true</span>&gt;,
+        shape: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;shape </span>Shape, Unit&gt;&gt;,
         texture: <span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource,
-        origin: Point&lt;Unit&gt;,
-        rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
-        scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
     ) <span class="kw">where
         </span>Unit: IsZero + ShaderScalable + figures::Unit + Copy,
         i32: From&lt;&lt;Unit <span class="kw">as </span>IntoSigned&gt;::Signed&gt;,
+        Shape: ShapeSource&lt;Unit, <span class="bool-val">true</span>&gt; + <span class="lifetime">&#39;shape</span>,
     {
-        <span class="self">self</span>.inner_draw(shape, <span class="prelude-val">Some</span>(texture), origin, rotation, scale);
+        <span class="self">self</span>.inner_draw(<span class="kw-2">&amp;</span>shape.into(), <span class="prelude-val">Some</span>(texture));
     }
 
-    <span class="kw">fn </span>inner_draw&lt;Unit, <span class="kw">const </span>TEXTURED: bool&gt;(
+    <span class="kw">fn </span>inner_draw&lt;Shape, Unit, <span class="kw">const </span>TEXTURED: bool&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        shape: <span class="kw-2">&amp;</span><span class="kw">impl </span>ShapeSource&lt;Unit, TEXTURED&gt;,
+        shape: <span class="kw-2">&amp;</span>Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>Shape, Unit&gt;,
         texture: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource&gt;,
-        origin: Point&lt;Unit&gt;,
-        rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
-        scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
     ) <span class="kw">where
         </span>Unit: IsZero + ShaderScalable + figures::Unit + Copy,
+        Shape: ShapeSource&lt;Unit, TEXTURED&gt;,
     {
         <span class="comment">// Merge the vertices into the graphics
-        </span><span class="kw">let </span>vertices = shape.vertices();
+        </span><span class="kw">let </span>vertices = shape.source.vertices();
         <span class="kw">let </span><span class="kw-2">mut </span>vertex_map = Vec::with_capacity(vertices.len());
         <span class="kw">for </span>vertex <span class="kw">in </span>vertices {
             <span class="kw">let </span>vertex = Vertex {
@@ -826,7 +795,7 @@
         }
 
         <span class="kw">let </span>first_index_drawn = <span class="self">self</span>.data.indices.len();
-        <span class="kw">for </span><span class="kw-2">&amp;</span>vertex_index <span class="kw">in </span>shape.indices() {
+        <span class="kw">for </span><span class="kw-2">&amp;</span>vertex_index <span class="kw">in </span>shape.source.indices() {
             <span class="self">self</span>.data
                 .indices
                 .push(vertex_map[usize::from(vertex_index)]);
@@ -847,15 +816,15 @@
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
-        <span class="kw">let </span>scale = scale.map_or(<span class="number">1.</span>, |scale| {
+        <span class="kw">let </span>scale = shape.scale.map_or(<span class="number">1.</span>, |scale| {
             flags |= FLAG_SCALE;
             scale
         });
-        <span class="kw">let </span>rotation = rotation.map_or(<span class="number">0.</span>, |scale| {
+        <span class="kw">let </span>rotation = shape.rotation.map_or(<span class="number">0.</span>, |scale| {
             flags |= FLAG_ROTATE;
             scale.into_raidans_f()
         });
-        <span class="kw">if </span>!origin.is_zero() {
+        <span class="kw">if </span>!shape.translation.is_zero() {
             flags |= FLAG_TRANSLATE;
         }
 
@@ -863,7 +832,10 @@
             flags,
             scale,
             rotation,
-            translation: origin.try_cast().unwrap_or(Point::new(i32::MAX, i32::MAX)),
+            translation: shape
+                .translation
+                .try_cast()
+                .unwrap_or(Point::new(i32::MAX, i32::MAX)),
         };
 
         <span class="kw">match </span><span class="self">self</span>.data.commands.last_mut() {
@@ -973,7 +945,7 @@
         map_each_glyph, measure_text, CachedGlyphHandle, MeasuredGlyph, MeasuredText, Text,
         TextOrigin,
     };
-    <span class="kw">use crate</span>::{DefaultHasher, TextureBlit, VertexCollection};
+    <span class="kw">use crate</span>::{DefaultHasher, Drawable, TextureBlit, VertexCollection};
 
     <span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>&gt; Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;gfx</span>&gt; {
         <span class="doccomment">/// Measures `text` using the current text settings.
@@ -999,27 +971,25 @@
         }
 
         <span class="doccomment">/// Draws `text` using the current text settings.
-        </span><span class="kw">pub fn </span>draw_text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;(
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-            text: <span class="kw">impl </span>Into&lt;Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;&gt;,
-            translate: Point&lt;Unit&gt;,
-            rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
-            scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
-        ) <span class="kw">where
+        </span><span class="kw">pub fn </span>draw_text&lt;<span class="lifetime">&#39;a</span>, Unit, Source&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, text: Source)
+        <span class="kw">where
             </span>Unit: ScreenUnit,
+            Source: Into&lt;Drawable&lt;Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;, Unit&gt;&gt;,
         {
             <span class="kw">let </span>text = text.into();
             <span class="self">self</span>.graphics.kludgine.update_scratch_buffer(
-                text.text,
-                text.wrap_at.map(|width| width.into_px(<span class="self">self</span>.graphics.scale)),
+                text.source.text,
+                text.source
+                    .wrap_at
+                    .map(|width| width.into_px(<span class="self">self</span>.graphics.scale)),
             );
             <span class="self">self</span>.draw_text_buffer_inner(
                 <span class="prelude-val">None</span>,
-                text.color,
-                text.origin.into_px(<span class="self">self</span>.scale()),
-                translate,
-                rotation,
-                scale,
+                text.source.color,
+                text.source.origin.into_px(<span class="self">self</span>.scale()),
+                text.translation,
+                text.rotation,
+                text.scale,
             );
         }
 
@@ -1030,24 +1000,22 @@
         ///
         /// `origin` allows controlling how the text will be drawn relative to the
         /// coordinate provided in [`render()`](crate::PreparedGraphic::render).
-        </span><span class="kw">pub fn </span>draw_text_buffer&lt;Unit&gt;(
+        </span><span class="kw">pub fn </span>draw_text_buffer&lt;<span class="lifetime">&#39;a</span>, Unit&gt;(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-            buffer: <span class="kw-2">&amp;</span>cosmic_text::Buffer,
+            buffer: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>cosmic_text::Buffer, Unit&gt;&gt;,
             default_color: Color,
             origin: TextOrigin&lt;Px&gt;,
-            translate: Point&lt;Unit&gt;,
-            rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
-            scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         ) <span class="kw">where
             </span>Unit: ScreenUnit,
         {
+            <span class="kw">let </span>buffer = buffer.into();
             <span class="self">self</span>.draw_text_buffer_inner(
-                <span class="prelude-val">Some</span>(buffer),
+                <span class="prelude-val">Some</span>(buffer.source),
                 default_color,
                 origin,
-                translate,
-                rotation,
-                scale,
+                buffer.translation,
+                buffer.rotation,
+                buffer.scale,
             );
         }
 
@@ -1077,31 +1045,33 @@
         ///
         /// `origin` allows controlling how the text will be drawn relative to the
         /// coordinate provided in [`render()`](crate::PreparedGraphic::render).
-        </span><span class="kw">pub fn </span>draw_measured_text&lt;Unit&gt;(
+        </span><span class="kw">pub fn </span>draw_measured_text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-            text: <span class="kw-2">&amp;</span>MeasuredText&lt;Unit&gt;,
+            text: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>MeasuredText&lt;Unit&gt;, Unit&gt;&gt;,
             origin: TextOrigin&lt;Unit&gt;,
-            translate: Point&lt;Unit&gt;,
-            rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
-            scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         ) <span class="kw">where
             </span>Unit: ScreenUnit,
         {
+            <span class="kw">let </span>text = text.into();
             <span class="kw">let </span>scaling_factor = <span class="self">self</span>.scale;
-            <span class="kw">let </span>translation = translate.into_px(scaling_factor).cast();
+            <span class="kw">let </span>translation = text.translation.into_px(scaling_factor).cast();
             <span class="kw">let </span>origin = <span class="kw">match </span>origin {
                 TextOrigin::TopLeft =&gt; Point::default(),
-                TextOrigin::Center =&gt; Point::from(text.size).into_px(scaling_factor).cast() / <span class="number">2</span>,
-                TextOrigin::FirstBaseline =&gt; Point::new(Px(<span class="number">0</span>), text.ascent.into_px(scaling_factor)),
+                TextOrigin::Center =&gt; {
+                    Point::from(text.source.size).into_px(scaling_factor).cast() / <span class="number">2
+                </span>}
+                TextOrigin::FirstBaseline =&gt; {
+                    Point::new(Px(<span class="number">0</span>), text.source.ascent.into_px(scaling_factor))
+                }
                 TextOrigin::Custom(offset) =&gt; offset.into_px(scaling_factor).cast(),
             };
-            <span class="kw">for </span>MeasuredGlyph { blit, cached, .. } <span class="kw">in </span><span class="kw-2">&amp;</span>text.glyphs {
+            <span class="kw">for </span>MeasuredGlyph { blit, cached, .. } <span class="kw">in </span><span class="kw-2">&amp;</span>text.source.glyphs {
                 <span class="kw">let </span><span class="kw-2">mut </span>blit = <span class="kw-2">*</span>blit;
                 blit.translate_by(-origin);
                 render_one_glyph(
                     translation,
-                    rotation,
-                    scale,
+                    text.rotation,
+                    text.scale,
                     blit,
                     cached,
                     <span class="self">self</span>.clip_index,

@@ -410,14 +410,6 @@
 <a href="#410" id="410">410</a>
 <a href="#411" id="411">411</a>
 <a href="#412" id="412">412</a>
-<a href="#413" id="413">413</a>
-<a href="#414" id="414">414</a>
-<a href="#415" id="415">415</a>
-<a href="#416" id="416">416</a>
-<a href="#417" id="417">417</a>
-<a href="#418" id="418">418</a>
-<a href="#419" id="419">419</a>
-<a href="#420" id="420">420</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(missing_docs, clippy::missing_panics_doc)] </span><span class="comment">// This file is a work in progress.
 
 </span><span class="kw">use </span>std::fmt::Debug;
@@ -478,26 +470,21 @@
         );
     }
 
-    graphics.draw_text(
-        Text::&lt;Px&gt;::new(
-            <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-                <span class="string">&quot;Tile {}: Vis: {},{},{},{} - TL: {},{} / {},{}&quot;</span>,
-                tile_size,
-                visible_region.origin.x,
-                visible_region.origin.y,
-                visible_region.size.width,
-                visible_region.size.height,
-                top_left.index.x,
-                top_left.index.y,
-                top_left.tile_offset.x,
-                top_left.tile_offset.y
-            ),
-            Color::RED,
+    graphics.draw_text(Text::&lt;Px&gt;::new(
+        <span class="kw-2">&amp;</span><span class="macro">format!</span>(
+            <span class="string">&quot;Tile {}: Vis: {},{},{},{} - TL: {},{} / {},{}&quot;</span>,
+            tile_size,
+            visible_region.origin.x,
+            visible_region.origin.y,
+            visible_region.size.width,
+            visible_region.size.height,
+            top_left.index.x,
+            top_left.index.y,
+            top_left.tile_offset.x,
+            top_left.tile_offset.y
         ),
-        Point::default(),
-        <span class="prelude-val">None</span>,
-        <span class="prelude-val">None</span>,
-    );
+        Color::RED,
+    ));
 }
 
 <span class="kw">pub struct </span>TileOffset {
@@ -671,12 +658,9 @@
                             <span class="comment">// TODO aspect-fit rather than fill.
                             </span>context.draw_texture(texture, tile_rect);
                         }
-                        TileKind::Color(color) =&gt; context.draw_shape(
-                            <span class="kw-2">&amp;</span>Shape::filled_rect(tile_rect, <span class="kw-2">*</span>color),
-                            Point::default(),
-                            <span class="prelude-val">None</span>,
-                            <span class="prelude-val">None</span>,
-                        ),
+                        TileKind::Color(color) =&gt; {
+                            context.draw_shape(<span class="kw-2">&amp;</span>Shape::filled_rect(tile_rect, <span class="kw-2">*</span>color));
+                        }
                     };
                     x += tile_size;
                 }

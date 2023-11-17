@@ -822,6 +822,10 @@
 <a href="#822" id="822">822</a>
 <a href="#823" id="823">823</a>
 <a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -837,8 +841,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::PreparedCommand;
 <span class="kw">use </span><span class="kw">crate</span>::sealed::{ShapeSource, TextureSource};
 <span class="kw">use crate</span>::{
-    Assert, CollectedTexture, Color, DefaultHasher, Graphics, Kludgine, PreparedGraphic,
-    ProtoGraphics, TextureBlit, TextureCollection, VertexCollection,
+    Assert, CollectedTexture, Color, DefaultHasher, DrawableSource, Graphics, Kludgine,
+    PreparedGraphic, ProtoGraphics, TextureBlit, TextureCollection, VertexCollection,
 };
 
 <span class="kw">impl </span>Kludgine {
@@ -1532,6 +1536,8 @@
     </span><span class="kw">pub </span>glyphs: Vec&lt;MeasuredGlyph&gt;,
 }
 
+<span class="kw">impl</span>&lt;Unit&gt; DrawableSource <span class="kw">for </span>MeasuredText&lt;Unit&gt; {}
+
 <span class="doccomment">/// Instructions for drawing a laid out glyph.
 </span><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>MeasuredGlyph {
@@ -1646,4 +1652,6 @@
         <span class="self">Self</span>::new(value, Color::WHITE)
     }
 }
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Unit&gt; DrawableSource <span class="kw">for </span>Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt; {}
 </code></pre></div></section></main></body></html>
