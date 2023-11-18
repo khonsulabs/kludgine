@@ -1591,7 +1591,7 @@ struct TextureBlit<Unit> {
 impl<Unit> TextureBlit<Unit> {
     pub fn new(source: Rect<UPx>, dest: Rect<Unit>, color: Color) -> Self
     where
-        Unit: Add<Output = Unit> + Ord + Copy,
+        Unit: Add<Output = Unit> + Ord + Copy + Default,
     {
         let (dest_top_left, dest_bottom_right) = dest.extents();
         let (source_top_left, source_bottom_right) = source.extents();
@@ -1601,21 +1601,29 @@ impl<Unit> TextureBlit<Unit> {
                     location: dest_top_left,
                     texture: source_top_left,
                     color,
+                    line_width: Default::default(),
+                    line_normal: Default::default(),
                 },
                 Vertex {
                     location: Point::new(dest_bottom_right.x, dest_top_left.y),
                     texture: Point::new(source_bottom_right.x, source_top_left.y),
                     color,
+                    line_width: Default::default(),
+                    line_normal: Default::default(),
                 },
                 Vertex {
                     location: Point::new(dest_top_left.x, dest_bottom_right.y),
                     texture: Point::new(source_top_left.x, source_bottom_right.y),
                     color,
+                    line_width: Default::default(),
+                    line_normal: Default::default(),
                 },
                 Vertex {
                     location: dest_bottom_right,
                     texture: source_bottom_right,
                     color,
+                    line_width: Default::default(),
+                    line_normal: Default::default(),
                 },
             ],
         }
