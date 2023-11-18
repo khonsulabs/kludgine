@@ -117,7 +117,12 @@ impl Kludgine {
             view_formats: &[],
         });
 
-        let sampler = device.create_sampler(&wgpu::SamplerDescriptor::default());
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            min_filter: wgpu::FilterMode::Linear,
+            mag_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
+            ..wgpu::SamplerDescriptor::default()
+        });
         let default_bindings = pipeline::bind_group(
             device,
             &binding_layout,

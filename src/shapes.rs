@@ -1,7 +1,8 @@
-use std::ops::{Add, Neg};
+use std::fmt::Debug;
+use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use figures::units::{Lp, Px, UPx};
-use figures::{FloatConversion, Point, Rect, ScreenScale};
+use figures::{FloatConversion, IsZero, Point, Rect, ScreenScale};
 use lyon_tessellation::{
     FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
     GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeTessellator, StrokeVertex,
@@ -100,6 +101,51 @@ impl<Unit> Shape<Unit, false> {
             .line_to(p2)
             .line_to(Point::new(p1.x, p2.y))
             .close();
+        path.stroke(color, options)
+    }
+
+    /// Returns a rounded rectangle with the specified corner radii that is
+    /// filled solid with `color`.
+    pub fn filled_round_rect(
+        rect: Rect<Unit>,
+        corner_radius: impl Into<CornerRadii<Unit>>,
+        color: Color,
+    ) -> Shape<Unit, false>
+    where
+        Unit: Add<Output = Unit>
+            + Sub<Output = Unit>
+            + Div<Output = Unit>
+            + Mul<f32, Output = Unit>
+            + TryFrom<i32>
+            + Ord
+            + FloatConversion<Float = f32>
+            + Copy,
+        Unit::Error: Debug,
+    {
+        let path = Path::round_rect(rect, corner_radius);
+        path.fill(color)
+    }
+
+    /// Returns a rounded rectangle with the specified corner radii that has its
+    /// outline stroked with `color` and `options`.
+    pub fn stroked_round_rect(
+        rect: Rect<Unit>,
+        corner_radius: impl Into<CornerRadii<Unit>>,
+        color: Color,
+        options: StrokeOptions<Unit>,
+    ) -> Shape<Unit, false>
+    where
+        Unit: Add<Output = Unit>
+            + Sub<Output = Unit>
+            + Div<Output = Unit>
+            + Mul<f32, Output = Unit>
+            + TryFrom<i32>
+            + Ord
+            + FloatConversion<Float = f32>
+            + Copy,
+        Unit::Error: Debug,
+    {
+        let path = Path::round_rect(rect, corner_radius);
         path.stroke(color, options)
     }
 
@@ -338,6 +384,70 @@ pub struct Path<Unit, const TEXTURED: bool> {
     /// A small-vec of path events. Contains enough stack space to contain the
     /// path of a hexagon, because it's the bestagon.
     events: SmallVec<[PathEvent<Unit>; 7]>,
+}
+
+impl<Unit> Path<Unit, false> {
+    pub fn round_rect(
+        rect: Rect<Unit>,
+        corner_radius: impl Into<CornerRadii<Unit>>,
+    ) -> Path<Unit, false>
+    where
+        Unit: Add<Output = Unit>
+            + Sub<Output = Unit>
+            + Div<Output = Unit>
+            + Mul<f32, Output = Unit>
+            + TryFrom<i32>
+            + Ord
+            + FloatConversion<Float = f32>
+            + Copy,
+        Unit::Error: Debug,
+    {
+        const C: f32 = 0.551_915_02; // https://spencermortensen.com/articles/bezier-circle/
+        let (top_left, bottom_right) = rect.extents();
+        let top = top_left.y;
+        let bottom = bottom_right.y;
+        let left = top_left.x;
+        let right = bottom_right.x;
+
+        let min_dimension = if rect.size.width > rect.size.height {
+            rect.size.height
+        } else {
+            rect.size.width
+        };
+        let radii = corner_radius
+            .into()
+            .clamped(min_dimension / Unit::try_from(2).expect("two is always convertable"));
+
+        let drift = radii.map(|r| r * C);
+
+        let start = Point::new(left + radii.top_left, top);
+        PathBuilder::new(start)
+            .line_to(Point::new(right - radii.top_right, top))
+            .cubic_curve_to(
+                Point::new(right + drift.top_right - radii.top_right, top),
+                Point::new(right, top + radii.top_right - drift.top_right),
+                Point::new(right, top + radii.top_right),
+            )
+            .line_to(Point::new(right, bottom - radii.bottom_right))
+            .cubic_curve_to(
+                Point::new(right, bottom + drift.bottom_right - radii.bottom_right),
+                Point::new(right + drift.bottom_right - radii.bottom_right, bottom),
+                Point::new(right - radii.bottom_right, bottom),
+            )
+            .line_to(Point::new(left + radii.bottom_left, bottom))
+            .cubic_curve_to(
+                Point::new(left + radii.bottom_left - drift.bottom_left, bottom),
+                Point::new(left, bottom + drift.bottom_left - radii.bottom_left),
+                Point::new(left, bottom - radii.bottom_left),
+            )
+            .line_to(Point::new(left, top + radii.top_left))
+            .cubic_curve_to(
+                Point::new(left, top + radii.top_left - drift.top_left),
+                Point::new(left + radii.top_left - drift.top_left, top),
+                start,
+            )
+            .close()
+    }
 }
 
 #[test]
@@ -703,7 +813,7 @@ where
             start_cap: lyon_tessellation::StrokeOptions::DEFAULT_LINE_CAP,
             end_cap: lyon_tessellation::StrokeOptions::DEFAULT_LINE_CAP,
             miter_limit: lyon_tessellation::StrokeOptions::DEFAULT_MITER_LIMIT,
-            tolerance: Default::default(),
+            tolerance: 1.0,
         }
     }
 }
@@ -846,5 +956,131 @@ where
             .with_end_cap(end_cap)
             .with_miter_limit(miter_limit)
             .with_tolerance(tolerance)
+    }
+}
+
+/// A description of the size to use for each corner radius measurement when
+/// rendering a rounded rectangle.
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+pub struct CornerRadii<Unit> {
+    /// The radius of the top left rounded corner.
+    pub top_left: Unit,
+    /// The radius of the top right rounded corner.
+    pub top_right: Unit,
+    /// The radius of the bottom right rounded corner.
+    pub bottom_right: Unit,
+    /// The radius of the bottom left rounded corner.
+    pub bottom_left: Unit,
+}
+
+impl<Unit> CornerRadii<Unit> {
+    /// Passes each radius definition to `map` and returns a new set of radii
+    /// with the results.
+    #[must_use]
+    pub fn map<UnitB>(self, mut map: impl FnMut(Unit) -> UnitB) -> CornerRadii<UnitB> {
+        CornerRadii {
+            top_left: map(self.top_left),
+            top_right: map(self.top_right),
+            bottom_right: map(self.bottom_right),
+            bottom_left: map(self.bottom_left),
+        }
+    }
+}
+
+impl<Unit> ScreenScale for CornerRadii<Unit>
+where
+    Unit: ScreenScale<Lp = Lp, Px = Px, UPx = UPx>,
+{
+    type Lp = CornerRadii<Lp>;
+    type Px = CornerRadii<Px>;
+    type UPx = CornerRadii<UPx>;
+
+    fn into_px(self, scale: figures::Fraction) -> Self::Px {
+        self.map(|size| size.into_px(scale))
+    }
+
+    fn from_px(px: Self::Px, scale: figures::Fraction) -> Self {
+        Self {
+            top_left: Unit::from_px(px.top_left, scale),
+            top_right: Unit::from_px(px.top_right, scale),
+            bottom_right: Unit::from_px(px.bottom_right, scale),
+            bottom_left: Unit::from_px(px.bottom_left, scale),
+        }
+    }
+
+    fn into_upx(self, scale: figures::Fraction) -> Self::UPx {
+        self.map(|size| size.into_upx(scale))
+    }
+
+    fn from_upx(px: Self::UPx, scale: figures::Fraction) -> Self {
+        Self {
+            top_left: Unit::from_upx(px.top_left, scale),
+            top_right: Unit::from_upx(px.top_right, scale),
+            bottom_right: Unit::from_upx(px.bottom_right, scale),
+            bottom_left: Unit::from_upx(px.bottom_left, scale),
+        }
+    }
+
+    fn into_lp(self, scale: figures::Fraction) -> Self::Lp {
+        self.map(|size| size.into_lp(scale))
+    }
+
+    fn from_lp(lp: Self::Lp, scale: figures::Fraction) -> Self {
+        Self {
+            top_left: Unit::from_lp(lp.top_left, scale),
+            top_right: Unit::from_lp(lp.top_right, scale),
+            bottom_right: Unit::from_lp(lp.bottom_right, scale),
+            bottom_left: Unit::from_lp(lp.bottom_left, scale),
+        }
+    }
+}
+
+impl<Unit> IsZero for CornerRadii<Unit>
+where
+    Unit: IsZero,
+{
+    fn is_zero(&self) -> bool {
+        self.top_left.is_zero()
+            && self.top_right.is_zero()
+            && self.bottom_right.is_zero()
+            && self.bottom_left.is_zero()
+    }
+}
+
+impl<Unit> CornerRadii<Unit>
+where
+    Unit: PartialOrd + Copy,
+{
+    fn clamp_size(size: Unit, clamp: Unit) -> Unit {
+        if size > clamp {
+            clamp
+        } else {
+            size
+        }
+    }
+
+    /// Returns this set of radii clamped so that no corner radius has a width
+    /// or height larger than `size`'s.
+    #[must_use]
+    pub fn clamped(mut self, size: Unit) -> Self {
+        self.top_left = Self::clamp_size(self.top_left, size);
+        self.top_right = Self::clamp_size(self.top_right, size);
+        self.bottom_right = Self::clamp_size(self.bottom_right, size);
+        self.bottom_left = Self::clamp_size(self.bottom_left, size);
+        self
+    }
+}
+
+impl<Unit> From<Unit> for CornerRadii<Unit>
+where
+    Unit: Copy,
+{
+    fn from(radii: Unit) -> Self {
+        Self {
+            top_left: radii,
+            top_right: radii,
+            bottom_right: radii,
+            bottom_left: radii,
+        }
     }
 }
