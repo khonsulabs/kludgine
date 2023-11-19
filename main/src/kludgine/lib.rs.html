@@ -1735,14 +1735,6 @@
 <a href="#1735" id="1735">1735</a>
 <a href="#1736" id="1736">1736</a>
 <a href="#1737" id="1737">1737</a>
-<a href="#1738" id="1738">1738</a>
-<a href="#1739" id="1739">1739</a>
-<a href="#1740" id="1740">1740</a>
-<a href="#1741" id="1741">1741</a>
-<a href="#1742" id="1742">1742</a>
-<a href="#1743" id="1743">1743</a>
-<a href="#1744" id="1744">1744</a>
-<a href="#1745" id="1745">1745</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -1833,6 +1825,7 @@
         device: <span class="kw-2">&amp;</span>wgpu::Device,
         queue: <span class="kw-2">&amp;</span>wgpu::Queue,
         format: wgpu::TextureFormat,
+        multisample: wgpu::MultisampleState,
         initial_size: Size&lt;UPx&gt;,
         scale: f32,
     ) -&gt; <span class="self">Self </span>{
@@ -1881,7 +1874,7 @@
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(<span class="macro">include_str!</span>(<span class="string">&quot;shader.wgsl&quot;</span>))),
         });
 
-        <span class="kw">let </span>pipeline = pipeline::new(device, <span class="kw-2">&amp;</span>pipeline_layout, <span class="kw-2">&amp;</span>shader, format);
+        <span class="kw">let </span>pipeline = pipeline::new(device, <span class="kw-2">&amp;</span>pipeline_layout, <span class="kw-2">&amp;</span>shader, format, multisample);
 
         <span class="self">Self </span>{
             <span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
@@ -1892,7 +1885,6 @@
                 sampler: <span class="kw-2">&amp;</span>sampler,
                 uniforms: <span class="kw-2">&amp;</span>uniforms.wgpu,
             }),
-
             default_bindings,
             pipeline,
             _shader: shader,
@@ -3346,29 +3338,21 @@
                     location: dest_top_left,
                     texture: source_top_left,
                     color,
-                    line_width: Default::default(),
-                    line_normal: Default::default(),
                 },
                 Vertex {
                     location: Point::new(dest_bottom_right.x, dest_top_left.y),
                     texture: Point::new(source_bottom_right.x, source_top_left.y),
                     color,
-                    line_width: Default::default(),
-                    line_normal: Default::default(),
                 },
                 Vertex {
                     location: Point::new(dest_top_left.x, dest_bottom_right.y),
                     texture: Point::new(source_top_left.x, source_bottom_right.y),
                     color,
-                    line_width: Default::default(),
-                    line_normal: Default::default(),
                 },
                 Vertex {
                     location: dest_bottom_right,
                     texture: source_bottom_right,
                     color,
-                    line_width: Default::default(),
-                    line_normal: Default::default(),
                 },
             ],
         }
