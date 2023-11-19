@@ -372,6 +372,23 @@
 <a href="#372" id="372">372</a>
 <a href="#373" id="373">373</a>
 <a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::any::TypeId;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::ops::Range;
@@ -379,7 +396,9 @@
 
 <span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>figures::units::{Lp, Px, UPx};
-<span class="kw">use </span>figures::{Angle, Fraction, IntoSigned, IsZero, Point, ScreenUnit, Size};
+<span class="kw">use </span>figures::{
+    Angle, Fraction, IntoSigned, Point, ScreenScale, ScreenUnit, Size, UnscaledUnit, Zero,
+};
 <span class="kw">use </span>smallvec::SmallVec;
 
 <span class="kw">use </span><span class="kw">crate</span>::buffer::Buffer;
@@ -419,14 +438,18 @@
     <span class="kw">pub </span>location: Point&lt;Unit&gt;,
     <span class="kw">pub </span>texture: Point&lt;UPx&gt;,
     <span class="kw">pub </span>color: Color,
+    <span class="kw">pub </span>line_normal: Unit,
+    <span class="kw">pub </span>line_width: Unit,
 }
 
 <span class="kw">impl </span>From&lt;Vertex&lt;Px&gt;&gt; <span class="kw">for </span>Vertex&lt;i32&gt; {
     <span class="kw">fn </span>from(value: Vertex&lt;Px&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            location: value.location.cast(),
+            location: value.location.map(Px::into_unscaled),
             texture: value.texture,
             color: value.color,
+            line_width: value.line_width.into(),
+            line_normal: value.line_normal.into(),
         }
     }
 }
@@ -469,7 +492,7 @@
 
 <span class="kw">impl</span>&lt;Unit&gt; PreparedGraphic&lt;Unit&gt;
 <span class="kw">where
-    </span>Unit: IntoSigned + Copy + Default + ShaderScalable + IsZero,
+    </span>Unit: IntoSigned + Copy + Default + ShaderScalable + ScreenUnit + Zero,
     i32: From&lt;Unit::Signed&gt;,
     Vertex&lt;Unit&gt;: Pod,
 {
@@ -516,8 +539,9 @@
                 flags |= FLAG_ROTATE;
                 scale.into_raidans_f()
             });
-            <span class="kw">let </span>translation =
-                graphics.clip.current.origin.into_signed().cast() + origin.into_signed().cast();
+            <span class="kw">let </span>translation = (graphics.clip.current.origin.into_signed()
+                + origin.into_px(graphics.scale()))
+            .map(Px::into_unscaled);
             <span class="kw">if </span>!translation.is_zero() {
                 flags |= FLAG_TRANSLATE;
             }
@@ -707,6 +731,16 @@
                         format: wgpu::VertexFormat::Uint32,
                         offset: <span class="number">16</span>,
                         shader_location: <span class="number">2</span>,
+                    },
+                    wgpu::VertexAttribute {
+                        format: wgpu::VertexFormat::Sint32,
+                        offset: <span class="number">20</span>,
+                        shader_location: <span class="number">3</span>,
+                    },
+                    wgpu::VertexAttribute {
+                        format: wgpu::VertexFormat::Sint32,
+                        offset: <span class="number">24</span>,
+                        shader_location: <span class="number">4</span>,
                     },
                 ],
             }],

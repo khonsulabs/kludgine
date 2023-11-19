@@ -826,6 +826,7 @@
 <a href="#826" id="826">826</a>
 <a href="#827" id="827">827</a>
 <a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -833,7 +834,7 @@
 
 <span class="kw">use </span>cosmic_text::{fontdb, Attrs, AttrsOwned, LayoutGlyph, SwashContent};
 <span class="kw">use </span>figures::units::{Lp, Px, UPx};
-<span class="kw">use </span>figures::{Fraction, Point, Rect, ScreenScale, Size};
+<span class="kw">use </span>figures::{FloatConversion, Fraction, Point, Rect, ScreenScale, Size, UPx2D};
 <span class="kw">use </span>intentional::Cast;
 <span class="kw">use </span>smallvec::SmallVec;
 
@@ -1055,7 +1056,7 @@
         </span>);
         scratch.set_size(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.fonts,
-            width.map_or(f32::MAX, |width| width.<span class="number">0</span>.cast()),
+            width.map_or(f32::MAX, Cast::cast),
             f32::MAX,
         );
         scratch.shape_until_scroll(<span class="kw-2">&amp;mut </span><span class="self">self</span>.fonts);
@@ -1239,23 +1240,24 @@
         .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect(<span class="string">&quot;no buffer&quot;</span>))
         .metrics();
 
-    <span class="kw">let </span>line_height_offset = Point::new(<span class="number">0.</span>, metrics.line_height);
+    <span class="kw">let </span>line_height_offset = Point::new(Px::ZERO, Px::from(metrics.line_height));
     <span class="kw">let </span>relative_to = <span class="kw">match </span>origin {
-        TextOrigin::Custom(point) =&gt; point.cast(),
+        TextOrigin::Custom(point) =&gt; point,
         TextOrigin::TopLeft =&gt; Point::default(),
         TextOrigin::Center =&gt; {
             <span class="kw">let </span>measured =
                 measure_text::&lt;Px, <span class="bool-val">false</span>&gt;(buffer, default_color, kludgine, queue, glyphs);
-            Point::from(measured.size).cast() / <span class="number">2.
+            Point::from(measured.size) / <span class="number">2.
         </span>}
-        TextOrigin::FirstBaseline =&gt; line_height_offset,
+        TextOrigin::FirstBaseline =&gt; line_height_offset.cast(),
     } + line_height_offset;
 
     <span class="kw">let </span>buffer = buffer.unwrap_or_else(|| kludgine.text.scratch.as_ref().expect(<span class="string">&quot;no buffer&quot;</span>));
     <span class="kw">for </span>run <span class="kw">in </span>buffer.layout_runs() {
-        <span class="kw">let </span>run_origin = Point::new(<span class="number">0.</span>, run.line_y) - relative_to;
+        <span class="kw">let </span>run_origin = Point::new(Px::ZERO, Px::from(run.line_y)) - relative_to;
         <span class="kw">for </span>glyph <span class="kw">in </span>run.glyphs {
-            <span class="kw">let </span>physical = glyph.physical((run_origin.x, run_origin.y), <span class="number">1.</span>);
+            <span class="kw">let </span>physical =
+                glyph.physical((run_origin.x.into_float(), run_origin.y.into_float()), <span class="number">1.</span>);
             <span class="kw">let </span><span class="prelude-val">Some</span>(image) = kludgine
                 .text
                 .swash_cache
@@ -1282,7 +1284,7 @@
                                     bytes_per_row: <span class="prelude-val">Some</span>(image.placement.width),
                                     rows_per_image: <span class="prelude-val">None</span>,
                                 },
-                                Size::new(image.placement.width, image.placement.height).cast(),
+                                Size::upx(image.placement.width, image.placement.height).cast(),
                                 queue,
                             ),
                             <span class="bool-val">true</span>,
@@ -1298,7 +1300,7 @@
                                         bytes_per_row: <span class="prelude-val">Some</span>(image.placement.width * <span class="number">4</span>),
                                         rows_per_image: <span class="prelude-val">None</span>,
                                     },
-                                    Size::new(image.placement.width, image.placement.height).cast(),
+                                    Size::upx(image.placement.width, image.placement.height).cast(),
                                     queue,
                                 ),
                                 <span class="bool-val">false</span>,
@@ -1332,7 +1334,7 @@
                 <span class="kw-2">&amp;</span>cached,
                 glyph,
                 (run.line_top / metrics.line_height).round().cast::&lt;usize&gt;(),
-                Px::from(relative_to.y),
+                relative_to.y,
                 Px::from(run.line_w),
             );
 

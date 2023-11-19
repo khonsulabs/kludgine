@@ -290,18 +290,14 @@
 <a href="#290" id="290">290</a>
 <a href="#291" id="291">291</a>
 <a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a>
-<a href="#294" id="294">294</a>
-<a href="#295" id="295">295</a>
-<a href="#296" id="296">296</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::Div;
 <span class="kw">use </span>std::sync::{Arc, PoisonError, RwLock};
 
 <span class="kw">use </span>alot::{LotId, Lots};
 <span class="kw">use </span>etagere::{Allocation, BucketedAtlasAllocator};
-<span class="kw">use </span>figures::units::{Px, UPx};
-<span class="kw">use </span>figures::{IntoSigned, IntoUnsigned, Point, Rect, Size};
+<span class="kw">use </span>figures::units::UPx;
+<span class="kw">use </span>figures::{IntoSigned, IntoUnsigned, Point, Px2D, Rect, Size, UPx2D};
 <span class="kw">use </span>intentional::Assert;
 
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{PreparedGraphic, Vertex};
@@ -348,8 +344,8 @@
             format,
             data: Arc::new(RwLock::new(Data {
                 rects: BucketedAtlasAllocator::new(etagere::euclid::Size2D::new(
-                    initial_size.width.<span class="number">0</span>,
-                    initial_size.height.<span class="number">0</span>,
+                    initial_size.width.into(),
+                    initial_size.height.into(),
                 )),
                 texture,
                 textures: Lots::new(),
@@ -389,17 +385,13 @@
         <span class="kw">let </span>allocation = this
             .rects
             .allocate(etagere::euclid::Size2D::new(
-                signed_size.width.<span class="number">0</span>,
-                signed_size.height.<span class="number">0</span>,
+                signed_size.width.into(),
+                signed_size.height.into(),
             ))
             .assert(<span class="string">&quot;TODO: implement growth&quot;</span>);
 
         <span class="kw">let </span>region = Rect::new(
-            Point::new(
-                Px(allocation.rectangle.min.x),
-                Px(allocation.rectangle.min.y),
-            )
-            .into_unsigned(),
+            Point::px(allocation.rectangle.min.x, allocation.rectangle.min.y).into_unsigned(),
             size,
         );
 
@@ -453,7 +445,7 @@
                 bytes_per_row: <span class="prelude-val">Some</span>(image.width() * <span class="number">4</span>),
                 rows_per_image: <span class="prelude-val">None</span>,
             },
-            Size::new(UPx(image.width()), UPx(image.height())),
+            Size::upx(image.width(), image.height()),
             graphics.queue,
         )
     }

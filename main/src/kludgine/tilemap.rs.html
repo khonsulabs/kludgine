@@ -426,7 +426,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::text::Text;
 <span class="kw">use crate</span>::{AnyTexture, Assert, Color};
 
-<span class="kw">pub const </span>TILE_SIZE: Px = Px(<span class="number">32</span>);
+<span class="kw">pub const </span>TILE_SIZE: Px = Px::new(<span class="number">32</span>);
 
 <span class="comment">// At the time of writing, this is is used to translate from
 // tilemap coords to world coords
@@ -505,7 +505,7 @@
             (-remainder, pos - remainder)
         };
         <span class="kw">let </span>index =
-            isize::try_from(floored.<span class="number">0 </span>/ tile_size.<span class="number">0</span>).expect(<span class="string">&quot;tile size out of range of isize&quot;</span>);
+            isize::try_from((floored / tile_size).get()).expect(<span class="string">&quot;tile size out of range of isize&quot;</span>);
         (index, offset)
     }
 
@@ -519,7 +519,7 @@
 
 <span class="kw">fn </span>last_tile(pos: Point&lt;Px&gt;, tile_size: Px) -&gt; TileOffset {
     <span class="kw">fn </span>coord_info(pos: Px, tile_size: Px) -&gt; (isize, Px) {
-        <span class="kw">let </span>index = (pos.<span class="number">0 </span>+ pos.<span class="number">0</span>.signum() * (tile_size.<span class="number">0 </span>- <span class="number">1</span>)) / tile_size.<span class="number">0</span>;
+        <span class="kw">let </span>index = (pos.get() + pos.get().signum() * (tile_size.get() - <span class="number">1</span>)) / tile_size.get();
         <span class="kw">let </span>floored = tile_size * index;
         <span class="kw">let </span>index = isize::try_from(index).expect(<span class="string">&quot;tile size out of range of isize&quot;</span>);
         (index, floored)

@@ -1730,6 +1730,19 @@
 <a href="#1730" id="1730">1730</a>
 <a href="#1731" id="1731">1731</a>
 <a href="#1732" id="1732">1732</a>
+<a href="#1733" id="1733">1733</a>
+<a href="#1734" id="1734">1734</a>
+<a href="#1735" id="1735">1735</a>
+<a href="#1736" id="1736">1736</a>
+<a href="#1737" id="1737">1737</a>
+<a href="#1738" id="1738">1738</a>
+<a href="#1739" id="1739">1739</a>
+<a href="#1740" id="1740">1740</a>
+<a href="#1741" id="1741">1741</a>
+<a href="#1742" id="1742">1742</a>
+<a href="#1743" id="1743">1743</a>
+<a href="#1744" id="1744">1744</a>
+<a href="#1745" id="1745">1745</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -1749,7 +1762,7 @@
 <span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
 </span><span class="kw">pub use </span>cosmic_text;
 <span class="kw">use </span>figures::units::UPx;
-<span class="kw">use </span>figures::{Angle, Fraction, FromComponents, IntoComponents, Point, Rect, Size};
+<span class="kw">use </span>figures::{Angle, Fraction, FromComponents, IntoComponents, Point, Rect, Size, UPx2D};
 <span class="kw">use </span>intentional::Assert;
 <span class="kw">use </span>sealed::ShapeSource <span class="kw">as _</span>;
 <span class="kw">use </span>wgpu::util::DeviceExt;
@@ -1849,7 +1862,12 @@
             view_formats: <span class="kw-2">&amp;</span>[],
         });
 
-        <span class="kw">let </span>sampler = device.create_sampler(<span class="kw-2">&amp;</span>wgpu::SamplerDescriptor::default());
+        <span class="kw">let </span>sampler = device.create_sampler(<span class="kw-2">&amp;</span>wgpu::SamplerDescriptor {
+            min_filter: wgpu::FilterMode::Linear,
+            mag_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
+            ..wgpu::SamplerDescriptor::default()
+        });
         <span class="kw">let </span>default_bindings = pipeline::bind_group(
             device,
             <span class="kw-2">&amp;</span>binding_layout,
@@ -2132,7 +2150,7 @@
 
     <span class="kw">pub fn </span>push_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) {
         <span class="kw">let </span>previous_clip = <span class="self">self</span>.current;
-        <span class="self">self</span>.current = previous_clip.clip_to(clip);
+        <span class="self">self</span>.current = previous_clip.clip_to(clip.expand_rounded());
         <span class="self">self</span>.previous_clips.push(previous_clip);
     }
 
@@ -2380,10 +2398,10 @@
         <span class="self">self</span>.clip.pop_clip();
         <span class="kw">if </span><span class="self">self</span>.clip.current.size.width &gt; <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.clip.current.size.height &gt; <span class="number">0 </span>{
             <span class="self">self</span>.pass.set_scissor_rect(
-                <span class="self">self</span>.clip.current.origin.x.<span class="number">0</span>,
-                <span class="self">self</span>.clip.current.origin.y.<span class="number">0</span>,
-                <span class="self">self</span>.clip.current.size.width.<span class="number">0</span>,
-                <span class="self">self</span>.clip.current.size.height.<span class="number">0</span>,
+                <span class="self">self</span>.clip.current.origin.x.into(),
+                <span class="self">self</span>.clip.current.origin.y.into(),
+                <span class="self">self</span>.clip.current.size.width.into(),
+                <span class="self">self</span>.clip.current.size.height.into(),
             );
         }
     }
@@ -2392,10 +2410,10 @@
         <span class="self">self</span>.clip.push_clip(clip);
         <span class="kw">if </span><span class="self">self</span>.clip.current.size.width &gt; <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.clip.current.size.height &gt; <span class="number">0 </span>{
             <span class="self">self</span>.pass.set_scissor_rect(
-                <span class="self">self</span>.clip.current.origin.x.<span class="number">0</span>,
-                <span class="self">self</span>.clip.current.origin.y.<span class="number">0</span>,
-                <span class="self">self</span>.clip.current.size.width.<span class="number">0</span>,
-                <span class="self">self</span>.clip.current.size.height.<span class="number">0</span>,
+                <span class="self">self</span>.clip.current.origin.x.into(),
+                <span class="self">self</span>.clip.current.origin.y.into(),
+                <span class="self">self</span>.clip.current.size.width.into(),
+                <span class="self">self</span>.clip.current.size.height.into(),
             );
         }
     }
@@ -2993,7 +3011,7 @@
         </span><span class="kw">let </span>image = image.to_rgba8();
         <span class="self">Self</span>::new_with_data(
             graphics,
-            Size::new(UPx(image.width()), UPx(image.height())),
+            Size::upx(image.width(), image.height()),
             wgpu::TextureFormat::Rgba8Unorm,
             wgpu::TextureUsages::TEXTURE_BINDING,
             image.as_raw(),
@@ -3050,7 +3068,7 @@
     <span class="doccomment">/// The size of the texture.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;UPx&gt; {
-        Size::new(UPx(<span class="self">self</span>.wgpu.width()), UPx(<span class="self">self</span>.wgpu.height()))
+        Size::upx(<span class="self">self</span>.wgpu.width(), <span class="self">self</span>.wgpu.height())
     }
 
     <span class="doccomment">/// The format of the texture.
@@ -3318,7 +3336,7 @@
 </span><span class="kw">impl</span>&lt;Unit&gt; TextureBlit&lt;Unit&gt; {
     <span class="kw">pub fn </span>new(source: Rect&lt;UPx&gt;, dest: Rect&lt;Unit&gt;, color: Color) -&gt; <span class="self">Self
     </span><span class="kw">where
-        </span>Unit: Add&lt;Output = Unit&gt; + Ord + Copy,
+        </span>Unit: Add&lt;Output = Unit&gt; + Ord + Copy + Default,
     {
         <span class="kw">let </span>(dest_top_left, dest_bottom_right) = dest.extents();
         <span class="kw">let </span>(source_top_left, source_bottom_right) = source.extents();
@@ -3328,21 +3346,29 @@
                     location: dest_top_left,
                     texture: source_top_left,
                     color,
+                    line_width: Default::default(),
+                    line_normal: Default::default(),
                 },
                 Vertex {
                     location: Point::new(dest_bottom_right.x, dest_top_left.y),
                     texture: Point::new(source_bottom_right.x, source_top_left.y),
                     color,
+                    line_width: Default::default(),
+                    line_normal: Default::default(),
                 },
                 Vertex {
                     location: Point::new(dest_top_left.x, dest_bottom_right.y),
                     texture: Point::new(source_top_left.x, source_bottom_right.y),
                     color,
+                    line_width: Default::default(),
+                    line_normal: Default::default(),
                 },
                 Vertex {
                     location: dest_bottom_right,
                     texture: source_bottom_right,
                     color,
+                    line_width: Default::default(),
+                    line_normal: Default::default(),
                 },
             ],
         }

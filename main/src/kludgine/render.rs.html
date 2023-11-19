@@ -679,12 +679,19 @@
 <a href="#679" id="679">679</a>
 <a href="#680" id="680">680</a>
 <a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
+<a href="#684" id="684">684</a>
+<a href="#685" id="685">685</a>
+<a href="#686" id="686">686</a>
+<a href="#687" id="687">687</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
 
-<span class="kw">use </span>figures::units::UPx;
-<span class="kw">use </span>figures::{Angle, IntoSigned, IsZero, Point, Rect};
+<span class="kw">use </span>figures::units::{Px, UPx};
+<span class="kw">use </span>figures::{Angle, IntoSigned, Point, Rect, ScreenScale, ScreenUnit, UnscaledUnit, Zero};
+<span class="kw">use </span>intentional::CastInto;
 
 <span class="kw">use </span><span class="kw">crate</span>::buffer::DiffableBuffer;
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{
@@ -739,7 +746,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         shape: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;shape </span>Shape&lt;Unit, <span class="bool-val">false</span>&gt;, Unit&gt;&gt;,
     ) <span class="kw">where
-        </span>Unit: IsZero + ShaderScalable + figures::Unit + Copy,
+        </span>Unit: Zero + ShaderScalable + ScreenUnit + figures::Unit + Copy,
     {
         <span class="self">self</span>.inner_draw(<span class="kw-2">&amp;</span>shape.into(), <span class="prelude-ty">Option</span>::&lt;<span class="kw-2">&amp;</span>Texture&gt;::None);
     }
@@ -747,7 +754,7 @@
     <span class="doccomment">/// Draws `texture` at `destination`, scaling as necessary.
     </span><span class="kw">pub fn </span>draw_texture&lt;Unit&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource, destination: Rect&lt;Unit&gt;)
     <span class="kw">where
-        </span>Unit: figures::Unit + ShaderScalable,
+        </span>Unit: figures::Unit + ScreenUnit + ShaderScalable,
         i32: From&lt;&lt;Unit <span class="kw">as </span>IntoSigned&gt;::Signed&gt;,
     {
         <span class="self">self</span>.draw_textured_shape(
@@ -763,7 +770,7 @@
         shape: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;shape </span>Shape, Unit&gt;&gt;,
         texture: <span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource,
     ) <span class="kw">where
-        </span>Unit: IsZero + ShaderScalable + figures::Unit + Copy,
+        </span>Unit: Zero + ShaderScalable + ScreenUnit + figures::Unit + Copy,
         i32: From&lt;&lt;Unit <span class="kw">as </span>IntoSigned&gt;::Signed&gt;,
         Shape: ShapeSource&lt;Unit, <span class="bool-val">true</span>&gt; + <span class="lifetime">&#39;shape</span>,
     {
@@ -775,7 +782,7 @@
         shape: <span class="kw-2">&amp;</span>Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>Shape, Unit&gt;,
         texture: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource&gt;,
     ) <span class="kw">where
-        </span>Unit: IsZero + ShaderScalable + figures::Unit + Copy,
+        </span>Unit: Zero + ShaderScalable + ScreenUnit + figures::Unit + Copy,
         Shape: ShapeSource&lt;Unit, TEXTURED&gt;,
     {
         <span class="comment">// Merge the vertices into the graphics
@@ -783,12 +790,11 @@
         <span class="kw">let </span><span class="kw-2">mut </span>vertex_map = Vec::with_capacity(vertices.len());
         <span class="kw">for </span>vertex <span class="kw">in </span>vertices {
             <span class="kw">let </span>vertex = Vertex {
-                location: vertex
-                    .location
-                    .try_cast()
-                    .unwrap_or(Point::new(i32::MAX, i32::MAX)),
+                location: vertex.location.map(|u| u.into_unscaled().cast_into()),
                 texture: vertex.texture,
                 color: vertex.color,
+                line_width: vertex.line_width.try_into().unwrap_or_default(),
+                line_normal: vertex.line_normal.try_into().unwrap_or_default(),
             };
             <span class="kw">let </span>index = <span class="self">self</span>.data.vertices.get_or_insert(vertex);
             vertex_map.push(index);
@@ -834,8 +840,8 @@
             rotation,
             translation: shape
                 .translation
-                .try_cast()
-                .unwrap_or(Point::new(i32::MAX, i32::MAX)),
+                .into_px(<span class="self">self</span>.graphics.scale())
+                .map(Px::into_unscaled),
         };
 
         <span class="kw">match </span><span class="self">self</span>.data.commands.last_mut() {
@@ -934,10 +940,10 @@
     <span class="kw">use </span>std::sync::Arc;
 
     <span class="kw">use </span>figures::units::Px;
-    <span class="kw">use </span>figures::{ScreenScale, ScreenUnit};
+    <span class="kw">use </span>figures::{Fraction, ScreenScale, ScreenUnit, UnscaledUnit};
 
     <span class="kw">use super</span>::{
-        Angle, Color, Command, IntoSigned, IsZero, Point, PushConstants, Renderer, Vertex,
+        Angle, Color, Command, IntoSigned, Point, PushConstants, Renderer, Vertex, Zero,
         FLAG_MASKED, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED, FLAG_TRANSLATE,
     };
     <span class="kw">use </span><span class="kw">crate</span>::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
@@ -1054,14 +1060,14 @@
         {
             <span class="kw">let </span>text = text.into();
             <span class="kw">let </span>scaling_factor = <span class="self">self</span>.scale;
-            <span class="kw">let </span>translation = text.translation.into_px(scaling_factor).cast();
+            <span class="kw">let </span>translation = text.translation;
             <span class="kw">let </span>origin = <span class="kw">match </span>origin {
                 TextOrigin::TopLeft =&gt; Point::default(),
                 TextOrigin::Center =&gt; {
                     Point::from(text.source.size).into_px(scaling_factor).cast() / <span class="number">2
                 </span>}
                 TextOrigin::FirstBaseline =&gt; {
-                    Point::new(Px(<span class="number">0</span>), text.source.ascent.into_px(scaling_factor))
+                    Point::new(Px::ZERO, text.source.ascent.into_px(scaling_factor))
                 }
                 TextOrigin::Custom(offset) =&gt; offset.into_px(scaling_factor).cast(),
             };
@@ -1075,6 +1081,7 @@
                     blit,
                     cached,
                     <span class="self">self</span>.clip_index,
+                    scaling_factor,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.vertices,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.indices,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.textures,
@@ -1088,7 +1095,7 @@
             buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>cosmic_text::Buffer&gt;,
             default_color: Color,
             origin: TextOrigin&lt;Px&gt;,
-            translate: Point&lt;Unit&gt;,
+            translation: Point&lt;Unit&gt;,
             rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
             scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         ) <span class="kw">where
@@ -1096,7 +1103,6 @@
         {
             <span class="kw">let </span>queue = <span class="self">self</span>.queue;
             <span class="kw">let </span>scaling_factor = <span class="self">self</span>.scale;
-            <span class="kw">let </span>translation = translate.into_px(scaling_factor).cast();
             map_each_glyph(
                 buffer,
                 default_color,
@@ -1112,6 +1118,7 @@
                         blit,
                         cached,
                         <span class="self">self</span>.clip_index,
+                        scaling_factor,
                         <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.vertices,
                         <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.indices,
                         <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.textures,
@@ -1123,24 +1130,30 @@
     }
 
     <span class="attr">#[allow(clippy::too_many_arguments)]
-    </span><span class="kw">fn </span>render_one_glyph(
-        translation: Point&lt;i32&gt;,
+    </span><span class="kw">fn </span>render_one_glyph&lt;Unit&gt;(
+        translation: Point&lt;Unit&gt;,
         rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
         scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         blit: TextureBlit&lt;Px&gt;,
         cached: <span class="kw-2">&amp;</span>CachedGlyphHandle,
         clip_index: u32,
+        dpi_scale: Fraction,
         vertices: <span class="kw-2">&amp;mut </span>VertexCollection&lt;i32&gt;,
         indices: <span class="kw-2">&amp;mut </span>Vec&lt;u16&gt;,
         textures: <span class="kw-2">&amp;mut </span>HashMap&lt;TextureId, Arc&lt;wgpu::BindGroup&gt;, DefaultHasher&gt;,
         commands: <span class="kw-2">&amp;mut </span>Vec&lt;Command&gt;,
-    ) {
+    ) <span class="kw">where
+        </span>Unit: ScreenUnit,
+    {
+        <span class="kw">let </span>translation = translation.into_px(dpi_scale).map(Px::into_unscaled);
         <span class="kw">let </span>corners: [u16; <span class="number">4</span>] = array::from_fn(|index| {
             <span class="kw">let </span>vertex = <span class="kw-2">&amp;</span>blit.verticies[index];
             vertices.get_or_insert(Vertex {
-                location: vertex.location.into_signed().cast(),
+                location: vertex.location.into_signed().map(Px::into_unscaled),
                 texture: vertex.texture,
                 color: vertex.color,
+                line_normal: Default::default(),
+                line_width: Default::default(),
             })
         });
         <span class="kw">let </span>start_index = u32::try_from(indices.len()).expect(<span class="string">&quot;too many drawn indices&quot;</span>);
@@ -1337,16 +1350,15 @@
                     }
 
                     graphics.pass.set_scissor_rect(
-                        current_clip.origin.x.<span class="number">0</span>,
-                        current_clip.origin.y.<span class="number">0</span>,
-                        current_clip.size.width.<span class="number">0</span>,
-                        current_clip.size.height.<span class="number">0</span>,
+                        current_clip.origin.x.into(),
+                        current_clip.origin.y.into(),
+                        current_clip.size.width.into(),
+                        current_clip.size.height.into(),
                     );
                 }
 
                 <span class="kw">let </span><span class="kw-2">mut </span>constants = command.constants;
-                constants.translation +=
-                    current_clip.origin.try_cast().assert(<span class="string">&quot;clip rect too large&quot;</span>);
+                constants.translation += current_clip.origin.into_signed().map(Px::into_unscaled);
                 <span class="kw">if </span>!constants.translation.is_zero() {
                     constants.flags |= FLAG_TRANSLATE;
                 }
