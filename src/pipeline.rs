@@ -47,8 +47,6 @@ pub struct Vertex<Unit> {
     pub location: Point<Unit>,
     pub texture: Point<UPx>,
     pub color: Color,
-    pub line_normal: Unit,
-    pub line_width: Unit,
 }
 
 impl From<Vertex<Px>> for Vertex<i32> {
@@ -57,8 +55,6 @@ impl From<Vertex<Px>> for Vertex<i32> {
             location: value.location.map(Px::into_unscaled),
             texture: value.texture,
             color: value.color,
-            line_width: value.line_width.into(),
-            line_normal: value.line_normal.into(),
         }
     }
 }
@@ -315,6 +311,7 @@ pub fn new(
     pipeline_layout: &wgpu::PipelineLayout,
     shader: &wgpu::ShaderModule,
     format: wgpu::TextureFormat,
+    multisample: wgpu::MultisampleState,
 ) -> wgpu::RenderPipeline {
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: None,
@@ -340,16 +337,6 @@ pub fn new(
                         format: wgpu::VertexFormat::Uint32,
                         offset: 16,
                         shader_location: 2,
-                    },
-                    wgpu::VertexAttribute {
-                        format: wgpu::VertexFormat::Sint32,
-                        offset: 20,
-                        shader_location: 3,
-                    },
-                    wgpu::VertexAttribute {
-                        format: wgpu::VertexFormat::Sint32,
-                        offset: 24,
-                        shader_location: 4,
                     },
                 ],
             }],
@@ -385,7 +372,7 @@ pub fn new(
             conservative: false,
         },
         depth_stencil: None,
-        multisample: wgpu::MultisampleState::default(),
+        multisample,
         multiview: None,
     })
 }

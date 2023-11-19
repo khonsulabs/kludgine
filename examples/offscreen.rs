@@ -31,6 +31,7 @@ impl WindowBehavior for Test {
             graphics.device(),
             graphics.queue(),
             prerendered.format(),
+            wgpu::MultisampleState::default(),
             Size::new(512, 512).cast(),
             1.0,
         );

@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 use std::mem::size_of;
+use std::num::NonZeroU32;
 use std::panic::UnwindSafe;
 use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
@@ -17,7 +18,7 @@ pub use appit::{winit, Message, WindowAttributes};
 use appit::{Application, PendingApp, RunningWindow, WindowBehavior as _};
 use figures::units::{Px, UPx};
 use figures::{Point, Rect, Size};
-use intentional::Cast;
+use intentional::{Assert, Cast};
 
 use crate::pipeline::PushConstants;
 use crate::render::{Drawing, Renderer};
@@ -263,6 +264,15 @@ where
     #[must_use]
     fn limits(adapter_limits: wgpu::Limits) -> wgpu::Limits {
         wgpu::Limits::downlevel_webgl2_defaults().using_resolution(adapter_limits)
+    }
+
+    /// Returns the number of multisamples to perform when rendering this
+    /// window.
+    ///
+    /// When 1 is returned, multisampling will be fully disabled.
+    #[must_use]
+    fn multisample_count() -> NonZeroU32 {
+        NonZeroU32::new(4).assert("4 is less than u32::MAX")
     }
 
     /// Returns the color to clear the window with. If None is returned, the
@@ -581,6 +591,7 @@ struct KludgineWindow<Behavior> {
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
+    msaa_texture: Option<wgpu::Texture>,
     _adapter: wgpu::Adapter,
     wgpu: Arc<wgpu::Instance>,
 }
@@ -629,11 +640,16 @@ where
 
         let swapchain_capabilities = surface.get_capabilities(&adapter);
         let swapchain_format = swapchain_capabilities.formats[0];
+        let multisample = wgpu::MultisampleState {
+            count: T::multisample_count().get(),
+            ..Default::default()
+        };
 
         let mut state = Kludgine::new(
             &device,
             &queue,
             swapchain_format,
+            multisample,
             window.inner_size().into(),
             window.scale().cast::<f32>(),
         );
@@ -666,6 +682,7 @@ where
             kludgine: state,
             last_render,
             last_render_duration: Duration::ZERO,
+            msaa_texture: None,
             _adapter: adapter,
             behavior,
             config,
@@ -712,15 +729,46 @@ where
             &mut frame.prepare(&self.device, &self.queue),
         );
 
-        let view = surface
+        let surface_view = surface
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
+        let (view, resolve_target) = if T::multisample_count().get() > 1 {
+            if self.msaa_texture.as_ref().map_or(true, |msaa| {
+                msaa.width() < surface.texture.width() || msaa.height() < surface.texture.height()
+            }) {
+                self.msaa_texture = Some(self.device.create_texture(&wgpu::TextureDescriptor {
+                    label: None,
+                    size: wgpu::Extent3d {
+                        width: surface.texture.width(),
+                        height: surface.texture.height(),
+                        depth_or_array_layers: 1,
+                    },
+                    mip_level_count: 1,
+                    sample_count: T::multisample_count().get(),
+                    dimension: wgpu::TextureDimension::D2,
+                    format: surface.texture.format(),
+                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                    view_formats: &[],
+                }));
+            }
+
+            (
+                self.msaa_texture
+                    .as_ref()
+                    .assert("always initialized")
+                    .create_view(&wgpu::TextureViewDescriptor::default()),
+                Some(surface_view),
+            )
+        } else {
+            (surface_view, None)
+        };
+
         let mut gfx = frame.render(
             &wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: &view,
-                    resolve_target: None,
+                    resolve_target: resolve_target.as_ref(),
                     ops: wgpu::Operations {
                         load: self
                             .behavior

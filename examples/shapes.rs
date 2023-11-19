@@ -3,7 +3,7 @@ use std::time::Duration;
 use appit::winit::error::EventLoopError;
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::{Lp, Px};
-use kludgine::figures::{Angle, Point, Rect, Size};
+use kludgine::figures::{Angle, Point, Rect, Roots, Size};
 use kludgine::shapes::{PathBuilder, Shape};
 use kludgine::{Color, PreparedGraphic};
 

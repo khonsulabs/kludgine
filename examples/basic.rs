@@ -31,7 +31,7 @@ fn main() -> Result<(), EventLoopError> {
                 .origin(TextOrigin::Center)
                 .translate_by(shape_center)
                 .rotate_by(angle),
-        ); // ROTATING AROUND CENTER BUT SCALED WRONG.
-        true
+        );
+        false
     })
 }

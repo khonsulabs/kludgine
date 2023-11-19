@@ -106,8 +106,6 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
                 location: vertex.location.map(|u| u.into_unscaled().cast_into()),
                 texture: vertex.texture,
                 color: vertex.color,
-                line_width: vertex.line_width.try_into().unwrap_or_default(),
-                line_normal: vertex.line_normal.try_into().unwrap_or_default(),
             };
             let index = self.data.vertices.get_or_insert(vertex);
             vertex_map.push(index);
@@ -261,8 +259,7 @@ mod text {
     };
     use crate::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
     use crate::text::{
-        map_each_glyph, measure_text, CachedGlyphHandle, MeasuredGlyph, MeasuredText, Text,
-        TextOrigin,
+        map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, Text, TextOrigin,
     };
     use crate::{DefaultHasher, Drawable, TextureBlit, VertexCollection};
 
@@ -384,15 +381,15 @@ mod text {
                 }
                 TextOrigin::Custom(offset) => offset.into_px(scaling_factor).cast(),
             };
-            for MeasuredGlyph { blit, cached, .. } in &text.source.glyphs {
-                let mut blit = *blit;
+            for glyph in &text.source.glyphs {
+                let mut blit = glyph.blit;
                 blit.translate_by(-origin);
                 render_one_glyph(
                     translation,
                     text.rotation,
                     text.scale,
                     blit,
-                    cached,
+                    &glyph.cached,
                     self.clip_index,
                     scaling_factor,
                     &mut self.data.vertices,
@@ -465,8 +462,6 @@ mod text {
                 location: vertex.location.into_signed().map(Px::into_unscaled),
                 texture: vertex.texture,
                 color: vertex.color,
-                line_normal: Default::default(),
-                line_width: Default::default(),
             })
         });
         let start_index = u32::try_from(indices.len()).expect("too many drawn indices");

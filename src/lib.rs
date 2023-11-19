@@ -88,6 +88,7 @@ impl Kludgine {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         format: wgpu::TextureFormat,
+        multisample: wgpu::MultisampleState,
         initial_size: Size<UPx>,
         scale: f32,
     ) -> Self {
@@ -136,7 +137,7 @@ impl Kludgine {
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!("shader.wgsl"))),
         });
 
-        let pipeline = pipeline::new(device, &pipeline_layout, &shader, format);
+        let pipeline = pipeline::new(device, &pipeline_layout, &shader, format, multisample);
 
         Self {
             #[cfg(feature = "cosmic-text")]
@@ -147,7 +148,6 @@ impl Kludgine {
                 sampler: &sampler,
                 uniforms: &uniforms.wgpu,
             }),
-
             default_bindings,
             pipeline,
             _shader: shader,
@@ -1601,29 +1601,21 @@ impl<Unit> TextureBlit<Unit> {
                     location: dest_top_left,
                     texture: source_top_left,
                     color,
-                    line_width: Default::default(),
-                    line_normal: Default::default(),
                 },
                 Vertex {
                     location: Point::new(dest_bottom_right.x, dest_top_left.y),
                     texture: Point::new(source_bottom_right.x, source_top_left.y),
                     color,
-                    line_width: Default::default(),
-                    line_normal: Default::default(),
                 },
                 Vertex {
                     location: Point::new(dest_top_left.x, dest_bottom_right.y),
                     texture: Point::new(source_top_left.x, source_bottom_right.y),
                     color,
-                    line_width: Default::default(),
-                    line_normal: Default::default(),
                 },
                 Vertex {
                     location: dest_bottom_right,
                     texture: source_bottom_right,
                     color,
-                    line_width: Default::default(),
-                    line_normal: Default::default(),
                 },
             ],
         }

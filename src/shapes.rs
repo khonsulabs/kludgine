@@ -5,8 +5,8 @@ use figures::units::{Lp, Px, UPx};
 use figures::{FloatConversion, FloatOrInt, PixelScaling, Point, Rect, ScreenScale, Zero};
 use lyon_tessellation::{
     FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
-    GeometryBuilder, GeometryBuilderError, Side, StrokeGeometryBuilder, StrokeTessellator,
-    StrokeVertex, StrokeVertexConstructor, VertexId,
+    GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeTessellator, StrokeVertex,
+    StrokeVertexConstructor, VertexId,
 };
 pub use lyon_tessellation::{LineCap, LineJoin};
 use smallvec::SmallVec;
@@ -212,7 +212,6 @@ where
     fn new_vertex(
         &mut self,
         position: lyon_tessellation::math::Point,
-        line_normal: Option<(Side, f32)>,
         attributes: &[f32],
     ) -> Vertex<Unit> {
         let texture = match attributes.len() {
@@ -220,33 +219,20 @@ where
             2 => Point::new(attributes[0], attributes[1]).cast(),
             _ => unreachable!("Attributes should be empty or 2"),
         };
-        let line_normal = line_normal.map_or_else(
-            || (Unit::from_float(0.), Unit::from_float(0.)),
-            |(side, width)| {
-                let width = width + f32::from(Unit::PX_SCALING_FACTOR);
-                (
-                    Unit::from_float(side.to_f32() * width),
-                    Unit::from_float(width),
-                )
-            },
-        );
 
         Vertex {
             location: Point::new(Unit::from_float(position.x), Unit::from_float(position.y)),
             texture,
             color: self.default_color,
-            line_width: line_normal.1,
-            line_normal: line_normal.0,
         }
     }
 
     fn add_vertex(
         &mut self,
         position: lyon_tessellation::math::Point,
-        line_normal: Option<(Side, f32)>,
         attributes: &[f32],
     ) -> Result<VertexId, GeometryBuilderError> {
-        let vertex = self.new_vertex(position, line_normal, attributes);
+        let vertex = self.new_vertex(position, attributes);
         let new_id = VertexId(
             self.shape
                 .vertices
@@ -271,7 +257,7 @@ where
     fn new_vertex(&mut self, mut vertex: FillVertex) -> Vertex<Unit> {
         let position = vertex.position();
         let attributes = vertex.interpolated_attributes();
-        self.new_vertex(position, None, attributes)
+        self.new_vertex(position, attributes)
     }
 }
 
@@ -281,11 +267,7 @@ where
     Unit: FloatConversion<Float = f32> + PixelScaling,
 {
     fn new_vertex(&mut self, mut vertex: StrokeVertex) -> Vertex<Unit> {
-        self.new_vertex(
-            vertex.position(),
-            Some((vertex.side(), vertex.line_width())),
-            vertex.interpolated_attributes(),
-        )
+        self.new_vertex(vertex.position(), vertex.interpolated_attributes())
     }
 }
 
@@ -299,7 +281,7 @@ where
     ) -> Result<VertexId, GeometryBuilderError> {
         let position = vertex.position();
         let attributes = vertex.interpolated_attributes();
-        self.add_vertex(position, None, attributes)
+        self.add_vertex(position, attributes)
     }
 }
 
@@ -311,11 +293,7 @@ where
         &mut self,
         mut vertex: StrokeVertex,
     ) -> Result<VertexId, GeometryBuilderError> {
-        self.add_vertex(
-            vertex.position() + vertex.normal() * f32::from(Unit::PX_SCALING_FACTOR) * 0.5,
-            Some((vertex.side(), vertex.line_width())),
-            vertex.interpolated_attributes(),
-        )
+        self.add_vertex(vertex.position(), vertex.interpolated_attributes())
     }
 }
 

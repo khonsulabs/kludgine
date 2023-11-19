@@ -53,9 +53,11 @@ fn main() -> Result<(), EventLoopError> {
                 .rotate_by(Angle::degrees(69))
                 .translate_by(Point::px(200, 200)),
         );
+        // Lines are stroked around the midpoint of the stroke width. To get a
+        // pixel-perfect line, we need to render at a 0.5 pixel offset.
         renderer.draw_shape(
-            PathBuilder::default()
-                .line_to(Point::px(300, 0))
+            PathBuilder::new(Point::px(0, 0.5))
+                .line_to(Point::px(300, 0.5))
                 .build()
                 .stroke(StrokeOptions::px_wide(1).colored(Color::LIGHTBLUE))
                 .translate_by(Point::px(200, 200)),
