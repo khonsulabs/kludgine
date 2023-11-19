@@ -734,7 +734,7 @@ where
             .create_view(&wgpu::TextureViewDescriptor::default());
         let (view, resolve_target) = if T::multisample_count().get() > 1 {
             if self.msaa_texture.as_ref().map_or(true, |msaa| {
-                msaa.width() < surface.texture.width() || msaa.height() < surface.texture.height()
+                msaa.width() != surface.texture.width() || msaa.height() != surface.texture.height()
             }) {
                 self.msaa_texture = Some(self.device.create_texture(&wgpu::TextureDescriptor {
                     label: None,
