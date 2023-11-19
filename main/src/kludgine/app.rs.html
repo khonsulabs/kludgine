@@ -2009,7 +2009,7 @@
             .create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor::default());
         <span class="kw">let </span>(view, resolve_target) = <span class="kw">if </span>T::multisample_count().get() &gt; <span class="number">1 </span>{
             <span class="kw">if </span><span class="self">self</span>.msaa_texture.as_ref().map_or(<span class="bool-val">true</span>, |msaa| {
-                msaa.width() &lt; surface.texture.width() || msaa.height() &lt; surface.texture.height()
+                msaa.width() != surface.texture.width() || msaa.height() != surface.texture.height()
             }) {
                 <span class="self">self</span>.msaa_texture = <span class="prelude-val">Some</span>(<span class="self">self</span>.device.create_texture(<span class="kw-2">&amp;</span>wgpu::TextureDescriptor {
                     label: <span class="prelude-val">None</span>,
