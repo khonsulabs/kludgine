@@ -2,8 +2,9 @@ use std::collections::{hash_map, HashMap};
 use std::ops::{Deref, DerefMut, Range};
 use std::sync::Arc;
 
-use figures::units::UPx;
-use figures::{Angle, IntoSigned, IsZero, Point, Rect};
+use figures::units::{Px, UPx};
+use figures::{Angle, IntoSigned, Point, Rect, ScreenScale, ScreenUnit, UnscaledUnit, Zero};
+use intentional::CastInto;
 
 use crate::buffer::DiffableBuffer;
 use crate::pipeline::{
@@ -58,7 +59,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         &mut self,
         shape: impl Into<Drawable<&'shape Shape<Unit, false>, Unit>>,
     ) where
-        Unit: IsZero + ShaderScalable + figures::Unit + Copy,
+        Unit: Zero + ShaderScalable + ScreenUnit + figures::Unit + Copy,
     {
         self.inner_draw(&shape.into(), Option::<&Texture>::None);
     }
@@ -66,7 +67,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
     /// Draws `texture` at `destination`, scaling as necessary.
     pub fn draw_texture<Unit>(&mut self, texture: &impl TextureSource, destination: Rect<Unit>)
     where
-        Unit: figures::Unit + ShaderScalable,
+        Unit: figures::Unit + ScreenUnit + ShaderScalable,
         i32: From<<Unit as IntoSigned>::Signed>,
     {
         self.draw_textured_shape(
@@ -82,7 +83,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         shape: impl Into<Drawable<&'shape Shape, Unit>>,
         texture: &impl TextureSource,
     ) where
-        Unit: IsZero + ShaderScalable + figures::Unit + Copy,
+        Unit: Zero + ShaderScalable + ScreenUnit + figures::Unit + Copy,
         i32: From<<Unit as IntoSigned>::Signed>,
         Shape: ShapeSource<Unit, true> + 'shape,
     {
@@ -94,7 +95,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         shape: &Drawable<&'_ Shape, Unit>,
         texture: Option<&impl TextureSource>,
     ) where
-        Unit: IsZero + ShaderScalable + figures::Unit + Copy,
+        Unit: Zero + ShaderScalable + ScreenUnit + figures::Unit + Copy,
         Shape: ShapeSource<Unit, TEXTURED>,
     {
         // Merge the vertices into the graphics
@@ -102,10 +103,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         let mut vertex_map = Vec::with_capacity(vertices.len());
         for vertex in vertices {
             let vertex = Vertex {
-                location: vertex
-                    .location
-                    .try_cast()
-                    .unwrap_or(Point::new(i32::MAX, i32::MAX)),
+                location: vertex.location.map(|u| u.into_unscaled().cast_into()),
                 texture: vertex.texture,
                 color: vertex.color,
                 line_width: vertex.line_width.try_into().unwrap_or_default(),
@@ -155,8 +153,8 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
             rotation,
             translation: shape
                 .translation
-                .try_cast()
-                .unwrap_or(Point::new(i32::MAX, i32::MAX)),
+                .into_px(self.graphics.scale())
+                .map(Px::into_unscaled),
         };
 
         match self.data.commands.last_mut() {
@@ -255,10 +253,10 @@ mod text {
     use std::sync::Arc;
 
     use figures::units::Px;
-    use figures::{ScreenScale, ScreenUnit};
+    use figures::{Fraction, ScreenScale, ScreenUnit, UnscaledUnit};
 
     use super::{
-        Angle, Color, Command, IntoSigned, IsZero, Point, PushConstants, Renderer, Vertex,
+        Angle, Color, Command, IntoSigned, Point, PushConstants, Renderer, Vertex, Zero,
         FLAG_MASKED, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED, FLAG_TRANSLATE,
     };
     use crate::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
@@ -375,14 +373,14 @@ mod text {
         {
             let text = text.into();
             let scaling_factor = self.scale;
-            let translation = text.translation.into_px(scaling_factor).cast();
+            let translation = text.translation;
             let origin = match origin {
                 TextOrigin::TopLeft => Point::default(),
                 TextOrigin::Center => {
                     Point::from(text.source.size).into_px(scaling_factor).cast() / 2
                 }
                 TextOrigin::FirstBaseline => {
-                    Point::new(Px(0), text.source.ascent.into_px(scaling_factor))
+                    Point::new(Px::ZERO, text.source.ascent.into_px(scaling_factor))
                 }
                 TextOrigin::Custom(offset) => offset.into_px(scaling_factor).cast(),
             };
@@ -396,6 +394,7 @@ mod text {
                     blit,
                     cached,
                     self.clip_index,
+                    scaling_factor,
                     &mut self.data.vertices,
                     &mut self.data.indices,
                     &mut self.data.textures,
@@ -409,7 +408,7 @@ mod text {
             buffer: Option<&cosmic_text::Buffer>,
             default_color: Color,
             origin: TextOrigin<Px>,
-            translate: Point<Unit>,
+            translation: Point<Unit>,
             rotation: Option<Angle>,
             scale: Option<f32>,
         ) where
@@ -417,7 +416,6 @@ mod text {
         {
             let queue = self.queue;
             let scaling_factor = self.scale;
-            let translation = translate.into_px(scaling_factor).cast();
             map_each_glyph(
                 buffer,
                 default_color,
@@ -433,6 +431,7 @@ mod text {
                         blit,
                         cached,
                         self.clip_index,
+                        scaling_factor,
                         &mut self.data.vertices,
                         &mut self.data.indices,
                         &mut self.data.textures,
@@ -444,22 +443,26 @@ mod text {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn render_one_glyph(
-        translation: Point<i32>,
+    fn render_one_glyph<Unit>(
+        translation: Point<Unit>,
         rotation: Option<Angle>,
         scale: Option<f32>,
         blit: TextureBlit<Px>,
         cached: &CachedGlyphHandle,
         clip_index: u32,
+        dpi_scale: Fraction,
         vertices: &mut VertexCollection<i32>,
         indices: &mut Vec<u16>,
         textures: &mut HashMap<TextureId, Arc<wgpu::BindGroup>, DefaultHasher>,
         commands: &mut Vec<Command>,
-    ) {
+    ) where
+        Unit: ScreenUnit,
+    {
+        let translation = translation.into_px(dpi_scale).map(Px::into_unscaled);
         let corners: [u16; 4] = array::from_fn(|index| {
             let vertex = &blit.verticies[index];
             vertices.get_or_insert(Vertex {
-                location: vertex.location.into_signed().cast(),
+                location: vertex.location.into_signed().map(Px::into_unscaled),
                 texture: vertex.texture,
                 color: vertex.color,
                 line_normal: Default::default(),
@@ -660,16 +663,15 @@ impl Drawing {
                     }
 
                     graphics.pass.set_scissor_rect(
-                        current_clip.origin.x.0,
-                        current_clip.origin.y.0,
-                        current_clip.size.width.0,
-                        current_clip.size.height.0,
+                        current_clip.origin.x.into(),
+                        current_clip.origin.y.into(),
+                        current_clip.size.width.into(),
+                        current_clip.size.height.into(),
                     );
                 }
 
                 let mut constants = command.constants;
-                constants.translation +=
-                    current_clip.origin.try_cast().assert("clip rect too large");
+                constants.translation += current_clip.origin.into_signed().map(Px::into_unscaled);
                 if !constants.translation.is_zero() {
                     constants.flags |= FLAG_TRANSLATE;
                 }

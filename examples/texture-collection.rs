@@ -3,7 +3,7 @@ use std::time::Duration;
 use appit::winit::error::EventLoopError;
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::{Lp, Px};
-use kludgine::figures::{Angle, Point, Rect, ScreenScale, Size};
+use kludgine::figures::{Angle, Lp2D, Point, Rect, ScreenScale, Size};
 use kludgine::{Color, PreparedGraphic, TextureCollection};
 
 fn main() -> Result<(), EventLoopError> {
@@ -32,10 +32,7 @@ impl WindowBehavior for Test {
         );
         let k = textures.push_image(&image::open("./examples/k.png").unwrap(), graphics);
         let k = k.prepare(
-            Rect::new(
-                Point::new(-Lp::inches(1) / 2, -Lp::inches(1) / 2),
-                Size::new(Lp::inches(1), Lp::inches(1)),
-            ),
+            Rect::new(-Point::inches(1, 1) / 2, Size::inches(1, 1)),
             graphics,
         );
         let ferris = textures.push_image(
@@ -43,10 +40,7 @@ impl WindowBehavior for Test {
             graphics,
         );
         let ferris = ferris.prepare(
-            Rect::new(
-                Point::new(-Lp::inches(1) / 2, -Lp::inches(1) / 2),
-                Size::new(Lp::inches(1), Lp::inches(1) / 1.5),
-            ),
+            Rect::new(-Point::inches(1, 0.75) / 2, Size::inches(1, 0.75)),
             graphics,
         );
         let atlas = textures.prepare_entire_colection(Size::new(256, 256).cast().into(), graphics);
@@ -66,20 +60,16 @@ impl WindowBehavior for Test {
     ) -> bool {
         window.redraw_in(Duration::from_millis(16));
         self.angle += Angle::degrees(180) * window.elapsed();
-        self.k.render(
-            Point::new(Lp::inches(1), Lp::inches(1)),
-            None,
-            Some(self.angle),
-            graphics,
-        );
-        self.ferris.render(
-            Point::new(Lp::inches(1) * 2, Lp::inches(1)),
-            None,
-            Some(-self.angle),
-            graphics,
-        );
+        self.k
+            .render(Point::inches(1, 1), None, Some(self.angle), graphics);
+        self.ferris
+            .render(Point::inches(2, 1), None, Some(-self.angle), graphics);
         self.atlas.render(
-            Point::new(0, graphics.size().height.into_px(graphics.scale()).0 - 256).cast(),
+            Point::new(
+                0,
+                graphics.size().height.into_px(graphics.scale()).get() - 256,
+            )
+            .cast(),
             None,
             None,
             graphics,

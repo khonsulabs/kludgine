@@ -38,8 +38,8 @@ image = { version = "0.24.6", features = ["png"] }
 # [patch."https://github.com/khonsulabs/appit"]
 # appit = { path = "../appit" }
 
-[patch."https://github.com/khonsulabs/figures"]
-figures = { path = "../figures" }
+# [patch."https://github.com/khonsulabs/figures"]
+# figures = { path = "../figures" }
 
 # [patch."https://github.com/khonsulabs/shelf-packer"]
 # shelf-packer = { path = "../shelf-packer" }

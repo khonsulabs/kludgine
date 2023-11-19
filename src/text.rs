@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use cosmic_text::{fontdb, Attrs, AttrsOwned, LayoutGlyph, SwashContent};
 use figures::units::{Lp, Px, UPx};
-use figures::{Fraction, Point, Rect, ScreenScale, Size};
+use figures::{FloatConversion, Fraction, Point, Rect, ScreenScale, Size, UPx2D};
 use intentional::Cast;
 use smallvec::SmallVec;
 
@@ -227,7 +227,7 @@ impl TextSystem {
         );
         scratch.set_size(
             &mut self.fonts,
-            width.map_or(f32::MAX, |width| width.0.cast()),
+            width.map_or(f32::MAX, Cast::cast),
             f32::MAX,
         );
         scratch.shape_until_scroll(&mut self.fonts);
@@ -411,23 +411,24 @@ pub(crate) fn map_each_glyph(
         .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"))
         .metrics();
 
-    let line_height_offset = Point::new(0., metrics.line_height);
+    let line_height_offset = Point::new(Px::ZERO, Px::from(metrics.line_height));
     let relative_to = match origin {
-        TextOrigin::Custom(point) => point.cast(),
+        TextOrigin::Custom(point) => point,
         TextOrigin::TopLeft => Point::default(),
         TextOrigin::Center => {
             let measured =
                 measure_text::<Px, false>(buffer, default_color, kludgine, queue, glyphs);
-            Point::from(measured.size).cast() / 2.
+            Point::from(measured.size) / 2.
         }
-        TextOrigin::FirstBaseline => line_height_offset,
+        TextOrigin::FirstBaseline => line_height_offset.cast(),
     } + line_height_offset;
 
     let buffer = buffer.unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"));
     for run in buffer.layout_runs() {
-        let run_origin = Point::new(0., run.line_y) - relative_to;
+        let run_origin = Point::new(Px::ZERO, Px::from(run.line_y)) - relative_to;
         for glyph in run.glyphs {
-            let physical = glyph.physical((run_origin.x, run_origin.y), 1.);
+            let physical =
+                glyph.physical((run_origin.x.into_float(), run_origin.y.into_float()), 1.);
             let Some(image) = kludgine
                 .text
                 .swash_cache
@@ -454,7 +455,7 @@ pub(crate) fn map_each_glyph(
                                     bytes_per_row: Some(image.placement.width),
                                     rows_per_image: None,
                                 },
-                                Size::new(image.placement.width, image.placement.height).cast(),
+                                Size::upx(image.placement.width, image.placement.height).cast(),
                                 queue,
                             ),
                             true,
@@ -470,7 +471,7 @@ pub(crate) fn map_each_glyph(
                                         bytes_per_row: Some(image.placement.width * 4),
                                         rows_per_image: None,
                                     },
-                                    Size::new(image.placement.width, image.placement.height).cast(),
+                                    Size::upx(image.placement.width, image.placement.height).cast(),
                                     queue,
                                 ),
                                 false,
@@ -504,7 +505,7 @@ pub(crate) fn map_each_glyph(
                 &cached,
                 glyph,
                 (run.line_top / metrics.line_height).round().cast::<usize>(),
-                Px::from(relative_to.y),
+                relative_to.y,
                 Px::from(run.line_w),
             );
 

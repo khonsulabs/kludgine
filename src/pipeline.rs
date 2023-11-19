@@ -5,7 +5,9 @@ use std::sync::Arc;
 
 use bytemuck::{Pod, Zeroable};
 use figures::units::{Lp, Px, UPx};
-use figures::{Angle, Fraction, IntoSigned, IsZero, Point, ScreenUnit, Size};
+use figures::{
+    Angle, Fraction, IntoSigned, Point, ScreenScale, ScreenUnit, Size, UnscaledUnit, Zero,
+};
 use smallvec::SmallVec;
 
 use crate::buffer::Buffer;
@@ -52,7 +54,7 @@ pub struct Vertex<Unit> {
 impl From<Vertex<Px>> for Vertex<i32> {
     fn from(value: Vertex<Px>) -> Self {
         Self {
-            location: value.location.cast(),
+            location: value.location.map(Px::into_unscaled),
             texture: value.texture,
             color: value.color,
             line_width: value.line_width.into(),
@@ -99,7 +101,7 @@ pub struct PreparedCommand {
 
 impl<Unit> PreparedGraphic<Unit>
 where
-    Unit: IntoSigned + Copy + Default + ShaderScalable + IsZero,
+    Unit: IntoSigned + Copy + Default + ShaderScalable + ScreenUnit + Zero,
     i32: From<Unit::Signed>,
     Vertex<Unit>: Pod,
 {
@@ -146,8 +148,9 @@ where
                 flags |= FLAG_ROTATE;
                 scale.into_raidans_f()
             });
-            let translation =
-                graphics.clip.current.origin.into_signed().cast() + origin.into_signed().cast();
+            let translation = (graphics.clip.current.origin.into_signed()
+                + origin.into_px(graphics.scale()))
+            .map(Px::into_unscaled);
             if !translation.is_zero() {
                 flags |= FLAG_TRANSLATE;
             }

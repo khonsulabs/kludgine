@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use figures::units::{Lp, Px, UPx};
-use figures::{FloatConversion, IsZero, PixelScaling, Point, Rect, ScreenScale};
+use figures::{FloatConversion, FloatOrInt, PixelScaling, Point, Rect, ScreenScale, Zero};
 use lyon_tessellation::{
     FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
     GeometryBuilder, GeometryBuilderError, Side, StrokeGeometryBuilder, StrokeTessellator,
@@ -89,8 +89,7 @@ impl<Unit: PixelScaling> Shape<Unit, false> {
     /// `options`.
     pub fn stroked_rect(
         rect: Rect<Unit>,
-        color: Color,
-        options: StrokeOptions<Unit>,
+        options: impl Into<StrokeOptions<Unit>>,
     ) -> Shape<Unit, false>
     where
         Unit: Add<Output = Unit> + Ord + FloatConversion<Float = f32> + Copy,
@@ -101,7 +100,7 @@ impl<Unit: PixelScaling> Shape<Unit, false> {
             .line_to(p2)
             .line_to(Point::new(p1.x, p2.y))
             .close();
-        path.stroke(color, options)
+        path.stroke(options)
     }
 
     /// Returns a rounded rectangle with the specified corner radii that is
@@ -131,8 +130,7 @@ impl<Unit: PixelScaling> Shape<Unit, false> {
     pub fn stroked_round_rect(
         rect: Rect<Unit>,
         corner_radius: impl Into<CornerRadii<Unit>>,
-        color: Color,
-        options: StrokeOptions<Unit>,
+        options: impl Into<StrokeOptions<Unit>>,
     ) -> Shape<Unit, false>
     where
         Unit: Add<Output = Unit>
@@ -146,7 +144,7 @@ impl<Unit: PixelScaling> Shape<Unit, false> {
         Unit::Error: Debug,
     {
         let path = Path::round_rect(rect, corner_radius);
-        path.stroke(color, options)
+        path.stroke(options)
     }
 
     /// Uploads the shape to the GPU.
@@ -219,7 +217,7 @@ where
     ) -> Vertex<Unit> {
         let texture = match attributes.len() {
             0 => Point::default(),
-            2 => Point::new(attributes[0].round(), attributes[1].round()).cast(),
+            2 => Point::new(attributes[0], attributes[1]).cast(),
             _ => unreachable!("Attributes should be empty or 2"),
         };
         let line_normal = line_normal.map_or_else(
@@ -405,6 +403,10 @@ pub struct Path<Unit, const TEXTURED: bool> {
 }
 
 impl<Unit> Path<Unit, false> {
+    /// Returns a path for a rounded rectangle with the given corner radii.
+    ///
+    /// All radius's will be limited to half of the largest side of the
+    /// rectangle.
     pub fn round_rect(
         rect: Rect<Unit>,
         corner_radius: impl Into<CornerRadii<Unit>>,
@@ -434,7 +436,7 @@ impl<Unit> Path<Unit, false> {
         };
         let radii = corner_radius
             .into()
-            .clamped(min_dimension / Unit::try_from(2).expect("two is always convertable"));
+            .clamped(min_dimension / Unit::try_from(2).assert("two is always convertable"));
 
         let drift = radii.map(|r| r * C);
 
@@ -553,9 +555,10 @@ where
     /// multiplied with this color. To render the image unchanged, use
     /// [`Color::WHITE`].
     #[must_use]
-    pub fn stroke(&self, color: Color, options: StrokeOptions<Unit>) -> Shape<Unit, TEXTURED> {
+    pub fn stroke(&self, options: impl Into<StrokeOptions<Unit>>) -> Shape<Unit, TEXTURED> {
+        let options = options.into();
+        let mut shape_builder = ShapeBuilder::new(options.color);
         let lyon_path = self.as_lyon();
-        let mut shape_builder = ShapeBuilder::new(color);
         let mut tesselator = StrokeTessellator::new();
 
         tesselator
@@ -576,6 +579,15 @@ pub struct PathBuilder<Unit, const TEXTURED: bool> {
     path: Path<Unit, TEXTURED>,
     current_location: Endpoint<Unit>,
     close: bool,
+}
+
+impl<Unit> Default for PathBuilder<Unit, false>
+where
+    Unit: Default + Copy,
+{
+    fn default() -> Self {
+        Self::new(Point::default())
+    }
 }
 
 impl<Unit, const TEXTURED: bool> From<Path<Unit, TEXTURED>> for PathBuilder<Unit, TEXTURED>
@@ -789,6 +801,9 @@ where
 /// Options for stroking lines on a path.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct StrokeOptions<Unit> {
+    /// The color to apply to the stroke.
+    pub color: Color,
+
     /// The width of the line.
     pub line_width: Unit,
 
@@ -826,18 +841,69 @@ where
 {
     fn default() -> Self {
         Self {
+            color: Color::WHITE,
             line_width: Unit::default_stroke_width(),
             line_join: lyon_tessellation::StrokeOptions::DEFAULT_LINE_JOIN,
             start_cap: lyon_tessellation::StrokeOptions::DEFAULT_LINE_CAP,
             end_cap: lyon_tessellation::StrokeOptions::DEFAULT_LINE_CAP,
             miter_limit: lyon_tessellation::StrokeOptions::DEFAULT_MITER_LIMIT,
-            tolerance: 1.0,
+            tolerance: lyon_tessellation::StrokeOptions::DEFAULT_TOLERANCE,
         }
+    }
+}
+
+impl<Unit> From<Color> for StrokeOptions<Unit>
+where
+    Unit: DefaultStrokeWidth,
+{
+    fn from(color: Color) -> Self {
+        Self {
+            color,
+            ..Self::default()
+        }
+    }
+}
+
+impl<Unit> StrokeOptions<Unit> {
+    /// Sets the color of this stroke and returns self.
+    #[must_use]
+    pub fn colored(mut self, color: Color) -> Self {
+        self.color = color;
+        self
+    }
+
+    /// Sets the line join style and returns self.
+    #[must_use]
+    pub fn line_join(mut self, join: LineJoin) -> Self {
+        self.line_join = join;
+        self
+    }
+
+    /// Sets the line cap style for the start of line segments and returns self.
+    #[must_use]
+    pub fn start_cap(mut self, cap: LineCap) -> Self {
+        self.start_cap = cap;
+        self
+    }
+
+    /// Sets the line cap style for the end of line segments and returns self.
+    #[must_use]
+    pub fn end_cap(mut self, cap: LineCap) -> Self {
+        self.end_cap = cap;
+        self
+    }
+
+    /// Sets the miter limit and returns self.
+    #[must_use]
+    pub fn miter_limit(mut self, limit: f32) -> Self {
+        self.miter_limit = limit;
+        self
     }
 }
 
 impl StrokeOptions<Px> {
     /// Returns the default options with a line width of `px`.
+    #[must_use]
     pub fn px_wide(px: impl Into<Px>) -> Self {
         Self {
             line_width: px.into(),
@@ -848,11 +914,39 @@ impl StrokeOptions<Px> {
 
 impl StrokeOptions<Lp> {
     /// Returns the default options with a line width of `lp`.
+    #[must_use]
     pub fn lp_wide(lp: impl Into<Lp>) -> Self {
         Self {
             line_width: lp.into(),
             ..Self::default()
         }
+    }
+
+    /// Returns the default options with the line width specified in
+    /// millimeters.
+    #[must_use]
+    pub fn mm_wide(mm: impl Into<FloatOrInt>) -> Self {
+        Self::lp_wide(mm.into().into_mm())
+    }
+
+    /// Returns the default options with the line width specified in
+    /// centimeters.
+    #[must_use]
+    pub fn cm_wide(cm: impl Into<FloatOrInt>) -> Self {
+        Self::lp_wide(cm.into().into_cm())
+    }
+
+    /// Returns the default options with the line width specified in
+    /// points (1/72 of an inch).
+    #[must_use]
+    pub fn points_wide(points: impl Into<FloatOrInt>) -> Self {
+        Self::lp_wide(points.into().into_points())
+    }
+
+    /// Returns the default options with the line width specified in inches.
+    #[must_use]
+    pub fn inches_wide(inches: impl Into<FloatOrInt>) -> Self {
+        Self::lp_wide(inches.into().into_inches())
     }
 }
 
@@ -870,12 +964,12 @@ impl DefaultStrokeWidth for figures::units::Lp {
 }
 impl DefaultStrokeWidth for figures::units::Px {
     fn default_stroke_width() -> Self {
-        Self(1)
+        Self::new(1)
     }
 }
 impl DefaultStrokeWidth for figures::units::UPx {
     fn default_stroke_width() -> Self {
-        Self(1)
+        Self::new(1)
     }
 }
 
@@ -889,6 +983,7 @@ where
 
     fn into_px(self, scale: figures::Fraction) -> Self::Px {
         StrokeOptions {
+            color: self.color,
             line_width: self.line_width.into_px(scale),
             line_join: self.line_join,
             start_cap: self.start_cap,
@@ -900,6 +995,7 @@ where
 
     fn from_px(px: Self::Px, scale: figures::Fraction) -> Self {
         Self {
+            color: px.color,
             line_width: Unit::from_px(px.line_width, scale),
             line_join: px.line_join,
             start_cap: px.start_cap,
@@ -911,6 +1007,7 @@ where
 
     fn into_lp(self, scale: figures::Fraction) -> Self::Lp {
         StrokeOptions {
+            color: self.color,
             line_width: self.line_width.into_lp(scale),
             line_join: self.line_join,
             start_cap: self.start_cap,
@@ -922,6 +1019,7 @@ where
 
     fn from_lp(lp: Self::Lp, scale: figures::Fraction) -> Self {
         Self {
+            color: lp.color,
             line_width: Unit::from_lp(lp.line_width, scale),
             line_join: lp.line_join,
             start_cap: lp.start_cap,
@@ -933,6 +1031,7 @@ where
 
     fn into_upx(self, scale: crate::Fraction) -> Self::UPx {
         StrokeOptions {
+            color: self.color,
             line_width: self.line_width.into_upx(scale),
             line_join: self.line_join,
             start_cap: self.start_cap,
@@ -944,6 +1043,7 @@ where
 
     fn from_upx(upx: Self::UPx, scale: crate::Fraction) -> Self {
         StrokeOptions {
+            color: upx.color,
             line_width: Unit::from_upx(upx.line_width, scale),
             line_join: upx.line_join,
             start_cap: upx.start_cap,
@@ -966,6 +1066,7 @@ where
             end_cap,
             miter_limit,
             tolerance,
+            color: _color,
         } = options;
         Self::default()
             .with_line_width(line_width.into_float())
@@ -1053,10 +1154,17 @@ where
     }
 }
 
-impl<Unit> IsZero for CornerRadii<Unit>
+impl<Unit> Zero for CornerRadii<Unit>
 where
-    Unit: IsZero,
+    Unit: Zero,
 {
+    const ZERO: Self = Self {
+        top_left: Unit::ZERO,
+        top_right: Unit::ZERO,
+        bottom_right: Unit::ZERO,
+        bottom_left: Unit::ZERO,
+    };
+
     fn is_zero(&self) -> bool {
         self.top_left.is_zero()
             && self.top_right.is_zero()

@@ -11,10 +11,10 @@ use kludgine::shapes::Shape;
 use kludgine::text::{Text, TextOrigin};
 use kludgine::{Color, DrawableExt, Origin};
 
-const PADDLE_SPEED: Px = Px(300);
-const PADDLE_HEIGHT: Px = Px(100);
-const PADDLE_WIDTH: Px = Px(20);
-const BALL_SIZE: Px = Px(PADDLE_WIDTH.0 / 2);
+const PADDLE_SPEED: Px = Px::new(300);
+const PADDLE_HEIGHT: Px = Px::new(100);
+const PADDLE_WIDTH: Px = Px::new(20);
+const BALL_SIZE: Px = Px::new(PADDLE_WIDTH.get() / 2);
 const BASE_VELOCITY: Px = PADDLE_SPEED;
 
 fn main() -> Result<(), EventLoopError> {
@@ -57,11 +57,11 @@ impl GameState {
         if window.key_pressed(&KeyCode::ArrowDown) || window.key_pressed(&KeyCode::KeyS) {
             self.player_paddle_position += paddle_movement;
         }
-        self.player_paddle_position = self.player_paddle_position.clamp(Px(0), size.height);
+        self.player_paddle_position = self.player_paddle_position.clamp(Px::ZERO, size.height);
 
         // Handle bot actions. Just track the ball position
         let paddle_delta = self.ball_pos.y - self.bot_paddle_position;
-        match paddle_delta.cmp(&Px(0)) {
+        match paddle_delta.cmp(&Px::ZERO) {
             Ordering::Less => {
                 self.bot_paddle_position -= paddle_movement;
             }
@@ -94,7 +94,7 @@ impl GameState {
 
         renderer.draw_shape(&Shape::filled_rect(
             Rect::new(
-                Point::new(Px(0), self.player_paddle_position - PADDLE_HEIGHT / 2),
+                Point::new(Px::ZERO, self.player_paddle_position - PADDLE_HEIGHT / 2),
                 Size::new(PADDLE_WIDTH, PADDLE_HEIGHT),
             ),
             Color::BLUE,
@@ -121,7 +121,7 @@ impl GameState {
         renderer.draw_text(
             Text::new(&self.player_score.to_string(), Color::BLUE)
                 .origin(TextOrigin::Center)
-                .translate_by(Point::new(size.width / 4, size.height / 4)),
+                .translate_by(Point::from(size / 4)),
         );
 
         renderer.draw_text(

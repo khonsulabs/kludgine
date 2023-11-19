@@ -16,7 +16,7 @@ use appit::winit::window::{ImePurpose, Theme, WindowId};
 pub use appit::{winit, Message, WindowAttributes};
 use appit::{Application, PendingApp, RunningWindow, WindowBehavior as _};
 use figures::units::{Px, UPx};
-use figures::{IntoSigned, Point, Rect, Size};
+use figures::{Point, Rect, Size};
 use intentional::Cast;
 
 use crate::pipeline::PushConstants;
@@ -131,10 +131,9 @@ where
 
     /// Sets the cursor area for IME input suggestions.
     pub fn set_ime_cursor_area(&self, area: Rect<UPx>) {
-        let area = area.into_signed();
         self.window.winit().set_ime_cursor_area(
-            PhysicalPosition::new(area.origin.x.0, area.origin.y.0),
-            PhysicalSize::new(area.size.width.0, area.size.height.0),
+            PhysicalPosition::<u32>::new(area.origin.x.into(), area.origin.y.into()),
+            PhysicalSize::<u32>::new(area.size.width.into(), area.size.height.into()),
         );
     }
 

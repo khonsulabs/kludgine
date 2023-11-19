@@ -52,7 +52,7 @@ fn int_scale(value: i32, ratio: Fraction) -> i32 {
 }
 
 fn dips_to_pixels(value: i32, ratio: Fraction) -> i32 {
-    return (int_scale(value, ratio) * i32(96) + 91439) / i32(182880);
+    return (int_scale(value, ratio) * i32(96 * 4) + 91439) / i32(182880);
 }
 
 fn int_to_rgba(color: u32) -> vec4<f32> {
@@ -104,19 +104,12 @@ fn vertex(input: VertexInput) -> VertexOutput {
         position = position * pc.scale;
     }
     if (pc.flags & flag_translate) != u32(0) {
-        if (pc.flags & flag_dips) != u32(0) {
-            position = position + vec2<f32>(
-                f32(dips_to_pixels(pc.translation_x, dips_scale)),
-                f32(dips_to_pixels(pc.translation_y, dips_scale))
-            );
-        } else {
-            position = position + vec2<f32>(
-                f32(pc.translation_x),
-                f32(pc.translation_y)
-            );
-        }
+        position = position + vec2<f32>(
+            f32(pc.translation_x),
+            f32(pc.translation_y)
+        );
     }
-    outval.position = uniforms.ortho * vec4<f32>(position, 0., 1.0);
+    outval.position = uniforms.ortho * vec4<f32>(position / 4., 0., 1.0);
     outval.color = int_to_rgba(input.color);
     outval.uv = vec2<f32>(input.uv) / vec2<f32>(textureDimensions(r_texture));
     return outval;
@@ -150,7 +143,7 @@ fn fragment(fragment: FragmentInput) -> @location(0) vec4<f32> {
     }
 
     if (pc.flags & flag_textured) != u32(0) {
-        let sample = textureSample(r_texture, r_sampler, fragment.uv);
+        let sample = textureSample(r_texture, r_sampler, fragment.uv / 4.);
         if (pc.flags & flag_masked) != u32(0) {
             return vec4<f32>(color.x, color.y, color.z, sample.x * color.w);
         }

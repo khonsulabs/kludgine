@@ -3,7 +3,7 @@ use std::time::Duration;
 use appit::winit::error::EventLoopError;
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::Px;
-use kludgine::figures::{Angle, Point, Rect, ScreenScale, Size};
+use kludgine::figures::{Angle, Point, Px2D, Rect, ScreenScale, Size};
 use kludgine::shapes::Shape;
 use kludgine::{Color, PreparedGraphic};
 
@@ -26,12 +26,12 @@ impl WindowBehavior for Test {
         _context: Self::Context,
     ) -> Self {
         let outer_square = Shape::filled_rect(
-            Rect::new(Point::new(Px(-200), Px(-200)), Size::new(Px(400), Px(400))),
+            Rect::new(Point::px(-200, -200), Size::px(400, 400)),
             Color::RED,
         )
         .prepare(graphics);
         let inner_square = Shape::filled_rect(
-            Rect::new(Point::new(Px(-50), Px(-50)), Size::new(Px(100), Px(100))),
+            Rect::new(Point::px(-50, -50), Size::px(100, 100)),
             Color::BLUE,
         )
         .prepare(graphics);

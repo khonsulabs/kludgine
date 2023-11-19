@@ -1,7 +1,7 @@
 use appit::winit::error::EventLoopError;
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::Px;
-use kludgine::figures::{Angle, Point, Rect, Size};
+use kludgine::figures::{Angle, Point, Px2D, Rect, Size};
 use kludgine::shapes::Shape;
 use kludgine::{Color, Graphics, Kludgine, PreparedGraphic, RenderingGraphics, Texture};
 
@@ -55,7 +55,7 @@ impl WindowBehavior for Test {
             graphics.queue(),
         );
         outer_square.render(
-            Point::new(Px(256), Px(256)),
+            Point::px(256, 256),
             None,
             Some(Angle::degrees(45)),
             &mut rendering,

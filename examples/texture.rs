@@ -3,7 +3,7 @@ use std::time::Duration;
 use appit::winit::error::EventLoopError;
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::Lp;
-use kludgine::figures::{Angle, Point, Rect, Size};
+use kludgine::figures::{Angle, Lp2D, Point, Rect, Size};
 use kludgine::{PreparedGraphic, Texture};
 
 fn main() -> Result<(), EventLoopError> {
@@ -25,10 +25,7 @@ impl WindowBehavior for Test {
     ) -> Self {
         let texture = Texture::from_image(&image::open("./examples/k.png").unwrap(), graphics)
             .prepare(
-                Rect::new(
-                    Point::new(-Lp::inches(1) / 2, -Lp::inches(1) / 2),
-                    Size::new(Lp::inches(1), Lp::inches(1)),
-                ),
+                Rect::new(-Point::inches(1, 1) / 2, Size::inches(1, 1)),
                 graphics,
             );
         Self {
@@ -44,12 +41,8 @@ impl WindowBehavior for Test {
     ) -> bool {
         window.redraw_in(Duration::from_millis(16));
         self.angle += Angle::degrees(180) * window.elapsed();
-        self.texture.render(
-            Point::new(Lp::inches(1), Lp::inches(1)),
-            None,
-            Some(self.angle),
-            graphics,
-        );
+        self.texture
+            .render(Point::inches(1, 1), None, Some(self.angle), graphics);
         true
     }
 }

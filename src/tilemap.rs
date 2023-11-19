@@ -14,7 +14,7 @@ use crate::shapes::Shape;
 use crate::text::Text;
 use crate::{AnyTexture, Assert, Color};
 
-pub const TILE_SIZE: Px = Px(32);
+pub const TILE_SIZE: Px = Px::new(32);
 
 // At the time of writing, this is is used to translate from
 // tilemap coords to world coords
@@ -93,7 +93,7 @@ fn first_tile(pos: Point<Px>, tile_size: Px) -> TileOffset {
             (-remainder, pos - remainder)
         };
         let index =
-            isize::try_from(floored.0 / tile_size.0).expect("tile size out of range of isize");
+            isize::try_from((floored / tile_size).get()).expect("tile size out of range of isize");
         (index, offset)
     }
 
@@ -107,7 +107,7 @@ fn first_tile(pos: Point<Px>, tile_size: Px) -> TileOffset {
 
 fn last_tile(pos: Point<Px>, tile_size: Px) -> TileOffset {
     fn coord_info(pos: Px, tile_size: Px) -> (isize, Px) {
-        let index = (pos.0 + pos.0.signum() * (tile_size.0 - 1)) / tile_size.0;
+        let index = (pos.get() + pos.get().signum() * (tile_size.get() - 1)) / tile_size.get();
         let floored = tile_size * index;
         let index = isize::try_from(index).expect("tile size out of range of isize");
         (index, floored)

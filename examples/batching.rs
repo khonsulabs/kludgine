@@ -25,8 +25,8 @@ fn main() -> Result<(), EventLoopError> {
         angle += Angle::degrees(180) * window.elapsed();
 
         let texture_size = texture.size();
-        for y in 0..(renderer.size().height / texture_size.height).0 {
-            for x in 0..(renderer.size().width / texture_size.width).0 {
+        for y in 0..(renderer.size().height / texture_size.height).get() {
+            for x in 0..(renderer.size().width / texture_size.width).get() {
                 renderer.draw_texture(
                     texture,
                     Rect::new(

@@ -4,8 +4,8 @@ use std::sync::{Arc, PoisonError, RwLock};
 
 use alot::{LotId, Lots};
 use etagere::{Allocation, BucketedAtlasAllocator};
-use figures::units::{Px, UPx};
-use figures::{IntoSigned, IntoUnsigned, Point, Rect, Size};
+use figures::units::UPx;
+use figures::{IntoSigned, IntoUnsigned, Point, Px2D, Rect, Size, UPx2D};
 use intentional::Assert;
 
 use crate::pipeline::{PreparedGraphic, Vertex};
@@ -52,8 +52,8 @@ impl TextureCollection {
             format,
             data: Arc::new(RwLock::new(Data {
                 rects: BucketedAtlasAllocator::new(etagere::euclid::Size2D::new(
-                    initial_size.width.0,
-                    initial_size.height.0,
+                    initial_size.width.into(),
+                    initial_size.height.into(),
                 )),
                 texture,
                 textures: Lots::new(),
@@ -93,17 +93,13 @@ impl TextureCollection {
         let allocation = this
             .rects
             .allocate(etagere::euclid::Size2D::new(
-                signed_size.width.0,
-                signed_size.height.0,
+                signed_size.width.into(),
+                signed_size.height.into(),
             ))
             .assert("TODO: implement growth");
 
         let region = Rect::new(
-            Point::new(
-                Px(allocation.rectangle.min.x),
-                Px(allocation.rectangle.min.y),
-            )
-            .into_unsigned(),
+            Point::px(allocation.rectangle.min.x, allocation.rectangle.min.y).into_unsigned(),
             size,
         );
 
@@ -157,7 +153,7 @@ impl TextureCollection {
                 bytes_per_row: Some(image.width() * 4),
                 rows_per_image: None,
             },
-            Size::new(UPx(image.width()), UPx(image.height())),
+            Size::upx(image.width(), image.height()),
             graphics.queue,
         )
     }

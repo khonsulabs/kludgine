@@ -13,7 +13,7 @@ fn main() -> Result<(), EventLoopError> {
     let mut angle = Angle::degrees(0);
     kludgine::app::run(move |mut renderer, mut window| {
         window.redraw_in(Duration::from_millis(16));
-        angle += Angle::degrees(180) * window.elapsed().as_secs_f32();
+        angle += Angle::degrees(30) * window.elapsed().as_secs_f32();
         let shape_center = Point::new(RED_SQUARE_SIZE / 2, RED_SQUARE_SIZE / 2);
         renderer.draw_shape(
             (&Shape::filled_rect(
@@ -31,7 +31,7 @@ fn main() -> Result<(), EventLoopError> {
                 .origin(TextOrigin::Center)
                 .translate_by(shape_center)
                 .rotate_by(angle),
-        );
+        ); // ROTATING AROUND CENTER BUT SCALED WRONG.
         true
     })
 }

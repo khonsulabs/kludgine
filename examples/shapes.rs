@@ -11,7 +11,7 @@ fn main() -> Result<(), EventLoopError> {
     Test::run()
 }
 
-const BLUE_TRIANGLE_SIZE: Px = Px(96);
+const BLUE_TRIANGLE_SIZE: Px = Px::new(96);
 const RED_SQUARE_SIZE: Lp = Lp::inches(1);
 
 struct Test {
@@ -38,7 +38,7 @@ impl WindowBehavior for Test {
         .prepare(graphics);
         let height = (BLUE_TRIANGLE_SIZE.pow(2) - (BLUE_TRIANGLE_SIZE / 2).pow(2)).sqrt();
         let pixels_triangle = PathBuilder::new(Point::new(-BLUE_TRIANGLE_SIZE / 2, -height / 2))
-            .line_to(Point::new(Px(0), height / 2))
+            .line_to(Point::new(Px::ZERO, height / 2))
             .line_to(Point::new(BLUE_TRIANGLE_SIZE / 2, -height / 2))
             .close()
             .fill(Color::BLUE)

@@ -17,7 +17,7 @@ use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "cosmic-text")]
 pub use cosmic_text;
 use figures::units::UPx;
-use figures::{Angle, Fraction, FromComponents, IntoComponents, Point, Rect, Size};
+use figures::{Angle, Fraction, FromComponents, IntoComponents, Point, Rect, Size, UPx2D};
 use intentional::Assert;
 use sealed::ShapeSource as _;
 use wgpu::util::DeviceExt;
@@ -405,7 +405,7 @@ impl ClipStack {
 
     pub fn push_clip(&mut self, clip: Rect<UPx>) {
         let previous_clip = self.current;
-        self.current = previous_clip.clip_to(clip);
+        self.current = previous_clip.clip_to(clip.expand_rounded());
         self.previous_clips.push(previous_clip);
     }
 
@@ -653,10 +653,10 @@ impl Clipped for RenderingGraphics<'_, '_> {
         self.clip.pop_clip();
         if self.clip.current.size.width > 0 && self.clip.current.size.height > 0 {
             self.pass.set_scissor_rect(
-                self.clip.current.origin.x.0,
-                self.clip.current.origin.y.0,
-                self.clip.current.size.width.0,
-                self.clip.current.size.height.0,
+                self.clip.current.origin.x.into(),
+                self.clip.current.origin.y.into(),
+                self.clip.current.size.width.into(),
+                self.clip.current.size.height.into(),
             );
         }
     }
@@ -665,10 +665,10 @@ impl Clipped for RenderingGraphics<'_, '_> {
         self.clip.push_clip(clip);
         if self.clip.current.size.width > 0 && self.clip.current.size.height > 0 {
             self.pass.set_scissor_rect(
-                self.clip.current.origin.x.0,
-                self.clip.current.origin.y.0,
-                self.clip.current.size.width.0,
-                self.clip.current.size.height.0,
+                self.clip.current.origin.x.into(),
+                self.clip.current.origin.y.into(),
+                self.clip.current.size.width.into(),
+                self.clip.current.size.height.into(),
             );
         }
     }
@@ -1266,7 +1266,7 @@ impl Texture {
         let image = image.to_rgba8();
         Self::new_with_data(
             graphics,
-            Size::new(UPx(image.width()), UPx(image.height())),
+            Size::upx(image.width(), image.height()),
             wgpu::TextureFormat::Rgba8Unorm,
             wgpu::TextureUsages::TEXTURE_BINDING,
             image.as_raw(),
@@ -1323,7 +1323,7 @@ impl Texture {
     /// The size of the texture.
     #[must_use]
     pub fn size(&self) -> Size<UPx> {
-        Size::new(UPx(self.wgpu.width()), UPx(self.wgpu.height()))
+        Size::upx(self.wgpu.width(), self.wgpu.height())
     }
 
     /// The format of the texture.

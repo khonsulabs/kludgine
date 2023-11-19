@@ -1,5 +1,5 @@
 use appit::winit::error::EventLoopError;
-use figures::{Rect, Size};
+use figures::{Lp2D, Rect, Size};
 use kludgine::figures::units::Lp;
 use kludgine::figures::Point;
 use kludgine::shapes::Shape;
@@ -12,7 +12,7 @@ fn main() -> Result<(), EventLoopError> {
         let line_height = Lp::points(72);
         renderer.set_line_height(line_height);
 
-        let inset = Point::new(Lp::cm(1), Lp::cm(1));
+        let inset = Point::cm(1, 1);
 
         let measured = renderer.measure_text::<Lp>("Kludgine");
         renderer.draw_shape(
