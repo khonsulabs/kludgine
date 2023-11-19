@@ -108,6 +108,8 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
                     .unwrap_or(Point::new(i32::MAX, i32::MAX)),
                 texture: vertex.texture,
                 color: vertex.color,
+                line_width: vertex.line_width.try_into().unwrap_or_default(),
+                line_normal: vertex.line_normal.try_into().unwrap_or_default(),
             };
             let index = self.data.vertices.get_or_insert(vertex);
             vertex_map.push(index);
@@ -460,6 +462,8 @@ mod text {
                 location: vertex.location.into_signed().cast(),
                 texture: vertex.texture,
                 color: vertex.color,
+                line_normal: Default::default(),
+                line_width: Default::default(),
             })
         });
         let start_index = u32::try_from(indices.len()).expect("too many drawn indices");

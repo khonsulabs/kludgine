@@ -11,12 +11,16 @@ struct VertexInput {
     @location(0) position: vec2<i32>,
     @location(1) uv: vec2<u32>,
     @location(2) color: u32,
+    @location(3) line_normal: i32,
+    @location(4) line_width: i32,
 }
 
 struct VertexOutput {
     @builtin(position) position: vec4<f32>,
     @location(0) color: vec4<f32>,
     @location(1) uv: vec2<f32>,
+    @location(2) line_normal: f32,
+    @location(3) line_width: f32,
 }
 
 struct Uniforms {
@@ -81,11 +85,15 @@ fn vertex(input: VertexInput) -> VertexOutput {
             f32(dips_to_pixels(input.position.x, dips_scale)),
             f32(dips_to_pixels(input.position.y, dips_scale)),
         );
+        outval.line_normal = f32(dips_to_pixels(input.line_normal, dips_scale));
+        outval.line_width = f32(dips_to_pixels(input.line_width, dips_scale));
     } else {
         position = vec2<f32>(
             f32(input.position.x),
             f32(input.position.y),
         );
+        outval.line_normal = f32(input.line_normal);
+        outval.line_width = f32(input.line_width);
     }
     if (pc.flags & flag_rotation) != u32(0) {
         var angle_cos = cos(pc.rotation);
@@ -117,6 +125,8 @@ fn vertex(input: VertexInput) -> VertexOutput {
 struct FragmentInput {
     @location(0) color: vec4<f32>,
     @location(1) uv: vec2<f32>,
+    @location(2) line_normal: f32,
+    @location(3) line_width: f32,
 }
 
 @group(0)
@@ -131,14 +141,22 @@ fn fragment(fragment: FragmentInput) -> @location(0) vec4<f32> {
     let flag_textured = u32(1) << u32(4);
     let flag_masked = u32(1) << u32(5);
 
+    var color = fragment.color;
+
+    // Calculate the feather
+    if fragment.line_width > 0. {
+        let feather = 2.;
+        color.w *= pow((feather - max(abs(fragment.line_normal) - fragment.line_width + feather, 0.0)) / feather, 2.);
+    }
+
     if (pc.flags & flag_textured) != u32(0) {
         let sample = textureSample(r_texture, r_sampler, fragment.uv);
         if (pc.flags & flag_masked) != u32(0) {
-            return vec4<f32>(fragment.color.x, fragment.color.y, fragment.color.z, sample.x * fragment.color.w);
+            return vec4<f32>(color.x, color.y, color.z, sample.x * color.w);
         }
 
-        return sample * fragment.color;
+        return sample * color;
     }
 
-    return fragment.color;
+    return color;
 }
