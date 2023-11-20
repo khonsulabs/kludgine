@@ -1287,7 +1287,7 @@
     AxisId, DeviceId, ElementState, Ime, KeyEvent, Modifiers, MouseButton, MouseScrollDelta, Touch,
     TouchPhase,
 };
-<span class="kw">use </span>appit::winit::keyboard::KeyCode;
+<span class="kw">use </span>appit::winit::keyboard::PhysicalKey;
 <span class="kw">use </span>appit::winit::window::{ImePurpose, Theme, WindowId};
 <span class="kw">pub use </span>appit::{winit, Message, WindowAttributes};
 <span class="kw">use </span>appit::{Application, PendingApp, RunningWindow, WindowBehavior <span class="kw">as _</span>};
@@ -1465,8 +1465,8 @@
 
     <span class="doccomment">/// Returns true if the given virtual key code is currently pressed.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>key_pressed(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>KeyCode) -&gt; bool {
-        <span class="self">self</span>.window.key_pressed(key)
+    </span><span class="kw">pub fn </span>key_pressed(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw">impl </span>Into&lt;PhysicalKey&gt;) -&gt; bool {
+        <span class="self">self</span>.window.key_pressed(<span class="kw-2">&amp;</span>key.into())
     }
 
     <span class="doccomment">/// Returns currently active modifiers.
@@ -1510,7 +1510,7 @@
     <span class="doccomment">/// Returns the window attributes to use when creating the window.
     </span><span class="attr">#[must_use]
     #[allow(unused_variables)]
-    </span><span class="kw">fn </span>initial_window_attributes(context: <span class="kw-2">&amp;</span><span class="self">Self</span>::Context) -&gt; WindowAttributes&lt;WindowEvent&gt; {
+    </span><span class="kw">fn </span>initial_window_attributes(context: <span class="kw-2">&amp;</span><span class="self">Self</span>::Context) -&gt; WindowAttributes {
         WindowAttributes::default()
     }
 
