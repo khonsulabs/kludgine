@@ -12,7 +12,7 @@ use appit::winit::event::{
     AxisId, DeviceId, ElementState, Ime, KeyEvent, Modifiers, MouseButton, MouseScrollDelta, Touch,
     TouchPhase,
 };
-use appit::winit::keyboard::KeyCode;
+use appit::winit::keyboard::PhysicalKey;
 use appit::winit::window::{ImePurpose, Theme, WindowId};
 pub use appit::{winit, Message, WindowAttributes};
 use appit::{Application, PendingApp, RunningWindow, WindowBehavior as _};
@@ -190,8 +190,8 @@ where
 
     /// Returns true if the given virtual key code is currently pressed.
     #[must_use]
-    pub fn key_pressed(&self, key: &KeyCode) -> bool {
-        self.window.key_pressed(key)
+    pub fn key_pressed(&self, key: impl Into<PhysicalKey>) -> bool {
+        self.window.key_pressed(&key.into())
     }
 
     /// Returns currently active modifiers.
@@ -235,7 +235,7 @@ where
     /// Returns the window attributes to use when creating the window.
     #[must_use]
     #[allow(unused_variables)]
-    fn initial_window_attributes(context: &Self::Context) -> WindowAttributes<WindowEvent> {
+    fn initial_window_attributes(context: &Self::Context) -> WindowAttributes {
         WindowAttributes::default()
     }
 

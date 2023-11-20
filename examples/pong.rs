@@ -50,11 +50,11 @@ impl GameState {
 
         // Handle keyboard inputs
         let paddle_movement = PADDLE_SPEED * elapsed_seconds;
-        if window.key_pressed(&KeyCode::ArrowUp) || window.key_pressed(&KeyCode::KeyW) {
+        if window.key_pressed(KeyCode::ArrowUp) || window.key_pressed(KeyCode::KeyW) {
             self.player_paddle_position -= paddle_movement;
         }
 
-        if window.key_pressed(&KeyCode::ArrowDown) || window.key_pressed(&KeyCode::KeyS) {
+        if window.key_pressed(KeyCode::ArrowDown) || window.key_pressed(KeyCode::KeyS) {
             self.player_paddle_position += paddle_movement;
         }
         self.player_paddle_position = self.player_paddle_position.clamp(Px::ZERO, size.height);

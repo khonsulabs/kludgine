@@ -32,6 +32,6 @@ fn main() -> Result<(), EventLoopError> {
                 .translate_by(shape_center)
                 .rotate_by(angle),
         );
-        false
+        true
     })
 }
