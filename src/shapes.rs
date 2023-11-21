@@ -71,6 +71,39 @@ impl<Unit: PixelScaling> Shape<Unit, false> {
         shape_builder.shape
     }
 
+    /// Returns a circle that is stroked with `color` and `options`.
+    pub fn stroked_circle(
+        radius: Unit,
+        color: Color,
+        origin: Origin<Unit>,
+        options: impl Into<StrokeOptions<Unit>>,
+    ) -> Shape<Unit, false>
+    where
+        Unit: Default
+            + Neg<Output = Unit>
+            + Add<Output = Unit>
+            + Ord
+            + FloatConversion<Float = f32>
+            + Copy,
+    {
+        let center = match origin {
+            Origin::TopLeft => Point::new(radius, radius),
+            Origin::Center => Point::default(),
+            Origin::Custom(pt) => pt,
+        };
+        let mut shape_builder = ShapeBuilder::new(color);
+        let mut tesselator = StrokeTessellator::new();
+        tesselator
+            .tessellate_circle(
+                lyon_tessellation::math::point(center.x.into_float(), center.y.into_float()),
+                radius.into_float(),
+                &options.into().into(),
+                &mut shape_builder,
+            )
+            .assert("should not fail to tesselat4e a rect");
+        shape_builder.shape
+    }
+
     /// Returns a rectangle that is filled solid with `color`.
     pub fn filled_rect(rect: Rect<Unit>, color: Color) -> Shape<Unit, false>
     where
