@@ -84,7 +84,7 @@ pub(crate) struct PushConstants {
 #[derive(Debug)]
 pub struct PreparedGraphic<Unit> {
     pub(crate) vertices: Buffer<Vertex<Unit>>,
-    pub(crate) indices: Buffer<u16>,
+    pub(crate) indices: Buffer<u32>,
     pub(crate) commands: SmallVec<[PreparedCommand; 2]>,
 }
 
@@ -115,7 +115,7 @@ where
         graphics.pass.set_vertex_buffer(0, self.vertices.as_slice());
         graphics
             .pass
-            .set_index_buffer(self.indices.as_slice(), wgpu::IndexFormat::Uint16);
+            .set_index_buffer(self.indices.as_slice(), wgpu::IndexFormat::Uint32);
 
         for command in &self.commands {
             if graphics.clip.current.size.is_zero() {

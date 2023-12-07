@@ -36,7 +36,7 @@ pub trait TextureSource {
 
 pub trait ShapeSource<Unit> {
     fn vertices(&self) -> &[Vertex<Unit>];
-    fn indices(&self) -> &[u16];
+    fn indices(&self) -> &[u32];
     fn prepare(
         &self,
         texture: Option<&impl TextureSource>,

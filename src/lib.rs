@@ -1527,11 +1527,11 @@ impl BuildHasher for DefaultHasher {
 #[derive(Default, Debug)]
 struct VertexCollection<T> {
     vertices: Vec<Vertex<T>>,
-    vertex_index_by_id: HashMap<VertexId, u16, DefaultHasher>,
+    vertex_index_by_id: HashMap<VertexId, u32, DefaultHasher>,
 }
 
 impl<T> VertexCollection<T> {
-    fn get_or_insert(&mut self, vertex: Vertex<T>) -> u16
+    fn get_or_insert(&mut self, vertex: Vertex<T>) -> u32
     where
         T: Copy,
         Vertex<T>: Into<Vertex<i32>>,
@@ -1577,7 +1577,7 @@ where
         &self.verticies
     }
 
-    fn indices(&self) -> &[u16] {
+    fn indices(&self) -> &[u32] {
         &[1, 0, 2, 1, 2, 3]
     }
 }

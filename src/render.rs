@@ -115,7 +115,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         for &vertex_index in shape.source.indices() {
             self.data
                 .indices
-                .push(vertex_map[usize::from(vertex_index)]);
+                .push(vertex_map[usize::try_from(vertex_index).assert("too many drawn indices")]);
         }
 
         let mut flags = Unit::flags();
@@ -252,6 +252,7 @@ mod text {
 
     use figures::units::Px;
     use figures::{Fraction, ScreenScale, ScreenUnit, UnscaledUnit};
+    use intentional::Assert;
 
     use super::{
         Angle, Color, Command, IntoSigned, Point, PushConstants, Renderer, Vertex, Zero,
@@ -449,14 +450,14 @@ mod text {
         clip_index: u32,
         dpi_scale: Fraction,
         vertices: &mut VertexCollection<i32>,
-        indices: &mut Vec<u16>,
+        indices: &mut Vec<u32>,
         textures: &mut HashMap<TextureId, Arc<wgpu::BindGroup>, DefaultHasher>,
         commands: &mut Vec<Command>,
     ) where
         Unit: ScreenUnit,
     {
         let translation = translation.into_px(dpi_scale).map(Px::into_unscaled);
-        let corners: [u16; 4] = array::from_fn(|index| {
+        let corners: [u32; 4] = array::from_fn(|index| {
             let vertex = &blit.verticies[index];
             vertices.get_or_insert(Vertex {
                 location: vertex.location.into_signed().map(Px::into_unscaled),
@@ -466,7 +467,7 @@ mod text {
         });
         let start_index = u32::try_from(indices.len()).expect("too many drawn indices");
         for &index in blit.indices() {
-            indices.push(corners[usize::from(index)]);
+            indices.push(corners[usize::try_from(index).assert("too many drawn indices")]);
         }
         let mut flags = Px::flags() | FLAG_TEXTURED;
         if let hash_map::Entry::Vacant(vacant) = textures.entry(cached.texture.id()) {
@@ -566,7 +567,7 @@ pub struct Drawing {
     vertices: VertexCollection<i32>,
     clips: Vec<Rect<UPx>>,
     clip_lookup: HashMap<Rect<UPx>, u32, DefaultHasher>,
-    indices: Vec<u16>,
+    indices: Vec<u32>,
     textures: HashMap<sealed::TextureId, Arc<wgpu::BindGroup>, DefaultHasher>,
     commands: Vec<Command>,
     #[cfg(feature = "cosmic-text")]
@@ -577,7 +578,7 @@ pub struct Drawing {
 #[derive(Debug)]
 struct RenderingBuffers {
     vertex: DiffableBuffer<Vertex<i32>>,
-    index: DiffableBuffer<u16>,
+    index: DiffableBuffer<u32>,
 }
 
 impl Drawing {
@@ -626,7 +627,7 @@ impl Drawing {
                 .set_vertex_buffer(0, buffers.vertex.as_slice());
             graphics
                 .pass
-                .set_index_buffer(buffers.index.as_slice(), wgpu::IndexFormat::Uint16);
+                .set_index_buffer(buffers.index.as_slice(), wgpu::IndexFormat::Uint32);
 
             let mut current_clip_index = 0;
             let mut current_clip = graphics.clip.current.0;

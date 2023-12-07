@@ -363,11 +363,11 @@ impl<'gfx> Graphics<'gfx> {
             self.queue,
             &mut glyphs,
             |blit, cached, _glyph, _is_first_line, _baseline, _line_w| {
-                let corners: [u16; 4] =
+                let corners: [u32; 4] =
                     array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
                 let start_index = u32::try_from(indices.len()).assert("too many drawn indices");
                 for &index in blit.indices() {
-                    indices.push(corners[usize::from(index)]);
+                    indices.push(corners[usize::try_from(index).assert("too many drawn indices")]);
                 }
                 let end_index = u32::try_from(indices.len()).assert("too many drawn indices");
                 match commands.last_mut() {

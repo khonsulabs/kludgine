@@ -25,12 +25,12 @@ use crate::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct Shape<Unit, const TEXTURED: bool> {
     pub(crate) vertices: SmallVec<[Vertex<Unit>; 6]>,
-    pub(crate) indices: SmallVec<[u16; 20]>,
+    pub(crate) indices: SmallVec<[u32; 20]>,
 }
 
 #[test]
 fn shape_size() {
-    assert_eq!(std::mem::size_of::<Shape<i32, true>>(), 176);
+    assert_eq!(std::mem::size_of::<Shape<i32, true>>(), 216);
 }
 
 impl<Unit, const TEXTURED: bool> Default for Shape<Unit, TEXTURED> {
@@ -221,7 +221,7 @@ where
         &self.vertices
     }
 
-    fn indices(&self) -> &[u16] {
+    fn indices(&self) -> &[u32] {
         &self.indices
     }
 }
@@ -274,7 +274,7 @@ where
                 .map_err(|_| GeometryBuilderError::TooManyVertices)?,
         );
         self.shape.vertices.push(vertex);
-        if self.shape.vertices.len() > u16::MAX as usize {
+        if self.shape.vertices.len() > u32::MAX as usize {
             return Err(GeometryBuilderError::TooManyVertices);
         }
 
@@ -339,15 +339,9 @@ where
     fn end_geometry(&mut self) {}
 
     fn add_triangle(&mut self, a: VertexId, b: VertexId, c: VertexId) {
-        self.shape
-            .indices
-            .push(a.0.try_into().expect("checked in new_vertex"));
-        self.shape
-            .indices
-            .push(b.0.try_into().expect("checked in new_vertex"));
-        self.shape
-            .indices
-            .push(c.0.try_into().expect("checked in new_vertex"));
+        self.shape.indices.push(a.0);
+        self.shape.indices.push(b.0);
+        self.shape.indices.push(c.0);
     }
 
     fn abort_geometry(&mut self) {
