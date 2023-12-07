@@ -9,7 +9,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{self, BuildHasher, Hash};
-use std::ops::{Add, AddAssign, Deref, DerefMut};
+use std::ops::{Add, AddAssign, Deref, DerefMut, Div, Neg};
 use std::sync::Arc;
 
 use ahash::AHasher;
@@ -17,7 +17,7 @@ use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "cosmic-text")]
 pub use cosmic_text;
 use figures::units::UPx;
-use figures::{Angle, Fraction, FromComponents, IntoComponents, Point, Rect, Size, UPx2D};
+use figures::{Angle, Fraction, FromComponents, Point, Rect, Size, UPx2D};
 use intentional::Assert;
 use sealed::ShapeSource as _;
 use wgpu::util::DeviceExt;
@@ -1283,13 +1283,13 @@ impl Texture {
         graphics: &Graphics<'_>,
     ) -> PreparedGraphic<Unit>
     where
-        Unit: figures::Unit,
-        i32: IntoComponents<Unit>,
+        Unit: figures::Unit + From<i32>,
+        Point<Unit>: Div<Unit, Output = Point<Unit>> + Neg<Output = Point<Unit>>,
         Vertex<Unit>: bytemuck::Pod,
     {
         let origin = match origin {
             Origin::TopLeft => Point::default(),
-            Origin::Center => Point::default() - (Point::from_vec(size) / 2),
+            Origin::Center => -(Point::from_vec(size) / Unit::from(2)),
             Origin::Custom(point) => point,
         };
         self.prepare(Rect::new(origin, size), graphics)

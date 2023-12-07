@@ -374,13 +374,11 @@ mod text {
             let translation = text.translation;
             let origin = match origin {
                 TextOrigin::TopLeft => Point::default(),
-                TextOrigin::Center => {
-                    Point::from(text.source.size).into_px(scaling_factor).cast() / 2
-                }
+                TextOrigin::Center => Point::from(text.source.size).into_px(scaling_factor) / 2,
                 TextOrigin::FirstBaseline => {
                     Point::new(Px::ZERO, text.source.ascent.into_px(scaling_factor))
                 }
-                TextOrigin::Custom(offset) => offset.into_px(scaling_factor).cast(),
+                TextOrigin::Custom(offset) => offset.into_px(scaling_factor),
             };
             for glyph in &text.source.glyphs {
                 let mut blit = glyph.blit;

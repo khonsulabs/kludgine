@@ -418,7 +418,7 @@ pub(crate) fn map_each_glyph(
         TextOrigin::Center => {
             let measured =
                 measure_text::<Px, false>(buffer, default_color, kludgine, queue, glyphs);
-            Point::from(measured.size) / 2.
+            Point::from(measured.size) / 2
         }
         TextOrigin::FirstBaseline => line_height_offset.cast(),
     } + line_height_offset;
@@ -490,8 +490,7 @@ pub(crate) fn map_each_glyph(
                         + Point::new(
                             image.placement.left,
                             metrics.line_height.cast::<i32>() - image.placement.top,
-                        )
-                        .cast(),
+                        ),
                     Size::new(
                         i32::try_from(image.placement.width).expect("width out of range of i32"),
                         i32::try_from(image.placement.height).expect("height out of range of i32"),

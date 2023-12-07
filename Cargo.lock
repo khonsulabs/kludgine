@@ -541,7 +541,7 @@ dependencies = [
 [[package]]
 name = "figures"
 version = "0.1.0"
-source = "git+https://github.com/khonsulabs/figures#40045fa1940f6212bc4876a4ef9ae2cd0bd89808"
+source = "git+https://github.com/khonsulabs/figures#1809e94c19e56aaf9df36d7553ffa9e65523369d"
 dependencies = [
  "bytemuck",
  "euclid",
