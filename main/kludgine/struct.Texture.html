@@ -20,8 +20,8 @@ is initialized with <code>data</code>. <code>data</code> must match <code>format
     size: Size&lt;Unit&gt;,
     graphics: &amp;<a class="struct" href="struct.Graphics.html" title="struct kludgine::Graphics">Graphics</a>&lt;'_&gt;
 ) -&gt; <a class="struct" href="struct.PreparedGraphic.html" title="struct kludgine::PreparedGraphic">PreparedGraphic</a>&lt;Unit&gt;<span class="where fmt-newline">where
-    Unit: Unit,
-    <a class="primitive" href="https://doc.rust-lang.org/1.74.1/std/primitive.i32.html">i32</a>: IntoComponents&lt;Unit&gt;,
+    Unit: Unit + <a class="trait" href="https://doc.rust-lang.org/1.74.1/core/convert/trait.From.html" title="trait core::convert::From">From</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.74.1/std/primitive.i32.html">i32</a>&gt;,
+    Point&lt;Unit&gt;: <a class="trait" href="https://doc.rust-lang.org/1.74.1/core/ops/arith/trait.Div.html" title="trait core::ops::arith::Div">Div</a>&lt;Unit, Output = Point&lt;Unit&gt;&gt; + <a class="trait" href="https://doc.rust-lang.org/1.74.1/core/ops/arith/trait.Neg.html" title="trait core::ops::arith::Neg">Neg</a>&lt;Output = Point&lt;Unit&gt;&gt;,
     Vertex&lt;Unit&gt;: Pod,</span></h4></section></summary><div class="docblock"><p>Prepares to render this texture with <code>size</code>. The returned graphic will
 be oriented around <code>origin</code>.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.prepare" class="method"><a class="src rightside" href="../src/kludgine/lib.rs.html#1300-1306">source</a><h4 class="code-header">pub fn <a href="#method.prepare" class="fn">prepare</a>&lt;Unit&gt;(

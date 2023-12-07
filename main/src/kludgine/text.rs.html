@@ -826,7 +826,6 @@
 <a href="#826" id="826">826</a>
 <a href="#827" id="827">827</a>
 <a href="#828" id="828">828</a>
-<a href="#829" id="829">829</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -1247,7 +1246,7 @@
         TextOrigin::Center =&gt; {
             <span class="kw">let </span>measured =
                 measure_text::&lt;Px, <span class="bool-val">false</span>&gt;(buffer, default_color, kludgine, queue, glyphs);
-            Point::from(measured.size) / <span class="number">2.
+            Point::from(measured.size) / <span class="number">2
         </span>}
         TextOrigin::FirstBaseline =&gt; line_height_offset.cast(),
     } + line_height_offset;
@@ -1319,8 +1318,7 @@
                         + Point::new(
                             image.placement.left,
                             metrics.line_height.cast::&lt;i32&gt;() - image.placement.top,
-                        )
-                        .cast(),
+                        ),
                     Size::new(
                         i32::try_from(image.placement.width).expect(<span class="string">&quot;width out of range of i32&quot;</span>),
                         i32::try_from(image.placement.height).expect(<span class="string">&quot;height out of range of i32&quot;</span>),
