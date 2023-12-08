@@ -95,6 +95,14 @@
 <a href="#95" id="95">95</a>
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Deref;
 <span class="kw">use </span>std::sync::atomic::{<span class="self">self</span>, AtomicUsize};
 <span class="kw">use </span>std::sync::{Arc, OnceLock};
@@ -127,7 +135,7 @@
 <span class="kw">pub trait </span>TextureSource {
     <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TextureId;
     <span class="kw">fn </span>is_mask(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
-    <span class="kw">fn </span>bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;wgpu::BindGroup&gt;;
+    <span class="kw">fn </span>bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics) -&gt; Arc&lt;wgpu::BindGroup&gt;;
     <span class="kw">fn </span>default_rect(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Rect&lt;UPx&gt;;
 }
 
@@ -162,7 +170,7 @@
                     .try_into()
                     .expect(<span class="string">&quot;too many drawn indices&quot;</span>),
                 is_mask: <span class="bool-val">false</span>,
-                binding: texture.map(TextureSource::bind_group),
+                binding: texture.map(|source| source.bind_group(graphics)),
             }],
         }
     }
@@ -191,5 +199,13 @@
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
     </span>}
+}
+
+<span class="kw">pub trait </span>KludgineGraphics {
+    <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Device;
+    <span class="kw">fn </span>queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Queue;
+    <span class="kw">fn </span>binding_layout(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::BindGroupLayout;
+    <span class="kw">fn </span>uniforms(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Buffer;
+    <span class="kw">fn </span>sampler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Sampler;
 }
 </code></pre></div></section></main></body></html>

@@ -1273,6 +1273,13 @@
 <a href="#1273" id="1273">1273</a>
 <a href="#1274" id="1274">1274</a>
 <a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
+<a href="#1278" id="1278">1278</a>
+<a href="#1279" id="1279">1279</a>
+<a href="#1280" id="1280">1280</a>
+<a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::num::NonZeroU32;
@@ -1533,6 +1540,12 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">fn </span>power_preference() -&gt; wgpu::PowerPreference {
         wgpu::PowerPreference::default()
+    }
+
+    <span class="doccomment">/// Returns the filter mode to use when rendering textures with `wgpu`.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">fn </span>filter_mode() -&gt; wgpu::FilterMode {
+        wgpu::FilterMode::Nearest
     }
 
     <span class="doccomment">/// Returns the limits to apply for the `wgpu` instance.
@@ -1924,6 +1937,7 @@
             <span class="kw-2">&amp;</span>device,
             <span class="kw-2">&amp;</span>queue,
             swapchain_format,
+            T::filter_mode(),
             multisample,
             window.inner_size().into(),
             window.scale().cast::&lt;f32&gt;(),

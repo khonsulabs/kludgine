@@ -410,11 +410,49 @@
 <a href="#410" id="410">410</a>
 <a href="#411" id="411">411</a>
 <a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(missing_docs, clippy::missing_panics_doc)] </span><span class="comment">// This file is a work in progress.
 
 </span><span class="kw">use </span>std::fmt::Debug;
-<span class="kw">use </span>std::ops::{Index, IndexMut};
+<span class="kw">use </span>std::ops::{Deref, DerefMut, Index, IndexMut};
 <span class="kw">use </span>std::panic::{AssertUnwindSafe, UnwindSafe};
+<span class="kw">use </span>std::time::Duration;
 
 <span class="kw">use </span>alot::{LotId, OrderedLots};
 <span class="kw">use </span>figures::Fraction;
@@ -423,7 +461,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::figures::{IntoSigned, Point, Rect, Size};
 <span class="kw">use </span><span class="kw">crate</span>::render::Renderer;
 <span class="kw">use </span><span class="kw">crate</span>::shapes::Shape;
-<span class="kw">use </span><span class="kw">crate</span>::text::Text;
+<span class="kw">use </span><span class="kw">crate</span>::sprite::Sprite;
 <span class="kw">use crate</span>::{AnyTexture, Assert, Color};
 
 <span class="kw">pub const </span>TILE_SIZE: Px = Px::new(<span class="number">32</span>);
@@ -444,7 +482,13 @@
     Point::new(coordinate.x / effective_zoom, coordinate.y / effective_zoom)
 }
 
-<span class="kw">pub fn </span>draw(layers: <span class="kw-2">&amp;</span><span class="kw">impl </span>Layers, focus: TileMapFocus, zoom: f32, graphics: <span class="kw-2">&amp;mut </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;) {
+<span class="kw">pub fn </span>draw(
+    layers: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Layers,
+    focus: TileMapFocus,
+    zoom: f32,
+    elapsed: Duration,
+    graphics: <span class="kw-2">&amp;mut </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+) {
     <span class="kw">let </span>effective_zoom = graphics.scale().into_f32() * zoom;
 
     <span class="kw">let </span>offset = focus.world_coordinate(layers);
@@ -456,35 +500,21 @@
     <span class="kw">let </span>top_left = first_tile(visible_region.origin, tile_size);
     <span class="kw">let </span>bottom_right = last_tile(visible_region.origin + visible_region.size, tile_size);
 
+    <span class="kw">let </span><span class="kw-2">mut </span>context = LayerContext {
+        top_left,
+        bottom_right,
+        tile_size,
+        visible_rect: visible_region,
+        zoom,
+        elapsed,
+        renderer: graphics,
+    };
     <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>.. {
         <span class="kw">let </span><span class="prelude-val">Some</span>(layer) = layers.layer(index) <span class="kw">else </span>{
             <span class="kw">break</span>;
         };
-        layer.render(
-            <span class="kw-2">&amp;</span>top_left,
-            <span class="kw-2">&amp;</span>bottom_right,
-            tile_size,
-            <span class="kw-2">&amp;</span>visible_region,
-            effective_zoom,
-            graphics,
-        );
+        layer.render(<span class="kw-2">&amp;mut </span>context);
     }
-
-    graphics.draw_text(Text::&lt;Px&gt;::new(
-        <span class="kw-2">&amp;</span><span class="macro">format!</span>(
-            <span class="string">&quot;Tile {}: Vis: {},{},{},{} - TL: {},{} / {},{}&quot;</span>,
-            tile_size,
-            visible_region.origin.x,
-            visible_region.origin.y,
-            visible_region.size.width,
-            visible_region.size.height,
-            top_left.index.x,
-            top_left.index.y,
-            top_left.tile_offset.x,
-            top_left.tile_offset.y
-        ),
-        Color::RED,
-    ));
 }
 
 <span class="kw">pub struct </span>TileOffset {
@@ -534,14 +564,14 @@
 }
 
 <span class="kw">pub trait </span>Layers: Debug + UnwindSafe + Send + <span class="lifetime">&#39;static </span>{
-    <span class="kw">fn </span>layer(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>Layer&gt;;
+    <span class="kw">fn </span>layer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Layer&gt;;
 }
 
 <span class="kw">impl</span>&lt;T&gt; Layers <span class="kw">for </span>T
 <span class="kw">where
     </span>T: Layer,
 {
-    <span class="kw">fn </span>layer(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>Layer&gt; {
+    <span class="kw">fn </span>layer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Layer&gt; {
         (index == <span class="number">0</span>).then_some(<span class="self">self</span>)
     }
 }
@@ -551,9 +581,9 @@
         <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$</span><span class="kw">type</span>),+&gt; <span class="macro-nonterminal">Layers </span><span class="kw">for </span>($(<span class="macro-nonterminal">$</span><span class="kw">type</span>),+) <span class="kw">where </span>$(
             <span class="macro-nonterminal">$</span><span class="kw">type</span>: <span class="macro-nonterminal">Debug </span>+ UnwindSafe + Send + Layer + <span class="lifetime">&#39;static
         </span>),+ {
-            <span class="kw">fn </span>layer(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>Layer&gt; {
+            <span class="kw">fn </span>layer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Layer&gt; {
                 <span class="kw">match </span>index {
-                    $(<span class="macro-nonterminal">$index </span>=&gt; <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="macro-nonterminal">$index</span>),)+
+                    $(<span class="macro-nonterminal">$index </span>=&gt; <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="macro-nonterminal">$index</span>),)+
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                 }
             }
@@ -563,16 +593,64 @@
 
 <span class="macro">impl_layers_for_tuples!</span>(T1: <span class="number">0</span>, T2: <span class="number">1</span>);
 
+<span class="kw">pub struct </span>LayerContext&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt; {
+    top_left: TileOffset,
+    bottom_right: TileOffset,
+    tile_size: Px,
+    visible_rect: Rect&lt;Px&gt;,
+    zoom: f32,
+    elapsed: Duration,
+    renderer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Renderer&lt;<span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt;,
+}
+
+<span class="kw">impl </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+    <span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>top_left(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>TileOffset {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.top_left
+    }
+
+    <span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>bottom_right(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>TileOffset {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.bottom_right
+    }
+
+    <span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>tile_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Px {
+        <span class="self">self</span>.tile_size
+    }
+
+    <span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>visible_rect(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Rect&lt;Px&gt; {
+        <span class="self">self</span>.visible_rect
+    }
+
+    <span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>elapsed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Duration {
+        <span class="self">self</span>.elapsed
+    }
+
+    <span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>zoom(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {
+        <span class="self">self</span>.zoom
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt; Deref <span class="kw">for </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt; {
+    <span class="kw">type </span>Target = Renderer&lt;<span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt;;
+
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="self">self</span>.renderer
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt; DerefMut <span class="kw">for </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt; {
+    <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
+        <span class="self">self</span>.renderer
+    }
+}
+
 <span class="kw">pub trait </span>Layer: Debug + UnwindSafe + Send + <span class="lifetime">&#39;static </span>{
-    <span class="kw">fn </span>render(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        top_left: <span class="kw-2">&amp;</span>TileOffset,
-        bottom_right: <span class="kw-2">&amp;</span>TileOffset,
-        tile_size: Px,
-        visible_rect: <span class="kw-2">&amp;</span>Rect&lt;Px&gt;,
-        zoom: f32,
-        context: <span class="kw-2">&amp;mut </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    );
+    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;);
 
     <span class="kw">fn </span>find_object(<span class="kw-2">&amp;</span><span class="self">self</span>, _object: ObjectId) -&gt; <span class="prelude-ty">Option</span>&lt;Point&lt;Px&gt;&gt; {
         <span class="prelude-val">None
@@ -609,40 +687,34 @@
 }
 
 <span class="kw">impl </span>Layer <span class="kw">for </span>Tiles {
-    <span class="kw">fn </span>render(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        top_left: <span class="kw-2">&amp;</span>TileOffset,
-        bottom_right: <span class="kw-2">&amp;</span>TileOffset,
-        tile_size: Px,
-        _visible_rect: <span class="kw-2">&amp;</span>Rect&lt;Px&gt;,
-        _zoom: f32,
-        context: <span class="kw-2">&amp;mut </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) {
+    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;) {
         <span class="kw">let </span>(<span class="prelude-val">Ok</span>(right), <span class="prelude-val">Ok</span>(bottom)) = (
-            usize::try_from(bottom_right.index.x),
-            usize::try_from(bottom_right.index.y),
+            usize::try_from(context.bottom_right().index.x),
+            usize::try_from(context.bottom_right().index.y),
         ) <span class="kw">else </span>{
             <span class="kw">return</span>;
         };
 
-        <span class="kw">let </span>(x, left) = <span class="kw">if let </span><span class="prelude-val">Ok</span>(left) = usize::try_from(top_left.index.x) {
+        <span class="kw">let </span>(x, left) = <span class="kw">if let </span><span class="prelude-val">Ok</span>(left) = usize::try_from(context.top_left().index.x) {
             (
-                top_left.tile_offset.x + tile_size * isize_to_i32(top_left.index.x),
+                context.top_left().tile_offset.x
+                    + context.tile_size() * isize_to_i32(context.top_left().index.x),
                 left,
             )
         } <span class="kw">else </span>{
-            <span class="kw">let </span>tile_offset = tile_size * isize_to_i32(-top_left.index.x);
-            (top_left.tile_offset.x + tile_offset, <span class="number">0</span>)
+            <span class="kw">let </span>tile_offset = context.tile_size() * isize_to_i32(-context.top_left().index.x);
+            (context.top_left().tile_offset.x + tile_offset, <span class="number">0</span>)
         };
-        <span class="kw">let </span>(<span class="kw-2">mut </span>y, top) = <span class="kw">if let </span><span class="prelude-val">Ok</span>(top) = usize::try_from(top_left.index.y) {
+        <span class="kw">let </span>(<span class="kw-2">mut </span>y, top) = <span class="kw">if let </span><span class="prelude-val">Ok</span>(top) = usize::try_from(context.top_left().index.y) {
             (
-                top_left.tile_offset.y + tile_size * isize_to_i32(top_left.index.y),
+                context.top_left().tile_offset.y
+                    + context.tile_size() * isize_to_i32(context.top_left().index.y),
                 top,
             )
         } <span class="kw">else </span>{
-            <span class="kw">let </span>tile_offset =
-                tile_size * i32::try_from(-top_left.index.y).expect(<span class="string">&quot;offset out of range&quot;</span>);
-            (top_left.tile_offset.y + tile_offset, <span class="number">0</span>)
+            <span class="kw">let </span>tile_offset = context.tile_size()
+                * i32::try_from(-context.top_left().index.y).expect(<span class="string">&quot;offset out of range&quot;</span>);
+            (context.top_left().tile_offset.y + tile_offset, <span class="number">0</span>)
         };
 
         <span class="kw">let </span>right = right.min(<span class="self">self</span>.width - <span class="number">1</span>);
@@ -652,8 +724,8 @@
             <span class="kw">for </span>y_index <span class="kw">in </span>top..=bottom {
                 <span class="kw">let </span><span class="kw-2">mut </span>x = x;
                 <span class="kw">for </span>x_index <span class="kw">in </span>left..=right {
-                    <span class="kw">let </span>tile_rect = Rect::new(Point::new(x, y), Size::squared(tile_size));
-                    <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.tiles[y_index * <span class="self">self</span>.width + x_index] {
+                    <span class="kw">let </span>tile_rect = Rect::new(Point::new(x, y), Size::squared(context.tile_size()));
+                    <span class="kw">match </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.tiles[y_index * <span class="self">self</span>.width + x_index] {
                         TileKind::Texture(texture) =&gt; {
                             <span class="comment">// TODO aspect-fit rather than fill.
                             </span>context.draw_texture(texture, tile_rect);
@@ -661,10 +733,17 @@
                         TileKind::Color(color) =&gt; {
                             context.draw_shape(<span class="kw-2">&amp;</span>Shape::filled_rect(tile_rect, <span class="kw-2">*</span>color));
                         }
+                        TileKind::Sprite(sprite) =&gt; {
+                            <span class="kw">if let </span><span class="prelude-val">Ok</span>(frame) = sprite.get_frame(<span class="prelude-val">Some</span>(context.elapsed())) {
+                                context.draw_texture(<span class="kw-2">&amp;</span>frame, tile_rect);
+                            } <span class="kw">else </span>{
+                                <span class="comment">// TODO show a broken image?
+                            </span>}
+                        }
                     };
-                    x += tile_size;
+                    x += context.tile_size();
                 }
-                y += tile_size;
+                y += context.tile_size();
             }
         }
     }
@@ -673,6 +752,7 @@
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>TileKind {
     Texture(AnyTexture),
+    Sprite(Sprite),
     Color(Color),
 }
 
@@ -759,20 +839,14 @@
 <span class="kw">where
     </span>O: Object,
 {
-    <span class="kw">fn </span>render(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        _top_left: <span class="kw-2">&amp;</span>TileOffset,
-        _bottom_right: <span class="kw-2">&amp;</span>TileOffset,
-        _tile_size: Px,
-        visible_rect: <span class="kw-2">&amp;</span>Rect&lt;Px&gt;,
-        zoom: f32,
-        context: <span class="kw-2">&amp;mut </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
-    ) {
+    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;) {
         <span class="kw">for </span>obj <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.objects {
-            <span class="kw">let </span>center =
-                Point::new(obj.position().x * zoom, obj.position().y * zoom) - visible_rect.origin;
+            <span class="kw">let </span>center = Point::new(
+                obj.position().x * context.zoom(),
+                obj.position().y * context.zoom(),
+            ) - context.visible_rect().origin;
 
-            obj.render(center, zoom, context);
+            obj.render(center, context.zoom(), context);
         }
     }
 
@@ -800,7 +874,7 @@
     <span class="comment">// Get the world coordinate of the selected focus.
     // Zoom in / out etc. will not change the world coordinate.
     // TB: 2023-11-14
-    </span><span class="kw">pub fn </span>world_coordinate(<span class="self">self</span>, layers: <span class="kw-2">&amp;</span><span class="kw">impl </span>Layers) -&gt; Point&lt;Px&gt; {
+    </span><span class="kw">pub fn </span>world_coordinate(<span class="self">self</span>, layers: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Layers) -&gt; Point&lt;Px&gt; {
         <span class="kw">match </span><span class="self">self </span>{
             TileMapFocus::Point(focus) =&gt; focus,
             TileMapFocus::Object { layer, id } =&gt; layers

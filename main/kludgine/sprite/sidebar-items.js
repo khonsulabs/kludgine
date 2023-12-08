@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["AnimationMode","FrameParseError","FrameTagError","SpriteParseError"],"struct":["InvalidSpriteTag","Sprite","SpriteAnimation","SpriteAnimations","SpriteFrame","SpriteMap","SpriteSheet"],"trait":["SpriteCollection"]};

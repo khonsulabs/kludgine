@@ -290,6 +290,16 @@
 <a href="#290" id="290">290</a>
 <a href="#291" id="291">291</a>
 <a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::Div;
 <span class="kw">use </span>std::sync::{Arc, PoisonError, RwLock};
@@ -301,7 +311,7 @@
 <span class="kw">use </span>intentional::Assert;
 
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{PreparedGraphic, Vertex};
-<span class="kw">use crate</span>::{sealed, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
+<span class="kw">use crate</span>::{sealed, Graphics, KludgineGraphics, Texture, TextureSource};
 
 <span class="doccomment">/// A collection of multiple textures, managed as a single texture on the GPU.
 /// This type is often called an atlas.
@@ -330,7 +340,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_generic(
         initial_size: Size&lt;UPx&gt;,
         format: wgpu::TextureFormat,
-        graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>WgpuDeviceAndQueue,
+        graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics,
     ) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>texture = Texture::new_generic(
             graphics,
@@ -375,7 +385,17 @@
         data: <span class="kw-2">&amp;</span>[u8],
         data_layout: wgpu::ImageDataLayout,
         size: Size&lt;UPx&gt;,
-        graphics: <span class="kw-2">&amp;</span>wgpu::Queue,
+        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;,
+    ) -&gt; CollectedTexture {
+        <span class="self">self</span>.push_texture_generic(data, data_layout, size, graphics)
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push_texture_generic(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        data: <span class="kw-2">&amp;</span>[u8],
+        data_layout: wgpu::ImageDataLayout,
+        size: Size&lt;UPx&gt;,
+        graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics,
     ) -&gt; CollectedTexture {
         <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">self
             </span>.data
@@ -395,9 +415,9 @@
             size,
         );
 
-        graphics.write_texture(
+        graphics.queue().write_texture(
             wgpu::ImageCopyTexture {
-                texture: <span class="kw-2">&amp;</span>this.texture.wgpu,
+                texture: this.texture.wgpu(graphics),
                 mip_level: <span class="number">0</span>,
                 origin: region.origin.into(),
                 aspect: wgpu::TextureAspect::All,
@@ -446,7 +466,7 @@
                 rows_per_image: <span class="prelude-val">None</span>,
             },
             Size::upx(image.width(), image.height()),
-            graphics.queue,
+            graphics,
         )
     }
 
@@ -506,9 +526,9 @@
 <span class="kw">impl </span>TextureSource <span class="kw">for </span>TextureCollection {}
 
 <span class="kw">impl </span>sealed::TextureSource <span class="kw">for </span>TextureCollection {
-    <span class="kw">fn </span>bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;wgpu::BindGroup&gt; {
+    <span class="kw">fn </span>bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>sealed::KludgineGraphics) -&gt; Arc&lt;wgpu::BindGroup&gt; {
         <span class="kw">let </span>data = <span class="self">self</span>.data.read().map_or_else(PoisonError::into_inner, |g| g);
-        data.texture.bind_group()
+        data.texture.bind_group(graphics)
     }
 
     <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; sealed::TextureId {
@@ -566,8 +586,8 @@
 <span class="kw">impl </span>TextureSource <span class="kw">for </span>CollectedTexture {}
 
 <span class="kw">impl </span>sealed::TextureSource <span class="kw">for </span>CollectedTexture {
-    <span class="kw">fn </span>bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;wgpu::BindGroup&gt; {
-        <span class="self">self</span>.collection.bind_group()
+    <span class="kw">fn </span>bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>sealed::KludgineGraphics) -&gt; Arc&lt;wgpu::BindGroup&gt; {
+        <span class="self">self</span>.collection.bind_group(graphics)
     }
 
     <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; sealed::TextureId {
