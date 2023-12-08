@@ -30,7 +30,7 @@ pub trait ShaderScalableSealed {
 pub trait TextureSource {
     fn id(&self) -> TextureId;
     fn is_mask(&self) -> bool;
-    fn bind_group(&self) -> Arc<wgpu::BindGroup>;
+    fn bind_group(&self, graphics: &impl KludgineGraphics) -> Arc<wgpu::BindGroup>;
     fn default_rect(&self) -> Rect<UPx>;
 }
 
@@ -65,7 +65,7 @@ pub trait ShapeSource<Unit> {
                     .try_into()
                     .expect("too many drawn indices"),
                 is_mask: false,
-                binding: texture.map(TextureSource::bind_group),
+                binding: texture.map(|source| source.bind_group(graphics)),
             }],
         }
     }
@@ -94,4 +94,12 @@ impl Deref for ClipRect {
     fn deref(&self) -> &Self::Target {
         &self.0
     }
+}
+
+pub trait KludgineGraphics {
+    fn device(&self) -> &wgpu::Device;
+    fn queue(&self) -> &wgpu::Queue;
+    fn binding_layout(&self) -> &wgpu::BindGroupLayout;
+    fn uniforms(&self) -> &wgpu::Buffer;
+    fn sampler(&self) -> &wgpu::Sampler;
 }

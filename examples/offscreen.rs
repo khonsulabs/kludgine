@@ -31,6 +31,7 @@ impl WindowBehavior for Test {
             graphics.device(),
             graphics.queue(),
             prerendered.format(),
+            wgpu::FilterMode::Linear,
             wgpu::MultisampleState::default(),
             Size::new(512, 512).cast(),
             1.0,
@@ -49,12 +50,8 @@ impl WindowBehavior for Test {
         .prepare(&preparing);
 
         // Render the texture
-        let mut rendering = frame.render_into(
-            &prerendered,
-            wgpu::LoadOp::Clear(Color::WHITE),
-            graphics.device(),
-            graphics.queue(),
-        );
+        let mut rendering =
+            frame.render_into(&prerendered, wgpu::LoadOp::Clear(Color::WHITE), graphics);
         outer_square.render(
             Point::px(256, 256),
             None,

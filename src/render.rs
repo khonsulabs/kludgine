@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut, Range};
 use std::sync::Arc;
 
 use figures::units::{Px, UPx};
-use figures::{Angle, IntoSigned, Point, Rect, ScreenScale, ScreenUnit, UnscaledUnit, Zero};
+use figures::{Angle, IntoSigned, Point, Rect, ScreenScale, ScreenUnit, Size, UnscaledUnit, Zero};
 use intentional::CastInto;
 
 use crate::buffer::DiffableBuffer;
@@ -76,6 +76,24 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         );
     }
 
+    /// Draws `texture` at `destination`.
+    pub fn draw_texture_at<Unit>(&mut self, texture: &impl TextureSource, destination: Point<Unit>)
+    where
+        Unit: figures::Unit + ScreenUnit + ShaderScalable,
+        i32: From<<Unit as IntoSigned>::Signed>,
+    {
+        let texture_rect = texture.default_rect();
+        let scaled_size = Size::<Unit>::from_upx(texture_rect.size, self.scale);
+        self.draw_textured_shape(
+            &TextureBlit::new(
+                texture_rect,
+                Rect::new(destination, scaled_size),
+                Color::WHITE,
+            ),
+            texture,
+        );
+    }
+
     /// Draws a shape that was created with texture coordinates, applying the
     /// provided texture.
     pub fn draw_textured_shape<'shape, Unit, Shape>(
@@ -127,7 +145,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
             }
             let id = texture.id();
             if let hash_map::Entry::Vacant(entry) = self.data.textures.entry(id) {
-                entry.insert(texture.bind_group());
+                entry.insert(texture.bind_group(self.graphics));
             }
             Some(id)
         } else {
@@ -262,7 +280,9 @@ mod text {
     use crate::text::{
         map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, Text, TextOrigin,
     };
-    use crate::{DefaultHasher, Drawable, TextureBlit, VertexCollection};
+    use crate::{
+        DefaultHasher, Drawable, KludgineGraphics, ProtoGraphics, TextureBlit, VertexCollection,
+    };
 
     impl<'gfx> Renderer<'_, 'gfx> {
         /// Measures `text` using the current text settings.
@@ -282,6 +302,7 @@ mod text {
                 None,
                 text.color,
                 self.graphics.kludgine,
+                self.graphics.device,
                 self.graphics.queue,
                 &mut self.data.glyphs,
             )
@@ -350,6 +371,7 @@ mod text {
                 Some(buffer),
                 default_color,
                 self.graphics.kludgine,
+                self.graphics.device,
                 self.graphics.queue,
                 &mut self.data.glyphs,
             )
@@ -391,6 +413,7 @@ mod text {
                     &glyph.cached,
                     self.clip_index,
                     scaling_factor,
+                    self.graphics,
                     &mut self.data.vertices,
                     &mut self.data.indices,
                     &mut self.data.textures,
@@ -410,16 +433,16 @@ mod text {
         ) where
             Unit: ScreenUnit,
         {
-            let queue = self.queue;
             let scaling_factor = self.scale;
             map_each_glyph(
                 buffer,
                 default_color,
                 origin,
                 self.graphics.kludgine,
-                queue,
+                self.graphics.device,
+                self.graphics.queue,
                 &mut self.data.glyphs,
-                |blit, cached, _glyph, _is_first_line, _baseline, _line_w| {
+                |blit, cached, _glyph, _is_first_line, _baseline, _line_w, kludgine| {
                     render_one_glyph(
                         translation,
                         rotation,
@@ -428,6 +451,7 @@ mod text {
                         cached,
                         self.clip_index,
                         scaling_factor,
+                        &ProtoGraphics::new(self.graphics.device, self.graphics.queue, kludgine),
                         &mut self.data.vertices,
                         &mut self.data.indices,
                         &mut self.data.textures,
@@ -447,6 +471,7 @@ mod text {
         cached: &CachedGlyphHandle,
         clip_index: u32,
         dpi_scale: Fraction,
+        graphics: &impl KludgineGraphics,
         vertices: &mut VertexCollection<i32>,
         indices: &mut Vec<u32>,
         textures: &mut HashMap<TextureId, Arc<wgpu::BindGroup>, DefaultHasher>,
@@ -469,7 +494,7 @@ mod text {
         }
         let mut flags = Px::flags() | FLAG_TEXTURED;
         if let hash_map::Entry::Vacant(vacant) = textures.entry(cached.texture.id()) {
-            vacant.insert(cached.texture.bind_group());
+            vacant.insert(cached.texture.bind_group(graphics));
         }
 
         if cached.is_mask {

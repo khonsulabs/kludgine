@@ -9,7 +9,7 @@ use figures::{IntoSigned, IntoUnsigned, Point, Px2D, Rect, Size, UPx2D};
 use intentional::Assert;
 
 use crate::pipeline::{PreparedGraphic, Vertex};
-use crate::{sealed, Graphics, Texture, TextureSource, WgpuDeviceAndQueue};
+use crate::{sealed, Graphics, KludgineGraphics, Texture, TextureSource};
 
 /// A collection of multiple textures, managed as a single texture on the GPU.
 /// This type is often called an atlas.
@@ -38,7 +38,7 @@ impl TextureCollection {
     pub(crate) fn new_generic(
         initial_size: Size<UPx>,
         format: wgpu::TextureFormat,
-        graphics: &impl WgpuDeviceAndQueue,
+        graphics: &impl KludgineGraphics,
     ) -> Self {
         let texture = Texture::new_generic(
             graphics,
@@ -83,7 +83,17 @@ impl TextureCollection {
         data: &[u8],
         data_layout: wgpu::ImageDataLayout,
         size: Size<UPx>,
-        graphics: &wgpu::Queue,
+        graphics: &Graphics<'_>,
+    ) -> CollectedTexture {
+        self.push_texture_generic(data, data_layout, size, graphics)
+    }
+
+    pub(crate) fn push_texture_generic(
+        &mut self,
+        data: &[u8],
+        data_layout: wgpu::ImageDataLayout,
+        size: Size<UPx>,
+        graphics: &impl KludgineGraphics,
     ) -> CollectedTexture {
         let mut this = self
             .data
@@ -103,9 +113,9 @@ impl TextureCollection {
             size,
         );
 
-        graphics.write_texture(
+        graphics.queue().write_texture(
             wgpu::ImageCopyTexture {
-                texture: &this.texture.wgpu,
+                texture: this.texture.wgpu(graphics),
                 mip_level: 0,
                 origin: region.origin.into(),
                 aspect: wgpu::TextureAspect::All,
@@ -154,7 +164,7 @@ impl TextureCollection {
                 rows_per_image: None,
             },
             Size::upx(image.width(), image.height()),
-            graphics.queue,
+            graphics,
         )
     }
 
@@ -214,9 +224,9 @@ impl TextureCollection {
 impl TextureSource for TextureCollection {}
 
 impl sealed::TextureSource for TextureCollection {
-    fn bind_group(&self) -> Arc<wgpu::BindGroup> {
+    fn bind_group(&self, graphics: &impl sealed::KludgineGraphics) -> Arc<wgpu::BindGroup> {
         let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
-        data.texture.bind_group()
+        data.texture.bind_group(graphics)
     }
 
     fn id(&self) -> sealed::TextureId {
@@ -274,8 +284,8 @@ impl Drop for CollectedTexture {
 impl TextureSource for CollectedTexture {}
 
 impl sealed::TextureSource for CollectedTexture {
-    fn bind_group(&self) -> Arc<wgpu::BindGroup> {
-        self.collection.bind_group()
+    fn bind_group(&self, graphics: &impl sealed::KludgineGraphics) -> Arc<wgpu::BindGroup> {
+        self.collection.bind_group(graphics)
     }
 
     fn id(&self) -> sealed::TextureId {

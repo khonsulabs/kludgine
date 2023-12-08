@@ -241,7 +241,7 @@ struct GlyphCache {
 
 impl GlyphCache {
     fn get_or_insert(
-        &mut self,
+        &self,
         key: PixelAlignedCacheKey,
         insert_fn: impl FnOnce() -> Option<(CollectedTexture, bool)>,
     ) -> Option<CachedGlyphHandle> {
@@ -360,9 +360,10 @@ impl<'gfx> Graphics<'gfx> {
             default_color,
             origin,
             self.kludgine,
+            self.device,
             self.queue,
             &mut glyphs,
-            |blit, cached, _glyph, _is_first_line, _baseline, _line_w| {
+            |blit, cached, _glyph, _is_first_line, _baseline, _line_w, kludgine| {
                 let corners: [u32; 4] =
                     array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
                 let start_index = u32::try_from(indices.len()).assert("too many drawn indices");
@@ -379,7 +380,11 @@ impl<'gfx> Graphics<'gfx> {
                         commands.push(PreparedCommand {
                             indices: start_index..end_index,
                             is_mask: cached.is_mask,
-                            binding: Some(cached.texture.bind_group()),
+                            binding: Some(cached.texture.bind_group(&ProtoGraphics::new(
+                                self.device,
+                                self.queue,
+                                kludgine,
+                            ))),
                         });
                     }
                 }
@@ -398,14 +403,24 @@ impl<'gfx> Graphics<'gfx> {
 }
 
 #[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn map_each_glyph(
     buffer: Option<&cosmic_text::Buffer>,
     default_color: Color,
     origin: TextOrigin<Px>,
     kludgine: &mut Kludgine,
+    device: &wgpu::Device,
     queue: &wgpu::Queue,
     glyphs: &mut HashMap<PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher>,
-    mut map: impl for<'a> FnMut(TextureBlit<Px>, &'a CachedGlyphHandle, &'a LayoutGlyph, usize, Px, Px),
+    mut map: impl for<'a> FnMut(
+        TextureBlit<Px>,
+        &'a CachedGlyphHandle,
+        &'a LayoutGlyph,
+        usize,
+        Px,
+        Px,
+        &'a Kludgine,
+    ),
 ) {
     let metrics = buffer
         .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"))
@@ -417,7 +432,7 @@ pub(crate) fn map_each_glyph(
         TextOrigin::TopLeft => Point::default(),
         TextOrigin::Center => {
             let measured =
-                measure_text::<Px, false>(buffer, default_color, kludgine, queue, glyphs);
+                measure_text::<Px, false>(buffer, default_color, kludgine, device, queue, glyphs);
             Point::from(measured.size) / 2
         }
         TextOrigin::FirstBaseline => line_height_offset.cast(),
@@ -448,7 +463,7 @@ pub(crate) fn map_each_glyph(
                     .glyphs
                     .get_or_insert(physical.cache_key.into(), || match image.content {
                         SwashContent::Mask => Some((
-                            kludgine.text.alpha_text_atlas.push_texture(
+                            kludgine.text.alpha_text_atlas.push_texture_generic(
                                 &image.data,
                                 wgpu::ImageDataLayout {
                                     offset: 0,
@@ -456,7 +471,13 @@ pub(crate) fn map_each_glyph(
                                     rows_per_image: None,
                                 },
                                 Size::upx(image.placement.width, image.placement.height).cast(),
-                                queue,
+                                &ProtoGraphics {
+                                    device,
+                                    queue,
+                                    binding_layout: &kludgine.binding_layout,
+                                    sampler: &kludgine.sampler,
+                                    uniforms: &kludgine.uniforms.wgpu,
+                                },
                             ),
                             true,
                         )),
@@ -464,7 +485,7 @@ pub(crate) fn map_each_glyph(
                             // Set the color to full white to avoid mixing.
                             color = Color::WHITE;
                             Some((
-                                kludgine.text.color_text_atlas.push_texture(
+                                kludgine.text.color_text_atlas.push_texture_generic(
                                     &image.data,
                                     wgpu::ImageDataLayout {
                                         offset: 0,
@@ -472,7 +493,13 @@ pub(crate) fn map_each_glyph(
                                         rows_per_image: None,
                                     },
                                     Size::upx(image.placement.width, image.placement.height).cast(),
-                                    queue,
+                                    &ProtoGraphics {
+                                        device,
+                                        queue,
+                                        binding_layout: &kludgine.binding_layout,
+                                        sampler: &kludgine.sampler,
+                                        uniforms: &kludgine.uniforms.wgpu,
+                                    },
                                 ),
                                 false,
                             ))
@@ -506,6 +533,7 @@ pub(crate) fn map_each_glyph(
                 (run.line_top / metrics.line_height).round().cast::<usize>(),
                 relative_to.y,
                 Px::from(run.line_w),
+                kludgine,
             );
 
             glyphs
@@ -519,6 +547,7 @@ pub(crate) fn measure_text<Unit, const COLLECT_GLYPHS: bool>(
     buffer: Option<&cosmic_text::Buffer>,
     color: Color,
     kludgine: &mut Kludgine,
+    device: &wgpu::Device,
     queue: &wgpu::Queue,
     glyphs: &mut HashMap<PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher>,
 ) -> MeasuredText<Unit>
@@ -537,9 +566,10 @@ where
         color,
         TextOrigin::TopLeft,
         kludgine,
+        device,
         queue,
         glyphs,
-        |blit, cached, glyph, line_index, baseline, line_width| {
+        |blit, cached, glyph, line_index, baseline, line_width, _kludgine| {
             last_baseline = last_baseline.max(baseline);
             min = min.min(blit.top_left().location);
             max.x = max.x.max(line_width);

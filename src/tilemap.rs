@@ -1,8 +1,9 @@
 #![allow(missing_docs, clippy::missing_panics_doc)] // This file is a work in progress.
 
 use std::fmt::Debug;
-use std::ops::{Index, IndexMut};
+use std::ops::{Deref, DerefMut, Index, IndexMut};
 use std::panic::{AssertUnwindSafe, UnwindSafe};
+use std::time::Duration;
 
 use alot::{LotId, OrderedLots};
 use figures::Fraction;
@@ -11,7 +12,7 @@ use crate::figures::units::Px;
 use crate::figures::{IntoSigned, Point, Rect, Size};
 use crate::render::Renderer;
 use crate::shapes::Shape;
-use crate::text::Text;
+use crate::sprite::Sprite;
 use crate::{AnyTexture, Assert, Color};
 
 pub const TILE_SIZE: Px = Px::new(32);
@@ -32,7 +33,13 @@ pub fn translate_coordinates(
     Point::new(coordinate.x / effective_zoom, coordinate.y / effective_zoom)
 }
 
-pub fn draw(layers: &impl Layers, focus: TileMapFocus, zoom: f32, graphics: &mut Renderer<'_, '_>) {
+pub fn draw(
+    layers: &mut impl Layers,
+    focus: TileMapFocus,
+    zoom: f32,
+    elapsed: Duration,
+    graphics: &mut Renderer<'_, '_>,
+) {
     let effective_zoom = graphics.scale().into_f32() * zoom;
 
     let offset = focus.world_coordinate(layers);
@@ -44,35 +51,21 @@ pub fn draw(layers: &impl Layers, focus: TileMapFocus, zoom: f32, graphics: &mut
     let top_left = first_tile(visible_region.origin, tile_size);
     let bottom_right = last_tile(visible_region.origin + visible_region.size, tile_size);
 
+    let mut context = LayerContext {
+        top_left,
+        bottom_right,
+        tile_size,
+        visible_rect: visible_region,
+        zoom,
+        elapsed,
+        renderer: graphics,
+    };
     for index in 0.. {
         let Some(layer) = layers.layer(index) else {
             break;
         };
-        layer.render(
-            &top_left,
-            &bottom_right,
-            tile_size,
-            &visible_region,
-            effective_zoom,
-            graphics,
-        );
+        layer.render(&mut context);
     }
-
-    graphics.draw_text(Text::<Px>::new(
-        &format!(
-            "Tile {}: Vis: {},{},{},{} - TL: {},{} / {},{}",
-            tile_size,
-            visible_region.origin.x,
-            visible_region.origin.y,
-            visible_region.size.width,
-            visible_region.size.height,
-            top_left.index.x,
-            top_left.index.y,
-            top_left.tile_offset.x,
-            top_left.tile_offset.y
-        ),
-        Color::RED,
-    ));
 }
 
 pub struct TileOffset {
@@ -122,14 +115,14 @@ fn last_tile(pos: Point<Px>, tile_size: Px) -> TileOffset {
 }
 
 pub trait Layers: Debug + UnwindSafe + Send + 'static {
-    fn layer(&self, index: usize) -> Option<&dyn Layer>;
+    fn layer(&mut self, index: usize) -> Option<&mut dyn Layer>;
 }
 
 impl<T> Layers for T
 where
     T: Layer,
 {
-    fn layer(&self, index: usize) -> Option<&dyn Layer> {
+    fn layer(&mut self, index: usize) -> Option<&mut dyn Layer> {
         (index == 0).then_some(self)
     }
 }
@@ -139,9 +132,9 @@ macro_rules! impl_layers_for_tuples {
         impl<$($type),+> Layers for ($($type),+) where $(
             $type: Debug + UnwindSafe + Send + Layer + 'static
         ),+ {
-            fn layer(&self, index: usize) -> Option<&dyn Layer> {
+            fn layer(&mut self, index: usize) -> Option<&mut dyn Layer> {
                 match index {
-                    $($index => Some(&self.$index),)+
+                    $($index => Some(&mut self.$index),)+
                     _ => None,
                 }
             }
@@ -151,16 +144,64 @@ macro_rules! impl_layers_for_tuples {
 
 impl_layers_for_tuples!(T1: 0, T2: 1);
 
+pub struct LayerContext<'render, 'ctx, 'pass> {
+    top_left: TileOffset,
+    bottom_right: TileOffset,
+    tile_size: Px,
+    visible_rect: Rect<Px>,
+    zoom: f32,
+    elapsed: Duration,
+    renderer: &'render mut Renderer<'ctx, 'pass>,
+}
+
+impl LayerContext<'_, '_, '_> {
+    #[must_use]
+    pub const fn top_left(&self) -> &TileOffset {
+        &self.top_left
+    }
+
+    #[must_use]
+    pub const fn bottom_right(&self) -> &TileOffset {
+        &self.bottom_right
+    }
+
+    #[must_use]
+    pub const fn tile_size(&self) -> Px {
+        self.tile_size
+    }
+
+    #[must_use]
+    pub const fn visible_rect(&self) -> Rect<Px> {
+        self.visible_rect
+    }
+
+    #[must_use]
+    pub const fn elapsed(&self) -> Duration {
+        self.elapsed
+    }
+
+    #[must_use]
+    pub const fn zoom(&self) -> f32 {
+        self.zoom
+    }
+}
+
+impl<'ctx, 'pass> Deref for LayerContext<'_, 'ctx, 'pass> {
+    type Target = Renderer<'ctx, 'pass>;
+
+    fn deref(&self) -> &Self::Target {
+        self.renderer
+    }
+}
+
+impl<'ctx, 'pass> DerefMut for LayerContext<'_, 'ctx, 'pass> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.renderer
+    }
+}
+
 pub trait Layer: Debug + UnwindSafe + Send + 'static {
-    fn render(
-        &self,
-        top_left: &TileOffset,
-        bottom_right: &TileOffset,
-        tile_size: Px,
-        visible_rect: &Rect<Px>,
-        zoom: f32,
-        context: &mut Renderer<'_, '_>,
-    );
+    fn render(&mut self, context: &mut LayerContext<'_, '_, '_>);
 
     fn find_object(&self, _object: ObjectId) -> Option<Point<Px>> {
         None
@@ -197,40 +238,34 @@ fn isize_to_i32(value: isize) -> i32 {
 }
 
 impl Layer for Tiles {
-    fn render(
-        &self,
-        top_left: &TileOffset,
-        bottom_right: &TileOffset,
-        tile_size: Px,
-        _visible_rect: &Rect<Px>,
-        _zoom: f32,
-        context: &mut Renderer<'_, '_>,
-    ) {
+    fn render(&mut self, context: &mut LayerContext<'_, '_, '_>) {
         let (Ok(right), Ok(bottom)) = (
-            usize::try_from(bottom_right.index.x),
-            usize::try_from(bottom_right.index.y),
+            usize::try_from(context.bottom_right().index.x),
+            usize::try_from(context.bottom_right().index.y),
         ) else {
             return;
         };
 
-        let (x, left) = if let Ok(left) = usize::try_from(top_left.index.x) {
+        let (x, left) = if let Ok(left) = usize::try_from(context.top_left().index.x) {
             (
-                top_left.tile_offset.x + tile_size * isize_to_i32(top_left.index.x),
+                context.top_left().tile_offset.x
+                    + context.tile_size() * isize_to_i32(context.top_left().index.x),
                 left,
             )
         } else {
-            let tile_offset = tile_size * isize_to_i32(-top_left.index.x);
-            (top_left.tile_offset.x + tile_offset, 0)
+            let tile_offset = context.tile_size() * isize_to_i32(-context.top_left().index.x);
+            (context.top_left().tile_offset.x + tile_offset, 0)
         };
-        let (mut y, top) = if let Ok(top) = usize::try_from(top_left.index.y) {
+        let (mut y, top) = if let Ok(top) = usize::try_from(context.top_left().index.y) {
             (
-                top_left.tile_offset.y + tile_size * isize_to_i32(top_left.index.y),
+                context.top_left().tile_offset.y
+                    + context.tile_size() * isize_to_i32(context.top_left().index.y),
                 top,
             )
         } else {
-            let tile_offset =
-                tile_size * i32::try_from(-top_left.index.y).expect("offset out of range");
-            (top_left.tile_offset.y + tile_offset, 0)
+            let tile_offset = context.tile_size()
+                * i32::try_from(-context.top_left().index.y).expect("offset out of range");
+            (context.top_left().tile_offset.y + tile_offset, 0)
         };
 
         let right = right.min(self.width - 1);
@@ -240,8 +275,8 @@ impl Layer for Tiles {
             for y_index in top..=bottom {
                 let mut x = x;
                 for x_index in left..=right {
-                    let tile_rect = Rect::new(Point::new(x, y), Size::squared(tile_size));
-                    match &self.tiles[y_index * self.width + x_index] {
+                    let tile_rect = Rect::new(Point::new(x, y), Size::squared(context.tile_size()));
+                    match &mut self.tiles[y_index * self.width + x_index] {
                         TileKind::Texture(texture) => {
                             // TODO aspect-fit rather than fill.
                             context.draw_texture(texture, tile_rect);
@@ -249,10 +284,17 @@ impl Layer for Tiles {
                         TileKind::Color(color) => {
                             context.draw_shape(&Shape::filled_rect(tile_rect, *color));
                         }
+                        TileKind::Sprite(sprite) => {
+                            if let Ok(frame) = sprite.get_frame(Some(context.elapsed())) {
+                                context.draw_texture(&frame, tile_rect);
+                            } else {
+                                // TODO show a broken image?
+                            }
+                        }
                     };
-                    x += tile_size;
+                    x += context.tile_size();
                 }
-                y += tile_size;
+                y += context.tile_size();
             }
         }
     }
@@ -261,6 +303,7 @@ impl Layer for Tiles {
 #[derive(Debug)]
 pub enum TileKind {
     Texture(AnyTexture),
+    Sprite(Sprite),
     Color(Color),
 }
 
@@ -347,20 +390,14 @@ impl<O> Layer for ObjectLayer<O>
 where
     O: Object,
 {
-    fn render(
-        &self,
-        _top_left: &TileOffset,
-        _bottom_right: &TileOffset,
-        _tile_size: Px,
-        visible_rect: &Rect<Px>,
-        zoom: f32,
-        context: &mut Renderer<'_, '_>,
-    ) {
+    fn render(&mut self, context: &mut LayerContext<'_, '_, '_>) {
         for obj in &self.objects {
-            let center =
-                Point::new(obj.position().x * zoom, obj.position().y * zoom) - visible_rect.origin;
+            let center = Point::new(
+                obj.position().x * context.zoom(),
+                obj.position().y * context.zoom(),
+            ) - context.visible_rect().origin;
 
-            obj.render(center, zoom, context);
+            obj.render(center, context.zoom(), context);
         }
     }
 
@@ -388,7 +425,7 @@ impl TileMapFocus {
     // Get the world coordinate of the selected focus.
     // Zoom in / out etc. will not change the world coordinate.
     // TB: 2023-11-14
-    pub fn world_coordinate(self, layers: &impl Layers) -> Point<Px> {
+    pub fn world_coordinate(self, layers: &mut impl Layers) -> Point<Px> {
         match self {
             TileMapFocus::Point(focus) => focus,
             TileMapFocus::Object { layer, id } => layers

@@ -30,13 +30,13 @@ impl WindowBehavior for Test {
             wgpu::TextureFormat::Rgba8UnormSrgb,
             graphics,
         );
-        let k = textures.push_image(&image::open("./examples/k.png").unwrap(), graphics);
+        let k = textures.push_image(&image::open("./examples/assets/k.png").unwrap(), graphics);
         let k = k.prepare(
             Rect::new(-Point::inches(1, 1) / 2, Size::inches(1, 1)),
             graphics,
         );
         let ferris = textures.push_image(
-            &image::open("./examples/ferris-happy.png").unwrap(),
+            &image::open("./examples/assets/ferris-happy.png").unwrap(),
             graphics,
         );
         let ferris = ferris.prepare(
