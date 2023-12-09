@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["TILE_SIZE"],"enum":["TileKind","TileMapFocus"],"fn":["draw","translate_coordinates"],"struct":["LayerContext","ObjectId","ObjectInfo","ObjectLayer","TileOffset","Tiles"],"trait":["Layer","Layers","Object"]};
+window.SIDEBAR_ITEMS = {"constant":["TILE_SIZE"],"enum":["TileKind","TileMapFocus"],"fn":["draw","translate_coordinates"],"struct":["DebugGrid","LayerContext","ObjectId","ObjectInfo","ObjectLayer","TileArray","TileOffset"],"trait":["Layer","Layers","Object","TileList","TileSource"]};

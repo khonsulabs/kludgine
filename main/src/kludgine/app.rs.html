@@ -1280,6 +1280,8 @@
 <a href="#1280" id="1280">1280</a>
 <a href="#1281" id="1281">1281</a>
 <a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::num::NonZeroU32;
@@ -1590,7 +1592,7 @@
     /// # Errors
     ///
     /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
-    /// [`EventLoop::run`] for more information.
+    /// [`EventLoop::run`](appit::winit::event_loop::EventLoop::run) for more information.
     </span><span class="kw">fn </span>run() -&gt; <span class="prelude-ty">Result</span>&lt;(), EventLoopError&gt;
     <span class="kw">where
         </span><span class="self">Self</span>::Context: Default,
@@ -1606,7 +1608,8 @@
     /// # Errors
     ///
     /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
-    /// [`EventLoop::run`] for more information.
+    /// [`EventLoop::run`](appit::winit::event_loop::EventLoop::run) for more
+    /// information.
     </span><span class="kw">fn </span>run_with(context: <span class="self">Self</span>::Context) -&gt; <span class="prelude-ty">Result</span>&lt;(), EventLoopError&gt; {
         <span class="kw">let </span>window_attributes = <span class="self">Self</span>::initial_window_attributes(<span class="kw-2">&amp;</span>context);
 
@@ -2531,7 +2534,8 @@
 /// # Errors
 ///
 /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
-/// [`EventLoop::run`] for more information.
+/// [`EventLoop::run`](appit::winit::event_loop::EventLoop::run) for more
+/// information.
 </span><span class="kw">pub fn </span>run&lt;RenderFn&gt;(render_fn: RenderFn) -&gt; <span class="prelude-ty">Result</span>&lt;(), EventLoopError&gt;
 <span class="kw">where
     </span>RenderFn: <span class="kw">for</span>&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>, <span class="lifetime">&#39;window</span>&gt; FnMut(Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt;, Window&lt;<span class="lifetime">&#39;window</span>&gt;) -&gt; bool

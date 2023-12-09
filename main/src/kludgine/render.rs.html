@@ -727,9 +727,9 @@
 /// automatically.
 ///
 /// Using the draw operations on this type don&#39;t immediately draw. Instead, once
-/// this type is dropped, the [`Rendering`] that created this renderer will be
+/// this type is dropped, the [`Drawing`] that created this renderer will be
 /// updated with the new drawing instructions. All of the pending operations can
-/// be drawn using [`Rendering::render`].
+/// be drawn using [`Drawing::render`].
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) graphics: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt;,
@@ -930,7 +930,7 @@
     </span>}
 
     <span class="doccomment">/// Returns the number of drawing operations that will be sent to the GPU
-    /// during [`render()`](Rendering::render).
+    /// during [`render()`](Drawing::render).
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>command_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.data.commands.len()
