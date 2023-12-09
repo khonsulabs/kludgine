@@ -1880,6 +1880,16 @@
 <a href="#1880" id="1880">1880</a>
 <a href="#1881" id="1881">1881</a>
 <a href="#1882" id="1882">1882</a>
+<a href="#1883" id="1883">1883</a>
+<a href="#1884" id="1884">1884</a>
+<a href="#1885" id="1885">1885</a>
+<a href="#1886" id="1886">1886</a>
+<a href="#1887" id="1887">1887</a>
+<a href="#1888" id="1888">1888</a>
+<a href="#1889" id="1889">1889</a>
+<a href="#1890" id="1890">1890</a>
+<a href="#1891" id="1891">1891</a>
+<a href="#1892" id="1892">1892</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -1892,7 +1902,7 @@
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug, Formatter};
 <span class="kw">use </span>std::hash::{<span class="self">self</span>, BuildHasher, Hash};
 <span class="kw">use </span>std::ops::{Add, AddAssign, Deref, DerefMut, Div, Neg};
-<span class="kw">use </span>std::panic::UnwindSafe;
+<span class="kw">use </span>std::panic::{RefUnwindSafe, UnwindSafe};
 <span class="kw">use </span>std::sync::{Arc, Mutex, OnceLock, PoisonError};
 
 <span class="kw">use </span>ahash::AHasher;
@@ -1901,6 +1911,8 @@
 </span><span class="kw">pub use </span>cosmic_text;
 <span class="kw">use </span>figures::units::UPx;
 <span class="kw">use </span>figures::{Angle, Fraction, FromComponents, Point, Rect, Size, UPx2D};
+<span class="attr">#[cfg(feature = <span class="string">&quot;image&quot;</span>)]
+</span><span class="kw">pub use </span>image;
 <span class="kw">use </span>intentional::Assert;
 <span class="kw">use </span>sealed::ShapeSource <span class="kw">as _</span>;
 <span class="kw">use </span>wgpu::util::DeviceExt;
@@ -3072,7 +3084,7 @@
     size: Size&lt;UPx&gt;,
     format: wgpu::TextureFormat,
     usage: wgpu::TextureUsages,
-    loadable: Mutex&lt;<span class="prelude-ty">Option</span>&lt;LoadableTexture&gt;&gt;,
+    loadable: Mutex&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt;,
     data: OnceLock&lt;TextureInstance&gt;,
 }
 
@@ -3084,11 +3096,7 @@
 }
 
 <span class="kw">impl </span>UnwindSafe <span class="kw">for </span>TextureInstance {}
-
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">struct </span>LoadableTexture {
-    data: Vec&lt;u8&gt;,
-}
+<span class="kw">impl </span>RefUnwindSafe <span class="kw">for </span>TextureInstance {}
 
 <span class="kw">impl </span>Texture {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_generic(
@@ -3199,7 +3207,7 @@
             size,
             format,
             usage,
-            loadable: Mutex::new(<span class="prelude-val">Some</span>(LoadableTexture { data })),
+            loadable: Mutex::new(<span class="prelude-val">Some</span>(data)),
             data: OnceLock::new(),
         }
     }
@@ -3214,7 +3222,7 @@
         <span class="self">Self</span>::new_with_data(
             graphics,
             Size::upx(image.width(), image.height()),
-            wgpu::TextureFormat::Rgba8Unorm,
+            wgpu::TextureFormat::Rgba8UnormSrgb,
             wgpu::TextureUsages::TEXTURE_BINDING,
             image.as_raw(),
         )
@@ -3227,7 +3235,7 @@
         <span class="kw">let </span>image = image.into_rgba8();
         <span class="self">Self</span>::lazy_from_data(
             Size::upx(image.width(), image.height()),
-            wgpu::TextureFormat::Rgba8Unorm,
+            wgpu::TextureFormat::Rgba8UnormSrgb,
             wgpu::TextureUsages::TEXTURE_BINDING,
             image.into_raw(),
         )
@@ -3300,30 +3308,24 @@
                 .map_or_else(PoisonError::into_inner, |g| g)
                 .take()
                 .assert(<span class="string">&quot;loadable present when OnceLock is uninitilized&quot;</span>);
-            loadable.load(<span class="self">self</span>, graphics)
+            <span class="self">self</span>.load(<span class="kw-2">&amp;</span>loadable, graphics)
         })
     }
 
-    <span class="kw">fn </span>wgpu(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics) -&gt; <span class="kw-2">&amp;</span>wgpu::Texture {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.instance(graphics).wgpu
-    }
-}
-
-<span class="kw">impl </span>LoadableTexture {
-    <span class="kw">fn </span>load(<span class="self">self</span>, texture: <span class="kw-2">&amp;</span>Texture, graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>sealed::KludgineGraphics) -&gt; TextureInstance {
+    <span class="kw">fn </span>load(<span class="kw-2">&amp;</span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>[u8], graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>sealed::KludgineGraphics) -&gt; TextureInstance {
         <span class="kw">let </span>wgpu = graphics.device().create_texture_with_data(
             graphics.queue(),
             <span class="kw-2">&amp;</span>wgpu::TextureDescriptor {
                 label: <span class="prelude-val">None</span>,
-                size: texture.size.into(),
+                size: <span class="self">self</span>.size.into(),
                 mip_level_count: <span class="number">1</span>,
                 sample_count: <span class="number">1</span>,
                 dimension: wgpu::TextureDimension::D2,
-                format: texture.format,
-                usage: texture.usage,
+                format: <span class="self">self</span>.format,
+                usage: <span class="self">self</span>.usage,
                 view_formats: <span class="kw-2">&amp;</span>[],
             },
-            <span class="kw-2">&amp;</span><span class="self">self</span>.data,
+            data,
         );
         <span class="kw">let </span>view = wgpu.create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor::default());
         <span class="kw">let </span>bind_group = Arc::new(pipeline::bind_group(
@@ -3339,6 +3341,24 @@
             bind_group,
         }
     }
+
+    <span class="kw">fn </span>wgpu(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics) -&gt; <span class="kw-2">&amp;</span>wgpu::Texture {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.instance(graphics).wgpu
+    }
+}
+
+<span class="doccomment">/// Loads a texture&#39;s bytes into the executable.
+///
+/// This macro takes a single parameter, which is forwarded along to
+/// [`include_bytes!`]. The bytes that are loaded are then parsed using
+/// [`image::load_from_memory`] and loaded using [`Texture::lazy_from_image`].
+</span><span class="attr">#[cfg(feature = <span class="string">&quot;image&quot;</span>)]
+#[macro_export]
+</span><span class="macro">macro_rules! </span>include_texture {
+    (<span class="macro-nonterminal">$path</span>:expr) =&gt; {
+        <span class="macro-nonterminal">$crate::image::load_from_memory</span>(<span class="macro">std::include_bytes!</span>(<span class="macro-nonterminal">$path</span>))
+            .map(<span class="macro-nonterminal">$crate::Texture::lazy_from_image</span>)
+    };
 }
 
 <span class="doccomment">/// The origin of a prepared graphic.

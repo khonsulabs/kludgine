@@ -870,11 +870,97 @@
 <a href="#870" id="870">870</a>
 <a href="#871" id="871">871</a>
 <a href="#872" id="872">872</a>
+<a href="#873" id="873">873</a>
+<a href="#874" id="874">874</a>
+<a href="#875" id="875">875</a>
+<a href="#876" id="876">876</a>
+<a href="#877" id="877">877</a>
+<a href="#878" id="878">878</a>
+<a href="#879" id="879">879</a>
+<a href="#880" id="880">880</a>
+<a href="#881" id="881">881</a>
+<a href="#882" id="882">882</a>
+<a href="#883" id="883">883</a>
+<a href="#884" id="884">884</a>
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
+<a href="#889" id="889">889</a>
+<a href="#890" id="890">890</a>
+<a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
+<a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
+<a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+<a href="#944" id="944">944</a>
+<a href="#945" id="945">945</a>
+<a href="#946" id="946">946</a>
+<a href="#947" id="947">947</a>
+<a href="#948" id="948">948</a>
+<a href="#949" id="949">949</a>
+<a href="#950" id="950">950</a>
+<a href="#951" id="951">951</a>
+<a href="#952" id="952">952</a>
+<a href="#953" id="953">953</a>
+<a href="#954" id="954">954</a>
+<a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
+<a href="#958" id="958">958</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{Debug, Display};
 <span class="kw">use </span>std::hash::Hash;
 <span class="kw">use </span>std::iter::IntoIterator;
-<span class="kw">use </span>std::ops::Deref;
+<span class="kw">use </span>std::ops::{Deref, Div};
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::time::Duration;
 
@@ -883,8 +969,11 @@
 <span class="kw">use </span>intentional::{Assert, Cast};
 <span class="kw">use </span>justjson::Value;
 
-<span class="kw">use </span><span class="kw">crate</span>::sealed::TextureSource;
-<span class="kw">use crate</span>::{SharedTexture, TextureRegion};
+<span class="kw">use </span><span class="kw">crate</span>::pipeline::Vertex;
+<span class="kw">use </span><span class="kw">crate</span>::sealed::{<span class="self">self</span>, TextureSource <span class="kw">as _</span>};
+<span class="kw">use crate</span>::{
+    CollectedTexture, Graphics, PreparedGraphic, SharedTexture, TextureRegion, TextureSource,
+};
 
 <span class="doccomment">/// Includes an [Aseprite](https://www.aseprite.org/) sprite sheet and Json
 /// export. For more information, see [`Sprite::load_aseprite_json`]. This macro
@@ -893,12 +982,14 @@
 </span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>include_aseprite_sprite {
     (<span class="macro-nonterminal">$path</span>:expr) =&gt; {{
-        <span class="macro-nonterminal">$</span><span class="macro">crate::include_texture!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$path</span>, <span class="string">&quot;.png&quot;</span>)).and_then(|texture| {
-            <span class="macro-nonterminal">$crate::sprite::Sprite::load_aseprite_json</span>(
-                <span class="macro">include_str!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$path</span>, <span class="string">&quot;.json&quot;</span>)),
-                <span class="kw-2">&amp;</span>texture,
-            )
-        })
+        <span class="macro-nonterminal">$</span><span class="macro">crate::include_texture!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$path</span>, <span class="string">&quot;.png&quot;</span>))
+            .map_err(<span class="macro-nonterminal">$crate::sprite::SpriteParseError::from</span>)
+            .and_then(|texture| {
+                <span class="macro-nonterminal">$crate::sprite::Sprite::load_aseprite_json</span>(
+                    <span class="macro">include_str!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$path</span>, <span class="string">&quot;.json&quot;</span>)),
+                    <span class="kw-2">&amp;</span><span class="macro-nonterminal">$crate::SharedTexture::from</span>(texture),
+                )
+            })
     }};
 }
 
@@ -931,6 +1022,7 @@
 }
 
 <span class="doccomment">/// An error occurred parsing a [`Sprite`].
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>SpriteParseError {
     <span class="doccomment">/// The `meta` field is missing or invalid.
     </span>Meta,
@@ -954,6 +1046,9 @@
     },
     <span class="doccomment">/// Invalid JSON.
     </span>Json(justjson::Error),
+    <span class="doccomment">/// An image parsing error.
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;image&quot;</span>)]
+    </span>Image(image::ImageError),
 }
 
 <span class="kw">impl </span>SpriteParseError {
@@ -969,6 +1064,13 @@
             name: name.to_string(),
             error,
         }
+    }
+}
+
+<span class="attr">#[cfg(feature = <span class="string">&quot;image&quot;</span>)]
+</span><span class="kw">impl </span>From&lt;image::ImageError&gt; <span class="kw">for </span>SpriteParseError {
+    <span class="kw">fn </span>from(value: image::ImageError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Image(value)
     }
 }
 
@@ -993,6 +1095,7 @@
 }
 
 <span class="doccomment">/// An error parsing a `frameTags` entry.
+</span><span class="attr">#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 </span><span class="kw">pub enum </span>FrameTagError {
     <span class="doccomment">/// The direction field is missing.
     </span>DirectionMissing,
@@ -1178,10 +1281,10 @@
             )
             .cast();
 
-            <span class="kw">let </span>source = TextureRegion {
+            <span class="kw">let </span>source = SpriteSource::Region(TextureRegion {
                 region,
                 texture: texture.clone(),
-            };
+            });
 
             frames.insert(
                 frame_number,
@@ -1301,7 +1404,7 @@
     </span><span class="kw">pub fn </span>get_frame(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         elapsed: <span class="prelude-ty">Option</span>&lt;Duration&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;TextureRegion, InvalidSpriteTag&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SpriteSource, InvalidSpriteTag&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(elapsed) = elapsed {
             <span class="self">self</span>.elapsed_since_frame_change += elapsed;
 
@@ -1327,7 +1430,7 @@
     /// Returns an error the current animation tag does not match any defined
     /// animation.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>current_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;TextureRegion, InvalidSpriteTag&gt; {
+    </span><span class="kw">pub fn </span>current_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;SpriteSource, InvalidSpriteTag&gt; {
         <span class="self">self</span>.with_current_frame(|frame| frame.source.clone())
     }
 
@@ -1465,7 +1568,7 @@
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>SpriteFrame {
     <span class="doccomment">/// The source to render.
-    </span><span class="kw">pub </span>source: TextureRegion,
+    </span><span class="kw">pub </span>source: SpriteSource,
     <span class="doccomment">/// The length the frame should be displayed. `None` will act as an infinite
     /// duration.
     </span><span class="kw">pub </span>duration: <span class="prelude-ty">Option</span>&lt;Duration&gt;,
@@ -1474,9 +1577,9 @@
 <span class="kw">impl </span>SpriteFrame {
     <span class="doccomment">/// Creates a new frame with `source` and no duration.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub const fn </span>new(source: TextureRegion) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(source: <span class="kw">impl </span>Into&lt;SpriteSource&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            source,
+            source: source.into(),
             duration: <span class="prelude-val">None</span>,
         }
     }
@@ -1537,15 +1640,15 @@
     ///
     /// Panics if a tile isn&#39;t found.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>sprites&lt;I: IntoIterator&lt;Item = T&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, iterator: I) -&gt; Vec&lt;TextureRegion&gt; {
+    </span><span class="kw">pub fn </span>sprites&lt;I: IntoIterator&lt;Item = T&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, iterator: I) -&gt; Vec&lt;SpriteSource&gt; {
         iterator
             .into_iter()
             .map(|tile| {
                 <span class="kw">let </span>location = <span class="self">self</span>.data.sprites.get(<span class="kw-2">&amp;</span>tile).unwrap();
-                TextureRegion {
+                SpriteSource::Region(TextureRegion {
                     region: <span class="kw-2">*</span>location,
                     texture: <span class="self">self</span>.texture.clone(),
-                }
+                })
             })
             .collect()
     }
@@ -1564,10 +1667,10 @@
                 <span class="kw">let </span>location = <span class="self">self</span>.data.sprites.get(<span class="kw-2">&amp;</span>tile).expect(<span class="string">&quot;missing sprite&quot;</span>);
                 (
                     tile,
-                    TextureRegion {
+                    SpriteSource::Region(TextureRegion {
                         region: <span class="kw-2">*</span>location,
                         texture: <span class="self">self</span>.texture.clone(),
-                    },
+                    }),
                 )
             })
             .collect::&lt;HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;();
@@ -1611,10 +1714,10 @@
                 .map(|(tile, location)| {
                     (
                         tile.clone(),
-                        TextureRegion {
+                        SpriteSource::Region(TextureRegion {
                             region: <span class="kw-2">*</span>location,
                             texture: <span class="self">self</span>.texture.clone(),
-                        },
+                        }),
                     )
                 })
                 .collect(),
@@ -1626,11 +1729,13 @@
 <span class="kw">where
     </span>T: Debug + Send + Sync + Eq + Hash,
 {
-    <span class="kw">fn </span>sprite(<span class="kw-2">&amp;</span><span class="self">self</span>, tile: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Option</span>&lt;TextureRegion&gt; {
+    <span class="kw">fn </span>sprite(<span class="kw-2">&amp;</span><span class="self">self</span>, tile: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Option</span>&lt;SpriteSource&gt; {
         <span class="kw">let </span>location = <span class="self">self</span>.data.sprites.get(tile);
-        location.map(|location| TextureRegion {
-            region: <span class="kw-2">*</span>location,
-            texture: <span class="self">self</span>.texture.clone(),
+        location.map(|location| {
+            SpriteSource::Region(TextureRegion {
+                region: <span class="kw-2">*</span>location,
+                texture: <span class="self">self</span>.texture.clone(),
+            })
         })
     }
 }
@@ -1638,7 +1743,7 @@
 <span class="doccomment">/// A collection of [`SpriteSource`]s.
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>SpriteMap&lt;T&gt; {
-    sprites: HashMap&lt;T, TextureRegion&gt;,
+    sprites: HashMap&lt;T, SpriteSource&gt;,
 }
 
 <span class="kw">impl</span>&lt;T&gt; Default <span class="kw">for </span>SpriteMap&lt;T&gt; {
@@ -1655,7 +1760,7 @@
 {
     <span class="doccomment">/// Creates a new collection with `sprites`.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>new(sprites: HashMap&lt;T, TextureRegion&gt;) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(sprites: HashMap&lt;T, SpriteSource&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ sprites }
     }
 
@@ -1695,19 +1800,86 @@
 }
 
 <span class="kw">impl</span>&lt;T&gt; Deref <span class="kw">for </span>SpriteMap&lt;T&gt; {
-    <span class="kw">type </span>Target = HashMap&lt;T, TextureRegion&gt;;
+    <span class="kw">type </span>Target = HashMap&lt;T, SpriteSource&gt;;
 
-    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>HashMap&lt;T, TextureRegion&gt; {
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>HashMap&lt;T, SpriteSource&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.sprites
     }
 }
 
 <span class="kw">impl</span>&lt;T&gt; IntoIterator <span class="kw">for </span>SpriteMap&lt;T&gt; {
-    <span class="kw">type </span>IntoIter = hash_map::IntoIter&lt;T, TextureRegion&gt;;
-    <span class="kw">type </span>Item = (T, TextureRegion);
+    <span class="kw">type </span>IntoIter = hash_map::IntoIter&lt;T, SpriteSource&gt;;
+    <span class="kw">type </span>Item = (T, SpriteSource);
 
     <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter {
         <span class="self">self</span>.sprites.into_iter()
+    }
+}
+
+<span class="doccomment">/// A region of a texture that is used as frame in a sprite animation.
+</span><span class="attr">#[derive(Debug, Clone)]
+</span><span class="kw">pub enum </span>SpriteSource {
+    <span class="doccomment">/// The sprite&#39;s source is a [`TextureRegion`].
+    </span>Region(TextureRegion),
+    <span class="doccomment">/// The sprite&#39;s source is a [`CollectedTexture`].
+    </span>Collected(CollectedTexture),
+}
+
+<span class="kw">impl </span>SpriteSource {
+    <span class="doccomment">/// Returns a [`PreparedGraphic`] that renders this texture at `dest`.
+    </span><span class="kw">pub fn </span>prepare&lt;Unit&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, dest: Rect&lt;Unit&gt;, graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; PreparedGraphic&lt;Unit&gt;
+    <span class="kw">where
+        </span>Unit: figures::Unit + Div&lt;i32, Output = Unit&gt;,
+        Vertex&lt;Unit&gt;: bytemuck::Pod,
+    {
+        <span class="kw">match </span><span class="self">self </span>{
+            SpriteSource::Region(texture) =&gt; texture.prepare(dest, graphics),
+            SpriteSource::Collected(texture) =&gt; texture.prepare(dest, graphics),
+        }
+    }
+}
+
+<span class="kw">impl </span>TextureSource <span class="kw">for </span>SpriteSource {}
+
+<span class="kw">impl </span>sealed::TextureSource <span class="kw">for </span>SpriteSource {
+    <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::sealed::TextureId {
+        <span class="kw">match </span><span class="self">self </span>{
+            SpriteSource::Region(texture) =&gt; texture.id(),
+            SpriteSource::Collected(texture) =&gt; texture.id(),
+        }
+    }
+
+    <span class="kw">fn </span>is_mask(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">match </span><span class="self">self </span>{
+            SpriteSource::Region(texture) =&gt; texture.is_mask(),
+            SpriteSource::Collected(texture) =&gt; texture.is_mask(),
+        }
+    }
+
+    <span class="kw">fn </span>bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span><span class="kw">crate</span>::sealed::KludgineGraphics) -&gt; Arc&lt;wgpu::BindGroup&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            SpriteSource::Region(texture) =&gt; texture.bind_group(graphics),
+            SpriteSource::Collected(texture) =&gt; texture.bind_group(graphics),
+        }
+    }
+
+    <span class="kw">fn </span>default_rect(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Rect&lt;UPx&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            SpriteSource::Region(texture) =&gt; texture.default_rect(),
+            SpriteSource::Collected(texture) =&gt; texture.default_rect(),
+        }
+    }
+}
+
+<span class="kw">impl </span>From&lt;TextureRegion&gt; <span class="kw">for </span>SpriteSource {
+    <span class="kw">fn </span>from(texture: TextureRegion) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Region(texture)
+    }
+}
+
+<span class="kw">impl </span>From&lt;CollectedTexture&gt; <span class="kw">for </span>SpriteSource {
+    <span class="kw">fn </span>from(texture: CollectedTexture) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Collected(texture)
     }
 }
 
@@ -1718,7 +1890,7 @@
 {
     <span class="doccomment">/// Returns the sprite referred to by `tile`.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">fn </span>sprite(<span class="kw-2">&amp;</span><span class="self">self</span>, tile: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Option</span>&lt;TextureRegion&gt;;
+    </span><span class="kw">fn </span>sprite(<span class="kw-2">&amp;</span><span class="self">self</span>, tile: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Option</span>&lt;SpriteSource&gt;;
 
     <span class="doccomment">/// Returns all of the requested `tiles`.
     ///
@@ -1726,7 +1898,7 @@
     ///
     /// Panics if a tile is not found.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">fn </span>sprites(<span class="kw-2">&amp;</span><span class="self">self</span>, tiles: <span class="kw-2">&amp;</span>[T]) -&gt; Vec&lt;TextureRegion&gt; {
+    </span><span class="kw">fn </span>sprites(<span class="kw-2">&amp;</span><span class="self">self</span>, tiles: <span class="kw-2">&amp;</span>[T]) -&gt; Vec&lt;SpriteSource&gt; {
         tiles
             .iter()
             .map(|t| <span class="self">self</span>.sprite(t).unwrap())
@@ -1738,7 +1910,7 @@
 <span class="kw">where
     </span>T: Send + Sync + Eq + Hash,
 {
-    <span class="kw">fn </span>sprite(<span class="kw-2">&amp;</span><span class="self">self</span>, tile: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Option</span>&lt;TextureRegion&gt; {
+    <span class="kw">fn </span>sprite(<span class="kw-2">&amp;</span><span class="self">self</span>, tile: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Option</span>&lt;SpriteSource&gt; {
         <span class="self">self</span>.sprites.get(tile).cloned()
     }
 }
