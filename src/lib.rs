@@ -1470,11 +1470,12 @@ macro_rules! include_texture {
 }
 
 /// The origin of a prepared graphic.
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+#[derive(Default, Clone, Copy, Eq, PartialEq, Debug)]
 pub enum Origin<Unit> {
     /// The graphic should be drawn so that the top-left of the graphic appears
     /// at the rendered location. When rotating the graphic, it will rotate
     /// around the top-left.
+    #[default]
     TopLeft,
     /// The grapihc should be drawn so that the center of the graphic appears at
     /// the rendered location. When rotating the graphic, it will rotate around
@@ -1625,6 +1626,31 @@ pub enum AnyTexture {
 impl From<Texture> for AnyTexture {
     fn from(texture: Texture) -> Self {
         Self::Texture(texture)
+    }
+}
+
+impl From<SharedTexture> for AnyTexture {
+    fn from(texture: SharedTexture) -> Self {
+        Self::Shared(texture)
+    }
+}
+
+impl From<TextureRegion> for AnyTexture {
+    fn from(texture: TextureRegion) -> Self {
+        Self::Region(texture)
+    }
+}
+
+impl From<CollectedTexture> for AnyTexture {
+    fn from(texture: CollectedTexture) -> Self {
+        Self::Collected(texture)
+    }
+}
+
+impl AnyTexture {
+    /// Returns the size of the texture.
+    pub fn size(&self) -> Size<UPx> {
+        self.default_rect().size
     }
 }
 

@@ -6,10 +6,15 @@ use alot::{LotId, Lots};
 use etagere::{Allocation, BucketedAtlasAllocator};
 use figures::units::UPx;
 use figures::{IntoSigned, IntoUnsigned, Point, Px2D, Rect, Size, UPx2D};
-use intentional::Assert;
 
 use crate::pipeline::{PreparedGraphic, Vertex};
 use crate::{sealed, Graphics, KludgineGraphics, Texture, TextureSource};
+
+fn atlas_usages() -> wgpu::TextureUsages {
+    wgpu::TextureUsages::TEXTURE_BINDING
+        | wgpu::TextureUsages::COPY_DST
+        | wgpu::TextureUsages::COPY_SRC
+}
 
 /// A collection of multiple textures, managed as a single texture on the GPU.
 /// This type is often called an atlas.
@@ -40,12 +45,7 @@ impl TextureCollection {
         format: wgpu::TextureFormat,
         graphics: &impl KludgineGraphics,
     ) -> Self {
-        let texture = Texture::new_generic(
-            graphics,
-            initial_size,
-            format,
-            wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
-        );
+        let texture = Texture::new_generic(graphics, initial_size, format, atlas_usages());
 
         let initial_size = initial_size.into_signed();
         Self {
@@ -100,13 +100,32 @@ impl TextureCollection {
             .write()
             .map_or_else(PoisonError::into_inner, |g| g);
         let signed_size = size.into_signed();
-        let allocation = this
-            .rects
-            .allocate(etagere::euclid::Size2D::new(
+        let allocation = loop {
+            if let Some(allocation) = this.rects.allocate(etagere::euclid::Size2D::new(
                 signed_size.width.into(),
                 signed_size.height.into(),
-            ))
-            .assert("TODO: implement growth");
+            )) {
+                break allocation;
+            }
+
+            let new_size = this.texture.size * 2;
+            let new_texture = Texture::new_generic(graphics, new_size, self.format, atlas_usages());
+            let mut commands = graphics
+                .device()
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
+            commands.copy_texture_to_texture(
+                this.texture.wgpu(graphics).as_image_copy(),
+                new_texture.wgpu(graphics).as_image_copy(),
+                this.texture.size.into(),
+            );
+            graphics.queue().submit([commands.finish()]);
+
+            this.rects.grow(etagere::euclid::Size2D::new(
+                new_size.width.into_signed().get(),
+                new_size.height.into_signed().get(),
+            ));
+            this.texture = new_texture;
+        };
 
         let region = Rect::new(
             Point::px(allocation.rectangle.min.x, allocation.rectangle.min.y).into_unsigned(),
