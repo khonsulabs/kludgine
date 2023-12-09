@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{self, BuildHasher, Hash};
 use std::ops::{Add, AddAssign, Deref, DerefMut, Div, Neg};
-use std::panic::UnwindSafe;
+use std::panic::{RefUnwindSafe, UnwindSafe};
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 
 use ahash::AHasher;
@@ -19,6 +19,8 @@ use bytemuck::{Pod, Zeroable};
 pub use cosmic_text;
 use figures::units::UPx;
 use figures::{Angle, Fraction, FromComponents, Point, Rect, Size, UPx2D};
+#[cfg(feature = "image")]
+pub use image;
 use intentional::Assert;
 use sealed::ShapeSource as _;
 use wgpu::util::DeviceExt;
@@ -1190,7 +1192,7 @@ pub struct Texture {
     size: Size<UPx>,
     format: wgpu::TextureFormat,
     usage: wgpu::TextureUsages,
-    loadable: Mutex<Option<LoadableTexture>>,
+    loadable: Mutex<Option<Vec<u8>>>,
     data: OnceLock<TextureInstance>,
 }
 
@@ -1202,11 +1204,7 @@ struct TextureInstance {
 }
 
 impl UnwindSafe for TextureInstance {}
-
-#[derive(Debug)]
-struct LoadableTexture {
-    data: Vec<u8>,
-}
+impl RefUnwindSafe for TextureInstance {}
 
 impl Texture {
     pub(crate) fn new_generic(
@@ -1317,7 +1315,7 @@ impl Texture {
             size,
             format,
             usage,
-            loadable: Mutex::new(Some(LoadableTexture { data })),
+            loadable: Mutex::new(Some(data)),
             data: OnceLock::new(),
         }
     }
@@ -1332,7 +1330,7 @@ impl Texture {
         Self::new_with_data(
             graphics,
             Size::upx(image.width(), image.height()),
-            wgpu::TextureFormat::Rgba8Unorm,
+            wgpu::TextureFormat::Rgba8UnormSrgb,
             wgpu::TextureUsages::TEXTURE_BINDING,
             image.as_raw(),
         )
@@ -1345,7 +1343,7 @@ impl Texture {
         let image = image.into_rgba8();
         Self::lazy_from_data(
             Size::upx(image.width(), image.height()),
-            wgpu::TextureFormat::Rgba8Unorm,
+            wgpu::TextureFormat::Rgba8UnormSrgb,
             wgpu::TextureUsages::TEXTURE_BINDING,
             image.into_raw(),
         )
@@ -1418,30 +1416,24 @@ impl Texture {
                 .map_or_else(PoisonError::into_inner, |g| g)
                 .take()
                 .assert("loadable present when OnceLock is uninitilized");
-            loadable.load(self, graphics)
+            self.load(&loadable, graphics)
         })
     }
 
-    fn wgpu(&self, graphics: &impl KludgineGraphics) -> &wgpu::Texture {
-        &self.instance(graphics).wgpu
-    }
-}
-
-impl LoadableTexture {
-    fn load(self, texture: &Texture, graphics: &impl sealed::KludgineGraphics) -> TextureInstance {
+    fn load(&self, data: &[u8], graphics: &impl sealed::KludgineGraphics) -> TextureInstance {
         let wgpu = graphics.device().create_texture_with_data(
             graphics.queue(),
             &wgpu::TextureDescriptor {
                 label: None,
-                size: texture.size.into(),
+                size: self.size.into(),
                 mip_level_count: 1,
                 sample_count: 1,
                 dimension: wgpu::TextureDimension::D2,
-                format: texture.format,
-                usage: texture.usage,
+                format: self.format,
+                usage: self.usage,
                 view_formats: &[],
             },
-            &self.data,
+            data,
         );
         let view = wgpu.create_view(&wgpu::TextureViewDescriptor::default());
         let bind_group = Arc::new(pipeline::bind_group(
@@ -1457,6 +1449,24 @@ impl LoadableTexture {
             bind_group,
         }
     }
+
+    fn wgpu(&self, graphics: &impl KludgineGraphics) -> &wgpu::Texture {
+        &self.instance(graphics).wgpu
+    }
+}
+
+/// Loads a texture's bytes into the executable.
+///
+/// This macro takes a single parameter, which is forwarded along to
+/// [`include_bytes!`]. The bytes that are loaded are then parsed using
+/// [`image::load_from_memory`] and loaded using [`Texture::lazy_from_image`].
+#[cfg(feature = "image")]
+#[macro_export]
+macro_rules! include_texture {
+    ($path:expr) => {
+        $crate::image::load_from_memory(std::include_bytes!($path))
+            .map($crate::Texture::lazy_from_image)
+    };
 }
 
 /// The origin of a prepared graphic.

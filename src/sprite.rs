@@ -2,7 +2,7 @@ use std::collections::{hash_map, HashMap};
 use std::fmt::{Debug, Display};
 use std::hash::Hash;
 use std::iter::IntoIterator;
-use std::ops::Deref;
+use std::ops::{Deref, Div};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -11,8 +11,11 @@ use figures::{Point, Rect, Size};
 use intentional::{Assert, Cast};
 use justjson::Value;
 
-use crate::sealed::TextureSource;
-use crate::{SharedTexture, TextureRegion};
+use crate::pipeline::Vertex;
+use crate::sealed::{self, TextureSource as _};
+use crate::{
+    CollectedTexture, Graphics, PreparedGraphic, SharedTexture, TextureRegion, TextureSource,
+};
 
 /// Includes an [Aseprite](https://www.aseprite.org/) sprite sheet and Json
 /// export. For more information, see [`Sprite::load_aseprite_json`]. This macro
@@ -21,12 +24,14 @@ use crate::{SharedTexture, TextureRegion};
 #[macro_export]
 macro_rules! include_aseprite_sprite {
     ($path:expr) => {{
-        $crate::include_texture!(concat!($path, ".png")).and_then(|texture| {
-            $crate::sprite::Sprite::load_aseprite_json(
-                include_str!(concat!($path, ".json")),
-                &texture,
-            )
-        })
+        $crate::include_texture!(concat!($path, ".png"))
+            .map_err($crate::sprite::SpriteParseError::from)
+            .and_then(|texture| {
+                $crate::sprite::Sprite::load_aseprite_json(
+                    include_str!(concat!($path, ".json")),
+                    &$crate::SharedTexture::from(texture),
+                )
+            })
     }};
 }
 
@@ -59,6 +64,7 @@ enum AnimationDirection {
 }
 
 /// An error occurred parsing a [`Sprite`].
+#[derive(Debug)]
 pub enum SpriteParseError {
     /// The `meta` field is missing or invalid.
     Meta,
@@ -82,6 +88,9 @@ pub enum SpriteParseError {
     },
     /// Invalid JSON.
     Json(justjson::Error),
+    /// An image parsing error.
+    #[cfg(feature = "image")]
+    Image(image::ImageError),
 }
 
 impl SpriteParseError {
@@ -97,6 +106,13 @@ impl SpriteParseError {
             name: name.to_string(),
             error,
         }
+    }
+}
+
+#[cfg(feature = "image")]
+impl From<image::ImageError> for SpriteParseError {
+    fn from(value: image::ImageError) -> Self {
+        Self::Image(value)
     }
 }
 
@@ -121,6 +137,7 @@ pub enum FrameParseError {
 }
 
 /// An error parsing a `frameTags` entry.
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 pub enum FrameTagError {
     /// The direction field is missing.
     DirectionMissing,
@@ -306,10 +323,10 @@ impl Sprite {
             )
             .cast();
 
-            let source = TextureRegion {
+            let source = SpriteSource::Region(TextureRegion {
                 region,
                 texture: texture.clone(),
-            };
+            });
 
             frames.insert(
                 frame_number,
@@ -429,7 +446,7 @@ impl Sprite {
     pub fn get_frame(
         &mut self,
         elapsed: Option<Duration>,
-    ) -> Result<TextureRegion, InvalidSpriteTag> {
+    ) -> Result<SpriteSource, InvalidSpriteTag> {
         if let Some(elapsed) = elapsed {
             self.elapsed_since_frame_change += elapsed;
 
@@ -455,7 +472,7 @@ impl Sprite {
     /// Returns an error the current animation tag does not match any defined
     /// animation.
     #[inline]
-    pub fn current_frame(&self) -> Result<TextureRegion, InvalidSpriteTag> {
+    pub fn current_frame(&self) -> Result<SpriteSource, InvalidSpriteTag> {
         self.with_current_frame(|frame| frame.source.clone())
     }
 
@@ -593,7 +610,7 @@ impl SpriteAnimation {
 #[derive(Debug, Clone)]
 pub struct SpriteFrame {
     /// The source to render.
-    pub source: TextureRegion,
+    pub source: SpriteSource,
     /// The length the frame should be displayed. `None` will act as an infinite
     /// duration.
     pub duration: Option<Duration>,
@@ -602,9 +619,9 @@ pub struct SpriteFrame {
 impl SpriteFrame {
     /// Creates a new frame with `source` and no duration.
     #[must_use]
-    pub const fn new(source: TextureRegion) -> Self {
+    pub fn new(source: impl Into<SpriteSource>) -> Self {
         Self {
-            source,
+            source: source.into(),
             duration: None,
         }
     }
@@ -665,15 +682,15 @@ where
     ///
     /// Panics if a tile isn't found.
     #[must_use]
-    pub fn sprites<I: IntoIterator<Item = T>>(&self, iterator: I) -> Vec<TextureRegion> {
+    pub fn sprites<I: IntoIterator<Item = T>>(&self, iterator: I) -> Vec<SpriteSource> {
         iterator
             .into_iter()
             .map(|tile| {
                 let location = self.data.sprites.get(&tile).unwrap();
-                TextureRegion {
+                SpriteSource::Region(TextureRegion {
                     region: *location,
                     texture: self.texture.clone(),
-                }
+                })
             })
             .collect()
     }
@@ -692,10 +709,10 @@ where
                 let location = self.data.sprites.get(&tile).expect("missing sprite");
                 (
                     tile,
-                    TextureRegion {
+                    SpriteSource::Region(TextureRegion {
                         region: *location,
                         texture: self.texture.clone(),
-                    },
+                    }),
                 )
             })
             .collect::<HashMap<_, _>>();
@@ -739,10 +756,10 @@ where
                 .map(|(tile, location)| {
                     (
                         tile.clone(),
-                        TextureRegion {
+                        SpriteSource::Region(TextureRegion {
                             region: *location,
                             texture: self.texture.clone(),
-                        },
+                        }),
                     )
                 })
                 .collect(),
@@ -754,11 +771,13 @@ impl<T> SpriteCollection<T> for SpriteSheet<T>
 where
     T: Debug + Send + Sync + Eq + Hash,
 {
-    fn sprite(&self, tile: &T) -> Option<TextureRegion> {
+    fn sprite(&self, tile: &T) -> Option<SpriteSource> {
         let location = self.data.sprites.get(tile);
-        location.map(|location| TextureRegion {
-            region: *location,
-            texture: self.texture.clone(),
+        location.map(|location| {
+            SpriteSource::Region(TextureRegion {
+                region: *location,
+                texture: self.texture.clone(),
+            })
         })
     }
 }
@@ -766,7 +785,7 @@ where
 /// A collection of [`SpriteSource`]s.
 #[derive(Debug, Clone)]
 pub struct SpriteMap<T> {
-    sprites: HashMap<T, TextureRegion>,
+    sprites: HashMap<T, SpriteSource>,
 }
 
 impl<T> Default for SpriteMap<T> {
@@ -783,7 +802,7 @@ where
 {
     /// Creates a new collection with `sprites`.
     #[must_use]
-    pub fn new(sprites: HashMap<T, TextureRegion>) -> Self {
+    pub fn new(sprites: HashMap<T, SpriteSource>) -> Self {
         Self { sprites }
     }
 
@@ -823,19 +842,86 @@ where
 }
 
 impl<T> Deref for SpriteMap<T> {
-    type Target = HashMap<T, TextureRegion>;
+    type Target = HashMap<T, SpriteSource>;
 
-    fn deref(&self) -> &HashMap<T, TextureRegion> {
+    fn deref(&self) -> &HashMap<T, SpriteSource> {
         &self.sprites
     }
 }
 
 impl<T> IntoIterator for SpriteMap<T> {
-    type IntoIter = hash_map::IntoIter<T, TextureRegion>;
-    type Item = (T, TextureRegion);
+    type IntoIter = hash_map::IntoIter<T, SpriteSource>;
+    type Item = (T, SpriteSource);
 
     fn into_iter(self) -> Self::IntoIter {
         self.sprites.into_iter()
+    }
+}
+
+/// A region of a texture that is used as frame in a sprite animation.
+#[derive(Debug, Clone)]
+pub enum SpriteSource {
+    /// The sprite's source is a [`TextureRegion`].
+    Region(TextureRegion),
+    /// The sprite's source is a [`CollectedTexture`].
+    Collected(CollectedTexture),
+}
+
+impl SpriteSource {
+    /// Returns a [`PreparedGraphic`] that renders this texture at `dest`.
+    pub fn prepare<Unit>(&self, dest: Rect<Unit>, graphics: &Graphics<'_>) -> PreparedGraphic<Unit>
+    where
+        Unit: figures::Unit + Div<i32, Output = Unit>,
+        Vertex<Unit>: bytemuck::Pod,
+    {
+        match self {
+            SpriteSource::Region(texture) => texture.prepare(dest, graphics),
+            SpriteSource::Collected(texture) => texture.prepare(dest, graphics),
+        }
+    }
+}
+
+impl TextureSource for SpriteSource {}
+
+impl sealed::TextureSource for SpriteSource {
+    fn id(&self) -> crate::sealed::TextureId {
+        match self {
+            SpriteSource::Region(texture) => texture.id(),
+            SpriteSource::Collected(texture) => texture.id(),
+        }
+    }
+
+    fn is_mask(&self) -> bool {
+        match self {
+            SpriteSource::Region(texture) => texture.is_mask(),
+            SpriteSource::Collected(texture) => texture.is_mask(),
+        }
+    }
+
+    fn bind_group(&self, graphics: &impl crate::sealed::KludgineGraphics) -> Arc<wgpu::BindGroup> {
+        match self {
+            SpriteSource::Region(texture) => texture.bind_group(graphics),
+            SpriteSource::Collected(texture) => texture.bind_group(graphics),
+        }
+    }
+
+    fn default_rect(&self) -> Rect<UPx> {
+        match self {
+            SpriteSource::Region(texture) => texture.default_rect(),
+            SpriteSource::Collected(texture) => texture.default_rect(),
+        }
+    }
+}
+
+impl From<TextureRegion> for SpriteSource {
+    fn from(texture: TextureRegion) -> Self {
+        Self::Region(texture)
+    }
+}
+
+impl From<CollectedTexture> for SpriteSource {
+    fn from(texture: CollectedTexture) -> Self {
+        Self::Collected(texture)
     }
 }
 
@@ -846,7 +932,7 @@ where
 {
     /// Returns the sprite referred to by `tile`.
     #[must_use]
-    fn sprite(&self, tile: &T) -> Option<TextureRegion>;
+    fn sprite(&self, tile: &T) -> Option<SpriteSource>;
 
     /// Returns all of the requested `tiles`.
     ///
@@ -854,7 +940,7 @@ where
     ///
     /// Panics if a tile is not found.
     #[must_use]
-    fn sprites(&self, tiles: &[T]) -> Vec<TextureRegion> {
+    fn sprites(&self, tiles: &[T]) -> Vec<SpriteSource> {
         tiles
             .iter()
             .map(|t| self.sprite(t).unwrap())
@@ -866,7 +952,7 @@ impl<T> SpriteCollection<T> for SpriteMap<T>
 where
     T: Send + Sync + Eq + Hash,
 {
-    fn sprite(&self, tile: &T) -> Option<TextureRegion> {
+    fn sprite(&self, tile: &T) -> Option<SpriteSource> {
         self.sprites.get(tile).cloned()
     }
 }

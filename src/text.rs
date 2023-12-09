@@ -166,7 +166,7 @@ impl TextSystem {
             ),
             color_text_atlas: TextureCollection::new_generic(
                 Size::new(512, 512).cast(),
-                wgpu::TextureFormat::Rgba8Unorm,
+                wgpu::TextureFormat::Rgba8UnormSrgb,
                 graphics,
             ),
             swash_cache: cosmic_text::SwashCache::new(),
