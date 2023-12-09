@@ -1890,6 +1890,32 @@
 <a href="#1890" id="1890">1890</a>
 <a href="#1891" id="1891">1891</a>
 <a href="#1892" id="1892">1892</a>
+<a href="#1893" id="1893">1893</a>
+<a href="#1894" id="1894">1894</a>
+<a href="#1895" id="1895">1895</a>
+<a href="#1896" id="1896">1896</a>
+<a href="#1897" id="1897">1897</a>
+<a href="#1898" id="1898">1898</a>
+<a href="#1899" id="1899">1899</a>
+<a href="#1900" id="1900">1900</a>
+<a href="#1901" id="1901">1901</a>
+<a href="#1902" id="1902">1902</a>
+<a href="#1903" id="1903">1903</a>
+<a href="#1904" id="1904">1904</a>
+<a href="#1905" id="1905">1905</a>
+<a href="#1906" id="1906">1906</a>
+<a href="#1907" id="1907">1907</a>
+<a href="#1908" id="1908">1908</a>
+<a href="#1909" id="1909">1909</a>
+<a href="#1910" id="1910">1910</a>
+<a href="#1911" id="1911">1911</a>
+<a href="#1912" id="1912">1912</a>
+<a href="#1913" id="1913">1913</a>
+<a href="#1914" id="1914">1914</a>
+<a href="#1915" id="1915">1915</a>
+<a href="#1916" id="1916">1916</a>
+<a href="#1917" id="1917">1917</a>
+<a href="#1918" id="1918">1918</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -3362,11 +3388,12 @@
 }
 
 <span class="doccomment">/// The origin of a prepared graphic.
-</span><span class="attr">#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+</span><span class="attr">#[derive(Default, Clone, Copy, Eq, PartialEq, Debug)]
 </span><span class="kw">pub enum </span>Origin&lt;Unit&gt; {
     <span class="doccomment">/// The graphic should be drawn so that the top-left of the graphic appears
     /// at the rendered location. When rotating the graphic, it will rotate
     /// around the top-left.
+    </span><span class="attr">#[default]
     </span>TopLeft,
     <span class="doccomment">/// The grapihc should be drawn so that the center of the graphic appears at
     /// the rendered location. When rotating the graphic, it will rotate around
@@ -3517,6 +3544,31 @@
 <span class="kw">impl </span>From&lt;Texture&gt; <span class="kw">for </span>AnyTexture {
     <span class="kw">fn </span>from(texture: Texture) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Texture(texture)
+    }
+}
+
+<span class="kw">impl </span>From&lt;SharedTexture&gt; <span class="kw">for </span>AnyTexture {
+    <span class="kw">fn </span>from(texture: SharedTexture) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Shared(texture)
+    }
+}
+
+<span class="kw">impl </span>From&lt;TextureRegion&gt; <span class="kw">for </span>AnyTexture {
+    <span class="kw">fn </span>from(texture: TextureRegion) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Region(texture)
+    }
+}
+
+<span class="kw">impl </span>From&lt;CollectedTexture&gt; <span class="kw">for </span>AnyTexture {
+    <span class="kw">fn </span>from(texture: CollectedTexture) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Collected(texture)
+    }
+}
+
+<span class="kw">impl </span>AnyTexture {
+    <span class="doccomment">/// Returns the size of the texture.
+    </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;UPx&gt; {
+        <span class="self">self</span>.default_rect().size
     }
 }
 

@@ -300,6 +300,25 @@
 <a href="#300" id="300">300</a>
 <a href="#301" id="301">301</a>
 <a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::Div;
 <span class="kw">use </span>std::sync::{Arc, PoisonError, RwLock};
@@ -308,10 +327,15 @@
 <span class="kw">use </span>etagere::{Allocation, BucketedAtlasAllocator};
 <span class="kw">use </span>figures::units::UPx;
 <span class="kw">use </span>figures::{IntoSigned, IntoUnsigned, Point, Px2D, Rect, Size, UPx2D};
-<span class="kw">use </span>intentional::Assert;
 
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{PreparedGraphic, Vertex};
 <span class="kw">use crate</span>::{sealed, Graphics, KludgineGraphics, Texture, TextureSource};
+
+<span class="kw">fn </span>atlas_usages() -&gt; wgpu::TextureUsages {
+    wgpu::TextureUsages::TEXTURE_BINDING
+        | wgpu::TextureUsages::COPY_DST
+        | wgpu::TextureUsages::COPY_SRC
+}
 
 <span class="doccomment">/// A collection of multiple textures, managed as a single texture on the GPU.
 /// This type is often called an atlas.
@@ -342,12 +366,7 @@
         format: wgpu::TextureFormat,
         graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics,
     ) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>texture = Texture::new_generic(
-            graphics,
-            initial_size,
-            format,
-            wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
-        );
+        <span class="kw">let </span>texture = Texture::new_generic(graphics, initial_size, format, atlas_usages());
 
         <span class="kw">let </span>initial_size = initial_size.into_signed();
         <span class="self">Self </span>{
@@ -402,13 +421,32 @@
             .write()
             .map_or_else(PoisonError::into_inner, |g| g);
         <span class="kw">let </span>signed_size = size.into_signed();
-        <span class="kw">let </span>allocation = this
-            .rects
-            .allocate(etagere::euclid::Size2D::new(
+        <span class="kw">let </span>allocation = <span class="kw">loop </span>{
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(allocation) = this.rects.allocate(etagere::euclid::Size2D::new(
                 signed_size.width.into(),
                 signed_size.height.into(),
-            ))
-            .assert(<span class="string">&quot;TODO: implement growth&quot;</span>);
+            )) {
+                <span class="kw">break </span>allocation;
+            }
+
+            <span class="kw">let </span>new_size = this.texture.size * <span class="number">2</span>;
+            <span class="kw">let </span>new_texture = Texture::new_generic(graphics, new_size, <span class="self">self</span>.format, atlas_usages());
+            <span class="kw">let </span><span class="kw-2">mut </span>commands = graphics
+                .device()
+                .create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor::default());
+            commands.copy_texture_to_texture(
+                this.texture.wgpu(graphics).as_image_copy(),
+                new_texture.wgpu(graphics).as_image_copy(),
+                this.texture.size.into(),
+            );
+            graphics.queue().submit([commands.finish()]);
+
+            this.rects.grow(etagere::euclid::Size2D::new(
+                new_size.width.into_signed().get(),
+                new_size.height.into_signed().get(),
+            ));
+            this.texture = new_texture;
+        };
 
         <span class="kw">let </span>region = Rect::new(
             Point::px(allocation.rectangle.min.x, allocation.rectangle.min.y).into_unsigned(),
