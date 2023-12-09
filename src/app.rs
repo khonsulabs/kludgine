@@ -308,7 +308,7 @@ where
     /// # Errors
     ///
     /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
-    /// [`EventLoop::run`] for more information.
+    /// [`EventLoop::run`](appit::winit::event_loop::EventLoop::run) for more information.
     fn run() -> Result<(), EventLoopError>
     where
         Self::Context: Default,
@@ -324,7 +324,8 @@ where
     /// # Errors
     ///
     /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
-    /// [`EventLoop::run`] for more information.
+    /// [`EventLoop::run`](appit::winit::event_loop::EventLoop::run) for more
+    /// information.
     fn run_with(context: Self::Context) -> Result<(), EventLoopError> {
         let window_attributes = Self::initial_window_attributes(&context);
 
@@ -1249,7 +1250,8 @@ where
 /// # Errors
 ///
 /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
-/// [`EventLoop::run`] for more information.
+/// [`EventLoop::run`](appit::winit::event_loop::EventLoop::run) for more
+/// information.
 pub fn run<RenderFn>(render_fn: RenderFn) -> Result<(), EventLoopError>
 where
     RenderFn: for<'render, 'gfx, 'window> FnMut(Renderer<'render, 'gfx>, Window<'window>) -> bool

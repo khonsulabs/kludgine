@@ -634,7 +634,7 @@ impl SpriteFrame {
     }
 }
 
-/// A collection of sprites from a single [`Texture`].
+/// A collection of sprites from a single [`SharedTexture`].
 #[derive(Debug, Clone)]
 pub struct SpriteSheet<T>
 where

@@ -21,9 +21,9 @@ use crate::{
 /// automatically.
 ///
 /// Using the draw operations on this type don't immediately draw. Instead, once
-/// this type is dropped, the [`Rendering`] that created this renderer will be
+/// this type is dropped, the [`Drawing`] that created this renderer will be
 /// updated with the new drawing instructions. All of the pending operations can
-/// be drawn using [`Rendering::render`].
+/// be drawn using [`Drawing::render`].
 #[derive(Debug)]
 pub struct Renderer<'render, 'gfx> {
     pub(crate) graphics: &'render mut Graphics<'gfx>,
@@ -224,7 +224,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
     }
 
     /// Returns the number of drawing operations that will be sent to the GPU
-    /// during [`render()`](Rendering::render).
+    /// during [`render()`](Drawing::render).
     #[must_use]
     pub fn command_count(&self) -> usize {
         self.data.commands.len()

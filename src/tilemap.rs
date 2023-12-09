@@ -2,16 +2,17 @@
 
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
-use std::panic::{AssertUnwindSafe, UnwindSafe};
+use std::panic::UnwindSafe;
 use std::time::Duration;
 
 use alot::{LotId, OrderedLots};
-use figures::Fraction;
+use figures::{Fraction, Ranged, Zero};
+use intentional::Cast;
 
 use crate::figures::units::Px;
 use crate::figures::{IntoSigned, Point, Rect, Size};
 use crate::render::Renderer;
-use crate::shapes::Shape;
+use crate::shapes::{PathBuilder, Shape, StrokeOptions};
 use crate::sprite::Sprite;
 use crate::text::Text;
 use crate::{AnyTexture, Assert, Color, DrawableExt};
@@ -140,7 +141,7 @@ where
 
 macro_rules! impl_layers_for_tuples {
     ($($type:ident : $index:tt),+) => {
-        impl<$($type),+> Layers for ($($type),+) where $(
+        impl<$($type),+> Layers for ($($type,)+) where $(
             $type: Debug + UnwindSafe + Send + Layer + 'static
         ),+ {
             fn layer(&self, index: usize) -> Option<&dyn Layer> {
@@ -160,7 +161,13 @@ macro_rules! impl_layers_for_tuples {
     };
 }
 
-impl_layers_for_tuples!(T1: 0, T2: 1);
+impl_layers_for_tuples!(T0: 0);
+impl_layers_for_tuples!(T0: 0, T1: 1);
+impl_layers_for_tuples!(T0: 0, T1: 1, T2: 2);
+impl_layers_for_tuples!(T0: 0, T1: 1, T2: 2, T3: 3);
+impl_layers_for_tuples!(T0: 0, T1: 1, T2: 2, T3: 3, T4: 4);
+impl_layers_for_tuples!(T0: 0, T1: 1, T2: 2, T3: 3, T4: 4, T5: 5);
+impl_layers_for_tuples!(T0: 0, T1: 1, T2: 2, T3: 3, T4: 4, T5: 5, T6: 6);
 
 pub struct LayerContext<'render, 'ctx, 'pass> {
     top_left: TileOffset,
@@ -232,25 +239,6 @@ pub trait Layer: Debug + UnwindSafe + Send + 'static {
     }
 }
 
-#[derive(Debug)]
-pub struct Tiles {
-    tiles: AssertUnwindSafe<Vec<TileKind>>,
-    width: usize,
-    height: usize,
-}
-
-impl Tiles {
-    pub fn new(width: usize, height: usize, tiles: impl IntoIterator<Item = TileKind>) -> Self {
-        let tiles = Vec::from_iter(tiles);
-        assert_eq!(tiles.len(), width * height);
-        Self {
-            tiles: AssertUnwindSafe(tiles),
-            width,
-            height,
-        }
-    }
-}
-
 fn isize_to_i32(value: isize) -> i32 {
     i32::try_from(value).unwrap_or_else(|_| {
         if value.is_negative() {
@@ -261,62 +249,46 @@ fn isize_to_i32(value: isize) -> i32 {
     })
 }
 
-impl Layer for Tiles {
+impl<Source> Layer for Source
+where
+    Source: TileSource,
+{
     fn render(&mut self, context: &mut LayerContext<'_, '_, '_>) -> Option<Duration> {
-        let (Ok(right), Ok(bottom)) = (
-            usize::try_from(context.bottom_right().index.x),
-            usize::try_from(context.bottom_right().index.y),
-        ) else {
+        let minimum_tile = self.minimum_tile();
+        if minimum_tile.x > context.bottom_right().index.x
+            || minimum_tile.y > context.bottom_right().index.y
+        {
             return None;
-        };
+        }
 
         let mut remaining_until_next_frame = None;
-        let (x, left) = if let Ok(left) = usize::try_from(context.top_left().index.x) {
-            (context.top_left().tile_offset.x, left)
+        let (x, left) = if context.top_left().index.x >= minimum_tile.x {
+            (context.top_left().tile_offset.x, context.top_left().index.x)
         } else {
-            let tile_offset = context.tile_size() * isize_to_i32(-context.top_left().index.x);
+            let tile_offset =
+                context.tile_size() * isize_to_i32(minimum_tile.x - context.top_left().index.x);
             (context.top_left().tile_offset.x + tile_offset, 0)
         };
-        let (mut y, top) = if let Ok(top) = usize::try_from(context.top_left().index.y) {
-            (context.top_left().tile_offset.y, top)
+        let (mut y, top) = if context.top_left().index.y >= minimum_tile.y {
+            (context.top_left().tile_offset.y, context.top_left().index.y)
         } else {
-            let tile_offset = context.tile_size()
-                * i32::try_from(-context.top_left().index.y).expect("offset out of range");
+            let tile_offset =
+                context.tile_size() * isize_to_i32(minimum_tile.y - context.top_left().index.y);
             (context.top_left().tile_offset.y + tile_offset, 0)
         };
 
-        let right = right.min(self.width - 1);
-        let bottom = bottom.min(self.height - 1);
+        let maximum_tile = self.maximum_tile();
+        let right = context.bottom_right().index.x.min(maximum_tile.x) - 1;
+        let bottom = context.bottom_right().index.y.min(maximum_tile.y) - 1;
 
         if left <= right && top <= bottom {
             for y_index in top..=bottom {
                 let mut x = x;
                 for x_index in left..=right {
                     let tile_rect = Rect::new(Point::new(x, y), Size::squared(context.tile_size()));
-                    match &mut self.tiles[y_index * self.width + x_index] {
-                        TileKind::Texture(texture) => {
-                            // TODO support other scaling options like
-                            // aspect-fit rather than fill.
-                            context.draw_texture(texture, tile_rect);
-                        }
-                        TileKind::Color(color) => {
-                            context.draw_shape(&Shape::filled_rect(tile_rect, *color));
-                        }
-                        TileKind::Sprite(sprite) => {
-                            if let Ok(frame) = sprite.get_frame(Some(context.elapsed())) {
-                                remaining_until_next_frame = minimum_duration(
-                                    remaining_until_next_frame,
-                                    sprite.remaining_frame_duration().ok().flatten(),
-                                );
-                                context.draw_texture(&frame, tile_rect);
-                            } else {
-                                // TODO show a broken image?
-                            }
-                        }
-                    };
-                    context.draw_text(
-                        Text::new(&format!("{x_index},{y_index}"), Color::WHITE)
-                            .translate_by(tile_rect.origin),
+                    remaining_until_next_frame = minimum_duration(
+                        remaining_until_next_frame,
+                        self.render(Point::new(x_index, y_index), tile_rect, context),
                     );
                     x += context.tile_size();
                 }
@@ -325,6 +297,80 @@ impl Layer for Tiles {
         }
 
         remaining_until_next_frame
+    }
+}
+
+#[derive(Debug)]
+pub struct TileArray<Tiles> {
+    pub width: usize,
+    pub tiles: Tiles,
+}
+
+impl<Tiles> TileArray<Tiles>
+where
+    Tiles: TileList,
+{
+    pub fn new(width: usize, tiles: Tiles) -> Self {
+        assert!(tiles.len() % width == 0);
+        Self { width, tiles }
+    }
+}
+
+#[allow(clippy::len_without_is_empty)]
+pub trait TileList:
+    IndexMut<usize, Output = TileKind> + Send + UnwindSafe + Debug + 'static
+{
+    fn len(&self) -> usize;
+}
+
+impl TileList for Vec<TileKind> {
+    fn len(&self) -> usize {
+        self.len()
+    }
+}
+
+impl<const N: usize> TileList for [TileKind; N] {
+    fn len(&self) -> usize {
+        N
+    }
+}
+
+pub trait TileSource: Send + UnwindSafe + Debug + 'static {
+    fn minimum_tile(&self) -> Point<isize> {
+        Point::MIN
+    }
+    fn maximum_tile(&self) -> Point<isize> {
+        Point::MAX
+    }
+
+    fn render(
+        &mut self,
+        coordinate: Point<isize>,
+        rect: Rect<Px>,
+        context: &mut LayerContext<'_, '_, '_>,
+    ) -> Option<Duration>;
+}
+
+impl<Tiles> TileSource for TileArray<Tiles>
+where
+    Tiles: TileList,
+{
+    fn minimum_tile(&self) -> Point<isize> {
+        Point::ZERO
+    }
+
+    fn maximum_tile(&self) -> Point<isize> {
+        Point::new(self.width, self.tiles.len() / self.width).map(Cast::cast)
+    }
+
+    fn render(
+        &mut self,
+        coordinate: Point<isize>,
+        rect: Rect<Px>,
+        context: &mut LayerContext<'_, '_, '_>,
+    ) -> Option<Duration> {
+        self.tiles[coordinate.y.cast::<usize>() * self.width + coordinate.x.cast::<usize>()]
+            .render(rect, context)
     }
 }
 
@@ -344,6 +390,36 @@ pub enum TileKind {
     Texture(AnyTexture),
     Sprite(Sprite),
     Color(Color),
+}
+
+impl TileKind {
+    pub fn render(
+        &mut self,
+        tile_rect: Rect<Px>,
+        context: &mut LayerContext<'_, '_, '_>,
+    ) -> Option<Duration> {
+        match self {
+            TileKind::Texture(texture) => {
+                // TODO support other scaling options like
+                // aspect-fit rather than fill.
+                context.draw_texture(texture, tile_rect);
+                None
+            }
+            TileKind::Color(color) => {
+                context.draw_shape(&Shape::filled_rect(tile_rect, *color));
+                None
+            }
+            TileKind::Sprite(sprite) => {
+                if let Ok(frame) = sprite.get_frame(Some(context.elapsed())) {
+                    context.draw_texture(&frame, tile_rect);
+                    sprite.remaining_frame_duration().ok().flatten()
+                } else {
+                    // TODO show a broken image?
+                    None
+                }
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -490,4 +566,32 @@ pub trait Object: Debug + UnwindSafe + Send + 'static {
         zoom: f32,
         context: &mut Renderer<'_, '_>,
     ) -> Option<Duration>;
+}
+
+#[derive(Debug)]
+pub struct DebugGrid;
+
+impl TileSource for DebugGrid {
+    fn render(
+        &mut self,
+        coordinate: Point<isize>,
+        rect: Rect<Px>,
+        context: &mut LayerContext<'_, '_, '_>,
+    ) -> Option<Duration> {
+        context.set_font_size(rect.size.height / 4);
+        context.set_line_height(rect.size.height / 4);
+        let color = Color::new(255, 255, 255, 64);
+        context.draw_text(
+            Text::new(&format!("{},{}", coordinate.x, coordinate.y), color)
+                .translate_by(rect.origin),
+        );
+        context.draw_shape(
+            &PathBuilder::new(Point::new(rect.origin.x, rect.origin.y + rect.size.height))
+                .line_to(rect.origin)
+                .line_to(Point::new(rect.origin.x + rect.size.width, rect.origin.y))
+                .build()
+                .stroke(StrokeOptions::default().colored(color)),
+        );
+        None
+    }
 }
