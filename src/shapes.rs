@@ -2,7 +2,10 @@ use std::fmt::Debug;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use figures::units::{Lp, Px, UPx};
-use figures::{FloatConversion, FloatOrInt, PixelScaling, Point, Rect, ScreenScale, Zero};
+use figures::{
+    Angle, FloatConversion, FloatOrInt, PixelScaling, Point, Ranged, Rect, ScreenScale, Size, Zero,
+};
+use lyon_tessellation::geom::Arc;
 use lyon_tessellation::{
     FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
     GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeTessellator, StrokeVertex,
@@ -472,6 +475,46 @@ impl<Unit> Path<Unit, false> {
                 start,
             )
             .close()
+    }
+
+    /// Returns a path forming an arc starting at `start` angle of an oval sized
+    /// `radii` oriented around `center`. The arc will sweep in a clockwise
+    /// direction a rotation of `sweep` angle.
+    #[must_use]
+    pub fn arc(center: Point<Unit>, radii: Size<Unit>, start: Angle, sweep: Angle) -> Self
+    where
+        Unit: FloatConversion<Float = f32>,
+    {
+        let mut events = SmallVec::new();
+        Arc {
+            center: lyon_tessellation::geom::point(center.x.into_float(), center.y.into_float()),
+            radii: lyon_tessellation::geom::vector(
+                radii.width.into_float(),
+                radii.height.into_float(),
+            ),
+            start_angle: lyon_tessellation::geom::Angle::degrees(start.into_degrees()),
+            sweep_angle: lyon_tessellation::geom::Angle::degrees(sweep.into_degrees()),
+            x_rotation: lyon_tessellation::geom::Angle::degrees(0.),
+        }
+        .for_each_cubic_bezier(&mut |segment| {
+            if events.is_empty() {
+                events.push(PathEvent::Begin {
+                    at: Point::new(segment.from.x, segment.from.y).map(Unit::from_float),
+                    texture: Point::ZERO,
+                });
+            }
+            events.push(PathEvent::Cubic {
+                ctrl1: Point::new(segment.ctrl1.x, segment.ctrl1.y).map(Unit::from_float),
+                ctrl2: Point::new(segment.ctrl2.x, segment.ctrl2.y).map(Unit::from_float),
+                to: Point::new(segment.to.x, segment.to.y).map(Unit::from_float),
+                texture: Point::ZERO,
+            });
+        });
+
+        events.push(PathEvent::End {
+            close: sweep == Angle::MAX,
+        });
+        Self { events }
     }
 }
 
