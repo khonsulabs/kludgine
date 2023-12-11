@@ -716,6 +716,7 @@ where
 pub struct PathBuilder<Unit, const TEXTURED: bool> {
     path: Path<Unit, TEXTURED>,
     current_location: Endpoint<Unit>,
+    current_texture: Point<UPx>,
     close: bool,
 }
 
@@ -737,6 +738,7 @@ where
         Self {
             path,
             current_location: Endpoint::default(),
+            current_texture: Point::default(),
             close: false,
         }
     }
@@ -756,6 +758,7 @@ where
                 texture: Point::default(),
             }]),
             current_location: start_at,
+            current_texture: Point::default(),
             close: false,
         }
     }
@@ -834,6 +837,69 @@ where
         self
     }
 
+    /// Add a clockwise arc starting at the current location.
+    ///
+    /// The arc will be drawn for an oval of size `radii`. The amount of
+    /// rotation the arc will be drawn is controlled by `sweep`.
+    #[must_use]
+    pub fn arc(mut self, center: impl Into<Endpoint<Unit>>, radii: Size<Unit>, sweep: Angle) -> Self
+    where
+        Unit: FloatConversion<Float = f32>,
+    {
+        let Endpoint {
+            location: center,
+            color,
+        } = center.into();
+        let center = center.into_float();
+
+        let current_offset = self.current_location.location.into_float() - center;
+        let start_angle = current_offset.y.atan2(current_offset.x);
+
+        let delta_red = color.red_f32() - self.current_location.color.red_f32();
+        let delta_green = color.green_f32() - self.current_location.color.green_f32();
+        let delta_blue = color.blue_f32() - self.current_location.color.blue_f32();
+        let delta_alpha = color.alpha_f32() - self.current_location.color.alpha_f32();
+
+        Arc {
+            center: lyon_tessellation::geom::point(center.x, center.y),
+            radii: lyon_tessellation::geom::vector(
+                radii.width.into_float(),
+                radii.height.into_float(),
+            ),
+            start_angle: lyon_tessellation::geom::Angle::radians(start_angle),
+            sweep_angle: lyon_tessellation::geom::Angle::degrees(sweep.into_degrees()),
+            x_rotation: lyon_tessellation::geom::Angle::degrees(0.),
+        }
+        .for_each_cubic_bezier(&mut |segment| {
+            let to = Point::new(segment.to.x, segment.to.y);
+            let current_offset = to - center;
+            let current_angle = current_offset.y.atan2(current_offset.x);
+            let elapsed_angle = if (current_angle - start_angle).abs() < f32::EPSILON {
+                Angle::MAX
+            } else {
+                Angle::radians_f(current_angle - start_angle)
+            };
+            let progress = elapsed_angle.into_degrees::<f32>() / sweep.into_degrees::<f32>();
+
+            self.path.events.push(PathEvent::Cubic {
+                ctrl1: Point::new(segment.ctrl1.x, segment.ctrl1.y).map(Unit::from_float),
+                ctrl2: Point::new(segment.ctrl2.x, segment.ctrl2.y).map(Unit::from_float),
+                to: Endpoint::new(
+                    to.map(Unit::from_float),
+                    Color::new_f32(
+                        color.red_f32() + delta_red * progress,
+                        color.green_f32() + delta_green * progress,
+                        color.blue_f32() + delta_blue * progress,
+                        color.alpha_f32() + delta_alpha * progress,
+                    ),
+                ),
+                texture: Point::ZERO,
+            });
+        });
+
+        self
+    }
+
     /// Closes the path, connecting the current location to the shape's starting
     /// location.
     #[must_use]
@@ -857,6 +923,7 @@ where
                 texture,
             })]),
             current_location: start_at,
+            current_texture: texture,
             close: false,
         }
     }
@@ -866,6 +933,7 @@ where
     pub fn reset(&mut self, start_at: impl Into<Endpoint<Unit>>, texture: Point<UPx>) {
         let start_at = start_at.into();
         self.current_location = start_at;
+        self.current_texture = texture;
         let begin = PathEvent::Begin {
             at: start_at,
             texture,
@@ -894,6 +962,7 @@ where
             texture,
         });
         self.current_location = end_at;
+        self.current_texture = texture;
         self
     }
 
@@ -913,6 +982,7 @@ where
             texture,
         });
         self.current_location = end_at;
+        self.current_texture = texture;
         self
     }
 
@@ -934,6 +1004,78 @@ where
             texture,
         });
         self.current_location = end_at;
+        self.current_texture = texture;
+        self
+    }
+
+    /// Add a clockwise arc starting at the current location.
+    ///
+    /// The arc will be drawn for an oval of size `radii`. The amount of
+    /// rotation the arc will be drawn is controlled by `sweep`.
+    #[must_use]
+    pub fn arc(
+        mut self,
+        center: Point<Unit>,
+        radii: Size<Unit>,
+        sweep: Angle,
+        texture: impl Into<Endpoint<UPx>>,
+    ) -> Self
+    where
+        Unit: FloatConversion<Float = f32>,
+    {
+        let Endpoint {
+            location: texture,
+            color,
+        } = texture.into();
+        let center = center.into_float();
+
+        let current_offset = self.current_location.location.into_float() - center;
+        let start_angle = current_offset.y.atan2(current_offset.x);
+
+        let texture_delta = texture - self.current_texture;
+
+        let delta_red = color.red_f32() - self.current_location.color.red_f32();
+        let delta_green = color.green_f32() - self.current_location.color.green_f32();
+        let delta_blue = color.blue_f32() - self.current_location.color.blue_f32();
+        let delta_alpha = color.alpha_f32() - self.current_location.color.alpha_f32();
+
+        Arc {
+            center: lyon_tessellation::geom::point(center.x, center.y),
+            radii: lyon_tessellation::geom::vector(
+                radii.width.into_float(),
+                radii.height.into_float(),
+            ),
+            start_angle: lyon_tessellation::geom::Angle::radians(start_angle),
+            sweep_angle: lyon_tessellation::geom::Angle::degrees(sweep.into_degrees()),
+            x_rotation: lyon_tessellation::geom::Angle::degrees(0.),
+        }
+        .for_each_cubic_bezier(&mut |segment| {
+            let to = Point::new(segment.to.x, segment.to.y);
+            let current_offset = to - center;
+            let current_angle = current_offset.y.atan2(current_offset.x);
+            let elapsed_angle = if (current_angle - start_angle).abs() < f32::EPSILON {
+                Angle::MAX
+            } else {
+                Angle::radians_f(current_angle - start_angle)
+            };
+            let progress = elapsed_angle.into_degrees::<f32>() / sweep.into_degrees::<f32>();
+
+            self.path.events.push(PathEvent::Cubic {
+                ctrl1: Point::new(segment.ctrl1.x, segment.ctrl1.y).map(Unit::from_float),
+                ctrl2: Point::new(segment.ctrl2.x, segment.ctrl2.y).map(Unit::from_float),
+                to: Endpoint::new(
+                    to.map(Unit::from_float),
+                    Color::new_f32(
+                        color.red_f32() + delta_red * progress,
+                        color.green_f32() + delta_green * progress,
+                        color.blue_f32() + delta_blue * progress,
+                        color.alpha_f32() + delta_alpha * progress,
+                    ),
+                ),
+                texture: self.current_texture + texture_delta * progress,
+            });
+        });
+
         self
     }
 
