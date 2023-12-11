@@ -250,16 +250,24 @@ where
         position: lyon_tessellation::math::Point,
         attributes: &[f32],
     ) -> Vertex<Unit> {
-        let texture = match attributes.len() {
-            0 => Point::default(),
-            2 => Point::new(attributes[0], attributes[1]).cast(),
+        let (texture, color) = match attributes.len() {
+            0 => (Point::default(), self.default_color),
+            6 => (
+                Point::new(attributes[0], attributes[1]).cast(),
+                Color::new_f32(
+                    self.default_color.red_f32() * attributes[2],
+                    self.default_color.green_f32() * attributes[3],
+                    self.default_color.blue_f32() * attributes[4],
+                    self.default_color.alpha_f32() * attributes[5],
+                ),
+            ),
             _ => unreachable!("Attributes should be empty or 2"),
         };
 
         Vertex {
             location: Point::new(Unit::from_float(position.x), Unit::from_float(position.y)),
             texture,
-            color: self.default_color,
+            color,
         }
     }
 
@@ -354,7 +362,42 @@ where
 }
 
 /// A point on a [`Path`].
-pub type Endpoint<Unit> = Point<Unit>;
+#[derive(Debug, Clone, Copy)]
+pub struct Endpoint<Unit> {
+    /// The location of the endpoint on a path.
+    pub location: Point<Unit>,
+    /// The color to associate with this endpoint.
+    pub color: Color,
+}
+
+impl<Unit> Endpoint<Unit> {
+    /// Returns a new endpoint with a given location and color.
+    pub fn new(location: Point<Unit>, color: Color) -> Self {
+        Self { location, color }
+    }
+}
+
+impl<Unit> From<Point<Unit>> for Endpoint<Unit> {
+    fn from(location: Point<Unit>) -> Self {
+        Self::new(location, Color::WHITE)
+    }
+}
+
+impl<Unit> From<(Point<Unit>, Color)> for Endpoint<Unit> {
+    fn from(fields: (Point<Unit>, Color)) -> Self {
+        Self::new(fields.0, fields.1)
+    }
+}
+
+impl<Unit> Default for Endpoint<Unit>
+where
+    Unit: Default,
+{
+    fn default() -> Self {
+        Self::from(Point::default())
+    }
+}
+
 /// A control point used to create curves.
 pub type ControlPoint<Unit> = Point<Unit>;
 
@@ -499,14 +542,18 @@ impl<Unit> Path<Unit, false> {
         .for_each_cubic_bezier(&mut |segment| {
             if events.is_empty() {
                 events.push(PathEvent::Begin {
-                    at: Point::new(segment.from.x, segment.from.y).map(Unit::from_float),
+                    at: Point::new(segment.from.x, segment.from.y)
+                        .map(Unit::from_float)
+                        .into(),
                     texture: Point::ZERO,
                 });
             }
             events.push(PathEvent::Cubic {
                 ctrl1: Point::new(segment.ctrl1.x, segment.ctrl1.y).map(Unit::from_float),
                 ctrl2: Point::new(segment.ctrl2.x, segment.ctrl2.y).map(Unit::from_float),
-                to: Point::new(segment.to.x, segment.to.y).map(Unit::from_float),
+                to: Point::new(segment.to.x, segment.to.y)
+                    .map(Unit::from_float)
+                    .into(),
                 texture: Point::ZERO,
             });
         });
@@ -539,21 +586,48 @@ where
     Unit: FloatConversion<Float = f32> + Copy + PixelScaling,
 {
     fn as_lyon(&self) -> lyon_tessellation::path::Path {
-        let mut builder = lyon_tessellation::path::Path::builder_with_attributes(2);
+        let mut builder = lyon_tessellation::path::Path::builder_with_attributes(6);
         // TODO: Pre-reserve to minimize allocations?
         for &event in &self.events {
             match event {
                 PathEvent::Begin { at, texture } => {
-                    builder.begin(at.into(), &[texture.x.into_float(), texture.y.into_float()]);
+                    builder.begin(
+                        at.location.into(),
+                        &[
+                            texture.x.into_float(),
+                            texture.y.into_float(),
+                            at.color.red_f32(),
+                            at.color.green_f32(),
+                            at.color.blue_f32(),
+                            at.color.alpha_f32(),
+                        ],
+                    );
                 }
                 PathEvent::Line { to, texture } => {
-                    builder.line_to(to.into(), &[texture.x.into_float(), texture.y.into_float()]);
+                    builder.line_to(
+                        to.location.into(),
+                        &[
+                            texture.x.into_float(),
+                            texture.y.into_float(),
+                            to.color.red_f32(),
+                            to.color.green_f32(),
+                            to.color.blue_f32(),
+                            to.color.alpha_f32(),
+                        ],
+                    );
                 }
                 PathEvent::Quadratic { ctrl, to, texture } => {
                     builder.quadratic_bezier_to(
                         ctrl.into(),
-                        to.into(),
-                        &[texture.x.into_float(), texture.y.into_float()],
+                        to.location.into(),
+                        &[
+                            texture.x.into_float(),
+                            texture.y.into_float(),
+                            to.color.red_f32(),
+                            to.color.green_f32(),
+                            to.color.blue_f32(),
+                            to.color.alpha_f32(),
+                        ],
                     );
                 }
                 PathEvent::Cubic {
@@ -565,8 +639,15 @@ where
                     builder.cubic_bezier_to(
                         ctrl1.into(),
                         ctrl2.into(),
-                        to.into(),
-                        &[texture.x.into_float(), texture.y.into_float()],
+                        to.location.into(),
+                        &[
+                            texture.x.into_float(),
+                            texture.y.into_float(),
+                            to.color.red_f32(),
+                            to.color.green_f32(),
+                            to.color.blue_f32(),
+                            to.color.alpha_f32(),
+                        ],
                     );
                 }
                 PathEvent::End { close } => builder.end(close),
@@ -577,9 +658,9 @@ where
 
     /// Fills this path with `color`.
     ///
-    /// If this is a textured image, the sampled texture colors will be
-    /// multiplied with this color. To render the image unchanged, use
-    /// [`Color::WHITE`].
+    /// If this is a textured image or the path endpoints were constructed with
+    /// colors, the sampled texture colors will be multiplied with this color.
+    /// To render the image unchanged, use [`Color::WHITE`].
     #[must_use]
     pub fn fill(&self, color: Color) -> Shape<Unit, TEXTURED> {
         let lyon_path = self.as_lyon();
@@ -595,6 +676,15 @@ where
             )
             .assert("should not fail to tesselat4e a rect");
         shape_builder.shape
+    }
+
+    /// Fills this path with solid white.
+    ///
+    /// If this is a textured image or the path endpoints were constructed with
+    /// colors, this will result in the source colors being copied unchanged.
+    #[must_use]
+    pub fn filled(&self) -> Shape<Unit, TEXTURED> {
+        self.fill(Color::WHITE)
     }
 
     /// Strokes this path with `color` and `options`.
@@ -646,7 +736,7 @@ where
         path.events.clear();
         Self {
             path,
-            current_location: Point::default(),
+            current_location: Endpoint::default(),
             close: false,
         }
     }
@@ -658,7 +748,8 @@ where
 {
     /// Creates a new path with the initial position `start_at`.
     #[must_use]
-    pub fn new(start_at: Endpoint<Unit>) -> Self {
+    pub fn new(start_at: impl Into<Endpoint<Unit>>) -> Self {
+        let start_at = start_at.into();
         Self {
             path: Path::from_iter([PathEvent::Begin {
                 at: start_at,
@@ -671,7 +762,8 @@ where
 
     /// Clears this builder to a state as if it had just been created with
     /// [`new()`](Self::new).
-    pub fn reset(&mut self, start_at: Endpoint<Unit>) {
+    pub fn reset(&mut self, start_at: impl Into<Endpoint<Unit>>) {
+        let start_at = start_at.into();
         self.current_location = start_at;
         let begin = PathEvent::Begin {
             at: start_at,
@@ -694,7 +786,8 @@ where
 
     /// Create a straight line from the current location to `end_at`.
     #[must_use]
-    pub fn line_to(mut self, end_at: Endpoint<Unit>) -> Self {
+    pub fn line_to(mut self, end_at: impl Into<Endpoint<Unit>>) -> Self {
+        let end_at = end_at.into();
         self.path.events.push(PathEvent::Line {
             to: end_at,
             texture: Point::default(),
@@ -709,8 +802,9 @@ where
     pub fn quadratic_curve_to(
         mut self,
         control: ControlPoint<Unit>,
-        end_at: Endpoint<Unit>,
+        end_at: impl Into<Endpoint<Unit>>,
     ) -> Self {
+        let end_at = end_at.into();
         self.path.events.push(PathEvent::Quadratic {
             ctrl: control,
             to: end_at,
@@ -727,8 +821,9 @@ where
         mut self,
         control1: ControlPoint<Unit>,
         control2: ControlPoint<Unit>,
-        end_at: Endpoint<Unit>,
+        end_at: impl Into<Endpoint<Unit>>,
     ) -> Self {
+        let end_at = end_at.into();
         self.path.events.push(PathEvent::Cubic {
             ctrl1: control1,
             ctrl2: control2,
@@ -754,7 +849,8 @@ where
 {
     /// Creates a new path with the initial position `start_at`.
     #[must_use]
-    pub fn new_textured(start_at: Endpoint<Unit>, texture: Point<UPx>) -> Self {
+    pub fn new_textured(start_at: impl Into<Endpoint<Unit>>, texture: Point<UPx>) -> Self {
+        let start_at = start_at.into();
         Self {
             path: Path::from_iter([(PathEvent::Begin {
                 at: start_at,
@@ -767,7 +863,8 @@ where
 
     /// Clears this builder to a state as if it had just been created with
     /// [`new_textured()`](Self::new_textured).
-    pub fn reset(&mut self, start_at: Endpoint<Unit>, texture: Point<UPx>) {
+    pub fn reset(&mut self, start_at: impl Into<Endpoint<Unit>>, texture: Point<UPx>) {
+        let start_at = start_at.into();
         self.current_location = start_at;
         let begin = PathEvent::Begin {
             at: start_at,
@@ -790,7 +887,8 @@ where
 
     /// Create a straight line from the current location to `end_at`.
     #[must_use]
-    pub fn line_to(mut self, end_at: Endpoint<Unit>, texture: Point<UPx>) -> Self {
+    pub fn line_to(mut self, end_at: impl Into<Endpoint<Unit>>, texture: Point<UPx>) -> Self {
+        let end_at = end_at.into();
         self.path.events.push(PathEvent::Line {
             to: end_at,
             texture,
@@ -805,9 +903,10 @@ where
     pub fn quadratic_curve_to(
         mut self,
         control: ControlPoint<Unit>,
-        end_at: Endpoint<Unit>,
+        end_at: impl Into<Endpoint<Unit>>,
         texture: Point<UPx>,
     ) -> Self {
+        let end_at = end_at.into();
         self.path.events.push(PathEvent::Quadratic {
             ctrl: control,
             to: end_at,
@@ -824,9 +923,10 @@ where
         mut self,
         control1: ControlPoint<Unit>,
         control2: ControlPoint<Unit>,
-        end_at: Endpoint<Unit>,
+        end_at: impl Into<Endpoint<Unit>>,
         texture: Point<UPx>,
     ) -> Self {
+        let end_at = end_at.into();
         self.path.events.push(PathEvent::Cubic {
             ctrl1: control1,
             ctrl2: control2,

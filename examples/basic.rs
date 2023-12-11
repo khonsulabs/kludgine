@@ -3,7 +3,7 @@ use std::time::Duration;
 use appit::winit::error::EventLoopError;
 use kludgine::figures::units::Lp;
 use kludgine::figures::{Angle, Point, Rect, Size};
-use kludgine::shapes::Shape;
+use kludgine::shapes::{PathBuilder, Shape};
 use kludgine::text::{Text, TextOrigin};
 use kludgine::{Color, DrawableExt};
 
@@ -14,12 +14,12 @@ fn main() -> Result<(), EventLoopError> {
     kludgine::app::run(move |mut renderer, mut window| {
         window.redraw_in(Duration::from_millis(16));
         angle += Angle::degrees(30) * window.elapsed().as_secs_f32();
-        let shape_center = Point::new(RED_SQUARE_SIZE / 2, RED_SQUARE_SIZE / 2);
+        let shape_center = Point::squared(RED_SQUARE_SIZE);
         renderer.draw_shape(
             (&Shape::filled_rect(
                 Rect::<Lp>::new(
-                    Point::new(-RED_SQUARE_SIZE / 2, -RED_SQUARE_SIZE / 2),
-                    Size::new(RED_SQUARE_SIZE, RED_SQUARE_SIZE),
+                    Point::squared(-RED_SQUARE_SIZE / 2),
+                    Size::squared(RED_SQUARE_SIZE),
                 ),
                 Color::RED,
             ))
@@ -32,6 +32,17 @@ fn main() -> Result<(), EventLoopError> {
                 .translate_by(shape_center)
                 .rotate_by(angle),
         );
+
+        renderer.draw_shape(
+            PathBuilder::new((Point::new(Lp::ZERO, Lp::inches(-1)), Color::RED))
+                .line_to((Point::new(Lp::inches(1), Lp::inches(1)), Color::GREEN))
+                .line_to((Point::new(Lp::inches(-1), Lp::inches(1)), Color::BLUE))
+                .close()
+                .filled()
+                .translate_by(Point::squared(Lp::inches(3)))
+                .rotate_by(-angle),
+        );
+
         true
     })
 }
