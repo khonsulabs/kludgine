@@ -101,5 +101,6 @@ pub trait KludgineGraphics {
     fn queue(&self) -> &wgpu::Queue;
     fn binding_layout(&self) -> &wgpu::BindGroupLayout;
     fn uniforms(&self) -> &wgpu::Buffer;
-    fn sampler(&self) -> &wgpu::Sampler;
+    fn nearest_sampler(&self) -> &wgpu::Sampler;
+    fn linear_sampler(&self) -> &wgpu::Sampler;
 }

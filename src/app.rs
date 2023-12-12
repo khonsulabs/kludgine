@@ -260,12 +260,6 @@ where
         wgpu::PowerPreference::default()
     }
 
-    /// Returns the filter mode to use when rendering textures with `wgpu`.
-    #[must_use]
-    fn filter_mode() -> wgpu::FilterMode {
-        wgpu::FilterMode::Nearest
-    }
-
     /// Returns the limits to apply for the `wgpu` instance.
     #[must_use]
     fn limits(adapter_limits: wgpu::Limits) -> wgpu::Limits {
@@ -656,7 +650,6 @@ where
             &device,
             &queue,
             swapchain_format,
-            T::filter_mode(),
             multisample,
             window.inner_size().into(),
             window.scale().cast::<f32>(),

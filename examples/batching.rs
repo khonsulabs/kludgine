@@ -18,7 +18,11 @@ fn main() -> Result<(), EventLoopError> {
     kludgine::app::run(move |mut renderer, mut window| {
         static TEXTURE: OnceLock<Texture> = OnceLock::new();
         let texture = TEXTURE.get_or_init(|| {
-            Texture::from_image(image::open("./examples/assets/k.png").unwrap(), &renderer)
+            Texture::from_image(
+                image::open("./examples/assets/k.png").unwrap(),
+                wgpu::FilterMode::Linear,
+                &renderer,
+            )
         });
 
         window.redraw_in(Duration::from_millis(16));

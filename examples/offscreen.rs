@@ -26,12 +26,12 @@ impl WindowBehavior for Test {
             Size::new(512, 512).cast(),
             wgpu::TextureFormat::Bgra8Unorm,
             wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT,
+            wgpu::FilterMode::Linear,
         );
         let mut kludgine = Kludgine::new(
             graphics.device(),
             graphics.queue(),
             prerendered.format(),
-            wgpu::FilterMode::Linear,
             wgpu::MultisampleState::default(),
             Size::new(512, 512).cast(),
             1.0,

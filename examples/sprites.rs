@@ -50,6 +50,7 @@ impl WindowBehavior for Sprites {
     ) -> Self {
         let texture = Texture::from_image(
             image::open("./examples/assets/stickguy.png").expect("valid image"),
+            wgpu::FilterMode::Nearest,
             graphics,
         );
         let sheet = SpriteSheet::new(

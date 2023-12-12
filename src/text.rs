@@ -3,7 +3,7 @@ use std::collections::{hash_map, HashMap};
 use std::fmt::{self, Debug};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use cosmic_text::{fontdb, Attrs, AttrsOwned, LayoutGlyph, SwashContent};
+use cosmic_text::{Attrs, AttrsOwned, LayoutGlyph, SwashContent};
 use figures::units::{Lp, Px, UPx};
 use figures::{FloatConversion, Fraction, Point, Rect, ScreenScale, Size, UPx2D};
 use intentional::Cast;
@@ -108,26 +108,6 @@ impl Kludgine {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
-pub(crate) struct PixelAlignedCacheKey {
-    /// Font ID
-    pub font_id: fontdb::ID,
-    /// Glyph ID
-    pub glyph_id: u16,
-    /// `f32` bits of font size
-    pub font_size_bits: u32,
-}
-
-impl From<cosmic_text::CacheKey> for PixelAlignedCacheKey {
-    fn from(key: cosmic_text::CacheKey) -> Self {
-        Self {
-            font_id: key.font_id,
-            glyph_id: key.glyph_id,
-            font_size_bits: key.font_size_bits,
-        }
-    }
-}
-
 pub(crate) struct TextSystem {
     pub fonts: cosmic_text::FontSystem,
     pub swash_cache: cosmic_text::SwashCache,
@@ -162,11 +142,13 @@ impl TextSystem {
             alpha_text_atlas: TextureCollection::new_generic(
                 Size::new(512, 512).cast(),
                 wgpu::TextureFormat::R8Unorm,
+                wgpu::FilterMode::Linear,
                 graphics,
             ),
             color_text_atlas: TextureCollection::new_generic(
                 Size::new(512, 512).cast(),
                 wgpu::TextureFormat::Rgba8UnormSrgb,
+                wgpu::FilterMode::Linear,
                 graphics,
             ),
             swash_cache: cosmic_text::SwashCache::new(),
@@ -236,13 +218,13 @@ impl TextSystem {
 
 #[derive(Debug, Default, Clone)]
 struct GlyphCache {
-    glyphs: Arc<Mutex<HashMap<PixelAlignedCacheKey, CachedGlyph, DefaultHasher>>>,
+    glyphs: Arc<Mutex<HashMap<cosmic_text::CacheKey, CachedGlyph, DefaultHasher>>>,
 }
 
 impl GlyphCache {
     fn get_or_insert(
         &self,
-        key: PixelAlignedCacheKey,
+        key: cosmic_text::CacheKey,
         insert_fn: impl FnOnce() -> Option<(CollectedTexture, bool)>,
     ) -> Option<CachedGlyphHandle> {
         let mut data = self
@@ -289,7 +271,7 @@ struct CachedGlyph {
 }
 
 pub(crate) struct CachedGlyphHandle {
-    key: PixelAlignedCacheKey,
+    key: cosmic_text::CacheKey,
     pub is_mask: bool,
     cache: GlyphCache,
     pub texture: CollectedTexture,
@@ -411,7 +393,7 @@ pub(crate) fn map_each_glyph(
     kludgine: &mut Kludgine,
     device: &wgpu::Device,
     queue: &wgpu::Queue,
-    glyphs: &mut HashMap<PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher>,
+    glyphs: &mut HashMap<cosmic_text::CacheKey, CachedGlyphHandle, DefaultHasher>,
     mut map: impl for<'a> FnMut(
         TextureBlit<Px>,
         &'a CachedGlyphHandle,
@@ -461,7 +443,7 @@ pub(crate) fn map_each_glyph(
                 kludgine
                     .text
                     .glyphs
-                    .get_or_insert(physical.cache_key.into(), || match image.content {
+                    .get_or_insert(physical.cache_key, || match image.content {
                         SwashContent::Mask => Some((
                             kludgine.text.alpha_text_atlas.push_texture_generic(
                                 &image.data,
@@ -475,7 +457,8 @@ pub(crate) fn map_each_glyph(
                                     device,
                                     queue,
                                     binding_layout: &kludgine.binding_layout,
-                                    sampler: &kludgine.sampler,
+                                    linear_sampler: &kludgine.linear_sampler,
+                                    nearest_sampler: &kludgine.nearest_sampler,
                                     uniforms: &kludgine.uniforms.wgpu,
                                 },
                             ),
@@ -497,7 +480,8 @@ pub(crate) fn map_each_glyph(
                                         device,
                                         queue,
                                         binding_layout: &kludgine.binding_layout,
-                                        sampler: &kludgine.sampler,
+                                        linear_sampler: &kludgine.linear_sampler,
+                                        nearest_sampler: &kludgine.nearest_sampler,
                                         uniforms: &kludgine.uniforms.wgpu,
                                     },
                                 ),
@@ -514,6 +498,11 @@ pub(crate) fn map_each_glyph(
                 cached.texture.region,
                 Rect::new(
                     (Point::new(physical.x, physical.y)).cast::<Px>()
+                        + Point::new(
+                            physical.cache_key.x_bin.as_float(),
+                            physical.cache_key.y_bin.as_float(),
+                        )
+                        .map(Px::from)
                         + Point::new(
                             image.placement.left,
                             metrics.line_height.cast::<i32>() - image.placement.top,
@@ -536,9 +525,7 @@ pub(crate) fn map_each_glyph(
                 kludgine,
             );
 
-            glyphs
-                .entry(physical.cache_key.into())
-                .or_insert_with(|| cached);
+            glyphs.entry(physical.cache_key).or_insert_with(|| cached);
         }
     }
 }
@@ -549,7 +536,7 @@ pub(crate) fn measure_text<Unit, const COLLECT_GLYPHS: bool>(
     kludgine: &mut Kludgine,
     device: &wgpu::Device,
     queue: &wgpu::Queue,
-    glyphs: &mut HashMap<PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher>,
+    glyphs: &mut HashMap<cosmic_text::CacheKey, CachedGlyphHandle, DefaultHasher>,
 ) -> MeasuredText<Unit>
 where
     Unit: figures::ScreenUnit,
@@ -614,7 +601,7 @@ where
 /// Text that is ready to be rendered on the GPU.
 pub struct PreparedText {
     graphic: PreparedGraphic<Px>,
-    _glyphs: HashMap<PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher>,
+    _glyphs: HashMap<cosmic_text::CacheKey, CachedGlyphHandle, DefaultHasher>,
 }
 
 impl fmt::Debug for PreparedText {

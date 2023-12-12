@@ -751,90 +751,42 @@ where
     /// Creates a new path with the initial position `start_at`.
     #[must_use]
     pub fn new(start_at: impl Into<Endpoint<Unit>>) -> Self {
-        let start_at = start_at.into();
-        Self {
-            path: Path::from_iter([PathEvent::Begin {
-                at: start_at,
-                texture: Point::default(),
-            }]),
-            current_location: start_at,
-            current_texture: Point::default(),
-            close: false,
-        }
+        Self::new_inner(start_at, Point::ZERO)
     }
 
     /// Clears this builder to a state as if it had just been created with
     /// [`new()`](Self::new).
     pub fn reset(&mut self, start_at: impl Into<Endpoint<Unit>>) {
-        let start_at = start_at.into();
-        self.current_location = start_at;
-        let begin = PathEvent::Begin {
-            at: start_at,
-            texture: Point::default(),
-        };
-        if self.path.events.is_empty() {
-            self.path.events.push(begin);
-        } else {
-            self.path.events.truncate(1);
-            self.path.events[0] = begin;
-        }
-    }
-
-    /// Returns the built path.
-    #[must_use]
-    pub fn build(mut self) -> Path<Unit, false> {
-        self.path.events.push(PathEvent::End { close: self.close });
-        self.path
+        self.reset_inner(start_at, Point::ZERO);
     }
 
     /// Create a straight line from the current location to `end_at`.
     #[must_use]
-    pub fn line_to(mut self, end_at: impl Into<Endpoint<Unit>>) -> Self {
-        let end_at = end_at.into();
-        self.path.events.push(PathEvent::Line {
-            to: end_at,
-            texture: Point::default(),
-        });
-        self.current_location = end_at;
-        self
+    pub fn line_to(self, end_at: impl Into<Endpoint<Unit>>) -> Self {
+        self.line_to_inner(end_at, Point::ZERO)
     }
 
     /// Create a quadratic curve from the current location to `end_at` using
     /// `control` as the curve's control point.
     #[must_use]
     pub fn quadratic_curve_to(
-        mut self,
+        self,
         control: ControlPoint<Unit>,
         end_at: impl Into<Endpoint<Unit>>,
     ) -> Self {
-        let end_at = end_at.into();
-        self.path.events.push(PathEvent::Quadratic {
-            ctrl: control,
-            to: end_at,
-            texture: Point::default(),
-        });
-        self.current_location = end_at;
-        self
+        self.quadratic_curve_to_inner(control, end_at, Point::ZERO)
     }
 
     /// Create a cubic curve from the current location to `end_at` using
     /// `control1` and `control2` as the curve's control points.
     #[must_use]
     pub fn cubic_curve_to(
-        mut self,
+        self,
         control1: ControlPoint<Unit>,
         control2: ControlPoint<Unit>,
         end_at: impl Into<Endpoint<Unit>>,
     ) -> Self {
-        let end_at = end_at.into();
-        self.path.events.push(PathEvent::Cubic {
-            ctrl1: control1,
-            ctrl2: control2,
-            to: end_at,
-            texture: Point::default(),
-        });
-        self.current_location = end_at;
-        self
+        self.cubic_curve_to_inner(control1, control2, end_at, Point::ZERO)
     }
 
     /// Add a clockwise arc starting at the current location.
@@ -842,7 +794,7 @@ where
     /// The arc will be drawn for an oval of size `radii`. The amount of
     /// rotation the arc will be drawn is controlled by `sweep`.
     #[must_use]
-    pub fn arc(mut self, center: impl Into<Endpoint<Unit>>, radii: Size<Unit>, sweep: Angle) -> Self
+    pub fn arc(self, center: impl Into<Endpoint<Unit>>, radii: Size<Unit>, sweep: Angle) -> Self
     where
         Unit: FloatConversion<Float = f32>,
     {
@@ -850,62 +802,28 @@ where
             location: center,
             color,
         } = center.into();
-        let center = center.into_float();
-
-        let current_offset = self.current_location.location.into_float() - center;
-        let start_angle = current_offset.y.atan2(current_offset.x);
-
-        let delta_red = color.red_f32() - self.current_location.color.red_f32();
-        let delta_green = color.green_f32() - self.current_location.color.green_f32();
-        let delta_blue = color.blue_f32() - self.current_location.color.blue_f32();
-        let delta_alpha = color.alpha_f32() - self.current_location.color.alpha_f32();
-
-        Arc {
-            center: lyon_tessellation::geom::point(center.x, center.y),
-            radii: lyon_tessellation::geom::vector(
-                radii.width.into_float(),
-                radii.height.into_float(),
-            ),
-            start_angle: lyon_tessellation::geom::Angle::radians(start_angle),
-            sweep_angle: lyon_tessellation::geom::Angle::degrees(sweep.into_degrees()),
-            x_rotation: lyon_tessellation::geom::Angle::degrees(0.),
-        }
-        .for_each_cubic_bezier(&mut |segment| {
-            let to = Point::new(segment.to.x, segment.to.y);
-            let current_offset = to - center;
-            let current_angle = current_offset.y.atan2(current_offset.x);
-            let elapsed_angle = if (current_angle - start_angle).abs() < f32::EPSILON {
-                Angle::MAX
-            } else {
-                Angle::radians_f(current_angle - start_angle)
-            };
-            let progress = elapsed_angle.into_degrees::<f32>() / sweep.into_degrees::<f32>();
-
-            self.path.events.push(PathEvent::Cubic {
-                ctrl1: Point::new(segment.ctrl1.x, segment.ctrl1.y).map(Unit::from_float),
-                ctrl2: Point::new(segment.ctrl2.x, segment.ctrl2.y).map(Unit::from_float),
-                to: Endpoint::new(
-                    to.map(Unit::from_float),
-                    Color::new_f32(
-                        color.red_f32() + delta_red * progress,
-                        color.green_f32() + delta_green * progress,
-                        color.blue_f32() + delta_blue * progress,
-                        color.alpha_f32() + delta_alpha * progress,
-                    ),
-                ),
-                texture: Point::ZERO,
-            });
-        });
-
-        self
+        self.arc_inner(center, radii, sweep, true, (Point::ZERO, color))
     }
 
-    /// Closes the path, connecting the current location to the shape's starting
-    /// location.
+    /// Add a counter-clockwise arc starting at the current location.
+    ///
+    /// The arc will be drawn for an oval of size `radii`. The amount of
+    /// rotation the arc will be drawn is controlled by `sweep`.
     #[must_use]
-    pub fn close(mut self) -> Path<Unit, false> {
-        self.close = true;
-        self.build()
+    pub fn arc_counter(
+        self,
+        center: impl Into<Endpoint<Unit>>,
+        radii: Size<Unit>,
+        sweep: Angle,
+    ) -> Self
+    where
+        Unit: FloatConversion<Float = f32>,
+    {
+        let Endpoint {
+            location: center,
+            color,
+        } = center.into();
+        self.arc_inner(center, radii, sweep, false, (Point::ZERO, color))
     }
 }
 
@@ -916,6 +834,88 @@ where
     /// Creates a new path with the initial position `start_at`.
     #[must_use]
     pub fn new_textured(start_at: impl Into<Endpoint<Unit>>, texture: Point<UPx>) -> Self {
+        Self::new_inner(start_at, texture)
+    }
+
+    /// Clears this builder to a state as if it had just been created with
+    /// [`new_textured()`](Self::new_textured).
+    pub fn reset(&mut self, start_at: impl Into<Endpoint<Unit>>, texture: Point<UPx>) {
+        self.reset_inner(start_at, texture);
+    }
+
+    /// Create a straight line from the current location to `end_at`.
+    #[must_use]
+    pub fn line_to(self, end_at: impl Into<Endpoint<Unit>>, texture: Point<UPx>) -> Self {
+        self.line_to_inner(end_at, texture)
+    }
+
+    /// Create a quadratic curve from the current location to `end_at` using
+    /// `control` as the curve's control point.
+    #[must_use]
+    pub fn quadratic_curve_to(
+        self,
+        control: ControlPoint<Unit>,
+        end_at: impl Into<Endpoint<Unit>>,
+        texture: Point<UPx>,
+    ) -> Self {
+        self.quadratic_curve_to_inner(control, end_at, texture)
+    }
+
+    /// Create a cubic curve from the current location to `end_at` using
+    /// `control1` and `control2` as the curve's control points.
+    #[must_use]
+    pub fn cubic_curve_to(
+        self,
+        control1: ControlPoint<Unit>,
+        control2: ControlPoint<Unit>,
+        end_at: impl Into<Endpoint<Unit>>,
+        texture: Point<UPx>,
+    ) -> Self {
+        self.cubic_curve_to_inner(control1, control2, end_at, texture)
+    }
+
+    /// Add a clockwise arc starting at the current location.
+    ///
+    /// The arc will be drawn for an oval of size `radii`. The amount of
+    /// rotation the arc will be drawn is controlled by `sweep`.
+    #[must_use]
+    pub fn arc(
+        self,
+        center: Point<Unit>,
+        radii: Size<Unit>,
+        sweep: Angle,
+        texture: impl Into<Endpoint<UPx>>,
+    ) -> Self
+    where
+        Unit: FloatConversion<Float = f32>,
+    {
+        self.arc_inner(center, radii, sweep, true, texture)
+    }
+
+    /// Add a counter-clockwise arc starting at the current location.
+    ///
+    /// The arc will be drawn for an oval of size `radii`. The amount of
+    /// rotation the arc will be drawn is controlled by `sweep`.
+    #[must_use]
+    pub fn arc_counter(
+        self,
+        center: Point<Unit>,
+        radii: Size<Unit>,
+        sweep: Angle,
+        texture: impl Into<Endpoint<UPx>>,
+    ) -> Self
+    where
+        Unit: FloatConversion<Float = f32>,
+    {
+        self.arc_inner(center, radii, sweep, false, texture)
+    }
+}
+
+impl<Unit, const TEXTURED: bool> PathBuilder<Unit, TEXTURED>
+where
+    Unit: Copy,
+{
+    fn new_inner(start_at: impl Into<Endpoint<Unit>>, texture: Point<UPx>) -> Self {
         let start_at = start_at.into();
         Self {
             path: Path::from_iter([(PathEvent::Begin {
@@ -928,9 +928,7 @@ where
         }
     }
 
-    /// Clears this builder to a state as if it had just been created with
-    /// [`new_textured()`](Self::new_textured).
-    pub fn reset(&mut self, start_at: impl Into<Endpoint<Unit>>, texture: Point<UPx>) {
+    fn reset_inner(&mut self, start_at: impl Into<Endpoint<Unit>>, texture: Point<UPx>) {
         let start_at = start_at.into();
         self.current_location = start_at;
         self.current_texture = texture;
@@ -946,16 +944,9 @@ where
         }
     }
 
-    /// Returns the built path.
-    #[must_use]
-    pub fn build(mut self) -> Path<Unit, true> {
-        self.path.events.push(PathEvent::End { close: self.close });
-        self.path
-    }
-
     /// Create a straight line from the current location to `end_at`.
     #[must_use]
-    pub fn line_to(mut self, end_at: impl Into<Endpoint<Unit>>, texture: Point<UPx>) -> Self {
+    fn line_to_inner(mut self, end_at: impl Into<Endpoint<Unit>>, texture: Point<UPx>) -> Self {
         let end_at = end_at.into();
         self.path.events.push(PathEvent::Line {
             to: end_at,
@@ -969,7 +960,7 @@ where
     /// Create a quadratic curve from the current location to `end_at` using
     /// `control` as the curve's control point.
     #[must_use]
-    pub fn quadratic_curve_to(
+    fn quadratic_curve_to_inner(
         mut self,
         control: ControlPoint<Unit>,
         end_at: impl Into<Endpoint<Unit>>,
@@ -989,7 +980,7 @@ where
     /// Create a cubic curve from the current location to `end_at` using
     /// `control1` and `control2` as the curve's control points.
     #[must_use]
-    pub fn cubic_curve_to(
+    fn cubic_curve_to_inner(
         mut self,
         control1: ControlPoint<Unit>,
         control2: ControlPoint<Unit>,
@@ -1013,11 +1004,12 @@ where
     /// The arc will be drawn for an oval of size `radii`. The amount of
     /// rotation the arc will be drawn is controlled by `sweep`.
     #[must_use]
-    pub fn arc(
+    fn arc_inner(
         mut self,
         center: Point<Unit>,
         radii: Size<Unit>,
         sweep: Angle,
+        clockwise: bool,
         texture: impl Into<Endpoint<UPx>>,
     ) -> Self
     where
@@ -1038,6 +1030,11 @@ where
         let delta_green = color.green_f32() - self.current_location.color.green_f32();
         let delta_blue = color.blue_f32() - self.current_location.color.blue_f32();
         let delta_alpha = color.alpha_f32() - self.current_location.color.alpha_f32();
+        let sweep = if clockwise {
+            sweep.into_degrees()
+        } else {
+            -sweep.into_degrees::<f32>()
+        };
 
         Arc {
             center: lyon_tessellation::geom::point(center.x, center.y),
@@ -1046,43 +1043,59 @@ where
                 radii.height.into_float(),
             ),
             start_angle: lyon_tessellation::geom::Angle::radians(start_angle),
-            sweep_angle: lyon_tessellation::geom::Angle::degrees(sweep.into_degrees()),
+            sweep_angle: lyon_tessellation::geom::Angle::degrees(sweep),
             x_rotation: lyon_tessellation::geom::Angle::degrees(0.),
         }
         .for_each_cubic_bezier(&mut |segment| {
             let to = Point::new(segment.to.x, segment.to.y);
             let current_offset = to - center;
             let current_angle = current_offset.y.atan2(current_offset.x);
-            let elapsed_angle = if (current_angle - start_angle).abs() < f32::EPSILON {
-                Angle::MAX
-            } else {
-                Angle::radians_f(current_angle - start_angle)
-            };
-            let progress = elapsed_angle.into_degrees::<f32>() / sweep.into_degrees::<f32>();
 
+            let (start_angle, current_angle) = if clockwise {
+                (start_angle, current_angle)
+            } else {
+                (current_angle, start_angle)
+            };
+
+            let elapsed_angle = if (current_angle - start_angle).abs() < f32::EPSILON {
+                360.
+            } else {
+                Angle::radians_f(current_angle - start_angle).into_degrees::<f32>()
+            };
+            let progress = elapsed_angle / sweep.abs();
+
+            self.current_location = Endpoint::new(
+                to.map(Unit::from_float),
+                Color::new_f32(
+                    color.red_f32() + delta_red * progress,
+                    color.green_f32() + delta_green * progress,
+                    color.blue_f32() + delta_blue * progress,
+                    color.alpha_f32() + delta_alpha * progress,
+                ),
+            );
+            self.current_texture += texture_delta * progress;
             self.path.events.push(PathEvent::Cubic {
                 ctrl1: Point::new(segment.ctrl1.x, segment.ctrl1.y).map(Unit::from_float),
                 ctrl2: Point::new(segment.ctrl2.x, segment.ctrl2.y).map(Unit::from_float),
-                to: Endpoint::new(
-                    to.map(Unit::from_float),
-                    Color::new_f32(
-                        color.red_f32() + delta_red * progress,
-                        color.green_f32() + delta_green * progress,
-                        color.blue_f32() + delta_blue * progress,
-                        color.alpha_f32() + delta_alpha * progress,
-                    ),
-                ),
-                texture: self.current_texture + texture_delta * progress,
+                to: self.current_location,
+                texture: self.current_texture,
             });
         });
 
         self
     }
 
+    /// Returns the built path.
+    #[must_use]
+    pub fn build(mut self) -> Path<Unit, TEXTURED> {
+        self.path.events.push(PathEvent::End { close: self.close });
+        self.path
+    }
+
     /// Closes the path, connecting the current location to the shape's starting
     /// location.
     #[must_use]
-    pub fn close(mut self) -> Path<Unit, true> {
+    pub fn close(mut self) -> Path<Unit, TEXTURED> {
         self.close = true;
         self.build()
     }

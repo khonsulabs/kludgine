@@ -30,6 +30,7 @@ fn atlas_usages() -> wgpu::TextureUsages {
 #[derive(Clone)]
 pub struct TextureCollection {
     format: wgpu::TextureFormat,
+    filter_mode: wgpu::FilterMode,
     data: Arc<RwLock<Data>>,
 }
 
@@ -43,13 +44,16 @@ impl TextureCollection {
     pub(crate) fn new_generic(
         initial_size: Size<UPx>,
         format: wgpu::TextureFormat,
+        filter_mode: wgpu::FilterMode,
         graphics: &impl KludgineGraphics,
     ) -> Self {
-        let texture = Texture::new_generic(graphics, initial_size, format, atlas_usages());
+        let texture =
+            Texture::new_generic(graphics, initial_size, format, atlas_usages(), filter_mode);
 
         let initial_size = initial_size.into_signed();
         Self {
             format,
+            filter_mode,
             data: Arc::new(RwLock::new(Data {
                 rects: BucketedAtlasAllocator::new(etagere::euclid::Size2D::new(
                     initial_size.width.into(),
@@ -66,9 +70,10 @@ impl TextureCollection {
     pub fn new(
         initial_size: Size<UPx>,
         format: wgpu::TextureFormat,
+        filter_mode: wgpu::FilterMode,
         graphics: &Graphics<'_>,
     ) -> Self {
-        Self::new_generic(initial_size, format, graphics)
+        Self::new_generic(initial_size, format, filter_mode, graphics)
     }
 
     /// Pushes image data to a specific region of the texture.
@@ -109,7 +114,13 @@ impl TextureCollection {
             }
 
             let new_size = this.texture.size * 2;
-            let new_texture = Texture::new_generic(graphics, new_size, self.format, atlas_usages());
+            let new_texture = Texture::new_generic(
+                graphics,
+                new_size,
+                self.format,
+                atlas_usages(),
+                self.filter_mode,
+            );
             let mut commands = graphics
                 .device()
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());

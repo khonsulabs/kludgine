@@ -23,11 +23,15 @@ impl WindowBehavior for Test {
         graphics: &mut kludgine::Graphics<'_>,
         _context: Self::Context,
     ) -> Self {
-        let texture =
-            Texture::from_image(image::open("./examples/assets/k.png").unwrap(), graphics).prepare(
-                Rect::new(-Point::inches(1, 1) / 2, Size::inches(1, 1)),
-                graphics,
-            );
+        let texture = Texture::from_image(
+            image::open("./examples/assets/k.png").unwrap(),
+            wgpu::FilterMode::Linear,
+            graphics,
+        )
+        .prepare(
+            Rect::new(-Point::inches(1, 1) / 2, Size::inches(1, 1)),
+            graphics,
+        );
         Self {
             texture,
             angle: Angle::degrees(0),

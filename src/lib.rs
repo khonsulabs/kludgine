@@ -21,14 +21,14 @@ use figures::units::UPx;
 use figures::{Angle, Fraction, FromComponents, Point, Rect, Size, UPx2D};
 #[cfg(feature = "image")]
 pub use image;
-use intentional::Assert;
+use intentional::{Assert, Cast};
 use sealed::ShapeSource as _;
 use wgpu::util::DeviceExt;
 pub use {figures, wgpu};
 
 use crate::buffer::Buffer;
 use crate::pipeline::{Uniforms, Vertex};
-use crate::sealed::{ClipRect, KludgineGraphics as _, TextureSource as _};
+use crate::sealed::{ClipRect, TextureSource as _};
 use crate::text::Text;
 
 /// Application and Windowing Support.
@@ -77,7 +77,8 @@ pub struct Kludgine {
     pipeline: wgpu::RenderPipeline,
     _shader: wgpu::ShaderModule,
     binding_layout: wgpu::BindGroupLayout,
-    sampler: wgpu::Sampler,
+    linear_sampler: wgpu::Sampler,
+    nearest_sampler: wgpu::Sampler,
     uniforms: Buffer<Uniforms>,
     size: Size<UPx>,
     scale: Fraction,
@@ -93,7 +94,6 @@ impl Kludgine {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         format: wgpu::TextureFormat,
-        filter_mode: wgpu::FilterMode,
         multisample: wgpu::MultisampleState,
         initial_size: Size<UPx>,
         scale: f32,
@@ -124,10 +124,16 @@ impl Kludgine {
             view_formats: &[],
         });
 
-        let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
-            min_filter: filter_mode,
-            mag_filter: filter_mode,
-            mipmap_filter: filter_mode,
+        let nearest_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            min_filter: wgpu::FilterMode::Nearest,
+            mag_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::FilterMode::Nearest,
+            ..wgpu::SamplerDescriptor::default()
+        });
+        let linear_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            min_filter: wgpu::FilterMode::Linear,
+            mag_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
             ..wgpu::SamplerDescriptor::default()
         });
         let default_bindings = pipeline::bind_group(
@@ -135,7 +141,7 @@ impl Kludgine {
             &binding_layout,
             &uniforms.wgpu,
             &empty_texture.create_view(&wgpu::TextureViewDescriptor::default()),
-            &sampler,
+            &nearest_sampler,
         );
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -151,13 +157,15 @@ impl Kludgine {
                 device,
                 queue,
                 binding_layout: &binding_layout,
-                sampler: &sampler,
+                linear_sampler: &linear_sampler,
+                nearest_sampler: &nearest_sampler,
                 uniforms: &uniforms.wgpu,
             }),
             default_bindings,
             pipeline,
             _shader: shader,
-            sampler,
+            linear_sampler,
+            nearest_sampler,
             size: initial_size,
             scale,
 
@@ -346,7 +354,8 @@ struct ProtoGraphics<'gfx> {
     device: &'gfx wgpu::Device,
     queue: &'gfx wgpu::Queue,
     binding_layout: &'gfx wgpu::BindGroupLayout,
-    sampler: &'gfx wgpu::Sampler,
+    linear_sampler: &'gfx wgpu::Sampler,
+    nearest_sampler: &'gfx wgpu::Sampler,
     uniforms: &'gfx wgpu::Buffer,
 }
 
@@ -356,7 +365,8 @@ impl<'a> ProtoGraphics<'a> {
             device,
             queue,
             binding_layout: &kludgine.binding_layout,
-            sampler: &kludgine.sampler,
+            linear_sampler: &kludgine.linear_sampler,
+            nearest_sampler: &kludgine.nearest_sampler,
             uniforms: &kludgine.uniforms.wgpu,
         }
     }
@@ -381,8 +391,12 @@ impl sealed::KludgineGraphics for ProtoGraphics<'_> {
         self.uniforms
     }
 
-    fn sampler(&self) -> &wgpu::Sampler {
-        self.sampler
+    fn nearest_sampler(&self) -> &wgpu::Sampler {
+        self.nearest_sampler
+    }
+
+    fn linear_sampler(&self) -> &wgpu::Sampler {
+        self.linear_sampler
     }
 }
 
@@ -405,8 +419,12 @@ impl sealed::KludgineGraphics for Graphics<'_> {
         &self.kludgine.uniforms.wgpu
     }
 
-    fn sampler(&self) -> &wgpu::Sampler {
-        &self.kludgine.sampler
+    fn nearest_sampler(&self) -> &wgpu::Sampler {
+        &self.kludgine.nearest_sampler
+    }
+
+    fn linear_sampler(&self) -> &wgpu::Sampler {
+        &self.kludgine.linear_sampler
     }
 }
 
@@ -746,6 +764,10 @@ where
 #[repr(C)]
 pub struct Color(u32);
 
+fn f32_component_to_u8(component: f32) -> u8 {
+    (component.clamp(0., 1.0) * 255.).round().cast()
+}
+
 impl Color {
     /// Returns a new color with the provided components.
     #[must_use]
@@ -756,14 +778,12 @@ impl Color {
     /// Returns a new color by converting each component from its `0.0..=1.0`
     /// range into a `0..=255` range.
     #[must_use]
-    #[allow(clippy::cast_possible_truncation)] // truncation desired
-    #[allow(clippy::cast_sign_loss)] // sign loss is truncated
     pub fn new_f32(red: f32, green: f32, blue: f32, alpha: f32) -> Self {
         Self::new(
-            (red.max(0.) * 255.).round() as u8,
-            (green.max(0.) * 255.).round() as u8,
-            (blue.max(0.) * 255.).round() as u8,
-            (alpha.max(0.) * 255.).round() as u8,
+            f32_component_to_u8(red),
+            f32_component_to_u8(green),
+            f32_component_to_u8(blue),
+            f32_component_to_u8(alpha),
         )
     }
 
@@ -843,6 +863,30 @@ impl Color {
     #[must_use]
     pub const fn with_alpha(self, alpha: u8) -> Self {
         Self(self.0 & 0xFFFF_FF00 | alpha as u32)
+    }
+
+    /// Returns a new color replacing this colors red channel with `red`.
+    #[must_use]
+    pub fn with_red_f32(self, red: f32) -> Self {
+        self.with_red(f32_component_to_u8(red))
+    }
+
+    /// Returns a new color replacing this colors green channel with `green`.
+    #[must_use]
+    pub fn with_green_f32(self, green: f32) -> Self {
+        self.with_green(f32_component_to_u8(green))
+    }
+
+    /// Returns a new color replacing this colors blue channel with `blue`.
+    #[must_use]
+    pub fn with_blue_f32(self, blue: f32) -> Self {
+        self.with_blue(f32_component_to_u8(blue))
+    }
+
+    /// Returns a new color replacing this colors alpha channel with `alpha`.
+    #[must_use]
+    pub fn with_alpha_f32(self, alpha: f32) -> Self {
+        self.with_alpha(f32_component_to_u8(alpha))
     }
 }
 
@@ -1192,6 +1236,7 @@ pub struct Texture {
     size: Size<UPx>,
     format: wgpu::TextureFormat,
     usage: wgpu::TextureUsages,
+    filter_mode: wgpu::FilterMode,
     loadable: Mutex<Option<Vec<u8>>>,
     data: OnceLock<TextureInstance>,
 }
@@ -1203,15 +1248,60 @@ struct TextureInstance {
     bind_group: Arc<wgpu::BindGroup>,
 }
 
+impl TextureInstance {
+    fn from_wgpu(
+        wgpu: wgpu::Texture,
+        filter_mode: wgpu::FilterMode,
+        graphics: &impl sealed::KludgineGraphics,
+    ) -> Self {
+        let view = wgpu.create_view(&wgpu::TextureViewDescriptor::default());
+        let bind_group = Arc::new(pipeline::bind_group(
+            graphics.device(),
+            graphics.binding_layout(),
+            graphics.uniforms(),
+            &view,
+            match filter_mode {
+                wgpu::FilterMode::Nearest => graphics.nearest_sampler(),
+                wgpu::FilterMode::Linear => graphics.linear_sampler(),
+            },
+        ));
+        TextureInstance {
+            wgpu,
+            view,
+            bind_group,
+        }
+    }
+}
+
 impl UnwindSafe for TextureInstance {}
 impl RefUnwindSafe for TextureInstance {}
 
 impl Texture {
+    fn from_wgpu(
+        wgpu: wgpu::Texture,
+        graphics: &impl KludgineGraphics,
+        size: Size<UPx>,
+        format: wgpu::TextureFormat,
+        usage: wgpu::TextureUsages,
+        filter_mode: wgpu::FilterMode,
+    ) -> Self {
+        Self {
+            id: sealed::TextureId::new_unique_id(),
+            size,
+            format,
+            usage,
+            loadable: Mutex::default(),
+            filter_mode,
+            data: OnceLock::from(TextureInstance::from_wgpu(wgpu, filter_mode, graphics)),
+        }
+    }
+
     pub(crate) fn new_generic(
         graphics: &impl KludgineGraphics,
         size: Size<UPx>,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
+        filter_mode: wgpu::FilterMode,
     ) -> Self {
         let wgpu = graphics.device().create_texture(&wgpu::TextureDescriptor {
             label: None,
@@ -1223,26 +1313,7 @@ impl Texture {
             usage,
             view_formats: &[],
         });
-        let view = wgpu.create_view(&wgpu::TextureViewDescriptor::default());
-        let bind_group = Arc::new(pipeline::bind_group(
-            graphics.device(),
-            graphics.binding_layout(),
-            graphics.uniforms(),
-            &view,
-            graphics.sampler(),
-        ));
-        Self {
-            id: sealed::TextureId::new_unique_id(),
-            size,
-            format,
-            usage,
-            loadable: Mutex::default(),
-            data: OnceLock::from(TextureInstance {
-                wgpu,
-                view,
-                bind_group,
-            }),
-        }
+        Self::from_wgpu(wgpu, graphics, size, format, usage, filter_mode)
     }
 
     /// Creates a new texture of the given size, format, and usages.
@@ -1252,8 +1323,9 @@ impl Texture {
         size: Size<UPx>,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
+        filter_mode: wgpu::FilterMode,
     ) -> Self {
-        Self::new_generic(graphics, size, format, usage)
+        Self::new_generic(graphics, size, format, usage, filter_mode)
     }
 
     /// Returns a new texture of the given size, format, and usages. The texture
@@ -1264,6 +1336,7 @@ impl Texture {
         size: Size<UPx>,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
+        filter_mode: wgpu::FilterMode,
         data: &[u8],
     ) -> Self {
         let wgpu = graphics.device().create_texture_with_data(
@@ -1280,26 +1353,7 @@ impl Texture {
             },
             data,
         );
-        let view = wgpu.create_view(&wgpu::TextureViewDescriptor::default());
-        let bind_group = Arc::new(pipeline::bind_group(
-            graphics.device(),
-            graphics.binding_layout(),
-            graphics.uniforms(),
-            &view,
-            graphics.sampler(),
-        ));
-        Self {
-            id: sealed::TextureId::new_unique_id(),
-            size,
-            format,
-            usage,
-            loadable: Mutex::default(),
-            data: OnceLock::from(TextureInstance {
-                wgpu,
-                view,
-                bind_group,
-            }),
-        }
+        Self::from_wgpu(wgpu, graphics, size, format, usage, filter_mode)
     }
 
     /// Returns a new texture that loads its data to the gpu once used.
@@ -1308,6 +1362,7 @@ impl Texture {
         size: Size<UPx>,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
+        filter_mode: wgpu::FilterMode,
         data: Vec<u8>,
     ) -> Self {
         Self {
@@ -1315,6 +1370,7 @@ impl Texture {
             size,
             format,
             usage,
+            filter_mode,
             loadable: Mutex::new(Some(data)),
             data: OnceLock::new(),
         }
@@ -1323,7 +1379,11 @@ impl Texture {
     /// Creates a texture from `image`.
     #[must_use]
     #[cfg(feature = "image")]
-    pub fn from_image(image: image::DynamicImage, graphics: &Graphics<'_>) -> Self {
+    pub fn from_image(
+        image: image::DynamicImage,
+        filter_mode: wgpu::FilterMode,
+        graphics: &Graphics<'_>,
+    ) -> Self {
         // TODO is it better to force rgba8, or is it better to avoid the
         // conversion and allow multiple texture formats?
         let image = image.into_rgba8();
@@ -1332,6 +1392,7 @@ impl Texture {
             Size::upx(image.width(), image.height()),
             wgpu::TextureFormat::Rgba8UnormSrgb,
             wgpu::TextureUsages::TEXTURE_BINDING,
+            filter_mode,
             image.as_raw(),
         )
     }
@@ -1339,12 +1400,13 @@ impl Texture {
     /// Returns a texture that loads `image` into the gpu when it is used.
     #[must_use]
     #[cfg(feature = "image")]
-    pub fn lazy_from_image(image: image::DynamicImage) -> Self {
+    pub fn lazy_from_image(image: image::DynamicImage, filter_mode: wgpu::FilterMode) -> Self {
         let image = image.into_rgba8();
         Self::lazy_from_data(
             Size::upx(image.width(), image.height()),
             wgpu::TextureFormat::Rgba8UnormSrgb,
             wgpu::TextureUsages::TEXTURE_BINDING,
+            filter_mode,
             image.into_raw(),
         )
     }
@@ -1435,19 +1497,7 @@ impl Texture {
             },
             data,
         );
-        let view = wgpu.create_view(&wgpu::TextureViewDescriptor::default());
-        let bind_group = Arc::new(pipeline::bind_group(
-            graphics.device(),
-            graphics.binding_layout(),
-            graphics.uniforms(),
-            &view,
-            graphics.sampler(),
-        ));
-        TextureInstance {
-            wgpu,
-            view,
-            bind_group,
-        }
+        TextureInstance::from_wgpu(wgpu, self.filter_mode, graphics)
     }
 
     fn wgpu(&self, graphics: &impl KludgineGraphics) -> &wgpu::Texture {
@@ -1464,8 +1514,11 @@ impl Texture {
 #[macro_export]
 macro_rules! include_texture {
     ($path:expr) => {
+        $crate::include_texture!($path, $crate::wgpu::FilterMode::Nearest)
+    };
+    ($path:expr, $filter_mode:expr) => {
         $crate::image::load_from_memory(std::include_bytes!($path))
-            .map($crate::Texture::lazy_from_image)
+            .map(|image| $crate::Texture::lazy_from_image(image, $filter_mode))
     };
 }
 

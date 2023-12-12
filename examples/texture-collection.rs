@@ -28,6 +28,7 @@ impl WindowBehavior for Test {
         let mut textures = TextureCollection::new(
             Size::new(1024, 1024).cast(),
             wgpu::TextureFormat::Rgba8UnormSrgb,
+            wgpu::FilterMode::Linear,
             graphics,
         );
         let k = textures.push_image(&image::open("./examples/assets/k.png").unwrap(), graphics);

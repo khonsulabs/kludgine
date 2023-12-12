@@ -594,8 +594,7 @@ pub struct Drawing {
     textures: HashMap<sealed::TextureId, Arc<wgpu::BindGroup>, DefaultHasher>,
     commands: Vec<Command>,
     #[cfg(feature = "cosmic-text")]
-    glyphs:
-        HashMap<crate::text::PixelAlignedCacheKey, crate::text::CachedGlyphHandle, DefaultHasher>,
+    glyphs: HashMap<cosmic_text::CacheKey, crate::text::CachedGlyphHandle, DefaultHasher>,
 }
 
 #[derive(Debug)]
