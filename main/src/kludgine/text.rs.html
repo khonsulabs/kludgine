@@ -843,25 +843,12 @@
 <a href="#843" id="843">843</a>
 <a href="#844" id="844">844</a>
 <a href="#845" id="845">845</a>
-<a href="#846" id="846">846</a>
-<a href="#847" id="847">847</a>
-<a href="#848" id="848">848</a>
-<a href="#849" id="849">849</a>
-<a href="#850" id="850">850</a>
-<a href="#851" id="851">851</a>
-<a href="#852" id="852">852</a>
-<a href="#853" id="853">853</a>
-<a href="#854" id="854">854</a>
-<a href="#855" id="855">855</a>
-<a href="#856" id="856">856</a>
-<a href="#857" id="857">857</a>
-<a href="#858" id="858">858</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
 <span class="kw">use </span>std::sync::{Arc, Mutex, PoisonError};
 
-<span class="kw">use </span>cosmic_text::{fontdb, Attrs, AttrsOwned, LayoutGlyph, SwashContent};
+<span class="kw">use </span>cosmic_text::{Attrs, AttrsOwned, LayoutGlyph, SwashContent};
 <span class="kw">use </span>figures::units::{Lp, Px, UPx};
 <span class="kw">use </span>figures::{FloatConversion, Fraction, Point, Rect, ScreenScale, Size, UPx2D};
 <span class="kw">use </span>intentional::Cast;
@@ -966,26 +953,6 @@
     }
 }
 
-<span class="attr">#[derive(Debug, Eq, PartialEq, Hash, Clone, Copy)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PixelAlignedCacheKey {
-    <span class="doccomment">/// Font ID
-    </span><span class="kw">pub </span>font_id: fontdb::ID,
-    <span class="doccomment">/// Glyph ID
-    </span><span class="kw">pub </span>glyph_id: u16,
-    <span class="doccomment">/// `f32` bits of font size
-    </span><span class="kw">pub </span>font_size_bits: u32,
-}
-
-<span class="kw">impl </span>From&lt;cosmic_text::CacheKey&gt; <span class="kw">for </span>PixelAlignedCacheKey {
-    <span class="kw">fn </span>from(key: cosmic_text::CacheKey) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            font_id: key.font_id,
-            glyph_id: key.glyph_id,
-            font_size_bits: key.font_size_bits,
-        }
-    }
-}
-
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TextSystem {
     <span class="kw">pub </span>fonts: cosmic_text::FontSystem,
     <span class="kw">pub </span>swash_cache: cosmic_text::SwashCache,
@@ -1020,11 +987,13 @@
             alpha_text_atlas: TextureCollection::new_generic(
                 Size::new(<span class="number">512</span>, <span class="number">512</span>).cast(),
                 wgpu::TextureFormat::R8Unorm,
+                wgpu::FilterMode::Linear,
                 graphics,
             ),
             color_text_atlas: TextureCollection::new_generic(
                 Size::new(<span class="number">512</span>, <span class="number">512</span>).cast(),
                 wgpu::TextureFormat::Rgba8UnormSrgb,
+                wgpu::FilterMode::Linear,
                 graphics,
             ),
             swash_cache: cosmic_text::SwashCache::new(),
@@ -1094,13 +1063,13 @@
 
 <span class="attr">#[derive(Debug, Default, Clone)]
 </span><span class="kw">struct </span>GlyphCache {
-    glyphs: Arc&lt;Mutex&lt;HashMap&lt;PixelAlignedCacheKey, CachedGlyph, DefaultHasher&gt;&gt;&gt;,
+    glyphs: Arc&lt;Mutex&lt;HashMap&lt;cosmic_text::CacheKey, CachedGlyph, DefaultHasher&gt;&gt;&gt;,
 }
 
 <span class="kw">impl </span>GlyphCache {
     <span class="kw">fn </span>get_or_insert(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        key: PixelAlignedCacheKey,
+        key: cosmic_text::CacheKey,
         insert_fn: <span class="kw">impl </span>FnOnce() -&gt; <span class="prelude-ty">Option</span>&lt;(CollectedTexture, bool)&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;CachedGlyphHandle&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self
@@ -1147,7 +1116,7 @@
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>CachedGlyphHandle {
-    key: PixelAlignedCacheKey,
+    key: cosmic_text::CacheKey,
     <span class="kw">pub </span>is_mask: bool,
     cache: GlyphCache,
     <span class="kw">pub </span>texture: CollectedTexture,
@@ -1269,7 +1238,7 @@
     kludgine: <span class="kw-2">&amp;mut </span>Kludgine,
     device: <span class="kw-2">&amp;</span>wgpu::Device,
     queue: <span class="kw-2">&amp;</span>wgpu::Queue,
-    glyphs: <span class="kw-2">&amp;mut </span>HashMap&lt;PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher&gt;,
+    glyphs: <span class="kw-2">&amp;mut </span>HashMap&lt;cosmic_text::CacheKey, CachedGlyphHandle, DefaultHasher&gt;,
     <span class="kw-2">mut </span>map: <span class="kw">impl for</span>&lt;<span class="lifetime">&#39;a</span>&gt; FnMut(
         TextureBlit&lt;Px&gt;,
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>CachedGlyphHandle,
@@ -1319,7 +1288,7 @@
                 kludgine
                     .text
                     .glyphs
-                    .get_or_insert(physical.cache_key.into(), || <span class="kw">match </span>image.content {
+                    .get_or_insert(physical.cache_key, || <span class="kw">match </span>image.content {
                         SwashContent::Mask =&gt; <span class="prelude-val">Some</span>((
                             kludgine.text.alpha_text_atlas.push_texture_generic(
                                 <span class="kw-2">&amp;</span>image.data,
@@ -1333,7 +1302,8 @@
                                     device,
                                     queue,
                                     binding_layout: <span class="kw-2">&amp;</span>kludgine.binding_layout,
-                                    sampler: <span class="kw-2">&amp;</span>kludgine.sampler,
+                                    linear_sampler: <span class="kw-2">&amp;</span>kludgine.linear_sampler,
+                                    nearest_sampler: <span class="kw-2">&amp;</span>kludgine.nearest_sampler,
                                     uniforms: <span class="kw-2">&amp;</span>kludgine.uniforms.wgpu,
                                 },
                             ),
@@ -1355,7 +1325,8 @@
                                         device,
                                         queue,
                                         binding_layout: <span class="kw-2">&amp;</span>kludgine.binding_layout,
-                                        sampler: <span class="kw-2">&amp;</span>kludgine.sampler,
+                                        linear_sampler: <span class="kw-2">&amp;</span>kludgine.linear_sampler,
+                                        nearest_sampler: <span class="kw-2">&amp;</span>kludgine.nearest_sampler,
                                         uniforms: <span class="kw-2">&amp;</span>kludgine.uniforms.wgpu,
                                     },
                                 ),
@@ -1372,6 +1343,11 @@
                 cached.texture.region,
                 Rect::new(
                     (Point::new(physical.x, physical.y)).cast::&lt;Px&gt;()
+                        + Point::new(
+                            physical.cache_key.x_bin.as_float(),
+                            physical.cache_key.y_bin.as_float(),
+                        )
+                        .map(Px::from)
                         + Point::new(
                             image.placement.left,
                             metrics.line_height.cast::&lt;i32&gt;() - image.placement.top,
@@ -1394,9 +1370,7 @@
                 kludgine,
             );
 
-            glyphs
-                .entry(physical.cache_key.into())
-                .or_insert_with(|| cached);
+            glyphs.entry(physical.cache_key).or_insert_with(|| cached);
         }
     }
 }
@@ -1407,7 +1381,7 @@
     kludgine: <span class="kw-2">&amp;mut </span>Kludgine,
     device: <span class="kw-2">&amp;</span>wgpu::Device,
     queue: <span class="kw-2">&amp;</span>wgpu::Queue,
-    glyphs: <span class="kw-2">&amp;mut </span>HashMap&lt;PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher&gt;,
+    glyphs: <span class="kw-2">&amp;mut </span>HashMap&lt;cosmic_text::CacheKey, CachedGlyphHandle, DefaultHasher&gt;,
 ) -&gt; MeasuredText&lt;Unit&gt;
 <span class="kw">where
     </span>Unit: figures::ScreenUnit,
@@ -1472,7 +1446,7 @@
 <span class="doccomment">/// Text that is ready to be rendered on the GPU.
 </span><span class="kw">pub struct </span>PreparedText {
     graphic: PreparedGraphic&lt;Px&gt;,
-    _glyphs: HashMap&lt;PixelAlignedCacheKey, CachedGlyphHandle, DefaultHasher&gt;,
+    _glyphs: HashMap&lt;cosmic_text::CacheKey, CachedGlyphHandle, DefaultHasher&gt;,
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>PreparedText {

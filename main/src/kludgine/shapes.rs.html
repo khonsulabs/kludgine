@@ -1500,6 +1500,19 @@
 <a href="#1500" id="1500">1500</a>
 <a href="#1501" id="1501">1501</a>
 <a href="#1502" id="1502">1502</a>
+<a href="#1503" id="1503">1503</a>
+<a href="#1504" id="1504">1504</a>
+<a href="#1505" id="1505">1505</a>
+<a href="#1506" id="1506">1506</a>
+<a href="#1507" id="1507">1507</a>
+<a href="#1508" id="1508">1508</a>
+<a href="#1509" id="1509">1509</a>
+<a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::{Add, Div, Mul, Neg, Sub};
 
@@ -2253,98 +2266,50 @@
     <span class="doccomment">/// Creates a new path with the initial position `start_at`.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>new(start_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>start_at = start_at.into();
-        <span class="self">Self </span>{
-            path: Path::from_iter([PathEvent::Begin {
-                at: start_at,
-                texture: Point::default(),
-            }]),
-            current_location: start_at,
-            current_texture: Point::default(),
-            close: <span class="bool-val">false</span>,
-        }
+        <span class="self">Self</span>::new_inner(start_at, Point::ZERO)
     }
 
     <span class="doccomment">/// Clears this builder to a state as if it had just been created with
     /// [`new()`](Self::new).
     </span><span class="kw">pub fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>, start_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;) {
-        <span class="kw">let </span>start_at = start_at.into();
-        <span class="self">self</span>.current_location = start_at;
-        <span class="kw">let </span>begin = PathEvent::Begin {
-            at: start_at,
-            texture: Point::default(),
-        };
-        <span class="kw">if </span><span class="self">self</span>.path.events.is_empty() {
-            <span class="self">self</span>.path.events.push(begin);
-        } <span class="kw">else </span>{
-            <span class="self">self</span>.path.events.truncate(<span class="number">1</span>);
-            <span class="self">self</span>.path.events[<span class="number">0</span>] = begin;
-        }
-    }
-
-    <span class="doccomment">/// Returns the built path.
-    </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>build(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Path&lt;Unit, <span class="bool-val">false</span>&gt; {
-        <span class="self">self</span>.path.events.push(PathEvent::End { close: <span class="self">self</span>.close });
-        <span class="self">self</span>.path
+        <span class="self">self</span>.reset_inner(start_at, Point::ZERO);
     }
 
     <span class="doccomment">/// Create a straight line from the current location to `end_at`.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>line_to(<span class="kw-2">mut </span><span class="self">self</span>, end_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>end_at = end_at.into();
-        <span class="self">self</span>.path.events.push(PathEvent::Line {
-            to: end_at,
-            texture: Point::default(),
-        });
-        <span class="self">self</span>.current_location = end_at;
-        <span class="self">self
-    </span>}
+    </span><span class="kw">pub fn </span>line_to(<span class="self">self</span>, end_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.line_to_inner(end_at, Point::ZERO)
+    }
 
     <span class="doccomment">/// Create a quadratic curve from the current location to `end_at` using
     /// `control` as the curve&#39;s control point.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>quadratic_curve_to(
-        <span class="kw-2">mut </span><span class="self">self</span>,
+        <span class="self">self</span>,
         control: ControlPoint&lt;Unit&gt;,
         end_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;,
     ) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>end_at = end_at.into();
-        <span class="self">self</span>.path.events.push(PathEvent::Quadratic {
-            ctrl: control,
-            to: end_at,
-            texture: Point::default(),
-        });
-        <span class="self">self</span>.current_location = end_at;
-        <span class="self">self
-    </span>}
+        <span class="self">self</span>.quadratic_curve_to_inner(control, end_at, Point::ZERO)
+    }
 
     <span class="doccomment">/// Create a cubic curve from the current location to `end_at` using
     /// `control1` and `control2` as the curve&#39;s control points.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>cubic_curve_to(
-        <span class="kw-2">mut </span><span class="self">self</span>,
+        <span class="self">self</span>,
         control1: ControlPoint&lt;Unit&gt;,
         control2: ControlPoint&lt;Unit&gt;,
         end_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;,
     ) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>end_at = end_at.into();
-        <span class="self">self</span>.path.events.push(PathEvent::Cubic {
-            ctrl1: control1,
-            ctrl2: control2,
-            to: end_at,
-            texture: Point::default(),
-        });
-        <span class="self">self</span>.current_location = end_at;
-        <span class="self">self
-    </span>}
+        <span class="self">self</span>.cubic_curve_to_inner(control1, control2, end_at, Point::ZERO)
+    }
 
     <span class="doccomment">/// Add a clockwise arc starting at the current location.
     ///
     /// The arc will be drawn for an oval of size `radii`. The amount of
     /// rotation the arc will be drawn is controlled by `sweep`.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>arc(<span class="kw-2">mut </span><span class="self">self</span>, center: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;, radii: Size&lt;Unit&gt;, sweep: Angle) -&gt; <span class="self">Self
+    </span><span class="kw">pub fn </span>arc(<span class="self">self</span>, center: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;, radii: Size&lt;Unit&gt;, sweep: Angle) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>Unit: FloatConversion&lt;Float = f32&gt;,
     {
@@ -2352,62 +2317,28 @@
             location: center,
             color,
         } = center.into();
-        <span class="kw">let </span>center = center.into_float();
+        <span class="self">self</span>.arc_inner(center, radii, sweep, <span class="bool-val">true</span>, (Point::ZERO, color))
+    }
 
-        <span class="kw">let </span>current_offset = <span class="self">self</span>.current_location.location.into_float() - center;
-        <span class="kw">let </span>start_angle = current_offset.y.atan2(current_offset.x);
-
-        <span class="kw">let </span>delta_red = color.red_f32() - <span class="self">self</span>.current_location.color.red_f32();
-        <span class="kw">let </span>delta_green = color.green_f32() - <span class="self">self</span>.current_location.color.green_f32();
-        <span class="kw">let </span>delta_blue = color.blue_f32() - <span class="self">self</span>.current_location.color.blue_f32();
-        <span class="kw">let </span>delta_alpha = color.alpha_f32() - <span class="self">self</span>.current_location.color.alpha_f32();
-
-        Arc {
-            center: lyon_tessellation::geom::point(center.x, center.y),
-            radii: lyon_tessellation::geom::vector(
-                radii.width.into_float(),
-                radii.height.into_float(),
-            ),
-            start_angle: lyon_tessellation::geom::Angle::radians(start_angle),
-            sweep_angle: lyon_tessellation::geom::Angle::degrees(sweep.into_degrees()),
-            x_rotation: lyon_tessellation::geom::Angle::degrees(<span class="number">0.</span>),
-        }
-        .for_each_cubic_bezier(<span class="kw-2">&amp;mut </span>|segment| {
-            <span class="kw">let </span>to = Point::new(segment.to.x, segment.to.y);
-            <span class="kw">let </span>current_offset = to - center;
-            <span class="kw">let </span>current_angle = current_offset.y.atan2(current_offset.x);
-            <span class="kw">let </span>elapsed_angle = <span class="kw">if </span>(current_angle - start_angle).abs() &lt; f32::EPSILON {
-                Angle::MAX
-            } <span class="kw">else </span>{
-                Angle::radians_f(current_angle - start_angle)
-            };
-            <span class="kw">let </span>progress = elapsed_angle.into_degrees::&lt;f32&gt;() / sweep.into_degrees::&lt;f32&gt;();
-
-            <span class="self">self</span>.path.events.push(PathEvent::Cubic {
-                ctrl1: Point::new(segment.ctrl1.x, segment.ctrl1.y).map(Unit::from_float),
-                ctrl2: Point::new(segment.ctrl2.x, segment.ctrl2.y).map(Unit::from_float),
-                to: Endpoint::new(
-                    to.map(Unit::from_float),
-                    Color::new_f32(
-                        color.red_f32() + delta_red * progress,
-                        color.green_f32() + delta_green * progress,
-                        color.blue_f32() + delta_blue * progress,
-                        color.alpha_f32() + delta_alpha * progress,
-                    ),
-                ),
-                texture: Point::ZERO,
-            });
-        });
-
-        <span class="self">self
-    </span>}
-
-    <span class="doccomment">/// Closes the path, connecting the current location to the shape&#39;s starting
-    /// location.
+    <span class="doccomment">/// Add a counter-clockwise arc starting at the current location.
+    ///
+    /// The arc will be drawn for an oval of size `radii`. The amount of
+    /// rotation the arc will be drawn is controlled by `sweep`.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>close(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Path&lt;Unit, <span class="bool-val">false</span>&gt; {
-        <span class="self">self</span>.close = <span class="bool-val">true</span>;
-        <span class="self">self</span>.build()
+    </span><span class="kw">pub fn </span>arc_counter(
+        <span class="self">self</span>,
+        center: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;,
+        radii: Size&lt;Unit&gt;,
+        sweep: Angle,
+    ) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>Unit: FloatConversion&lt;Float = f32&gt;,
+    {
+        <span class="kw">let </span>Endpoint {
+            location: center,
+            color,
+        } = center.into();
+        <span class="self">self</span>.arc_inner(center, radii, sweep, <span class="bool-val">false</span>, (Point::ZERO, color))
     }
 }
 
@@ -2418,6 +2349,88 @@
     <span class="doccomment">/// Creates a new path with the initial position `start_at`.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>new_textured(start_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;, texture: Point&lt;UPx&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new_inner(start_at, texture)
+    }
+
+    <span class="doccomment">/// Clears this builder to a state as if it had just been created with
+    /// [`new_textured()`](Self::new_textured).
+    </span><span class="kw">pub fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>, start_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;, texture: Point&lt;UPx&gt;) {
+        <span class="self">self</span>.reset_inner(start_at, texture);
+    }
+
+    <span class="doccomment">/// Create a straight line from the current location to `end_at`.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>line_to(<span class="self">self</span>, end_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;, texture: Point&lt;UPx&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.line_to_inner(end_at, texture)
+    }
+
+    <span class="doccomment">/// Create a quadratic curve from the current location to `end_at` using
+    /// `control` as the curve&#39;s control point.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>quadratic_curve_to(
+        <span class="self">self</span>,
+        control: ControlPoint&lt;Unit&gt;,
+        end_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;,
+        texture: Point&lt;UPx&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.quadratic_curve_to_inner(control, end_at, texture)
+    }
+
+    <span class="doccomment">/// Create a cubic curve from the current location to `end_at` using
+    /// `control1` and `control2` as the curve&#39;s control points.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>cubic_curve_to(
+        <span class="self">self</span>,
+        control1: ControlPoint&lt;Unit&gt;,
+        control2: ControlPoint&lt;Unit&gt;,
+        end_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;,
+        texture: Point&lt;UPx&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.cubic_curve_to_inner(control1, control2, end_at, texture)
+    }
+
+    <span class="doccomment">/// Add a clockwise arc starting at the current location.
+    ///
+    /// The arc will be drawn for an oval of size `radii`. The amount of
+    /// rotation the arc will be drawn is controlled by `sweep`.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>arc(
+        <span class="self">self</span>,
+        center: Point&lt;Unit&gt;,
+        radii: Size&lt;Unit&gt;,
+        sweep: Angle,
+        texture: <span class="kw">impl </span>Into&lt;Endpoint&lt;UPx&gt;&gt;,
+    ) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>Unit: FloatConversion&lt;Float = f32&gt;,
+    {
+        <span class="self">self</span>.arc_inner(center, radii, sweep, <span class="bool-val">true</span>, texture)
+    }
+
+    <span class="doccomment">/// Add a counter-clockwise arc starting at the current location.
+    ///
+    /// The arc will be drawn for an oval of size `radii`. The amount of
+    /// rotation the arc will be drawn is controlled by `sweep`.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>arc_counter(
+        <span class="self">self</span>,
+        center: Point&lt;Unit&gt;,
+        radii: Size&lt;Unit&gt;,
+        sweep: Angle,
+        texture: <span class="kw">impl </span>Into&lt;Endpoint&lt;UPx&gt;&gt;,
+    ) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>Unit: FloatConversion&lt;Float = f32&gt;,
+    {
+        <span class="self">self</span>.arc_inner(center, radii, sweep, <span class="bool-val">false</span>, texture)
+    }
+}
+
+<span class="kw">impl</span>&lt;Unit, <span class="kw">const </span>TEXTURED: bool&gt; PathBuilder&lt;Unit, TEXTURED&gt;
+<span class="kw">where
+    </span>Unit: Copy,
+{
+    <span class="kw">fn </span>new_inner(start_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;, texture: Point&lt;UPx&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>start_at = start_at.into();
         <span class="self">Self </span>{
             path: Path::from_iter([(PathEvent::Begin {
@@ -2430,9 +2443,7 @@
         }
     }
 
-    <span class="doccomment">/// Clears this builder to a state as if it had just been created with
-    /// [`new_textured()`](Self::new_textured).
-    </span><span class="kw">pub fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>, start_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;, texture: Point&lt;UPx&gt;) {
+    <span class="kw">fn </span>reset_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>, start_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;, texture: Point&lt;UPx&gt;) {
         <span class="kw">let </span>start_at = start_at.into();
         <span class="self">self</span>.current_location = start_at;
         <span class="self">self</span>.current_texture = texture;
@@ -2448,16 +2459,9 @@
         }
     }
 
-    <span class="doccomment">/// Returns the built path.
-    </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>build(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Path&lt;Unit, <span class="bool-val">true</span>&gt; {
-        <span class="self">self</span>.path.events.push(PathEvent::End { close: <span class="self">self</span>.close });
-        <span class="self">self</span>.path
-    }
-
     <span class="doccomment">/// Create a straight line from the current location to `end_at`.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>line_to(<span class="kw-2">mut </span><span class="self">self</span>, end_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;, texture: Point&lt;UPx&gt;) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">fn </span>line_to_inner(<span class="kw-2">mut </span><span class="self">self</span>, end_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;, texture: Point&lt;UPx&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>end_at = end_at.into();
         <span class="self">self</span>.path.events.push(PathEvent::Line {
             to: end_at,
@@ -2471,7 +2475,7 @@
     <span class="doccomment">/// Create a quadratic curve from the current location to `end_at` using
     /// `control` as the curve&#39;s control point.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>quadratic_curve_to(
+    </span><span class="kw">fn </span>quadratic_curve_to_inner(
         <span class="kw-2">mut </span><span class="self">self</span>,
         control: ControlPoint&lt;Unit&gt;,
         end_at: <span class="kw">impl </span>Into&lt;Endpoint&lt;Unit&gt;&gt;,
@@ -2491,7 +2495,7 @@
     <span class="doccomment">/// Create a cubic curve from the current location to `end_at` using
     /// `control1` and `control2` as the curve&#39;s control points.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>cubic_curve_to(
+    </span><span class="kw">fn </span>cubic_curve_to_inner(
         <span class="kw-2">mut </span><span class="self">self</span>,
         control1: ControlPoint&lt;Unit&gt;,
         control2: ControlPoint&lt;Unit&gt;,
@@ -2515,11 +2519,12 @@
     /// The arc will be drawn for an oval of size `radii`. The amount of
     /// rotation the arc will be drawn is controlled by `sweep`.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>arc(
+    </span><span class="kw">fn </span>arc_inner(
         <span class="kw-2">mut </span><span class="self">self</span>,
         center: Point&lt;Unit&gt;,
         radii: Size&lt;Unit&gt;,
         sweep: Angle,
+        clockwise: bool,
         texture: <span class="kw">impl </span>Into&lt;Endpoint&lt;UPx&gt;&gt;,
     ) -&gt; <span class="self">Self
     </span><span class="kw">where
@@ -2540,6 +2545,11 @@
         <span class="kw">let </span>delta_green = color.green_f32() - <span class="self">self</span>.current_location.color.green_f32();
         <span class="kw">let </span>delta_blue = color.blue_f32() - <span class="self">self</span>.current_location.color.blue_f32();
         <span class="kw">let </span>delta_alpha = color.alpha_f32() - <span class="self">self</span>.current_location.color.alpha_f32();
+        <span class="kw">let </span>sweep = <span class="kw">if </span>clockwise {
+            sweep.into_degrees()
+        } <span class="kw">else </span>{
+            -sweep.into_degrees::&lt;f32&gt;()
+        };
 
         Arc {
             center: lyon_tessellation::geom::point(center.x, center.y),
@@ -2548,43 +2558,59 @@
                 radii.height.into_float(),
             ),
             start_angle: lyon_tessellation::geom::Angle::radians(start_angle),
-            sweep_angle: lyon_tessellation::geom::Angle::degrees(sweep.into_degrees()),
+            sweep_angle: lyon_tessellation::geom::Angle::degrees(sweep),
             x_rotation: lyon_tessellation::geom::Angle::degrees(<span class="number">0.</span>),
         }
         .for_each_cubic_bezier(<span class="kw-2">&amp;mut </span>|segment| {
             <span class="kw">let </span>to = Point::new(segment.to.x, segment.to.y);
             <span class="kw">let </span>current_offset = to - center;
             <span class="kw">let </span>current_angle = current_offset.y.atan2(current_offset.x);
-            <span class="kw">let </span>elapsed_angle = <span class="kw">if </span>(current_angle - start_angle).abs() &lt; f32::EPSILON {
-                Angle::MAX
-            } <span class="kw">else </span>{
-                Angle::radians_f(current_angle - start_angle)
-            };
-            <span class="kw">let </span>progress = elapsed_angle.into_degrees::&lt;f32&gt;() / sweep.into_degrees::&lt;f32&gt;();
 
+            <span class="kw">let </span>(start_angle, current_angle) = <span class="kw">if </span>clockwise {
+                (start_angle, current_angle)
+            } <span class="kw">else </span>{
+                (current_angle, start_angle)
+            };
+
+            <span class="kw">let </span>elapsed_angle = <span class="kw">if </span>(current_angle - start_angle).abs() &lt; f32::EPSILON {
+                <span class="number">360.
+            </span>} <span class="kw">else </span>{
+                Angle::radians_f(current_angle - start_angle).into_degrees::&lt;f32&gt;()
+            };
+            <span class="kw">let </span>progress = elapsed_angle / sweep.abs();
+
+            <span class="self">self</span>.current_location = Endpoint::new(
+                to.map(Unit::from_float),
+                Color::new_f32(
+                    color.red_f32() + delta_red * progress,
+                    color.green_f32() + delta_green * progress,
+                    color.blue_f32() + delta_blue * progress,
+                    color.alpha_f32() + delta_alpha * progress,
+                ),
+            );
+            <span class="self">self</span>.current_texture += texture_delta * progress;
             <span class="self">self</span>.path.events.push(PathEvent::Cubic {
                 ctrl1: Point::new(segment.ctrl1.x, segment.ctrl1.y).map(Unit::from_float),
                 ctrl2: Point::new(segment.ctrl2.x, segment.ctrl2.y).map(Unit::from_float),
-                to: Endpoint::new(
-                    to.map(Unit::from_float),
-                    Color::new_f32(
-                        color.red_f32() + delta_red * progress,
-                        color.green_f32() + delta_green * progress,
-                        color.blue_f32() + delta_blue * progress,
-                        color.alpha_f32() + delta_alpha * progress,
-                    ),
-                ),
-                texture: <span class="self">self</span>.current_texture + texture_delta * progress,
+                to: <span class="self">self</span>.current_location,
+                texture: <span class="self">self</span>.current_texture,
             });
         });
 
         <span class="self">self
     </span>}
 
+    <span class="doccomment">/// Returns the built path.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>build(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Path&lt;Unit, TEXTURED&gt; {
+        <span class="self">self</span>.path.events.push(PathEvent::End { close: <span class="self">self</span>.close });
+        <span class="self">self</span>.path
+    }
+
     <span class="doccomment">/// Closes the path, connecting the current location to the shape&#39;s starting
     /// location.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>close(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Path&lt;Unit, <span class="bool-val">true</span>&gt; {
+    </span><span class="kw">pub fn </span>close(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Path&lt;Unit, TEXTURED&gt; {
         <span class="self">self</span>.close = <span class="bool-val">true</span>;
         <span class="self">self</span>.build()
     }

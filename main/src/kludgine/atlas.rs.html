@@ -319,6 +319,17 @@
 <a href="#319" id="319">319</a>
 <a href="#320" id="320">320</a>
 <a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::Div;
 <span class="kw">use </span>std::sync::{Arc, PoisonError, RwLock};
@@ -351,6 +362,7 @@
 </span><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>TextureCollection {
     format: wgpu::TextureFormat,
+    filter_mode: wgpu::FilterMode,
     data: Arc&lt;RwLock&lt;Data&gt;&gt;,
 }
 
@@ -364,13 +376,16 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_generic(
         initial_size: Size&lt;UPx&gt;,
         format: wgpu::TextureFormat,
+        filter_mode: wgpu::FilterMode,
         graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics,
     ) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>texture = Texture::new_generic(graphics, initial_size, format, atlas_usages());
+        <span class="kw">let </span>texture =
+            Texture::new_generic(graphics, initial_size, format, atlas_usages(), filter_mode);
 
         <span class="kw">let </span>initial_size = initial_size.into_signed();
         <span class="self">Self </span>{
             format,
+            filter_mode,
             data: Arc::new(RwLock::new(Data {
                 rects: BucketedAtlasAllocator::new(etagere::euclid::Size2D::new(
                     initial_size.width.into(),
@@ -387,9 +402,10 @@
     </span><span class="kw">pub fn </span>new(
         initial_size: Size&lt;UPx&gt;,
         format: wgpu::TextureFormat,
+        filter_mode: wgpu::FilterMode,
         graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;,
     ) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new_generic(initial_size, format, graphics)
+        <span class="self">Self</span>::new_generic(initial_size, format, filter_mode, graphics)
     }
 
     <span class="doccomment">/// Pushes image data to a specific region of the texture.
@@ -430,7 +446,13 @@
             }
 
             <span class="kw">let </span>new_size = this.texture.size * <span class="number">2</span>;
-            <span class="kw">let </span>new_texture = Texture::new_generic(graphics, new_size, <span class="self">self</span>.format, atlas_usages());
+            <span class="kw">let </span>new_texture = Texture::new_generic(
+                graphics,
+                new_size,
+                <span class="self">self</span>.format,
+                atlas_usages(),
+                <span class="self">self</span>.filter_mode,
+            );
             <span class="kw">let </span><span class="kw-2">mut </span>commands = graphics
                 .device()
                 .create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor::default());

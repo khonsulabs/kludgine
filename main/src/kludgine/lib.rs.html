@@ -1916,6 +1916,59 @@
 <a href="#1916" id="1916">1916</a>
 <a href="#1917" id="1917">1917</a>
 <a href="#1918" id="1918">1918</a>
+<a href="#1919" id="1919">1919</a>
+<a href="#1920" id="1920">1920</a>
+<a href="#1921" id="1921">1921</a>
+<a href="#1922" id="1922">1922</a>
+<a href="#1923" id="1923">1923</a>
+<a href="#1924" id="1924">1924</a>
+<a href="#1925" id="1925">1925</a>
+<a href="#1926" id="1926">1926</a>
+<a href="#1927" id="1927">1927</a>
+<a href="#1928" id="1928">1928</a>
+<a href="#1929" id="1929">1929</a>
+<a href="#1930" id="1930">1930</a>
+<a href="#1931" id="1931">1931</a>
+<a href="#1932" id="1932">1932</a>
+<a href="#1933" id="1933">1933</a>
+<a href="#1934" id="1934">1934</a>
+<a href="#1935" id="1935">1935</a>
+<a href="#1936" id="1936">1936</a>
+<a href="#1937" id="1937">1937</a>
+<a href="#1938" id="1938">1938</a>
+<a href="#1939" id="1939">1939</a>
+<a href="#1940" id="1940">1940</a>
+<a href="#1941" id="1941">1941</a>
+<a href="#1942" id="1942">1942</a>
+<a href="#1943" id="1943">1943</a>
+<a href="#1944" id="1944">1944</a>
+<a href="#1945" id="1945">1945</a>
+<a href="#1946" id="1946">1946</a>
+<a href="#1947" id="1947">1947</a>
+<a href="#1948" id="1948">1948</a>
+<a href="#1949" id="1949">1949</a>
+<a href="#1950" id="1950">1950</a>
+<a href="#1951" id="1951">1951</a>
+<a href="#1952" id="1952">1952</a>
+<a href="#1953" id="1953">1953</a>
+<a href="#1954" id="1954">1954</a>
+<a href="#1955" id="1955">1955</a>
+<a href="#1956" id="1956">1956</a>
+<a href="#1957" id="1957">1957</a>
+<a href="#1958" id="1958">1958</a>
+<a href="#1959" id="1959">1959</a>
+<a href="#1960" id="1960">1960</a>
+<a href="#1961" id="1961">1961</a>
+<a href="#1962" id="1962">1962</a>
+<a href="#1963" id="1963">1963</a>
+<a href="#1964" id="1964">1964</a>
+<a href="#1965" id="1965">1965</a>
+<a href="#1966" id="1966">1966</a>
+<a href="#1967" id="1967">1967</a>
+<a href="#1968" id="1968">1968</a>
+<a href="#1969" id="1969">1969</a>
+<a href="#1970" id="1970">1970</a>
+<a href="#1971" id="1971">1971</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -1939,14 +1992,14 @@
 <span class="kw">use </span>figures::{Angle, Fraction, FromComponents, Point, Rect, Size, UPx2D};
 <span class="attr">#[cfg(feature = <span class="string">&quot;image&quot;</span>)]
 </span><span class="kw">pub use </span>image;
-<span class="kw">use </span>intentional::Assert;
+<span class="kw">use </span>intentional::{Assert, Cast};
 <span class="kw">use </span>sealed::ShapeSource <span class="kw">as _</span>;
 <span class="kw">use </span>wgpu::util::DeviceExt;
 <span class="kw">pub use </span>{figures, wgpu};
 
 <span class="kw">use </span><span class="kw">crate</span>::buffer::Buffer;
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{Uniforms, Vertex};
-<span class="kw">use </span><span class="kw">crate</span>::sealed::{ClipRect, KludgineGraphics <span class="kw">as _</span>, TextureSource <span class="kw">as _</span>};
+<span class="kw">use </span><span class="kw">crate</span>::sealed::{ClipRect, TextureSource <span class="kw">as _</span>};
 <span class="kw">use </span><span class="kw">crate</span>::text::Text;
 
 <span class="doccomment">/// Application and Windowing Support.
@@ -1995,7 +2048,8 @@
     pipeline: wgpu::RenderPipeline,
     _shader: wgpu::ShaderModule,
     binding_layout: wgpu::BindGroupLayout,
-    sampler: wgpu::Sampler,
+    linear_sampler: wgpu::Sampler,
+    nearest_sampler: wgpu::Sampler,
     uniforms: Buffer&lt;Uniforms&gt;,
     size: Size&lt;UPx&gt;,
     scale: Fraction,
@@ -2011,7 +2065,6 @@
         device: <span class="kw-2">&amp;</span>wgpu::Device,
         queue: <span class="kw-2">&amp;</span>wgpu::Queue,
         format: wgpu::TextureFormat,
-        filter_mode: wgpu::FilterMode,
         multisample: wgpu::MultisampleState,
         initial_size: Size&lt;UPx&gt;,
         scale: f32,
@@ -2042,10 +2095,16 @@
             view_formats: <span class="kw-2">&amp;</span>[],
         });
 
-        <span class="kw">let </span>sampler = device.create_sampler(<span class="kw-2">&amp;</span>wgpu::SamplerDescriptor {
-            min_filter: filter_mode,
-            mag_filter: filter_mode,
-            mipmap_filter: filter_mode,
+        <span class="kw">let </span>nearest_sampler = device.create_sampler(<span class="kw-2">&amp;</span>wgpu::SamplerDescriptor {
+            min_filter: wgpu::FilterMode::Nearest,
+            mag_filter: wgpu::FilterMode::Nearest,
+            mipmap_filter: wgpu::FilterMode::Nearest,
+            ..wgpu::SamplerDescriptor::default()
+        });
+        <span class="kw">let </span>linear_sampler = device.create_sampler(<span class="kw-2">&amp;</span>wgpu::SamplerDescriptor {
+            min_filter: wgpu::FilterMode::Linear,
+            mag_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
             ..wgpu::SamplerDescriptor::default()
         });
         <span class="kw">let </span>default_bindings = pipeline::bind_group(
@@ -2053,7 +2112,7 @@
             <span class="kw-2">&amp;</span>binding_layout,
             <span class="kw-2">&amp;</span>uniforms.wgpu,
             <span class="kw-2">&amp;</span>empty_texture.create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor::default()),
-            <span class="kw-2">&amp;</span>sampler,
+            <span class="kw-2">&amp;</span>nearest_sampler,
         );
 
         <span class="kw">let </span>shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -2069,13 +2128,15 @@
                 device,
                 queue,
                 binding_layout: <span class="kw-2">&amp;</span>binding_layout,
-                sampler: <span class="kw-2">&amp;</span>sampler,
+                linear_sampler: <span class="kw-2">&amp;</span>linear_sampler,
+                nearest_sampler: <span class="kw-2">&amp;</span>nearest_sampler,
                 uniforms: <span class="kw-2">&amp;</span>uniforms.wgpu,
             }),
             default_bindings,
             pipeline,
             _shader: shader,
-            sampler,
+            linear_sampler,
+            nearest_sampler,
             size: initial_size,
             scale,
 
@@ -2264,7 +2325,8 @@
     device: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device,
     queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue,
     binding_layout: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::BindGroupLayout,
-    sampler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Sampler,
+    linear_sampler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Sampler,
+    nearest_sampler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Sampler,
     uniforms: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Buffer,
 }
 
@@ -2274,7 +2336,8 @@
             device,
             queue,
             binding_layout: <span class="kw-2">&amp;</span>kludgine.binding_layout,
-            sampler: <span class="kw-2">&amp;</span>kludgine.sampler,
+            linear_sampler: <span class="kw-2">&amp;</span>kludgine.linear_sampler,
+            nearest_sampler: <span class="kw-2">&amp;</span>kludgine.nearest_sampler,
             uniforms: <span class="kw-2">&amp;</span>kludgine.uniforms.wgpu,
         }
     }
@@ -2299,8 +2362,12 @@
         <span class="self">self</span>.uniforms
     }
 
-    <span class="kw">fn </span>sampler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Sampler {
-        <span class="self">self</span>.sampler
+    <span class="kw">fn </span>nearest_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Sampler {
+        <span class="self">self</span>.nearest_sampler
+    }
+
+    <span class="kw">fn </span>linear_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Sampler {
+        <span class="self">self</span>.linear_sampler
     }
 }
 
@@ -2323,8 +2390,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.kludgine.uniforms.wgpu
     }
 
-    <span class="kw">fn </span>sampler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Sampler {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.kludgine.sampler
+    <span class="kw">fn </span>nearest_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Sampler {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.kludgine.nearest_sampler
+    }
+
+    <span class="kw">fn </span>linear_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Sampler {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.kludgine.linear_sampler
     }
 }
 
@@ -2664,6 +2735,10 @@
 #[repr(C)]
 </span><span class="kw">pub struct </span>Color(u32);
 
+<span class="kw">fn </span>f32_component_to_u8(component: f32) -&gt; u8 {
+    (component.clamp(<span class="number">0.</span>, <span class="number">1.0</span>) * <span class="number">255.</span>).round().cast()
+}
+
 <span class="kw">impl </span>Color {
     <span class="doccomment">/// Returns a new color with the provided components.
     </span><span class="attr">#[must_use]
@@ -2674,14 +2749,12 @@
     <span class="doccomment">/// Returns a new color by converting each component from its `0.0..=1.0`
     /// range into a `0..=255` range.
     </span><span class="attr">#[must_use]
-    #[allow(clippy::cast_possible_truncation)] </span><span class="comment">// truncation desired
-    </span><span class="attr">#[allow(clippy::cast_sign_loss)] </span><span class="comment">// sign loss is truncated
     </span><span class="kw">pub fn </span>new_f32(red: f32, green: f32, blue: f32, alpha: f32) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new(
-            (red.max(<span class="number">0.</span>) * <span class="number">255.</span>).round() <span class="kw">as </span>u8,
-            (green.max(<span class="number">0.</span>) * <span class="number">255.</span>).round() <span class="kw">as </span>u8,
-            (blue.max(<span class="number">0.</span>) * <span class="number">255.</span>).round() <span class="kw">as </span>u8,
-            (alpha.max(<span class="number">0.</span>) * <span class="number">255.</span>).round() <span class="kw">as </span>u8,
+            f32_component_to_u8(red),
+            f32_component_to_u8(green),
+            f32_component_to_u8(blue),
+            f32_component_to_u8(alpha),
         )
     }
 
@@ -2761,6 +2834,30 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>with_alpha(<span class="self">self</span>, alpha: u8) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0 </span>&amp; <span class="number">0xFFFF_FF00 </span>| alpha <span class="kw">as </span>u32)
+    }
+
+    <span class="doccomment">/// Returns a new color replacing this colors red channel with `red`.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>with_red_f32(<span class="self">self</span>, red: f32) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.with_red(f32_component_to_u8(red))
+    }
+
+    <span class="doccomment">/// Returns a new color replacing this colors green channel with `green`.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>with_green_f32(<span class="self">self</span>, green: f32) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.with_green(f32_component_to_u8(green))
+    }
+
+    <span class="doccomment">/// Returns a new color replacing this colors blue channel with `blue`.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>with_blue_f32(<span class="self">self</span>, blue: f32) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.with_blue(f32_component_to_u8(blue))
+    }
+
+    <span class="doccomment">/// Returns a new color replacing this colors alpha channel with `alpha`.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>with_alpha_f32(<span class="self">self</span>, alpha: f32) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.with_alpha(f32_component_to_u8(alpha))
     }
 }
 
@@ -3110,6 +3207,7 @@
     size: Size&lt;UPx&gt;,
     format: wgpu::TextureFormat,
     usage: wgpu::TextureUsages,
+    filter_mode: wgpu::FilterMode,
     loadable: Mutex&lt;<span class="prelude-ty">Option</span>&lt;Vec&lt;u8&gt;&gt;&gt;,
     data: OnceLock&lt;TextureInstance&gt;,
 }
@@ -3121,15 +3219,60 @@
     bind_group: Arc&lt;wgpu::BindGroup&gt;,
 }
 
+<span class="kw">impl </span>TextureInstance {
+    <span class="kw">fn </span>from_wgpu(
+        wgpu: wgpu::Texture,
+        filter_mode: wgpu::FilterMode,
+        graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>sealed::KludgineGraphics,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>view = wgpu.create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor::default());
+        <span class="kw">let </span>bind_group = Arc::new(pipeline::bind_group(
+            graphics.device(),
+            graphics.binding_layout(),
+            graphics.uniforms(),
+            <span class="kw-2">&amp;</span>view,
+            <span class="kw">match </span>filter_mode {
+                wgpu::FilterMode::Nearest =&gt; graphics.nearest_sampler(),
+                wgpu::FilterMode::Linear =&gt; graphics.linear_sampler(),
+            },
+        ));
+        TextureInstance {
+            wgpu,
+            view,
+            bind_group,
+        }
+    }
+}
+
 <span class="kw">impl </span>UnwindSafe <span class="kw">for </span>TextureInstance {}
 <span class="kw">impl </span>RefUnwindSafe <span class="kw">for </span>TextureInstance {}
 
 <span class="kw">impl </span>Texture {
+    <span class="kw">fn </span>from_wgpu(
+        wgpu: wgpu::Texture,
+        graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics,
+        size: Size&lt;UPx&gt;,
+        format: wgpu::TextureFormat,
+        usage: wgpu::TextureUsages,
+        filter_mode: wgpu::FilterMode,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            id: sealed::TextureId::new_unique_id(),
+            size,
+            format,
+            usage,
+            loadable: Mutex::default(),
+            filter_mode,
+            data: OnceLock::from(TextureInstance::from_wgpu(wgpu, filter_mode, graphics)),
+        }
+    }
+
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new_generic(
         graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics,
         size: Size&lt;UPx&gt;,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
+        filter_mode: wgpu::FilterMode,
     ) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>wgpu = graphics.device().create_texture(<span class="kw-2">&amp;</span>wgpu::TextureDescriptor {
             label: <span class="prelude-val">None</span>,
@@ -3141,26 +3284,7 @@
             usage,
             view_formats: <span class="kw-2">&amp;</span>[],
         });
-        <span class="kw">let </span>view = wgpu.create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor::default());
-        <span class="kw">let </span>bind_group = Arc::new(pipeline::bind_group(
-            graphics.device(),
-            graphics.binding_layout(),
-            graphics.uniforms(),
-            <span class="kw-2">&amp;</span>view,
-            graphics.sampler(),
-        ));
-        <span class="self">Self </span>{
-            id: sealed::TextureId::new_unique_id(),
-            size,
-            format,
-            usage,
-            loadable: Mutex::default(),
-            data: OnceLock::from(TextureInstance {
-                wgpu,
-                view,
-                bind_group,
-            }),
-        }
+        <span class="self">Self</span>::from_wgpu(wgpu, graphics, size, format, usage, filter_mode)
     }
 
     <span class="doccomment">/// Creates a new texture of the given size, format, and usages.
@@ -3170,8 +3294,9 @@
         size: Size&lt;UPx&gt;,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
+        filter_mode: wgpu::FilterMode,
     ) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::new_generic(graphics, size, format, usage)
+        <span class="self">Self</span>::new_generic(graphics, size, format, usage, filter_mode)
     }
 
     <span class="doccomment">/// Returns a new texture of the given size, format, and usages. The texture
@@ -3182,6 +3307,7 @@
         size: Size&lt;UPx&gt;,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
+        filter_mode: wgpu::FilterMode,
         data: <span class="kw-2">&amp;</span>[u8],
     ) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>wgpu = graphics.device().create_texture_with_data(
@@ -3198,26 +3324,7 @@
             },
             data,
         );
-        <span class="kw">let </span>view = wgpu.create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor::default());
-        <span class="kw">let </span>bind_group = Arc::new(pipeline::bind_group(
-            graphics.device(),
-            graphics.binding_layout(),
-            graphics.uniforms(),
-            <span class="kw-2">&amp;</span>view,
-            graphics.sampler(),
-        ));
-        <span class="self">Self </span>{
-            id: sealed::TextureId::new_unique_id(),
-            size,
-            format,
-            usage,
-            loadable: Mutex::default(),
-            data: OnceLock::from(TextureInstance {
-                wgpu,
-                view,
-                bind_group,
-            }),
-        }
+        <span class="self">Self</span>::from_wgpu(wgpu, graphics, size, format, usage, filter_mode)
     }
 
     <span class="doccomment">/// Returns a new texture that loads its data to the gpu once used.
@@ -3226,6 +3333,7 @@
         size: Size&lt;UPx&gt;,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
+        filter_mode: wgpu::FilterMode,
         data: Vec&lt;u8&gt;,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
@@ -3233,6 +3341,7 @@
             size,
             format,
             usage,
+            filter_mode,
             loadable: Mutex::new(<span class="prelude-val">Some</span>(data)),
             data: OnceLock::new(),
         }
@@ -3241,7 +3350,11 @@
     <span class="doccomment">/// Creates a texture from `image`.
     </span><span class="attr">#[must_use]
     #[cfg(feature = <span class="string">&quot;image&quot;</span>)]
-    </span><span class="kw">pub fn </span>from_image(image: image::DynamicImage, graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>from_image(
+        image: image::DynamicImage,
+        filter_mode: wgpu::FilterMode,
+        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;,
+    ) -&gt; <span class="self">Self </span>{
         <span class="comment">// TODO is it better to force rgba8, or is it better to avoid the
         // conversion and allow multiple texture formats?
         </span><span class="kw">let </span>image = image.into_rgba8();
@@ -3250,6 +3363,7 @@
             Size::upx(image.width(), image.height()),
             wgpu::TextureFormat::Rgba8UnormSrgb,
             wgpu::TextureUsages::TEXTURE_BINDING,
+            filter_mode,
             image.as_raw(),
         )
     }
@@ -3257,12 +3371,13 @@
     <span class="doccomment">/// Returns a texture that loads `image` into the gpu when it is used.
     </span><span class="attr">#[must_use]
     #[cfg(feature = <span class="string">&quot;image&quot;</span>)]
-    </span><span class="kw">pub fn </span>lazy_from_image(image: image::DynamicImage) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>lazy_from_image(image: image::DynamicImage, filter_mode: wgpu::FilterMode) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>image = image.into_rgba8();
         <span class="self">Self</span>::lazy_from_data(
             Size::upx(image.width(), image.height()),
             wgpu::TextureFormat::Rgba8UnormSrgb,
             wgpu::TextureUsages::TEXTURE_BINDING,
+            filter_mode,
             image.into_raw(),
         )
     }
@@ -3353,19 +3468,7 @@
             },
             data,
         );
-        <span class="kw">let </span>view = wgpu.create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor::default());
-        <span class="kw">let </span>bind_group = Arc::new(pipeline::bind_group(
-            graphics.device(),
-            graphics.binding_layout(),
-            graphics.uniforms(),
-            <span class="kw-2">&amp;</span>view,
-            graphics.sampler(),
-        ));
-        TextureInstance {
-            wgpu,
-            view,
-            bind_group,
-        }
+        TextureInstance::from_wgpu(wgpu, <span class="self">self</span>.filter_mode, graphics)
     }
 
     <span class="kw">fn </span>wgpu(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics) -&gt; <span class="kw-2">&amp;</span>wgpu::Texture {
@@ -3382,8 +3485,11 @@
 #[macro_export]
 </span><span class="macro">macro_rules! </span>include_texture {
     (<span class="macro-nonterminal">$path</span>:expr) =&gt; {
+        <span class="macro-nonterminal">$</span><span class="macro">crate::include_texture!</span>(<span class="macro-nonterminal">$path</span>, <span class="macro-nonterminal">$crate::wgpu::FilterMode::Nearest</span>)
+    };
+    (<span class="macro-nonterminal">$path</span>:expr, <span class="macro-nonterminal">$filter_mode</span>:expr) =&gt; {
         <span class="macro-nonterminal">$crate::image::load_from_memory</span>(<span class="macro">std::include_bytes!</span>(<span class="macro-nonterminal">$path</span>))
-            .map(<span class="macro-nonterminal">$crate::Texture::lazy_from_image</span>)
+            .map(|image| <span class="macro-nonterminal">$crate::Texture::lazy_from_image</span>(image, <span class="macro-nonterminal">$filter_mode</span>))
     };
 }
 
