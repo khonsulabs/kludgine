@@ -3,7 +3,9 @@ use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::Px;
 use kludgine::figures::{Angle, Point, Px2D, Rect, Size};
 use kludgine::shapes::Shape;
-use kludgine::{Color, Graphics, Kludgine, PreparedGraphic, RenderingGraphics, Texture};
+use kludgine::{
+    Color, DrawableExt, Graphics, Kludgine, PreparedGraphic, RenderingGraphics, Texture,
+};
 
 fn main() -> Result<(), EventLoopError> {
     Test::run()
@@ -52,12 +54,10 @@ impl WindowBehavior for Test {
         // Render the texture
         let mut rendering =
             frame.render_into(&prerendered, wgpu::LoadOp::Clear(Color::WHITE), graphics);
-        outer_square.render(
-            Point::px(256, 256),
-            None,
-            Some(Angle::degrees(45)),
-            &mut rendering,
-        );
+        outer_square
+            .translate_by(Point::px(256, 256))
+            .rotate_by(Angle::degrees(45))
+            .render(&mut rendering);
         drop(rendering);
 
         frame.submit(graphics.queue());
@@ -72,7 +72,7 @@ impl WindowBehavior for Test {
         _window: Window<'_>,
         graphics: &mut RenderingGraphics<'_, 'pass>,
     ) -> bool {
-        self.prepared.render(Point::default(), None, None, graphics);
+        self.prepared.render(graphics);
 
         true
     }

@@ -6,7 +6,7 @@ use kludgine::app::{Window, WindowBehavior};
 use kludgine::cosmic_text::{Attrs, AttrsList, Buffer, Edit, Editor, Metrics};
 use kludgine::figures::{FloatConversion, ScreenScale};
 use kludgine::text::{PreparedText, TextOrigin};
-use kludgine::Color;
+use kludgine::{Color, DrawableExt};
 
 fn main() -> Result<(), EventLoopError> {
     Test::run()
@@ -83,12 +83,10 @@ impl WindowBehavior for Test {
     ) -> bool {
         window.redraw_in(Duration::from_millis(16));
         self.angle += Angle::degrees(180) * window.elapsed() / 5;
-        self.prepared.render(
-            Point::from_vec(graphics.size().into_px(graphics.scale())) / 2,
-            None,
-            Some(self.angle),
-            graphics,
-        );
+        self.prepared
+            .translate_by(Point::from_vec(graphics.size().into_px(graphics.scale())) / 2)
+            .rotate_by(self.angle)
+            .render(graphics);
         true
     }
 }

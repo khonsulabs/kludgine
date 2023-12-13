@@ -4,7 +4,7 @@ use appit::winit::error::EventLoopError;
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::{Lp, Px};
 use kludgine::figures::{Angle, Lp2D, Point, Rect, ScreenScale, Size};
-use kludgine::{Color, PreparedGraphic, TextureCollection};
+use kludgine::{Color, DrawableExt, PreparedGraphic, TextureCollection};
 
 fn main() -> Result<(), EventLoopError> {
     Test::run()
@@ -62,19 +62,22 @@ impl WindowBehavior for Test {
         window.redraw_in(Duration::from_millis(16));
         self.angle += Angle::degrees(180) * window.elapsed();
         self.k
-            .render(Point::inches(1, 1), None, Some(self.angle), graphics);
+            .translate_by(Point::inches(1, 1))
+            .rotate_by(self.angle)
+            .render(graphics);
         self.ferris
-            .render(Point::inches(2, 1), None, Some(-self.angle), graphics);
-        self.atlas.render(
-            Point::new(
-                0,
-                graphics.size().height.into_px(graphics.scale()).get() - 256,
+            .translate_by(Point::inches(2, 1))
+            .rotate_by(-self.angle)
+            .render(graphics);
+        self.atlas
+            .translate_by(
+                Point::new(
+                    0,
+                    graphics.size().height.into_px(graphics.scale()).get() - 256,
+                )
+                .cast(),
             )
-            .cast(),
-            None,
-            None,
-            graphics,
-        );
+            .render(graphics);
         true
     }
 

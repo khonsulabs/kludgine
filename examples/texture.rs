@@ -4,7 +4,7 @@ use appit::winit::error::EventLoopError;
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::Lp;
 use kludgine::figures::{Angle, Lp2D, Point, Rect, Size};
-use kludgine::{PreparedGraphic, Texture};
+use kludgine::{DrawableExt, PreparedGraphic, Texture};
 
 fn main() -> Result<(), EventLoopError> {
     Test::run()
@@ -46,7 +46,9 @@ impl WindowBehavior for Test {
         window.redraw_in(Duration::from_millis(16));
         self.angle += Angle::degrees(180) * window.elapsed();
         self.texture
-            .render(Point::inches(1, 1), None, Some(self.angle), graphics);
+            .translate_by(Point::inches(1, 1))
+            .rotate_by(self.angle)
+            .render(graphics);
         true
     }
 }

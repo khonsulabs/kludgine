@@ -5,13 +5,11 @@ use std::sync::Arc;
 
 use bytemuck::{Pod, Zeroable};
 use figures::units::{Lp, Px, UPx};
-use figures::{
-    Angle, Fraction, IntoSigned, Point, ScreenScale, ScreenUnit, Size, UnscaledUnit, Zero,
-};
+use figures::{Fraction, IntoSigned, Point, ScreenScale, ScreenUnit, Size, UnscaledUnit, Zero};
 use smallvec::SmallVec;
 
 use crate::buffer::Buffer;
-use crate::{sealed, Color, RenderingGraphics};
+use crate::{sealed, Color, Drawable, DrawableSource, RenderingGraphics};
 
 #[derive(Pod, Zeroable, Copy, Clone, Debug)]
 #[repr(C)]
@@ -77,6 +75,7 @@ pub(crate) struct PushConstants {
     pub flags: u32,
     pub scale: f32,
     pub rotation: f32,
+    pub opacity: f32,
     pub translation: Point<i32>,
 }
 
@@ -103,21 +102,32 @@ where
 {
     /// Renders the prepared graphic at `origin`, rotating and scaling as
     /// requested.
-    pub fn render<'pass>(
-        &'pass self,
-        origin: Point<Unit>,
-        scale: Option<f32>,
-        rotation: Option<Angle>,
-        graphics: &mut RenderingGraphics<'_, 'pass>,
-    ) {
+    pub fn render<'pass>(&'pass self, graphics: &mut RenderingGraphics<'_, 'pass>) {
+        Drawable::from(self).render(graphics);
+    }
+}
+
+impl<Unit> DrawableSource for PreparedGraphic<Unit> {}
+
+impl<'pass, Unit> Drawable<&'pass PreparedGraphic<Unit>, Unit>
+where
+    Unit: IntoSigned + Copy + Default + ShaderScalable + ScreenUnit + Zero,
+    i32: From<Unit::Signed>,
+    Vertex<Unit>: Pod,
+{
+    /// Renders this prepared graphic into `graphics` using the options from
+    /// this [`Drawable`].
+    pub fn render(&self, graphics: &mut RenderingGraphics<'_, 'pass>) {
         graphics.active_pipeline_if_needed();
 
-        graphics.pass.set_vertex_buffer(0, self.vertices.as_slice());
         graphics
             .pass
-            .set_index_buffer(self.indices.as_slice(), wgpu::IndexFormat::Uint32);
+            .set_vertex_buffer(0, self.source.vertices.as_slice());
+        graphics
+            .pass
+            .set_index_buffer(self.source.indices.as_slice(), wgpu::IndexFormat::Uint32);
 
-        for command in &self.commands {
+        for command in &self.source.commands {
             if graphics.clip.current.size.is_zero() {
                 continue;
             }
@@ -136,16 +146,16 @@ where
                     flags |= FLAG_MASKED;
                 }
             }
-            let scale = scale.map_or(1., |scale| {
+            let scale = self.scale.map_or(1., |scale| {
                 flags |= FLAG_SCALE;
                 scale
             });
-            let rotation = rotation.map_or(0., |scale| {
+            let rotation = self.rotation.map_or(0., |scale| {
                 flags |= FLAG_ROTATE;
                 scale.into_raidans_f()
             });
             let translation = (graphics.clip.current.origin.into_signed()
-                + origin.into_px(graphics.scale()))
+                + self.translation.into_px(graphics.scale()))
             .map(Px::into_unscaled);
             if !translation.is_zero() {
                 flags |= FLAG_TRANSLATE;
@@ -159,6 +169,7 @@ where
                     scale,
                     rotation,
                     translation,
+                    opacity: self.opacity.unwrap_or(1.),
                 }),
             );
             graphics.pass.draw_indexed(command.indices.clone(), 0, 0..1);

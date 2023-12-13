@@ -5,7 +5,7 @@ use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::Px;
 use kludgine::figures::{Angle, Point, Px2D, Rect, ScreenScale, Size};
 use kludgine::shapes::Shape;
-use kludgine::{Color, PreparedGraphic};
+use kludgine::{Color, DrawableExt, PreparedGraphic};
 
 fn main() -> Result<(), EventLoopError> {
     Test::run()
@@ -57,23 +57,18 @@ impl WindowBehavior for Test {
         ));
         // `clipped` now acts as if 0,0 is at `clip_origin`. The borrow checker
         // prevents using `graphics` until `clipped` is dropped.
-        self.red_square.render(
-            Point::from(clipped.size()).into_px(clipped.scale()) / 2,
-            None,
-            Some(self.angle),
-            &mut clipped,
-        );
-        self.blue_square
-            .render(Point::default(), None, Some(-self.angle), &mut clipped);
+        self.red_square
+            .translate_by(Point::from(clipped.size()).into_px(clipped.scale()) / 2)
+            .rotate_by(self.angle)
+            .render(&mut clipped);
+        self.blue_square.rotate_by(-self.angle).render(&mut clipped);
         drop(clipped);
 
         // Now `graphics` can be used without clipping again.
-        self.blue_square.render(
-            Point::from(graphics.size().into_px(graphics.scale())) / 4 * 3,
-            None,
-            Some(self.angle),
-            graphics,
-        );
+        self.blue_square
+            .translate_by(Point::from(graphics.size().into_px(graphics.scale())) / 4 * 3)
+            .rotate_by(self.angle)
+            .render(graphics);
 
         true
     }

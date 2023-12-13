@@ -167,6 +167,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
             flags,
             scale,
             rotation,
+            opacity: shape.opacity.unwrap_or(1.),
             translation: shape
                 .translation
                 .into_px(self.graphics.scale())
@@ -328,6 +329,7 @@ mod text {
                 text.translation,
                 text.rotation,
                 text.scale,
+                text.opacity,
             );
         }
 
@@ -354,6 +356,7 @@ mod text {
                 buffer.translation,
                 buffer.rotation,
                 buffer.scale,
+                buffer.opacity,
             );
         }
 
@@ -409,6 +412,7 @@ mod text {
                     translation,
                     text.rotation,
                     text.scale,
+                    text.opacity,
                     blit,
                     &glyph.cached,
                     self.clip_index,
@@ -422,6 +426,7 @@ mod text {
             }
         }
 
+        #[allow(clippy::too_many_arguments)]
         fn draw_text_buffer_inner<Unit>(
             &mut self,
             buffer: Option<&cosmic_text::Buffer>,
@@ -430,6 +435,7 @@ mod text {
             translation: Point<Unit>,
             rotation: Option<Angle>,
             scale: Option<f32>,
+            opacity: Option<f32>,
         ) where
             Unit: ScreenUnit,
         {
@@ -447,6 +453,7 @@ mod text {
                         translation,
                         rotation,
                         scale,
+                        opacity,
                         blit,
                         cached,
                         self.clip_index,
@@ -467,6 +474,7 @@ mod text {
         translation: Point<Unit>,
         rotation: Option<Angle>,
         scale: Option<f32>,
+        opacity: Option<f32>,
         blit: TextureBlit<Px>,
         cached: &CachedGlyphHandle,
         clip_index: u32,
@@ -517,6 +525,7 @@ mod text {
             scale,
             rotation,
             translation,
+            opacity: opacity.unwrap_or(1.),
         };
         let end_index = u32::try_from(indices.len()).expect("too many drawn indices");
         match commands.last_mut() {

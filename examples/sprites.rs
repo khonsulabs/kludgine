@@ -3,9 +3,8 @@ use std::time::Duration;
 use appit::winit::error::EventLoopError;
 use appit::winit::keyboard::{Key, NamedKey};
 use figures::units::{Px, UPx};
-use figures::Zero;
 use kludgine::app::WindowBehavior;
-use kludgine::figures::{Point, Size};
+use kludgine::figures::Size;
 use kludgine::sprite::{
     AnimationMode, Sprite, SpriteAnimation, SpriteAnimations, SpriteFrame, SpriteSheet,
 };
@@ -152,7 +151,7 @@ impl WindowBehavior for Sprites {
         graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
     ) -> bool {
         if let Some(frame) = &self.current_frame {
-            frame.render(Point::ZERO, None, None, graphics);
+            frame.render(graphics);
         }
         window.redraw_in(
             self.sprite

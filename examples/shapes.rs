@@ -1,11 +1,12 @@
 use std::time::Duration;
 
 use appit::winit::error::EventLoopError;
+use figures::Pow;
 use kludgine::app::{Window, WindowBehavior};
 use kludgine::figures::units::{Lp, Px};
 use kludgine::figures::{Angle, Point, Rect, Roots, Size};
 use kludgine::shapes::{PathBuilder, Shape};
-use kludgine::{Color, PreparedGraphic};
+use kludgine::{Color, DrawableExt, PreparedGraphic};
 
 fn main() -> Result<(), EventLoopError> {
     Test::run()
@@ -57,18 +58,14 @@ impl WindowBehavior for Test {
     ) -> bool {
         window.redraw_in(Duration::from_millis(16));
         self.angle += Angle::degrees(180) * window.elapsed();
-        self.dips_square.render(
-            Point::new(RED_SQUARE_SIZE / 2, RED_SQUARE_SIZE / 2),
-            None,
-            Some(self.angle),
-            graphics,
-        );
-        self.pixels_triangle.render(
-            Point::new(BLUE_TRIANGLE_SIZE / 2, BLUE_TRIANGLE_SIZE / 2),
-            None,
-            Some(self.angle),
-            graphics,
-        );
+        self.dips_square
+            .translate_by(Point::new(RED_SQUARE_SIZE / 2, RED_SQUARE_SIZE / 2))
+            .rotate_by(self.angle)
+            .render(graphics);
+        self.pixels_triangle
+            .translate_by(Point::new(BLUE_TRIANGLE_SIZE / 2, BLUE_TRIANGLE_SIZE / 2))
+            .rotate_by(self.angle)
+            .render(graphics);
         true
     }
 }

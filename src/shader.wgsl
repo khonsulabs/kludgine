@@ -2,6 +2,7 @@ struct PushConstants {
     flags: u32,
     scale: f32,
     rotation: f32,
+    opacity: f32,
     translation_x: i32,
     translation_y: i32,
 }
@@ -103,6 +104,7 @@ fn vertex(input: VertexInput) -> VertexOutput {
     }
     outval.position = uniforms.ortho * vec4<f32>(position / 4., 0., 1.0);
     outval.color = int_to_rgba(input.color);
+    outval.color.a = pc.opacity * outval.color.a;
     outval.uv = vec2<f32>(input.uv) / vec2<f32>(textureDimensions(r_texture));
     return outval;
 }

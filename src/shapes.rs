@@ -567,10 +567,10 @@ impl<Unit> Path<Unit, false> {
 
 #[test]
 fn path_size() {
-    assert_eq!(std::mem::size_of::<PathEvent<i32>>(), 36);
+    assert_eq!(std::mem::size_of::<PathEvent<i32>>(), 40);
     // This is a pretty big structure with the inline path events, but it allows
     // drawing most common polygons without heap allocations.
-    assert_eq!(std::mem::size_of::<Path<i32, true>>(), 264);
+    assert_eq!(std::mem::size_of::<Path<i32, true>>(), 288);
 }
 
 impl<Unit, const TEXTURED: bool> FromIterator<PathEvent<Unit>> for Path<Unit, TEXTURED> {

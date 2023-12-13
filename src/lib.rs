@@ -1894,6 +1894,8 @@ pub struct Drawable<T, Unit> {
     pub rotation: Option<Angle>,
     /// Scale the source before rendering.
     pub scale: Option<f32>,
+    /// An opacity multiplier to apply to this drawable.
+    pub opacity: Option<f32>,
 }
 
 impl<'a, Unit> From<Text<'a, Unit>> for Drawable<Text<'a, Unit>, Unit>
@@ -1906,6 +1908,7 @@ where
             translation: Point::default(),
             rotation: None,
             scale: None,
+            opacity: None,
         }
     }
 }
@@ -1921,6 +1924,7 @@ where
             translation: Point::default(),
             rotation: None,
             scale: None,
+            opacity: None,
         }
     }
 }
