@@ -1973,6 +1973,17 @@
 <a href="#1973" id="1973">1973</a>
 <a href="#1974" id="1974">1974</a>
 <a href="#1975" id="1975">1975</a>
+<a href="#1976" id="1976">1976</a>
+<a href="#1977" id="1977">1977</a>
+<a href="#1978" id="1978">1978</a>
+<a href="#1979" id="1979">1979</a>
+<a href="#1980" id="1980">1980</a>
+<a href="#1981" id="1981">1981</a>
+<a href="#1982" id="1982">1982</a>
+<a href="#1983" id="1983">1983</a>
+<a href="#1984" id="1984">1984</a>
+<a href="#1985" id="1985">1985</a>
+<a href="#1986" id="1986">1986</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -3912,6 +3923,8 @@
     </span><span class="kw">fn </span>rotate_by(<span class="self">self</span>, angle: Angle) -&gt; Drawable&lt;Source, Unit&gt;;
     <span class="doccomment">/// Scales `self` by `factor`.
     </span><span class="kw">fn </span>scale(<span class="self">self</span>, factor: f32) -&gt; Drawable&lt;Source, Unit&gt;;
+    <span class="doccomment">/// Renders this drawable with `opacity`, ranged from 0.- to 1.0.
+    </span><span class="kw">fn </span>opacity(<span class="self">self</span>, opacity: f32) -&gt; Drawable&lt;Source, Unit&gt;;
 }
 
 <span class="kw">impl</span>&lt;T, Unit&gt; DrawableExt&lt;T, Unit&gt; <span class="kw">for </span>Drawable&lt;T, Unit&gt; {
@@ -3927,6 +3940,11 @@
 
     <span class="kw">fn </span>scale(<span class="kw-2">mut </span><span class="self">self</span>, factor: f32) -&gt; Drawable&lt;T, Unit&gt; {
         <span class="self">self</span>.scale = <span class="prelude-val">Some</span>(factor);
+        <span class="self">self
+    </span>}
+
+    <span class="kw">fn </span>opacity(<span class="kw-2">mut </span><span class="self">self</span>, opacity: f32) -&gt; Drawable&lt;T, Unit&gt; {
+        <span class="self">self</span>.opacity = <span class="prelude-val">Some</span>(opacity.clamp(<span class="number">0.</span>, <span class="number">1.</span>));
         <span class="self">self
     </span>}
 }
@@ -3946,6 +3964,10 @@
 
     <span class="kw">fn </span>scale(<span class="self">self</span>, factor: f32) -&gt; Drawable&lt;T, Unit&gt; {
         Drawable::from(<span class="self">self</span>).scale(factor)
+    }
+
+    <span class="kw">fn </span>opacity(<span class="self">self</span>, opacity: f32) -&gt; Drawable&lt;T, Unit&gt; {
+        Drawable::from(<span class="self">self</span>).opacity(opacity)
     }
 }
 </code></pre></div></section></main></body></html>
