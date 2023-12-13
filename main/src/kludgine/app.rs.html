@@ -2509,7 +2509,7 @@
         _window: Window&lt;<span class="lifetime">&#39;_</span>&gt;,
         graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;pass</span>&gt;,
     ) -&gt; bool {
-        <span class="self">self</span>.rendering.render(graphics);
+        <span class="self">self</span>.rendering.render(<span class="number">1.</span>, graphics);
         <span class="self">self</span>.keep_running
     }
 }

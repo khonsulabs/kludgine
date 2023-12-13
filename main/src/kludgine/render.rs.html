@@ -712,6 +712,21 @@
 <a href="#712" id="712">712</a>
 <a href="#713" id="713">713</a>
 <a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
@@ -727,8 +742,9 @@
 };
 <span class="kw">use </span><span class="kw">crate</span>::shapes::Shape;
 <span class="kw">use crate</span>::{
-    sealed, Assert, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Drawable, Graphics,
-    RenderingGraphics, ShapeSource, Texture, TextureBlit, TextureSource, VertexCollection,
+    sealed, Assert, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Drawable, DrawableExt,
+    Graphics, RenderingGraphics, ShapeSource, Texture, TextureBlit, TextureSource,
+    VertexCollection,
 };
 
 <span class="doccomment">/// An easy-to-use graphics renderer that batches operations on the GPU
@@ -743,6 +759,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) graphics: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt;,
     data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Drawing,
     clip_index: u32,
+    opacity: f32,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>&gt; Deref <span class="kw">for </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;gfx</span>&gt; {
@@ -779,31 +796,40 @@
     }
 
     <span class="doccomment">/// Draws `texture` at `destination`, scaling as necessary.
-    </span><span class="kw">pub fn </span>draw_texture&lt;Unit&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource, destination: Rect&lt;Unit&gt;)
-    <span class="kw">where
+    </span><span class="kw">pub fn </span>draw_texture&lt;Unit&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        texture: <span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource,
+        destination: Rect&lt;Unit&gt;,
+        opacity: f32,
+    ) <span class="kw">where
         </span>Unit: figures::Unit + ScreenUnit + ShaderScalable,
         i32: From&lt;&lt;Unit <span class="kw">as </span>IntoSigned&gt;::Signed&gt;,
     {
         <span class="self">self</span>.draw_textured_shape(
-            <span class="kw-2">&amp;</span>TextureBlit::new(texture.default_rect(), destination, Color::WHITE),
+            TextureBlit::new(texture.default_rect(), destination, Color::WHITE).opacity(opacity),
             texture,
         );
     }
 
     <span class="doccomment">/// Draws `texture` at `destination`.
-    </span><span class="kw">pub fn </span>draw_texture_at&lt;Unit&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource, destination: Point&lt;Unit&gt;)
-    <span class="kw">where
+    </span><span class="kw">pub fn </span>draw_texture_at&lt;Unit&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        texture: <span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource,
+        destination: Point&lt;Unit&gt;,
+        opacity: f32,
+    ) <span class="kw">where
         </span>Unit: figures::Unit + ScreenUnit + ShaderScalable,
         i32: From&lt;&lt;Unit <span class="kw">as </span>IntoSigned&gt;::Signed&gt;,
     {
         <span class="kw">let </span>texture_rect = texture.default_rect();
         <span class="kw">let </span>scaled_size = Size::&lt;Unit&gt;::from_upx(texture_rect.size, <span class="self">self</span>.scale);
         <span class="self">self</span>.draw_textured_shape(
-            <span class="kw-2">&amp;</span>TextureBlit::new(
+            TextureBlit::new(
                 texture_rect,
                 Rect::new(destination, scaled_size),
                 Color::WHITE,
-            ),
+            )
+            .opacity(opacity),
             texture,
         );
     }
@@ -881,7 +907,9 @@
             flags,
             scale,
             rotation,
-            opacity: shape.opacity.unwrap_or(<span class="number">1.</span>),
+            opacity: shape
+                .opacity
+                .map_or(<span class="self">self</span>.opacity, |opacity| opacity * <span class="self">self</span>.opacity),
             translation: shape
                 .translation
                 .into_px(<span class="self">self</span>.graphics.scale())
@@ -1350,6 +1378,7 @@
             graphics,
             clip_index: <span class="number">0</span>,
             data: <span class="self">self</span>,
+            opacity: <span class="number">1.</span>,
         }
     }
 
@@ -1362,7 +1391,7 @@
     }
 
     <span class="doccomment">/// Renders the prepared graphics from the last frame.
-    </span><span class="kw">pub fn </span>render&lt;<span class="lifetime">&#39;pass</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span><span class="self">self</span>, graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;pass</span>&gt;) {
+    </span><span class="kw">pub fn </span>render&lt;<span class="lifetime">&#39;pass</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span><span class="self">self</span>, opacity: f32, graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;pass</span>&gt;) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(buffers) = <span class="kw-2">&amp;</span><span class="self">self</span>.buffers {
             <span class="kw">let </span><span class="kw-2">mut </span>current_texture_id = <span class="prelude-val">None</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>needs_texture_binding = graphics.active_pipeline_if_needed();
@@ -1412,6 +1441,7 @@
                 }
 
                 <span class="kw">let </span><span class="kw-2">mut </span>constants = command.constants;
+                constants.opacity <span class="kw-2">*</span>= opacity;
                 constants.translation += current_clip.origin.into_signed().map(Px::into_unscaled);
                 <span class="kw">if </span>!constants.translation.is_zero() {
                     constants.flags |= FLAG_TRANSLATE;

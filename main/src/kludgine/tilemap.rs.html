@@ -999,7 +999,7 @@
             TileKind::Texture(texture) =&gt; {
                 <span class="comment">// TODO support other scaling options like
                 // aspect-fit rather than fill.
-                </span>context.draw_texture(texture, tile_rect);
+                </span>context.draw_texture(texture, tile_rect, <span class="number">1.</span>);
                 <span class="prelude-val">None
             </span>}
             TileKind::Color(color) =&gt; {
@@ -1008,7 +1008,7 @@
             </span>}
             TileKind::Sprite(sprite) =&gt; {
                 <span class="kw">if let </span><span class="prelude-val">Ok</span>(frame) = sprite.get_frame(<span class="prelude-val">Some</span>(context.elapsed())) {
-                    context.draw_texture(<span class="kw-2">&amp;</span>frame, tile_rect);
+                    context.draw_texture(<span class="kw-2">&amp;</span>frame, tile_rect, <span class="number">1.</span>);
                     sprite.remaining_frame_duration().ok().flatten()
                 } <span class="kw">else </span>{
                     <span class="comment">// TODO show a broken image?
