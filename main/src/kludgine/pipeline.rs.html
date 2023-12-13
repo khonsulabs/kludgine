@@ -376,6 +376,17 @@
 <a href="#376" id="376">376</a>
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::any::TypeId;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::ops::Range;
@@ -383,13 +394,11 @@
 
 <span class="kw">use </span>bytemuck::{Pod, Zeroable};
 <span class="kw">use </span>figures::units::{Lp, Px, UPx};
-<span class="kw">use </span>figures::{
-    Angle, Fraction, IntoSigned, Point, ScreenScale, ScreenUnit, Size, UnscaledUnit, Zero,
-};
+<span class="kw">use </span>figures::{Fraction, IntoSigned, Point, ScreenScale, ScreenUnit, Size, UnscaledUnit, Zero};
 <span class="kw">use </span>smallvec::SmallVec;
 
 <span class="kw">use </span><span class="kw">crate</span>::buffer::Buffer;
-<span class="kw">use crate</span>::{sealed, Color, RenderingGraphics};
+<span class="kw">use crate</span>::{sealed, Color, Drawable, DrawableSource, RenderingGraphics};
 
 <span class="attr">#[derive(Pod, Zeroable, Copy, Clone, Debug)]
 #[repr(C)]
@@ -455,6 +464,7 @@
     <span class="kw">pub </span>flags: u32,
     <span class="kw">pub </span>scale: f32,
     <span class="kw">pub </span>rotation: f32,
+    <span class="kw">pub </span>opacity: f32,
     <span class="kw">pub </span>translation: Point&lt;i32&gt;,
 }
 
@@ -481,21 +491,32 @@
 {
     <span class="doccomment">/// Renders the prepared graphic at `origin`, rotating and scaling as
     /// requested.
-    </span><span class="kw">pub fn </span>render&lt;<span class="lifetime">&#39;pass</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span><span class="self">self</span>,
-        origin: Point&lt;Unit&gt;,
-        scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
-        rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
-        graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;pass</span>&gt;,
-    ) {
+    </span><span class="kw">pub fn </span>render&lt;<span class="lifetime">&#39;pass</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span><span class="self">self</span>, graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;pass</span>&gt;) {
+        Drawable::from(<span class="self">self</span>).render(graphics);
+    }
+}
+
+<span class="kw">impl</span>&lt;Unit&gt; DrawableSource <span class="kw">for </span>PreparedGraphic&lt;Unit&gt; {}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;pass</span>, Unit&gt; Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span>PreparedGraphic&lt;Unit&gt;, Unit&gt;
+<span class="kw">where
+    </span>Unit: IntoSigned + Copy + Default + ShaderScalable + ScreenUnit + Zero,
+    i32: From&lt;Unit::Signed&gt;,
+    Vertex&lt;Unit&gt;: Pod,
+{
+    <span class="doccomment">/// Renders this prepared graphic into `graphics` using the options from
+    /// this [`Drawable`].
+    </span><span class="kw">pub fn </span>render(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;pass</span>&gt;) {
         graphics.active_pipeline_if_needed();
 
-        graphics.pass.set_vertex_buffer(<span class="number">0</span>, <span class="self">self</span>.vertices.as_slice());
         graphics
             .pass
-            .set_index_buffer(<span class="self">self</span>.indices.as_slice(), wgpu::IndexFormat::Uint32);
+            .set_vertex_buffer(<span class="number">0</span>, <span class="self">self</span>.source.vertices.as_slice());
+        graphics
+            .pass
+            .set_index_buffer(<span class="self">self</span>.source.indices.as_slice(), wgpu::IndexFormat::Uint32);
 
-        <span class="kw">for </span>command <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.commands {
+        <span class="kw">for </span>command <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.source.commands {
             <span class="kw">if </span>graphics.clip.current.size.is_zero() {
                 <span class="kw">continue</span>;
             }
@@ -514,16 +535,16 @@
                     flags |= FLAG_MASKED;
                 }
             }
-            <span class="kw">let </span>scale = scale.map_or(<span class="number">1.</span>, |scale| {
+            <span class="kw">let </span>scale = <span class="self">self</span>.scale.map_or(<span class="number">1.</span>, |scale| {
                 flags |= FLAG_SCALE;
                 scale
             });
-            <span class="kw">let </span>rotation = rotation.map_or(<span class="number">0.</span>, |scale| {
+            <span class="kw">let </span>rotation = <span class="self">self</span>.rotation.map_or(<span class="number">0.</span>, |scale| {
                 flags |= FLAG_ROTATE;
                 scale.into_raidans_f()
             });
             <span class="kw">let </span>translation = (graphics.clip.current.origin.into_signed()
-                + origin.into_px(graphics.scale()))
+                + <span class="self">self</span>.translation.into_px(graphics.scale()))
             .map(Px::into_unscaled);
             <span class="kw">if </span>!translation.is_zero() {
                 flags |= FLAG_TRANSLATE;
@@ -537,6 +558,7 @@
                     scale,
                     rotation,
                     translation,
+                    opacity: <span class="self">self</span>.opacity.unwrap_or(<span class="number">1.</span>),
                 }),
             );
             graphics.pass.draw_indexed(command.indices.clone(), <span class="number">0</span>, <span class="number">0</span>..<span class="number">1</span>);

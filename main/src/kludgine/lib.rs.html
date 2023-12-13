@@ -1969,6 +1969,10 @@
 <a href="#1969" id="1969">1969</a>
 <a href="#1970" id="1970">1970</a>
 <a href="#1971" id="1971">1971</a>
+<a href="#1972" id="1972">1972</a>
+<a href="#1973" id="1973">1973</a>
+<a href="#1974" id="1974">1974</a>
+<a href="#1975" id="1975">1975</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -3865,6 +3869,8 @@
     </span><span class="kw">pub </span>rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
     <span class="doccomment">/// Scale the source before rendering.
     </span><span class="kw">pub </span>scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+    <span class="doccomment">/// An opacity multiplier to apply to this drawable.
+    </span><span class="kw">pub </span>opacity: <span class="prelude-ty">Option</span>&lt;f32&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Unit&gt; From&lt;Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;&gt; <span class="kw">for </span>Drawable&lt;Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;, Unit&gt;
@@ -3877,6 +3883,7 @@
             translation: Point::default(),
             rotation: <span class="prelude-val">None</span>,
             scale: <span class="prelude-val">None</span>,
+            opacity: <span class="prelude-val">None</span>,
         }
     }
 }
@@ -3892,6 +3899,7 @@
             translation: Point::default(),
             rotation: <span class="prelude-val">None</span>,
             scale: <span class="prelude-val">None</span>,
+            opacity: <span class="prelude-val">None</span>,
         }
     }
 }

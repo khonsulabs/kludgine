@@ -703,6 +703,15 @@
 <a href="#703" id="703">703</a>
 <a href="#704" id="704">704</a>
 <a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
@@ -872,6 +881,7 @@
             flags,
             scale,
             rotation,
+            opacity: shape.opacity.unwrap_or(<span class="number">1.</span>),
             translation: shape
                 .translation
                 .into_px(<span class="self">self</span>.graphics.scale())
@@ -1033,6 +1043,7 @@
                 text.translation,
                 text.rotation,
                 text.scale,
+                text.opacity,
             );
         }
 
@@ -1059,6 +1070,7 @@
                 buffer.translation,
                 buffer.rotation,
                 buffer.scale,
+                buffer.opacity,
             );
         }
 
@@ -1114,6 +1126,7 @@
                     translation,
                     text.rotation,
                     text.scale,
+                    text.opacity,
                     blit,
                     <span class="kw-2">&amp;</span>glyph.cached,
                     <span class="self">self</span>.clip_index,
@@ -1127,7 +1140,8 @@
             }
         }
 
-        <span class="kw">fn </span>draw_text_buffer_inner&lt;Unit&gt;(
+        <span class="attr">#[allow(clippy::too_many_arguments)]
+        </span><span class="kw">fn </span>draw_text_buffer_inner&lt;Unit&gt;(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>,
             buffer: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>cosmic_text::Buffer&gt;,
             default_color: Color,
@@ -1135,6 +1149,7 @@
             translation: Point&lt;Unit&gt;,
             rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
             scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+            opacity: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         ) <span class="kw">where
             </span>Unit: ScreenUnit,
         {
@@ -1152,6 +1167,7 @@
                         translation,
                         rotation,
                         scale,
+                        opacity,
                         blit,
                         cached,
                         <span class="self">self</span>.clip_index,
@@ -1172,6 +1188,7 @@
         translation: Point&lt;Unit&gt;,
         rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
         scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+        opacity: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         blit: TextureBlit&lt;Px&gt;,
         cached: <span class="kw-2">&amp;</span>CachedGlyphHandle,
         clip_index: u32,
@@ -1222,6 +1239,7 @@
             scale,
             rotation,
             translation,
+            opacity: opacity.unwrap_or(<span class="number">1.</span>),
         };
         <span class="kw">let </span>end_index = u32::try_from(indices.len()).expect(<span class="string">&quot;too many drawn indices&quot;</span>);
         <span class="kw">match </span>commands.last_mut() {

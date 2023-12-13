@@ -2082,10 +2082,10 @@
 
 <span class="attr">#[test]
 </span><span class="kw">fn </span>path_size() {
-    <span class="macro">assert_eq!</span>(std::mem::size_of::&lt;PathEvent&lt;i32&gt;&gt;(), <span class="number">36</span>);
+    <span class="macro">assert_eq!</span>(std::mem::size_of::&lt;PathEvent&lt;i32&gt;&gt;(), <span class="number">40</span>);
     <span class="comment">// This is a pretty big structure with the inline path events, but it allows
     // drawing most common polygons without heap allocations.
-    </span><span class="macro">assert_eq!</span>(std::mem::size_of::&lt;Path&lt;i32, <span class="bool-val">true</span>&gt;&gt;(), <span class="number">264</span>);
+    </span><span class="macro">assert_eq!</span>(std::mem::size_of::&lt;Path&lt;i32, <span class="bool-val">true</span>&gt;&gt;(), <span class="number">288</span>);
 }
 
 <span class="kw">impl</span>&lt;Unit, <span class="kw">const </span>TEXTURED: bool&gt; FromIterator&lt;PathEvent&lt;Unit&gt;&gt; <span class="kw">for </span>Path&lt;Unit, TEXTURED&gt; {
