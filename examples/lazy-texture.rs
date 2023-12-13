@@ -8,7 +8,7 @@ fn main() -> Result<(), EventLoopError> {
         wgpu::FilterMode::Linear,
     );
     kludgine::app::run(move |mut renderer, _window| {
-        renderer.draw_texture_at(&texture, Point::inches(1, 1));
+        renderer.draw_texture_at(&texture, Point::inches(1, 1), 1.);
         true
     })
 }

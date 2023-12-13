@@ -37,6 +37,7 @@ fn main() -> Result<(), EventLoopError> {
                         Point::new(texture_size.width * x, texture_size.height * y),
                         texture_size,
                     ),
+                    1.,
                 );
             }
         }

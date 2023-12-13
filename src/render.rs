@@ -13,8 +13,9 @@ use crate::pipeline::{
 };
 use crate::shapes::Shape;
 use crate::{
-    sealed, Assert, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Drawable, Graphics,
-    RenderingGraphics, ShapeSource, Texture, TextureBlit, TextureSource, VertexCollection,
+    sealed, Assert, ClipGuard, ClipRect, Clipped, Color, DefaultHasher, Drawable, DrawableExt,
+    Graphics, RenderingGraphics, ShapeSource, Texture, TextureBlit, TextureSource,
+    VertexCollection,
 };
 
 /// An easy-to-use graphics renderer that batches operations on the GPU
@@ -29,6 +30,7 @@ pub struct Renderer<'render, 'gfx> {
     pub(crate) graphics: &'render mut Graphics<'gfx>,
     data: &'render mut Drawing,
     clip_index: u32,
+    opacity: f32,
 }
 
 impl<'gfx> Deref for Renderer<'_, 'gfx> {
@@ -65,31 +67,40 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
     }
 
     /// Draws `texture` at `destination`, scaling as necessary.
-    pub fn draw_texture<Unit>(&mut self, texture: &impl TextureSource, destination: Rect<Unit>)
-    where
+    pub fn draw_texture<Unit>(
+        &mut self,
+        texture: &impl TextureSource,
+        destination: Rect<Unit>,
+        opacity: f32,
+    ) where
         Unit: figures::Unit + ScreenUnit + ShaderScalable,
         i32: From<<Unit as IntoSigned>::Signed>,
     {
         self.draw_textured_shape(
-            &TextureBlit::new(texture.default_rect(), destination, Color::WHITE),
+            TextureBlit::new(texture.default_rect(), destination, Color::WHITE).opacity(opacity),
             texture,
         );
     }
 
     /// Draws `texture` at `destination`.
-    pub fn draw_texture_at<Unit>(&mut self, texture: &impl TextureSource, destination: Point<Unit>)
-    where
+    pub fn draw_texture_at<Unit>(
+        &mut self,
+        texture: &impl TextureSource,
+        destination: Point<Unit>,
+        opacity: f32,
+    ) where
         Unit: figures::Unit + ScreenUnit + ShaderScalable,
         i32: From<<Unit as IntoSigned>::Signed>,
     {
         let texture_rect = texture.default_rect();
         let scaled_size = Size::<Unit>::from_upx(texture_rect.size, self.scale);
         self.draw_textured_shape(
-            &TextureBlit::new(
+            TextureBlit::new(
                 texture_rect,
                 Rect::new(destination, scaled_size),
                 Color::WHITE,
-            ),
+            )
+            .opacity(opacity),
             texture,
         );
     }
@@ -167,7 +178,9 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
             flags,
             scale,
             rotation,
-            opacity: shape.opacity.unwrap_or(1.),
+            opacity: shape
+                .opacity
+                .map_or(self.opacity, |opacity| opacity * self.opacity),
             translation: shape
                 .translation
                 .into_px(self.graphics.scale())
@@ -636,6 +649,7 @@ impl Drawing {
             graphics,
             clip_index: 0,
             data: self,
+            opacity: 1.,
         }
     }
 
@@ -648,7 +662,7 @@ impl Drawing {
     }
 
     /// Renders the prepared graphics from the last frame.
-    pub fn render<'pass>(&'pass self, graphics: &mut RenderingGraphics<'_, 'pass>) {
+    pub fn render<'pass>(&'pass self, opacity: f32, graphics: &mut RenderingGraphics<'_, 'pass>) {
         if let Some(buffers) = &self.buffers {
             let mut current_texture_id = None;
             let mut needs_texture_binding = graphics.active_pipeline_if_needed();
@@ -698,6 +712,7 @@ impl Drawing {
                 }
 
                 let mut constants = command.constants;
+                constants.opacity *= opacity;
                 constants.translation += current_clip.origin.into_signed().map(Px::into_unscaled);
                 if !constants.translation.is_zero() {
                     constants.flags |= FLAG_TRANSLATE;

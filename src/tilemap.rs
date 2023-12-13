@@ -402,7 +402,7 @@ impl TileKind {
             TileKind::Texture(texture) => {
                 // TODO support other scaling options like
                 // aspect-fit rather than fill.
-                context.draw_texture(texture, tile_rect);
+                context.draw_texture(texture, tile_rect, 1.);
                 None
             }
             TileKind::Color(color) => {
@@ -411,7 +411,7 @@ impl TileKind {
             }
             TileKind::Sprite(sprite) => {
                 if let Ok(frame) = sprite.get_frame(Some(context.elapsed())) {
-                    context.draw_texture(&frame, tile_rect);
+                    context.draw_texture(&frame, tile_rect, 1.);
                     sprite.remaining_frame_duration().ok().flatten()
                 } else {
                     // TODO show a broken image?

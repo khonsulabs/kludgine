@@ -1232,7 +1232,7 @@ where
         _window: Window<'_>,
         graphics: &mut RenderingGraphics<'_, 'pass>,
     ) -> bool {
-        self.rendering.render(graphics);
+        self.rendering.render(1., graphics);
         self.keep_running
     }
 }
