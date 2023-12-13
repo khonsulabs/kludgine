@@ -1937,6 +1937,8 @@ pub trait DrawableExt<Source, Unit> {
     fn rotate_by(self, angle: Angle) -> Drawable<Source, Unit>;
     /// Scales `self` by `factor`.
     fn scale(self, factor: f32) -> Drawable<Source, Unit>;
+    /// Renders this drawable with `opacity`, ranged from 0.- to 1.0.
+    fn opacity(self, opacity: f32) -> Drawable<Source, Unit>;
 }
 
 impl<T, Unit> DrawableExt<T, Unit> for Drawable<T, Unit> {
@@ -1952,6 +1954,11 @@ impl<T, Unit> DrawableExt<T, Unit> for Drawable<T, Unit> {
 
     fn scale(mut self, factor: f32) -> Drawable<T, Unit> {
         self.scale = Some(factor);
+        self
+    }
+
+    fn opacity(mut self, opacity: f32) -> Drawable<T, Unit> {
+        self.opacity = Some(opacity.clamp(0., 1.));
         self
     }
 }
@@ -1971,5 +1978,9 @@ where
 
     fn scale(self, factor: f32) -> Drawable<T, Unit> {
         Drawable::from(self).scale(factor)
+    }
+
+    fn opacity(self, opacity: f32) -> Drawable<T, Unit> {
+        Drawable::from(self).opacity(opacity)
     }
 }
