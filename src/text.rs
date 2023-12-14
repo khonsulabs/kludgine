@@ -494,15 +494,17 @@ pub(crate) fn map_each_glyph(
                 continue;
             };
 
+            let subpixel = Point::new(
+                physical.cache_key.x_bin.as_float(),
+                1.0 - physical.cache_key.y_bin.as_float(),
+            )
+            .map(Px::from);
+
             let blit = TextureBlit::new(
                 cached.texture.region,
                 Rect::new(
                     (Point::new(physical.x, physical.y)).cast::<Px>()
-                        + Point::new(
-                            physical.cache_key.x_bin.as_float(),
-                            physical.cache_key.y_bin.as_float(),
-                        )
-                        .map(Px::from)
+                        + subpixel
                         + Point::new(
                             image.placement.left,
                             metrics.line_height.cast::<i32>() - image.placement.top,
@@ -586,7 +588,7 @@ where
     } else {
         MeasuredText {
             ascent: line_height - Unit::from_px(min.y, kludgine.scale),
-            descent: Unit::from_px(first_line_max_y, kludgine.scale) - line_height,
+            descent: line_height - Unit::from_px(first_line_max_y, kludgine.scale),
             left: Unit::from_px(min.x, kludgine.scale),
             size: Size {
                 width: Unit::from_px(max.x, kludgine.scale),

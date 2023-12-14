@@ -21,7 +21,7 @@ fn main() -> Result<(), EventLoopError> {
                     Point::new(measured.left, line_height - measured.ascent),
                     Size::new(measured.size.width - measured.left, measured.ascent),
                 ),
-                Color::new(0, 40, 0, 255),
+                Color::new(0, 255, 0, 128),
             )
             .translate_by(inset),
         );
@@ -31,7 +31,7 @@ fn main() -> Result<(), EventLoopError> {
                     Point::new(measured.left, line_height),
                     Size::new(measured.size.width - measured.left, -measured.descent),
                 ),
-                Color::new(0, 0, 40, 255),
+                Color::new(0, 0, 255, 128),
             )
             .translate_by(inset),
         );
