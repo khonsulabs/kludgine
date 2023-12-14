@@ -843,6 +843,8 @@
 <a href="#843" id="843">843</a>
 <a href="#844" id="844">844</a>
 <a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -1339,15 +1341,17 @@
                 <span class="kw">continue</span>;
             };
 
+            <span class="kw">let </span>subpixel = Point::new(
+                physical.cache_key.x_bin.as_float(),
+                <span class="number">1.0 </span>- physical.cache_key.y_bin.as_float(),
+            )
+            .map(Px::from);
+
             <span class="kw">let </span>blit = TextureBlit::new(
                 cached.texture.region,
                 Rect::new(
                     (Point::new(physical.x, physical.y)).cast::&lt;Px&gt;()
-                        + Point::new(
-                            physical.cache_key.x_bin.as_float(),
-                            physical.cache_key.y_bin.as_float(),
-                        )
-                        .map(Px::from)
+                        + subpixel
                         + Point::new(
                             image.placement.left,
                             metrics.line_height.cast::&lt;i32&gt;() - image.placement.top,
@@ -1431,7 +1435,7 @@
     } <span class="kw">else </span>{
         MeasuredText {
             ascent: line_height - Unit::from_px(min.y, kludgine.scale),
-            descent: Unit::from_px(first_line_max_y, kludgine.scale) - line_height,
+            descent: line_height - Unit::from_px(first_line_max_y, kludgine.scale),
             left: Unit::from_px(min.x, kludgine.scale),
             size: Size {
                 width: Unit::from_px(max.x, kludgine.scale),
