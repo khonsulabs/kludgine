@@ -727,6 +727,23 @@
 <a href="#727" id="727">727</a>
 <a href="#728" id="728">728</a>
 <a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
@@ -1021,7 +1038,7 @@
     };
     <span class="kw">use </span><span class="kw">crate</span>::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
     <span class="kw">use </span><span class="kw">crate</span>::text::{
-        map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, Text, TextOrigin,
+        map_each_glyph, measure_text, CachedGlyphHandle, GlyphBlit, MeasuredText, Text, TextOrigin,
     };
     <span class="kw">use crate</span>::{
         DefaultHasher, Drawable, KludgineGraphics, ProtoGraphics, TextureBlit, VertexCollection,
@@ -1148,7 +1165,14 @@
                 TextOrigin::Custom(offset) =&gt; offset.into_px(scaling_factor),
             };
             <span class="kw">for </span>glyph <span class="kw">in </span><span class="kw-2">&amp;</span>text.source.glyphs {
-                <span class="kw">let </span><span class="kw-2">mut </span>blit = glyph.blit;
+                <span class="kw">let </span>GlyphBlit::Visible {
+                    blit,
+                    glyph: cached,
+                } = <span class="kw-2">&amp;</span>glyph.blit
+                <span class="kw">else </span>{
+                    <span class="kw">continue</span>;
+                };
+                <span class="kw">let </span><span class="kw-2">mut </span>blit = <span class="kw-2">*</span>blit;
                 blit.translate_by(-origin);
                 render_one_glyph(
                     translation,
@@ -1156,7 +1180,7 @@
                     text.scale,
                     text.opacity,
                     blit,
-                    <span class="kw-2">&amp;</span>glyph.cached,
+                    cached,
                     <span class="self">self</span>.clip_index,
                     scaling_factor,
                     <span class="self">self</span>.graphics,
@@ -1190,22 +1214,32 @@
                 <span class="self">self</span>.graphics.device,
                 <span class="self">self</span>.graphics.queue,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.glyphs,
-                |blit, cached, _glyph, _is_first_line, _baseline, _line_w, kludgine| {
-                    render_one_glyph(
-                        translation,
-                        rotation,
-                        scale,
-                        opacity,
+                |blit, _glyph, _is_first_line, _baseline, _line_w, kludgine| {
+                    <span class="kw">if let </span>GlyphBlit::Visible {
                         blit,
-                        cached,
-                        <span class="self">self</span>.clip_index,
-                        scaling_factor,
-                        <span class="kw-2">&amp;</span>ProtoGraphics::new(<span class="self">self</span>.graphics.device, <span class="self">self</span>.graphics.queue, kludgine),
-                        <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.vertices,
-                        <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.indices,
-                        <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.textures,
-                        <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.commands,
-                    );
+                        glyph: cached,
+                    } = blit
+                    {
+                        render_one_glyph(
+                            translation,
+                            rotation,
+                            scale,
+                            opacity,
+                            blit,
+                            <span class="kw-2">&amp;</span>cached,
+                            <span class="self">self</span>.clip_index,
+                            scaling_factor,
+                            <span class="kw-2">&amp;</span>ProtoGraphics::new(
+                                <span class="self">self</span>.graphics.device,
+                                <span class="self">self</span>.graphics.queue,
+                                kludgine,
+                            ),
+                            <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.vertices,
+                            <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.indices,
+                            <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.textures,
+                            <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.commands,
+                        );
+                    }
                 },
             );
         }

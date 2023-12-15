@@ -845,6 +845,47 @@
 <a href="#845" id="845">845</a>
 <a href="#846" id="846">846</a>
 <a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
+<a href="#869" id="869">869</a>
+<a href="#870" id="870">870</a>
+<a href="#871" id="871">871</a>
+<a href="#872" id="872">872</a>
+<a href="#873" id="873">873</a>
+<a href="#874" id="874">874</a>
+<a href="#875" id="875">875</a>
+<a href="#876" id="876">876</a>
+<a href="#877" id="877">877</a>
+<a href="#878" id="878">878</a>
+<a href="#879" id="879">879</a>
+<a href="#880" id="880">880</a>
+<a href="#881" id="881">881</a>
+<a href="#882" id="882">882</a>
+<a href="#883" id="883">883</a>
+<a href="#884" id="884">884</a>
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -1192,29 +1233,36 @@
             <span class="self">self</span>.device,
             <span class="self">self</span>.queue,
             <span class="kw-2">&amp;mut </span>glyphs,
-            |blit, cached, _glyph, _is_first_line, _baseline, _line_w, kludgine| {
-                <span class="kw">let </span>corners: [u32; <span class="number">4</span>] =
-                    array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
-                <span class="kw">let </span>start_index = u32::try_from(indices.len()).assert(<span class="string">&quot;too many drawn indices&quot;</span>);
-                <span class="kw">for </span><span class="kw-2">&amp;</span>index <span class="kw">in </span>blit.indices() {
-                    indices.push(corners[usize::try_from(index).assert(<span class="string">&quot;too many drawn indices&quot;</span>)]);
-                }
-                <span class="kw">let </span>end_index = u32::try_from(indices.len()).assert(<span class="string">&quot;too many drawn indices&quot;</span>);
-                <span class="kw">match </span>commands.last_mut() {
-                    <span class="prelude-val">Some</span>(last_command) <span class="kw">if </span>last_command.is_mask == cached.is_mask =&gt; {
-                        <span class="comment">// The last command was from the same texture source, we can stend the previous range to the new end.
-                        </span>last_command.indices.end = end_index;
+            |blit, _glyph, _is_first_line, _baseline, _line_w, kludgine| {
+                <span class="kw">if let </span>GlyphBlit::Visible {
+                    blit,
+                    glyph: cached,
+                } = blit
+                {
+                    <span class="kw">let </span>corners: [u32; <span class="number">4</span>] =
+                        array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
+                    <span class="kw">let </span>start_index = u32::try_from(indices.len()).assert(<span class="string">&quot;too many drawn indices&quot;</span>);
+                    <span class="kw">for </span><span class="kw-2">&amp;</span>index <span class="kw">in </span>blit.indices() {
+                        indices
+                            .push(corners[usize::try_from(index).assert(<span class="string">&quot;too many drawn indices&quot;</span>)]);
                     }
-                    <span class="kw">_ </span>=&gt; {
-                        commands.push(PreparedCommand {
-                            indices: start_index..end_index,
-                            is_mask: cached.is_mask,
-                            binding: <span class="prelude-val">Some</span>(cached.texture.bind_group(<span class="kw-2">&amp;</span>ProtoGraphics::new(
-                                <span class="self">self</span>.device,
-                                <span class="self">self</span>.queue,
-                                kludgine,
-                            ))),
-                        });
+                    <span class="kw">let </span>end_index = u32::try_from(indices.len()).assert(<span class="string">&quot;too many drawn indices&quot;</span>);
+                    <span class="kw">match </span>commands.last_mut() {
+                        <span class="prelude-val">Some</span>(last_command) <span class="kw">if </span>last_command.is_mask == cached.is_mask =&gt; {
+                            <span class="comment">// The last command was from the same texture source, we can stend the previous range to the new end.
+                            </span>last_command.indices.end = end_index;
+                        }
+                        <span class="kw">_ </span>=&gt; {
+                            commands.push(PreparedCommand {
+                                indices: start_index..end_index,
+                                is_mask: cached.is_mask,
+                                binding: <span class="prelude-val">Some</span>(cached.texture.bind_group(<span class="kw-2">&amp;</span>ProtoGraphics::new(
+                                    <span class="self">self</span>.device,
+                                    <span class="self">self</span>.queue,
+                                    kludgine,
+                                ))),
+                            });
+                        }
                     }
                 }
             },
@@ -1241,15 +1289,7 @@
     device: <span class="kw-2">&amp;</span>wgpu::Device,
     queue: <span class="kw-2">&amp;</span>wgpu::Queue,
     glyphs: <span class="kw-2">&amp;mut </span>HashMap&lt;cosmic_text::CacheKey, CachedGlyphHandle, DefaultHasher&gt;,
-    <span class="kw-2">mut </span>map: <span class="kw">impl for</span>&lt;<span class="lifetime">&#39;a</span>&gt; FnMut(
-        TextureBlit&lt;Px&gt;,
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>CachedGlyphHandle,
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>LayoutGlyph,
-        usize,
-        Px,
-        Px,
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Kludgine,
-    ),
+    <span class="kw-2">mut </span>map: <span class="kw">impl for</span>&lt;<span class="lifetime">&#39;a</span>&gt; FnMut(GlyphBlit, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>LayoutGlyph, usize, Px, Px, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Kludgine),
 ) {
     <span class="kw">let </span>metrics = buffer
         .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect(<span class="string">&quot;no buffer&quot;</span>))
@@ -1280,13 +1320,19 @@
             <span class="kw">else </span>{
                 <span class="kw">continue</span>;
             };
-            <span class="kw">if </span>image.placement.width == <span class="number">0 </span>|| image.placement.height == <span class="number">0 </span>{
-                <span class="kw">continue</span>;
-            }
+            <span class="kw">let </span>invisible = image.placement.width == <span class="number">0 </span>|| image.placement.height == <span class="number">0</span>;
 
             <span class="kw">let </span><span class="kw-2">mut </span>color = glyph.color_opt.map_or(default_color, Color::from);
 
-            <span class="kw">let </span><span class="prelude-val">Some</span>(cached) =
+            <span class="kw">let </span>subpixel = Point::new(
+                physical.cache_key.x_bin.as_float(),
+                <span class="number">1.0 </span>- physical.cache_key.y_bin.as_float(),
+            )
+            .map(Px::from);
+
+            <span class="kw">let </span>cached = <span class="kw">if </span>invisible {
+                <span class="prelude-val">None
+            </span>} <span class="kw">else </span>{
                 kludgine
                     .text
                     .glyphs
@@ -1337,44 +1383,77 @@
                         }
                         SwashContent::SubpixelMask =&gt; <span class="prelude-val">None</span>,
                     })
-            <span class="kw">else </span>{
-                <span class="kw">continue</span>;
             };
 
-            <span class="kw">let </span>subpixel = Point::new(
-                physical.cache_key.x_bin.as_float(),
-                <span class="number">1.0 </span>- physical.cache_key.y_bin.as_float(),
-            )
-            .map(Px::from);
+            <span class="kw">let </span>blit = <span class="kw">if let </span><span class="prelude-val">Some</span>(cached) = cached {
+                glyphs
+                    .entry(physical.cache_key)
+                    .or_insert_with(|| cached.clone());
 
-            <span class="kw">let </span>blit = TextureBlit::new(
-                cached.texture.region,
-                Rect::new(
-                    (Point::new(physical.x, physical.y)).cast::&lt;Px&gt;()
-                        + subpixel
-                        + Point::new(
-                            image.placement.left,
-                            metrics.line_height.cast::&lt;i32&gt;() - image.placement.top,
+                GlyphBlit::Visible {
+                    blit: TextureBlit::new(
+                        cached.texture.region,
+                        Rect::new(
+                            (Point::new(physical.x, physical.y)).cast::&lt;Px&gt;()
+                                + subpixel
+                                + Point::new(
+                                    image.placement.left,
+                                    metrics.line_height.cast::&lt;i32&gt;() - image.placement.top,
+                                ),
+                            Size::new(
+                                i32::try_from(image.placement.width)
+                                    .expect(<span class="string">&quot;width out of range of i32&quot;</span>),
+                                i32::try_from(image.placement.height)
+                                    .expect(<span class="string">&quot;height out of range of i32&quot;</span>),
+                            )
+                            .cast(),
                         ),
-                    Size::new(
-                        i32::try_from(image.placement.width).expect(<span class="string">&quot;width out of range of i32&quot;</span>),
-                        i32::try_from(image.placement.height).expect(<span class="string">&quot;height out of range of i32&quot;</span>),
-                    )
-                    .cast(),
-                ),
-                color,
-            );
+                        color,
+                    ),
+                    glyph: cached.clone(),
+                }
+            } <span class="kw">else </span>{
+                GlyphBlit::Invisible {
+                    location: Point::new(physical.x, physical.y).cast::&lt;Px&gt;() + subpixel,
+                    width: glyph.w.cast(),
+                }
+            };
             map(
                 blit,
-                <span class="kw-2">&amp;</span>cached,
                 glyph,
                 (run.line_top / metrics.line_height).round().cast::&lt;usize&gt;(),
                 relative_to.y,
                 Px::from(run.line_w),
                 kludgine,
             );
+        }
+    }
+}
 
-            glyphs.entry(physical.cache_key).or_insert_with(|| cached);
+<span class="attr">#[derive(Debug, Clone)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>GlyphBlit {
+    Invisible {
+        location: Point&lt;Px&gt;,
+        width: Px,
+    },
+    Visible {
+        blit: TextureBlit&lt;Px&gt;,
+        glyph: CachedGlyphHandle,
+    },
+}
+
+<span class="kw">impl </span>GlyphBlit {
+    <span class="kw">pub fn </span>top_left(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Point&lt;Px&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            GlyphBlit::Invisible { location, .. } =&gt; <span class="kw-2">*</span>location,
+            GlyphBlit::Visible { blit, .. } =&gt; blit.top_left().location,
+        }
+    }
+
+    <span class="kw">pub fn </span>bottom_right(<span class="kw-2">&amp;</span><span class="self">self</span>, bottom: Px) -&gt; Point&lt;Px&gt; {
+        <span class="kw">match </span><span class="self">self </span>{
+            GlyphBlit::Invisible { location, width } =&gt; Point::new(location.x + <span class="kw-2">*</span>width, bottom),
+            GlyphBlit::Visible { blit, .. } =&gt; blit.bottom_right().location,
         }
     }
 }
@@ -1405,18 +1484,17 @@
         device,
         queue,
         glyphs,
-        |blit, cached, glyph, line_index, baseline, line_width, _kludgine| {
+        |blit, glyph, line_index, baseline, line_width, _kludgine| {
             last_baseline = last_baseline.max(baseline);
-            min = min.min(blit.top_left().location);
+            min = min.min(blit.top_left());
             max.x = max.x.max(line_width);
-            max.y = max.y.max(blit.bottom_right().location.y);
+            max.y = max.y.max(blit.bottom_right(baseline).y);
             <span class="kw">if </span>line_index == <span class="number">0 </span>{
-                first_line_max_y = first_line_max_y.max(blit.bottom_right().location.y);
+                first_line_max_y = first_line_max_y.max(blit.bottom_right(baseline).y);
             }
             <span class="kw">if </span>COLLECT_GLYPHS {
                 measured_glyphs.push(MeasuredGlyph {
                     blit,
-                    cached: cached.clone(),
                     info: GlyphInfo::new(glyph, line_index, line_width),
                 });
             }
@@ -1579,8 +1657,7 @@
 <span class="doccomment">/// Instructions for drawing a laid out glyph.
 </span><span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>MeasuredGlyph {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) blit: TextureBlit&lt;Px&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) cached: CachedGlyphHandle,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) blit: GlyphBlit,
     <span class="doccomment">/// Information about what glyph this is.
     </span><span class="kw">pub </span>info: GlyphInfo,
 }
@@ -1598,10 +1675,15 @@
     <span class="doccomment">/// Returns the destination rectangle for this glyph.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>rect(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Rect&lt;Px&gt; {
-        Rect::from_extents(
-            <span class="self">self</span>.blit.top_left().location,
-            <span class="self">self</span>.blit.bottom_right().location,
-        )
+        <span class="kw">let </span>top_left = <span class="self">self</span>.blit.top_left();
+        Rect::from_extents(top_left, <span class="self">self</span>.blit.bottom_right(top_left.y))
+    }
+
+    <span class="doccomment">/// Returns true if this measurement is for a visible glyph, as opposed to
+    /// whitespace or padding.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>visible(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="macro">matches!</span>(<span class="self">self</span>.blit, GlyphBlit::Visible { .. })
     }
 }
 
