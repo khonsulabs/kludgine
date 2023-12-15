@@ -1513,6 +1513,16 @@
 <a href="#1513" id="1513">1513</a>
 <a href="#1514" id="1514">1514</a>
 <a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
+<a href="#1517" id="1517">1517</a>
+<a href="#1518" id="1518">1518</a>
+<a href="#1519" id="1519">1519</a>
+<a href="#1520" id="1520">1520</a>
+<a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::{Add, Div, Mul, Neg, Sub};
 
@@ -1522,11 +1532,11 @@
 };
 <span class="kw">use </span>lyon_tessellation::geom::Arc;
 <span class="kw">use </span>lyon_tessellation::{
-    FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
-    GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeTessellator, StrokeVertex,
+    FillGeometryBuilder, FillTessellator, FillVertex, FillVertexConstructor, GeometryBuilder,
+    GeometryBuilderError, StrokeGeometryBuilder, StrokeTessellator, StrokeVertex,
     StrokeVertexConstructor, VertexId,
 };
-<span class="kw">pub use </span>lyon_tessellation::{LineCap, LineJoin};
+<span class="kw">pub use </span>lyon_tessellation::{FillOptions, LineCap, LineJoin, Orientation};
 <span class="kw">use </span>smallvec::SmallVec;
 
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::Vertex;
@@ -1592,7 +1602,6 @@
     <span class="doccomment">/// Returns a circle that is stroked with `color` and `options`.
     </span><span class="kw">pub fn </span>stroked_circle(
         radius: Unit,
-        color: Color,
         origin: Origin&lt;Unit&gt;,
         options: <span class="kw">impl </span>Into&lt;StrokeOptions&lt;Unit&gt;&gt;,
     ) -&gt; Shape&lt;Unit, <span class="bool-val">false</span>&gt;
@@ -1609,13 +1618,14 @@
             Origin::Center =&gt; Point::default(),
             Origin::Custom(pt) =&gt; pt,
         };
-        <span class="kw">let </span><span class="kw-2">mut </span>shape_builder = ShapeBuilder::new(color);
+        <span class="kw">let </span>options = options.into();
+        <span class="kw">let </span><span class="kw-2">mut </span>shape_builder = ShapeBuilder::new(options.color);
         <span class="kw">let </span><span class="kw-2">mut </span>tesselator = StrokeTessellator::new();
         tesselator
             .tessellate_circle(
                 lyon_tessellation::math::point(center.x.into_float(), center.y.into_float()),
                 radius.into_float(),
-                <span class="kw-2">&amp;</span>options.into().into(),
+                <span class="kw-2">&amp;</span>options.into(),
                 <span class="kw-2">&amp;mut </span>shape_builder,
             )
             .assert(<span class="string">&quot;should not fail to tesselat4e a rect&quot;</span>);
@@ -2178,6 +2188,16 @@
     /// To render the image unchanged, use [`Color::WHITE`].
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>fill(<span class="kw-2">&amp;</span><span class="self">self</span>, color: Color) -&gt; Shape&lt;Unit, TEXTURED&gt; {
+        <span class="self">self</span>.fill_opt(color, <span class="kw-2">&amp;</span>FillOptions::DEFAULT)
+    }
+
+    <span class="doccomment">/// Fills this path with `color` using the provided options.
+    ///
+    /// If this is a textured image or the path endpoints were constructed with
+    /// colors, the sampled texture colors will be multiplied with this color.
+    /// To render the image unchanged, use [`Color::WHITE`].
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>fill_opt(<span class="kw-2">&amp;</span><span class="self">self</span>, color: Color, options: <span class="kw-2">&amp;</span>FillOptions) -&gt; Shape&lt;Unit, TEXTURED&gt; {
         <span class="kw">let </span>lyon_path = <span class="self">self</span>.as_lyon();
         <span class="kw">let </span><span class="kw-2">mut </span>shape_builder = ShapeBuilder::new(color);
         <span class="kw">let </span><span class="kw-2">mut </span>tesselator = FillTessellator::new();
@@ -2186,7 +2206,7 @@
                 lyon_path.id_iter(),
                 <span class="kw-2">&amp;</span>lyon_path,
                 <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>lyon_path),
-                <span class="kw-2">&amp;</span>FillOptions::DEFAULT,
+                options,
                 <span class="kw-2">&amp;mut </span>shape_builder,
             )
             .assert(<span class="string">&quot;should not fail to tesselat4e a rect&quot;</span>);
