@@ -292,7 +292,7 @@ mod text {
     };
     use crate::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
     use crate::text::{
-        map_each_glyph, measure_text, CachedGlyphHandle, MeasuredText, Text, TextOrigin,
+        map_each_glyph, measure_text, CachedGlyphHandle, GlyphBlit, MeasuredText, Text, TextOrigin,
     };
     use crate::{
         DefaultHasher, Drawable, KludgineGraphics, ProtoGraphics, TextureBlit, VertexCollection,
@@ -419,7 +419,14 @@ mod text {
                 TextOrigin::Custom(offset) => offset.into_px(scaling_factor),
             };
             for glyph in &text.source.glyphs {
-                let mut blit = glyph.blit;
+                let GlyphBlit::Visible {
+                    blit,
+                    glyph: cached,
+                } = &glyph.blit
+                else {
+                    continue;
+                };
+                let mut blit = *blit;
                 blit.translate_by(-origin);
                 render_one_glyph(
                     translation,
@@ -427,7 +434,7 @@ mod text {
                     text.scale,
                     text.opacity,
                     blit,
-                    &glyph.cached,
+                    cached,
                     self.clip_index,
                     scaling_factor,
                     self.graphics,
@@ -461,22 +468,32 @@ mod text {
                 self.graphics.device,
                 self.graphics.queue,
                 &mut self.data.glyphs,
-                |blit, cached, _glyph, _is_first_line, _baseline, _line_w, kludgine| {
-                    render_one_glyph(
-                        translation,
-                        rotation,
-                        scale,
-                        opacity,
+                |blit, _glyph, _is_first_line, _baseline, _line_w, kludgine| {
+                    if let GlyphBlit::Visible {
                         blit,
-                        cached,
-                        self.clip_index,
-                        scaling_factor,
-                        &ProtoGraphics::new(self.graphics.device, self.graphics.queue, kludgine),
-                        &mut self.data.vertices,
-                        &mut self.data.indices,
-                        &mut self.data.textures,
-                        &mut self.data.commands,
-                    );
+                        glyph: cached,
+                    } = blit
+                    {
+                        render_one_glyph(
+                            translation,
+                            rotation,
+                            scale,
+                            opacity,
+                            blit,
+                            &cached,
+                            self.clip_index,
+                            scaling_factor,
+                            &ProtoGraphics::new(
+                                self.graphics.device,
+                                self.graphics.queue,
+                                kludgine,
+                            ),
+                            &mut self.data.vertices,
+                            &mut self.data.indices,
+                            &mut self.data.textures,
+                            &mut self.data.commands,
+                        );
+                    }
                 },
             );
         }

@@ -345,29 +345,36 @@ impl<'gfx> Graphics<'gfx> {
             self.device,
             self.queue,
             &mut glyphs,
-            |blit, cached, _glyph, _is_first_line, _baseline, _line_w, kludgine| {
-                let corners: [u32; 4] =
-                    array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
-                let start_index = u32::try_from(indices.len()).assert("too many drawn indices");
-                for &index in blit.indices() {
-                    indices.push(corners[usize::try_from(index).assert("too many drawn indices")]);
-                }
-                let end_index = u32::try_from(indices.len()).assert("too many drawn indices");
-                match commands.last_mut() {
-                    Some(last_command) if last_command.is_mask == cached.is_mask => {
-                        // The last command was from the same texture source, we can stend the previous range to the new end.
-                        last_command.indices.end = end_index;
+            |blit, _glyph, _is_first_line, _baseline, _line_w, kludgine| {
+                if let GlyphBlit::Visible {
+                    blit,
+                    glyph: cached,
+                } = blit
+                {
+                    let corners: [u32; 4] =
+                        array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
+                    let start_index = u32::try_from(indices.len()).assert("too many drawn indices");
+                    for &index in blit.indices() {
+                        indices
+                            .push(corners[usize::try_from(index).assert("too many drawn indices")]);
                     }
-                    _ => {
-                        commands.push(PreparedCommand {
-                            indices: start_index..end_index,
-                            is_mask: cached.is_mask,
-                            binding: Some(cached.texture.bind_group(&ProtoGraphics::new(
-                                self.device,
-                                self.queue,
-                                kludgine,
-                            ))),
-                        });
+                    let end_index = u32::try_from(indices.len()).assert("too many drawn indices");
+                    match commands.last_mut() {
+                        Some(last_command) if last_command.is_mask == cached.is_mask => {
+                            // The last command was from the same texture source, we can stend the previous range to the new end.
+                            last_command.indices.end = end_index;
+                        }
+                        _ => {
+                            commands.push(PreparedCommand {
+                                indices: start_index..end_index,
+                                is_mask: cached.is_mask,
+                                binding: Some(cached.texture.bind_group(&ProtoGraphics::new(
+                                    self.device,
+                                    self.queue,
+                                    kludgine,
+                                ))),
+                            });
+                        }
                     }
                 }
             },
@@ -394,15 +401,7 @@ pub(crate) fn map_each_glyph(
     device: &wgpu::Device,
     queue: &wgpu::Queue,
     glyphs: &mut HashMap<cosmic_text::CacheKey, CachedGlyphHandle, DefaultHasher>,
-    mut map: impl for<'a> FnMut(
-        TextureBlit<Px>,
-        &'a CachedGlyphHandle,
-        &'a LayoutGlyph,
-        usize,
-        Px,
-        Px,
-        &'a Kludgine,
-    ),
+    mut map: impl for<'a> FnMut(GlyphBlit, &'a LayoutGlyph, usize, Px, Px, &'a Kludgine),
 ) {
     let metrics = buffer
         .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"))
@@ -433,13 +432,19 @@ pub(crate) fn map_each_glyph(
             else {
                 continue;
             };
-            if image.placement.width == 0 || image.placement.height == 0 {
-                continue;
-            }
+            let invisible = image.placement.width == 0 || image.placement.height == 0;
 
             let mut color = glyph.color_opt.map_or(default_color, Color::from);
 
-            let Some(cached) =
+            let subpixel = Point::new(
+                physical.cache_key.x_bin.as_float(),
+                1.0 - physical.cache_key.y_bin.as_float(),
+            )
+            .map(Px::from);
+
+            let cached = if invisible {
+                None
+            } else {
                 kludgine
                     .text
                     .glyphs
@@ -490,44 +495,77 @@ pub(crate) fn map_each_glyph(
                         }
                         SwashContent::SubpixelMask => None,
                     })
-            else {
-                continue;
             };
 
-            let subpixel = Point::new(
-                physical.cache_key.x_bin.as_float(),
-                1.0 - physical.cache_key.y_bin.as_float(),
-            )
-            .map(Px::from);
+            let blit = if let Some(cached) = cached {
+                glyphs
+                    .entry(physical.cache_key)
+                    .or_insert_with(|| cached.clone());
 
-            let blit = TextureBlit::new(
-                cached.texture.region,
-                Rect::new(
-                    (Point::new(physical.x, physical.y)).cast::<Px>()
-                        + subpixel
-                        + Point::new(
-                            image.placement.left,
-                            metrics.line_height.cast::<i32>() - image.placement.top,
+                GlyphBlit::Visible {
+                    blit: TextureBlit::new(
+                        cached.texture.region,
+                        Rect::new(
+                            (Point::new(physical.x, physical.y)).cast::<Px>()
+                                + subpixel
+                                + Point::new(
+                                    image.placement.left,
+                                    metrics.line_height.cast::<i32>() - image.placement.top,
+                                ),
+                            Size::new(
+                                i32::try_from(image.placement.width)
+                                    .expect("width out of range of i32"),
+                                i32::try_from(image.placement.height)
+                                    .expect("height out of range of i32"),
+                            )
+                            .cast(),
                         ),
-                    Size::new(
-                        i32::try_from(image.placement.width).expect("width out of range of i32"),
-                        i32::try_from(image.placement.height).expect("height out of range of i32"),
-                    )
-                    .cast(),
-                ),
-                color,
-            );
+                        color,
+                    ),
+                    glyph: cached.clone(),
+                }
+            } else {
+                GlyphBlit::Invisible {
+                    location: Point::new(physical.x, physical.y).cast::<Px>() + subpixel,
+                    width: glyph.w.cast(),
+                }
+            };
             map(
                 blit,
-                &cached,
                 glyph,
                 (run.line_top / metrics.line_height).round().cast::<usize>(),
                 relative_to.y,
                 Px::from(run.line_w),
                 kludgine,
             );
+        }
+    }
+}
 
-            glyphs.entry(physical.cache_key).or_insert_with(|| cached);
+#[derive(Debug, Clone)]
+pub(crate) enum GlyphBlit {
+    Invisible {
+        location: Point<Px>,
+        width: Px,
+    },
+    Visible {
+        blit: TextureBlit<Px>,
+        glyph: CachedGlyphHandle,
+    },
+}
+
+impl GlyphBlit {
+    pub fn top_left(&self) -> Point<Px> {
+        match self {
+            GlyphBlit::Invisible { location, .. } => *location,
+            GlyphBlit::Visible { blit, .. } => blit.top_left().location,
+        }
+    }
+
+    pub fn bottom_right(&self, bottom: Px) -> Point<Px> {
+        match self {
+            GlyphBlit::Invisible { location, width } => Point::new(location.x + *width, bottom),
+            GlyphBlit::Visible { blit, .. } => blit.bottom_right().location,
         }
     }
 }
@@ -558,18 +596,17 @@ where
         device,
         queue,
         glyphs,
-        |blit, cached, glyph, line_index, baseline, line_width, _kludgine| {
+        |blit, glyph, line_index, baseline, line_width, _kludgine| {
             last_baseline = last_baseline.max(baseline);
-            min = min.min(blit.top_left().location);
+            min = min.min(blit.top_left());
             max.x = max.x.max(line_width);
-            max.y = max.y.max(blit.bottom_right().location.y);
+            max.y = max.y.max(blit.bottom_right(baseline).y);
             if line_index == 0 {
-                first_line_max_y = first_line_max_y.max(blit.bottom_right().location.y);
+                first_line_max_y = first_line_max_y.max(blit.bottom_right(baseline).y);
             }
             if COLLECT_GLYPHS {
                 measured_glyphs.push(MeasuredGlyph {
                     blit,
-                    cached: cached.clone(),
                     info: GlyphInfo::new(glyph, line_index, line_width),
                 });
             }
@@ -732,8 +769,7 @@ impl<Unit> DrawableSource for MeasuredText<Unit> {}
 /// Instructions for drawing a laid out glyph.
 #[derive(Clone)]
 pub struct MeasuredGlyph {
-    pub(crate) blit: TextureBlit<Px>,
-    pub(crate) cached: CachedGlyphHandle,
+    pub(crate) blit: GlyphBlit,
     /// Information about what glyph this is.
     pub info: GlyphInfo,
 }
@@ -751,10 +787,15 @@ impl MeasuredGlyph {
     /// Returns the destination rectangle for this glyph.
     #[must_use]
     pub fn rect(&self) -> Rect<Px> {
-        Rect::from_extents(
-            self.blit.top_left().location,
-            self.blit.bottom_right().location,
-        )
+        let top_left = self.blit.top_left();
+        Rect::from_extents(top_left, self.blit.bottom_right(top_left.y))
+    }
+
+    /// Returns true if this measurement is for a visible glyph, as opposed to
+    /// whitespace or padding.
+    #[must_use]
+    pub const fn visible(&self) -> bool {
+        matches!(self.blit, GlyphBlit::Visible { .. })
     }
 }
 
