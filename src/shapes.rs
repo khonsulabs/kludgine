@@ -7,11 +7,11 @@ use figures::{
 };
 use lyon_tessellation::geom::Arc;
 use lyon_tessellation::{
-    FillGeometryBuilder, FillOptions, FillTessellator, FillVertex, FillVertexConstructor,
-    GeometryBuilder, GeometryBuilderError, StrokeGeometryBuilder, StrokeTessellator, StrokeVertex,
+    FillGeometryBuilder, FillTessellator, FillVertex, FillVertexConstructor, GeometryBuilder,
+    GeometryBuilderError, StrokeGeometryBuilder, StrokeTessellator, StrokeVertex,
     StrokeVertexConstructor, VertexId,
 };
-pub use lyon_tessellation::{LineCap, LineJoin};
+pub use lyon_tessellation::{FillOptions, LineCap, LineJoin, Orientation};
 use smallvec::SmallVec;
 
 use crate::pipeline::Vertex;
@@ -77,7 +77,6 @@ impl<Unit: PixelScaling> Shape<Unit, false> {
     /// Returns a circle that is stroked with `color` and `options`.
     pub fn stroked_circle(
         radius: Unit,
-        color: Color,
         origin: Origin<Unit>,
         options: impl Into<StrokeOptions<Unit>>,
     ) -> Shape<Unit, false>
@@ -94,13 +93,14 @@ impl<Unit: PixelScaling> Shape<Unit, false> {
             Origin::Center => Point::default(),
             Origin::Custom(pt) => pt,
         };
-        let mut shape_builder = ShapeBuilder::new(color);
+        let options = options.into();
+        let mut shape_builder = ShapeBuilder::new(options.color);
         let mut tesselator = StrokeTessellator::new();
         tesselator
             .tessellate_circle(
                 lyon_tessellation::math::point(center.x.into_float(), center.y.into_float()),
                 radius.into_float(),
-                &options.into().into(),
+                &options.into(),
                 &mut shape_builder,
             )
             .assert("should not fail to tesselat4e a rect");
@@ -663,6 +663,16 @@ where
     /// To render the image unchanged, use [`Color::WHITE`].
     #[must_use]
     pub fn fill(&self, color: Color) -> Shape<Unit, TEXTURED> {
+        self.fill_opt(color, &FillOptions::DEFAULT)
+    }
+
+    /// Fills this path with `color` using the provided options.
+    ///
+    /// If this is a textured image or the path endpoints were constructed with
+    /// colors, the sampled texture colors will be multiplied with this color.
+    /// To render the image unchanged, use [`Color::WHITE`].
+    #[must_use]
+    pub fn fill_opt(&self, color: Color, options: &FillOptions) -> Shape<Unit, TEXTURED> {
         let lyon_path = self.as_lyon();
         let mut shape_builder = ShapeBuilder::new(color);
         let mut tesselator = FillTessellator::new();
@@ -671,7 +681,7 @@ where
                 lyon_path.id_iter(),
                 &lyon_path,
                 Some(&lyon_path),
-                &FillOptions::DEFAULT,
+                options,
                 &mut shape_builder,
             )
             .assert("should not fail to tesselat4e a rect");
