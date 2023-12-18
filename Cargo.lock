@@ -81,7 +81,8 @@ dependencies = [
 [[package]]
 name = "appit"
 version = "0.1.0"
-source = "git+https://github.com/khonsulabs/appit#c036093beec71780f957709df1cd932de779e06e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c843008d81c05e90e716349b2fa73017583f40965bf1651a34fa5fa7159eeef7"
 dependencies = [
  "winit",
 ]
@@ -540,7 +541,8 @@ dependencies = [
 [[package]]
 name = "figures"
 version = "0.2.0"
-source = "git+https://github.com/khonsulabs/figures#1d645c9b5eafa20339b5bc8d74afc2d001a7b4b1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "63172cefd2b4018ab01e207ce8b951e757575412d58a9370619d19ea16ddc948"
 dependencies = [
  "bytemuck",
  "euclid",

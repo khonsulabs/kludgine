@@ -8,7 +8,7 @@ default = ["app", "image", "cosmic-text"]
 app = ["dep:appit"]
 
 [dependencies]
-appit = { git = "https://github.com/khonsulabs/appit", optional = true }
+appit = { version = "0.1.0", optional = true }
 wgpu = { version = "0.18.0", features = ["expose-ids"] }
 pollster = "0.3.0"
 bytemuck = { version = "1.13.1", features = ["derive"] }
@@ -18,7 +18,7 @@ cosmic-text = { version = "0.10.0", optional = true }
 alot = "0.3.0"
 ahash = { version = "0.8.3", default-features = false }
 etagere = "0.2.8"
-figures = { git = "https://github.com/khonsulabs/figures", features = [
+figures = { version = "0.2.0", features = [
     "wgpu",
     "winit",
     "bytemuck",
