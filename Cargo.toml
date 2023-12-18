@@ -2,6 +2,13 @@
 name = "kludgine"
 version = "0.6.0"
 edition = "2021"
+description = "A wgpu-powered 2d graphics library with optional windowing support"
+readme = "../README.md"
+license = "MIT OR Apache-2.0"
+keywords = ["gamedev", "graphics", "wgpu"]
+categories = ["graphics", "rendering::engine", "game-engines"]
+repository = "https://github.com/khonsulabs/kludgine"
+rust-version = "1.70.0"
 
 [features]
 default = ["app", "image", "cosmic-text"]
