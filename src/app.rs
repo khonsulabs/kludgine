@@ -607,7 +607,6 @@ struct KludgineWindow<Behavior> {
     queue: wgpu::Queue,
     msaa_texture: Option<wgpu::Texture>,
     _adapter: wgpu::Adapter,
-    wgpu: Arc<wgpu::Instance>,
 }
 
 impl<T, User> appit::WindowBehavior<CreateSurfaceRequest<User>> for KludgineWindow<T>
@@ -688,7 +687,6 @@ where
         surface.configure(&device, &config);
 
         Self {
-            wgpu,
             kludgine: state,
             last_render,
             last_render_duration: Duration::ZERO,
@@ -702,7 +700,6 @@ where
         }
     }
 
-    #[allow(unsafe_code)]
     fn redraw(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
         let surface = loop {
             match self.surface.get_current_texture() {
@@ -716,9 +713,12 @@ where
                         return;
                     }
                     wgpu::SurfaceError::Lost => {
-                        // SAFETY: redraw is only called while the event loop
-                        // and window are still alive.
-                        self.surface = unsafe { self.wgpu.create_surface(window.winit()).unwrap() };
+                        self.surface = window
+                            .send(CreateSurfaceRequest {
+                                window: window.winit().id(),
+                                data: PhantomData,
+                            })
+                            .expect("app not running");
                         self.surface.configure(&self.device, &self.config);
                     }
                     wgpu::SurfaceError::OutOfMemory => {
