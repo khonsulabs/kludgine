@@ -299,6 +299,13 @@ where
 
     /// Launches a Kludgine app using this window as the primary window.
     ///
+    /// # Panics
+    ///
+    /// On many platforms, it is a requirement that this function only be called
+    /// from the thread that is executing the program's `main()` function.
+    /// `wgpu` may panic when creating a surface if this function is not called
+    /// from the correct thread.
+    ///
     /// # Errors
     ///
     /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
@@ -315,15 +322,37 @@ where
     /// The `context` is passed along to [`initialize()`](Self::initialize) once
     /// the thread it is running on is spawned.
     ///
+    /// # Panics
+    ///
+    /// On many platforms, it is a requirement that this function only be called
+    /// from the thread that is executing the program's `main()` function.
+    /// `wgpu` may panic when creating a surface if this function is not called
+    /// from the correct thread.
+    ///
     /// # Errors
     ///
     /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
     /// [`EventLoop::run`](appit::winit::event_loop::EventLoop::run) for more
     /// information.
+    #[allow(unsafe_code)]
     fn run_with(context: Self::Context) -> Result<(), EventLoopError> {
         let window_attributes = Self::initial_window_attributes(&context);
 
-        let app = PendingApp::new_with_event_callback(handle_window_message);
+        let app = PendingApp::new_with_event_callback(
+            |request: CreateSurfaceRequest<WindowEvent>, windows: &appit::Windows<WindowEvent>| {
+                let window = windows.get(request.window).expect("window not found");
+                // SAFETY: This callback is only invoked by the winit event
+                // loop, where the window will already be removed from the
+                // collection if it is closed. Additionally, because this
+                // callback is only invoked from the winit event loop, we are
+                // guaranteed that we are on the original thread winit began on.
+                unsafe {
+                    shared_wgpu()
+                        .create_surface(&*window)
+                        .expect("error creating surface")
+                }
+            },
+        );
         let mut window = KludgineWindow::<Self>::build_with(&app, context);
         *window = window_attributes;
         window.open().expect("error opening initial window");
@@ -550,25 +579,6 @@ where
         kludgine: &mut Kludgine,
         event: WindowEvent,
     ) {
-    }
-}
-
-#[allow(unsafe_code, clippy::needless_pass_by_value)]
-fn handle_window_message<User>(
-    request: CreateSurfaceRequest<User>,
-    windows: &appit::Windows<User>,
-) -> wgpu::Surface
-where
-    User: Send + 'static,
-{
-    let window = windows.get(request.window).expect("window not found");
-    // SAFETY: This function is only invoked once the window has been
-    // created, and cannot be invoked after the underlying window has been
-    // destroyed.
-    unsafe {
-        shared_wgpu()
-            .create_surface(&*window)
-            .expect("error creating surface")
     }
 }
 
