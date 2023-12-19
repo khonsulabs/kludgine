@@ -341,11 +341,10 @@ where
         let app = PendingApp::new_with_event_callback(
             |request: CreateSurfaceRequest<WindowEvent>, windows: &appit::Windows<WindowEvent>| {
                 let window = windows.get(request.window).expect("window not found");
-                // SAFETY: This callback is only invoked by the winit event
-                // loop, where the window will already be removed from the
-                // collection if it is closed. Additionally, because this
-                // callback is only invoked from the winit event loop, we are
-                // guaranteed that we are on the original thread winit began on.
+                // SAFETY: The winit window is valid and open when it is
+                // contained in the windows collection. The surface being
+                // created is stored on the KludgineWindow, which is dropped
+                // prior to the appit/winit window closing.
                 unsafe {
                     shared_wgpu()
                         .create_surface(&*window)
