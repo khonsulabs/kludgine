@@ -1423,7 +1423,7 @@
                 glyph,
                 (run.line_top / metrics.line_height).round().cast::&lt;usize&gt;(),
                 relative_to.y,
-                Px::from(run.line_w),
+                Px::from(run.line_w.ceil()),
                 kludgine,
             );
         }
