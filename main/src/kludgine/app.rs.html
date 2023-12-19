@@ -1283,6 +1283,7 @@
 <a href="#1283" id="1283">1283</a>
 <a href="#1284" id="1284">1284</a>
 <a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::num::NonZeroU32;
@@ -1886,7 +1887,8 @@
     last_render_duration: Duration,
 
     config: wgpu::SurfaceConfiguration,
-    surface: wgpu::Surface,
+    <span class="comment">// SAFETY: Must not outlive this KludgineWindow.
+    </span>surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
     msaa_texture: <span class="prelude-ty">Option</span>&lt;wgpu::Texture&gt;,
