@@ -1283,7 +1283,6 @@
 <a href="#1283" id="1283">1283</a>
 <a href="#1284" id="1284">1284</a>
 <a href="#1285" id="1285">1285</a>
-<a href="#1286" id="1286">1286</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::num::NonZeroU32;
@@ -1627,11 +1626,10 @@
         <span class="kw">let </span>app = PendingApp::new_with_event_callback(
             |request: CreateSurfaceRequest&lt;WindowEvent&gt;, windows: <span class="kw-2">&amp;</span>appit::Windows&lt;WindowEvent&gt;| {
                 <span class="kw">let </span>window = windows.get(request.window).expect(<span class="string">&quot;window not found&quot;</span>);
-                <span class="comment">// SAFETY: This callback is only invoked by the winit event
-                // loop, where the window will already be removed from the
-                // collection if it is closed. Additionally, because this
-                // callback is only invoked from the winit event loop, we are
-                // guaranteed that we are on the original thread winit began on.
+                <span class="comment">// SAFETY: The winit window is valid and open when it is
+                // contained in the windows collection. The surface being
+                // created is stored on the KludgineWindow, which is dropped
+                // prior to the appit/winit window closing.
                 </span><span class="kw">unsafe </span>{
                     shared_wgpu()
                         .create_surface(<span class="kw-2">&amp;*</span>window)
