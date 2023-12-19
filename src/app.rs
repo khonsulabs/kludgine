@@ -602,6 +602,7 @@ struct KludgineWindow<Behavior> {
     last_render_duration: Duration,
 
     config: wgpu::SurfaceConfiguration,
+    // SAFETY: Must not outlive this KludgineWindow.
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -703,7 +704,7 @@ where
     }
 
     #[allow(unsafe_code)]
-    fn redraw(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
+    unsafe fn redraw(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
         let surface = loop {
             match self.surface.get_current_texture() {
                 Ok(frame) => break frame,
@@ -717,7 +718,9 @@ where
                     }
                     wgpu::SurfaceError::Lost => {
                         // SAFETY: redraw is only called while the event loop
-                        // and window are still alive.
+                        // and window are still alive. The caller guarantees that this
+                        // `KlugineWindow` and therefore the `surface`, is dropped 
+                        // before the window is dropped.
                         self.surface = unsafe { self.wgpu.create_surface(window.winit()).unwrap() };
                         self.surface.configure(&self.device, &self.config);
                     }
