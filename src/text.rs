@@ -535,7 +535,7 @@ pub(crate) fn map_each_glyph(
                 glyph,
                 (run.line_top / metrics.line_height).round().cast::<usize>(),
                 relative_to.y,
-                Px::from(run.line_w),
+                Px::from(run.line_w.ceil()),
                 kludgine,
             );
         }
