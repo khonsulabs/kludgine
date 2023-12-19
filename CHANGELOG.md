@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- A panic "Unsupported uniform datatype! 0x1405" has been resolved that occurred
+  on some devices where push constants were being emulated and only signed
+  integers were unspported.
+- [#66][66]: A rounding error has been fixed when calculating the text width
+      would cause the line width to be rounded down in some cases.
+- If `wgpu` reports a `SurfaceError::Lost`, the `create_surface()` call is now
+  correctly made on the main thread rather than the window thread. Thanks to
+  [@Plecra][plecra] for reviewing the unsafe code and noticing this issue. This
+  review also led to further reductions in the amount of unsafe code and
+  improved the safety comments.
+
+[66]: https://github.com/khonsulabs/kludgine/pull/66
+[plecra]: https://github.com/Plecra
+
 ## v0.6.0 (2023-12-18)
 
 This version is a complete rewrite. While some code was copied across, this
