@@ -1,6 +1,6 @@
 [package]
 name = "kludgine"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2021"
 description = "A wgpu-powered 2d graphics library with optional windowing support"
 readme = "./README.md"
