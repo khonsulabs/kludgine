@@ -1,5 +1,5 @@
 struct PushConstants {
-    flags: u32,
+    flags: i32,
     scale: f32,
     rotation: f32,
     opacity: f32,
@@ -74,10 +74,12 @@ fn vertex(input: VertexInput) -> VertexOutput {
     let flag_rotation = flag_dips << u32(2);
     let flag_translate = flag_dips << u32(3);
 
+    let flags = u32(pc.flags);
+
     var dips_scale = ratio(uniforms.dips_scale);
     var outval: VertexOutput;
     var position: vec2<f32>;
-    if (pc.flags & flag_dips) != u32(0) {
+    if (flags & flag_dips) != u32(0) {
         position = vec2<f32>(
             f32(dips_to_pixels(input.position.x, dips_scale)),
             f32(dips_to_pixels(input.position.y, dips_scale)),
@@ -88,15 +90,15 @@ fn vertex(input: VertexInput) -> VertexOutput {
             f32(input.position.y),
         );
     }
-    if (pc.flags & flag_rotation) != u32(0) {
+    if (flags & flag_rotation) != u32(0) {
         var angle_cos = cos(pc.rotation);
         var angle_sin = sin(pc.rotation);
         position = position * mat2x2<f32>(angle_cos, -angle_sin, angle_sin, angle_cos);
     }
-    if (pc.flags & flag_scale) != u32(0) {
+    if (flags & flag_scale) != u32(0) {
         position = position * pc.scale;
     }
-    if (pc.flags & flag_translate) != u32(0) {
+    if (flags & flag_translate) != u32(0) {
         position = position + vec2<f32>(
             f32(pc.translation_x),
             f32(pc.translation_y)
@@ -128,9 +130,10 @@ fn fragment(fragment: FragmentInput) -> @location(0) vec4<f32> {
 
     var color = fragment.color;
 
-    if (pc.flags & flag_textured) != u32(0) {
+    let flags = u32(pc.flags);
+    if (flags & flag_textured) != u32(0) {
         let sample = textureSample(r_texture, r_sampler, fragment.uv / 4.);
-        if (pc.flags & flag_masked) != u32(0) {
+        if (flags & flag_masked) != u32(0) {
             return vec4<f32>(color.x, color.y, color.z, sample.x * color.w);
         }
 
