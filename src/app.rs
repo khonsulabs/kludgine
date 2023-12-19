@@ -341,11 +341,10 @@ where
         let app = PendingApp::new_with_event_callback(
             |request: CreateSurfaceRequest<WindowEvent>, windows: &appit::Windows<WindowEvent>| {
                 let window = windows.get(request.window).expect("window not found");
-                // SAFETY: This callback is only invoked by the winit event
-                // loop, where the window will already be removed from the
-                // collection if it is closed. Additionally, because this
-                // callback is only invoked from the winit event loop, we are
-                // guaranteed that we are on the original thread winit began on.
+                // SAFETY: The winit window is valid and open when it is
+                // contained in the windows collection. The surface being
+                // created is stored on the KludgineWindow, which is dropped
+                // prior to the appit/winit window closing.
                 unsafe {
                     shared_wgpu()
                         .create_surface(&*window)
@@ -608,7 +607,6 @@ struct KludgineWindow<Behavior> {
     queue: wgpu::Queue,
     msaa_texture: Option<wgpu::Texture>,
     _adapter: wgpu::Adapter,
-    wgpu: Arc<wgpu::Instance>,
 }
 
 impl<T, User> appit::WindowBehavior<CreateSurfaceRequest<User>> for KludgineWindow<T>
@@ -689,7 +687,6 @@ where
         surface.configure(&device, &config);
 
         Self {
-            wgpu,
             kludgine: state,
             last_render,
             last_render_duration: Duration::ZERO,
@@ -703,8 +700,7 @@ where
         }
     }
 
-    #[allow(unsafe_code)]
-    unsafe fn redraw(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
+    fn redraw(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
         let surface = loop {
             match self.surface.get_current_texture() {
                 Ok(frame) => break frame,
@@ -717,11 +713,12 @@ where
                         return;
                     }
                     wgpu::SurfaceError::Lost => {
-                        // SAFETY: redraw is only called while the event loop
-                        // and window are still alive. The caller guarantees that this
-                        // `KlugineWindow` and therefore the `surface`, is dropped 
-                        // before the window is dropped.
-                        self.surface = unsafe { self.wgpu.create_surface(window.winit()).unwrap() };
+                        self.surface = window
+                            .send(CreateSurfaceRequest {
+                                window: window.winit().id(),
+                                data: PhantomData,
+                            })
+                            .expect("app not running");
                         self.surface.configure(&self.device, &self.config);
                     }
                     wgpu::SurfaceError::OutOfMemory => {
