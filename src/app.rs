@@ -562,6 +562,9 @@ where
     User: Send + 'static,
 {
     let window = windows.get(request.window).expect("window not found");
+    // SAFETY: This function is only invoked once the window has been
+    // created, and cannot be invoked after the underlying window has been
+    // destroyed.
     unsafe {
         shared_wgpu()
             .create_surface(&*window)
@@ -604,14 +607,10 @@ where
 {
     type Context = T::Context;
 
-    #[allow(unsafe_code)]
     fn initialize(
         window: &mut RunningWindow<CreateSurfaceRequest<User>>,
         context: Self::Context,
     ) -> Self {
-        // SAFETY: This function is only invoked once the window has been
-        // created, and cannot be invoked after the underlying window has been
-        // destroyed.
         let surface = window
             .send(CreateSurfaceRequest {
                 window: window.winit().id(),
