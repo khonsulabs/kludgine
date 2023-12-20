@@ -2,7 +2,6 @@
 
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
-use std::panic::UnwindSafe;
 use std::time::Duration;
 
 use alot::{LotId, OrderedLots};
@@ -121,7 +120,7 @@ fn last_tile(pos: Point<Px>, tile_size: Px) -> TileOffset {
     }
 }
 
-pub trait Layers: Debug + UnwindSafe + Send + 'static {
+pub trait Layers: Debug + Send + 'static {
     fn layer(&self, index: usize) -> Option<&dyn Layer>;
     fn layer_mut(&mut self, index: usize) -> Option<&mut dyn Layer>;
 }
@@ -142,7 +141,7 @@ where
 macro_rules! impl_layers_for_tuples {
     ($($type:ident : $index:tt),+) => {
         impl<$($type),+> Layers for ($($type,)+) where $(
-            $type: Debug + UnwindSafe + Send + Layer + 'static
+            $type: Debug +  Send + Layer + 'static
         ),+ {
             fn layer(&self, index: usize) -> Option<&dyn Layer> {
                 match index {
@@ -231,7 +230,7 @@ impl<'ctx, 'pass> DerefMut for LayerContext<'_, 'ctx, 'pass> {
     }
 }
 
-pub trait Layer: Debug + UnwindSafe + Send + 'static {
+pub trait Layer: Debug + Send + 'static {
     fn render(&mut self, context: &mut LayerContext<'_, '_, '_>) -> Option<Duration>;
 
     fn find_object(&self, _object: ObjectId) -> Option<Point<Px>> {
@@ -317,9 +316,7 @@ where
 }
 
 #[allow(clippy::len_without_is_empty)]
-pub trait TileList:
-    IndexMut<usize, Output = TileKind> + Send + UnwindSafe + Debug + 'static
-{
+pub trait TileList: IndexMut<usize, Output = TileKind> + Send + Debug + 'static {
     fn len(&self) -> usize;
 }
 
@@ -335,7 +332,7 @@ impl<const N: usize> TileList for [TileKind; N] {
     }
 }
 
-pub trait TileSource: Send + UnwindSafe + Debug + 'static {
+pub trait TileSource: Send + Debug + 'static {
     fn minimum_tile(&self) -> Point<isize> {
         Point::MIN
     }
@@ -558,7 +555,7 @@ impl Default for TileMapFocus {
     }
 }
 
-pub trait Object: Debug + UnwindSafe + Send + 'static {
+pub trait Object: Debug + Send + 'static {
     fn position(&self) -> Point<Px>;
     fn render(
         &self,

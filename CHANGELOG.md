@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Breaking Changes
+
+- `UnwindSafe` has been removed from the bounds of `WindowBehavior::Context`,
+  and various types may or may no longer implmement `UnwindSafe`. The underlying
+  requirement for this has been removed from `appit`.
+
 ## v0.6.1 (2023-12-19)
 
 ### Fixed

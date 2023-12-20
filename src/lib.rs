@@ -10,7 +10,6 @@ use std::collections::HashMap;
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{self, BuildHasher, Hash};
 use std::ops::{Add, AddAssign, Deref, DerefMut, Div, Neg};
-use std::panic::{RefUnwindSafe, UnwindSafe};
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 
 use ahash::AHasher;
@@ -1272,9 +1271,6 @@ impl TextureInstance {
         }
     }
 }
-
-impl UnwindSafe for TextureInstance {}
-impl RefUnwindSafe for TextureInstance {}
 
 impl Texture {
     fn from_wgpu(

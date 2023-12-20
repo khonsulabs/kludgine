@@ -15,7 +15,8 @@ default = ["app", "image", "cosmic-text"]
 app = ["dep:appit"]
 
 [dependencies]
-appit = { version = "0.1.1", optional = true }
+# appit = { version = "0.1.1", optional = true }
+appit = { git = "https://github.com/khonsulabs/appit", optional = true }
 wgpu = { version = "0.18.0", features = ["expose-ids"] }
 pollster = "0.3.0"
 bytemuck = { version = "1.13.1", features = ["derive"] }
@@ -45,8 +46,6 @@ image = { version = "0.24.6", features = ["png"] }
 
 # [patch.crates-io]
 # intentional = { path = "../intentional" }
-
-# [patch."https://github.com/khonsulabs/appit"]
 # appit = { path = "../appit" }
 
 # [patch."https://github.com/khonsulabs/figures"]

@@ -1,7 +1,6 @@
 use std::marker::PhantomData;
 use std::mem::size_of;
 use std::num::NonZeroU32;
-use std::panic::UnwindSafe;
 use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
@@ -223,7 +222,7 @@ where
     /// can be useful to receive input from the thread that is opening the
     /// window. This is where `Context` is useful: it must implement `Send`,
     /// allowing some data to still be passed when opening the window.
-    type Context: UnwindSafe + Send + 'static;
+    type Context: Send + 'static;
 
     /// Initialize a new instance from the provided context.
     fn initialize(
@@ -1202,8 +1201,6 @@ where
     }
 }
 
-impl<T> UnwindSafe for KludgineWindow<T> {}
-
 struct CallbackWindow<C> {
     callback: C,
     rendering: Drawing,
@@ -1214,7 +1211,6 @@ impl<T> WindowBehavior for CallbackWindow<T>
 where
     T: for<'render, 'gfx, 'window> FnMut(Renderer<'render, 'gfx>, Window<'window>) -> bool
         + Send
-        + UnwindSafe
         + 'static,
 {
     type Context = T;
@@ -1258,7 +1254,6 @@ pub fn run<RenderFn>(render_fn: RenderFn) -> Result<(), EventLoopError>
 where
     RenderFn: for<'render, 'gfx, 'window> FnMut(Renderer<'render, 'gfx>, Window<'window>) -> bool
         + Send
-        + UnwindSafe
         + 'static,
 {
     CallbackWindow::run_with(render_fn)
