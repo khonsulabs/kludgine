@@ -1980,10 +1980,6 @@
 <a href="#1980" id="1980">1980</a>
 <a href="#1981" id="1981">1981</a>
 <a href="#1982" id="1982">1982</a>
-<a href="#1983" id="1983">1983</a>
-<a href="#1984" id="1984">1984</a>
-<a href="#1985" id="1985">1985</a>
-<a href="#1986" id="1986">1986</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -1996,7 +1992,6 @@
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug, Formatter};
 <span class="kw">use </span>std::hash::{<span class="self">self</span>, BuildHasher, Hash};
 <span class="kw">use </span>std::ops::{Add, AddAssign, Deref, DerefMut, Div, Neg};
-<span class="kw">use </span>std::panic::{RefUnwindSafe, UnwindSafe};
 <span class="kw">use </span>std::sync::{Arc, Mutex, OnceLock, PoisonError};
 
 <span class="kw">use </span>ahash::AHasher;
@@ -3258,9 +3253,6 @@
         }
     }
 }
-
-<span class="kw">impl </span>UnwindSafe <span class="kw">for </span>TextureInstance {}
-<span class="kw">impl </span>RefUnwindSafe <span class="kw">for </span>TextureInstance {}
 
 <span class="kw">impl </span>Texture {
     <span class="kw">fn </span>from_wgpu(

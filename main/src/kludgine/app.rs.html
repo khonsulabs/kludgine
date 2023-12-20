@@ -1279,15 +1279,9 @@
 <a href="#1279" id="1279">1279</a>
 <a href="#1280" id="1280">1280</a>
 <a href="#1281" id="1281">1281</a>
-<a href="#1282" id="1282">1282</a>
-<a href="#1283" id="1283">1283</a>
-<a href="#1284" id="1284">1284</a>
-<a href="#1285" id="1285">1285</a>
-<a href="#1286" id="1286">1286</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::num::NonZeroU32;
-<span class="kw">use </span>std::panic::UnwindSafe;
 <span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>std::sync::{Arc, OnceLock};
 <span class="kw">use </span>std::time::{Duration, Instant};
@@ -1509,7 +1503,7 @@
     /// can be useful to receive input from the thread that is opening the
     /// window. This is where `Context` is useful: it must implement `Send`,
     /// allowing some data to still be passed when opening the window.
-    </span><span class="kw">type </span>Context: UnwindSafe + Send + <span class="lifetime">&#39;static</span>;
+    </span><span class="kw">type </span>Context: Send + <span class="lifetime">&#39;static</span>;
 
     <span class="doccomment">/// Initialize a new instance from the provided context.
     </span><span class="kw">fn </span>initialize(
@@ -2488,8 +2482,6 @@
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; UnwindSafe <span class="kw">for </span>KludgineWindow&lt;T&gt; {}
-
 <span class="kw">struct </span>CallbackWindow&lt;C&gt; {
     callback: C,
     rendering: Drawing,
@@ -2500,7 +2492,6 @@
 <span class="kw">where
     </span>T: <span class="kw">for</span>&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>, <span class="lifetime">&#39;window</span>&gt; FnMut(Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt;, Window&lt;<span class="lifetime">&#39;window</span>&gt;) -&gt; bool
         + Send
-        + UnwindSafe
         + <span class="lifetime">&#39;static</span>,
 {
     <span class="kw">type </span>Context = T;
@@ -2544,7 +2535,6 @@
 <span class="kw">where
     </span>RenderFn: <span class="kw">for</span>&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>, <span class="lifetime">&#39;window</span>&gt; FnMut(Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt;, Window&lt;<span class="lifetime">&#39;window</span>&gt;) -&gt; bool
         + Send
-        + UnwindSafe
         + <span class="lifetime">&#39;static</span>,
 {
     CallbackWindow::run_with(render_fn)

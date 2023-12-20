@@ -592,14 +592,10 @@
 <a href="#592" id="592">592</a>
 <a href="#593" id="593">593</a>
 <a href="#594" id="594">594</a>
-<a href="#595" id="595">595</a>
-<a href="#596" id="596">596</a>
-<a href="#597" id="597">597</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(missing_docs, clippy::missing_panics_doc)] </span><span class="comment">// This file is a work in progress.
 
 </span><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Index, IndexMut};
-<span class="kw">use </span>std::panic::UnwindSafe;
 <span class="kw">use </span>std::time::Duration;
 
 <span class="kw">use </span>alot::{LotId, OrderedLots};
@@ -718,7 +714,7 @@
     }
 }
 
-<span class="kw">pub trait </span>Layers: Debug + UnwindSafe + Send + <span class="lifetime">&#39;static </span>{
+<span class="kw">pub trait </span>Layers: Debug + Send + <span class="lifetime">&#39;static </span>{
     <span class="kw">fn </span>layer(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>Layer&gt;;
     <span class="kw">fn </span>layer_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Layer&gt;;
 }
@@ -739,7 +735,7 @@
 <span class="macro">macro_rules! </span>impl_layers_for_tuples {
     ($(<span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">ident </span>: <span class="macro-nonterminal">$index</span>:tt),+) =&gt; {
         <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$</span><span class="kw">type</span>),+&gt; <span class="macro-nonterminal">Layers </span><span class="kw">for </span>($(<span class="macro-nonterminal">$</span><span class="kw">type</span>,)+) <span class="kw">where </span>$(
-            <span class="macro-nonterminal">$</span><span class="kw">type</span>: <span class="macro-nonterminal">Debug </span>+ UnwindSafe + Send + Layer + <span class="lifetime">&#39;static
+            <span class="macro-nonterminal">$</span><span class="kw">type</span>: <span class="macro-nonterminal">Debug </span>+  Send + Layer + <span class="lifetime">&#39;static
         </span>),+ {
             <span class="kw">fn </span>layer(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>Layer&gt; {
                 <span class="kw">match </span>index {
@@ -828,7 +824,7 @@
     }
 }
 
-<span class="kw">pub trait </span>Layer: Debug + UnwindSafe + Send + <span class="lifetime">&#39;static </span>{
+<span class="kw">pub trait </span>Layer: Debug + Send + <span class="lifetime">&#39;static </span>{
     <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt;;
 
     <span class="kw">fn </span>find_object(<span class="kw-2">&amp;</span><span class="self">self</span>, _object: ObjectId) -&gt; <span class="prelude-ty">Option</span>&lt;Point&lt;Px&gt;&gt; {
@@ -914,9 +910,7 @@
 }
 
 <span class="attr">#[allow(clippy::len_without_is_empty)]
-</span><span class="kw">pub trait </span>TileList:
-    IndexMut&lt;usize, Output = TileKind&gt; + Send + UnwindSafe + Debug + <span class="lifetime">&#39;static
-</span>{
+</span><span class="kw">pub trait </span>TileList: IndexMut&lt;usize, Output = TileKind&gt; + Send + Debug + <span class="lifetime">&#39;static </span>{
     <span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
 }
 
@@ -932,7 +926,7 @@
     }
 }
 
-<span class="kw">pub trait </span>TileSource: Send + UnwindSafe + Debug + <span class="lifetime">&#39;static </span>{
+<span class="kw">pub trait </span>TileSource: Send + Debug + <span class="lifetime">&#39;static </span>{
     <span class="kw">fn </span>minimum_tile(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Point&lt;isize&gt; {
         Point::MIN
     }
@@ -1155,7 +1149,7 @@
     }
 }
 
-<span class="kw">pub trait </span>Object: Debug + UnwindSafe + Send + <span class="lifetime">&#39;static </span>{
+<span class="kw">pub trait </span>Object: Debug + Send + <span class="lifetime">&#39;static </span>{
     <span class="kw">fn </span>position(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Point&lt;Px&gt;;
     <span class="kw">fn </span>render(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
