@@ -1367,6 +1367,20 @@
 <a href="#1367" id="1367">1367</a>
 <a href="#1368" id="1368">1368</a>
 <a href="#1369" id="1369">1369</a>
+<a href="#1370" id="1370">1370</a>
+<a href="#1371" id="1371">1371</a>
+<a href="#1372" id="1372">1372</a>
+<a href="#1373" id="1373">1373</a>
+<a href="#1374" id="1374">1374</a>
+<a href="#1375" id="1375">1375</a>
+<a href="#1376" id="1376">1376</a>
+<a href="#1377" id="1377">1377</a>
+<a href="#1378" id="1378">1378</a>
+<a href="#1379" id="1379">1379</a>
+<a href="#1380" id="1380">1380</a>
+<a href="#1381" id="1381">1381</a>
+<a href="#1382" id="1382">1382</a>
+<a href="#1383" id="1383">1383</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::num::NonZeroU32;
@@ -1787,12 +1801,8 @@
     /// [`EventLoop::run`](appit::winit::event_loop::EventLoop::run) for more
     /// information.
     </span><span class="kw">fn </span>run_with(context: <span class="self">Self</span>::Context) -&gt; <span class="prelude-ty">Result</span>&lt;(), EventLoopError&gt; {
-        <span class="kw">let </span>window_attributes = <span class="self">Self</span>::initial_window_attributes(<span class="kw-2">&amp;</span>context);
-
         <span class="kw">let </span>app = PendingApp::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>window = KludgineWindow::&lt;<span class="self">Self</span>&gt;::build_with(<span class="kw-2">&amp;</span>app.<span class="number">0</span>, context);
-        <span class="kw-2">*</span>window = window_attributes;
-        window.open().expect(<span class="string">&quot;error opening initial window&quot;</span>);
+        KludgineWindow::&lt;<span class="self">Self</span>&gt;::new(<span class="kw-2">&amp;</span>app, context).open()<span class="question-mark">?</span>;
         app.<span class="number">0</span>.run()
     }
 
@@ -1811,7 +1821,7 @@
         </span>App: AsApplication&lt;AppEvent&lt;WindowEvent&gt;&gt;,
         <span class="self">Self</span>::Context: Default,
     {
-        KludgineWindow::&lt;<span class="self">Self</span>&gt;::build(app)
+        KludgineWindow::&lt;<span class="self">Self</span>&gt;::new(app, &lt;<span class="self">Self</span>::Context&gt;::default())
             .open()
             .map(|opt| opt.map(WindowHandle))
     }
@@ -1833,7 +1843,7 @@
     <span class="kw">where
         </span>App: AsApplication&lt;AppEvent&lt;WindowEvent&gt;&gt;,
     {
-        KludgineWindow::&lt;<span class="self">Self</span>&gt;::build_with(app, context)
+        KludgineWindow::&lt;<span class="self">Self</span>&gt;::new(app, context)
             .open()
             .map(|opt| opt.map(WindowHandle))
     }
@@ -2090,6 +2100,24 @@
     queue: wgpu::Queue,
     msaa_texture: <span class="prelude-ty">Option</span>&lt;wgpu::Texture&gt;,
     _adapter: wgpu::Adapter,
+}
+
+<span class="kw">impl</span>&lt;Behavior&gt; KludgineWindow&lt;Behavior&gt; {
+    <span class="kw">fn </span>new&lt;App, User&gt;(
+        app: <span class="kw-2">&amp;</span>App,
+        context: Behavior::Context,
+    ) -&gt; appit::WindowBuilder&lt;<span class="lifetime">&#39;_</span>, <span class="self">Self</span>, App, AppEvent&lt;User&gt;&gt;
+    <span class="kw">where
+        </span>App: AsApplication&lt;AppEvent&lt;User&gt;&gt;,
+        Behavior: WindowBehavior&lt;User&gt; + <span class="lifetime">&#39;static</span>,
+        User: Send + <span class="lifetime">&#39;static</span>,
+    {
+        <span class="kw">let </span>window_attributes = Behavior::initial_window_attributes(<span class="kw-2">&amp;</span>context);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>window = <span class="self">Self</span>::build_with(app, context);
+        <span class="kw-2">*</span>window = window_attributes;
+        window
+    }
 }
 
 <span class="kw">impl</span>&lt;T, User&gt; appit::WindowBehavior&lt;AppEvent&lt;User&gt;&gt; <span class="kw">for </span>KludgineWindow&lt;T&gt;
