@@ -48,6 +48,9 @@ image = { version = "0.24.6", features = ["png"] }
 # intentional = { path = "../intentional" }
 # appit = { path = "../appit" }
 
+# [patch."https://github.com/khonsulabs/appit"]
+# appit = { path = "../appit" }
+
 # [patch."https://github.com/khonsulabs/figures"]
 # figures = { path = "../figures" }
 

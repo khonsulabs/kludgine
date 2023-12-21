@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and various types may or may no longer implmement `UnwindSafe`. The underlying
   requirement for this has been removed from `appit`.
 
+## Added
+
+- `app::PendingApp` is a type that allows opening one or more windows before
+  running an application.
+- `app::App` is a handle to a running application.
+- `app::Window::app()` returns a handle to the application of the window.
+- `WindowBehavior::open[_with]()` are new functions that allow opening a window
+  into a reference of an `App` or `PendingApp`.
+
 ## v0.6.1 (2023-12-19)
 
 ### Fixed

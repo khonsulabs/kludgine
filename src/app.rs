@@ -6,15 +6,15 @@ use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
 use appit::winit::dpi::{PhysicalPosition, PhysicalSize};
-use appit::winit::error::EventLoopError;
+use appit::winit::error::{EventLoopError, OsError};
 use appit::winit::event::{
     AxisId, DeviceId, ElementState, Ime, KeyEvent, Modifiers, MouseButton, MouseScrollDelta, Touch,
     TouchPhase,
 };
 use appit::winit::keyboard::PhysicalKey;
 use appit::winit::window::{ImePurpose, Theme, WindowId};
-pub use appit::{winit, Message, WindowAttributes};
-use appit::{Application, PendingApp, RunningWindow, WindowBehavior as _};
+pub use appit::{winit, Application, AsApplication, Message, WindowAttributes};
+use appit::{RunningWindow, WindowBehavior as _};
 use figures::units::{Px, UPx};
 use figures::{Point, Rect, Size};
 use intentional::{Assert, Cast};
@@ -28,12 +28,87 @@ fn shared_wgpu() -> Arc<wgpu::Instance> {
     SHARED_WGPU.get_or_init(Arc::default).clone()
 }
 
+/// A `Kludgine` application that enables opening multiple windows.
+pub struct PendingApp<WindowEvent = ()>(appit::PendingApp<AppEvent<WindowEvent>>)
+where
+    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface>;
+
+impl<WindowEvent> Default for PendingApp<WindowEvent>
+where
+    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface>,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<WindowEvent> AsApplication<AppEvent<WindowEvent>> for PendingApp<WindowEvent>
+where
+    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface>,
+{
+    fn as_application(&self) -> &dyn Application<AppEvent<WindowEvent>>
+    where
+        AppEvent<WindowEvent>: Message,
+    {
+        &self.0
+    }
+}
+
+impl<WindowEvent> PendingApp<WindowEvent>
+where
+    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface>,
+{
+    /// Creates a new Kludgine application.
+    #[allow(unsafe_code)]
+    #[must_use]
+    #[allow(clippy::missing_panics_doc)] // The panics are in a closure that happens only after the app is running.
+    pub fn new() -> Self {
+        Self(appit::PendingApp::new_with_event_callback(
+            |request: AppEvent<WindowEvent>, windows: &appit::Windows<WindowEvent>| {
+                let window = windows.get(request.0.window).expect("window not found");
+                // SAFETY: The winit window is valid and open when it is
+                // contained in the windows collection. The surface being
+                // created is stored on the KludgineWindow, which is dropped
+                // prior to the appit/winit window closing.
+                unsafe {
+                    shared_wgpu()
+                        .create_surface(&*window)
+                        .expect("error creating surface")
+                }
+            },
+        ))
+    }
+
+    /// Returns a handle to the application that will be run.
+    #[must_use]
+    pub fn as_app(&self) -> App<WindowEvent> {
+        self.0.app()
+    }
+
+    /// Begins running the application.
+    ///
+    /// On some platforms, this function may never return. If it does return, it
+    /// is after the application has been shut down.
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
+    /// [`EventLoop::run`](winit::event_loop::EventLoop::run) for more
+    /// information.
+    pub fn run(self) -> Result<(), EventLoopError> {
+        self.0.run()
+    }
+}
+
+/// A handle to a running Kludgine application.
+pub type App<WindowEvent = ()> = appit::App<AppEvent<WindowEvent>>;
+
 /// An open window.
 pub struct Window<'window, WindowEvent = ()>
 where
     WindowEvent: Send + 'static,
 {
-    window: &'window mut RunningWindow<CreateSurfaceRequest<WindowEvent>>,
+    window: &'window mut RunningWindow<AppEvent<WindowEvent>>,
     elapsed: Duration,
     last_frame_rendered_in: Duration,
 }
@@ -43,7 +118,7 @@ where
     WindowEvent: Send + 'static,
 {
     fn new(
-        window: &'window mut RunningWindow<CreateSurfaceRequest<WindowEvent>>,
+        window: &'window mut RunningWindow<AppEvent<WindowEvent>>,
         elapsed: Duration,
         last_frame_rendered_in: Duration,
     ) -> Self {
@@ -59,6 +134,15 @@ where
     #[must_use]
     pub fn handle(&self) -> WindowHandle<WindowEvent> {
         WindowHandle(self.window.handle())
+    }
+
+    /// Returns a handle to the application.
+    ///
+    /// This is useful for opening additional windows in a multi-window
+    /// application.
+    #[must_use]
+    pub fn app(&self) -> App<WindowEvent> {
+        self.window.app()
     }
 
     /// Returns the current position of the window.
@@ -333,28 +417,56 @@ where
     /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
     /// [`EventLoop::run`](appit::winit::event_loop::EventLoop::run) for more
     /// information.
-    #[allow(unsafe_code)]
     fn run_with(context: Self::Context) -> Result<(), EventLoopError> {
         let window_attributes = Self::initial_window_attributes(&context);
 
-        let app = PendingApp::new_with_event_callback(
-            |request: CreateSurfaceRequest<WindowEvent>, windows: &appit::Windows<WindowEvent>| {
-                let window = windows.get(request.window).expect("window not found");
-                // SAFETY: The winit window is valid and open when it is
-                // contained in the windows collection. The surface being
-                // created is stored on the KludgineWindow, which is dropped
-                // prior to the appit/winit window closing.
-                unsafe {
-                    shared_wgpu()
-                        .create_surface(&*window)
-                        .expect("error creating surface")
-                }
-            },
-        );
-        let mut window = KludgineWindow::<Self>::build_with(&app, context);
+        let app = PendingApp::new();
+        let mut window = KludgineWindow::<Self>::build_with(&app.0, context);
         *window = window_attributes;
         window.open().expect("error opening initial window");
-        app.run()
+        app.0.run()
+    }
+
+    /// Opens a new window with a default instance of this behavior's
+    /// [`Context`](Self::Context). The events of the window will be processed
+    /// in a thread spawned by this function.
+    ///
+    /// If the application has shut down, this function returns None.
+    ///
+    /// # Errors
+    ///
+    /// The only errors this funciton can return arise from
+    /// [`winit::window::WindowBuilder::build`].
+    fn open<App>(app: &App) -> Result<Option<WindowHandle<WindowEvent>>, OsError>
+    where
+        App: AsApplication<AppEvent<WindowEvent>>,
+        Self::Context: Default,
+    {
+        KludgineWindow::<Self>::build(app)
+            .open()
+            .map(|opt| opt.map(WindowHandle))
+    }
+
+    /// Opens a new window with the provided [`Context`](Self::Context). The
+    /// events of the window will be processed in a thread spawned by this
+    /// function.
+    ///
+    /// If the application has shut down, this function returns None.
+    ///
+    /// # Errors
+    ///
+    /// The only errors this funciton can return arise from
+    /// [`winit::window::WindowBuilder::build`].
+    fn open_with<App>(
+        app: &App,
+        context: Self::Context,
+    ) -> Result<Option<WindowHandle<WindowEvent>>, OsError>
+    where
+        App: AsApplication<AppEvent<WindowEvent>>,
+    {
+        KludgineWindow::<Self>::build_with(app, context)
+            .open()
+            .map(|opt| opt.map(WindowHandle))
     }
 
     /// The window has been requested to be closed. This can happen as a result
@@ -580,12 +692,15 @@ where
     }
 }
 
+/// A Kludgine application event.
+pub struct AppEvent<User>(CreateSurfaceRequest<User>);
+
 struct CreateSurfaceRequest<User> {
     window: WindowId,
     data: PhantomData<User>,
 }
 
-impl<User> Message for CreateSurfaceRequest<User>
+impl<User> Message for AppEvent<User>
 where
     User: Send + 'static,
 {
@@ -608,22 +723,19 @@ struct KludgineWindow<Behavior> {
     _adapter: wgpu::Adapter,
 }
 
-impl<T, User> appit::WindowBehavior<CreateSurfaceRequest<User>> for KludgineWindow<T>
+impl<T, User> appit::WindowBehavior<AppEvent<User>> for KludgineWindow<T>
 where
     T: WindowBehavior<User> + 'static,
     User: Send + 'static,
 {
     type Context = T::Context;
 
-    fn initialize(
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
-        context: Self::Context,
-    ) -> Self {
+    fn initialize(window: &mut RunningWindow<AppEvent<User>>, context: Self::Context) -> Self {
         let surface = window
-            .send(CreateSurfaceRequest {
+            .send(AppEvent(CreateSurfaceRequest {
                 window: window.winit().id(),
                 data: PhantomData,
-            })
+            }))
             .expect("app not running");
         let wgpu = shared_wgpu();
         let adapter = pollster::block_on(wgpu.request_adapter(&wgpu::RequestAdapterOptions {
@@ -699,7 +811,7 @@ where
         }
     }
 
-    fn redraw(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
+    fn redraw(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
         let surface = loop {
             match self.surface.get_current_texture() {
                 Ok(frame) => break frame,
@@ -713,10 +825,10 @@ where
                     }
                     wgpu::SurfaceError::Lost => {
                         self.surface = window
-                            .send(CreateSurfaceRequest {
+                            .send(AppEvent(CreateSurfaceRequest {
                                 window: window.winit().id(),
                                 data: PhantomData,
-                            })
+                            }))
                             .expect("app not running");
                         self.surface.configure(&self.device, &self.config);
                     }
@@ -809,7 +921,7 @@ where
         }
     }
 
-    fn close_requested(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) -> bool {
+    fn close_requested(&mut self, window: &mut RunningWindow<AppEvent<User>>) -> bool {
         self.behavior.close_requested(
             Window::new(
                 window,
@@ -820,7 +932,7 @@ where
         )
     }
 
-    fn focus_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
+    fn focus_changed(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
         self.behavior.focus_changed(
             Window::new(
                 window,
@@ -831,7 +943,7 @@ where
         );
     }
 
-    fn occlusion_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
+    fn occlusion_changed(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
         self.behavior.occlusion_changed(
             Window::new(
                 window,
@@ -842,7 +954,7 @@ where
         );
     }
 
-    fn resized(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
+    fn resized(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
         self.config.width = window.inner_size().width;
         self.config.height = window.inner_size().height;
         self.surface.configure(&self.device, &self.config);
@@ -862,7 +974,7 @@ where
         );
     }
 
-    fn scale_factor_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
+    fn scale_factor_changed(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
         self.behavior.scale_factor_changed(
             Window::new(
                 window,
@@ -873,7 +985,7 @@ where
         );
     }
 
-    fn theme_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
+    fn theme_changed(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
         self.behavior.theme_changed(
             Window::new(
                 window,
@@ -884,11 +996,7 @@ where
         );
     }
 
-    fn dropped_file(
-        &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
-        path: PathBuf,
-    ) {
+    fn dropped_file(&mut self, window: &mut RunningWindow<AppEvent<User>>, path: PathBuf) {
         self.behavior.dropped_file(
             Window::new(
                 window,
@@ -900,11 +1008,7 @@ where
         );
     }
 
-    fn hovered_file(
-        &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
-        path: PathBuf,
-    ) {
+    fn hovered_file(&mut self, window: &mut RunningWindow<AppEvent<User>>, path: PathBuf) {
         self.behavior.hovered_file(
             Window::new(
                 window,
@@ -916,7 +1020,7 @@ where
         );
     }
 
-    fn hovered_file_cancelled(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
+    fn hovered_file_cancelled(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
         self.behavior.hovered_file_cancelled(
             Window::new(
                 window,
@@ -927,11 +1031,7 @@ where
         );
     }
 
-    fn received_character(
-        &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
-        char: char,
-    ) {
+    fn received_character(&mut self, window: &mut RunningWindow<AppEvent<User>>, char: char) {
         self.behavior.received_character(
             Window::new(
                 window,
@@ -945,7 +1045,7 @@ where
 
     fn keyboard_input(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
+        window: &mut RunningWindow<AppEvent<User>>,
         device_id: DeviceId,
         event: KeyEvent,
         is_synthetic: bool,
@@ -963,7 +1063,7 @@ where
         );
     }
 
-    fn modifiers_changed(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>) {
+    fn modifiers_changed(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
         self.behavior.modifiers_changed(
             Window::new(
                 window,
@@ -974,7 +1074,7 @@ where
         );
     }
 
-    fn ime(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>, ime: Ime) {
+    fn ime(&mut self, window: &mut RunningWindow<AppEvent<User>>, ime: Ime) {
         self.behavior.ime(
             Window::new(
                 window,
@@ -988,7 +1088,7 @@ where
 
     fn cursor_moved(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
+        window: &mut RunningWindow<AppEvent<User>>,
         device_id: DeviceId,
         position: PhysicalPosition<f64>,
     ) {
@@ -1004,11 +1104,7 @@ where
         );
     }
 
-    fn cursor_entered(
-        &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
-        device_id: DeviceId,
-    ) {
+    fn cursor_entered(&mut self, window: &mut RunningWindow<AppEvent<User>>, device_id: DeviceId) {
         self.behavior.cursor_entered(
             Window::new(
                 window,
@@ -1020,11 +1116,7 @@ where
         );
     }
 
-    fn cursor_left(
-        &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
-        device_id: DeviceId,
-    ) {
+    fn cursor_left(&mut self, window: &mut RunningWindow<AppEvent<User>>, device_id: DeviceId) {
         self.behavior.cursor_left(
             Window::new(
                 window,
@@ -1038,7 +1130,7 @@ where
 
     fn mouse_wheel(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
+        window: &mut RunningWindow<AppEvent<User>>,
         device_id: DeviceId,
         delta: MouseScrollDelta,
         phase: TouchPhase,
@@ -1058,7 +1150,7 @@ where
 
     fn mouse_input(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
+        window: &mut RunningWindow<AppEvent<User>>,
         device_id: DeviceId,
         state: ElementState,
         button: MouseButton,
@@ -1078,7 +1170,7 @@ where
 
     fn touchpad_pressure(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
+        window: &mut RunningWindow<AppEvent<User>>,
         device_id: DeviceId,
         pressure: f32,
         stage: i64,
@@ -1098,7 +1190,7 @@ where
 
     fn axis_motion(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
+        window: &mut RunningWindow<AppEvent<User>>,
         device_id: DeviceId,
         axis: AxisId,
         value: f64,
@@ -1116,7 +1208,7 @@ where
         );
     }
 
-    fn touch(&mut self, window: &mut RunningWindow<CreateSurfaceRequest<User>>, touch: Touch) {
+    fn touch(&mut self, window: &mut RunningWindow<AppEvent<User>>, touch: Touch) {
         self.behavior.touch(
             Window::new(
                 window,
@@ -1130,7 +1222,7 @@ where
 
     fn touchpad_magnify(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
+        window: &mut RunningWindow<AppEvent<User>>,
         device_id: DeviceId,
         delta: f64,
         phase: TouchPhase,
@@ -1148,11 +1240,7 @@ where
         );
     }
 
-    fn smart_magnify(
-        &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
-        device_id: DeviceId,
-    ) {
+    fn smart_magnify(&mut self, window: &mut RunningWindow<AppEvent<User>>, device_id: DeviceId) {
         self.behavior.smart_magnify(
             Window::new(
                 window,
@@ -1166,7 +1254,7 @@ where
 
     fn touchpad_rotate(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
+        window: &mut RunningWindow<AppEvent<User>>,
         device_id: DeviceId,
         delta: f32,
         phase: TouchPhase,
@@ -1186,8 +1274,8 @@ where
 
     fn event(
         &mut self,
-        window: &mut RunningWindow<CreateSurfaceRequest<User>>,
-        event: <CreateSurfaceRequest<User> as Message>::Window,
+        window: &mut RunningWindow<AppEvent<User>>,
+        event: <AppEvent<User> as Message>::Window,
     ) {
         self.behavior.event(
             Window::new(
