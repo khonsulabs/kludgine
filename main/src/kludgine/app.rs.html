@@ -1279,6 +1279,94 @@
 <a href="#1279" id="1279">1279</a>
 <a href="#1280" id="1280">1280</a>
 <a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
+<a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
+<a href="#1301" id="1301">1301</a>
+<a href="#1302" id="1302">1302</a>
+<a href="#1303" id="1303">1303</a>
+<a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a>
+<a href="#1308" id="1308">1308</a>
+<a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
+<a href="#1314" id="1314">1314</a>
+<a href="#1315" id="1315">1315</a>
+<a href="#1316" id="1316">1316</a>
+<a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
+<a href="#1359" id="1359">1359</a>
+<a href="#1360" id="1360">1360</a>
+<a href="#1361" id="1361">1361</a>
+<a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
+<a href="#1365" id="1365">1365</a>
+<a href="#1366" id="1366">1366</a>
+<a href="#1367" id="1367">1367</a>
+<a href="#1368" id="1368">1368</a>
+<a href="#1369" id="1369">1369</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::num::NonZeroU32;
@@ -1287,15 +1375,15 @@
 <span class="kw">use </span>std::time::{Duration, Instant};
 
 <span class="kw">use </span>appit::winit::dpi::{PhysicalPosition, PhysicalSize};
-<span class="kw">use </span>appit::winit::error::EventLoopError;
+<span class="kw">use </span>appit::winit::error::{EventLoopError, OsError};
 <span class="kw">use </span>appit::winit::event::{
     AxisId, DeviceId, ElementState, Ime, KeyEvent, Modifiers, MouseButton, MouseScrollDelta, Touch,
     TouchPhase,
 };
 <span class="kw">use </span>appit::winit::keyboard::PhysicalKey;
 <span class="kw">use </span>appit::winit::window::{ImePurpose, Theme, WindowId};
-<span class="kw">pub use </span>appit::{winit, Message, WindowAttributes};
-<span class="kw">use </span>appit::{Application, PendingApp, RunningWindow, WindowBehavior <span class="kw">as _</span>};
+<span class="kw">pub use </span>appit::{winit, Application, AsApplication, Message, WindowAttributes};
+<span class="kw">use </span>appit::{RunningWindow, WindowBehavior <span class="kw">as _</span>};
 <span class="kw">use </span>figures::units::{Px, UPx};
 <span class="kw">use </span>figures::{Point, Rect, Size};
 <span class="kw">use </span>intentional::{Assert, Cast};
@@ -1309,12 +1397,87 @@
     SHARED_WGPU.get_or_init(Arc::default).clone()
 }
 
+<span class="doccomment">/// A `Kludgine` application that enables opening multiple windows.
+</span><span class="kw">pub struct </span>PendingApp&lt;WindowEvent = ()&gt;(appit::PendingApp&lt;AppEvent&lt;WindowEvent&gt;&gt;)
+<span class="kw">where
+    </span>AppEvent&lt;WindowEvent&gt;: Message&lt;Window = WindowEvent, Response = wgpu::Surface&gt;;
+
+<span class="kw">impl</span>&lt;WindowEvent&gt; Default <span class="kw">for </span>PendingApp&lt;WindowEvent&gt;
+<span class="kw">where
+    </span>AppEvent&lt;WindowEvent&gt;: Message&lt;Window = WindowEvent, Response = wgpu::Surface&gt;,
+{
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new()
+    }
+}
+
+<span class="kw">impl</span>&lt;WindowEvent&gt; AsApplication&lt;AppEvent&lt;WindowEvent&gt;&gt; <span class="kw">for </span>PendingApp&lt;WindowEvent&gt;
+<span class="kw">where
+    </span>AppEvent&lt;WindowEvent&gt;: Message&lt;Window = WindowEvent, Response = wgpu::Surface&gt;,
+{
+    <span class="kw">fn </span>as_application(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Application&lt;AppEvent&lt;WindowEvent&gt;&gt;
+    <span class="kw">where
+        </span>AppEvent&lt;WindowEvent&gt;: Message,
+    {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;WindowEvent&gt; PendingApp&lt;WindowEvent&gt;
+<span class="kw">where
+    </span>AppEvent&lt;WindowEvent&gt;: Message&lt;Window = WindowEvent, Response = wgpu::Surface&gt;,
+{
+    <span class="doccomment">/// Creates a new Kludgine application.
+    </span><span class="attr">#[allow(unsafe_code)]
+    #[must_use]
+    #[allow(clippy::missing_panics_doc)] </span><span class="comment">// The panics are in a closure that happens only after the app is running.
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(appit::PendingApp::new_with_event_callback(
+            |request: AppEvent&lt;WindowEvent&gt;, windows: <span class="kw-2">&amp;</span>appit::Windows&lt;WindowEvent&gt;| {
+                <span class="kw">let </span>window = windows.get(request.<span class="number">0</span>.window).expect(<span class="string">&quot;window not found&quot;</span>);
+                <span class="comment">// SAFETY: The winit window is valid and open when it is
+                // contained in the windows collection. The surface being
+                // created is stored on the KludgineWindow, which is dropped
+                // prior to the appit/winit window closing.
+                </span><span class="kw">unsafe </span>{
+                    shared_wgpu()
+                        .create_surface(<span class="kw-2">&amp;*</span>window)
+                        .expect(<span class="string">&quot;error creating surface&quot;</span>)
+                }
+            },
+        ))
+    }
+
+    <span class="doccomment">/// Returns a handle to the application that will be run.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>as_app(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; App&lt;WindowEvent&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.app()
+    }
+
+    <span class="doccomment">/// Begins running the application.
+    ///
+    /// On some platforms, this function may never return. If it does return, it
+    /// is after the application has been shut down.
+    ///
+    /// # Errors
+    ///
+    /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
+    /// [`EventLoop::run`](winit::event_loop::EventLoop::run) for more
+    /// information.
+    </span><span class="kw">pub fn </span>run(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), EventLoopError&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.run()
+    }
+}
+
+<span class="doccomment">/// A handle to a running Kludgine application.
+</span><span class="kw">pub type </span>App&lt;WindowEvent = ()&gt; = appit::App&lt;AppEvent&lt;WindowEvent&gt;&gt;;
+
 <span class="doccomment">/// An open window.
 </span><span class="kw">pub struct </span>Window&lt;<span class="lifetime">&#39;window</span>, WindowEvent = ()&gt;
 <span class="kw">where
     </span>WindowEvent: Send + <span class="lifetime">&#39;static</span>,
 {
-    window: <span class="kw-2">&amp;</span><span class="lifetime">&#39;window </span><span class="kw-2">mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;WindowEvent&gt;&gt;,
+    window: <span class="kw-2">&amp;</span><span class="lifetime">&#39;window </span><span class="kw-2">mut </span>RunningWindow&lt;AppEvent&lt;WindowEvent&gt;&gt;,
     elapsed: Duration,
     last_frame_rendered_in: Duration,
 }
@@ -1324,7 +1487,7 @@
     </span>WindowEvent: Send + <span class="lifetime">&#39;static</span>,
 {
     <span class="kw">fn </span>new(
-        window: <span class="kw-2">&amp;</span><span class="lifetime">&#39;window </span><span class="kw-2">mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;WindowEvent&gt;&gt;,
+        window: <span class="kw-2">&amp;</span><span class="lifetime">&#39;window </span><span class="kw-2">mut </span>RunningWindow&lt;AppEvent&lt;WindowEvent&gt;&gt;,
         elapsed: Duration,
         last_frame_rendered_in: Duration,
     ) -&gt; <span class="self">Self </span>{
@@ -1340,6 +1503,15 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>handle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; WindowHandle&lt;WindowEvent&gt; {
         WindowHandle(<span class="self">self</span>.window.handle())
+    }
+
+    <span class="doccomment">/// Returns a handle to the application.
+    ///
+    /// This is useful for opening additional windows in a multi-window
+    /// application.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>app(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; App&lt;WindowEvent&gt; {
+        <span class="self">self</span>.window.app()
     }
 
     <span class="doccomment">/// Returns the current position of the window.
@@ -1614,28 +1786,56 @@
     /// Returns an [`EventLoopError`] upon the loop exiting due to an error. See
     /// [`EventLoop::run`](appit::winit::event_loop::EventLoop::run) for more
     /// information.
-    </span><span class="attr">#[allow(unsafe_code)]
     </span><span class="kw">fn </span>run_with(context: <span class="self">Self</span>::Context) -&gt; <span class="prelude-ty">Result</span>&lt;(), EventLoopError&gt; {
         <span class="kw">let </span>window_attributes = <span class="self">Self</span>::initial_window_attributes(<span class="kw-2">&amp;</span>context);
 
-        <span class="kw">let </span>app = PendingApp::new_with_event_callback(
-            |request: CreateSurfaceRequest&lt;WindowEvent&gt;, windows: <span class="kw-2">&amp;</span>appit::Windows&lt;WindowEvent&gt;| {
-                <span class="kw">let </span>window = windows.get(request.window).expect(<span class="string">&quot;window not found&quot;</span>);
-                <span class="comment">// SAFETY: The winit window is valid and open when it is
-                // contained in the windows collection. The surface being
-                // created is stored on the KludgineWindow, which is dropped
-                // prior to the appit/winit window closing.
-                </span><span class="kw">unsafe </span>{
-                    shared_wgpu()
-                        .create_surface(<span class="kw-2">&amp;*</span>window)
-                        .expect(<span class="string">&quot;error creating surface&quot;</span>)
-                }
-            },
-        );
-        <span class="kw">let </span><span class="kw-2">mut </span>window = KludgineWindow::&lt;<span class="self">Self</span>&gt;::build_with(<span class="kw-2">&amp;</span>app, context);
+        <span class="kw">let </span>app = PendingApp::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>window = KludgineWindow::&lt;<span class="self">Self</span>&gt;::build_with(<span class="kw-2">&amp;</span>app.<span class="number">0</span>, context);
         <span class="kw-2">*</span>window = window_attributes;
         window.open().expect(<span class="string">&quot;error opening initial window&quot;</span>);
-        app.run()
+        app.<span class="number">0</span>.run()
+    }
+
+    <span class="doccomment">/// Opens a new window with a default instance of this behavior&#39;s
+    /// [`Context`](Self::Context). The events of the window will be processed
+    /// in a thread spawned by this function.
+    ///
+    /// If the application has shut down, this function returns None.
+    ///
+    /// # Errors
+    ///
+    /// The only errors this funciton can return arise from
+    /// [`winit::window::WindowBuilder::build`].
+    </span><span class="kw">fn </span>open&lt;App&gt;(app: <span class="kw-2">&amp;</span>App) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;WindowHandle&lt;WindowEvent&gt;&gt;, OsError&gt;
+    <span class="kw">where
+        </span>App: AsApplication&lt;AppEvent&lt;WindowEvent&gt;&gt;,
+        <span class="self">Self</span>::Context: Default,
+    {
+        KludgineWindow::&lt;<span class="self">Self</span>&gt;::build(app)
+            .open()
+            .map(|opt| opt.map(WindowHandle))
+    }
+
+    <span class="doccomment">/// Opens a new window with the provided [`Context`](Self::Context). The
+    /// events of the window will be processed in a thread spawned by this
+    /// function.
+    ///
+    /// If the application has shut down, this function returns None.
+    ///
+    /// # Errors
+    ///
+    /// The only errors this funciton can return arise from
+    /// [`winit::window::WindowBuilder::build`].
+    </span><span class="kw">fn </span>open_with&lt;App&gt;(
+        app: <span class="kw-2">&amp;</span>App,
+        context: <span class="self">Self</span>::Context,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;WindowHandle&lt;WindowEvent&gt;&gt;, OsError&gt;
+    <span class="kw">where
+        </span>App: AsApplication&lt;AppEvent&lt;WindowEvent&gt;&gt;,
+    {
+        KludgineWindow::&lt;<span class="self">Self</span>&gt;::build_with(app, context)
+            .open()
+            .map(|opt| opt.map(WindowHandle))
     }
 
     <span class="doccomment">/// The window has been requested to be closed. This can happen as a result
@@ -1861,12 +2061,15 @@
     }
 }
 
+<span class="doccomment">/// A Kludgine application event.
+</span><span class="kw">pub struct </span>AppEvent&lt;User&gt;(CreateSurfaceRequest&lt;User&gt;);
+
 <span class="kw">struct </span>CreateSurfaceRequest&lt;User&gt; {
     window: WindowId,
     data: PhantomData&lt;User&gt;,
 }
 
-<span class="kw">impl</span>&lt;User&gt; Message <span class="kw">for </span>CreateSurfaceRequest&lt;User&gt;
+<span class="kw">impl</span>&lt;User&gt; Message <span class="kw">for </span>AppEvent&lt;User&gt;
 <span class="kw">where
     </span>User: Send + <span class="lifetime">&#39;static</span>,
 {
@@ -1889,22 +2092,19 @@
     _adapter: wgpu::Adapter,
 }
 
-<span class="kw">impl</span>&lt;T, User&gt; appit::WindowBehavior&lt;CreateSurfaceRequest&lt;User&gt;&gt; <span class="kw">for </span>KludgineWindow&lt;T&gt;
+<span class="kw">impl</span>&lt;T, User&gt; appit::WindowBehavior&lt;AppEvent&lt;User&gt;&gt; <span class="kw">for </span>KludgineWindow&lt;T&gt;
 <span class="kw">where
     </span>T: WindowBehavior&lt;User&gt; + <span class="lifetime">&#39;static</span>,
     User: Send + <span class="lifetime">&#39;static</span>,
 {
     <span class="kw">type </span>Context = T::Context;
 
-    <span class="kw">fn </span>initialize(
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
-        context: <span class="self">Self</span>::Context,
-    ) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>initialize(window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;, context: <span class="self">Self</span>::Context) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>surface = window
-            .send(CreateSurfaceRequest {
+            .send(AppEvent(CreateSurfaceRequest {
                 window: window.winit().id(),
                 data: PhantomData,
-            })
+            }))
             .expect(<span class="string">&quot;app not running&quot;</span>);
         <span class="kw">let </span>wgpu = shared_wgpu();
         <span class="kw">let </span>adapter = pollster::block_on(wgpu.request_adapter(<span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
@@ -1980,7 +2180,7 @@
         }
     }
 
-    <span class="kw">fn </span>redraw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
+    <span class="kw">fn </span>redraw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
         <span class="kw">let </span>surface = <span class="kw">loop </span>{
             <span class="kw">match </span><span class="self">self</span>.surface.get_current_texture() {
                 <span class="prelude-val">Ok</span>(frame) =&gt; <span class="kw">break </span>frame,
@@ -1994,10 +2194,10 @@
                     }
                     wgpu::SurfaceError::Lost =&gt; {
                         <span class="self">self</span>.surface = window
-                            .send(CreateSurfaceRequest {
+                            .send(AppEvent(CreateSurfaceRequest {
                                 window: window.winit().id(),
                                 data: PhantomData,
-                            })
+                            }))
                             .expect(<span class="string">&quot;app not running&quot;</span>);
                         <span class="self">self</span>.surface.configure(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.config);
                     }
@@ -2090,7 +2290,7 @@
         }
     }
 
-    <span class="kw">fn </span>close_requested(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) -&gt; bool {
+    <span class="kw">fn </span>close_requested(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) -&gt; bool {
         <span class="self">self</span>.behavior.close_requested(
             Window::new(
                 window,
@@ -2101,7 +2301,7 @@
         )
     }
 
-    <span class="kw">fn </span>focus_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
+    <span class="kw">fn </span>focus_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
         <span class="self">self</span>.behavior.focus_changed(
             Window::new(
                 window,
@@ -2112,7 +2312,7 @@
         );
     }
 
-    <span class="kw">fn </span>occlusion_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
+    <span class="kw">fn </span>occlusion_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
         <span class="self">self</span>.behavior.occlusion_changed(
             Window::new(
                 window,
@@ -2123,7 +2323,7 @@
         );
     }
 
-    <span class="kw">fn </span>resized(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
+    <span class="kw">fn </span>resized(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
         <span class="self">self</span>.config.width = window.inner_size().width;
         <span class="self">self</span>.config.height = window.inner_size().height;
         <span class="self">self</span>.surface.configure(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.config);
@@ -2143,7 +2343,7 @@
         );
     }
 
-    <span class="kw">fn </span>scale_factor_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
+    <span class="kw">fn </span>scale_factor_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
         <span class="self">self</span>.behavior.scale_factor_changed(
             Window::new(
                 window,
@@ -2154,7 +2354,7 @@
         );
     }
 
-    <span class="kw">fn </span>theme_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
+    <span class="kw">fn </span>theme_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
         <span class="self">self</span>.behavior.theme_changed(
             Window::new(
                 window,
@@ -2165,11 +2365,7 @@
         );
     }
 
-    <span class="kw">fn </span>dropped_file(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
-        path: PathBuf,
-    ) {
+    <span class="kw">fn </span>dropped_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;, path: PathBuf) {
         <span class="self">self</span>.behavior.dropped_file(
             Window::new(
                 window,
@@ -2181,11 +2377,7 @@
         );
     }
 
-    <span class="kw">fn </span>hovered_file(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
-        path: PathBuf,
-    ) {
+    <span class="kw">fn </span>hovered_file(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;, path: PathBuf) {
         <span class="self">self</span>.behavior.hovered_file(
             Window::new(
                 window,
@@ -2197,7 +2389,7 @@
         );
     }
 
-    <span class="kw">fn </span>hovered_file_cancelled(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
+    <span class="kw">fn </span>hovered_file_cancelled(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
         <span class="self">self</span>.behavior.hovered_file_cancelled(
             Window::new(
                 window,
@@ -2208,11 +2400,7 @@
         );
     }
 
-    <span class="kw">fn </span>received_character(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
-        char: char,
-    ) {
+    <span class="kw">fn </span>received_character(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;, char: char) {
         <span class="self">self</span>.behavior.received_character(
             Window::new(
                 window,
@@ -2226,7 +2414,7 @@
 
     <span class="kw">fn </span>keyboard_input(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
         device_id: DeviceId,
         event: KeyEvent,
         is_synthetic: bool,
@@ -2244,7 +2432,7 @@
         );
     }
 
-    <span class="kw">fn </span>modifiers_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;) {
+    <span class="kw">fn </span>modifiers_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
         <span class="self">self</span>.behavior.modifiers_changed(
             Window::new(
                 window,
@@ -2255,7 +2443,7 @@
         );
     }
 
-    <span class="kw">fn </span>ime(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;, ime: Ime) {
+    <span class="kw">fn </span>ime(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;, ime: Ime) {
         <span class="self">self</span>.behavior.ime(
             Window::new(
                 window,
@@ -2269,7 +2457,7 @@
 
     <span class="kw">fn </span>cursor_moved(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
         device_id: DeviceId,
         position: PhysicalPosition&lt;f64&gt;,
     ) {
@@ -2285,11 +2473,7 @@
         );
     }
 
-    <span class="kw">fn </span>cursor_entered(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
-        device_id: DeviceId,
-    ) {
+    <span class="kw">fn </span>cursor_entered(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;, device_id: DeviceId) {
         <span class="self">self</span>.behavior.cursor_entered(
             Window::new(
                 window,
@@ -2301,11 +2485,7 @@
         );
     }
 
-    <span class="kw">fn </span>cursor_left(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
-        device_id: DeviceId,
-    ) {
+    <span class="kw">fn </span>cursor_left(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;, device_id: DeviceId) {
         <span class="self">self</span>.behavior.cursor_left(
             Window::new(
                 window,
@@ -2319,7 +2499,7 @@
 
     <span class="kw">fn </span>mouse_wheel(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
         device_id: DeviceId,
         delta: MouseScrollDelta,
         phase: TouchPhase,
@@ -2339,7 +2519,7 @@
 
     <span class="kw">fn </span>mouse_input(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
         device_id: DeviceId,
         state: ElementState,
         button: MouseButton,
@@ -2359,7 +2539,7 @@
 
     <span class="kw">fn </span>touchpad_pressure(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
         device_id: DeviceId,
         pressure: f32,
         stage: i64,
@@ -2379,7 +2559,7 @@
 
     <span class="kw">fn </span>axis_motion(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
         device_id: DeviceId,
         axis: AxisId,
         value: f64,
@@ -2397,7 +2577,7 @@
         );
     }
 
-    <span class="kw">fn </span>touch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;, touch: Touch) {
+    <span class="kw">fn </span>touch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;, touch: Touch) {
         <span class="self">self</span>.behavior.touch(
             Window::new(
                 window,
@@ -2411,7 +2591,7 @@
 
     <span class="kw">fn </span>touchpad_magnify(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
         device_id: DeviceId,
         delta: f64,
         phase: TouchPhase,
@@ -2429,11 +2609,7 @@
         );
     }
 
-    <span class="kw">fn </span>smart_magnify(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
-        device_id: DeviceId,
-    ) {
+    <span class="kw">fn </span>smart_magnify(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;, device_id: DeviceId) {
         <span class="self">self</span>.behavior.smart_magnify(
             Window::new(
                 window,
@@ -2447,7 +2623,7 @@
 
     <span class="kw">fn </span>touchpad_rotate(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
         device_id: DeviceId,
         delta: f32,
         phase: TouchPhase,
@@ -2467,8 +2643,8 @@
 
     <span class="kw">fn </span>event(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;CreateSurfaceRequest&lt;User&gt;&gt;,
-        event: &lt;CreateSurfaceRequest&lt;User&gt; <span class="kw">as </span>Message&gt;::Window,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
+        event: &lt;AppEvent&lt;User&gt; <span class="kw">as </span>Message&gt;::Window,
     ) {
         <span class="self">self</span>.behavior.event(
             Window::new(
