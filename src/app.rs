@@ -418,12 +418,8 @@ where
     /// [`EventLoop::run`](appit::winit::event_loop::EventLoop::run) for more
     /// information.
     fn run_with(context: Self::Context) -> Result<(), EventLoopError> {
-        let window_attributes = Self::initial_window_attributes(&context);
-
         let app = PendingApp::new();
-        let mut window = KludgineWindow::<Self>::build_with(&app.0, context);
-        *window = window_attributes;
-        window.open().expect("error opening initial window");
+        KludgineWindow::<Self>::new(&app, context).open()?;
         app.0.run()
     }
 
@@ -442,7 +438,7 @@ where
         App: AsApplication<AppEvent<WindowEvent>>,
         Self::Context: Default,
     {
-        KludgineWindow::<Self>::build(app)
+        KludgineWindow::<Self>::new(app, <Self::Context>::default())
             .open()
             .map(|opt| opt.map(WindowHandle))
     }
@@ -464,7 +460,7 @@ where
     where
         App: AsApplication<AppEvent<WindowEvent>>,
     {
-        KludgineWindow::<Self>::build_with(app, context)
+        KludgineWindow::<Self>::new(app, context)
             .open()
             .map(|opt| opt.map(WindowHandle))
     }
@@ -721,6 +717,24 @@ struct KludgineWindow<Behavior> {
     queue: wgpu::Queue,
     msaa_texture: Option<wgpu::Texture>,
     _adapter: wgpu::Adapter,
+}
+
+impl<Behavior> KludgineWindow<Behavior> {
+    fn new<App, User>(
+        app: &App,
+        context: Behavior::Context,
+    ) -> appit::WindowBuilder<'_, Self, App, AppEvent<User>>
+    where
+        App: AsApplication<AppEvent<User>>,
+        Behavior: WindowBehavior<User> + 'static,
+        User: Send + 'static,
+    {
+        let window_attributes = Behavior::initial_window_attributes(&context);
+
+        let mut window = Self::build_with(app, context);
+        *window = window_attributes;
+        window
+    }
 }
 
 impl<T, User> appit::WindowBehavior<AppEvent<User>> for KludgineWindow<T>
