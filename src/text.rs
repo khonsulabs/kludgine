@@ -1,7 +1,7 @@
 use std::array;
 use std::collections::{hash_map, HashMap};
 use std::fmt::{self, Debug};
-use std::sync::{Arc, Mutex, PoisonError};
+use std::sync::{Arc, Mutex, PoisonError, Weak};
 
 use cosmic_text::{Attrs, AttrsOwned, LayoutGlyph, SwashContent};
 use figures::units::{Lp, Px, UPx};
@@ -249,7 +249,7 @@ impl GlyphCache {
         Some(CachedGlyphHandle {
             key,
             is_mask: cached.is_mask,
-            cache: self.clone(),
+            cache: Arc::downgrade(&self.glyphs),
             texture: cached.texture.clone(),
         })
     }
@@ -273,7 +273,7 @@ struct CachedGlyph {
 pub(crate) struct CachedGlyphHandle {
     key: cosmic_text::CacheKey,
     pub is_mask: bool,
-    cache: GlyphCache,
+    cache: Weak<Mutex<HashMap<cosmic_text::CacheKey, CachedGlyph, DefaultHasher>>>,
     pub texture: CollectedTexture,
 }
 
@@ -288,14 +288,12 @@ impl Debug for CachedGlyphHandle {
 
 impl Clone for CachedGlyphHandle {
     fn clone(&self) -> Self {
-        let mut data = self
-            .cache
-            .glyphs
-            .lock()
-            .map_or_else(PoisonError::into_inner, |g| g);
-        let cached = data.get_mut(&self.key).expect("cached glyph missing");
-        cached.ref_count += 1;
-        drop(data);
+        if let Some(glyphs) = self.cache.upgrade() {
+            let mut data = glyphs.lock().map_or_else(PoisonError::into_inner, |g| g);
+            let cached = data.get_mut(&self.key).expect("cached glyph missing");
+            cached.ref_count += 1;
+            drop(data);
+        }
 
         Self {
             key: self.key,
@@ -308,13 +306,11 @@ impl Clone for CachedGlyphHandle {
 
 impl Drop for CachedGlyphHandle {
     fn drop(&mut self) {
-        let mut data = self
-            .cache
-            .glyphs
-            .lock()
-            .map_or_else(PoisonError::into_inner, |g| g);
-        let cached = data.get_mut(&self.key).expect("cached glyph missing");
-        cached.ref_count -= 1;
+        if let Some(glyphs) = self.cache.upgrade() {
+            let mut data = glyphs.lock().map_or_else(PoisonError::into_inner, |g| g);
+            let cached = data.get_mut(&self.key).expect("cached glyph missing");
+            cached.ref_count -= 1;
+        }
     }
 }
 

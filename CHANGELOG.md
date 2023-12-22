@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `WindowBehavior::open[_with]()` are new functions that allow opening a window
   into a reference of an `App` or `PendingApp`.
 
+## Fixed
+
+- Internally, text drawing now uses weak references for the glyph handles to
+  prevent `wgpu` resources from being freed if a `MeasuredText` was being held.
+- Each window now has its own `wgpu::Instance` instead of sharing a single
+  instance between windows.
+
 ## v0.6.1 (2023-12-19)
 
 ### Fixed

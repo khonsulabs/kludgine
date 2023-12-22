@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use std::mem::size_of;
 use std::num::NonZeroU32;
 use std::path::PathBuf;
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use appit::winit::dpi::{PhysicalPosition, PhysicalSize};
@@ -22,11 +22,6 @@ use intentional::{Assert, Cast};
 use crate::pipeline::PushConstants;
 use crate::render::{Drawing, Renderer};
 use crate::{Color, Graphics, Kludgine, RenderingGraphics};
-
-fn shared_wgpu() -> Arc<wgpu::Instance> {
-    static SHARED_WGPU: OnceLock<Arc<wgpu::Instance>> = OnceLock::new();
-    SHARED_WGPU.get_or_init(Arc::default).clone()
-}
 
 /// A `Kludgine` application that enables opening multiple windows.
 pub struct PendingApp<WindowEvent = ()>(appit::PendingApp<AppEvent<WindowEvent>>)
@@ -71,7 +66,9 @@ where
                 // created is stored on the KludgineWindow, which is dropped
                 // prior to the appit/winit window closing.
                 unsafe {
-                    shared_wgpu()
+                    request
+                        .0
+                        .wgpu
                         .create_surface(&*window)
                         .expect("error creating surface")
                 }
@@ -692,6 +689,7 @@ where
 pub struct AppEvent<User>(CreateSurfaceRequest<User>);
 
 struct CreateSurfaceRequest<User> {
+    wgpu: Arc<wgpu::Instance>,
     window: WindowId,
     data: PhantomData<User>,
 }
@@ -713,10 +711,10 @@ struct KludgineWindow<Behavior> {
     config: wgpu::SurfaceConfiguration,
     // SAFETY: Must not outlive this KludgineWindow.
     surface: wgpu::Surface,
-    device: wgpu::Device,
-    queue: wgpu::Queue,
     msaa_texture: Option<wgpu::Texture>,
-    _adapter: wgpu::Adapter,
+    queue: wgpu::Queue,
+    wgpu: Arc<wgpu::Instance>,
+    device: wgpu::Device,
 }
 
 impl<Behavior> KludgineWindow<Behavior> {
@@ -737,6 +735,22 @@ impl<Behavior> KludgineWindow<Behavior> {
     }
 }
 
+fn new_wgpu_instance() -> wgpu::Instance {
+    let flags;
+    #[cfg(debug_assertions)]
+    {
+        flags = wgpu::InstanceFlags::debugging();
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        flags = wgpu::InstanceFlags::empty();
+    }
+    wgpu::Instance::new(wgpu::InstanceDescriptor {
+        flags,
+        ..wgpu::InstanceDescriptor::default()
+    })
+}
+
 impl<T, User> appit::WindowBehavior<AppEvent<User>> for KludgineWindow<T>
 where
     T: WindowBehavior<User> + 'static,
@@ -745,13 +759,14 @@ where
     type Context = T::Context;
 
     fn initialize(window: &mut RunningWindow<AppEvent<User>>, context: Self::Context) -> Self {
+        let wgpu = Arc::new(new_wgpu_instance());
         let surface = window
             .send(AppEvent(CreateSurfaceRequest {
+                wgpu: wgpu.clone(),
                 window: window.winit().id(),
                 data: PhantomData,
             }))
             .expect("app not running");
-        let wgpu = shared_wgpu();
         let adapter = pollster::block_on(wgpu.request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: T::power_preference(),
             force_fallback_adapter: false,
@@ -816,12 +831,12 @@ where
             last_render,
             last_render_duration: Duration::ZERO,
             msaa_texture: None,
-            _adapter: adapter,
             behavior,
             config,
             surface,
             device,
             queue,
+            wgpu,
         }
     }
 
@@ -840,6 +855,7 @@ where
                     wgpu::SurfaceError::Lost => {
                         self.surface = window
                             .send(AppEvent(CreateSurfaceRequest {
+                                wgpu: self.wgpu.clone(),
                                 window: window.winit().id(),
                                 data: PhantomData,
                             }))
