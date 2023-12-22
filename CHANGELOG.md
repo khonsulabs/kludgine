@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instance between windows.
 - Each `Window` frame now waits until it's fully rendered before yielding back
   to the windqow loop.
+- When a `Window` has a 0 dimension, it will no longer try to redraw. This
+  presented as a panic when a window was minimized.
 
 ## v0.6.1 (2023-12-19)
 

@@ -969,16 +969,18 @@ where
     }
 
     fn redraw(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
-        let Some(surface) = self.current_surface_texture(window) else {
-            return;
-        };
+        if self.config.width > 0 && self.config.height > 0 {
+            let Some(surface) = self.current_surface_texture(window) else {
+                return;
+            };
 
-        let render_start = Instant::now();
+            let render_start = Instant::now();
 
-        self.render_to_surface(surface, render_start, window);
+            self.render_to_surface(surface, render_start, window);
 
-        self.last_render_duration = render_start.elapsed();
-        self.last_render = render_start;
+            self.last_render_duration = render_start.elapsed();
+            self.last_render = render_start;
+        }
     }
 
     fn close_requested(&mut self, window: &mut RunningWindow<AppEvent<User>>) -> bool {
@@ -1017,13 +1019,15 @@ where
     fn resized(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
         self.config.width = window.inner_size().width;
         self.config.height = window.inner_size().height;
-        self.surface.configure(&self.device, &self.config);
-        self.kludgine.resize(
-            window.inner_size().into(),
-            window.scale().cast::<f32>(),
-            &self.queue,
-        );
-        window.set_needs_redraw();
+        if self.config.width > 0 && self.config.height > 0 {
+            self.surface.configure(&self.device, &self.config);
+            self.kludgine.resize(
+                window.inner_size().into(),
+                window.scale().cast::<f32>(),
+                &self.queue,
+            );
+            window.set_needs_redraw();
+        }
         self.behavior.resized(
             Window::new(
                 window,
