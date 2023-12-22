@@ -733,6 +733,134 @@ impl<Behavior> KludgineWindow<Behavior> {
         *window = window_attributes;
         window
     }
+
+    fn current_surface_texture<User>(
+        &mut self,
+        window: &mut RunningWindow<AppEvent<User>>,
+    ) -> Option<wgpu::SurfaceTexture>
+    where
+        AppEvent<User>: Message<Response = wgpu::Surface>,
+    {
+        loop {
+            match self.surface.get_current_texture() {
+                Ok(frame) => break Some(frame),
+                Err(other) => match other {
+                    wgpu::SurfaceError::Timeout => continue,
+                    wgpu::SurfaceError::Outdated => {
+                        // Needs to be reconfigured. We do this automatically
+                        // when the window is resized. We need to allow the
+                        // event loop to catch up.
+                        return None;
+                    }
+                    wgpu::SurfaceError::Lost => {
+                        self.surface = window
+                            .send(AppEvent(CreateSurfaceRequest {
+                                wgpu: self.wgpu.clone(),
+                                window: window.winit().id(),
+                                data: PhantomData,
+                            }))
+                            .expect("app not running");
+                        self.surface.configure(&self.device, &self.config);
+                    }
+                    wgpu::SurfaceError::OutOfMemory => {
+                        unreachable!(
+                            "out of memory error when requesting current swap chain texture"
+                        )
+                    }
+                },
+            }
+        }
+    }
+
+    fn render_to_surface<User>(
+        &mut self,
+        surface: wgpu::SurfaceTexture,
+        render_start: Instant,
+        window: &mut RunningWindow<AppEvent<User>>,
+    ) where
+        AppEvent<User>: Message,
+        Behavior: WindowBehavior<User> + 'static,
+        User: Send + 'static,
+    {
+        let mut frame = self.kludgine.next_frame();
+        let elapsed = render_start - self.last_render;
+
+        self.behavior.prepare(
+            Window::new(window, elapsed, self.last_render_duration),
+            &mut frame.prepare(&self.device, &self.queue),
+        );
+
+        let surface_view = surface
+            .texture
+            .create_view(&wgpu::TextureViewDescriptor::default());
+        let (view, resolve_target) = if Behavior::multisample_count().get() > 1 {
+            if self.msaa_texture.as_ref().map_or(true, |msaa| {
+                msaa.width() != surface.texture.width() || msaa.height() != surface.texture.height()
+            }) {
+                self.msaa_texture = Some(self.device.create_texture(&wgpu::TextureDescriptor {
+                    label: None,
+                    size: wgpu::Extent3d {
+                        width: surface.texture.width(),
+                        height: surface.texture.height(),
+                        depth_or_array_layers: 1,
+                    },
+                    mip_level_count: 1,
+                    sample_count: Behavior::multisample_count().get(),
+                    dimension: wgpu::TextureDimension::D2,
+                    format: surface.texture.format(),
+                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                    view_formats: &[],
+                }));
+            }
+
+            (
+                self.msaa_texture
+                    .as_ref()
+                    .assert("always initialized")
+                    .create_view(&wgpu::TextureViewDescriptor::default()),
+                Some(surface_view),
+            )
+        } else {
+            (surface_view, None)
+        };
+
+        let mut gfx = frame.render(
+            &wgpu::RenderPassDescriptor {
+                label: None,
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &view,
+                    resolve_target: resolve_target.as_ref(),
+                    ops: wgpu::Operations {
+                        load: self
+                            .behavior
+                            .clear_color()
+                            .map_or(wgpu::LoadOp::Load, |color| {
+                                wgpu::LoadOp::Clear(color.into())
+                            }),
+                        store: wgpu::StoreOp::Store,
+                    },
+                })],
+                depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            },
+            &self.device,
+            &self.queue,
+        );
+        let close_after_frame = !self.behavior.render(
+            Window::new(window, elapsed, self.last_render_duration),
+            &mut gfx,
+        );
+        drop(gfx);
+        let id = frame.submit(&self.queue);
+        surface.present();
+        if let Some(id) = id {
+            self.device.poll(wgpu::Maintain::WaitForSubmissionIndex(id));
+        }
+        if close_after_frame {
+            window.close();
+        }
+    }
 }
 
 fn new_wgpu_instance() -> wgpu::Instance {
@@ -841,114 +969,16 @@ where
     }
 
     fn redraw(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
-        let surface = loop {
-            match self.surface.get_current_texture() {
-                Ok(frame) => break frame,
-                Err(other) => match other {
-                    wgpu::SurfaceError::Timeout => continue,
-                    wgpu::SurfaceError::Outdated => {
-                        // Needs to be reconfigured. We do this automatically
-                        // when the window is resized. We need to allow the
-                        // event loop to catch up.
-                        return;
-                    }
-                    wgpu::SurfaceError::Lost => {
-                        self.surface = window
-                            .send(AppEvent(CreateSurfaceRequest {
-                                wgpu: self.wgpu.clone(),
-                                window: window.winit().id(),
-                                data: PhantomData,
-                            }))
-                            .expect("app not running");
-                        self.surface.configure(&self.device, &self.config);
-                    }
-                    wgpu::SurfaceError::OutOfMemory => {
-                        unreachable!(
-                            "out of memory error when requesting current swap chain texture"
-                        )
-                    }
-                },
-            }
+        let Some(surface) = self.current_surface_texture(window) else {
+            return;
         };
 
-        let mut frame = self.kludgine.next_frame();
         let render_start = Instant::now();
-        let elapsed = render_start - self.last_render;
 
-        self.behavior.prepare(
-            Window::new(window, elapsed, self.last_render_duration),
-            &mut frame.prepare(&self.device, &self.queue),
-        );
+        self.render_to_surface(surface, render_start, window);
 
-        let surface_view = surface
-            .texture
-            .create_view(&wgpu::TextureViewDescriptor::default());
-        let (view, resolve_target) = if T::multisample_count().get() > 1 {
-            if self.msaa_texture.as_ref().map_or(true, |msaa| {
-                msaa.width() != surface.texture.width() || msaa.height() != surface.texture.height()
-            }) {
-                self.msaa_texture = Some(self.device.create_texture(&wgpu::TextureDescriptor {
-                    label: None,
-                    size: wgpu::Extent3d {
-                        width: surface.texture.width(),
-                        height: surface.texture.height(),
-                        depth_or_array_layers: 1,
-                    },
-                    mip_level_count: 1,
-                    sample_count: T::multisample_count().get(),
-                    dimension: wgpu::TextureDimension::D2,
-                    format: surface.texture.format(),
-                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-                    view_formats: &[],
-                }));
-            }
-
-            (
-                self.msaa_texture
-                    .as_ref()
-                    .assert("always initialized")
-                    .create_view(&wgpu::TextureViewDescriptor::default()),
-                Some(surface_view),
-            )
-        } else {
-            (surface_view, None)
-        };
-
-        let mut gfx = frame.render(
-            &wgpu::RenderPassDescriptor {
-                label: None,
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: resolve_target.as_ref(),
-                    ops: wgpu::Operations {
-                        load: self
-                            .behavior
-                            .clear_color()
-                            .map_or(wgpu::LoadOp::Load, |color| {
-                                wgpu::LoadOp::Clear(color.into())
-                            }),
-                        store: wgpu::StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: None,
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            },
-            &self.device,
-            &self.queue,
-        );
-        let close_after_frame = !self.behavior.render(
-            Window::new(window, elapsed, self.last_render_duration),
-            &mut gfx,
-        );
-        drop(gfx);
-        frame.submit(&self.queue);
-        surface.present();
         self.last_render_duration = render_start.elapsed();
         self.last_render = render_start;
-        if close_after_frame {
-            window.close();
-        }
     }
 
     fn close_requested(&mut self, window: &mut RunningWindow<AppEvent<User>>) -> bool {

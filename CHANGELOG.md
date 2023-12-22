@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prevent `wgpu` resources from being freed if a `MeasuredText` was being held.
 - Each window now has its own `wgpu::Instance` instead of sharing a single
   instance between windows.
+- Each `Window` frame now waits until it's fully rendered before yielding back
+  to the windqow loop.
 
 ## v0.6.1 (2023-12-19)
 
