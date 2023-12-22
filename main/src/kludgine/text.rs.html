@@ -882,14 +882,10 @@
 <a href="#882" id="882">882</a>
 <a href="#883" id="883">883</a>
 <a href="#884" id="884">884</a>
-<a href="#885" id="885">885</a>
-<a href="#886" id="886">886</a>
-<a href="#887" id="887">887</a>
-<a href="#888" id="888">888</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
-<span class="kw">use </span>std::sync::{Arc, Mutex, PoisonError};
+<span class="kw">use </span>std::sync::{Arc, Mutex, PoisonError, Weak};
 
 <span class="kw">use </span>cosmic_text::{Attrs, AttrsOwned, LayoutGlyph, SwashContent};
 <span class="kw">use </span>figures::units::{Lp, Px, UPx};
@@ -1137,7 +1133,7 @@
         <span class="prelude-val">Some</span>(CachedGlyphHandle {
             key,
             is_mask: cached.is_mask,
-            cache: <span class="self">self</span>.clone(),
+            cache: Arc::downgrade(<span class="kw-2">&amp;</span><span class="self">self</span>.glyphs),
             texture: cached.texture.clone(),
         })
     }
@@ -1161,7 +1157,7 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>CachedGlyphHandle {
     key: cosmic_text::CacheKey,
     <span class="kw">pub </span>is_mask: bool,
-    cache: GlyphCache,
+    cache: Weak&lt;Mutex&lt;HashMap&lt;cosmic_text::CacheKey, CachedGlyph, DefaultHasher&gt;&gt;&gt;,
     <span class="kw">pub </span>texture: CollectedTexture,
 }
 
@@ -1176,14 +1172,12 @@
 
 <span class="kw">impl </span>Clone <span class="kw">for </span>CachedGlyphHandle {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self
-            </span>.cache
-            .glyphs
-            .lock()
-            .map_or_else(PoisonError::into_inner, |g| g);
-        <span class="kw">let </span>cached = data.get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.key).expect(<span class="string">&quot;cached glyph missing&quot;</span>);
-        cached.ref_count += <span class="number">1</span>;
-        drop(data);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(glyphs) = <span class="self">self</span>.cache.upgrade() {
+            <span class="kw">let </span><span class="kw-2">mut </span>data = glyphs.lock().map_or_else(PoisonError::into_inner, |g| g);
+            <span class="kw">let </span>cached = data.get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.key).expect(<span class="string">&quot;cached glyph missing&quot;</span>);
+            cached.ref_count += <span class="number">1</span>;
+            drop(data);
+        }
 
         <span class="self">Self </span>{
             key: <span class="self">self</span>.key,
@@ -1196,13 +1190,11 @@
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>CachedGlyphHandle {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self
-            </span>.cache
-            .glyphs
-            .lock()
-            .map_or_else(PoisonError::into_inner, |g| g);
-        <span class="kw">let </span>cached = data.get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.key).expect(<span class="string">&quot;cached glyph missing&quot;</span>);
-        cached.ref_count -= <span class="number">1</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(glyphs) = <span class="self">self</span>.cache.upgrade() {
+            <span class="kw">let </span><span class="kw-2">mut </span>data = glyphs.lock().map_or_else(PoisonError::into_inner, |g| g);
+            <span class="kw">let </span>cached = data.get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.key).expect(<span class="string">&quot;cached glyph missing&quot;</span>);
+            cached.ref_count -= <span class="number">1</span>;
+        }
     }
 }
 

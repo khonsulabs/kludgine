@@ -1381,11 +1381,27 @@
 <a href="#1381" id="1381">1381</a>
 <a href="#1382" id="1382">1382</a>
 <a href="#1383" id="1383">1383</a>
+<a href="#1384" id="1384">1384</a>
+<a href="#1385" id="1385">1385</a>
+<a href="#1386" id="1386">1386</a>
+<a href="#1387" id="1387">1387</a>
+<a href="#1388" id="1388">1388</a>
+<a href="#1389" id="1389">1389</a>
+<a href="#1390" id="1390">1390</a>
+<a href="#1391" id="1391">1391</a>
+<a href="#1392" id="1392">1392</a>
+<a href="#1393" id="1393">1393</a>
+<a href="#1394" id="1394">1394</a>
+<a href="#1395" id="1395">1395</a>
+<a href="#1396" id="1396">1396</a>
+<a href="#1397" id="1397">1397</a>
+<a href="#1398" id="1398">1398</a>
+<a href="#1399" id="1399">1399</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
-<span class="kw">use </span>std::sync::{Arc, OnceLock};
+<span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::time::{Duration, Instant};
 
 <span class="kw">use </span>appit::winit::dpi::{PhysicalPosition, PhysicalSize};
@@ -1405,11 +1421,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::PushConstants;
 <span class="kw">use </span><span class="kw">crate</span>::render::{Drawing, Renderer};
 <span class="kw">use crate</span>::{Color, Graphics, Kludgine, RenderingGraphics};
-
-<span class="kw">fn </span>shared_wgpu() -&gt; Arc&lt;wgpu::Instance&gt; {
-    <span class="kw">static </span>SHARED_WGPU: OnceLock&lt;Arc&lt;wgpu::Instance&gt;&gt; = OnceLock::new();
-    SHARED_WGPU.get_or_init(Arc::default).clone()
-}
 
 <span class="doccomment">/// A `Kludgine` application that enables opening multiple windows.
 </span><span class="kw">pub struct </span>PendingApp&lt;WindowEvent = ()&gt;(appit::PendingApp&lt;AppEvent&lt;WindowEvent&gt;&gt;)
@@ -1454,7 +1465,9 @@
                 // created is stored on the KludgineWindow, which is dropped
                 // prior to the appit/winit window closing.
                 </span><span class="kw">unsafe </span>{
-                    shared_wgpu()
+                    request
+                        .<span class="number">0
+                        </span>.wgpu
                         .create_surface(<span class="kw-2">&amp;*</span>window)
                         .expect(<span class="string">&quot;error creating surface&quot;</span>)
                 }
@@ -2075,6 +2088,7 @@
 </span><span class="kw">pub struct </span>AppEvent&lt;User&gt;(CreateSurfaceRequest&lt;User&gt;);
 
 <span class="kw">struct </span>CreateSurfaceRequest&lt;User&gt; {
+    wgpu: Arc&lt;wgpu::Instance&gt;,
     window: WindowId,
     data: PhantomData&lt;User&gt;,
 }
@@ -2096,10 +2110,10 @@
     config: wgpu::SurfaceConfiguration,
     <span class="comment">// SAFETY: Must not outlive this KludgineWindow.
     </span>surface: wgpu::Surface,
-    device: wgpu::Device,
-    queue: wgpu::Queue,
     msaa_texture: <span class="prelude-ty">Option</span>&lt;wgpu::Texture&gt;,
-    _adapter: wgpu::Adapter,
+    queue: wgpu::Queue,
+    wgpu: Arc&lt;wgpu::Instance&gt;,
+    device: wgpu::Device,
 }
 
 <span class="kw">impl</span>&lt;Behavior&gt; KludgineWindow&lt;Behavior&gt; {
@@ -2120,6 +2134,22 @@
     }
 }
 
+<span class="kw">fn </span>new_wgpu_instance() -&gt; wgpu::Instance {
+    <span class="kw">let </span>flags;
+    <span class="attr">#[cfg(debug_assertions)]
+    </span>{
+        flags = wgpu::InstanceFlags::debugging();
+    }
+    <span class="attr">#[cfg(not(debug_assertions))]
+    </span>{
+        flags = wgpu::InstanceFlags::empty();
+    }
+    wgpu::Instance::new(wgpu::InstanceDescriptor {
+        flags,
+        ..wgpu::InstanceDescriptor::default()
+    })
+}
+
 <span class="kw">impl</span>&lt;T, User&gt; appit::WindowBehavior&lt;AppEvent&lt;User&gt;&gt; <span class="kw">for </span>KludgineWindow&lt;T&gt;
 <span class="kw">where
     </span>T: WindowBehavior&lt;User&gt; + <span class="lifetime">&#39;static</span>,
@@ -2128,13 +2158,14 @@
     <span class="kw">type </span>Context = T::Context;
 
     <span class="kw">fn </span>initialize(window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;, context: <span class="self">Self</span>::Context) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>wgpu = Arc::new(new_wgpu_instance());
         <span class="kw">let </span>surface = window
             .send(AppEvent(CreateSurfaceRequest {
+                wgpu: wgpu.clone(),
                 window: window.winit().id(),
                 data: PhantomData,
             }))
             .expect(<span class="string">&quot;app not running&quot;</span>);
-        <span class="kw">let </span>wgpu = shared_wgpu();
         <span class="kw">let </span>adapter = pollster::block_on(wgpu.request_adapter(<span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
             power_preference: T::power_preference(),
             force_fallback_adapter: <span class="bool-val">false</span>,
@@ -2199,12 +2230,12 @@
             last_render,
             last_render_duration: Duration::ZERO,
             msaa_texture: <span class="prelude-val">None</span>,
-            _adapter: adapter,
             behavior,
             config,
             surface,
             device,
             queue,
+            wgpu,
         }
     }
 
@@ -2223,6 +2254,7 @@
                     wgpu::SurfaceError::Lost =&gt; {
                         <span class="self">self</span>.surface = window
                             .send(AppEvent(CreateSurfaceRequest {
+                                wgpu: <span class="self">self</span>.wgpu.clone(),
                                 window: window.winit().id(),
                                 data: PhantomData,
                             }))
