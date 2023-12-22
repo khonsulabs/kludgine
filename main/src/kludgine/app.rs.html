@@ -1397,6 +1397,36 @@
 <a href="#1397" id="1397">1397</a>
 <a href="#1398" id="1398">1398</a>
 <a href="#1399" id="1399">1399</a>
+<a href="#1400" id="1400">1400</a>
+<a href="#1401" id="1401">1401</a>
+<a href="#1402" id="1402">1402</a>
+<a href="#1403" id="1403">1403</a>
+<a href="#1404" id="1404">1404</a>
+<a href="#1405" id="1405">1405</a>
+<a href="#1406" id="1406">1406</a>
+<a href="#1407" id="1407">1407</a>
+<a href="#1408" id="1408">1408</a>
+<a href="#1409" id="1409">1409</a>
+<a href="#1410" id="1410">1410</a>
+<a href="#1411" id="1411">1411</a>
+<a href="#1412" id="1412">1412</a>
+<a href="#1413" id="1413">1413</a>
+<a href="#1414" id="1414">1414</a>
+<a href="#1415" id="1415">1415</a>
+<a href="#1416" id="1416">1416</a>
+<a href="#1417" id="1417">1417</a>
+<a href="#1418" id="1418">1418</a>
+<a href="#1419" id="1419">1419</a>
+<a href="#1420" id="1420">1420</a>
+<a href="#1421" id="1421">1421</a>
+<a href="#1422" id="1422">1422</a>
+<a href="#1423" id="1423">1423</a>
+<a href="#1424" id="1424">1424</a>
+<a href="#1425" id="1425">1425</a>
+<a href="#1426" id="1426">1426</a>
+<a href="#1427" id="1427">1427</a>
+<a href="#1428" id="1428">1428</a>
+<a href="#1429" id="1429">1429</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::num::NonZeroU32;
@@ -2132,6 +2162,134 @@
         <span class="kw-2">*</span>window = window_attributes;
         window
     }
+
+    <span class="kw">fn </span>current_surface_texture&lt;User&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;wgpu::SurfaceTexture&gt;
+    <span class="kw">where
+        </span>AppEvent&lt;User&gt;: Message&lt;Response = wgpu::Surface&gt;,
+    {
+        <span class="kw">loop </span>{
+            <span class="kw">match </span><span class="self">self</span>.surface.get_current_texture() {
+                <span class="prelude-val">Ok</span>(frame) =&gt; <span class="kw">break </span><span class="prelude-val">Some</span>(frame),
+                <span class="prelude-val">Err</span>(other) =&gt; <span class="kw">match </span>other {
+                    wgpu::SurfaceError::Timeout =&gt; <span class="kw">continue</span>,
+                    wgpu::SurfaceError::Outdated =&gt; {
+                        <span class="comment">// Needs to be reconfigured. We do this automatically
+                        // when the window is resized. We need to allow the
+                        // event loop to catch up.
+                        </span><span class="kw">return </span><span class="prelude-val">None</span>;
+                    }
+                    wgpu::SurfaceError::Lost =&gt; {
+                        <span class="self">self</span>.surface = window
+                            .send(AppEvent(CreateSurfaceRequest {
+                                wgpu: <span class="self">self</span>.wgpu.clone(),
+                                window: window.winit().id(),
+                                data: PhantomData,
+                            }))
+                            .expect(<span class="string">&quot;app not running&quot;</span>);
+                        <span class="self">self</span>.surface.configure(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.config);
+                    }
+                    wgpu::SurfaceError::OutOfMemory =&gt; {
+                        <span class="macro">unreachable!</span>(
+                            <span class="string">&quot;out of memory error when requesting current swap chain texture&quot;
+                        </span>)
+                    }
+                },
+            }
+        }
+    }
+
+    <span class="kw">fn </span>render_to_surface&lt;User&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        surface: wgpu::SurfaceTexture,
+        render_start: Instant,
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
+    ) <span class="kw">where
+        </span>AppEvent&lt;User&gt;: Message,
+        Behavior: WindowBehavior&lt;User&gt; + <span class="lifetime">&#39;static</span>,
+        User: Send + <span class="lifetime">&#39;static</span>,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>frame = <span class="self">self</span>.kludgine.next_frame();
+        <span class="kw">let </span>elapsed = render_start - <span class="self">self</span>.last_render;
+
+        <span class="self">self</span>.behavior.prepare(
+            Window::new(window, elapsed, <span class="self">self</span>.last_render_duration),
+            <span class="kw-2">&amp;mut </span>frame.prepare(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.queue),
+        );
+
+        <span class="kw">let </span>surface_view = surface
+            .texture
+            .create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor::default());
+        <span class="kw">let </span>(view, resolve_target) = <span class="kw">if </span>Behavior::multisample_count().get() &gt; <span class="number">1 </span>{
+            <span class="kw">if </span><span class="self">self</span>.msaa_texture.as_ref().map_or(<span class="bool-val">true</span>, |msaa| {
+                msaa.width() != surface.texture.width() || msaa.height() != surface.texture.height()
+            }) {
+                <span class="self">self</span>.msaa_texture = <span class="prelude-val">Some</span>(<span class="self">self</span>.device.create_texture(<span class="kw-2">&amp;</span>wgpu::TextureDescriptor {
+                    label: <span class="prelude-val">None</span>,
+                    size: wgpu::Extent3d {
+                        width: surface.texture.width(),
+                        height: surface.texture.height(),
+                        depth_or_array_layers: <span class="number">1</span>,
+                    },
+                    mip_level_count: <span class="number">1</span>,
+                    sample_count: Behavior::multisample_count().get(),
+                    dimension: wgpu::TextureDimension::D2,
+                    format: surface.texture.format(),
+                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                    view_formats: <span class="kw-2">&amp;</span>[],
+                }));
+            }
+
+            (
+                <span class="self">self</span>.msaa_texture
+                    .as_ref()
+                    .assert(<span class="string">&quot;always initialized&quot;</span>)
+                    .create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor::default()),
+                <span class="prelude-val">Some</span>(surface_view),
+            )
+        } <span class="kw">else </span>{
+            (surface_view, <span class="prelude-val">None</span>)
+        };
+
+        <span class="kw">let </span><span class="kw-2">mut </span>gfx = frame.render(
+            <span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor {
+                label: <span class="prelude-val">None</span>,
+                color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(wgpu::RenderPassColorAttachment {
+                    view: <span class="kw-2">&amp;</span>view,
+                    resolve_target: resolve_target.as_ref(),
+                    ops: wgpu::Operations {
+                        load: <span class="self">self
+                            </span>.behavior
+                            .clear_color()
+                            .map_or(wgpu::LoadOp::Load, |color| {
+                                wgpu::LoadOp::Clear(color.into())
+                            }),
+                        store: wgpu::StoreOp::Store,
+                    },
+                })],
+                depth_stencil_attachment: <span class="prelude-val">None</span>,
+                timestamp_writes: <span class="prelude-val">None</span>,
+                occlusion_query_set: <span class="prelude-val">None</span>,
+            },
+            <span class="kw-2">&amp;</span><span class="self">self</span>.device,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.queue,
+        );
+        <span class="kw">let </span>close_after_frame = !<span class="self">self</span>.behavior.render(
+            Window::new(window, elapsed, <span class="self">self</span>.last_render_duration),
+            <span class="kw-2">&amp;mut </span>gfx,
+        );
+        drop(gfx);
+        <span class="kw">let </span>id = frame.submit(<span class="kw-2">&amp;</span><span class="self">self</span>.queue);
+        surface.present();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = id {
+            <span class="self">self</span>.device.poll(wgpu::Maintain::WaitForSubmissionIndex(id));
+        }
+        <span class="kw">if </span>close_after_frame {
+            window.close();
+        }
+    }
 }
 
 <span class="kw">fn </span>new_wgpu_instance() -&gt; wgpu::Instance {
@@ -2240,114 +2398,16 @@
     }
 
     <span class="kw">fn </span>redraw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
-        <span class="kw">let </span>surface = <span class="kw">loop </span>{
-            <span class="kw">match </span><span class="self">self</span>.surface.get_current_texture() {
-                <span class="prelude-val">Ok</span>(frame) =&gt; <span class="kw">break </span>frame,
-                <span class="prelude-val">Err</span>(other) =&gt; <span class="kw">match </span>other {
-                    wgpu::SurfaceError::Timeout =&gt; <span class="kw">continue</span>,
-                    wgpu::SurfaceError::Outdated =&gt; {
-                        <span class="comment">// Needs to be reconfigured. We do this automatically
-                        // when the window is resized. We need to allow the
-                        // event loop to catch up.
-                        </span><span class="kw">return</span>;
-                    }
-                    wgpu::SurfaceError::Lost =&gt; {
-                        <span class="self">self</span>.surface = window
-                            .send(AppEvent(CreateSurfaceRequest {
-                                wgpu: <span class="self">self</span>.wgpu.clone(),
-                                window: window.winit().id(),
-                                data: PhantomData,
-                            }))
-                            .expect(<span class="string">&quot;app not running&quot;</span>);
-                        <span class="self">self</span>.surface.configure(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.config);
-                    }
-                    wgpu::SurfaceError::OutOfMemory =&gt; {
-                        <span class="macro">unreachable!</span>(
-                            <span class="string">&quot;out of memory error when requesting current swap chain texture&quot;
-                        </span>)
-                    }
-                },
-            }
+        <span class="kw">let </span><span class="prelude-val">Some</span>(surface) = <span class="self">self</span>.current_surface_texture(window) <span class="kw">else </span>{
+            <span class="kw">return</span>;
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>frame = <span class="self">self</span>.kludgine.next_frame();
         <span class="kw">let </span>render_start = Instant::now();
-        <span class="kw">let </span>elapsed = render_start - <span class="self">self</span>.last_render;
 
-        <span class="self">self</span>.behavior.prepare(
-            Window::new(window, elapsed, <span class="self">self</span>.last_render_duration),
-            <span class="kw-2">&amp;mut </span>frame.prepare(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.queue),
-        );
+        <span class="self">self</span>.render_to_surface(surface, render_start, window);
 
-        <span class="kw">let </span>surface_view = surface
-            .texture
-            .create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor::default());
-        <span class="kw">let </span>(view, resolve_target) = <span class="kw">if </span>T::multisample_count().get() &gt; <span class="number">1 </span>{
-            <span class="kw">if </span><span class="self">self</span>.msaa_texture.as_ref().map_or(<span class="bool-val">true</span>, |msaa| {
-                msaa.width() != surface.texture.width() || msaa.height() != surface.texture.height()
-            }) {
-                <span class="self">self</span>.msaa_texture = <span class="prelude-val">Some</span>(<span class="self">self</span>.device.create_texture(<span class="kw-2">&amp;</span>wgpu::TextureDescriptor {
-                    label: <span class="prelude-val">None</span>,
-                    size: wgpu::Extent3d {
-                        width: surface.texture.width(),
-                        height: surface.texture.height(),
-                        depth_or_array_layers: <span class="number">1</span>,
-                    },
-                    mip_level_count: <span class="number">1</span>,
-                    sample_count: T::multisample_count().get(),
-                    dimension: wgpu::TextureDimension::D2,
-                    format: surface.texture.format(),
-                    usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-                    view_formats: <span class="kw-2">&amp;</span>[],
-                }));
-            }
-
-            (
-                <span class="self">self</span>.msaa_texture
-                    .as_ref()
-                    .assert(<span class="string">&quot;always initialized&quot;</span>)
-                    .create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor::default()),
-                <span class="prelude-val">Some</span>(surface_view),
-            )
-        } <span class="kw">else </span>{
-            (surface_view, <span class="prelude-val">None</span>)
-        };
-
-        <span class="kw">let </span><span class="kw-2">mut </span>gfx = frame.render(
-            <span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor {
-                label: <span class="prelude-val">None</span>,
-                color_attachments: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(wgpu::RenderPassColorAttachment {
-                    view: <span class="kw-2">&amp;</span>view,
-                    resolve_target: resolve_target.as_ref(),
-                    ops: wgpu::Operations {
-                        load: <span class="self">self
-                            </span>.behavior
-                            .clear_color()
-                            .map_or(wgpu::LoadOp::Load, |color| {
-                                wgpu::LoadOp::Clear(color.into())
-                            }),
-                        store: wgpu::StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: <span class="prelude-val">None</span>,
-                timestamp_writes: <span class="prelude-val">None</span>,
-                occlusion_query_set: <span class="prelude-val">None</span>,
-            },
-            <span class="kw-2">&amp;</span><span class="self">self</span>.device,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.queue,
-        );
-        <span class="kw">let </span>close_after_frame = !<span class="self">self</span>.behavior.render(
-            Window::new(window, elapsed, <span class="self">self</span>.last_render_duration),
-            <span class="kw-2">&amp;mut </span>gfx,
-        );
-        drop(gfx);
-        frame.submit(<span class="kw-2">&amp;</span><span class="self">self</span>.queue);
-        surface.present();
         <span class="self">self</span>.last_render_duration = render_start.elapsed();
         <span class="self">self</span>.last_render = render_start;
-        <span class="kw">if </span>close_after_frame {
-            window.close();
-        }
     }
 
     <span class="kw">fn </span>close_requested(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) -&gt; bool {
