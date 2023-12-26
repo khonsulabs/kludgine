@@ -283,7 +283,7 @@ mod text {
     use std::sync::Arc;
 
     use figures::units::Px;
-    use figures::{Fraction, ScreenScale, ScreenUnit, UnscaledUnit};
+    use figures::{Fraction, Round, ScreenScale, ScreenUnit, UnscaledUnit};
     use intentional::Assert;
 
     use super::{
@@ -412,7 +412,9 @@ mod text {
             let translation = text.translation;
             let origin = match origin {
                 TextOrigin::TopLeft => Point::default(),
-                TextOrigin::Center => Point::from(text.source.size).into_px(scaling_factor) / 2,
+                TextOrigin::Center => {
+                    (Point::from(text.source.size).into_px(scaling_factor) / 2).round()
+                }
                 TextOrigin::FirstBaseline => {
                     Point::new(Px::ZERO, text.source.ascent.into_px(scaling_factor))
                 }

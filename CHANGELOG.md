@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the windqow loop.
 - When a `Window` has a 0 dimension, it will no longer try to redraw. This
   presented as a panic when a window was minimized.
+- Subpixel alignment of text rendering is no longer accounted for twice. Additionally,
+  `TextOrigin::Center` rounds the offset calculated to the nearest whole pixel.
 
 ## v0.6.1 (2023-12-19)
 

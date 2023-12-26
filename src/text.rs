@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex, PoisonError, Weak};
 
 use cosmic_text::{Attrs, AttrsOwned, LayoutGlyph, SwashContent};
 use figures::units::{Lp, Px, UPx};
-use figures::{FloatConversion, Fraction, Point, Rect, ScreenScale, Size, UPx2D};
+use figures::{FloatConversion, Fraction, Point, Rect, Round, ScreenScale, Size, UPx2D};
 use intentional::Cast;
 use smallvec::SmallVec;
 
@@ -410,7 +410,7 @@ pub(crate) fn map_each_glyph(
         TextOrigin::Center => {
             let measured =
                 measure_text::<Px, false>(buffer, default_color, kludgine, device, queue, glyphs);
-            Point::from(measured.size) / 2
+            (Point::from(measured.size) / 2).round()
         }
         TextOrigin::FirstBaseline => line_height_offset.cast(),
     } + line_height_offset;
@@ -431,12 +431,6 @@ pub(crate) fn map_each_glyph(
             let invisible = image.placement.width == 0 || image.placement.height == 0;
 
             let mut color = glyph.color_opt.map_or(default_color, Color::from);
-
-            let subpixel = Point::new(
-                physical.cache_key.x_bin.as_float(),
-                1.0 - physical.cache_key.y_bin.as_float(),
-            )
-            .map(Px::from);
 
             let cached = if invisible {
                 None
@@ -503,7 +497,6 @@ pub(crate) fn map_each_glyph(
                         cached.texture.region,
                         Rect::new(
                             (Point::new(physical.x, physical.y)).cast::<Px>()
-                                + subpixel
                                 + Point::new(
                                     image.placement.left,
                                     metrics.line_height.cast::<i32>() - image.placement.top,
@@ -522,7 +515,7 @@ pub(crate) fn map_each_glyph(
                 }
             } else {
                 GlyphBlit::Invisible {
-                    location: Point::new(physical.x, physical.y).cast::<Px>() + subpixel,
+                    location: Point::new(physical.x, physical.y).cast::<Px>(),
                     width: glyph.w.cast(),
                 }
             };
