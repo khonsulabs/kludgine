@@ -956,6 +956,16 @@
 <a href="#956" id="956">956</a>
 <a href="#957" id="957">957</a>
 <a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{Debug, Display};
 <span class="kw">use </span>std::hash::Hash;
@@ -972,7 +982,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::Vertex;
 <span class="kw">use </span><span class="kw">crate</span>::sealed::{<span class="self">self</span>, TextureSource <span class="kw">as _</span>};
 <span class="kw">use crate</span>::{
-    CollectedTexture, Graphics, PreparedGraphic, SharedTexture, TextureRegion, TextureSource,
+    CanRenderTo, CollectedTexture, Graphics, Kludgine, PreparedGraphic, ShareableTexture,
+    SharedTexture, TextureRegion, TextureSource,
 };
 
 <span class="doccomment">/// Includes an [Aseprite](https://www.aseprite.org/) sprite sheet and Json
@@ -987,7 +998,7 @@
             .and_then(|texture| {
                 <span class="macro-nonterminal">$crate::sprite::Sprite::load_aseprite_json</span>(
                     <span class="macro">include_str!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$path</span>, <span class="string">&quot;.json&quot;</span>)),
-                    <span class="kw-2">&amp;</span><span class="macro-nonterminal">$crate::SharedTexture::from</span>(texture),
+                    texture,
                 )
             })
     }};
@@ -1197,8 +1208,9 @@
     // with a complex serde type.
     </span><span class="kw">pub fn </span>load_aseprite_json(
         raw_json: <span class="kw-2">&amp;</span>str,
-        texture: <span class="kw-2">&amp;</span>SharedTexture,
+        texture: <span class="kw">impl </span>Into&lt;ShareableTexture&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, SpriteParseError&gt; {
+        <span class="kw">let </span>texture = texture.into();
         <span class="kw">let </span>json = justjson::Value::from_json(raw_json)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="prelude-val">Some</span>(Value::Object(meta)) = json.get(<span class="string">&quot;meta&quot;</span>) <span class="kw">else </span>{
@@ -1592,14 +1604,14 @@
     </span>}
 }
 
-<span class="doccomment">/// A collection of sprites from a single [`SharedTexture`].
+<span class="doccomment">/// A collection of sprites from a single [`ShareableTexture`].
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>SpriteSheet&lt;T&gt;
 <span class="kw">where
     </span>T: Debug,
 {
     <span class="doccomment">/// The source texture.
-    </span><span class="kw">pub </span>texture: SharedTexture,
+    </span><span class="kw">pub </span>texture: ShareableTexture,
     data: Arc&lt;SpriteSheetData&lt;T&gt;&gt;,
 }
 
@@ -1619,7 +1631,7 @@
     <span class="doccomment">/// Creates a new sprite sheet, diving `texture` into a grid of `tile_size`.
     /// The order of `tiles` will be read left-to-right, top-to-bottom.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>new(texture: <span class="kw">impl </span>Into&lt;SharedTexture&gt;, tile_size: Size&lt;UPx&gt;, tiles: Vec&lt;T&gt;) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(texture: <span class="kw">impl </span>Into&lt;ShareableTexture&gt;, tile_size: Size&lt;UPx&gt;, tiles: Vec&lt;T&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>texture = texture.into();
         <span class="kw">let </span>dimensions = texture.size() / tile_size;
         <span class="self">Self </span>{
@@ -1835,6 +1847,14 @@
         <span class="kw">match </span><span class="self">self </span>{
             SpriteSource::Region(texture) =&gt; texture.prepare(dest, graphics),
             SpriteSource::Collected(texture) =&gt; texture.prepare(dest, graphics),
+        }
+    }
+}
+<span class="kw">impl </span>CanRenderTo <span class="kw">for </span>SpriteSource {
+    <span class="kw">fn </span>can_render_to(<span class="kw-2">&amp;</span><span class="self">self</span>, kludgine: <span class="kw-2">&amp;</span>Kludgine) -&gt; bool {
+        <span class="kw">match </span><span class="self">self </span>{
+            SpriteSource::Region(texture) =&gt; texture.can_render_to(kludgine),
+            SpriteSource::Collected(texture) =&gt; texture.can_render_to(kludgine),
         }
     }
 }
