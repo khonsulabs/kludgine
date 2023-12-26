@@ -8,7 +8,7 @@ use smallvec::smallvec;
 
 use crate::buffer::Buffer;
 use crate::pipeline::{PreparedCommand, Vertex};
-use crate::{Graphics, PreparedGraphic};
+use crate::{Graphics, KludgineId, PreparedGraphic};
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct TextureId(usize);
@@ -97,6 +97,7 @@ impl Deref for ClipRect {
 }
 
 pub trait KludgineGraphics {
+    fn id(&self) -> KludgineId;
     fn device(&self) -> &wgpu::Device;
     fn queue(&self) -> &wgpu::Queue;
     fn binding_layout(&self) -> &wgpu::BindGroupLayout;

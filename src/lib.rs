@@ -6,13 +6,15 @@
 #![allow(clippy::module_name_repetitions)]
 
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{self, BuildHasher, Hash};
 use std::ops::{Add, AddAssign, Deref, DerefMut, Div, Neg};
-use std::sync::{Arc, Mutex, OnceLock, PoisonError};
+use std::sync::atomic::{self, AtomicU64};
+use std::sync::{Arc, Mutex, Weak};
 
-use ahash::AHasher;
+use ahash::{AHashMap, AHasher};
 use bytemuck::{Pod, Zeroable};
 #[cfg(feature = "cosmic-text")]
 pub use cosmic_text;
@@ -72,6 +74,7 @@ pub use pipeline::{PreparedGraphic, ShaderScalable};
 /// [`Shape::prepare`](shapes::Shape::prepare).
 #[derive(Debug)]
 pub struct Kludgine {
+    id: KludgineId,
     default_bindings: wgpu::BindGroup,
     pipeline: wgpu::RenderPipeline,
     _shader: wgpu::ShaderModule,
@@ -97,6 +100,7 @@ impl Kludgine {
         initial_size: Size<UPx>,
         scale: f32,
     ) -> Self {
+        let id = KludgineId::unique();
         let scale = Fraction::from(scale);
         let uniforms = Buffer::new(
             &[Uniforms::new(initial_size, scale)],
@@ -151,8 +155,10 @@ impl Kludgine {
         let pipeline = pipeline::new(device, &pipeline_layout, &shader, format, multisample);
 
         Self {
+            id,
             #[cfg(feature = "cosmic-text")]
             text: text::TextSystem::new(&ProtoGraphics {
+                id,
                 device,
                 queue,
                 binding_layout: &binding_layout,
@@ -210,6 +216,17 @@ impl Kludgine {
     /// rendering to.
     pub const fn scale(&self) -> Fraction {
         self.scale
+    }
+}
+
+/// The unique ID of a [`Kludgine`] instance.
+#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
+pub struct KludgineId(u64);
+
+impl KludgineId {
+    fn unique() -> Self {
+        static ID_COUNTER: AtomicU64 = AtomicU64::new(0);
+        Self(ID_COUNTER.fetch_add(1, atomic::Ordering::Release))
     }
 }
 
@@ -286,12 +303,11 @@ impl Frame<'_> {
         load_op: wgpu::LoadOp<Color>,
         graphics: &Graphics<'gfx>,
     ) -> RenderingGraphics<'gfx, 'pass> {
-        let texture = texture.instance(graphics);
         self.render(
             &wgpu::RenderPassDescriptor {
                 label: None,
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &texture.view,
+                    view: &texture.data.view,
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: match load_op {
@@ -350,6 +366,7 @@ impl Drop for Frame<'_> {
 pub trait KludgineGraphics: sealed::KludgineGraphics {}
 
 struct ProtoGraphics<'gfx> {
+    id: KludgineId,
     device: &'gfx wgpu::Device,
     queue: &'gfx wgpu::Queue,
     binding_layout: &'gfx wgpu::BindGroupLayout,
@@ -361,6 +378,7 @@ struct ProtoGraphics<'gfx> {
 impl<'a> ProtoGraphics<'a> {
     fn new(device: &'a wgpu::Device, queue: &'a wgpu::Queue, kludgine: &'a Kludgine) -> Self {
         Self {
+            id: kludgine.id,
             device,
             queue,
             binding_layout: &kludgine.binding_layout,
@@ -374,6 +392,10 @@ impl<'a> ProtoGraphics<'a> {
 impl KludgineGraphics for ProtoGraphics<'_> {}
 
 impl sealed::KludgineGraphics for ProtoGraphics<'_> {
+    fn id(&self) -> KludgineId {
+        self.id
+    }
+
     fn device(&self) -> &wgpu::Device {
         self.device
     }
@@ -402,6 +424,10 @@ impl sealed::KludgineGraphics for ProtoGraphics<'_> {
 impl KludgineGraphics for Graphics<'_> {}
 
 impl sealed::KludgineGraphics for Graphics<'_> {
+    fn id(&self) -> KludgineId {
+        self.kludgine.id
+    }
+
     fn device(&self) -> &wgpu::Device {
         self.device
     }
@@ -1228,16 +1254,152 @@ impl Color {
     pub const YELLOWGREEN: Self = Self::new(154, 205, 50, 255);
 }
 
+/// A [`TextureSource`] that loads its data lazily.
+///
+/// This texture type can be shared between multiple [`wgpu::Device`]s. When a
+/// clone of this texture is used, a unique copy will be loaded once per
+/// [`wgpu::Device`].
+#[derive(Debug)]
+pub struct LazyTexture {
+    data: Arc<LazyTextureData>,
+    last_loaded: RefCell<Option<(KludgineId, SharedTexture)>>,
+}
+
+impl LazyTexture {
+    /// Returns a new texture that loads its data to the gpu once used.
+    #[must_use]
+    pub fn from_data(
+        size: Size<UPx>,
+        format: wgpu::TextureFormat,
+        usage: wgpu::TextureUsages,
+        filter_mode: wgpu::FilterMode,
+        data: Vec<u8>,
+    ) -> Self {
+        Self {
+            data: Arc::new(LazyTextureData {
+                id: sealed::TextureId::new_unique_id(),
+                size,
+                format,
+                usage,
+                filter_mode,
+                loaded_by_device: Mutex::default(),
+                data,
+            }),
+            last_loaded: RefCell::default(),
+        }
+    }
+
+    /// Returns a texture that loads `image` into the gpu when it is used.
+    #[must_use]
+    #[cfg(feature = "image")]
+    pub fn from_image(image: image::DynamicImage, filter_mode: wgpu::FilterMode) -> Self {
+        let image = image.into_rgba8();
+        Self::from_data(
+            Size::upx(image.width(), image.height()),
+            wgpu::TextureFormat::Rgba8UnormSrgb,
+            wgpu::TextureUsages::TEXTURE_BINDING,
+            filter_mode,
+            image.into_raw(),
+        )
+    }
+
+    /// Loads this texture to `graphics`, if needed, returning a
+    /// [`SharedTexture`].
+    #[must_use]
+    pub fn upgrade(&self, graphics: &impl sealed::KludgineGraphics) -> SharedTexture {
+        if let Some(last_loaded) = &*self.last_loaded.borrow() {
+            if last_loaded.0 == graphics.id() {
+                return last_loaded.1.clone();
+            }
+        }
+
+        let mut loaded = self
+            .data
+            .loaded_by_device
+            .lock()
+            .assert("texture lock poisoned");
+
+        if let Some(loaded) = loaded.get(&graphics.id()).and_then(Weak::upgrade) {
+            return SharedTexture(loaded);
+        }
+
+        let wgpu = graphics.device().create_texture_with_data(
+            graphics.queue(),
+            &wgpu::TextureDescriptor {
+                label: None,
+                size: self.data.size.into(),
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: self.data.format,
+                usage: self.data.usage,
+                view_formats: &[],
+            },
+            &self.data.data,
+        );
+        let texture = SharedTexture::from(Texture {
+            id: self.data.id,
+            size: self.data.size,
+            format: self.data.format,
+            data: TextureInstance::from_wgpu(wgpu, self.data.filter_mode, graphics),
+        });
+
+        loaded.insert(graphics.id(), Arc::downgrade(&texture.0));
+        self.last_loaded
+            .replace(Some((graphics.id(), texture.clone())));
+
+        texture
+    }
+}
+
+impl Clone for LazyTexture {
+    fn clone(&self) -> Self {
+        Self {
+            data: self.data.clone(),
+            last_loaded: RefCell::default(),
+        }
+    }
+}
+
+impl TextureSource for LazyTexture {}
+
+impl sealed::TextureSource for LazyTexture {
+    fn id(&self) -> sealed::TextureId {
+        self.data.id
+    }
+
+    fn is_mask(&self) -> bool {
+        // TODO this should be a flag on the texture.
+        self.data.format == wgpu::TextureFormat::R8Unorm
+    }
+
+    fn bind_group(&self, graphics: &impl sealed::KludgineGraphics) -> Arc<wgpu::BindGroup> {
+        self.upgrade(graphics).bind_group(graphics)
+    }
+
+    fn default_rect(&self) -> Rect<UPx> {
+        self.data.size.into()
+    }
+}
+
+#[derive(Debug)]
+struct LazyTextureData {
+    id: sealed::TextureId,
+    size: Size<UPx>,
+    format: wgpu::TextureFormat,
+    usage: wgpu::TextureUsages,
+    filter_mode: wgpu::FilterMode,
+    loaded_by_device: Mutex<AHashMap<KludgineId, Weak<Texture>>>,
+    data: Vec<u8>,
+}
+
 /// An image stored on the GPU.
 #[derive(Debug)]
 pub struct Texture {
     id: sealed::TextureId,
     size: Size<UPx>,
     format: wgpu::TextureFormat,
-    usage: wgpu::TextureUsages,
-    filter_mode: wgpu::FilterMode,
-    loadable: Mutex<Option<Vec<u8>>>,
-    data: OnceLock<TextureInstance>,
+    data: TextureInstance,
 }
 
 #[derive(Debug)]
@@ -1278,17 +1440,13 @@ impl Texture {
         graphics: &impl KludgineGraphics,
         size: Size<UPx>,
         format: wgpu::TextureFormat,
-        usage: wgpu::TextureUsages,
         filter_mode: wgpu::FilterMode,
     ) -> Self {
         Self {
             id: sealed::TextureId::new_unique_id(),
             size,
             format,
-            usage,
-            loadable: Mutex::default(),
-            filter_mode,
-            data: OnceLock::from(TextureInstance::from_wgpu(wgpu, filter_mode, graphics)),
+            data: TextureInstance::from_wgpu(wgpu, filter_mode, graphics),
         }
     }
 
@@ -1309,7 +1467,7 @@ impl Texture {
             usage,
             view_formats: &[],
         });
-        Self::from_wgpu(wgpu, graphics, size, format, usage, filter_mode)
+        Self::from_wgpu(wgpu, graphics, size, format, filter_mode)
     }
 
     /// Creates a new texture of the given size, format, and usages.
@@ -1349,27 +1507,7 @@ impl Texture {
             },
             data,
         );
-        Self::from_wgpu(wgpu, graphics, size, format, usage, filter_mode)
-    }
-
-    /// Returns a new texture that loads its data to the gpu once used.
-    #[must_use]
-    pub fn lazy_from_data(
-        size: Size<UPx>,
-        format: wgpu::TextureFormat,
-        usage: wgpu::TextureUsages,
-        filter_mode: wgpu::FilterMode,
-        data: Vec<u8>,
-    ) -> Self {
-        Self {
-            id: sealed::TextureId::new_unique_id(),
-            size,
-            format,
-            usage,
-            filter_mode,
-            loadable: Mutex::new(Some(data)),
-            data: OnceLock::new(),
-        }
+        Self::from_wgpu(wgpu, graphics, size, format, filter_mode)
     }
 
     /// Creates a texture from `image`.
@@ -1390,20 +1528,6 @@ impl Texture {
             wgpu::TextureUsages::TEXTURE_BINDING,
             filter_mode,
             image.as_raw(),
-        )
-    }
-
-    /// Returns a texture that loads `image` into the gpu when it is used.
-    #[must_use]
-    #[cfg(feature = "image")]
-    pub fn lazy_from_image(image: image::DynamicImage, filter_mode: wgpu::FilterMode) -> Self {
-        let image = image.into_rgba8();
-        Self::lazy_from_data(
-            Size::upx(image.width(), image.height()),
-            wgpu::TextureFormat::Rgba8UnormSrgb,
-            wgpu::TextureUsages::TEXTURE_BINDING,
-            filter_mode,
-            image.into_raw(),
         )
     }
 
@@ -1465,47 +1589,14 @@ impl Texture {
     pub const fn format(&self) -> wgpu::TextureFormat {
         self.format
     }
-
-    fn instance(&self, graphics: &impl sealed::KludgineGraphics) -> &TextureInstance {
-        self.data.get_or_init(|| {
-            let loadable = self
-                .loadable
-                .lock()
-                .map_or_else(PoisonError::into_inner, |g| g)
-                .take()
-                .assert("loadable present when OnceLock is uninitilized");
-            self.load(&loadable, graphics)
-        })
-    }
-
-    fn load(&self, data: &[u8], graphics: &impl sealed::KludgineGraphics) -> TextureInstance {
-        let wgpu = graphics.device().create_texture_with_data(
-            graphics.queue(),
-            &wgpu::TextureDescriptor {
-                label: None,
-                size: self.size.into(),
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: wgpu::TextureDimension::D2,
-                format: self.format,
-                usage: self.usage,
-                view_formats: &[],
-            },
-            data,
-        );
-        TextureInstance::from_wgpu(wgpu, self.filter_mode, graphics)
-    }
-
-    fn wgpu(&self, graphics: &impl KludgineGraphics) -> &wgpu::Texture {
-        &self.instance(graphics).wgpu
-    }
 }
 
-/// Loads a texture's bytes into the executable.
+/// Loads a texture's bytes into the executable. This macro returns a result
+/// containing a [`LazyTexture`].
 ///
 /// This macro takes a single parameter, which is forwarded along to
 /// [`include_bytes!`]. The bytes that are loaded are then parsed using
-/// [`image::load_from_memory`] and loaded using [`Texture::lazy_from_image`].
+/// [`image::load_from_memory`] and loaded using [`LazyTexture::from_image`].
 #[cfg(feature = "image")]
 #[macro_export]
 macro_rules! include_texture {
@@ -1514,7 +1605,7 @@ macro_rules! include_texture {
     };
     ($path:expr, $filter_mode:expr) => {
         $crate::image::load_from_memory(std::include_bytes!($path))
-            .map(|image| $crate::Texture::lazy_from_image(image, $filter_mode))
+            .map(|image| $crate::LazyTexture::from_image(image, $filter_mode))
     };
 }
 
@@ -1542,8 +1633,8 @@ pub trait TextureSource: sealed::TextureSource {}
 impl TextureSource for Texture {}
 
 impl sealed::TextureSource for Texture {
-    fn bind_group(&self, graphics: &impl sealed::KludgineGraphics) -> Arc<wgpu::BindGroup> {
-        self.instance(graphics).bind_group.clone()
+    fn bind_group(&self, _graphics: &impl sealed::KludgineGraphics) -> Arc<wgpu::BindGroup> {
+        self.data.bind_group.clone()
     }
 
     fn id(&self) -> sealed::TextureId {
@@ -1664,6 +1755,8 @@ impl From<SharedTexture> for TextureRegion {
 pub enum AnyTexture {
     /// A [`Texture`].
     Texture(Texture),
+    /// A [`LazyTexture`].
+    Lazy(LazyTexture),
     /// A [`SharedTexture`].
     Shared(SharedTexture),
     /// A [`TextureRegion`].
@@ -1675,6 +1768,12 @@ pub enum AnyTexture {
 impl From<Texture> for AnyTexture {
     fn from(texture: Texture) -> Self {
         Self::Texture(texture)
+    }
+}
+
+impl From<LazyTexture> for AnyTexture {
+    fn from(texture: LazyTexture) -> Self {
+        Self::Lazy(texture)
     }
 }
 
@@ -1709,6 +1808,7 @@ impl sealed::TextureSource for AnyTexture {
     fn id(&self) -> sealed::TextureId {
         match self {
             AnyTexture::Texture(texture) => texture.id(),
+            AnyTexture::Lazy(texture) => texture.id(),
             AnyTexture::Collected(texture) => texture.id(),
             AnyTexture::Shared(texture) => texture.id(),
             AnyTexture::Region(texture) => texture.id(),
@@ -1718,6 +1818,7 @@ impl sealed::TextureSource for AnyTexture {
     fn is_mask(&self) -> bool {
         match self {
             AnyTexture::Texture(texture) => texture.is_mask(),
+            AnyTexture::Lazy(texture) => texture.is_mask(),
             AnyTexture::Collected(texture) => texture.is_mask(),
             AnyTexture::Shared(texture) => texture.is_mask(),
             AnyTexture::Region(texture) => texture.is_mask(),
@@ -1727,6 +1828,7 @@ impl sealed::TextureSource for AnyTexture {
     fn bind_group(&self, graphics: &impl sealed::KludgineGraphics) -> Arc<wgpu::BindGroup> {
         match self {
             AnyTexture::Texture(texture) => texture.bind_group(graphics),
+            AnyTexture::Lazy(texture) => texture.bind_group(graphics),
             AnyTexture::Collected(texture) => texture.bind_group(graphics),
             AnyTexture::Shared(texture) => texture.bind_group(graphics),
             AnyTexture::Region(texture) => texture.bind_group(graphics),
@@ -1736,6 +1838,7 @@ impl sealed::TextureSource for AnyTexture {
     fn default_rect(&self) -> Rect<UPx> {
         match self {
             AnyTexture::Texture(texture) => texture.default_rect(),
+            AnyTexture::Lazy(texture) => texture.default_rect(),
             AnyTexture::Collected(texture) => texture.default_rect(),
             AnyTexture::Shared(texture) => texture.default_rect(),
             AnyTexture::Region(texture) => texture.default_rect(),

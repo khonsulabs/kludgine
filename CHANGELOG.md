@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `UnwindSafe` has been removed from the bounds of `WindowBehavior::Context`,
   and various types may or may no longer implmement `UnwindSafe`. The underlying
   requirement for this has been removed from `appit`.
+- `Texture::lazy_from_data` and `Texture::lazy_from_image` have been refactored
+  into a new type: `LazyTexture::from_data`/`LazyTexture::from_image`.
+  `LazyTexture` is able to be shared across different windows/wgpu rendering
+  contexts by loading a copy of its data once per context it is used within. The
+  previous lazy texture support created textures that weren't able to be shared
+  between windows.
+- `include_texture!` now returns a `LazyTexture` instead of a `Texture`.
 
 ## Added
 

@@ -1,9 +1,9 @@
 use appit::winit::error::EventLoopError;
 use kludgine::figures::{Lp2D, Point};
-use kludgine::Texture;
+use kludgine::LazyTexture;
 
 fn main() -> Result<(), EventLoopError> {
-    let texture = Texture::lazy_from_image(
+    let texture = LazyTexture::from_image(
         image::open("./examples/assets/k.png").unwrap(),
         wgpu::FilterMode::Linear,
     );

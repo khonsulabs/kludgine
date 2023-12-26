@@ -449,6 +449,7 @@ pub(crate) fn map_each_glyph(
                                 },
                                 Size::upx(image.placement.width, image.placement.height).cast(),
                                 &ProtoGraphics {
+                                    id: kludgine.id,
                                     device,
                                     queue,
                                     binding_layout: &kludgine.binding_layout,
@@ -472,6 +473,7 @@ pub(crate) fn map_each_glyph(
                                     },
                                     Size::upx(image.placement.width, image.placement.height).cast(),
                                     &ProtoGraphics {
+                                        id: kludgine.id,
                                         device,
                                         queue,
                                         binding_layout: &kludgine.binding_layout,

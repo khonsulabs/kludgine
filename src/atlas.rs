@@ -125,8 +125,8 @@ impl TextureCollection {
                 .device()
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
             commands.copy_texture_to_texture(
-                this.texture.wgpu(graphics).as_image_copy(),
-                new_texture.wgpu(graphics).as_image_copy(),
+                this.texture.data.wgpu.as_image_copy(),
+                new_texture.data.wgpu.as_image_copy(),
                 this.texture.size.into(),
             );
             graphics.queue().submit([commands.finish()]);
@@ -145,7 +145,7 @@ impl TextureCollection {
 
         graphics.queue().write_texture(
             wgpu::ImageCopyTexture {
-                texture: this.texture.wgpu(graphics),
+                texture: &this.texture.data.wgpu,
                 mip_level: 0,
                 origin: region.origin.into(),
                 aspect: wgpu::TextureAspect::All,
