@@ -13,12 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and various types may or may no longer implmement `UnwindSafe`. The underlying
   requirement for this has been removed from `appit`.
 - `Texture::lazy_from_data` and `Texture::lazy_from_image` have been refactored
-  into a new type: `LazyTexture::from_data`/`LazyTexture::from_image`.
-  `LazyTexture` is able to be shared across different windows/wgpu rendering
-  contexts by loading a copy of its data once per context it is used within. The
-  previous lazy texture support created textures that weren't able to be shared
-  between windows.
+  into constructors of a new type:
+  `LazyTexture::from_data`/`LazyTexture::from_image`.
 - `include_texture!` now returns a `LazyTexture` instead of a `Texture`.
+- `SharedTexture::region()` has been removed. `TextureRegion::new()` is the
+  replacement API that allows creating a region for any `ShareableTexture`.
+- `Sprite::load_aseprite_json` now accepts `impl Into<ShareableTexture>` instead
+  of `&SharedTexture`. In theory, no code will break from this change due to
+  trait implementations.
+- `SpriteSheet::texture` is now a `ShareableTexture`.
 
 ## Added
 
@@ -28,6 +31,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `app::Window::app()` returns a handle to the application of the window.
 - `WindowBehavior::open[_with]()` are new functions that allow opening a window
   into a reference of an `App` or `PendingApp`.
+- `CanRenderTo::can_render_to()` is a new trait that checks if a resource can be
+  rendered in a given `Kludgine` instance.
+
+  This is implemented by all types in Kludgine that utilize textures.
+- `LazyTexture` is a new texture type that supports being shared across
+  different windows/wgpu rendering contexts by loading its data on-demand.
+  `LazyTexture::upgrade()` loads a `SharedTexture` that is compatible with the
+  given graphics context.
+- `ShareableTexture` is a texture type that can resolve to a `SharedTexture`.
+  Currently this is either a `SharedTexture` or a `LazyTexture`.
 
 ## Fixed
 

@@ -14,7 +14,8 @@ use justjson::Value;
 use crate::pipeline::Vertex;
 use crate::sealed::{self, TextureSource as _};
 use crate::{
-    CollectedTexture, Graphics, PreparedGraphic, SharedTexture, TextureRegion, TextureSource,
+    CanRenderTo, CollectedTexture, Graphics, Kludgine, PreparedGraphic, ShareableTexture,
+    SharedTexture, TextureRegion, TextureSource,
 };
 
 /// Includes an [Aseprite](https://www.aseprite.org/) sprite sheet and Json
@@ -29,7 +30,7 @@ macro_rules! include_aseprite_sprite {
             .and_then(|texture| {
                 $crate::sprite::Sprite::load_aseprite_json(
                     include_str!(concat!($path, ".json")),
-                    &$crate::SharedTexture::from(texture),
+                    texture,
                 )
             })
     }};
@@ -239,8 +240,9 @@ impl Sprite {
     // with a complex serde type.
     pub fn load_aseprite_json(
         raw_json: &str,
-        texture: &SharedTexture,
+        texture: impl Into<ShareableTexture>,
     ) -> Result<Self, SpriteParseError> {
+        let texture = texture.into();
         let json = justjson::Value::from_json(raw_json)?;
 
         let Some(Value::Object(meta)) = json.get("meta") else {
@@ -634,14 +636,14 @@ impl SpriteFrame {
     }
 }
 
-/// A collection of sprites from a single [`SharedTexture`].
+/// A collection of sprites from a single [`ShareableTexture`].
 #[derive(Debug, Clone)]
 pub struct SpriteSheet<T>
 where
     T: Debug,
 {
     /// The source texture.
-    pub texture: SharedTexture,
+    pub texture: ShareableTexture,
     data: Arc<SpriteSheetData<T>>,
 }
 
@@ -661,7 +663,7 @@ where
     /// Creates a new sprite sheet, diving `texture` into a grid of `tile_size`.
     /// The order of `tiles` will be read left-to-right, top-to-bottom.
     #[must_use]
-    pub fn new(texture: impl Into<SharedTexture>, tile_size: Size<UPx>, tiles: Vec<T>) -> Self {
+    pub fn new(texture: impl Into<ShareableTexture>, tile_size: Size<UPx>, tiles: Vec<T>) -> Self {
         let texture = texture.into();
         let dimensions = texture.size() / tile_size;
         Self {
@@ -877,6 +879,14 @@ impl SpriteSource {
         match self {
             SpriteSource::Region(texture) => texture.prepare(dest, graphics),
             SpriteSource::Collected(texture) => texture.prepare(dest, graphics),
+        }
+    }
+}
+impl CanRenderTo for SpriteSource {
+    fn can_render_to(&self, kludgine: &Kludgine) -> bool {
+        match self {
+            SpriteSource::Region(texture) => texture.can_render_to(kludgine),
+            SpriteSource::Collected(texture) => texture.can_render_to(kludgine),
         }
     }
 }

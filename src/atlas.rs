@@ -8,7 +8,7 @@ use figures::units::UPx;
 use figures::{IntoSigned, IntoUnsigned, Point, Px2D, Rect, Size, UPx2D};
 
 use crate::pipeline::{PreparedGraphic, Vertex};
-use crate::{sealed, Graphics, KludgineGraphics, Texture, TextureSource};
+use crate::{sealed, CanRenderTo, Graphics, Kludgine, KludgineGraphics, Texture, TextureSource};
 
 fn atlas_usages() -> wgpu::TextureUsages {
     wgpu::TextureUsages::TEXTURE_BINDING
@@ -251,6 +251,16 @@ impl TextureCollection {
     }
 }
 
+impl CanRenderTo for TextureCollection {
+    fn can_render_to(&self, kludgine: &Kludgine) -> bool {
+        self.data
+            .read()
+            .map_or_else(PoisonError::into_inner, |g| g)
+            .texture
+            .can_render_to(kludgine)
+    }
+}
+
 impl TextureSource for TextureCollection {}
 
 impl sealed::TextureSource for TextureCollection {
@@ -308,6 +318,12 @@ impl Drop for CollectedTexture {
         if Arc::strong_count(&self.id) == 1 {
             self.collection.free(*self.id);
         }
+    }
+}
+
+impl CanRenderTo for CollectedTexture {
+    fn can_render_to(&self, kludgine: &Kludgine) -> bool {
+        self.collection.can_render_to(kludgine)
     }
 }
 

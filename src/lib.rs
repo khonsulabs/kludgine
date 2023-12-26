@@ -6,7 +6,6 @@
 #![allow(clippy::module_name_repetitions)]
 
 use std::borrow::Cow;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{self, BuildHasher, Hash};
@@ -1262,7 +1261,7 @@ impl Color {
 #[derive(Debug)]
 pub struct LazyTexture {
     data: Arc<LazyTextureData>,
-    last_loaded: RefCell<Option<(KludgineId, SharedTexture)>>,
+    last_loaded: Mutex<Option<(KludgineId, SharedTexture)>>,
 }
 
 impl LazyTexture {
@@ -1285,7 +1284,7 @@ impl LazyTexture {
                 loaded_by_device: Mutex::default(),
                 data,
             }),
-            last_loaded: RefCell::default(),
+            last_loaded: Mutex::default(),
         }
     }
 
@@ -1307,7 +1306,8 @@ impl LazyTexture {
     /// [`SharedTexture`].
     #[must_use]
     pub fn upgrade(&self, graphics: &impl sealed::KludgineGraphics) -> SharedTexture {
-        if let Some(last_loaded) = &*self.last_loaded.borrow() {
+        let mut last_loaded = self.last_loaded.lock().assert("texture lock poisoned");
+        if let Some(last_loaded) = &*last_loaded {
             if last_loaded.0 == graphics.id() {
                 return last_loaded.1.clone();
             }
@@ -1339,16 +1339,22 @@ impl LazyTexture {
         );
         let texture = SharedTexture::from(Texture {
             id: self.data.id,
+            kludgine: graphics.id(),
             size: self.data.size,
             format: self.data.format,
             data: TextureInstance::from_wgpu(wgpu, self.data.filter_mode, graphics),
         });
 
         loaded.insert(graphics.id(), Arc::downgrade(&texture.0));
-        self.last_loaded
-            .replace(Some((graphics.id(), texture.clone())));
+        *last_loaded = Some((graphics.id(), texture.clone()));
 
         texture
+    }
+
+    /// The size of the texture.
+    #[must_use]
+    pub fn size(&self) -> Size<UPx> {
+        self.data.size
     }
 }
 
@@ -1356,8 +1362,14 @@ impl Clone for LazyTexture {
     fn clone(&self) -> Self {
         Self {
             data: self.data.clone(),
-            last_loaded: RefCell::default(),
+            last_loaded: Mutex::default(),
         }
+    }
+}
+
+impl CanRenderTo for LazyTexture {
+    fn can_render_to(&self, _kludgine: &Kludgine) -> bool {
+        true
     }
 }
 
@@ -1397,6 +1409,7 @@ struct LazyTextureData {
 #[derive(Debug)]
 pub struct Texture {
     id: sealed::TextureId,
+    kludgine: KludgineId,
     size: Size<UPx>,
     format: wgpu::TextureFormat,
     data: TextureInstance,
@@ -1444,6 +1457,7 @@ impl Texture {
     ) -> Self {
         Self {
             id: sealed::TextureId::new_unique_id(),
+            kludgine: graphics.id(),
             size,
             format,
             data: TextureInstance::from_wgpu(wgpu, filter_mode, graphics),
@@ -1627,8 +1641,22 @@ pub enum Origin<Unit> {
     Custom(Point<Unit>),
 }
 
+/// A resource that can be checked for surface compatibility.
+pub trait CanRenderTo {
+    /// Returns `true` if this resource can be rendered into a graphics context
+    /// for `kludgine`.
+    #[must_use]
+    fn can_render_to(&self, kludgine: &Kludgine) -> bool;
+}
+
 /// A type that is rendered using a texture.
-pub trait TextureSource: sealed::TextureSource {}
+pub trait TextureSource: CanRenderTo + sealed::TextureSource {}
+
+impl CanRenderTo for Texture {
+    fn can_render_to(&self, kludgine: &Kludgine) -> bool {
+        self.kludgine == kludgine.id
+    }
+}
 
 impl TextureSource for Texture {}
 
@@ -1669,18 +1697,6 @@ impl From<Texture> for SharedTexture {
     }
 }
 
-impl SharedTexture {
-    /// Returns a reference to this texture that only renders a region of the
-    /// texture when drawn.
-    #[must_use]
-    pub fn region(&self, region: Rect<UPx>) -> TextureRegion {
-        TextureRegion {
-            texture: self.clone(),
-            region,
-        }
-    }
-}
-
 impl Deref for SharedTexture {
     type Target = Texture;
 
@@ -1689,16 +1705,129 @@ impl Deref for SharedTexture {
     }
 }
 
+/// A texture that can be cloned cheaply.
+#[derive(Clone, Debug)]
+pub enum ShareableTexture {
+    /// A shared texture instance.
+    Shared(SharedTexture),
+    /// A lazy texture that loads its contents on first use.
+    Lazy(LazyTexture),
+}
+
+impl ShareableTexture {
+    /// Returns the [`SharedTexture`] from this instance, loading it if
+    /// necessary.
+    pub fn texture(&self, graphics: &impl KludgineGraphics) -> Cow<'_, SharedTexture> {
+        match self {
+            ShareableTexture::Shared(texture) => Cow::Borrowed(texture),
+            ShareableTexture::Lazy(texture) => Cow::Owned(texture.upgrade(graphics)),
+        }
+    }
+
+    /// The size of the texture.
+    #[must_use]
+    pub fn size(&self) -> Size<UPx> {
+        match self {
+            ShareableTexture::Shared(texture) => texture.size(),
+            ShareableTexture::Lazy(texture) => texture.size(),
+        }
+    }
+}
+
+impl Eq for ShareableTexture {}
+
+impl PartialEq for ShareableTexture {
+    fn eq(&self, other: &Self) -> bool {
+        self.id() == other.id()
+    }
+}
+
+impl CanRenderTo for ShareableTexture {
+    fn can_render_to(&self, kludgine: &Kludgine) -> bool {
+        match self {
+            ShareableTexture::Shared(texture) => texture.can_render_to(kludgine),
+            ShareableTexture::Lazy(texture) => texture.can_render_to(kludgine),
+        }
+    }
+}
+
+impl sealed::TextureSource for ShareableTexture {
+    fn id(&self) -> sealed::TextureId {
+        match self {
+            ShareableTexture::Shared(texture) => texture.id(),
+            ShareableTexture::Lazy(texture) => texture.id(),
+        }
+    }
+
+    fn is_mask(&self) -> bool {
+        match self {
+            ShareableTexture::Shared(texture) => texture.is_mask(),
+            ShareableTexture::Lazy(texture) => texture.is_mask(),
+        }
+    }
+
+    fn bind_group(&self, graphics: &impl sealed::KludgineGraphics) -> Arc<wgpu::BindGroup> {
+        match self {
+            ShareableTexture::Shared(texture) => texture.bind_group(graphics),
+            ShareableTexture::Lazy(texture) => texture.bind_group(graphics),
+        }
+    }
+
+    fn default_rect(&self) -> Rect<UPx> {
+        match self {
+            ShareableTexture::Shared(texture) => texture.default_rect(),
+            ShareableTexture::Lazy(texture) => texture.default_rect(),
+        }
+    }
+}
+
+impl From<Texture> for ShareableTexture {
+    fn from(texture: Texture) -> Self {
+        Self::from(SharedTexture::from(texture))
+    }
+}
+
+impl From<SharedTexture> for ShareableTexture {
+    fn from(texture: SharedTexture) -> Self {
+        Self::Shared(texture)
+    }
+}
+
+impl From<LazyTexture> for ShareableTexture {
+    fn from(texture: LazyTexture) -> Self {
+        Self::Lazy(texture)
+    }
+}
+
+impl<'a, T> From<&'a T> for ShareableTexture
+where
+    T: Clone + Into<Self>,
+{
+    fn from(value: &'a T) -> Self {
+        value.clone().into()
+    }
+}
+
 /// A region of a [`SharedTexture`].
 ///
 /// When this type is drawn, only a region of the source texture will be drawn.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TextureRegion {
-    texture: SharedTexture,
+    texture: ShareableTexture,
     region: Rect<UPx>,
 }
 
 impl TextureRegion {
+    /// Returns a reference to this texture that only renders a region of the
+    /// texture when drawn.
+    #[must_use]
+    pub fn new(texture: impl Into<ShareableTexture>, region: Rect<UPx>) -> Self {
+        Self {
+            texture: texture.into(),
+            region,
+        }
+    }
+
     /// Returns the size of the region being drawn.
     #[must_use]
     pub const fn size(&self) -> Size<UPx> {
@@ -1712,7 +1841,15 @@ impl TextureRegion {
         Unit: figures::Unit,
         Vertex<Unit>: bytemuck::Pod,
     {
-        self.texture.prepare_partial(self.region, dest, graphics)
+        self.texture
+            .texture(graphics)
+            .prepare_partial(self.region, dest, graphics)
+    }
+}
+
+impl CanRenderTo for TextureRegion {
+    fn can_render_to(&self, kludgine: &Kludgine) -> bool {
+        self.texture.can_render_to(kludgine)
     }
 }
 
@@ -1738,6 +1875,18 @@ impl sealed::TextureSource for TextureRegion {
 
 impl From<SharedTexture> for TextureRegion {
     fn from(texture: SharedTexture) -> Self {
+        Self::from(ShareableTexture::from(texture))
+    }
+}
+
+impl From<LazyTexture> for TextureRegion {
+    fn from(texture: LazyTexture) -> Self {
+        Self::from(ShareableTexture::from(texture))
+    }
+}
+
+impl From<ShareableTexture> for TextureRegion {
+    fn from(texture: ShareableTexture) -> Self {
         Self {
             region: texture.default_rect(),
             texture,
@@ -1795,10 +1944,31 @@ impl From<CollectedTexture> for AnyTexture {
     }
 }
 
+impl From<ShareableTexture> for AnyTexture {
+    fn from(texture: ShareableTexture) -> Self {
+        match texture {
+            ShareableTexture::Shared(texture) => Self::Shared(texture),
+            ShareableTexture::Lazy(texture) => Self::Lazy(texture),
+        }
+    }
+}
+
 impl AnyTexture {
     /// Returns the size of the texture.
     pub fn size(&self) -> Size<UPx> {
         self.default_rect().size
+    }
+}
+
+impl CanRenderTo for AnyTexture {
+    fn can_render_to(&self, kludgine: &Kludgine) -> bool {
+        match self {
+            AnyTexture::Texture(texture) => texture.can_render_to(kludgine),
+            AnyTexture::Lazy(texture) => texture.can_render_to(kludgine),
+            AnyTexture::Collected(texture) => texture.can_render_to(kludgine),
+            AnyTexture::Shared(texture) => texture.can_render_to(kludgine),
+            AnyTexture::Region(texture) => texture.can_render_to(kludgine),
+        }
     }
 }
 

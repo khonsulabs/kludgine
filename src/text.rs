@@ -13,8 +13,8 @@ use crate::buffer::Buffer;
 use crate::pipeline::PreparedCommand;
 use crate::sealed::{ShapeSource, TextureSource};
 use crate::{
-    Assert, CollectedTexture, Color, DefaultHasher, DrawableSource, Graphics, Kludgine,
-    PreparedGraphic, ProtoGraphics, TextureBlit, TextureCollection, VertexCollection,
+    Assert, CanRenderTo, CollectedTexture, Color, DefaultHasher, DrawableSource, Graphics,
+    Kludgine, PreparedGraphic, ProtoGraphics, TextureBlit, TextureCollection, VertexCollection,
 };
 
 impl Kludgine {
@@ -561,6 +561,15 @@ impl GlyphBlit {
     }
 }
 
+impl CanRenderTo for GlyphBlit {
+    fn can_render_to(&self, kludgine: &Kludgine) -> bool {
+        match self {
+            GlyphBlit::Invisible { .. } => true,
+            GlyphBlit::Visible { glyph, .. } => glyph.texture.can_render_to(kludgine),
+        }
+    }
+}
+
 pub(crate) fn measure_text<Unit, const COLLECT_GLYPHS: bool>(
     buffer: Option<&cosmic_text::Buffer>,
     color: Color,
@@ -755,6 +764,14 @@ pub struct MeasuredText<Unit> {
     pub glyphs: Vec<MeasuredGlyph>,
 }
 
+impl<Unit> CanRenderTo for MeasuredText<Unit> {
+    fn can_render_to(&self, kludgine: &Kludgine) -> bool {
+        self.glyphs
+            .first()
+            .map_or(true, |glyph| glyph.can_render_to(kludgine))
+    }
+}
+
 impl<Unit> DrawableSource for MeasuredText<Unit> {}
 
 /// Instructions for drawing a laid out glyph.
@@ -787,6 +804,12 @@ impl MeasuredGlyph {
     #[must_use]
     pub const fn visible(&self) -> bool {
         matches!(self.blit, GlyphBlit::Visible { .. })
+    }
+}
+
+impl CanRenderTo for MeasuredGlyph {
+    fn can_render_to(&self, kludgine: &Kludgine) -> bool {
+        self.blit.can_render_to(kludgine)
     }
 }
 
