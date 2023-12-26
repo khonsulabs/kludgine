@@ -104,6 +104,7 @@
 <a href="#104" id="104">104</a>
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Deref;
 <span class="kw">use </span>std::sync::atomic::{<span class="self">self</span>, AtomicUsize};
 <span class="kw">use </span>std::sync::{Arc, OnceLock};
@@ -114,7 +115,7 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::buffer::Buffer;
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::{PreparedCommand, Vertex};
-<span class="kw">use crate</span>::{Graphics, PreparedGraphic};
+<span class="kw">use crate</span>::{Graphics, KludgineId, PreparedGraphic};
 
 <span class="attr">#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 </span><span class="kw">pub struct </span>TextureId(usize);
@@ -203,6 +204,7 @@
 }
 
 <span class="kw">pub trait </span>KludgineGraphics {
+    <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; KludgineId;
     <span class="kw">fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Device;
     <span class="kw">fn </span>queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Queue;
     <span class="kw">fn </span>binding_layout(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::BindGroupLayout;

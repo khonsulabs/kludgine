@@ -457,8 +457,8 @@
                 .device()
                 .create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor::default());
             commands.copy_texture_to_texture(
-                this.texture.wgpu(graphics).as_image_copy(),
-                new_texture.wgpu(graphics).as_image_copy(),
+                this.texture.data.wgpu.as_image_copy(),
+                new_texture.data.wgpu.as_image_copy(),
                 this.texture.size.into(),
             );
             graphics.queue().submit([commands.finish()]);
@@ -477,7 +477,7 @@
 
         graphics.queue().write_texture(
             wgpu::ImageCopyTexture {
-                texture: this.texture.wgpu(graphics),
+                texture: <span class="kw-2">&amp;</span>this.texture.data.wgpu,
                 mip_level: <span class="number">0</span>,
                 origin: region.origin.into(),
                 aspect: wgpu::TextureAspect::All,
