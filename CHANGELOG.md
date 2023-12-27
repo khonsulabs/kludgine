@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   given graphics context.
 - `ShareableTexture` is a texture type that can resolve to a `SharedTexture`.
   Currently this is either a `SharedTexture` or a `LazyTexture`.
+- `RunningWindow::close` is allows closing a window.
 
 ## Fixed
 

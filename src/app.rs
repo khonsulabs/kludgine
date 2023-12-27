@@ -142,6 +142,11 @@ where
         self.window.app()
     }
 
+    /// Closes this window as soon as control returns to `Kludgine`.
+    pub fn close(&mut self) {
+        self.window.close();
+    }
+
     /// Returns the current position of the window.
     #[must_use]
     pub fn position(&self) -> Point<Px> {
