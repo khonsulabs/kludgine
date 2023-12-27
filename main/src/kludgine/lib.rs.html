@@ -2253,6 +2253,20 @@
 <a href="#2253" id="2253">2253</a>
 <a href="#2254" id="2254">2254</a>
 <a href="#2255" id="2255">2255</a>
+<a href="#2256" id="2256">2256</a>
+<a href="#2257" id="2257">2257</a>
+<a href="#2258" id="2258">2258</a>
+<a href="#2259" id="2259">2259</a>
+<a href="#2260" id="2260">2260</a>
+<a href="#2261" id="2261">2261</a>
+<a href="#2262" id="2262">2262</a>
+<a href="#2263" id="2263">2263</a>
+<a href="#2264" id="2264">2264</a>
+<a href="#2265" id="2265">2265</a>
+<a href="#2266" id="2266">2266</a>
+<a href="#2267" id="2267">2267</a>
+<a href="#2268" id="2268">2268</a>
+<a href="#2269" id="2269">2269</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -2993,6 +3007,20 @@
 }
 
 <span class="kw">impl </span>sealed::Clipped <span class="kw">for </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {}
+
+<span class="kw">impl </span>Drop <span class="kw">for </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// This shouldn&#39;t be necessary, but under the GL backend, Gooey only
+        // renders the final widget/clipped region. By setting this, it makes
+        // Gooey work on this backend.
+        </span><span class="self">self</span>.pass.set_scissor_rect(
+            <span class="number">0</span>,
+            <span class="number">0</span>,
+            <span class="self">self</span>.kludgine.size.width.get(),
+            <span class="self">self</span>.kludgine.size.height.get(),
+        );
+    }
+}
 
 <span class="doccomment">/// A clipped surface.
 ///
