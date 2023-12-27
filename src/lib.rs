@@ -739,6 +739,20 @@ impl Clipped for RenderingGraphics<'_, '_> {
 
 impl sealed::Clipped for RenderingGraphics<'_, '_> {}
 
+impl Drop for RenderingGraphics<'_, '_> {
+    fn drop(&mut self) {
+        // This shouldn't be necessary, but under the GL backend, Gooey only
+        // renders the final widget/clipped region. By setting this, it makes
+        // Gooey work on this backend.
+        self.pass.set_scissor_rect(
+            0,
+            0,
+            self.kludgine.size.width.get(),
+            self.kludgine.size.height.get(),
+        );
+    }
+}
+
 /// A clipped surface.
 ///
 /// When dropped, the clipped type will have its clip rect restored to the
