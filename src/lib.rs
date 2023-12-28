@@ -741,9 +741,9 @@ impl sealed::Clipped for RenderingGraphics<'_, '_> {}
 
 impl Drop for RenderingGraphics<'_, '_> {
     fn drop(&mut self) {
-        // This shouldn't be necessary, but under the GL backend, Gooey only
+        // This shouldn't be necessary, but under the GL backend, Cushy only
         // renders the final widget/clipped region. By setting this, it makes
-        // Gooey work on this backend.
+        // Cushy work on the GL backend.
         self.pass.set_scissor_rect(
             0,
             0,

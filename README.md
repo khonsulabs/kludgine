@@ -21,7 +21,7 @@ many examples that highlight a specific feature.
 
 ## Project Status
 
-This project is early in development as part of [Gooey][gooey]. It is considered
+This project is early in development as part of [Cushy][cushy]. It is considered
 alpha and unsupported at this time, and the primary focus for [@ecton][ecton] is
 to use this for his own projects. Feature requests and bug fixes will be
 prioritized based on @ecton's own needs.
@@ -30,11 +30,11 @@ If you would like to contribute, bug fixes are always appreciated. Before
 working on a new feature, please [open an issue][issues] proposing the feature
 and problem it aims to solve. Doing so will help prevent friction in merging
 pull requests, as it ensures changes fit the vision the maintainers have for
-Gooey.
+Cushy.
 
-[gooey]: https://github.com/khonsulabs/gooey
+[cushy]: https://github.com/khonsulabs/cushy
 [ecton]: https://github.com/khonsulabs/ecton
-[issues]: https://github.com/khonsulabs/gooey/issues
+[issues]: https://github.com/khonsulabs/cushy/issues
 
 [wgpu]: https://github.com/gfx-rs/wgpu
 [kludge]: https://en.wikipedia.org/wiki/Kludge

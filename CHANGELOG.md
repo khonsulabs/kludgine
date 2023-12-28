@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## v0.7.0
 
 ### Breaking Changes
 
@@ -228,7 +228,7 @@ article.
 ### Breaking Changes
 
 - Removed all user interface code, and spun off a new user interface project,
-  [Gooey](https://github.com/khonsulabs/gooey).
+  [Cushy](https://github.com/khonsulabs/cushy).
 - Split Kludgine into three crates:
   - `kludgine-core`: The rendering aspects of Kludgine. Can now be used for headless rendering as well.
   - `kludgine-app`: The windowing/event handling layer of Kludgine.
