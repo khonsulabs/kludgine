@@ -97,8 +97,7 @@ dependencies = [
 [[package]]
 name = "appit"
 version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19f4127675fb55fa12ce1f3eaaf24826db1a00a4b5f108c0698bafbefab32c9b"
+source = "git+https://github.com/khonsulabs/appit#0fa6a4b3a512eb3ef3c844fcbb03d2efbecec863"
 dependencies = [
  "winit",
 ]
@@ -561,9 +560,9 @@ dependencies = [
 
 [[package]]
 name = "figures"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63172cefd2b4018ab01e207ce8b951e757575412d58a9370619d19ea16ddc948"
+checksum = "813f0f9e0ba0d378a8e2cd51df24dd724ba8fbc07baa3dd192813eeba407ea86"
 dependencies = [
  "bytemuck",
  "euclid",
@@ -1079,9 +1078,9 @@ dependencies = [
 
 [[package]]
 name = "memchr"
-version = "2.6.4"
+version = "2.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f665ee40bc4a3c5590afb1e9677db74a508659dfd71e126420da8274909a0167"
+checksum = "523dc4f511e55ab87b694dc30d0f820d60906ef06413f93d4d7a1385599cc149"
 
 [[package]]
 name = "memmap2"
