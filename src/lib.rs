@@ -178,6 +178,12 @@ impl Kludgine {
         }
     }
 
+    /// Returns the unique id of this instance.
+    #[must_use]
+    pub const fn id(&self) -> KludgineId {
+        self.id
+    }
+
     /// Updates the size and scale of this Kludgine instance.
     ///
     /// This function updates data stored in the GPU that affects how graphics

@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All `&Appplication` bounds now are `?Sized`, enabling `&dyn Application`
   parameters.
 
+### Added
+
+- `Kludgine::id()` returns the instance's unique id.
+
 ## v0.7.0
 
 ### Breaking Changes
