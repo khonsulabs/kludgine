@@ -1,3 +1,0 @@
-(function() {var implementors = {
-"kludgine":[["impl&lt;User&gt; <a class=\"trait\" href=\"kludgine/app/trait.Message.html\" title=\"trait kludgine::app::Message\">Message</a> for <a class=\"struct\" href=\"kludgine/app/struct.AppEvent.html\" title=\"struct kludgine::app::AppEvent\">AppEvent</a>&lt;User&gt;<span class=\"where fmt-newline\">where\n    User: <a class=\"trait\" href=\"https://doc.rust-lang.org/1.74.1/core/marker/trait.Send.html\" title=\"trait core::marker::Send\">Send</a> + 'static,</span>"]]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
