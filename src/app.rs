@@ -437,7 +437,7 @@ where
     /// [`winit::window::WindowBuilder::build`].
     fn open<App>(app: &App) -> Result<Option<WindowHandle<WindowEvent>>, OsError>
     where
-        App: AsApplication<AppEvent<WindowEvent>>,
+        App: AsApplication<AppEvent<WindowEvent>> + ?Sized,
         Self::Context: Default,
     {
         KludgineWindow::<Self>::new(app, <Self::Context>::default())
@@ -460,7 +460,7 @@ where
         context: Self::Context,
     ) -> Result<Option<WindowHandle<WindowEvent>>, OsError>
     where
-        App: AsApplication<AppEvent<WindowEvent>>,
+        App: AsApplication<AppEvent<WindowEvent>> + ?Sized,
     {
         KludgineWindow::<Self>::new(app, context)
             .open()
@@ -728,7 +728,7 @@ impl<Behavior> KludgineWindow<Behavior> {
         context: Behavior::Context,
     ) -> appit::WindowBuilder<'_, Self, App, AppEvent<User>>
     where
-        App: AsApplication<AppEvent<User>>,
+        App: AsApplication<AppEvent<User>> + ?Sized,
         Behavior: WindowBehavior<User> + 'static,
         User: Send + 'static,
     {
