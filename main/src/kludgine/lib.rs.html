@@ -2267,6 +2267,12 @@
 <a href="#2267" id="2267">2267</a>
 <a href="#2268" id="2268">2268</a>
 <a href="#2269" id="2269">2269</a>
+<a href="#2270" id="2270">2270</a>
+<a href="#2271" id="2271">2271</a>
+<a href="#2272" id="2272">2272</a>
+<a href="#2273" id="2273">2273</a>
+<a href="#2274" id="2274">2274</a>
+<a href="#2275" id="2275">2275</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -2445,6 +2451,12 @@
             uniforms,
             binding_layout,
         }
+    }
+
+    <span class="doccomment">/// Returns the unique id of this instance.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; KludgineId {
+        <span class="self">self</span>.id
     }
 
     <span class="doccomment">/// Updates the size and scale of this Kludgine instance.
