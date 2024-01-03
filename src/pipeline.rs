@@ -236,7 +236,7 @@ impl ScreenTransformation {
     }
 }
 
-pub fn bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
+pub fn bind_group_layout(device: &wgpu::Device, multisampled: bool) -> wgpu::BindGroupLayout {
     device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
         label: None,
         entries: &[
@@ -254,9 +254,11 @@ pub fn bind_group_layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
                 binding: 1,
                 visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
                 ty: wgpu::BindingType::Texture {
-                    sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                    sample_type: wgpu::TextureSampleType::Float {
+                        filterable: !multisampled,
+                    },
                     view_dimension: wgpu::TextureViewDimension::D2,
-                    multisampled: false,
+                    multisampled,
                 },
                 count: None,
             },

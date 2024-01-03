@@ -47,8 +47,14 @@ impl TextureCollection {
         filter_mode: wgpu::FilterMode,
         graphics: &impl KludgineGraphics,
     ) -> Self {
-        let texture =
-            Texture::new_generic(graphics, initial_size, format, atlas_usages(), filter_mode);
+        let texture = Texture::new_generic(
+            graphics,
+            1,
+            initial_size,
+            format,
+            atlas_usages(),
+            filter_mode,
+        );
 
         let initial_size = initial_size.into_signed();
         Self {
@@ -116,6 +122,7 @@ impl TextureCollection {
             let new_size = this.texture.size * 2;
             let new_texture = Texture::new_generic(
                 graphics,
+                1,
                 new_size,
                 self.format,
                 atlas_usages(),

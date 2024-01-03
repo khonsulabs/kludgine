@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Breaking Changes
+
+- `Frame::render_into` no longer takes a `Graphics` parameter, but instead
+  accepts the `wgpu::Queue` and `wgpu::Device` parameters directly. Using
+  `Graphics` causes lifetime issues in some rendering workflows.
+
 ### Changed
 
 - All `&Appplication` bounds now are `?Sized`, enabling `&dyn Application`
@@ -15,6 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Kludgine::id()` returns the instance's unique id.
+- `Kludgine::REQUIRED_FEATURES` specifies the `wgpu::Features`` that Kludgine uses.
+- `Kludgine::adjust_limits()` adjusts `wgpu::Limits` to ensure Kludgine will
+  function.
+- `Texture::multisampled` allows creating a `Texture` that can be used as a
+  multisample render attachment.
+- `Texture::copy[_rect]_to_buffer` are convenience helpers for copying image
+  data to a `wgpu::Buffer`.
+- `Texture::view()` returns a `wgpu::TextureView` for the entire texture.
 
 ## v0.7.0
 

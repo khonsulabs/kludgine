@@ -52,8 +52,12 @@ impl WindowBehavior for Test {
         .prepare(&preparing);
 
         // Render the texture
-        let mut rendering =
-            frame.render_into(&prerendered, wgpu::LoadOp::Clear(Color::WHITE), graphics);
+        let mut rendering = frame.render_into(
+            &prerendered,
+            wgpu::LoadOp::Clear(Color::WHITE),
+            graphics.device(),
+            graphics.queue(),
+        );
         outer_square
             .translate_by(Point::px(256, 256))
             .rotate_by(Angle::degrees(45))

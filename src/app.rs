@@ -1,5 +1,4 @@
 use std::marker::PhantomData;
-use std::mem::size_of;
 use std::num::NonZeroU32;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -19,7 +18,6 @@ use figures::units::{Px, UPx};
 use figures::{Point, Rect, Size};
 use intentional::{Assert, Cast};
 
-use crate::pipeline::PushConstants;
 use crate::render::{Drawing, Renderer};
 use crate::{Color, Graphics, Kludgine, RenderingGraphics};
 
@@ -906,15 +904,11 @@ where
             compatible_surface: Some(&surface),
         }))
         .unwrap();
-        let mut limits = T::limits(adapter.limits());
-        limits.max_push_constant_size = size_of::<PushConstants>()
-            .try_into()
-            .expect("should fit :)");
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
-                features: wgpu::Features::PUSH_CONSTANTS,
-                limits,
+                features: Kludgine::REQURED_FEATURES,
+                limits: Kludgine::adjust_limits(T::limits(adapter.limits())),
             },
             None,
         ))

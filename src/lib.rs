@@ -9,6 +9,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{self, BuildHasher, Hash};
+use std::mem::size_of;
 use std::ops::{Add, AddAssign, Deref, DerefMut, Div, Neg};
 use std::sync::atomic::{self, AtomicU64};
 use std::sync::{Arc, Mutex, Weak};
@@ -22,11 +23,11 @@ use figures::{Angle, Fraction, FromComponents, Point, Rect, Size, UPx2D};
 #[cfg(feature = "image")]
 pub use image;
 use intentional::{Assert, Cast};
+use pipeline::PushConstants;
 use sealed::ShapeSource as _;
 use wgpu::util::DeviceExt;
 pub use {figures, wgpu};
 
-use crate::buffer::Buffer;
 use crate::pipeline::{Uniforms, Vertex};
 use crate::sealed::{ClipRect, TextureSource as _};
 use crate::text::Text;
@@ -51,6 +52,7 @@ pub mod text;
 pub mod tilemap;
 
 pub use atlas::{CollectedTexture, TextureCollection};
+use buffer::Buffer;
 pub use pipeline::{PreparedGraphic, ShaderScalable};
 
 /// A 2d graphics instance.
@@ -88,6 +90,9 @@ pub struct Kludgine {
 }
 
 impl Kludgine {
+    /// The features that wgpu requires in compatible devices.
+    pub const REQURED_FEATURES: wgpu::Features = wgpu::Features::PUSH_CONSTANTS;
+
     /// Returns a new instance of Kludgine with the provided parameters.
     #[must_use]
     #[cfg_attr(not(feature = "cosmic-text"), allow(unused_variables))]
@@ -107,7 +112,7 @@ impl Kludgine {
             device,
         );
 
-        let binding_layout = pipeline::bind_group_layout(device);
+        let binding_layout = pipeline::bind_group_layout(device, false);
 
         let pipeline_layout = pipeline::layout(device, &binding_layout);
 
@@ -176,6 +181,16 @@ impl Kludgine {
             uniforms,
             binding_layout,
         }
+    }
+
+    /// Adjusts and returns the wgpu limits to support features used by
+    /// Kludgine.
+    #[must_use]
+    pub fn adjust_limits(mut limits: wgpu::Limits) -> wgpu::Limits {
+        limits.max_push_constant_size = limits
+            .max_push_constant_size
+            .max(size_of::<PushConstants>().try_into().assert_expected());
+        limits
     }
 
     /// Returns the unique id of this instance.
@@ -306,7 +321,8 @@ impl Frame<'_> {
         &'pass mut self,
         texture: &'pass Texture,
         load_op: wgpu::LoadOp<Color>,
-        graphics: &Graphics<'gfx>,
+        device: &'gfx wgpu::Device,
+        queue: &'gfx wgpu::Queue,
     ) -> RenderingGraphics<'gfx, 'pass> {
         self.render(
             &wgpu::RenderPassDescriptor {
@@ -326,8 +342,8 @@ impl Frame<'_> {
                 timestamp_writes: None,
                 occlusion_query_set: None,
             },
-            graphics.device,
-            graphics.queue,
+            device,
+            queue,
         )
     }
 
@@ -1362,7 +1378,7 @@ impl LazyTexture {
             kludgine: graphics.id(),
             size: self.data.size,
             format: self.data.format,
-            data: TextureInstance::from_wgpu(wgpu, self.data.filter_mode, graphics),
+            data: TextureInstance::from_wgpu(wgpu, false, self.data.filter_mode, graphics),
         });
 
         loaded.insert(graphics.id(), Arc::downgrade(&texture.0));
@@ -1442,16 +1458,36 @@ struct TextureInstance {
     bind_group: Arc<wgpu::BindGroup>,
 }
 
+enum MaybeRef<'a, T> {
+    Borrowed(&'a T),
+    Owned(T),
+}
+
+impl<T> AsRef<T> for MaybeRef<'_, T> {
+    fn as_ref(&self) -> &T {
+        match self {
+            MaybeRef::Borrowed(value) => value,
+            MaybeRef::Owned(value) => value,
+        }
+    }
+}
+
 impl TextureInstance {
     fn from_wgpu(
         wgpu: wgpu::Texture,
+        multisampled: bool,
         filter_mode: wgpu::FilterMode,
         graphics: &impl sealed::KludgineGraphics,
     ) -> Self {
         let view = wgpu.create_view(&wgpu::TextureViewDescriptor::default());
+        let layout = if multisampled {
+            MaybeRef::Owned(pipeline::bind_group_layout(graphics.device(), multisampled))
+        } else {
+            MaybeRef::Borrowed(graphics.binding_layout())
+        };
         let bind_group = Arc::new(pipeline::bind_group(
             graphics.device(),
-            graphics.binding_layout(),
+            layout.as_ref(),
             graphics.uniforms(),
             &view,
             match filter_mode {
@@ -1471,6 +1507,7 @@ impl Texture {
     fn from_wgpu(
         wgpu: wgpu::Texture,
         graphics: &impl KludgineGraphics,
+        multisampled: bool,
         size: Size<UPx>,
         format: wgpu::TextureFormat,
         filter_mode: wgpu::FilterMode,
@@ -1480,12 +1517,13 @@ impl Texture {
             kludgine: graphics.id(),
             size,
             format,
-            data: TextureInstance::from_wgpu(wgpu, filter_mode, graphics),
+            data: TextureInstance::from_wgpu(wgpu, multisampled, filter_mode, graphics),
         }
     }
 
     pub(crate) fn new_generic(
         graphics: &impl KludgineGraphics,
+        multisample_count: u32,
         size: Size<UPx>,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
@@ -1495,13 +1533,20 @@ impl Texture {
             label: None,
             size: size.into(),
             mip_level_count: 1,
-            sample_count: 1,
+            sample_count: multisample_count,
             dimension: wgpu::TextureDimension::D2,
             format,
             usage,
             view_formats: &[],
         });
-        Self::from_wgpu(wgpu, graphics, size, format, filter_mode)
+        Self::from_wgpu(
+            wgpu,
+            graphics,
+            multisample_count > 1,
+            size,
+            format,
+            filter_mode,
+        )
     }
 
     /// Creates a new texture of the given size, format, and usages.
@@ -1513,7 +1558,27 @@ impl Texture {
         usage: wgpu::TextureUsages,
         filter_mode: wgpu::FilterMode,
     ) -> Self {
-        Self::new_generic(graphics, size, format, usage, filter_mode)
+        Self::multisampled(graphics, 1, size, format, usage, filter_mode)
+    }
+
+    /// Creates a new texture of the given multisample count, size, format, and usages.
+    #[must_use]
+    pub fn multisampled(
+        graphics: &Graphics<'_>,
+        multisample_count: u32,
+        size: Size<UPx>,
+        format: wgpu::TextureFormat,
+        usage: wgpu::TextureUsages,
+        filter_mode: wgpu::FilterMode,
+    ) -> Self {
+        Self::new_generic(
+            graphics,
+            multisample_count,
+            size,
+            format,
+            usage,
+            filter_mode,
+        )
     }
 
     /// Returns a new texture of the given size, format, and usages. The texture
@@ -1541,7 +1606,7 @@ impl Texture {
             },
             data,
         );
-        Self::from_wgpu(wgpu, graphics, size, format, filter_mode)
+        Self::from_wgpu(wgpu, graphics, false, size, format, filter_mode)
     }
 
     /// Creates a texture from `image`.
@@ -1622,6 +1687,40 @@ impl Texture {
     #[must_use]
     pub const fn format(&self) -> wgpu::TextureFormat {
         self.format
+    }
+
+    /// Copies the contents of this texture into `destination`.
+    pub fn copy_to_buffer(
+        &self,
+        destination: wgpu::ImageCopyBuffer<'_>,
+        encoder: &mut wgpu::CommandEncoder,
+    ) {
+        self.copy_rect_to_buffer(self.default_rect(), destination, encoder);
+    }
+
+    /// Copies the contents of a portion of this texture into `destination`.
+    pub fn copy_rect_to_buffer(
+        &self,
+        source: Rect<UPx>,
+        destination: wgpu::ImageCopyBuffer<'_>,
+        encoder: &mut wgpu::CommandEncoder,
+    ) {
+        encoder.copy_texture_to_buffer(
+            wgpu::ImageCopyTexture {
+                texture: &self.data.wgpu,
+                mip_level: 0,
+                origin: source.origin.into(),
+                aspect: wgpu::TextureAspect::All,
+            },
+            destination,
+            source.size.into(),
+        );
+    }
+
+    /// Returns a view over the entire texture.
+    #[must_use]
+    pub const fn view(&self) -> &wgpu::TextureView {
+        &self.data.view
     }
 }
 

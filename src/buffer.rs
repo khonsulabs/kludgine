@@ -4,8 +4,13 @@ use std::ops::Deref;
 
 use wgpu::util::DeviceExt;
 
+/// A GPU-managed memory buffer.
+///
+/// This type uses `bytemuck::Pod` to access the bytes of `T` when copying
+/// to/from the gpu.
 #[derive(Debug)]
 pub struct Buffer<T> {
+    /// The wgpu bufffer handle.
     pub wgpu: wgpu::Buffer,
     used: usize,
     count: usize,
@@ -17,6 +22,7 @@ impl<T> Buffer<T>
 where
     T: bytemuck::Pod,
 {
+    /// Returns a new buffer containing `contents`.
     pub fn new(contents: &[T], usage: wgpu::BufferUsages, device: &wgpu::Device) -> Self {
         let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: None,
@@ -27,11 +33,16 @@ where
             wgpu: buffer,
             used: contents.len(),
             count: contents.len(),
-            // usage,
             _phantom: PhantomData,
         }
     }
 
+    /// Updates a portion of this buffer using `new_data`.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if the written data goes beyond the bounds of
+    /// the buffer.
     pub fn update(&self, offset: usize, new_data: &[T], queue: &wgpu::Queue) {
         assert!(offset + new_data.len() <= self.count);
         queue.write_buffer(
@@ -74,19 +85,23 @@ where
     //     self.update(copy_start, new_data, queue);
     // }
 
+    /// Returns the current valid length of this buffer.
     pub const fn len(&self) -> usize {
         self.used
     }
 
+    /// Returns the entire contents of this buffer as a [`wgpu::BufferSlice`].
     pub fn as_slice(&self) -> wgpu::BufferSlice<'_> {
         self.wgpu.slice(0..self.size() as u64)
     }
 
+    /// Returns the number of bytes contained in this buffer.
     pub const fn size(&self) -> usize {
         size_of::<T>() * self.len()
     }
 }
 
+/// A GPU-buffer that tries to minimize copying when uploading new data.
 #[derive(Debug)]
 pub struct DiffableBuffer<T> {
     buffer: Buffer<T>,
@@ -98,6 +113,7 @@ impl<T> DiffableBuffer<T>
 where
     T: bytemuck::Pod + Clone + Eq,
 {
+    /// Returns a new buffer containing `contents`.
     pub fn new(contents: &[T], usage: wgpu::BufferUsages, device: &wgpu::Device) -> Self {
         let usage = usage | wgpu::BufferUsages::COPY_DST;
         let buffer = Buffer::new(contents, usage, device);
@@ -108,6 +124,11 @@ where
         }
     }
 
+    /// Updates the contenst of this buffer with `new_contents`.
+    ///
+    /// This function attempts to strike a balance between copying only data
+    /// that has changed and minimizing the number of individual copy commands
+    /// issued to `queue`.
     pub fn update(&mut self, new_contents: &[T], device: &wgpu::Device, queue: &wgpu::Queue) {
         if new_contents.len() <= self.buffer.len() {
             let mut index = 0;
