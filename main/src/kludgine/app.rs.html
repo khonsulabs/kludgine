@@ -1430,14 +1430,7 @@
 <a href="#1430" id="1430">1430</a>
 <a href="#1431" id="1431">1431</a>
 <a href="#1432" id="1432">1432</a>
-<a href="#1433" id="1433">1433</a>
-<a href="#1434" id="1434">1434</a>
-<a href="#1435" id="1435">1435</a>
-<a href="#1436" id="1436">1436</a>
-<a href="#1437" id="1437">1437</a>
-<a href="#1438" id="1438">1438</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
-<span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>std::sync::Arc;
@@ -1457,7 +1450,6 @@
 <span class="kw">use </span>figures::{Point, Rect, Size};
 <span class="kw">use </span>intentional::{Assert, Cast};
 
-<span class="kw">use </span><span class="kw">crate</span>::pipeline::PushConstants;
 <span class="kw">use </span><span class="kw">crate</span>::render::{Drawing, Renderer};
 <span class="kw">use crate</span>::{Color, Graphics, Kludgine, RenderingGraphics};
 
@@ -2344,15 +2336,11 @@
             compatible_surface: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>surface),
         }))
         .unwrap();
-        <span class="kw">let </span><span class="kw-2">mut </span>limits = T::limits(adapter.limits());
-        limits.max_push_constant_size = size_of::&lt;PushConstants&gt;()
-            .try_into()
-            .expect(<span class="string">&quot;should fit :)&quot;</span>);
         <span class="kw">let </span>(device, queue) = pollster::block_on(adapter.request_device(
             <span class="kw-2">&amp;</span>wgpu::DeviceDescriptor {
                 label: <span class="prelude-val">None</span>,
-                features: wgpu::Features::PUSH_CONSTANTS,
-                limits,
+                features: Kludgine::REQURED_FEATURES,
+                limits: Kludgine::adjust_limits(T::limits(adapter.limits())),
             },
             <span class="prelude-val">None</span>,
         ))

@@ -196,15 +196,41 @@
 <a href="#196" id="196">196</a>
 <a href="#197" id="197">197</a>
 <a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::ops::Deref;
 
 <span class="kw">use </span>wgpu::util::DeviceExt;
 
-<span class="attr">#[derive(Debug)]
+<span class="doccomment">/// A GPU-managed memory buffer.
+///
+/// This type uses `bytemuck::Pod` to access the bytes of `T` when copying
+/// to/from the gpu.
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Buffer&lt;T&gt; {
-    <span class="kw">pub </span>wgpu: wgpu::Buffer,
+    <span class="doccomment">/// The wgpu bufffer handle.
+    </span><span class="kw">pub </span>wgpu: wgpu::Buffer,
     used: usize,
     count: usize,
     <span class="comment">// usage: wgpu::BufferUsages,
@@ -215,7 +241,8 @@
 <span class="kw">where
     </span>T: bytemuck::Pod,
 {
-    <span class="kw">pub fn </span>new(contents: <span class="kw-2">&amp;</span>[T], usage: wgpu::BufferUsages, device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Returns a new buffer containing `contents`.
+    </span><span class="kw">pub fn </span>new(contents: <span class="kw-2">&amp;</span>[T], usage: wgpu::BufferUsages, device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>buffer = device.create_buffer_init(<span class="kw-2">&amp;</span>wgpu::util::BufferInitDescriptor {
             label: <span class="prelude-val">None</span>,
             contents: bytemuck::cast_slice(contents),
@@ -225,12 +252,17 @@
             wgpu: buffer,
             used: contents.len(),
             count: contents.len(),
-            <span class="comment">// usage,
-            </span>_phantom: PhantomData,
+            _phantom: PhantomData,
         }
     }
 
-    <span class="kw">pub fn </span>update(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, new_data: <span class="kw-2">&amp;</span>[T], queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
+    <span class="doccomment">/// Updates a portion of this buffer using `new_data`.
+    ///
+    /// # Panics
+    ///
+    /// This function will panic if the written data goes beyond the bounds of
+    /// the buffer.
+    </span><span class="kw">pub fn </span>update(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, new_data: <span class="kw-2">&amp;</span>[T], queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
         <span class="macro">assert!</span>(offset + new_data.len() &lt;= <span class="self">self</span>.count);
         queue.write_buffer(
             <span class="kw-2">&amp;</span><span class="self">self</span>.wgpu,
@@ -272,20 +304,24 @@
     //     self.update(copy_start, new_data, queue);
     // }
 
+    </span><span class="doccomment">/// Returns the current valid length of this buffer.
     </span><span class="kw">pub const fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.used
     }
 
-    <span class="kw">pub fn </span>as_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::BufferSlice&lt;<span class="lifetime">&#39;_</span>&gt; {
+    <span class="doccomment">/// Returns the entire contents of this buffer as a [`wgpu::BufferSlice`].
+    </span><span class="kw">pub fn </span>as_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::BufferSlice&lt;<span class="lifetime">&#39;_</span>&gt; {
         <span class="self">self</span>.wgpu.slice(<span class="number">0</span>..<span class="self">self</span>.size() <span class="kw">as </span>u64)
     }
 
-    <span class="kw">pub const fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+    <span class="doccomment">/// Returns the number of bytes contained in this buffer.
+    </span><span class="kw">pub const fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         size_of::&lt;T&gt;() * <span class="self">self</span>.len()
     }
 }
 
-<span class="attr">#[derive(Debug)]
+<span class="doccomment">/// A GPU-buffer that tries to minimize copying when uploading new data.
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>DiffableBuffer&lt;T&gt; {
     buffer: Buffer&lt;T&gt;,
     usage: wgpu::BufferUsages,
@@ -296,7 +332,8 @@
 <span class="kw">where
     </span>T: bytemuck::Pod + Clone + Eq,
 {
-    <span class="kw">pub fn </span>new(contents: <span class="kw-2">&amp;</span>[T], usage: wgpu::BufferUsages, device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Returns a new buffer containing `contents`.
+    </span><span class="kw">pub fn </span>new(contents: <span class="kw-2">&amp;</span>[T], usage: wgpu::BufferUsages, device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>usage = usage | wgpu::BufferUsages::COPY_DST;
         <span class="kw">let </span>buffer = Buffer::new(contents, usage, device);
         <span class="self">Self </span>{
@@ -306,7 +343,12 @@
         }
     }
 
-    <span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_contents: <span class="kw-2">&amp;</span>[T], device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
+    <span class="doccomment">/// Updates the contenst of this buffer with `new_contents`.
+    ///
+    /// This function attempts to strike a balance between copying only data
+    /// that has changed and minimizing the number of individual copy commands
+    /// issued to `queue`.
+    </span><span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new_contents: <span class="kw-2">&amp;</span>[T], device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue) {
         <span class="kw">if </span>new_contents.len() &lt;= <span class="self">self</span>.buffer.len() {
             <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>cant_align = <span class="bool-val">false</span>;

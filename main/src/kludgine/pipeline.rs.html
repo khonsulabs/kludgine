@@ -387,6 +387,8 @@
 <a href="#387" id="387">387</a>
 <a href="#388" id="388">388</a>
 <a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::any::TypeId;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::ops::Range;
@@ -625,7 +627,7 @@
     </span>}
 }
 
-<span class="kw">pub fn </span>bind_group_layout(device: <span class="kw-2">&amp;</span>wgpu::Device) -&gt; wgpu::BindGroupLayout {
+<span class="kw">pub fn </span>bind_group_layout(device: <span class="kw-2">&amp;</span>wgpu::Device, multisampled: bool) -&gt; wgpu::BindGroupLayout {
     device.create_bind_group_layout(<span class="kw-2">&amp;</span>wgpu::BindGroupLayoutDescriptor {
         label: <span class="prelude-val">None</span>,
         entries: <span class="kw-2">&amp;</span>[
@@ -643,9 +645,11 @@
                 binding: <span class="number">1</span>,
                 visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
                 ty: wgpu::BindingType::Texture {
-                    sample_type: wgpu::TextureSampleType::Float { filterable: <span class="bool-val">true </span>},
+                    sample_type: wgpu::TextureSampleType::Float {
+                        filterable: !multisampled,
+                    },
                     view_dimension: wgpu::TextureViewDimension::D2,
-                    multisampled: <span class="bool-val">false</span>,
+                    multisampled,
                 },
                 count: <span class="prelude-val">None</span>,
             },
