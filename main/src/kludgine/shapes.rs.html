@@ -1523,6 +1523,12 @@
 <a href="#1523" id="1523">1523</a>
 <a href="#1524" id="1524">1524</a>
 <a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::{Add, Div, Mul, Neg, Sub};
 
@@ -1541,8 +1547,8 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::pipeline::Vertex;
 <span class="kw">use crate</span>::{
-    sealed, Assert, Color, DrawableSource, Graphics, Origin, PreparedGraphic, ShapeSource, Texture,
-    TextureSource,
+    sealed, srgb_to_linear, Assert, Color, DrawableSource, Graphics, Origin, PreparedGraphic,
+    ShapeSource, Texture, TextureSource,
 };
 
 <span class="doccomment">/// A tesselated shape.
@@ -1775,19 +1781,25 @@
         position: lyon_tessellation::math::Point,
         attributes: <span class="kw-2">&amp;</span>[f32],
     ) -&gt; Vertex&lt;Unit&gt; {
-        <span class="kw">let </span>(texture, color) = <span class="kw">match </span>attributes.len() {
-            <span class="number">0 </span>=&gt; (Point::default(), <span class="self">self</span>.default_color),
+        <span class="kw">let </span>(texture, red, green, blue, alpha) = <span class="kw">match </span>attributes.len() {
+            <span class="number">0 </span>=&gt; (
+                Point::default(),
+                <span class="self">self</span>.default_color.red_f32(),
+                <span class="self">self</span>.default_color.green_f32(),
+                <span class="self">self</span>.default_color.blue_f32(),
+                <span class="self">self</span>.default_color.alpha_f32(),
+            ),
             <span class="number">6 </span>=&gt; (
                 Point::new(attributes[<span class="number">0</span>], attributes[<span class="number">1</span>]).cast(),
-                Color::new_f32(
-                    <span class="self">self</span>.default_color.red_f32() * attributes[<span class="number">2</span>],
-                    <span class="self">self</span>.default_color.green_f32() * attributes[<span class="number">3</span>],
-                    <span class="self">self</span>.default_color.blue_f32() * attributes[<span class="number">4</span>],
-                    <span class="self">self</span>.default_color.alpha_f32() * attributes[<span class="number">5</span>],
-                ),
+                <span class="self">self</span>.default_color.red_f32() * attributes[<span class="number">2</span>],
+                <span class="self">self</span>.default_color.green_f32() * attributes[<span class="number">3</span>],
+                <span class="self">self</span>.default_color.blue_f32() * attributes[<span class="number">4</span>],
+                <span class="self">self</span>.default_color.alpha_f32() * attributes[<span class="number">5</span>],
             ),
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Attributes should be empty or 2&quot;</span>),
         };
+
+        <span class="kw">let </span>color = srgb_to_linear(red, green, blue, alpha);
 
         Vertex {
             location: Point::new(Unit::from_float(position.x), Unit::from_float(position.y)),

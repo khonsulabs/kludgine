@@ -2372,6 +2372,17 @@
 <a href="#2372" id="2372">2372</a>
 <a href="#2373" id="2373">2373</a>
 <a href="#2374" id="2374">2374</a>
+<a href="#2375" id="2375">2375</a>
+<a href="#2376" id="2376">2376</a>
+<a href="#2377" id="2377">2377</a>
+<a href="#2378" id="2378">2378</a>
+<a href="#2379" id="2379">2379</a>
+<a href="#2380" id="2380">2380</a>
+<a href="#2381" id="2381">2381</a>
+<a href="#2382" id="2382">2382</a>
+<a href="#2383" id="2383">2383</a>
+<a href="#2384" id="2384">2384</a>
+<a href="#2385" id="2385">2385</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -3322,6 +3333,11 @@
     </span><span class="kw">pub fn </span>with_alpha_f32(<span class="self">self</span>, alpha: f32) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.with_alpha(f32_component_to_u8(alpha))
     }
+}
+
+<span class="kw">fn </span>srgb_to_linear(red: f32, green: f32, blue: f32, alpha: f32) -&gt; Color {
+    <span class="kw">let </span>linear = palette::rgb::Srgba::new(red, green, blue, alpha).into_linear();
+    Color::new_f32(linear.red, linear.green, linear.blue, linear.alpha)
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>Color {
@@ -4589,6 +4605,12 @@
     </span><span class="kw">where
         </span>Unit: Add&lt;Output = Unit&gt; + Ord + Copy + Default,
     {
+        <span class="kw">let </span>color = srgb_to_linear(
+            color.red_f32(),
+            color.green_f32(),
+            color.blue_f32(),
+            color.alpha_f32(),
+        );
         <span class="kw">let </span>(dest_top_left, dest_bottom_right) = dest.extents();
         <span class="kw">let </span>(source_top_left, source_bottom_right) = source.extents();
         <span class="self">Self </span>{
