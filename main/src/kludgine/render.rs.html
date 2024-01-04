@@ -1441,7 +1441,7 @@
                 .pass
                 .set_index_buffer(buffers.index.as_slice(), wgpu::IndexFormat::Uint32);
 
-            <span class="kw">let </span><span class="kw-2">mut </span>current_clip_index = <span class="number">0</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>current_clip_index = u32::MAX;
             <span class="kw">let </span><span class="kw-2">mut </span>current_clip = graphics.clip.current.<span class="number">0</span>;
 
             <span class="kw">for </span>command <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.commands {
