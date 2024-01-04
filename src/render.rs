@@ -693,7 +693,7 @@ impl Drawing {
                 .pass
                 .set_index_buffer(buffers.index.as_slice(), wgpu::IndexFormat::Uint32);
 
-            let mut current_clip_index = 0;
+            let mut current_clip_index = u32::MAX;
             let mut current_clip = graphics.clip.current.0;
 
             for command in &self.commands {

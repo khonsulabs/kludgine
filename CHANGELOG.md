@@ -30,6 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   data to a `wgpu::Buffer`.
 - `Texture::view()` returns a `wgpu::TextureView` for the entire texture.
 
+### Fixed
+
+- `Drawing::render()` no longer makes any assumptions about the current clipping
+  rectangle when drawing is started.
+
 ## v0.7.0
 
 ### Breaking Changes
