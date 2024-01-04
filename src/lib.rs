@@ -950,6 +950,11 @@ impl Color {
     }
 }
 
+fn srgb_to_linear(red: f32, green: f32, blue: f32, alpha: f32) -> Color {
+    let linear = palette::rgb::Srgba::new(red, green, blue, alpha).into_linear();
+    Color::new_f32(linear.red, linear.green, linear.blue, linear.alpha)
+}
+
 impl Debug for Color {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "#{:08x}", self.0)
@@ -2215,6 +2220,12 @@ impl<Unit> TextureBlit<Unit> {
     where
         Unit: Add<Output = Unit> + Ord + Copy + Default,
     {
+        let color = srgb_to_linear(
+            color.red_f32(),
+            color.green_f32(),
+            color.blue_f32(),
+            color.alpha_f32(),
+        );
         let (dest_top_left, dest_bottom_right) = dest.extents();
         let (source_top_left, source_bottom_right) = source.extents();
         Self {

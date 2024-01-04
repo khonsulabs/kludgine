@@ -16,8 +16,8 @@ use smallvec::SmallVec;
 
 use crate::pipeline::Vertex;
 use crate::{
-    sealed, Assert, Color, DrawableSource, Graphics, Origin, PreparedGraphic, ShapeSource, Texture,
-    TextureSource,
+    sealed, srgb_to_linear, Assert, Color, DrawableSource, Graphics, Origin, PreparedGraphic,
+    ShapeSource, Texture, TextureSource,
 };
 
 /// A tesselated shape.
@@ -250,19 +250,25 @@ where
         position: lyon_tessellation::math::Point,
         attributes: &[f32],
     ) -> Vertex<Unit> {
-        let (texture, color) = match attributes.len() {
-            0 => (Point::default(), self.default_color),
+        let (texture, red, green, blue, alpha) = match attributes.len() {
+            0 => (
+                Point::default(),
+                self.default_color.red_f32(),
+                self.default_color.green_f32(),
+                self.default_color.blue_f32(),
+                self.default_color.alpha_f32(),
+            ),
             6 => (
                 Point::new(attributes[0], attributes[1]).cast(),
-                Color::new_f32(
-                    self.default_color.red_f32() * attributes[2],
-                    self.default_color.green_f32() * attributes[3],
-                    self.default_color.blue_f32() * attributes[4],
-                    self.default_color.alpha_f32() * attributes[5],
-                ),
+                self.default_color.red_f32() * attributes[2],
+                self.default_color.green_f32() * attributes[3],
+                self.default_color.blue_f32() * attributes[4],
+                self.default_color.alpha_f32() * attributes[5],
             ),
             _ => unreachable!("Attributes should be empty or 2"),
         };
+
+        let color = srgb_to_linear(red, green, blue, alpha);
 
         Vertex {
             location: Point::new(Unit::from_float(position.x), Unit::from_float(position.y)),

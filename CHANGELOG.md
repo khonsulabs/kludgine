@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Drawing::render()` no longer makes any assumptions about the current clipping
   rectangle when drawing is started.
+- Color correction for Srgb is now being done more accurately using the
+  `palette` crate. This affects colors being applied to textures as tints and
+  shape drawing, but the Srgb handling of textures themselves remain handled
+  purely by wgpu.
 
 ## v0.7.0
 
