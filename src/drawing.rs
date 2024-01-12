@@ -21,6 +21,9 @@ use crate::{
 #[cfg(feature = "plotters")]
 mod plotters;
 
+#[cfg(feature = "plotters")]
+pub use plotters::PlotterBackend;
+
 /// An easy-to-use graphics renderer that batches operations on the GPU
 /// automatically.
 ///

@@ -8,8 +8,8 @@ use intentional::Cast;
 use plotters::coord::Shift;
 use plotters::drawing::DrawingArea;
 use plotters_backend::{
-    BackendColor, BackendCoord, BackendStyle, BackendTextStyle, DrawingErrorKind, FontFamily,
-    FontStyle,
+    BackendColor, BackendCoord, BackendStyle, BackendTextStyle, DrawingBackend, DrawingErrorKind,
+    FontFamily, FontStyle,
 };
 
 use crate::shapes::{PathBuilder, Shape, StrokeOptions};
@@ -63,7 +63,8 @@ where
 }
 
 impl<'render, 'gfx> super::Renderer<'render, 'gfx> {
-    /// Returns this renderer as a [`DrawingArea`] compatible with `plotters`.
+    /// Returns this renderer as a [`DrawingArea`] compatible with the
+    /// [plotters](https://github.com/plotters-rs/plotters) crate.
     #[must_use]
     pub fn as_plot_area(&mut self) -> DrawingArea<PlotterBackend<'_, 'render, 'gfx>, Shift> {
         DrawingArea::from(PlotterBackend(RefCell::new(self)))
@@ -95,9 +96,10 @@ impl<'render, 'gfx> super::Renderer<'render, 'gfx> {
     }
 }
 
+/// A [`DrawingBackend`]
 pub struct PlotterBackend<'plot, 'render, 'gfx>(RefCell<&'plot mut super::Renderer<'render, 'gfx>>);
 
-impl plotters::backend::DrawingBackend for PlotterBackend<'_, '_, '_> {
+impl DrawingBackend for PlotterBackend<'_, '_, '_> {
     type ErrorType = Infallible;
 
     fn get_size(&self) -> (u32, u32) {
