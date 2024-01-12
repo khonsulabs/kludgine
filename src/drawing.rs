@@ -22,7 +22,7 @@ use crate::{
 mod plotters;
 
 #[cfg(feature = "plotters")]
-pub use plotters::PlotterBackend;
+pub use self::plotters::PlotterBackend;
 
 /// An easy-to-use graphics renderer that batches operations on the GPU
 /// automatically.
