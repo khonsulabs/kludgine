@@ -776,7 +776,7 @@
 </span><span class="kw">mod </span>plotters;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;plotters&quot;</span>)]
-</span><span class="kw">pub use </span>plotters::PlotterBackend;
+</span><span class="kw">pub use </span><span class="self">self</span>::plotters::PlotterBackend;
 
 <span class="doccomment">/// An easy-to-use graphics renderer that batches operations on the GPU
 /// automatically.
