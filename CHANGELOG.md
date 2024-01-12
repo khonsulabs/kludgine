@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Frame::render_into` no longer takes a `Graphics` parameter, but instead
   accepts the `wgpu::Queue` and `wgpu::Device` parameters directly. Using
   `Graphics` causes lifetime issues in some rendering workflows.
+- The `render` module has been renamed to `drawing` to match the type it
+  contains. The old name was a remnant from when `Drawing` used to be named
+  `Rendering`, which was incredibly confusing with `Renderer` types around as
+  well.
 
 ### Changed
 
@@ -29,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Texture::copy[_rect]_to_buffer` are convenience helpers for copying image
   data to a `wgpu::Buffer`.
 - `Texture::view()` returns a `wgpu::TextureView` for the entire texture.
+- A new feature `plotters` enables integration with the excellent
+  [plotters][plotters] crate. `Renderer::as_plot_area()` is a new function that
+  returns a `plotters::DrawingArea`.
+
+[plotters]: https://github.com/plotters-rs/plotters
 
 ### Fixed
 

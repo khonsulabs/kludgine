@@ -18,7 +18,7 @@ use figures::units::{Px, UPx};
 use figures::{Point, Rect, Size};
 use intentional::{Assert, Cast};
 
-use crate::render::{Drawing, Renderer};
+use crate::drawing::{Drawing, Renderer};
 use crate::{Color, Graphics, Kludgine, RenderingGraphics};
 
 /// A `Kludgine` application that enables opening multiple windows.

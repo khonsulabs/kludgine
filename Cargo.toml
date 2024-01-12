@@ -13,6 +13,7 @@ rust-version = "1.70.0"
 [features]
 default = ["app", "image", "cosmic-text"]
 app = ["dep:appit"]
+plotters = ["dep:plotters", "dep:plotters-backend"]
 
 [dependencies]
 # appit = { version = "0.2.0", optional = true }
@@ -37,6 +38,8 @@ intentional = "0.1.1"
 unicode-bidi = "0.3.13"
 justjson = "0.3.0"
 palette = "0.7.3"
+plotters = { version = "0.3.5", default-features = false, optional = true }
+plotters-backend = { version = "0.3.5", default-features = false, optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies.wgpu]
 version = "0.18.0"
@@ -44,6 +47,10 @@ features = ["webgl"]
 
 [dev-dependencies]
 image = { version = "0.24.6", features = ["png"] }
+
+[[example]]
+name = "plotters"
+required-features = ["plotters"]
 
 # [patch.crates-io]
 # intentional = { path = "../intentional" }

@@ -18,6 +18,9 @@ use crate::{
     VertexCollection,
 };
 
+#[cfg(feature = "plotters")]
+mod plotters;
+
 /// An easy-to-use graphics renderer that batches operations on the GPU
 /// automatically.
 ///

@@ -8,9 +8,9 @@ use alot::{LotId, OrderedLots};
 use figures::{Fraction, Ranged, Zero};
 use intentional::Cast;
 
+use crate::drawing::Renderer;
 use crate::figures::units::Px;
 use crate::figures::{IntoSigned, Point, Rect, Size};
-use crate::render::Renderer;
 use crate::shapes::{PathBuilder, Shape, StrokeOptions};
 use crate::sprite::Sprite;
 use crate::text::Text;

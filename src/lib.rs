@@ -37,10 +37,10 @@ use crate::text::Text;
 pub mod app;
 mod atlas;
 mod buffer;
+/// An easy-to-use batching renderer.
+pub mod drawing;
 mod pipeline;
 mod pod;
-/// An easy-to-use batching renderer.
-pub mod render;
 mod sealed;
 /// Types for drawing paths and shapes.
 pub mod shapes;
@@ -824,7 +824,7 @@ where
 #[repr(C)]
 pub struct Color(u32);
 
-fn f32_component_to_u8(component: f32) -> u8 {
+pub(crate) fn f32_component_to_u8(component: f32) -> u8 {
     (component.clamp(0., 1.0) * 255.).round().cast()
 }
 
