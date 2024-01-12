@@ -2422,10 +2422,10 @@
 </span><span class="kw">pub mod </span>app;
 <span class="kw">mod </span>atlas;
 <span class="kw">mod </span>buffer;
+<span class="doccomment">/// An easy-to-use batching renderer.
+</span><span class="kw">pub mod </span>drawing;
 <span class="kw">mod </span>pipeline;
 <span class="kw">mod </span>pod;
-<span class="doccomment">/// An easy-to-use batching renderer.
-</span><span class="kw">pub mod </span>render;
 <span class="kw">mod </span>sealed;
 <span class="doccomment">/// Types for drawing paths and shapes.
 </span><span class="kw">pub mod </span>shapes;
@@ -3209,7 +3209,7 @@
 #[repr(C)]
 </span><span class="kw">pub struct </span>Color(u32);
 
-<span class="kw">fn </span>f32_component_to_u8(component: f32) -&gt; u8 {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>f32_component_to_u8(component: f32) -&gt; u8 {
     (component.clamp(<span class="number">0.</span>, <span class="number">1.0</span>) * <span class="number">255.</span>).round().cast()
 }
 
