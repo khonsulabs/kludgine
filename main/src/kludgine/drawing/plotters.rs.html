@@ -286,6 +286,8 @@
 <a href="#286" id="286">286</a>
 <a href="#287" id="287">287</a>
 <a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::cell::RefCell;
 <span class="kw">use </span>std::convert::Infallible;
 
@@ -296,8 +298,8 @@
 <span class="kw">use </span>plotters::coord::Shift;
 <span class="kw">use </span>plotters::drawing::DrawingArea;
 <span class="kw">use </span>plotters_backend::{
-    BackendColor, BackendCoord, BackendStyle, BackendTextStyle, DrawingErrorKind, FontFamily,
-    FontStyle,
+    BackendColor, BackendCoord, BackendStyle, BackendTextStyle, DrawingBackend, DrawingErrorKind,
+    FontFamily, FontStyle,
 };
 
 <span class="kw">use </span><span class="kw">crate</span>::shapes::{PathBuilder, Shape, StrokeOptions};
@@ -351,7 +353,8 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; <span class="kw">super</span>::Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; {
-    <span class="doccomment">/// Returns this renderer as a [`DrawingArea`] compatible with `plotters`.
+    <span class="doccomment">/// Returns this renderer as a [`DrawingArea`] compatible with the
+    /// [plotters](https://github.com/plotters-rs/plotters) crate.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>as_plot_area(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; DrawingArea&lt;PlotterBackend&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt;, Shift&gt; {
         DrawingArea::from(PlotterBackend(RefCell::new(<span class="self">self</span>)))
@@ -383,9 +386,10 @@
     }
 }
 
-<span class="kw">pub struct </span>PlotterBackend&lt;<span class="lifetime">&#39;plot</span>, <span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt;(RefCell&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;plot </span><span class="kw-2">mut </span><span class="kw">super</span>::Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt;&gt;);
+<span class="doccomment">/// A [`DrawingBackend`]
+</span><span class="kw">pub struct </span>PlotterBackend&lt;<span class="lifetime">&#39;plot</span>, <span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt;(RefCell&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;plot </span><span class="kw-2">mut </span><span class="kw">super</span>::Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt;&gt;);
 
-<span class="kw">impl </span>plotters::backend::DrawingBackend <span class="kw">for </span>PlotterBackend&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>DrawingBackend <span class="kw">for </span>PlotterBackend&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
     <span class="kw">type </span>ErrorType = Infallible;
 
     <span class="kw">fn </span>get_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (u32, u32) {
