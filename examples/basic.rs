@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use appit::winit::error::EventLoopError;
+use figures::Zero;
 use kludgine::figures::units::Lp;
 use kludgine::figures::{Angle, Point, Rect, Size};
 use kludgine::shapes::{PathBuilder, Shape};

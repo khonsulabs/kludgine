@@ -1376,6 +1376,7 @@ impl LazyTexture {
                 usage: self.data.usage,
                 view_formats: &[],
             },
+            wgpu::util::TextureDataOrder::LayerMajor,
             &self.data.data,
         );
         let texture = SharedTexture::from(Texture {
@@ -1609,6 +1610,7 @@ impl Texture {
                 usage,
                 view_formats: &[],
             },
+            wgpu::util::TextureDataOrder::LayerMajor,
             data,
         );
         Self::from_wgpu(wgpu, graphics, false, size, format, filter_mode)

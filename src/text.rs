@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex, PoisonError, Weak};
 
 use cosmic_text::{Attrs, AttrsOwned, LayoutGlyph, SwashContent};
 use figures::units::{Lp, Px, UPx};
-use figures::{FloatConversion, Fraction, Point, Rect, Round, ScreenScale, Size, UPx2D};
+use figures::{FloatConversion, Fraction, Point, Rect, Round, ScreenScale, Size, UPx2D, Zero};
 use intentional::Cast;
 use smallvec::SmallVec;
 

@@ -24,11 +24,11 @@ use crate::{Color, Graphics, Kludgine, RenderingGraphics};
 /// A `Kludgine` application that enables opening multiple windows.
 pub struct PendingApp<WindowEvent = ()>(appit::PendingApp<AppEvent<WindowEvent>>)
 where
-    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface>;
+    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface<'static>>;
 
 impl<WindowEvent> Default for PendingApp<WindowEvent>
 where
-    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface>,
+    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface<'static>>,
 {
     fn default() -> Self {
         Self::new()
@@ -37,7 +37,7 @@ where
 
 impl<WindowEvent> AsApplication<AppEvent<WindowEvent>> for PendingApp<WindowEvent>
 where
-    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface>,
+    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface<'static>>,
 {
     fn as_application(&self) -> &dyn Application<AppEvent<WindowEvent>>
     where
@@ -49,27 +49,20 @@ where
 
 impl<WindowEvent> PendingApp<WindowEvent>
 where
-    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface>,
+    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface<'static>>,
 {
     /// Creates a new Kludgine application.
-    #[allow(unsafe_code)]
     #[must_use]
     #[allow(clippy::missing_panics_doc)] // The panics are in a closure that happens only after the app is running.
     pub fn new() -> Self {
         Self(appit::PendingApp::new_with_event_callback(
             |request: AppEvent<WindowEvent>, windows: &appit::Windows<WindowEvent>| {
                 let window = windows.get(request.0.window).expect("window not found");
-                // SAFETY: The winit window is valid and open when it is
-                // contained in the windows collection. The surface being
-                // created is stored on the KludgineWindow, which is dropped
-                // prior to the appit/winit window closing.
-                unsafe {
-                    request
-                        .0
-                        .wgpu
-                        .create_surface(&*window)
-                        .expect("error creating surface")
-                }
+                request
+                    .0
+                    .wgpu
+                    .create_surface(window)
+                    .expect("error creating surface")
             },
         ))
     }
@@ -701,7 +694,7 @@ impl<User> Message for AppEvent<User>
 where
     User: Send + 'static,
 {
-    type Response = wgpu::Surface;
+    type Response = wgpu::Surface<'static>;
     type Window = User;
 }
 
@@ -712,8 +705,7 @@ struct KludgineWindow<Behavior> {
     last_render_duration: Duration,
 
     config: wgpu::SurfaceConfiguration,
-    // SAFETY: Must not outlive this KludgineWindow.
-    surface: wgpu::Surface,
+    surface: wgpu::Surface<'static>,
     msaa_texture: Option<wgpu::Texture>,
     queue: wgpu::Queue,
     wgpu: Arc<wgpu::Instance>,
@@ -742,7 +734,7 @@ impl<Behavior> KludgineWindow<Behavior> {
         window: &mut RunningWindow<AppEvent<User>>,
     ) -> Option<wgpu::SurfaceTexture>
     where
-        AppEvent<User>: Message<Response = wgpu::Surface>,
+        AppEvent<User>: Message<Response = wgpu::Surface<'static>>,
     {
         loop {
             match self.surface.get_current_texture() {
@@ -907,8 +899,8 @@ where
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
-                features: Kludgine::REQURED_FEATURES,
-                limits: Kludgine::adjust_limits(T::limits(adapter.limits())),
+                required_features: Kludgine::REQURED_FEATURES,
+                required_limits: Kludgine::adjust_limits(T::limits(adapter.limits())),
             },
             None,
         ))
@@ -950,6 +942,7 @@ where
             present_mode: wgpu::PresentMode::Fifo,
             alpha_mode: behavior.composite_alpha_mode(&swapchain_capabilities.alpha_modes),
             view_formats: vec![],
+            desired_maximum_frame_latency: 2,
         };
         surface.configure(&device, &config);
 

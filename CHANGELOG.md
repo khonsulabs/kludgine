@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   contains. The old name was a remnant from when `Drawing` used to be named
   `Rendering`, which was incredibly confusing with `Renderer` types around as
   well.
+- This crate now supports `wgpu` 0.19.0.
 
 ### Changed
 

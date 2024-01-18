@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use appit::winit::error::EventLoopError;
 use appit::winit::keyboard::KeyCode;
+use figures::Zero;
 use kludgine::app::Window;
 use kludgine::drawing::Renderer;
 use kludgine::figures::units::{Lp, Px};

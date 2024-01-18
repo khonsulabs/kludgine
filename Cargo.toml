@@ -17,8 +17,10 @@ plotters = ["dep:plotters", "dep:plotters-backend"]
 
 [dependencies]
 # appit = { version = "0.2.0", optional = true }
-appit = { git = "https://github.com/khonsulabs/appit", optional = true }
-wgpu = { version = "0.18.0", features = ["expose-ids"] }
+appit = { git = "https://github.com/khonsulabs/appit", features = [
+    "rwh_06",
+], optional = true }
+wgpu = { version = "0.19.0" }
 pollster = "0.3.0"
 bytemuck = { version = "1.13.1", features = ["derive"] }
 lyon_tessellation = "1.0.1"
@@ -27,7 +29,7 @@ cosmic-text = { version = "0.10.0", optional = true }
 alot = "0.3.0"
 ahash = "0.8.3"
 etagere = "0.2.8"
-figures = { version = "0.2.0", features = [
+figures = { version = "0.2.0", git = "https://github.com/khonsulabs/figures", features = [
     "wgpu",
     "winit",
     "bytemuck",
@@ -40,9 +42,10 @@ justjson = "0.3.0"
 palette = "0.7.3"
 plotters = { version = "0.3.5", default-features = false, optional = true }
 plotters-backend = { version = "0.3.5", default-features = false, optional = true }
+raw-window-handle = "0.6.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies.wgpu]
-version = "0.18.0"
+version = "0.19.0"
 features = ["webgl"]
 
 [dev-dependencies]
