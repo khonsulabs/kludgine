@@ -2383,6 +2383,8 @@
 <a href="#2383" id="2383">2383</a>
 <a href="#2384" id="2384">2384</a>
 <a href="#2385" id="2385">2385</a>
+<a href="#2386" id="2386">2386</a>
+<a href="#2387" id="2387">2387</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -3761,6 +3763,7 @@
                 usage: <span class="self">self</span>.data.usage,
                 view_formats: <span class="kw-2">&amp;</span>[],
             },
+            wgpu::util::TextureDataOrder::LayerMajor,
             <span class="kw-2">&amp;</span><span class="self">self</span>.data.data,
         );
         <span class="kw">let </span>texture = SharedTexture::from(Texture {
@@ -3994,6 +3997,7 @@
                 usage,
                 view_formats: <span class="kw-2">&amp;</span>[],
             },
+            wgpu::util::TextureDataOrder::LayerMajor,
             data,
         );
         <span class="self">Self</span>::from_wgpu(wgpu, graphics, <span class="bool-val">false</span>, size, format, filter_mode)
