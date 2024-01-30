@@ -895,7 +895,7 @@ where
             force_fallback_adapter: false,
             compatible_surface: Some(&surface),
         }))
-        .unwrap();
+        .expect("no compatible graphics adapters found");
         let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
@@ -904,7 +904,7 @@ where
             },
             None,
         ))
-        .unwrap();
+        .expect("no compatible graphics devices found");
 
         let swapchain_capabilities = surface.get_capabilities(&adapter);
         let swapchain_format = swapchain_capabilities.formats[0];
