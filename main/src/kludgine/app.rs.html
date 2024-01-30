@@ -2320,7 +2320,7 @@
             force_fallback_adapter: <span class="bool-val">false</span>,
             compatible_surface: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>surface),
         }))
-        .unwrap();
+        .expect(<span class="string">&quot;no compatible graphics adapters found&quot;</span>);
         <span class="kw">let </span>(device, queue) = pollster::block_on(adapter.request_device(
             <span class="kw-2">&amp;</span>wgpu::DeviceDescriptor {
                 label: <span class="prelude-val">None</span>,
@@ -2329,7 +2329,7 @@
             },
             <span class="prelude-val">None</span>,
         ))
-        .unwrap();
+        .expect(<span class="string">&quot;no compatible graphics devices found&quot;</span>);
 
         <span class="kw">let </span>swapchain_capabilities = surface.get_capabilities(<span class="kw-2">&amp;</span>adapter);
         <span class="kw">let </span>swapchain_format = swapchain_capabilities.formats[<span class="number">0</span>];
