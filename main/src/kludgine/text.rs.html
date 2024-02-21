@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/text.rs`."><title>text.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/text.rs`."><title>text.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -958,7 +959,7 @@
     }
 
     <span class="doccomment">/// Returns the current font family.
-    </span><span class="kw">pub fn </span>font_family(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; cosmic_text::Family&lt;<span class="lifetime">&#39;_</span>&gt; {
+    </span><span class="kw">pub fn </span>font_family(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; cosmic_text::Family&lt;<span class="lifetime">'_</span>&gt; {
         <span class="self">self</span>.text.attrs.family_owned.as_family()
     }
 
@@ -993,12 +994,12 @@
     }
 
     <span class="doccomment">/// Returns the current text attributes.
-    </span><span class="kw">pub fn </span>text_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; cosmic_text::Attrs&lt;<span class="lifetime">&#39;_</span>&gt; {
+    </span><span class="kw">pub fn </span>text_attrs(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; cosmic_text::Attrs&lt;<span class="lifetime">'_</span>&gt; {
         <span class="self">self</span>.text.attrs.as_attrs()
     }
 
     <span class="doccomment">/// Sets the current text attributes.
-    </span><span class="kw">pub fn </span>set_text_attributes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, attrs: Attrs&lt;<span class="lifetime">&#39;_</span>&gt;) {
+    </span><span class="kw">pub fn </span>set_text_attributes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, attrs: Attrs&lt;<span class="lifetime">'_</span>&gt;) {
         <span class="self">self</span>.text.attrs = AttrsOwned::new(attrs);
     }
 
@@ -1023,12 +1024,12 @@
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>TextSystem {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_struct(<span class="string">&quot;TextSystem&quot;</span>)
-            .field(<span class="string">&quot;font_size&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.font_size)
-            .field(<span class="string">&quot;line_height&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.line_height)
-            .field(<span class="string">&quot;attrs&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.attrs)
-            .field(<span class="string">&quot;glyphs&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.glyphs)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"TextSystem"</span>)
+            .field(<span class="string">"font_size"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.font_size)
+            .field(<span class="string">"line_height"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.line_height)
+            .field(<span class="string">"attrs"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.attrs)
+            .field(<span class="string">"glyphs"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.glyphs)
             .finish_non_exhaustive()
     }
 }
@@ -1037,7 +1038,7 @@
 <span class="kw">const </span>DEFAULT_LINE_SIZE: Lp = Lp::points(<span class="number">16</span>);
 
 <span class="kw">impl </span>TextSystem {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(graphics: <span class="kw-2">&amp;</span>ProtoGraphics&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(graphics: <span class="kw-2">&amp;</span>ProtoGraphics&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>fonts = cosmic_text::FontSystem::new();
 
         <span class="self">Self </span>{
@@ -1102,7 +1103,7 @@
             <span class="self">self</span>.scratch = <span class="prelude-val">Some</span>(buffer);
         }
 
-        <span class="kw">let </span>scratch = <span class="self">self</span>.scratch.as_mut().expect(<span class="string">&quot;initialized above&quot;</span>);
+        <span class="kw">let </span>scratch = <span class="self">self</span>.scratch.as_mut().expect(<span class="string">"initialized above"</span>);
         scratch.set_text(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.fonts,
             text,
@@ -1114,7 +1115,7 @@
             width.map_or(f32::MAX, Cast::cast),
             f32::MAX,
         );
-        scratch.shape_until_scroll(<span class="kw-2">&amp;mut </span><span class="self">self</span>.fonts);
+        scratch.shape_until_scroll(<span class="kw-2">&amp;mut </span><span class="self">self</span>.fonts, <span class="bool-val">false</span>);
     }
 }
 
@@ -1180,10 +1181,10 @@
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>CachedGlyphHandle {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_struct(<span class="string">&quot;CachedGlyphHandle&quot;</span>)
-            .field(<span class="string">&quot;key&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.key)
-            .field(<span class="string">&quot;is_mask&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.is_mask)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"CachedGlyphHandle"</span>)
+            .field(<span class="string">"key"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.key)
+            .field(<span class="string">"is_mask"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.is_mask)
             .finish_non_exhaustive()
     }
 }
@@ -1192,7 +1193,7 @@
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="kw">if let </span><span class="prelude-val">Some</span>(glyphs) = <span class="self">self</span>.cache.upgrade() {
             <span class="kw">let </span><span class="kw-2">mut </span>data = glyphs.lock().map_or_else(PoisonError::into_inner, |g| g);
-            <span class="kw">let </span>cached = data.get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.key).expect(<span class="string">&quot;cached glyph missing&quot;</span>);
+            <span class="kw">let </span>cached = data.get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.key).expect(<span class="string">"cached glyph missing"</span>);
             cached.ref_count += <span class="number">1</span>;
             drop(data);
         }
@@ -1210,13 +1211,13 @@
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(glyphs) = <span class="self">self</span>.cache.upgrade() {
             <span class="kw">let </span><span class="kw-2">mut </span>data = glyphs.lock().map_or_else(PoisonError::into_inner, |g| g);
-            <span class="kw">let </span>cached = data.get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.key).expect(<span class="string">&quot;cached glyph missing&quot;</span>);
+            <span class="kw">let </span>cached = data.get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.key).expect(<span class="string">"cached glyph missing"</span>);
             cached.ref_count -= <span class="number">1</span>;
         }
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>&gt; Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'gfx</span>&gt; Graphics&lt;<span class="lifetime">'gfx</span>&gt; {
     <span class="doccomment">/// Prepares the text layout contained in `buffer` to be rendered.
     ///
     /// When the text in `buffer` has no color defined, `default_color` will be
@@ -1251,12 +1252,12 @@
                 {
                     <span class="kw">let </span>corners: [u32; <span class="number">4</span>] =
                         array::from_fn(|index| vertices.get_or_insert(blit.verticies[index]));
-                    <span class="kw">let </span>start_index = u32::try_from(indices.len()).assert(<span class="string">&quot;too many drawn indices&quot;</span>);
+                    <span class="kw">let </span>start_index = u32::try_from(indices.len()).assert(<span class="string">"too many drawn indices"</span>);
                     <span class="kw">for </span><span class="kw-2">&amp;</span>index <span class="kw">in </span>blit.indices() {
                         indices
-                            .push(corners[usize::try_from(index).assert(<span class="string">&quot;too many drawn indices&quot;</span>)]);
+                            .push(corners[usize::try_from(index).assert(<span class="string">"too many drawn indices"</span>)]);
                     }
-                    <span class="kw">let </span>end_index = u32::try_from(indices.len()).assert(<span class="string">&quot;too many drawn indices&quot;</span>);
+                    <span class="kw">let </span>end_index = u32::try_from(indices.len()).assert(<span class="string">"too many drawn indices"</span>);
                     <span class="kw">match </span>commands.last_mut() {
                         <span class="prelude-val">Some</span>(last_command) <span class="kw">if </span>last_command.is_mask == cached.is_mask =&gt; {
                             <span class="comment">// The last command was from the same texture source, we can stend the previous range to the new end.
@@ -1299,10 +1300,10 @@
     device: <span class="kw-2">&amp;</span>wgpu::Device,
     queue: <span class="kw-2">&amp;</span>wgpu::Queue,
     glyphs: <span class="kw-2">&amp;mut </span>HashMap&lt;cosmic_text::CacheKey, CachedGlyphHandle, DefaultHasher&gt;,
-    <span class="kw-2">mut </span>map: <span class="kw">impl for</span>&lt;<span class="lifetime">&#39;a</span>&gt; FnMut(GlyphBlit, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>LayoutGlyph, usize, Px, Px, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Kludgine),
+    <span class="kw-2">mut </span>map: <span class="kw">impl for</span>&lt;<span class="lifetime">'a</span>&gt; FnMut(GlyphBlit, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>LayoutGlyph, usize, Px, Px, <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Kludgine),
 ) {
     <span class="kw">let </span>metrics = buffer
-        .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect(<span class="string">&quot;no buffer&quot;</span>))
+        .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect(<span class="string">"no buffer"</span>))
         .metrics();
 
     <span class="kw">let </span>line_height_offset = Point::new(Px::ZERO, Px::from(metrics.line_height));
@@ -1317,7 +1318,7 @@
         TextOrigin::FirstBaseline =&gt; line_height_offset.cast(),
     } + line_height_offset;
 
-    <span class="kw">let </span>buffer = buffer.unwrap_or_else(|| kludgine.text.scratch.as_ref().expect(<span class="string">&quot;no buffer&quot;</span>));
+    <span class="kw">let </span>buffer = buffer.unwrap_or_else(|| kludgine.text.scratch.as_ref().expect(<span class="string">"no buffer"</span>));
     <span class="kw">for </span>run <span class="kw">in </span>buffer.layout_runs() {
         <span class="kw">let </span>run_origin = Point::new(Px::ZERO, Px::from(run.line_y)) - relative_to;
         <span class="kw">for </span>glyph <span class="kw">in </span>run.glyphs {
@@ -1407,9 +1408,9 @@
                                 ),
                             Size::new(
                                 i32::try_from(image.placement.width)
-                                    .expect(<span class="string">&quot;width out of range of i32&quot;</span>),
+                                    .expect(<span class="string">"width out of range of i32"</span>),
                                 i32::try_from(image.placement.height)
-                                    .expect(<span class="string">&quot;height out of range of i32&quot;</span>),
+                                    .expect(<span class="string">"height out of range of i32"</span>),
                             )
                             .cast(),
                         ),
@@ -1483,7 +1484,7 @@
 <span class="kw">where
     </span>Unit: figures::ScreenUnit,
 {
-    <span class="comment">// TODO the returned type should be able to be drawn, so that we don&#39;t have to call update_scratch_buffer again.
+    <span class="comment">// TODO the returned type should be able to be drawn, so that we don't have to call update_scratch_buffer again.
     </span><span class="kw">let </span>line_height = Unit::from_lp(kludgine.text.line_height, kludgine.scale);
     <span class="kw">let </span><span class="kw-2">mut </span>min = Point::new(Px::MAX, Px::MAX);
     <span class="kw">let </span><span class="kw-2">mut </span>first_line_max_y = Px::MIN;
@@ -1546,7 +1547,7 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>PreparedText {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
         <span class="self">self</span>.graphic.fmt(f)
     }
 }
@@ -1685,10 +1686,10 @@
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>MeasuredGlyph {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        f.debug_struct(<span class="string">&quot;MeasuredGlyph&quot;</span>)
-            .field(<span class="string">&quot;blit&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.blit)
-            .field(<span class="string">&quot;info&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.info)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">"MeasuredGlyph"</span>)
+            .field(<span class="string">"blit"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.blit)
+            .field(<span class="string">"info"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.info)
             .finish_non_exhaustive()
     }
 }
@@ -1751,9 +1752,9 @@
 <span class="doccomment">/// A text drawing command.
 </span><span class="attr">#[derive(Clone, Copy, Debug)]
 #[non_exhaustive]
-</span><span class="kw">pub struct </span>Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt; {
+</span><span class="kw">pub struct </span>Text&lt;<span class="lifetime">'a</span>, Unit&gt; {
     <span class="doccomment">/// The text to be drawn.
-    </span><span class="kw">pub </span>text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+    </span><span class="kw">pub </span>text: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
     <span class="doccomment">/// The color to draw the text using.
     </span><span class="kw">pub </span>color: Color,
     <span class="doccomment">/// The origin to draw the text around.
@@ -1762,10 +1763,10 @@
     </span><span class="kw">pub </span>wrap_at: <span class="prelude-ty">Option</span>&lt;Unit&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Unit&gt; Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Unit&gt; Text&lt;<span class="lifetime">'a</span>, Unit&gt; {
     <span class="doccomment">/// Returns a text command that draws `text` with `color`.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub const fn </span>new(text: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str, color: Color) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub const fn </span>new(text: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str, color: Color) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             text,
             color,
@@ -1789,17 +1790,17 @@
     </span>}
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Unit&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt; <span class="kw">for </span>Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt; {
-    <span class="kw">fn </span>from(value: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Unit&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt; <span class="kw">for </span>Text&lt;<span class="lifetime">'a</span>, Unit&gt; {
+    <span class="kw">fn </span>from(value: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new(value, Color::WHITE)
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Unit&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>String&gt; <span class="kw">for </span>Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt; {
-    <span class="kw">fn </span>from(value: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>String) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Unit&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>String&gt; <span class="kw">for </span>Text&lt;<span class="lifetime">'a</span>, Unit&gt; {
+    <span class="kw">fn </span>from(value: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>String) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new(value, Color::WHITE)
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Unit&gt; DrawableSource <span class="kw">for </span>Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt; {}
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Unit&gt; DrawableSource <span class="kw">for </span>Text&lt;<span class="lifetime">'a</span>, Unit&gt; {}
 </code></pre></div></section></main></body></html>

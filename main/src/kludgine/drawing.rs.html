@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/drawing.rs`."><title>drawing.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/drawing.rs`."><title>drawing.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -772,36 +773,36 @@
     VertexCollection,
 };
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;plotters&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"plotters"</span>)]
 </span><span class="kw">mod </span>plotters;
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;plotters&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"plotters"</span>)]
 </span><span class="kw">pub use </span><span class="self">self</span>::plotters::PlotterBackend;
 
 <span class="doccomment">/// An easy-to-use graphics renderer that batches operations on the GPU
 /// automatically.
 ///
-/// Using the draw operations on this type don&#39;t immediately draw. Instead, once
+/// Using the draw operations on this type don't immediately draw. Instead, once
 /// this type is dropped, the [`Drawing`] that created this renderer will be
 /// updated with the new drawing instructions. All of the pending operations can
 /// be drawn using [`Drawing::render`].
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) graphics: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt;,
-    data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Drawing,
+</span><span class="kw">pub struct </span>Renderer&lt;<span class="lifetime">'render</span>, <span class="lifetime">'gfx</span>&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) graphics: <span class="kw-2">&amp;</span><span class="lifetime">'render </span><span class="kw-2">mut </span>Graphics&lt;<span class="lifetime">'gfx</span>&gt;,
+    data: <span class="kw-2">&amp;</span><span class="lifetime">'render </span><span class="kw-2">mut </span>Drawing,
     clip_index: u32,
     opacity: f32,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>&gt; Deref <span class="kw">for </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;gfx</span>&gt; {
-    <span class="kw">type </span>Target = Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt;;
+<span class="kw">impl</span>&lt;<span class="lifetime">'gfx</span>&gt; Deref <span class="kw">for </span>Renderer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'gfx</span>&gt; {
+    <span class="kw">type </span>Target = Graphics&lt;<span class="lifetime">'gfx</span>&gt;;
 
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
         <span class="self">self</span>.graphics
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>&gt; DerefMut <span class="kw">for </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;gfx</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'gfx</span>&gt; DerefMut <span class="kw">for </span>Renderer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'gfx</span>&gt; {
     <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
         <span class="self">self</span>.graphics
     }
@@ -815,11 +816,11 @@
     texture: <span class="prelude-ty">Option</span>&lt;sealed::TextureId&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; Renderer&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;gfx</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'render</span>, <span class="lifetime">'gfx</span>&gt; Renderer&lt;<span class="lifetime">'render</span>, <span class="lifetime">'gfx</span>&gt; {
     <span class="doccomment">/// Draws a shape at the origin, rotating and scaling as needed.
-    </span><span class="kw">pub fn </span>draw_shape&lt;<span class="lifetime">&#39;shape</span>, Unit&gt;(
+    </span><span class="kw">pub fn </span>draw_shape&lt;<span class="lifetime">'shape</span>, Unit&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        shape: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;shape </span>Shape&lt;Unit, <span class="bool-val">false</span>&gt;, Unit&gt;&gt;,
+        shape: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">'shape </span>Shape&lt;Unit, <span class="bool-val">false</span>&gt;, Unit&gt;&gt;,
     ) <span class="kw">where
         </span>Unit: Zero + ShaderScalable + ScreenUnit + figures::Unit + Copy,
     {
@@ -867,21 +868,21 @@
 
     <span class="doccomment">/// Draws a shape that was created with texture coordinates, applying the
     /// provided texture.
-    </span><span class="kw">pub fn </span>draw_textured_shape&lt;<span class="lifetime">&#39;shape</span>, Unit, Shape&gt;(
+    </span><span class="kw">pub fn </span>draw_textured_shape&lt;<span class="lifetime">'shape</span>, Unit, Shape&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        shape: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;shape </span>Shape, Unit&gt;&gt;,
+        shape: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">'shape </span>Shape, Unit&gt;&gt;,
         texture: <span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource,
     ) <span class="kw">where
         </span>Unit: Zero + ShaderScalable + ScreenUnit + figures::Unit + Copy,
         i32: From&lt;&lt;Unit <span class="kw">as </span>IntoSigned&gt;::Signed&gt;,
-        Shape: ShapeSource&lt;Unit, <span class="bool-val">true</span>&gt; + <span class="lifetime">&#39;shape</span>,
+        Shape: ShapeSource&lt;Unit, <span class="bool-val">true</span>&gt; + <span class="lifetime">'shape</span>,
     {
         <span class="self">self</span>.inner_draw(<span class="kw-2">&amp;</span>shape.into(), <span class="prelude-val">Some</span>(texture));
     }
 
     <span class="kw">fn </span>inner_draw&lt;Shape, Unit, <span class="kw">const </span>TEXTURED: bool&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        shape: <span class="kw-2">&amp;</span>Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>Shape, Unit&gt;,
+        shape: <span class="kw-2">&amp;</span>Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">'_ </span>Shape, Unit&gt;,
         texture: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource&gt;,
     ) <span class="kw">where
         </span>Unit: Zero + ShaderScalable + ScreenUnit + figures::Unit + Copy,
@@ -904,7 +905,7 @@
         <span class="kw">for </span><span class="kw-2">&amp;</span>vertex_index <span class="kw">in </span>shape.source.indices() {
             <span class="self">self</span>.data
                 .indices
-                .push(vertex_map[usize::try_from(vertex_index).assert(<span class="string">&quot;too many drawn indices&quot;</span>)]);
+                .push(vertex_map[usize::try_from(vertex_index).assert(<span class="string">"too many drawn indices"</span>)]);
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>flags = Unit::flags();
@@ -963,20 +964,20 @@
                     .indices
                     .len()
                     .try_into()
-                    .expect(<span class="string">&quot;too many drawn verticies&quot;</span>);
+                    .expect(<span class="string">"too many drawn verticies"</span>);
             }
             <span class="kw">_ </span>=&gt; {
                 <span class="self">self</span>.data.commands.push(Command {
                     clip_index: <span class="self">self</span>.clip_index,
                     indices: first_index_drawn
                         .try_into()
-                        .expect(<span class="string">&quot;too many drawn verticies&quot;</span>)
+                        .expect(<span class="string">"too many drawn verticies"</span>)
                         ..<span class="self">self
                             </span>.data
                             .indices
                             .len()
                             .try_into()
-                            .expect(<span class="string">&quot;too many drawn verticies&quot;</span>),
+                            .expect(<span class="string">"too many drawn verticies"</span>),
                     constants,
                     texture,
                 });
@@ -1010,11 +1011,11 @@
     /// This function causes the [`Renderer`] to act as if the origin of the
     /// context is `clip.origin`, and the size of the context is `clip.size`.
     /// This means that rendering at 0,0 will actually render at the effective
-    /// clip rect&#39;s origin.
+    /// clip rect's origin.
     ///
     /// `clip` is relative to the current clip rect and cannot extend the
     /// current clipping rectangle.
-    </span><span class="kw">pub fn </span>clipped_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) -&gt; ClipGuard&lt;<span class="lifetime">&#39;_</span>, <span class="self">Self</span>&gt; {
+    </span><span class="kw">pub fn </span>clipped_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) -&gt; ClipGuard&lt;<span class="lifetime">'_</span>, <span class="self">Self</span>&gt; {
         <span class="self">self</span>.push_clip(clip);
         <span class="self">self</span>.clip_index = <span class="self">self</span>.data.get_or_lookup_clip(<span class="self">self</span>.clip.current);
 
@@ -1022,7 +1023,7 @@
     }
 }
 
-<span class="kw">impl </span>Clipped <span class="kw">for </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Clipped <span class="kw">for </span>Renderer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>push_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) {
         <span class="self">self</span>.clip.push_clip(clip);
         <span class="self">self</span>.clip_index = <span class="self">self</span>.data.get_or_lookup_clip(<span class="self">self</span>.clip.current);
@@ -1034,9 +1035,9 @@
     }
 }
 
-<span class="kw">impl </span>sealed::Clipped <span class="kw">for </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {}
+<span class="kw">impl </span>sealed::Clipped <span class="kw">for </span>Renderer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {}
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
 </span><span class="kw">mod </span>text {
     <span class="kw">use </span>std::array;
     <span class="kw">use </span>std::collections::{hash_map, HashMap};
@@ -1058,13 +1059,13 @@
         DefaultHasher, Drawable, KludgineGraphics, ProtoGraphics, TextureBlit, VertexCollection,
     };
 
-    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>&gt; Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;gfx</span>&gt; {
+    <span class="kw">impl</span>&lt;<span class="lifetime">'gfx</span>&gt; Renderer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'gfx</span>&gt; {
         <span class="doccomment">/// Measures `text` using the current text settings.
         ///
         /// `default_color` does not affect the
-        </span><span class="kw">pub fn </span>measure_text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;(
+        </span><span class="kw">pub fn </span>measure_text&lt;<span class="lifetime">'a</span>, Unit&gt;(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-            text: <span class="kw">impl </span>Into&lt;Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;&gt;,
+            text: <span class="kw">impl </span>Into&lt;Text&lt;<span class="lifetime">'a</span>, Unit&gt;&gt;,
         ) -&gt; MeasuredText&lt;Unit&gt;
         <span class="kw">where
             </span>Unit: figures::ScreenUnit,
@@ -1083,10 +1084,10 @@
         }
 
         <span class="doccomment">/// Draws `text` using the current text settings.
-        </span><span class="kw">pub fn </span>draw_text&lt;<span class="lifetime">&#39;a</span>, Unit, Source&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, text: Source)
+        </span><span class="kw">pub fn </span>draw_text&lt;<span class="lifetime">'a</span>, Unit, Source&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, text: Source)
         <span class="kw">where
             </span>Unit: ScreenUnit,
-            Source: Into&lt;Drawable&lt;Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;, Unit&gt;&gt;,
+            Source: Into&lt;Drawable&lt;Text&lt;<span class="lifetime">'a</span>, Unit&gt;, Unit&gt;&gt;,
         {
             <span class="kw">let </span>text = text.into();
             <span class="self">self</span>.graphics.kludgine.update_scratch_buffer(
@@ -1113,9 +1114,9 @@
         ///
         /// `origin` allows controlling how the text will be drawn relative to the
         /// coordinate provided in [`render()`](crate::PreparedGraphic::render).
-        </span><span class="kw">pub fn </span>draw_text_buffer&lt;<span class="lifetime">&#39;a</span>, Unit&gt;(
+        </span><span class="kw">pub fn </span>draw_text_buffer&lt;<span class="lifetime">'a</span>, Unit&gt;(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-            buffer: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>cosmic_text::Buffer, Unit&gt;&gt;,
+            buffer: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>cosmic_text::Buffer, Unit&gt;&gt;,
             default_color: Color,
             origin: TextOrigin&lt;Px&gt;,
         ) <span class="kw">where
@@ -1160,9 +1161,9 @@
         ///
         /// `origin` allows controlling how the text will be drawn relative to the
         /// coordinate provided in [`render()`](crate::PreparedGraphic::render).
-        </span><span class="kw">pub fn </span>draw_measured_text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;(
+        </span><span class="kw">pub fn </span>draw_measured_text&lt;<span class="lifetime">'a</span>, Unit&gt;(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-            text: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>MeasuredText&lt;Unit&gt;, Unit&gt;&gt;,
+            text: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>MeasuredText&lt;Unit&gt;, Unit&gt;&gt;,
             origin: TextOrigin&lt;Unit&gt;,
         ) <span class="kw">where
             </span>Unit: ScreenUnit,
@@ -1288,9 +1289,9 @@
                 color: vertex.color,
             })
         });
-        <span class="kw">let </span>start_index = u32::try_from(indices.len()).expect(<span class="string">&quot;too many drawn indices&quot;</span>);
+        <span class="kw">let </span>start_index = u32::try_from(indices.len()).expect(<span class="string">"too many drawn indices"</span>);
         <span class="kw">for </span><span class="kw-2">&amp;</span>index <span class="kw">in </span>blit.indices() {
-            indices.push(corners[usize::try_from(index).assert(<span class="string">&quot;too many drawn indices&quot;</span>)]);
+            indices.push(corners[usize::try_from(index).assert(<span class="string">"too many drawn indices"</span>)]);
         }
         <span class="kw">let </span><span class="kw-2">mut </span>flags = Px::flags() | FLAG_TEXTURED;
         <span class="kw">if let </span>hash_map::Entry::Vacant(vacant) = textures.entry(cached.texture.id()) {
@@ -1319,7 +1320,7 @@
             translation,
             opacity: opacity.unwrap_or(<span class="number">1.</span>),
         };
-        <span class="kw">let </span>end_index = u32::try_from(indices.len()).expect(<span class="string">&quot;too many drawn indices&quot;</span>);
+        <span class="kw">let </span>end_index = u32::try_from(indices.len()).expect(<span class="string">"too many drawn indices"</span>);
         <span class="kw">match </span>commands.last_mut() {
             <span class="prelude-val">Some</span>(last_command)
                 <span class="kw">if </span>clip_index == last_command.clip_index
@@ -1341,7 +1342,7 @@
     }
 }
 
-<span class="kw">impl </span>Drop <span class="kw">for </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Drop <span class="kw">for </span>Renderer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!<span class="self">self</span>.data.indices.is_empty() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(buffers) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.buffers {
@@ -1383,7 +1384,7 @@
 /// index buffers.
 ///
 /// This type allows rendering a batch of drawing operations using a
-/// [`Renderer`]. Once the renderer is dropped, this type&#39;s vertex buffer and
+/// [`Renderer`]. Once the renderer is dropped, this type's vertex buffer and
 /// index buffer are updated.
 </span><span class="attr">#[derive(Default, Debug)]
 </span><span class="kw">pub struct </span>Drawing {
@@ -1394,7 +1395,7 @@
     indices: Vec&lt;u32&gt;,
     textures: HashMap&lt;sealed::TextureId, Arc&lt;wgpu::BindGroup&gt;, DefaultHasher&gt;,
     commands: Vec&lt;Command&gt;,
-    <span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
     </span>glyphs: HashMap&lt;cosmic_text::CacheKey, <span class="kw">crate</span>::text::CachedGlyphHandle, DefaultHasher&gt;,
 }
 
@@ -1409,10 +1410,10 @@
     /// prepare new graphics.
     ///
     /// Once the renderer is dropped, this type is ready to be rendered.
-    </span><span class="kw">pub fn </span>new_frame&lt;<span class="lifetime">&#39;rendering</span>, <span class="lifetime">&#39;gfx</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;rendering </span><span class="kw-2">mut </span><span class="self">self</span>,
-        graphics: <span class="kw-2">&amp;</span><span class="lifetime">&#39;rendering </span><span class="kw-2">mut </span>Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt;,
-    ) -&gt; Renderer&lt;<span class="lifetime">&#39;rendering</span>, <span class="lifetime">&#39;gfx</span>&gt; {
+    </span><span class="kw">pub fn </span>new_frame&lt;<span class="lifetime">'rendering</span>, <span class="lifetime">'gfx</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'rendering </span><span class="kw-2">mut </span><span class="self">self</span>,
+        graphics: <span class="kw-2">&amp;</span><span class="lifetime">'rendering </span><span class="kw-2">mut </span>Graphics&lt;<span class="lifetime">'gfx</span>&gt;,
+    ) -&gt; Renderer&lt;<span class="lifetime">'rendering</span>, <span class="lifetime">'gfx</span>&gt; {
         <span class="self">self</span>.commands.clear();
         <span class="self">self</span>.indices.clear();
         <span class="self">self</span>.textures.clear();
@@ -1421,7 +1422,7 @@
         <span class="self">self</span>.clip_lookup.clear();
         <span class="self">self</span>.clips.clear();
         <span class="self">self</span>.get_or_lookup_clip(graphics.clip.current);
-        <span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
         </span><span class="self">self</span>.glyphs.clear();
 
         Renderer {
@@ -1434,14 +1435,14 @@
 
     <span class="kw">fn </span>get_or_lookup_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: ClipRect) -&gt; u32 {
         <span class="kw-2">*</span><span class="self">self</span>.clip_lookup.entry(clip.<span class="number">0</span>).or_insert_with(|| {
-            <span class="kw">let </span>id = u32::try_from(<span class="self">self</span>.clips.len()).expect(<span class="string">&quot;too many clips&quot;</span>);
+            <span class="kw">let </span>id = u32::try_from(<span class="self">self</span>.clips.len()).expect(<span class="string">"too many clips"</span>);
             <span class="self">self</span>.clips.push(clip.<span class="number">0</span>);
             id
         })
     }
 
     <span class="doccomment">/// Renders the prepared graphics from the last frame.
-    </span><span class="kw">pub fn </span>render&lt;<span class="lifetime">&#39;pass</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span><span class="self">self</span>, opacity: f32, graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;pass</span>&gt;) {
+    </span><span class="kw">pub fn </span>render&lt;<span class="lifetime">'pass</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="self">self</span>, opacity: f32, graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">'_</span>, <span class="lifetime">'pass</span>&gt;) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(buffers) = <span class="kw-2">&amp;</span><span class="self">self</span>.buffers {
             <span class="kw">let </span><span class="kw-2">mut </span>current_texture_id = <span class="prelude-val">None</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>needs_texture_binding = graphics.active_pipeline_if_needed();
@@ -1463,7 +1464,7 @@
                         current_texture_id = <span class="prelude-val">Some</span>(<span class="kw-2">*</span>texture_id);
                         graphics.pass.set_bind_group(
                             <span class="number">0</span>,
-                            <span class="self">self</span>.textures.get(texture_id).assert(<span class="string">&quot;texture missing&quot;</span>),
+                            <span class="self">self</span>.textures.get(texture_id).assert(<span class="string">"texture missing"</span>),
                             <span class="kw-2">&amp;</span>[],
                         );
                     }

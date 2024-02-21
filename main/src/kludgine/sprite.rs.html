@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/sprite.rs`."><title>sprite.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/sprite.rs`."><title>sprite.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -988,16 +989,16 @@
 
 <span class="doccomment">/// Includes an [Aseprite](https://www.aseprite.org/) sprite sheet and Json
 /// export. For more information, see [`Sprite::load_aseprite_json`]. This macro
-/// will append &quot;.png&quot; and &quot;.json&quot; to the path provided and include both files
+/// will append ".png" and ".json" to the path provided and include both files
 /// in your binary.
 </span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>include_aseprite_sprite {
     (<span class="macro-nonterminal">$path</span>:expr) =&gt; {{
-        <span class="macro-nonterminal">$</span><span class="macro">crate::include_texture!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$path</span>, <span class="string">&quot;.png&quot;</span>))
+        <span class="macro-nonterminal">$</span><span class="macro">crate::include_texture!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$path</span>, <span class="string">".png"</span>))
             .map_err(<span class="macro-nonterminal">$crate::sprite::SpriteParseError::from</span>)
             .and_then(|texture| {
                 <span class="macro-nonterminal">$crate::sprite::Sprite::load_aseprite_json</span>(
-                    <span class="macro">include_str!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$path</span>, <span class="string">&quot;.json&quot;</span>)),
+                    <span class="macro">include_str!</span>(<span class="macro">concat!</span>(<span class="macro-nonterminal">$path</span>, <span class="string">".json"</span>)),
                     texture,
                 )
             })
@@ -1058,7 +1059,7 @@
     <span class="doccomment">/// Invalid JSON.
     </span>Json(justjson::Error),
     <span class="doccomment">/// An image parsing error.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;image&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">"image"</span>)]
     </span>Image(image::ImageError),
 }
 
@@ -1078,7 +1079,7 @@
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;image&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"image"</span>)]
 </span><span class="kw">impl </span>From&lt;image::ImageError&gt; <span class="kw">for </span>SpriteParseError {
     <span class="kw">fn </span>from(value: image::ImageError) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::Image(value)
@@ -1126,7 +1127,7 @@
     }
 }
 
-<span class="doccomment">/// A [`Sprite`]&#39;s tag did not correspond to an animation.
+<span class="doccomment">/// A [`Sprite`]'s tag did not correspond to an animation.
 </span><span class="attr">#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 </span><span class="kw">pub struct </span>InvalidSpriteTag;
 
@@ -1213,23 +1214,23 @@
         <span class="kw">let </span>texture = texture.into();
         <span class="kw">let </span>json = justjson::Value::from_json(raw_json)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="prelude-val">Some</span>(Value::Object(meta)) = json.get(<span class="string">&quot;meta&quot;</span>) <span class="kw">else </span>{
+        <span class="kw">let </span><span class="prelude-val">Some</span>(Value::Object(meta)) = json.get(<span class="string">"meta"</span>) <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(SpriteParseError::Meta);
         };
 
         <span class="kw">let </span>texture_size = texture.default_rect().size;
-        <span class="kw">let </span><span class="prelude-val">Some</span>(size) = meta.get(<span class="string">&quot;size&quot;</span>) <span class="kw">else </span>{
+        <span class="kw">let </span><span class="prelude-val">Some</span>(size) = meta.get(<span class="string">"size"</span>) <span class="kw">else </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(SpriteParseError::SizeMissing);
         };
 
-        <span class="kw">if </span>size[<span class="string">&quot;w&quot;</span>].as_u32() != <span class="prelude-val">Some</span>(texture_size.width.get())
-            || size[<span class="string">&quot;h&quot;</span>].as_u32() != <span class="prelude-val">Some</span>(texture_size.height.get())
+        <span class="kw">if </span>size[<span class="string">"w"</span>].as_u32() != <span class="prelude-val">Some</span>(texture_size.width.get())
+            || size[<span class="string">"h"</span>].as_u32() != <span class="prelude-val">Some</span>(texture_size.height.get())
         {
             <span class="kw">return </span><span class="prelude-val">Err</span>(SpriteParseError::SizeMismatch);
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>frames = HashMap::new();
-        <span class="kw">for </span>frame <span class="kw">in </span>json[<span class="string">&quot;frames&quot;</span>]
+        <span class="kw">for </span>frame <span class="kw">in </span>json[<span class="string">"frames"</span>]
             .as_object()
             .map(|frame| frame.iter())
             .into_iter()
@@ -1237,13 +1238,13 @@
         {
             <span class="comment">// Remove the extension, if present
             </span><span class="kw">let </span>key = frame.key.decode_if_needed();
-            <span class="kw">let </span>name = key.split(<span class="string">&#39;.&#39;</span>).next().assert_expected();
-            <span class="comment">// Split by _ or &#39; &#39;as per the documentation of this method.
-            </span><span class="kw">let </span>name_parts = name.split(|c| c == <span class="string">&#39;_&#39; </span>|| c == <span class="string">&#39; &#39;</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+            <span class="kw">let </span>name = key.split(<span class="string">'.'</span>).next().assert_expected();
+            <span class="comment">// Split by _ or ' 'as per the documentation of this method.
+            </span><span class="kw">let </span>name_parts = name.split(|c| c == <span class="string">'_' </span>|| c == <span class="string">' '</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
             <span class="kw">let </span>frame_number = name_parts[name_parts.len() - <span class="number">1</span>]
                 .parse::&lt;usize&gt;()
                 .or_else(|<span class="kw">_</span>| {
-                    <span class="kw">if </span>json[<span class="string">&quot;frames&quot;</span>]
+                    <span class="kw">if </span>json[<span class="string">"frames"</span>]
                         .as_array()
                         .map_or(<span class="bool-val">false</span>, |frames| frames.len() == <span class="number">1</span>)
                     {
@@ -1256,7 +1257,7 @@
                     }
                 })<span class="question-mark">?</span>;
 
-            <span class="kw">let </span>duration = <span class="kw">match </span>frame.value.get(<span class="string">&quot;duration&quot;</span>).and_then(Value::as_u64) {
+            <span class="kw">let </span>duration = <span class="kw">match </span>frame.value.get(<span class="string">"duration"</span>).and_then(Value::as_u64) {
                 <span class="prelude-val">Some</span>(millis) =&gt; Duration::from_millis(millis),
                 <span class="prelude-val">None </span>=&gt; {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(SpriteParseError::frame(
@@ -1266,7 +1267,7 @@
                 }
             };
 
-            <span class="kw">let </span><span class="prelude-val">Some</span>(rect) = frame.value.get(<span class="string">&quot;frame&quot;</span>) <span class="kw">else </span>{
+            <span class="kw">let </span><span class="prelude-val">Some</span>(rect) = frame.value.get(<span class="string">"frame"</span>) <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(SpriteParseError::frame(
                     <span class="kw-2">&amp;</span>frame.key,
                     FrameParseError::MissingRegion,
@@ -1275,18 +1276,18 @@
 
             <span class="kw">let </span>region = Rect::new(
                 Point::new(
-                    rect[<span class="string">&quot;x&quot;</span>]
+                    rect[<span class="string">"x"</span>]
                         .as_u32()
                         .ok_or_else(|| SpriteParseError::frame(<span class="kw-2">&amp;</span>frame.key, FrameParseError::X))<span class="question-mark">?</span>,
-                    rect[<span class="string">&quot;y&quot;</span>]
+                    rect[<span class="string">"y"</span>]
                         .as_u32()
                         .ok_or_else(|| SpriteParseError::frame(<span class="kw-2">&amp;</span>frame.key, FrameParseError::Y))<span class="question-mark">?</span>,
                 ),
                 Size::new(
-                    rect[<span class="string">&quot;w&quot;</span>].as_u32().ok_or_else(|| {
+                    rect[<span class="string">"w"</span>].as_u32().ok_or_else(|| {
                         SpriteParseError::frame(<span class="kw-2">&amp;</span>frame.key, FrameParseError::Width)
                     })<span class="question-mark">?</span>,
-                    rect[<span class="string">&quot;h&quot;</span>].as_u32().ok_or_else(|| {
+                    rect[<span class="string">"h"</span>].as_u32().ok_or_else(|| {
                         SpriteParseError::frame(<span class="kw-2">&amp;</span>frame.key, FrameParseError::Height)
                     })<span class="question-mark">?</span>,
                 ),
@@ -1309,26 +1310,26 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>animations = HashMap::new();
         <span class="kw">for </span>tag <span class="kw">in </span>meta
-            .get(<span class="string">&quot;frameTags&quot;</span>)
+            .get(<span class="string">"frameTags"</span>)
             .and_then(|tags| tags.as_array())
             .into_iter()
             .flatten()
         {
-            <span class="kw">let </span><span class="prelude-val">Some</span>(name) = tag[<span class="string">&quot;name&quot;</span>].as_string() <span class="kw">else </span>{
+            <span class="kw">let </span><span class="prelude-val">Some</span>(name) = tag[<span class="string">"name"</span>].as_string() <span class="kw">else </span>{
                 <span class="kw">continue</span>;
             };
 
-            <span class="kw">let </span><span class="prelude-val">Some</span>(direction) = tag[<span class="string">&quot;direction&quot;</span>].as_string() <span class="kw">else </span>{
+            <span class="kw">let </span><span class="prelude-val">Some</span>(direction) = tag[<span class="string">"direction"</span>].as_string() <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(SpriteParseError::frame_tag(
                     name,
                     FrameTagError::DirectionMissing,
                 ));
             };
-            <span class="kw">let </span>direction = <span class="kw">if </span>direction == <span class="string">&quot;forward&quot; </span>{
+            <span class="kw">let </span>direction = <span class="kw">if </span>direction == <span class="string">"forward" </span>{
                 AnimationMode::Forward
-            } <span class="kw">else if </span>direction == <span class="string">&quot;reverse&quot; </span>{
+            } <span class="kw">else if </span>direction == <span class="string">"reverse" </span>{
                 AnimationMode::Reverse
-            } <span class="kw">else if </span>direction == <span class="string">&quot;pingpong&quot; </span>{
+            } <span class="kw">else if </span>direction == <span class="string">"pingpong" </span>{
                 AnimationMode::PingPong
             } <span class="kw">else </span>{
                 <span class="kw">return </span><span class="prelude-val">Err</span>(SpriteParseError::frame_tag(
@@ -1337,10 +1338,10 @@
                 ));
             };
 
-            <span class="kw">let </span>start_frame = tag[<span class="string">&quot;from&quot;</span>]
+            <span class="kw">let </span>start_frame = tag[<span class="string">"from"</span>]
                 .as_usize()
                 .ok_or_else(|| SpriteParseError::frame_tag(name, FrameTagError::From))<span class="question-mark">?</span>;
-            <span class="kw">let </span>end_frame = tag[<span class="string">&quot;to&quot;</span>]
+            <span class="kw">let </span>end_frame = tag[<span class="string">"to"</span>]
                 .as_usize()
                 .ok_or_else(|| SpriteParseError::frame_tag(name, FrameTagError::To))<span class="question-mark">?</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>animation_frames = Vec::new();
@@ -1399,7 +1400,7 @@
 
     <span class="doccomment">/// Returns the current tag.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>current_tag(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>str&gt; {
+    </span><span class="kw">pub fn </span>current_tag(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'_ </span>str&gt; {
         <span class="self">self</span>.current_tag.as_deref()
     }
 
@@ -1448,7 +1449,7 @@
 
     <span class="doccomment">/// Returns the amount of time remaining until the next frame is due to be
     /// shown for this sprite. Can be used to calculate redraws more efficiently
-    /// if you&#39;re not rendering at a constant framerate.
+    /// if you're not rendering at a constant framerate.
     ///
     /// # Errors
     ///
@@ -1544,7 +1545,7 @@
 
     <span class="doccomment">/// Returns the animation for `tag`.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>animation_for(<span class="kw-2">&amp;</span><span class="self">self</span>, tag: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>ToString&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;_ </span>SpriteAnimation&gt; {
+    </span><span class="kw">pub fn </span>animation_for(<span class="kw-2">&amp;</span><span class="self">self</span>, tag: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>ToString&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'_ </span>SpriteAnimation&gt; {
         <span class="self">self</span>.animations.get(<span class="kw-2">&amp;</span>tag.as_ref().map(ToString::to_string))
     }
 }
@@ -1650,7 +1651,7 @@
     ///
     /// # Panics
     ///
-    /// Panics if a tile isn&#39;t found.
+    /// Panics if a tile isn't found.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>sprites&lt;I: IntoIterator&lt;Item = T&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, iterator: I) -&gt; Vec&lt;SpriteSource&gt; {
         iterator
@@ -1676,7 +1677,7 @@
         <span class="kw">let </span>map = iterator
             .into_iter()
             .map(|tile| {
-                <span class="kw">let </span>location = <span class="self">self</span>.data.sprites.get(<span class="kw-2">&amp;</span>tile).expect(<span class="string">&quot;missing sprite&quot;</span>);
+                <span class="kw">let </span>location = <span class="self">self</span>.data.sprites.get(<span class="kw-2">&amp;</span>tile).expect(<span class="string">"missing sprite"</span>);
                 (
                     tile,
                     SpriteSource::Region(TextureRegion {
@@ -1831,15 +1832,15 @@
 <span class="doccomment">/// A region of a texture that is used as frame in a sprite animation.
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub enum </span>SpriteSource {
-    <span class="doccomment">/// The sprite&#39;s source is a [`TextureRegion`].
+    <span class="doccomment">/// The sprite's source is a [`TextureRegion`].
     </span>Region(TextureRegion),
-    <span class="doccomment">/// The sprite&#39;s source is a [`CollectedTexture`].
+    <span class="doccomment">/// The sprite's source is a [`CollectedTexture`].
     </span>Collected(CollectedTexture),
 }
 
 <span class="kw">impl </span>SpriteSource {
     <span class="doccomment">/// Returns a [`PreparedGraphic`] that renders this texture at `dest`.
-    </span><span class="kw">pub fn </span>prepare&lt;Unit&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, dest: Rect&lt;Unit&gt;, graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; PreparedGraphic&lt;Unit&gt;
+    </span><span class="kw">pub fn </span>prepare&lt;Unit&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, dest: Rect&lt;Unit&gt;, graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">'_</span>&gt;) -&gt; PreparedGraphic&lt;Unit&gt;
     <span class="kw">where
         </span>Unit: figures::Unit + Div&lt;i32, Output = Unit&gt;,
         Vertex&lt;Unit&gt;: bytemuck::Pod,

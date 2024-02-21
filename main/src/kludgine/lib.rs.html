@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2385,7 +2386,7 @@
 <a href="#2385" id="2385">2385</a>
 <a href="#2386" id="2386">2386</a>
 <a href="#2387" id="2387">2387</a>
-</pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
+</pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">"../README.md"</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
 </span><span class="attr">#![deny(unsafe_code)]
@@ -2403,11 +2404,11 @@
 
 <span class="kw">use </span>ahash::{AHashMap, AHasher};
 <span class="kw">use </span>bytemuck::{Pod, Zeroable};
-<span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
 </span><span class="kw">pub use </span>cosmic_text;
 <span class="kw">use </span>figures::units::UPx;
 <span class="kw">use </span>figures::{Angle, Fraction, FromComponents, Point, Rect, Size, UPx2D};
-<span class="attr">#[cfg(feature = <span class="string">&quot;image&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"image"</span>)]
 </span><span class="kw">pub use </span>image;
 <span class="kw">use </span>intentional::{Assert, Cast};
 <span class="kw">use </span>pipeline::PushConstants;
@@ -2420,7 +2421,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::text::Text;
 
 <span class="doccomment">/// Application and Windowing Support.
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;app&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">"app"</span>)]
 </span><span class="kw">pub mod </span>app;
 <span class="kw">mod </span>atlas;
 <span class="kw">mod </span>buffer;
@@ -2434,7 +2435,7 @@
 <span class="doccomment">/// Types for animating textures.
 </span><span class="kw">pub mod </span>sprite;
 <span class="doccomment">/// Types for text rendering.
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
 </span><span class="kw">pub mod </span>text;
 <span class="kw">pub mod </span>tilemap;
 
@@ -2472,7 +2473,7 @@
     uniforms: Buffer&lt;Uniforms&gt;,
     size: Size&lt;UPx&gt;,
     scale: Fraction,
-    <span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
     </span>text: text::TextSystem,
 }
 
@@ -2482,7 +2483,7 @@
 
     <span class="doccomment">/// Returns a new instance of Kludgine with the provided parameters.
     </span><span class="attr">#[must_use]
-    #[cfg_attr(not(feature = <span class="string">&quot;cosmic-text&quot;</span>), allow(unused_variables))]
+    #[cfg_attr(not(feature = <span class="string">"cosmic-text"</span>), allow(unused_variables))]
     </span><span class="kw">pub fn </span>new(
         device: <span class="kw-2">&amp;</span>wgpu::Device,
         queue: <span class="kw-2">&amp;</span>wgpu::Queue,
@@ -2540,14 +2541,14 @@
 
         <span class="kw">let </span>shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: <span class="prelude-val">None</span>,
-            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(<span class="macro">include_str!</span>(<span class="string">&quot;shader.wgsl&quot;</span>))),
+            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(<span class="macro">include_str!</span>(<span class="string">"shader.wgsl"</span>))),
         });
 
         <span class="kw">let </span>pipeline = pipeline::new(device, <span class="kw-2">&amp;</span>pipeline_layout, <span class="kw-2">&amp;</span>shader, format, multisample);
 
         <span class="self">Self </span>{
             id,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
             </span>text: text::TextSystem::new(<span class="kw-2">&amp;</span>ProtoGraphics {
                 id,
                 device,
@@ -2600,13 +2601,13 @@
                 .update(<span class="number">0</span>, <span class="kw-2">&amp;</span>[Uniforms::new(<span class="self">self</span>.size, <span class="self">self</span>.scale)], queue);
         }
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
         </span><span class="self">self</span>.text.scale_changed(<span class="self">self</span>.scale);
     }
 
     <span class="doccomment">/// Begins rendering a new frame.
-    </span><span class="kw">pub fn </span>next_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Frame&lt;<span class="lifetime">&#39;_</span>&gt; {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
+    </span><span class="kw">pub fn </span>next_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Frame&lt;<span class="lifetime">'_</span>&gt; {
+        <span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
         </span><span class="self">self</span>.text.new_frame();
         Frame {
             kludgine: <span class="self">self</span>,
@@ -2644,12 +2645,12 @@
 /// After [`Frame::render()`] has been invoked, this type will panic if dropped
 /// before either [`Frame::submit()`] or [`Frame::abort()`] are invoked. This
 /// panic is designed to prevent accidentally forgetting to submit a frame to the GPU.q
-</span><span class="kw">pub struct </span>Frame&lt;<span class="lifetime">&#39;gfx</span>&gt; {
-    kludgine: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span><span class="kw-2">mut </span>Kludgine,
+</span><span class="kw">pub struct </span>Frame&lt;<span class="lifetime">'gfx</span>&gt; {
+    kludgine: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span><span class="kw-2">mut </span>Kludgine,
     commands: <span class="prelude-ty">Option</span>&lt;wgpu::CommandEncoder&gt;,
 }
 
-<span class="kw">impl </span>Frame&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Frame&lt;<span class="lifetime">'_</span>&gt; {
     <span class="doccomment">/// Creates a [`Graphics`] context for this frame that can be used to
     /// prepare graphics for rendering:
     ///
@@ -2661,11 +2662,11 @@
     ///
     /// The returned graphics provides access to the various types to update
     /// their representation on the GPU so that they can be rendered later.
-    </span><span class="kw">pub fn </span>prepare&lt;<span class="lifetime">&#39;gfx</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span><span class="kw-2">mut </span><span class="self">self</span>,
-        device: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device,
-        queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue,
-    ) -&gt; Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt; {
+    </span><span class="kw">pub fn </span>prepare&lt;<span class="lifetime">'gfx</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span><span class="kw-2">mut </span><span class="self">self</span>,
+        device: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Device,
+        queue: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Queue,
+    ) -&gt; Graphics&lt;<span class="lifetime">'gfx</span>&gt; {
         Graphics::new(<span class="self">self</span>.kludgine, device, queue)
     }
 
@@ -2676,12 +2677,12 @@
     /// - [`PreparedText`](text::PreparedText)
     /// - [`Drawing`](render::Drawing)
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>render&lt;<span class="lifetime">&#39;gfx</span>, <span class="lifetime">&#39;pass</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span><span class="kw-2">mut </span><span class="self">self</span>,
-        pass: <span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor&lt;<span class="lifetime">&#39;pass</span>, <span class="lifetime">&#39;_</span>&gt;,
-        device: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device,
-        queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue,
-    ) -&gt; RenderingGraphics&lt;<span class="lifetime">&#39;gfx</span>, <span class="lifetime">&#39;pass</span>&gt; {
+    </span><span class="kw">pub fn </span>render&lt;<span class="lifetime">'gfx</span>, <span class="lifetime">'pass</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="kw-2">mut </span><span class="self">self</span>,
+        pass: <span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor&lt;<span class="lifetime">'pass</span>, <span class="lifetime">'_</span>&gt;,
+        device: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Device,
+        queue: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Queue,
+    ) -&gt; RenderingGraphics&lt;<span class="lifetime">'gfx</span>, <span class="lifetime">'pass</span>&gt; {
         <span class="kw">if </span><span class="self">self</span>.commands.is_none() {
             <span class="self">self</span>.commands =
                 <span class="prelude-val">Some</span>(device.create_command_encoder(<span class="kw-2">&amp;</span>wgpu::CommandEncoderDescriptor::default()));
@@ -2689,7 +2690,7 @@
         RenderingGraphics::new(
             <span class="self">self</span>.commands
                 .as_mut()
-                .assert(<span class="string">&quot;initialized above&quot;</span>)
+                .assert(<span class="string">"initialized above"</span>)
                 .begin_render_pass(pass),
             <span class="self">self</span>.kludgine,
             device,
@@ -2704,13 +2705,13 @@
     /// - [`PreparedGraphic`]
     /// - [`PreparedText`](text::PreparedText)
     /// - [`Drawing`](render::Drawing)
-    </span><span class="kw">pub fn </span>render_into&lt;<span class="lifetime">&#39;gfx</span>, <span class="lifetime">&#39;pass</span>&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span><span class="kw-2">mut </span><span class="self">self</span>,
-        texture: <span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span>Texture,
+    </span><span class="kw">pub fn </span>render_into&lt;<span class="lifetime">'gfx</span>, <span class="lifetime">'pass</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="kw-2">mut </span><span class="self">self</span>,
+        texture: <span class="kw-2">&amp;</span><span class="lifetime">'pass </span>Texture,
         load_op: wgpu::LoadOp&lt;Color&gt;,
-        device: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device,
-        queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue,
-    ) -&gt; RenderingGraphics&lt;<span class="lifetime">&#39;gfx</span>, <span class="lifetime">&#39;pass</span>&gt; {
+        device: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Device,
+        queue: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Queue,
+    ) -&gt; RenderingGraphics&lt;<span class="lifetime">'gfx</span>, <span class="lifetime">'pass</span>&gt; {
         <span class="self">self</span>.render(
             <span class="kw-2">&amp;</span>wgpu::RenderPassDescriptor {
                 label: <span class="prelude-val">None</span>,
@@ -2757,11 +2758,11 @@
     }
 }
 
-<span class="kw">impl </span>Drop <span class="kw">for </span>Frame&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Drop <span class="kw">for </span>Frame&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="macro">assert!</span>(
             <span class="self">self</span>.commands.is_none(),
-            <span class="string">&quot;Frame dropped without calling finish() or abort()&quot;
+            <span class="string">"Frame dropped without calling finish() or abort()"
         </span>);
     }
 }
@@ -2773,18 +2774,18 @@
 /// trait is [`Graphics`].
 </span><span class="kw">pub trait </span>KludgineGraphics: sealed::KludgineGraphics {}
 
-<span class="kw">struct </span>ProtoGraphics&lt;<span class="lifetime">&#39;gfx</span>&gt; {
+<span class="kw">struct </span>ProtoGraphics&lt;<span class="lifetime">'gfx</span>&gt; {
     id: KludgineId,
-    device: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device,
-    queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue,
-    binding_layout: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::BindGroupLayout,
-    linear_sampler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Sampler,
-    nearest_sampler: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Sampler,
-    uniforms: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Buffer,
+    device: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Device,
+    queue: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Queue,
+    binding_layout: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::BindGroupLayout,
+    linear_sampler: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Sampler,
+    nearest_sampler: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Sampler,
+    uniforms: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Buffer,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; ProtoGraphics&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">fn </span>new(device: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>wgpu::Device, queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>wgpu::Queue, kludgine: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Kludgine) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ProtoGraphics&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">fn </span>new(device: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>wgpu::Device, queue: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>wgpu::Queue, kludgine: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Kludgine) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             id: kludgine.id,
             device,
@@ -2797,9 +2798,9 @@
     }
 }
 
-<span class="kw">impl </span>KludgineGraphics <span class="kw">for </span>ProtoGraphics&lt;<span class="lifetime">&#39;_</span>&gt; {}
+<span class="kw">impl </span>KludgineGraphics <span class="kw">for </span>ProtoGraphics&lt;<span class="lifetime">'_</span>&gt; {}
 
-<span class="kw">impl </span>sealed::KludgineGraphics <span class="kw">for </span>ProtoGraphics&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>sealed::KludgineGraphics <span class="kw">for </span>ProtoGraphics&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; KludgineId {
         <span class="self">self</span>.id
     }
@@ -2829,9 +2830,9 @@
     }
 }
 
-<span class="kw">impl </span>KludgineGraphics <span class="kw">for </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt; {}
+<span class="kw">impl </span>KludgineGraphics <span class="kw">for </span>Graphics&lt;<span class="lifetime">'_</span>&gt; {}
 
-<span class="kw">impl </span>sealed::KludgineGraphics <span class="kw">for </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>sealed::KludgineGraphics <span class="kw">for </span>Graphics&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; KludgineId {
         <span class="self">self</span>.kludgine.id
     }
@@ -2882,7 +2883,7 @@
     }
 
     <span class="kw">pub fn </span>pop_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.current = <span class="self">self</span>.previous_clips.pop().expect(<span class="string">&quot;unpaired pop_clip&quot;</span>);
+        <span class="self">self</span>.current = <span class="self">self</span>.previous_clips.pop().expect(<span class="string">"unpaired pop_clip"</span>);
     }
 }
 
@@ -2896,19 +2897,19 @@
 /// - [`CollectedTexture::prepare`]
 /// - [`Drawing::new_frame`](render::Drawing::new_frame)
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt; {
-    kludgine: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span><span class="kw-2">mut </span>Kludgine,
-    device: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device,
-    queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue, <span class="comment">// Need this eventually to be able to have dynamic shape collections
+</span><span class="kw">pub struct </span>Graphics&lt;<span class="lifetime">'gfx</span>&gt; {
+    kludgine: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span><span class="kw-2">mut </span>Kludgine,
+    device: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Device,
+    queue: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Queue, <span class="comment">// Need this eventually to be able to have dynamic shape collections
     </span>clip: ClipStack,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>&gt; Graphics&lt;<span class="lifetime">&#39;gfx</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'gfx</span>&gt; Graphics&lt;<span class="lifetime">'gfx</span>&gt; {
     <span class="doccomment">/// Returns a new instance.
     </span><span class="kw">pub fn </span>new(
-        kludgine: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span><span class="kw-2">mut </span>Kludgine,
-        device: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device,
-        queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue,
+        kludgine: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span><span class="kw-2">mut </span>Kludgine,
+        device: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Device,
+        queue: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Queue,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             clip: ClipStack::new(kludgine.size),
@@ -2920,19 +2921,19 @@
 
     <span class="doccomment">/// Returns a reference to the underlying [`wgpu::Device`].
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub const fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device {
+    </span><span class="kw">pub const fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Device {
         <span class="self">self</span>.device
     }
 
     <span class="doccomment">/// Returns a reference to the underlying [`wgpu::Queue`].
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub const fn </span>queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue {
+    </span><span class="kw">pub const fn </span>queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Queue {
         <span class="self">self</span>.queue
     }
 
     <span class="doccomment">/// Returns a mutable reference to the [`cosmic_text::FontSystem`] used when
     /// rendering text.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
     </span><span class="kw">pub fn </span>font_system(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>cosmic_text::FontSystem {
         <span class="self">self</span>.kludgine.font_system()
     }
@@ -2956,19 +2957,19 @@
     </span>}
 }
 
-<span class="kw">impl </span>AsRef&lt;wgpu::Device&gt; <span class="kw">for </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>AsRef&lt;wgpu::Device&gt; <span class="kw">for </span>Graphics&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Device {
         <span class="self">self</span>.device()
     }
 }
 
-<span class="kw">impl </span>AsRef&lt;wgpu::Queue&gt; <span class="kw">for </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>AsRef&lt;wgpu::Queue&gt; <span class="kw">for </span>Graphics&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Queue {
         <span class="self">self</span>.queue()
     }
 }
 
-<span class="kw">impl </span>Deref <span class="kw">for </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Deref <span class="kw">for </span>Graphics&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">type </span>Target = Kludgine;
 
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
@@ -2976,13 +2977,13 @@
     }
 }
 
-<span class="kw">impl </span>DerefMut <span class="kw">for </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>DerefMut <span class="kw">for </span>Graphics&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
         <span class="self">self</span>.kludgine
     }
 }
 
-<span class="kw">impl </span>Clipped <span class="kw">for </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Clipped <span class="kw">for </span>Graphics&lt;<span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>push_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) {
         <span class="self">self</span>.clip.push_clip(clip);
     }
@@ -2992,7 +2993,7 @@
     }
 }
 
-<span class="kw">impl </span>sealed::Clipped <span class="kw">for </span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt; {}
+<span class="kw">impl </span>sealed::Clipped <span class="kw">for </span>Graphics&lt;<span class="lifetime">'_</span>&gt; {}
 
 <span class="doccomment">/// A graphics context used to render previously prepared graphics.
 ///
@@ -3001,21 +3002,21 @@
 /// - [`PreparedGraphic`]
 /// - [`PreparedText`](text::PreparedText)
 /// - [`Drawing`](render::Drawing)
-</span><span class="kw">pub struct </span>RenderingGraphics&lt;<span class="lifetime">&#39;gfx</span>, <span class="lifetime">&#39;pass</span>&gt; {
-    pass: wgpu::RenderPass&lt;<span class="lifetime">&#39;pass</span>&gt;,
-    kludgine: <span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span>Kludgine,
-    device: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device,
-    queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue,
+</span><span class="kw">pub struct </span>RenderingGraphics&lt;<span class="lifetime">'gfx</span>, <span class="lifetime">'pass</span>&gt; {
+    pass: wgpu::RenderPass&lt;<span class="lifetime">'pass</span>&gt;,
+    kludgine: <span class="kw-2">&amp;</span><span class="lifetime">'pass </span>Kludgine,
+    device: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Device,
+    queue: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Queue,
     clip: ClipStack,
     pipeline_is_active: bool,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;gfx</span>, <span class="lifetime">&#39;pass</span>&gt; RenderingGraphics&lt;<span class="lifetime">&#39;gfx</span>, <span class="lifetime">&#39;pass</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'gfx</span>, <span class="lifetime">'pass</span>&gt; RenderingGraphics&lt;<span class="lifetime">'gfx</span>, <span class="lifetime">'pass</span>&gt; {
     <span class="kw">fn </span>new(
-        pass: wgpu::RenderPass&lt;<span class="lifetime">&#39;pass</span>&gt;,
-        kludgine: <span class="kw-2">&amp;</span><span class="lifetime">&#39;pass </span>Kludgine,
-        device: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device,
-        queue: <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue,
+        pass: wgpu::RenderPass&lt;<span class="lifetime">'pass</span>&gt;,
+        kludgine: <span class="kw-2">&amp;</span><span class="lifetime">'pass </span>Kludgine,
+        device: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Device,
+        queue: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Queue,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             pass,
@@ -3029,13 +3030,13 @@
 
     <span class="doccomment">/// Returns a reference to the underlying [`wgpu::Device`].
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub const fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Device {
+    </span><span class="kw">pub const fn </span>device(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Device {
         <span class="self">self</span>.device
     }
 
     <span class="doccomment">/// Returns a reference to the underlying [`wgpu::Queue`].
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub const fn </span>queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;gfx </span>wgpu::Queue {
+    </span><span class="kw">pub const fn </span>queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Queue {
         <span class="self">self</span>.queue
     }
 
@@ -3055,11 +3056,11 @@
     /// This function causes the [`RenderingGraphics`] to act as if the origin
     /// of the context is `clip.origin`, and the size of the context is
     /// `clip.size`. This means that rendering at 0,0 will actually render at
-    /// the effective clip rect&#39;s origin.
+    /// the effective clip rect's origin.
     ///
     /// `clip` is relative to the current clip rect and cannot extend the
     /// current clipping rectangle.
-    </span><span class="kw">pub fn </span>clipped_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) -&gt; ClipGuard&lt;<span class="lifetime">&#39;_</span>, <span class="self">Self</span>&gt; {
+    </span><span class="kw">pub fn </span>clipped_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) -&gt; ClipGuard&lt;<span class="lifetime">'_</span>, <span class="self">Self</span>&gt; {
         <span class="self">self</span>.push_clip(clip);
         ClipGuard { clipped: <span class="self">self </span>}
     }
@@ -3086,7 +3087,7 @@
     ///
     /// This function causes this type to act as if the origin of the context is
     /// `clip.origin`, and the size of the context is `clip.size`. This means
-    /// that rendering at 0,0 will actually render at the effective clip rect&#39;s
+    /// that rendering at 0,0 will actually render at the effective clip rect's
     /// origin.
     ///
     /// `clip` is relative to the current clip rect and cannot extend the
@@ -3109,18 +3110,18 @@
     ///
     /// This function causes this type to act as if the origin of the context is
     /// `clip.origin`, and the size of the context is `clip.size`. This means
-    /// that rendering at 0,0 will actually render at the effective clip rect&#39;s
+    /// that rendering at 0,0 will actually render at the effective clip rect's
     /// origin.
     ///
     /// `clip` is relative to the current clip rect and cannot extend the
     /// current clipping rectangle.
-    </span><span class="kw">fn </span>clipped_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) -&gt; ClipGuard&lt;<span class="lifetime">&#39;_</span>, <span class="self">Self</span>&gt; {
+    </span><span class="kw">fn </span>clipped_to(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clip: Rect&lt;UPx&gt;) -&gt; ClipGuard&lt;<span class="lifetime">'_</span>, <span class="self">Self</span>&gt; {
         <span class="self">self</span>.push_clip(clip);
         ClipGuard { clipped: <span class="self">self </span>}
     }
 }
 
-<span class="kw">impl </span>Clipped <span class="kw">for </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Clipped <span class="kw">for </span>RenderingGraphics&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>pop_clip(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.clip.pop_clip();
         <span class="kw">if </span><span class="self">self</span>.clip.current.size.width &gt; <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.clip.current.size.height &gt; <span class="number">0 </span>{
@@ -3146,11 +3147,11 @@
     }
 }
 
-<span class="kw">impl </span>sealed::Clipped <span class="kw">for </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {}
+<span class="kw">impl </span>sealed::Clipped <span class="kw">for </span>RenderingGraphics&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {}
 
-<span class="kw">impl </span>Drop <span class="kw">for </span>RenderingGraphics&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>Drop <span class="kw">for </span>RenderingGraphics&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="comment">// This shouldn&#39;t be necessary, but under the GL backend, Cushy only
+        <span class="comment">// This shouldn't be necessary, but under the GL backend, Cushy only
         // renders the final widget/clipped region. By setting this, it makes
         // Cushy work on the GL backend.
         </span><span class="self">self</span>.pass.set_scissor_rect(
@@ -3170,14 +3171,14 @@
 /// This type implements [`Deref`]/[`DerefMut`] to provide access to the
 /// underyling clipped type.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ClipGuard&lt;<span class="lifetime">&#39;clip</span>, T&gt;
+</span><span class="kw">pub struct </span>ClipGuard&lt;<span class="lifetime">'clip</span>, T&gt;
 <span class="kw">where
     </span>T: Clipped,
 {
-    clipped: <span class="kw-2">&amp;</span><span class="lifetime">&#39;clip </span><span class="kw-2">mut </span>T,
+    clipped: <span class="kw-2">&amp;</span><span class="lifetime">'clip </span><span class="kw-2">mut </span>T,
 }
 
-<span class="kw">impl</span>&lt;T&gt; Drop <span class="kw">for </span>ClipGuard&lt;<span class="lifetime">&#39;_</span>, T&gt;
+<span class="kw">impl</span>&lt;T&gt; Drop <span class="kw">for </span>ClipGuard&lt;<span class="lifetime">'_</span>, T&gt;
 <span class="kw">where
     </span>T: Clipped,
 {
@@ -3186,7 +3187,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; Deref <span class="kw">for </span>ClipGuard&lt;<span class="lifetime">&#39;_</span>, T&gt;
+<span class="kw">impl</span>&lt;T&gt; Deref <span class="kw">for </span>ClipGuard&lt;<span class="lifetime">'_</span>, T&gt;
 <span class="kw">where
     </span>T: Clipped,
 {
@@ -3197,7 +3198,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; DerefMut <span class="kw">for </span>ClipGuard&lt;<span class="lifetime">&#39;_</span>, T&gt;
+<span class="kw">impl</span>&lt;T&gt; DerefMut <span class="kw">for </span>ClipGuard&lt;<span class="lifetime">'_</span>, T&gt;
 <span class="kw">where
     </span>T: Clipped,
 {
@@ -3343,8 +3344,8 @@
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>Color {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;#{:08x}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">"#{:08x}"</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
 
@@ -3359,14 +3360,14 @@
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
 </span><span class="kw">impl </span>From&lt;cosmic_text::Color&gt; <span class="kw">for </span>Color {
     <span class="kw">fn </span>from(value: cosmic_text::Color) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new(value.r(), value.g(), value.b(), value.a())
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;cosmic-text&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
 </span><span class="kw">impl </span>From&lt;Color&gt; <span class="kw">for </span>cosmic_text::Color {
     <span class="kw">fn </span>from(value: Color) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::rgba(value.red(), value.green(), value.blue(), value.alpha())
@@ -3375,7 +3376,7 @@
 
 <span class="attr">#[test]
 </span><span class="kw">fn </span>color_debug() {
-    <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Color::new(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>)), <span class="string">&quot;#01020304&quot;</span>);
+    <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, Color::new(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>)), <span class="string">"#01020304"</span>);
 }
 
 <span class="kw">impl </span>Color {
@@ -3718,7 +3719,7 @@
 
     <span class="doccomment">/// Returns a texture that loads `image` into the gpu when it is used.
     </span><span class="attr">#[must_use]
-    #[cfg(feature = <span class="string">&quot;image&quot;</span>)]
+    #[cfg(feature = <span class="string">"image"</span>)]
     </span><span class="kw">pub fn </span>from_image(image: image::DynamicImage, filter_mode: wgpu::FilterMode) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>image = image.into_rgba8();
         <span class="self">Self</span>::from_data(
@@ -3734,7 +3735,7 @@
     /// [`SharedTexture`].
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>upgrade(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>sealed::KludgineGraphics) -&gt; SharedTexture {
-        <span class="kw">let </span><span class="kw-2">mut </span>last_loaded = <span class="self">self</span>.last_loaded.lock().assert(<span class="string">&quot;texture lock poisoned&quot;</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>last_loaded = <span class="self">self</span>.last_loaded.lock().assert(<span class="string">"texture lock poisoned"</span>);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(last_loaded) = <span class="kw-2">&amp;*</span>last_loaded {
             <span class="kw">if </span>last_loaded.<span class="number">0 </span>== graphics.id() {
                 <span class="kw">return </span>last_loaded.<span class="number">1</span>.clone();
@@ -3745,7 +3746,7 @@
             </span>.data
             .loaded_by_device
             .lock()
-            .assert(<span class="string">&quot;texture lock poisoned&quot;</span>);
+            .assert(<span class="string">"texture lock poisoned"</span>);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(loaded) = loaded.get(<span class="kw-2">&amp;</span>graphics.id()).and_then(Weak::upgrade) {
             <span class="kw">return </span>SharedTexture(loaded);
@@ -3851,12 +3852,12 @@
     bind_group: Arc&lt;wgpu::BindGroup&gt;,
 }
 
-<span class="kw">enum </span>MaybeRef&lt;<span class="lifetime">&#39;a</span>, T&gt; {
-    Borrowed(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T),
+<span class="kw">enum </span>MaybeRef&lt;<span class="lifetime">'a</span>, T&gt; {
+    Borrowed(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T),
     Owned(T),
 }
 
-<span class="kw">impl</span>&lt;T&gt; AsRef&lt;T&gt; <span class="kw">for </span>MaybeRef&lt;<span class="lifetime">&#39;_</span>, T&gt; {
+<span class="kw">impl</span>&lt;T&gt; AsRef&lt;T&gt; <span class="kw">for </span>MaybeRef&lt;<span class="lifetime">'_</span>, T&gt; {
     <span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>T {
         <span class="kw">match </span><span class="self">self </span>{
             MaybeRef::Borrowed(value) =&gt; value,
@@ -3945,7 +3946,7 @@
     <span class="doccomment">/// Creates a new texture of the given size, format, and usages.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>new(
-        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;,
+        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">'_</span>&gt;,
         size: Size&lt;UPx&gt;,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
@@ -3957,7 +3958,7 @@
     <span class="doccomment">/// Creates a new texture of the given multisample count, size, format, and usages.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>multisampled(
-        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;,
+        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">'_</span>&gt;,
         multisample_count: u32,
         size: Size&lt;UPx&gt;,
         format: wgpu::TextureFormat,
@@ -3978,7 +3979,7 @@
     /// is initialized with `data`. `data` must match `format`.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>new_with_data(
-        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;,
+        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">'_</span>&gt;,
         size: Size&lt;UPx&gt;,
         format: wgpu::TextureFormat,
         usage: wgpu::TextureUsages,
@@ -4005,11 +4006,11 @@
 
     <span class="doccomment">/// Creates a texture from `image`.
     </span><span class="attr">#[must_use]
-    #[cfg(feature = <span class="string">&quot;image&quot;</span>)]
+    #[cfg(feature = <span class="string">"image"</span>)]
     </span><span class="kw">pub fn </span>from_image(
         image: image::DynamicImage,
         filter_mode: wgpu::FilterMode,
-        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;,
+        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="self">Self </span>{
         <span class="comment">// TODO is it better to force rgba8, or is it better to avoid the
         // conversion and allow multiple texture formats?
@@ -4031,7 +4032,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         origin: Origin&lt;Unit&gt;,
         size: Size&lt;Unit&gt;,
-        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;,
+        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; PreparedGraphic&lt;Unit&gt;
     <span class="kw">where
         </span>Unit: figures::Unit + From&lt;i32&gt;,
@@ -4048,7 +4049,7 @@
 
     <span class="doccomment">/// Prepares to render this texture at the given location.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>prepare&lt;Unit&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, dest: Rect&lt;Unit&gt;, graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; PreparedGraphic&lt;Unit&gt;
+    </span><span class="kw">pub fn </span>prepare&lt;Unit&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, dest: Rect&lt;Unit&gt;, graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">'_</span>&gt;) -&gt; PreparedGraphic&lt;Unit&gt;
     <span class="kw">where
         </span>Unit: figures::Unit,
         Vertex&lt;Unit&gt;: bytemuck::Pod,
@@ -4062,7 +4063,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         source: Rect&lt;UPx&gt;,
         dest: Rect&lt;Unit&gt;,
-        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;,
+        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; PreparedGraphic&lt;Unit&gt;
     <span class="kw">where
         </span>Unit: figures::Unit,
@@ -4086,7 +4087,7 @@
     <span class="doccomment">/// Copies the contents of this texture into `destination`.
     </span><span class="kw">pub fn </span>copy_to_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        destination: wgpu::ImageCopyBuffer&lt;<span class="lifetime">&#39;_</span>&gt;,
+        destination: wgpu::ImageCopyBuffer&lt;<span class="lifetime">'_</span>&gt;,
         encoder: <span class="kw-2">&amp;mut </span>wgpu::CommandEncoder,
     ) {
         <span class="self">self</span>.copy_rect_to_buffer(<span class="self">self</span>.default_rect(), destination, encoder);
@@ -4096,7 +4097,7 @@
     </span><span class="kw">pub fn </span>copy_rect_to_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         source: Rect&lt;UPx&gt;,
-        destination: wgpu::ImageCopyBuffer&lt;<span class="lifetime">&#39;_</span>&gt;,
+        destination: wgpu::ImageCopyBuffer&lt;<span class="lifetime">'_</span>&gt;,
         encoder: <span class="kw-2">&amp;mut </span>wgpu::CommandEncoder,
     ) {
         encoder.copy_texture_to_buffer(
@@ -4118,13 +4119,13 @@
     }
 }
 
-<span class="doccomment">/// Loads a texture&#39;s bytes into the executable. This macro returns a result
+<span class="doccomment">/// Loads a texture's bytes into the executable. This macro returns a result
 /// containing a [`LazyTexture`].
 ///
 /// This macro takes a single parameter, which is forwarded along to
 /// [`include_bytes!`]. The bytes that are loaded are then parsed using
 /// [`image::load_from_memory`] and loaded using [`LazyTexture::from_image`].
-</span><span class="attr">#[cfg(feature = <span class="string">&quot;image&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">"image"</span>)]
 #[macro_export]
 </span><span class="macro">macro_rules! </span>include_texture {
     (<span class="macro-nonterminal">$path</span>:expr) =&gt; {
@@ -4230,7 +4231,7 @@
 <span class="kw">impl </span>ShareableTexture {
     <span class="doccomment">/// Returns the [`SharedTexture`] from this instance, loading it if
     /// necessary.
-    </span><span class="kw">pub fn </span>texture(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics) -&gt; Cow&lt;<span class="lifetime">&#39;_</span>, SharedTexture&gt; {
+    </span><span class="kw">pub fn </span>texture(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics) -&gt; Cow&lt;<span class="lifetime">'_</span>, SharedTexture&gt; {
         <span class="kw">match </span><span class="self">self </span>{
             ShareableTexture::Shared(texture) =&gt; Cow::Borrowed(texture),
             ShareableTexture::Lazy(texture) =&gt; Cow::Owned(texture.upgrade(graphics)),
@@ -4312,11 +4313,11 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; <span class="kw">for </span>ShareableTexture
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; <span class="kw">for </span>ShareableTexture
 <span class="kw">where
     </span>T: Clone + Into&lt;<span class="self">Self</span>&gt;,
 {
-    <span class="kw">fn </span>from(value: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>from(value: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T) -&gt; <span class="self">Self </span>{
         value.clone().into()
     }
 }
@@ -4349,7 +4350,7 @@
 
     <span class="doccomment">/// Prepares to render this texture at the given location.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>prepare&lt;Unit&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, dest: Rect&lt;Unit&gt;, graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; PreparedGraphic&lt;Unit&gt;
+    </span><span class="kw">pub fn </span>prepare&lt;Unit&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, dest: Rect&lt;Unit&gt;, graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">'_</span>&gt;) -&gt; PreparedGraphic&lt;Unit&gt;
     <span class="kw">where
         </span>Unit: figures::Unit,
         Vertex&lt;Unit&gt;: bytemuck::Pod,
@@ -4411,7 +4412,7 @@
 /// Kludgine.
 ///
 /// This type is useful if you are designing a type that supports drawing a
-/// configurable texture, but you don&#39;t care whether it&#39;s a [`Texture`],
+/// configurable texture, but you don't care whether it's a [`Texture`],
 /// [`SharedTexture`], [`TextureRegion`], or [`CollectedTexture`].
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>AnyTexture {
@@ -4560,7 +4561,7 @@
                     </span>.vertices
                     .len()
                     .try_into()
-                    .expect(<span class="string">&quot;too many drawn verticies&quot;</span>);
+                    .expect(<span class="string">"too many drawn verticies"</span>);
                 <span class="self">self</span>.vertices.push(vertex);
                 index
             })
@@ -4603,7 +4604,7 @@
     verticies: [Vertex&lt;Unit&gt;; <span class="number">4</span>],
 }
 
-<span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;cosmic-text&quot;</span>), allow(dead_code))]
+<span class="attr">#[cfg_attr(not(feature = <span class="string">"cosmic-text"</span>), allow(dead_code))]
 </span><span class="kw">impl</span>&lt;Unit&gt; TextureBlit&lt;Unit&gt; {
     <span class="kw">pub fn </span>new(source: Rect&lt;UPx&gt;, dest: Rect&lt;Unit&gt;, color: Color) -&gt; <span class="self">Self
     </span><span class="kw">where
@@ -4686,11 +4687,11 @@
     </span><span class="kw">pub </span>opacity: <span class="prelude-ty">Option</span>&lt;f32&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, Unit&gt; From&lt;Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;&gt; <span class="kw">for </span>Drawable&lt;Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;, Unit&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Unit&gt; From&lt;Text&lt;<span class="lifetime">'a</span>, Unit&gt;&gt; <span class="kw">for </span>Drawable&lt;Text&lt;<span class="lifetime">'a</span>, Unit&gt;, Unit&gt;
 <span class="kw">where
     </span>Unit: Default,
 {
-    <span class="kw">fn </span>from(what: Text&lt;<span class="lifetime">&#39;a</span>, Unit&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>from(what: Text&lt;<span class="lifetime">'a</span>, Unit&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             source: what,
             translation: Point::default(),
@@ -4701,12 +4702,12 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T, Unit&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; <span class="kw">for </span>Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T, Unit&gt;
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T, Unit&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T&gt; <span class="kw">for </span>Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T, Unit&gt;
 <span class="kw">where
     </span>T: DrawableSource,
     Unit: Default,
 {
-    <span class="kw">fn </span>from(what: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>from(what: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>T) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             source: what,
             translation: Point::default(),

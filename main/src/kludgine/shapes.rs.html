@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/shapes.rs`."><title>shapes.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/shapes.rs`."><title>shapes.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1601,7 +1602,7 @@
                 <span class="kw-2">&amp;</span>FillOptions::DEFAULT,
                 <span class="kw-2">&amp;mut </span>shape_builder,
             )
-            .assert(<span class="string">&quot;should not fail to tesselat4e a rect&quot;</span>);
+            .assert(<span class="string">"should not fail to tesselat4e a rect"</span>);
         shape_builder.shape
     }
 
@@ -1634,7 +1635,7 @@
                 <span class="kw-2">&amp;</span>options.into(),
                 <span class="kw-2">&amp;mut </span>shape_builder,
             )
-            .assert(<span class="string">&quot;should not fail to tesselat4e a rect&quot;</span>);
+            .assert(<span class="string">"should not fail to tesselat4e a rect"</span>);
         shape_builder.shape
     }
 
@@ -1716,7 +1717,7 @@
 
     <span class="doccomment">/// Uploads the shape to the GPU.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub fn </span>prepare(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; PreparedGraphic&lt;Unit&gt;
+    </span><span class="kw">pub fn </span>prepare(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">'_</span>&gt;) -&gt; PreparedGraphic&lt;Unit&gt;
     <span class="kw">where
         </span>Unit: Copy,
         Vertex&lt;Unit&gt;: bytemuck::Pod,
@@ -1730,7 +1731,7 @@
     </span><span class="kw">pub fn </span>prepare(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         texture: <span class="kw-2">&amp;</span><span class="kw">impl </span>TextureSource,
-        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">&#39;_</span>&gt;,
+        graphics: <span class="kw-2">&amp;</span>Graphics&lt;<span class="lifetime">'_</span>&gt;,
     ) -&gt; PreparedGraphic&lt;Unit&gt;
     <span class="kw">where
         </span>Unit: Copy,
@@ -1796,7 +1797,7 @@
                 <span class="self">self</span>.default_color.blue_f32() * attributes[<span class="number">4</span>],
                 <span class="self">self</span>.default_color.alpha_f32() * attributes[<span class="number">5</span>],
             ),
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Attributes should be empty or 2&quot;</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">"Attributes should be empty or 2"</span>),
         };
 
         <span class="kw">let </span>color = srgb_to_linear(red, green, blue, alpha);
@@ -1986,14 +1987,14 @@
 </span><span class="attr">#[derive(Default, Debug, Clone)]
 </span><span class="kw">pub struct </span>Path&lt;Unit, <span class="kw">const </span>TEXTURED: bool&gt; {
     <span class="doccomment">/// A small-vec of path events. Contains enough stack space to contain the
-    /// path of a hexagon, because it&#39;s the bestagon.
+    /// path of a hexagon, because it's the bestagon.
     </span>events: SmallVec&lt;[PathEvent&lt;Unit&gt;; <span class="number">7</span>]&gt;,
 }
 
 <span class="kw">impl</span>&lt;Unit&gt; Path&lt;Unit, <span class="bool-val">false</span>&gt; {
     <span class="doccomment">/// Returns a path for a rounded rectangle with the given corner radii.
     ///
-    /// All radius&#39;s will be limited to half of the largest side of the
+    /// All radius's will be limited to half of the largest side of the
     /// rectangle.
     </span><span class="kw">pub fn </span>round_rect(
         rect: Rect&lt;Unit&gt;,
@@ -2024,7 +2025,7 @@
         };
         <span class="kw">let </span>radii = corner_radius
             .into()
-            .clamped(min_dimension / Unit::try_from(<span class="number">2</span>).assert(<span class="string">&quot;two is always convertable&quot;</span>));
+            .clamped(min_dimension / Unit::try_from(<span class="number">2</span>).assert(<span class="string">"two is always convertable"</span>));
 
         <span class="kw">let </span>drift = radii.map(|r| r * C);
 
@@ -2221,7 +2222,7 @@
                 options,
                 <span class="kw-2">&amp;mut </span>shape_builder,
             )
-            .assert(<span class="string">&quot;should not fail to tesselat4e a rect&quot;</span>);
+            .assert(<span class="string">"should not fail to tesselat4e a rect"</span>);
         shape_builder.shape
     }
 
@@ -2254,7 +2255,7 @@
                 <span class="kw-2">&amp;</span>options.into(),
                 <span class="kw-2">&amp;mut </span>shape_builder,
             )
-            .assert(<span class="string">&quot;should not fail to tesselat4e a rect&quot;</span>);
+            .assert(<span class="string">"should not fail to tesselat4e a rect"</span>);
         shape_builder.shape
     }
 }
@@ -2314,7 +2315,7 @@
     }
 
     <span class="doccomment">/// Create a quadratic curve from the current location to `end_at` using
-    /// `control` as the curve&#39;s control point.
+    /// `control` as the curve's control point.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>quadratic_curve_to(
         <span class="self">self</span>,
@@ -2325,7 +2326,7 @@
     }
 
     <span class="doccomment">/// Create a cubic curve from the current location to `end_at` using
-    /// `control1` and `control2` as the curve&#39;s control points.
+    /// `control1` and `control2` as the curve's control points.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>cubic_curve_to(
         <span class="self">self</span>,
@@ -2397,7 +2398,7 @@
     }
 
     <span class="doccomment">/// Create a quadratic curve from the current location to `end_at` using
-    /// `control` as the curve&#39;s control point.
+    /// `control` as the curve's control point.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>quadratic_curve_to(
         <span class="self">self</span>,
@@ -2409,7 +2410,7 @@
     }
 
     <span class="doccomment">/// Create a cubic curve from the current location to `end_at` using
-    /// `control1` and `control2` as the curve&#39;s control points.
+    /// `control1` and `control2` as the curve's control points.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>cubic_curve_to(
         <span class="self">self</span>,
@@ -2505,7 +2506,7 @@
     </span>}
 
     <span class="doccomment">/// Create a quadratic curve from the current location to `end_at` using
-    /// `control` as the curve&#39;s control point.
+    /// `control` as the curve's control point.
     </span><span class="attr">#[must_use]
     </span><span class="kw">fn </span>quadratic_curve_to_inner(
         <span class="kw-2">mut </span><span class="self">self</span>,
@@ -2525,7 +2526,7 @@
     </span>}
 
     <span class="doccomment">/// Create a cubic curve from the current location to `end_at` using
-    /// `control1` and `control2` as the curve&#39;s control points.
+    /// `control1` and `control2` as the curve's control points.
     </span><span class="attr">#[must_use]
     </span><span class="kw">fn </span>cubic_curve_to_inner(
         <span class="kw-2">mut </span><span class="self">self</span>,
@@ -2639,7 +2640,7 @@
         <span class="self">self</span>.path
     }
 
-    <span class="doccomment">/// Closes the path, connecting the current location to the shape&#39;s starting
+    <span class="doccomment">/// Closes the path, connecting the current location to the shape's starting
     /// location.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>close(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; Path&lt;Unit, TEXTURED&gt; {
@@ -3036,7 +3037,7 @@
     }
 
     <span class="doccomment">/// Returns this set of radii clamped so that no corner radius has a width
-    /// or height larger than `size`&#39;s.
+    /// or height larger than `size`'s.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>clamped(<span class="kw-2">mut </span><span class="self">self</span>, size: Unit) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.top_left = <span class="self">Self</span>::clamp_size(<span class="self">self</span>.top_left, size);

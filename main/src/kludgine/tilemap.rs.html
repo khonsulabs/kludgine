@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/tilemap.rs`."><title>tilemap.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/tilemap.rs`."><title>tilemap.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -633,7 +634,7 @@
     focus: TileMapFocus,
     zoom: f32,
     elapsed: Duration,
-    graphics: <span class="kw-2">&amp;mut </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    graphics: <span class="kw-2">&amp;mut </span>Renderer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
 ) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt; {
     <span class="kw">let </span>effective_zoom = graphics.scale().into_f32() * zoom;
     <span class="kw">let </span><span class="kw-2">mut </span>remaining_until_next_frame = <span class="prelude-val">None</span>;
@@ -686,7 +687,7 @@
             (-remainder, pos - remainder)
         };
         <span class="kw">let </span>index =
-            isize::try_from((floored / tile_size).get()).expect(<span class="string">&quot;tile size out of range of isize&quot;</span>);
+            isize::try_from((floored / tile_size).get()).expect(<span class="string">"tile size out of range of isize"</span>);
         (index, offset)
     }
 
@@ -702,7 +703,7 @@
     <span class="kw">fn </span>coord_info(pos: Px, tile_size: Px) -&gt; (isize, Px) {
         <span class="kw">let </span>index = (pos.get() + pos.get().signum() * (tile_size.get() - <span class="number">1</span>)) / tile_size.get();
         <span class="kw">let </span>floored = tile_size * index;
-        <span class="kw">let </span>index = isize::try_from(index).expect(<span class="string">&quot;tile size out of range of isize&quot;</span>);
+        <span class="kw">let </span>index = isize::try_from(index).expect(<span class="string">"tile size out of range of isize"</span>);
         (index, floored)
     }
 
@@ -714,7 +715,7 @@
     }
 }
 
-<span class="kw">pub trait </span>Layers: Debug + Send + <span class="lifetime">&#39;static </span>{
+<span class="kw">pub trait </span>Layers: Debug + Send + <span class="lifetime">'static </span>{
     <span class="kw">fn </span>layer(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>Layer&gt;;
     <span class="kw">fn </span>layer_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Layer&gt;;
 }
@@ -735,7 +736,7 @@
 <span class="macro">macro_rules! </span>impl_layers_for_tuples {
     ($(<span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">ident </span>: <span class="macro-nonterminal">$index</span>:tt),+) =&gt; {
         <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$</span><span class="kw">type</span>),+&gt; <span class="macro-nonterminal">Layers </span><span class="kw">for </span>($(<span class="macro-nonterminal">$</span><span class="kw">type</span>,)+) <span class="kw">where </span>$(
-            <span class="macro-nonterminal">$</span><span class="kw">type</span>: <span class="macro-nonterminal">Debug </span>+  Send + Layer + <span class="lifetime">&#39;static
+            <span class="macro-nonterminal">$</span><span class="kw">type</span>: <span class="macro-nonterminal">Debug </span>+  Send + Layer + <span class="lifetime">'static
         </span>),+ {
             <span class="kw">fn </span>layer(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="kw">dyn </span>Layer&gt; {
                 <span class="kw">match </span>index {
@@ -762,7 +763,7 @@
 <span class="macro">impl_layers_for_tuples!</span>(T0: <span class="number">0</span>, T1: <span class="number">1</span>, T2: <span class="number">2</span>, T3: <span class="number">3</span>, T4: <span class="number">4</span>, T5: <span class="number">5</span>);
 <span class="macro">impl_layers_for_tuples!</span>(T0: <span class="number">0</span>, T1: <span class="number">1</span>, T2: <span class="number">2</span>, T3: <span class="number">3</span>, T4: <span class="number">4</span>, T5: <span class="number">5</span>, T6: <span class="number">6</span>);
 
-<span class="kw">pub struct </span>LayerContext&lt;<span class="lifetime">&#39;render</span>, <span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt; {
+<span class="kw">pub struct </span>LayerContext&lt;<span class="lifetime">'render</span>, <span class="lifetime">'ctx</span>, <span class="lifetime">'pass</span>&gt; {
     top_left: TileOffset,
     bottom_right: TileOffset,
     tile_size: Px,
@@ -770,10 +771,10 @@
     visible_rect: Rect&lt;Px&gt;,
     zoom: f32,
     elapsed: Duration,
-    renderer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;render </span><span class="kw-2">mut </span>Renderer&lt;<span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt;,
+    renderer: <span class="kw-2">&amp;</span><span class="lifetime">'render </span><span class="kw-2">mut </span>Renderer&lt;<span class="lifetime">'ctx</span>, <span class="lifetime">'pass</span>&gt;,
 }
 
-<span class="kw">impl </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt; {
+<span class="kw">impl </span>LayerContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
     <span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>top_left(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>TileOffset {
         <span class="kw-2">&amp;</span><span class="self">self</span>.top_left
@@ -810,22 +811,22 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt; Deref <span class="kw">for </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt; {
-    <span class="kw">type </span>Target = Renderer&lt;<span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt;;
+<span class="kw">impl</span>&lt;<span class="lifetime">'ctx</span>, <span class="lifetime">'pass</span>&gt; Deref <span class="kw">for </span>LayerContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'ctx</span>, <span class="lifetime">'pass</span>&gt; {
+    <span class="kw">type </span>Target = Renderer&lt;<span class="lifetime">'ctx</span>, <span class="lifetime">'pass</span>&gt;;
 
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
         <span class="self">self</span>.renderer
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt; DerefMut <span class="kw">for </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;ctx</span>, <span class="lifetime">&#39;pass</span>&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'ctx</span>, <span class="lifetime">'pass</span>&gt; DerefMut <span class="kw">for </span>LayerContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'ctx</span>, <span class="lifetime">'pass</span>&gt; {
     <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
         <span class="self">self</span>.renderer
     }
 }
 
-<span class="kw">pub trait </span>Layer: Debug + Send + <span class="lifetime">&#39;static </span>{
-    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt;;
+<span class="kw">pub trait </span>Layer: Debug + Send + <span class="lifetime">'static </span>{
+    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt;;
 
     <span class="kw">fn </span>find_object(<span class="kw-2">&amp;</span><span class="self">self</span>, _object: ObjectId) -&gt; <span class="prelude-ty">Option</span>&lt;Point&lt;Px&gt;&gt; {
         <span class="prelude-val">None
@@ -846,7 +847,7 @@
 <span class="kw">where
     </span>Source: TileSource,
 {
-    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt; {
+    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt; {
         <span class="kw">let </span>minimum_tile = <span class="self">self</span>.minimum_tile();
         <span class="kw">if </span>minimum_tile.x &gt; context.bottom_right().index.x
             || minimum_tile.y &gt; context.bottom_right().index.y
@@ -910,7 +911,7 @@
 }
 
 <span class="attr">#[allow(clippy::len_without_is_empty)]
-</span><span class="kw">pub trait </span>TileList: IndexMut&lt;usize, Output = TileKind&gt; + Send + Debug + <span class="lifetime">&#39;static </span>{
+</span><span class="kw">pub trait </span>TileList: IndexMut&lt;usize, Output = TileKind&gt; + Send + Debug + <span class="lifetime">'static </span>{
     <span class="kw">fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
 }
 
@@ -926,7 +927,7 @@
     }
 }
 
-<span class="kw">pub trait </span>TileSource: Send + Debug + <span class="lifetime">&#39;static </span>{
+<span class="kw">pub trait </span>TileSource: Send + Debug + <span class="lifetime">'static </span>{
     <span class="kw">fn </span>minimum_tile(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Point&lt;isize&gt; {
         Point::MIN
     }
@@ -938,7 +939,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         coordinate: Point&lt;isize&gt;,
         rect: Rect&lt;Px&gt;,
-        context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+        context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt;;
 }
 
@@ -958,7 +959,7 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         coordinate: Point&lt;isize&gt;,
         rect: Rect&lt;Px&gt;,
-        context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+        context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt; {
         <span class="self">self</span>.tiles[coordinate.y.cast::&lt;usize&gt;() * <span class="self">self</span>.width + coordinate.x.cast::&lt;usize&gt;()]
             .render(rect, context)
@@ -987,7 +988,7 @@
     <span class="kw">pub fn </span>render(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         tile_rect: Rect&lt;Px&gt;,
-        context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+        context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt; {
         <span class="kw">match </span><span class="self">self </span>{
             TileKind::Texture(texture) =&gt; {
@@ -1096,7 +1097,7 @@
 <span class="kw">where
     </span>O: Object,
 {
-    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt; {
+    <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>min_duration = <span class="prelude-val">None</span>;
         <span class="kw">for </span>obj <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.objects {
             <span class="kw">let </span>center = context.origin + obj.position();
@@ -1136,9 +1137,9 @@
             TileMapFocus::Point(focus) =&gt; focus,
             TileMapFocus::Object { layer, id } =&gt; layers
                 .layer(layer)
-                .assert(<span class="string">&quot;invalid focus layer&quot;</span>)
+                .assert(<span class="string">"invalid focus layer"</span>)
                 .find_object(id)
-                .assert(<span class="string">&quot;focus not found&quot;</span>),
+                .assert(<span class="string">"focus not found"</span>),
         }
     }
 }
@@ -1149,13 +1150,13 @@
     }
 }
 
-<span class="kw">pub trait </span>Object: Debug + Send + <span class="lifetime">&#39;static </span>{
+<span class="kw">pub trait </span>Object: Debug + Send + <span class="lifetime">'static </span>{
     <span class="kw">fn </span>position(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Point&lt;Px&gt;;
     <span class="kw">fn </span>render(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         center: Point&lt;Px&gt;,
         zoom: f32,
-        context: <span class="kw-2">&amp;mut </span>Renderer&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+        context: <span class="kw-2">&amp;mut </span>Renderer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt;;
 }
 
@@ -1167,13 +1168,13 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         coordinate: Point&lt;isize&gt;,
         rect: Rect&lt;Px&gt;,
-        context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+        context: <span class="kw-2">&amp;mut </span>LayerContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;Duration&gt; {
         context.set_font_size(rect.size.height / <span class="number">4</span>);
         context.set_line_height(rect.size.height / <span class="number">4</span>);
         <span class="kw">let </span>color = Color::new(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>, <span class="number">64</span>);
         context.draw_text(
-            Text::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{},{}&quot;</span>, coordinate.x, coordinate.y), color)
+            Text::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{},{}"</span>, coordinate.x, coordinate.y), color)
                 .translate_by(rect.origin),
         );
         context.draw_shape(
