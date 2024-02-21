@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Rendering`, which was incredibly confusing with `Renderer` types around as
   well.
 - This crate now supports `wgpu` 0.19.0.
+- This crate now supports `cosmic-text` 0.11.2.
 
 ### Changed
 

@@ -212,7 +212,7 @@ impl TextSystem {
             width.map_or(f32::MAX, Cast::cast),
             f32::MAX,
         );
-        scratch.shape_until_scroll(&mut self.fonts);
+        scratch.shape_until_scroll(&mut self.fonts, false);
     }
 }
 
