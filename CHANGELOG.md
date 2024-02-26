@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `palette` crate. This affects colors being applied to textures as tints and
   shape drawing, but the Srgb handling of textures themselves remain handled
   purely by wgpu.
+- Drawing text with an empty first line no longer panics.
 
 ## v0.7.0
 

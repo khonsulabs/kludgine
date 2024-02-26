@@ -623,6 +623,10 @@ where
             glyphs: Vec::new(),
         }
     } else {
+        if first_line_max_y == Px::MIN {
+            first_line_max_y = line_height.into_px(kludgine.scale);
+        }
+
         MeasuredText {
             ascent: line_height - Unit::from_px(min.y, kludgine.scale),
             descent: line_height - Unit::from_px(first_line_max_y, kludgine.scale),
