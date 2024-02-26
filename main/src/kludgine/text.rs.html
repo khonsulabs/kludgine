@@ -901,6 +901,10 @@
 <a href="#900" id="900">900</a>
 <a href="#901" id="901">901</a>
 <a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
+<a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -1526,6 +1530,10 @@
             glyphs: Vec::new(),
         }
     } <span class="kw">else </span>{
+        <span class="kw">if </span>first_line_max_y == Px::MIN {
+            first_line_max_y = line_height.into_px(kludgine.scale);
+        }
+
         MeasuredText {
             ascent: line_height - Unit::from_px(min.y, kludgine.scale),
             descent: line_height - Unit::from_px(first_line_max_y, kludgine.scale),
