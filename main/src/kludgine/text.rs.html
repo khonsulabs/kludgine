@@ -905,6 +905,20 @@
 <a href="#904" id="904">904</a>
 <a href="#905" id="905">905</a>
 <a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -929,6 +943,20 @@
     /// rendering text.
     </span><span class="kw">pub fn </span>font_system(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>cosmic_text::FontSystem {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.text.fonts
+    }
+
+    <span class="doccomment">/// Rebuilds the font system, invalidating font database caches.
+    ///
+    /// This function can be invoked after loading fonts into the font database
+    /// to ensure that all future text rendering considers the newly loaded
+    /// fonts.
+    </span><span class="kw">pub fn </span>rebuild_font_system(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>existing_system = std::mem::replace(
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.text.fonts,
+            cosmic_text::FontSystem::new_with_fonts([]),
+        );
+        <span class="kw">let </span>(locale, db) = existing_system.into_locale_and_db();
+        <span class="self">self</span>.text.fonts = cosmic_text::FontSystem::new_with_locale_and_db(locale, db);
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>update_scratch_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, text: <span class="kw-2">&amp;</span>str, width: <span class="prelude-ty">Option</span>&lt;Px&gt;) {
