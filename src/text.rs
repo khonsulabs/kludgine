@@ -24,6 +24,20 @@ impl Kludgine {
         &mut self.text.fonts
     }
 
+    /// Rebuilds the font system, invalidating font database caches.
+    ///
+    /// This function can be invoked after loading fonts into the font database
+    /// to ensure that all future text rendering considers the newly loaded
+    /// fonts.
+    pub fn rebuild_font_system(&mut self) {
+        let existing_system = std::mem::replace(
+            &mut self.text.fonts,
+            cosmic_text::FontSystem::new_with_fonts([]),
+        );
+        let (locale, db) = existing_system.into_locale_and_db();
+        self.text.fonts = cosmic_text::FontSystem::new_with_locale_and_db(locale, db);
+    }
+
     pub(crate) fn update_scratch_buffer(&mut self, text: &str, width: Option<Px>) {
         self.text.update_scratch_buffer(text, self.scale, width);
     }

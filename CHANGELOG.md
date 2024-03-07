@@ -38,6 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A new feature `plotters` enables integration with the excellent
   [plotters][plotters] crate. `Renderer::as_plot_area()` is a new function that
   returns a `plotters::DrawingArea`.
+- `Kludgine::rebuild_font_system()` is a new function that recreates the
+  `cosmic_text::FontSystem`, which has the net effect of clearing font-database
+  related caches.
 
 [plotters]: https://github.com/plotters-rs/plotters
 
