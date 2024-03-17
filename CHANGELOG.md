@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - All `&Appplication` bounds now are `?Sized`, enabling `&dyn Application`
   parameters.
+- `Color` now exposes its inner `u32` as public.
 
 ### Added
 

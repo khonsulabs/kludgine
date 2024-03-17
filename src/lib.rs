@@ -822,7 +822,7 @@ where
 /// A red, green, blue, and alpha color value stored in 32-bits.
 #[derive(Clone, Copy, Eq, PartialEq, Hash, Pod, Zeroable)]
 #[repr(C)]
-pub struct Color(u32);
+pub struct Color(pub u32);
 
 pub(crate) fn f32_component_to_u8(component: f32) -> u8 {
     (component.clamp(0., 1.0) * 255.).round().cast()
