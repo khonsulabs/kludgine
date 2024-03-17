@@ -1764,7 +1764,7 @@
 
     <span class="doccomment">/// Returns the swap chain present mode to use for this window.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">fn </span>present_mode() -&gt; wgpu::PresentMode {
+    </span><span class="kw">fn </span>present_mode(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::PresentMode {
         wgpu::PresentMode::AutoVsync
     }
 
@@ -2377,7 +2377,7 @@
             format: swapchain_format,
             width: window.inner_size().width,
             height: window.inner_size().height,
-            present_mode: T::present_mode(),
+            present_mode: behavior.present_mode(),
             alpha_mode: behavior.composite_alpha_mode(<span class="kw-2">&amp;</span>swapchain_capabilities.alpha_modes),
             view_formats: <span class="macro">vec!</span>[],
             desired_maximum_frame_latency: <span class="number">2</span>,
