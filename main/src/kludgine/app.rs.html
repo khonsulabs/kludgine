@@ -1424,6 +1424,12 @@
 <a href="#1423" id="1423">1423</a>
 <a href="#1424" id="1424">1424</a>
 <a href="#1425" id="1425">1425</a>
+<a href="#1426" id="1426">1426</a>
+<a href="#1427" id="1427">1427</a>
+<a href="#1428" id="1428">1428</a>
+<a href="#1429" id="1429">1429</a>
+<a href="#1430" id="1430">1430</a>
+<a href="#1431" id="1431">1431</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
@@ -1755,6 +1761,12 @@
         window: Window&lt;<span class="lifetime">'_</span>, WindowEvent&gt;,
         graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">'_</span>, <span class="lifetime">'pass</span>&gt;,
     ) -&gt; bool;
+
+    <span class="doccomment">/// Returns the swap chain present mode to use for this window.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">fn </span>present_mode() -&gt; wgpu::PresentMode {
+        wgpu::PresentMode::AutoVsync
+    }
 
     <span class="doccomment">/// Returns the power preference to initialize `wgpu` with.
     </span><span class="attr">#[must_use]
@@ -2365,7 +2377,7 @@
             format: swapchain_format,
             width: window.inner_size().width,
             height: window.inner_size().height,
-            present_mode: wgpu::PresentMode::Fifo,
+            present_mode: T::present_mode(),
             alpha_mode: behavior.composite_alpha_mode(<span class="kw-2">&amp;</span>swapchain_capabilities.alpha_modes),
             view_formats: <span class="macro">vec!</span>[],
             desired_maximum_frame_latency: <span class="number">2</span>,

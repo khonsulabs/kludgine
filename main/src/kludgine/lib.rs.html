@@ -2386,6 +2386,12 @@
 <a href="#2385" id="2385">2385</a>
 <a href="#2386" id="2386">2386</a>
 <a href="#2387" id="2387">2387</a>
+<a href="#2388" id="2388">2388</a>
+<a href="#2389" id="2389">2389</a>
+<a href="#2390" id="2390">2390</a>
+<a href="#2391" id="2391">2391</a>
+<a href="#2392" id="2392">2392</a>
+<a href="#2393" id="2393">2393</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">"../README.md"</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -4110,6 +4116,12 @@
             destination,
             source.size.into(),
         );
+    }
+
+    <span class="doccomment">/// Returns the underlying wgpu handle.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>wgpu(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Texture {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.data.wgpu
     }
 
     <span class="doccomment">/// Returns a view over the entire texture.
