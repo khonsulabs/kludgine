@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   multisample render attachment.
 - `Texture::copy[_rect]_to_buffer` are convenience helpers for copying image
   data to a `wgpu::Buffer`.
+- `Texture::wgpu()` returns a handle to the underlying `wgpu::Texture`.
 - `Texture::view()` returns a `wgpu::TextureView` for the entire texture.
 - A new feature `plotters` enables integration with the excellent
   [plotters][plotters] crate. `Renderer::as_plot_area()` is a new function that
@@ -41,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Kludgine::rebuild_font_system()` is a new function that recreates the
   `cosmic_text::FontSystem`, which has the net effect of clearing font-database
   related caches.
+- `WindowBehavior::present_mode()` allows a window to pick a different
+  presentation mode. The default implementation returns
+  `wgpu::PresentMode::AutoVsync`.
 
 [plotters]: https://github.com/plotters-rs/plotters
 

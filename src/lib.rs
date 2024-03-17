@@ -1724,6 +1724,12 @@ impl Texture {
         );
     }
 
+    /// Returns the underlying wgpu handle.
+    #[must_use]
+    pub const fn wgpu(&self) -> &wgpu::Texture {
+        &self.data.wgpu
+    }
+
     /// Returns a view over the entire texture.
     #[must_use]
     pub const fn view(&self) -> &wgpu::TextureView {

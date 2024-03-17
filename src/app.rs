@@ -330,6 +330,12 @@ where
         graphics: &mut RenderingGraphics<'_, 'pass>,
     ) -> bool;
 
+    /// Returns the swap chain present mode to use for this window.
+    #[must_use]
+    fn present_mode() -> wgpu::PresentMode {
+        wgpu::PresentMode::AutoVsync
+    }
+
     /// Returns the power preference to initialize `wgpu` with.
     #[must_use]
     fn power_preference() -> wgpu::PowerPreference {
@@ -939,7 +945,7 @@ where
             format: swapchain_format,
             width: window.inner_size().width,
             height: window.inner_size().height,
-            present_mode: wgpu::PresentMode::Fifo,
+            present_mode: T::present_mode(),
             alpha_mode: behavior.composite_alpha_mode(&swapchain_capabilities.alpha_modes),
             view_formats: vec![],
             desired_maximum_frame_latency: 2,
