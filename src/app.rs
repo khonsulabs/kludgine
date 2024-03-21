@@ -315,6 +315,30 @@ where
         WindowAttributes::default()
     }
 
+    /// Returns the power preference to initialize `wgpu` with.
+    #[must_use]
+    #[allow(unused_variables)]
+    fn power_preference(context: &Self::Context) -> wgpu::PowerPreference {
+        wgpu::PowerPreference::default()
+    }
+
+    /// Returns the limits to apply for the `wgpu` instance.
+    #[must_use]
+    #[allow(unused_variables)]
+    fn limits(adapter_limits: wgpu::Limits, context: &Self::Context) -> wgpu::Limits {
+        wgpu::Limits::downlevel_webgl2_defaults().using_resolution(adapter_limits)
+    }
+
+    /// Returns the number of multisamples to perform when rendering this
+    /// window.
+    ///
+    /// When 1 is returned, multisampling will be fully disabled.
+    #[must_use]
+    #[allow(unused_variables)]
+    fn multisample_count(context: &Self::Context) -> NonZeroU32 {
+        NonZeroU32::new(4).assert("4 is less than u32::MAX")
+    }
+
     /// Prepare the window to render.
     ///
     /// This is called directly before [`render()`](Self::render()) and is a
@@ -334,27 +358,6 @@ where
     #[must_use]
     fn present_mode(&self) -> wgpu::PresentMode {
         wgpu::PresentMode::AutoVsync
-    }
-
-    /// Returns the power preference to initialize `wgpu` with.
-    #[must_use]
-    fn power_preference() -> wgpu::PowerPreference {
-        wgpu::PowerPreference::default()
-    }
-
-    /// Returns the limits to apply for the `wgpu` instance.
-    #[must_use]
-    fn limits(adapter_limits: wgpu::Limits) -> wgpu::Limits {
-        wgpu::Limits::downlevel_webgl2_defaults().using_resolution(adapter_limits)
-    }
-
-    /// Returns the number of multisamples to perform when rendering this
-    /// window.
-    ///
-    /// When 1 is returned, multisampling will be fully disabled.
-    #[must_use]
-    fn multisample_count() -> NonZeroU32 {
-        NonZeroU32::new(4).assert("4 is less than u32::MAX")
     }
 
     /// Returns the color to clear the window with. If None is returned, the
@@ -716,6 +719,7 @@ struct KludgineWindow<Behavior> {
     queue: wgpu::Queue,
     wgpu: Arc<wgpu::Instance>,
     device: wgpu::Device,
+    multisample_count: u32,
 }
 
 impl<Behavior> KludgineWindow<Behavior> {
@@ -794,7 +798,7 @@ impl<Behavior> KludgineWindow<Behavior> {
         let surface_view = surface
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let (view, resolve_target) = if Behavior::multisample_count().get() > 1 {
+        let (view, resolve_target) = if self.multisample_count > 1 {
             if self.msaa_texture.as_ref().map_or(true, |msaa| {
                 msaa.width() != surface.texture.width() || msaa.height() != surface.texture.height()
             }) {
@@ -806,7 +810,7 @@ impl<Behavior> KludgineWindow<Behavior> {
                         depth_or_array_layers: 1,
                     },
                     mip_level_count: 1,
-                    sample_count: Behavior::multisample_count().get(),
+                    sample_count: self.multisample_count,
                     dimension: wgpu::TextureDimension::D2,
                     format: surface.texture.format(),
                     usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
@@ -897,7 +901,7 @@ where
             }))
             .expect("app not running");
         let adapter = pollster::block_on(wgpu.request_adapter(&wgpu::RequestAdapterOptions {
-            power_preference: T::power_preference(),
+            power_preference: T::power_preference(&context),
             force_fallback_adapter: false,
             compatible_surface: Some(&surface),
         }))
@@ -906,7 +910,7 @@ where
             &wgpu::DeviceDescriptor {
                 label: None,
                 required_features: Kludgine::REQURED_FEATURES,
-                required_limits: Kludgine::adjust_limits(T::limits(adapter.limits())),
+                required_limits: Kludgine::adjust_limits(T::limits(adapter.limits(), &context)),
             },
             None,
         ))
@@ -914,8 +918,9 @@ where
 
         let swapchain_capabilities = surface.get_capabilities(&adapter);
         let swapchain_format = swapchain_capabilities.formats[0];
+        let multisample_count = T::multisample_count(&context).get();
         let multisample = wgpu::MultisampleState {
-            count: T::multisample_count().get(),
+            count: multisample_count,
             ..Default::default()
         };
 
@@ -963,6 +968,7 @@ where
             device,
             queue,
             wgpu,
+            multisample_count,
         }
     }
 

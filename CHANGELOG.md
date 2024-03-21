@@ -18,6 +18,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   well.
 - This crate now supports `wgpu` 0.19.0.
 - This crate now supports `cosmic-text` 0.11.2.
+- These `WindowBehavior` functions have had a `&Self::Context` parameter added
+  to them, ensuring each function where Kludgine is requesting information from
+  the implementor either receives an `&self` or an `&Self::Context`:
+
+  - `WindowBehavior::power_preference()`
+  - `WindowBehavior::limits()`
+  - `WindowBehavior::multisample_count()`
 
 ### Changed
 
