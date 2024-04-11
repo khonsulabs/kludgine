@@ -660,15 +660,26 @@ impl<T> SpriteSheet<T>
 where
     T: Debug + Eq + Hash,
 {
-    /// Creates a new sprite sheet, diving `texture` into a grid of `tile_size`.
-    /// The order of `tiles` will be read left-to-right, top-to-bottom.
+    /// Creates a new sprite sheet, diving `texture` into a grid of `tile_size`
+    /// with `gutter_size` spacing between each row and column. The order of
+    /// `tiles` will be read left-to-right, top-to-bottom.
     #[must_use]
-    pub fn new(texture: impl Into<ShareableTexture>, tile_size: Size<UPx>, tiles: Vec<T>) -> Self {
+    pub fn new(
+        texture: impl Into<ShareableTexture>,
+        tile_size: Size<UPx>,
+        gutter_size: Size<UPx>,
+        tiles: Vec<T>,
+    ) -> Self {
         let texture = texture.into();
         let dimensions = texture.size() / tile_size;
         Self {
             texture,
-            data: Arc::new(SpriteSheetData::from_tiles(tiles, tile_size, dimensions)),
+            data: Arc::new(SpriteSheetData::from_tiles(
+                tiles,
+                tile_size,
+                gutter_size,
+                dimensions,
+            )),
         }
     }
 
@@ -723,9 +734,15 @@ where
 }
 
 impl<T: Debug + Eq + Hash> SpriteSheetData<T> {
-    fn from_tiles(tiles: Vec<T>, tile_size: Size<UPx>, dimensions: Size<UPx>) -> Self {
+    fn from_tiles(
+        tiles: Vec<T>,
+        tile_size: Size<UPx>,
+        gutters: Size<UPx>,
+        dimensions: Size<UPx>,
+    ) -> Self {
         let mut sprites = HashMap::new();
 
+        let full_size = tile_size + gutters;
         for (index, tile) in tiles.into_iter().enumerate() {
             let index = UPx::new(index.cast::<u32>());
             let y = index / dimensions.width;
@@ -733,7 +750,7 @@ impl<T: Debug + Eq + Hash> SpriteSheetData<T> {
             sprites.insert(
                 tile,
                 Rect::new(
-                    Point::new(x * tile_size.width, y * tile_size.height),
+                    Point::new(x * full_size.width, y * full_size.height),
                     tile_size,
                 ),
             );

@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `WindowBehavior::power_preference()`
   - `WindowBehavior::limits()`
   - `WindowBehavior::multisample_count()`
+- `SpriteSheet::new()` now takes an additional parameter: `gutter_size`. Passing
+  `Size::ZERO` will cause the returned sprite sheet to be the same as before
+  this change.
+
+  This new parameter allows using sprite sheets that have been exported with
+  consistent spacing between each sprite.
 
 ### Changed
 

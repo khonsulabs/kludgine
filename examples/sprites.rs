@@ -3,6 +3,7 @@ use std::time::Duration;
 use appit::winit::error::EventLoopError;
 use appit::winit::keyboard::{Key, NamedKey};
 use figures::units::{Px, UPx};
+use figures::Zero;
 use kludgine::app::WindowBehavior;
 use kludgine::figures::Size;
 use kludgine::sprite::{
@@ -55,6 +56,7 @@ impl WindowBehavior for Sprites {
         let sheet = SpriteSheet::new(
             texture,
             SPRITE_SIZE,
+            Size::ZERO,
             vec![
                 StickGuy::Idle1,
                 StickGuy::Idle2,
