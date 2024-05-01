@@ -45,6 +45,13 @@ where
     {
         &self.0
     }
+
+    fn as_application_mut(&mut self) -> &mut dyn Application<AppEvent<WindowEvent>>
+    where
+        AppEvent<WindowEvent>: Message,
+    {
+        &mut self.0
+    }
 }
 
 impl<WindowEvent> PendingApp<WindowEvent>
@@ -420,8 +427,8 @@ where
     /// [`EventLoop::run`](appit::winit::event_loop::EventLoop::run) for more
     /// information.
     fn run_with(context: Self::Context) -> Result<(), EventLoopError> {
-        let app = PendingApp::new();
-        KludgineWindow::<Self>::new(&app, context).open()?;
+        let mut app = PendingApp::new();
+        KludgineWindow::<Self>::new(&mut app, context).open()?;
         app.0.run()
     }
 
@@ -435,7 +442,7 @@ where
     ///
     /// The only errors this funciton can return arise from
     /// [`winit::window::WindowBuilder::build`].
-    fn open<App>(app: &App) -> Result<Option<WindowHandle<WindowEvent>>, OsError>
+    fn open<App>(app: &mut App) -> Result<Option<WindowHandle<WindowEvent>>, OsError>
     where
         App: AsApplication<AppEvent<WindowEvent>> + ?Sized,
         Self::Context: Default,
@@ -456,7 +463,7 @@ where
     /// The only errors this funciton can return arise from
     /// [`winit::window::WindowBuilder::build`].
     fn open_with<App>(
-        app: &App,
+        app: &mut App,
         context: Self::Context,
     ) -> Result<Option<WindowHandle<WindowEvent>>, OsError>
     where
@@ -645,9 +652,9 @@ where
     #[allow(unused_variables)]
     fn touch(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine, touch: Touch) {}
 
-    /// A touchpad-originated magnification gesture.
+    /// A pinch-to-zoom gesture.
     #[allow(unused_variables)]
-    fn touchpad_magnify(
+    fn pinch_gesture(
         &mut self,
         window: Window<'_, WindowEvent>,
         kludgine: &mut Kludgine,
@@ -657,9 +664,21 @@ where
     ) {
     }
 
-    /// A request to smart-magnify the window.
+    /// A pan/scroll gesture.
     #[allow(unused_variables)]
-    fn smart_magnify(
+    fn pan_gesture(
+        &mut self,
+        window: Window<'_, WindowEvent>,
+        kludgine: &mut Kludgine,
+        device_id: DeviceId,
+        delta: Point<f32>,
+        phase: TouchPhase,
+    ) {
+    }
+
+    /// A double-tap gesture directed at the window.
+    #[allow(unused_variables)]
+    fn double_tap_gesture(
         &mut self,
         window: Window<'_, WindowEvent>,
         kludgine: &mut Kludgine,
@@ -724,7 +743,7 @@ struct KludgineWindow<Behavior> {
 
 impl<Behavior> KludgineWindow<Behavior> {
     fn new<App, User>(
-        app: &App,
+        app: &mut App,
         context: Behavior::Context,
     ) -> appit::WindowBuilder<'_, Self, App, AppEvent<User>>
     where
@@ -1288,14 +1307,14 @@ where
         );
     }
 
-    fn touchpad_magnify(
+    fn pinch_gesture(
         &mut self,
         window: &mut RunningWindow<AppEvent<User>>,
         device_id: DeviceId,
         delta: f64,
         phase: TouchPhase,
     ) {
-        self.behavior.touchpad_magnify(
+        self.behavior.pinch_gesture(
             Window::new(
                 window,
                 self.last_render.elapsed(),
@@ -1308,8 +1327,32 @@ where
         );
     }
 
-    fn smart_magnify(&mut self, window: &mut RunningWindow<AppEvent<User>>, device_id: DeviceId) {
-        self.behavior.smart_magnify(
+    fn pan_gesture(
+        &mut self,
+        window: &mut RunningWindow<AppEvent<User>>,
+        device_id: DeviceId,
+        delta: PhysicalPosition<f32>,
+        phase: TouchPhase,
+    ) {
+        self.behavior.pan_gesture(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            &mut self.kludgine,
+            device_id,
+            Point::new(delta.x, delta.y),
+            phase,
+        );
+    }
+
+    fn double_tap_gesture(
+        &mut self,
+        window: &mut RunningWindow<AppEvent<User>>,
+        device_id: DeviceId,
+    ) {
+        self.behavior.double_tap_gesture(
             Window::new(
                 window,
                 self.last_render.elapsed(),

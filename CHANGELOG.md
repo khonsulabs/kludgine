@@ -32,6 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   This new parameter allows using sprite sheets that have been exported with
   consistent spacing between each sprite.
+- These APIs now require exclusive references to the application:
+  - `WindowBehavior::open`
+  - `WindowBehavior::open_with`
+- These events have been renamed to match `winit`'s nomenclature:
+  - `WindowBehavior::touchpad_magnify` -> `WindowBehavior::pinch_gesture`
+  - `WindowBehavior::smart_magnify` -> `WindowBehavior::double_tap_gesture`
+
+### Added
+
+- `WindowBeahvior::pan_gesture` is a new event provided by `winit`.
 
 ### Changed
 
