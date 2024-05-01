@@ -391,6 +391,8 @@
 <a href="#389" id="389">389</a>
 <a href="#390" id="390">390</a>
 <a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::any::TypeId;
 <span class="kw">use </span>std::mem::size_of;
 <span class="kw">use </span>std::ops::Range;
@@ -746,6 +748,7 @@
                     },
                 ],
             }],
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
         },
         fragment: <span class="prelude-val">Some</span>(wgpu::FragmentState {
             module: shader,
@@ -767,6 +770,7 @@
 
                 write_mask: wgpu::ColorWrites::ALL,
             })],
+            compilation_options: wgpu::PipelineCompilationOptions::default(),
         }),
         primitive: wgpu::PrimitiveState {
             topology: wgpu::PrimitiveTopology::TriangleList,
