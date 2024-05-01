@@ -16,8 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   contains. The old name was a remnant from when `Drawing` used to be named
   `Rendering`, which was incredibly confusing with `Renderer` types around as
   well.
-- This crate now supports `wgpu` 0.19.0.
+- This crate now supports `wgpu` 0.20.0.
 - This crate now supports `cosmic-text` 0.11.2.
+- This crate now supports `image` 0.25.1.
 - These `WindowBehavior` functions have had a `&Self::Context` parameter added
   to them, ensuring each function where Kludgine is requesting information from
   the implementor either receives an `&self` or an `&Self::Context`:

@@ -20,11 +20,11 @@ plotters = ["dep:plotters", "dep:plotters-backend"]
 appit = { git = "https://github.com/khonsulabs/appit", features = [
     "rwh_06",
 ], optional = true }
-wgpu = { version = "0.19.0" }
+wgpu = { version = "0.20.0" }
 pollster = "0.3.0"
 bytemuck = { version = "1.13.1", features = ["derive"] }
 lyon_tessellation = "1.0.1"
-image = { version = "0.24.6", optional = true, default-features = false }
+image = { version = "0.25.1", optional = true, default-features = false }
 cosmic-text = { version = "0.11.2", optional = true }
 alot = "0.3.0"
 ahash = "0.8.3"
@@ -45,11 +45,11 @@ plotters-backend = { version = "0.3.5", default-features = false, optional = tru
 raw-window-handle = "0.6.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies.wgpu]
-version = "0.19.0"
+version = "0.20.0"
 features = ["webgl"]
 
 [dev-dependencies]
-image = { version = "0.24.6", features = ["png"] }
+image = { version = "0.25.1", features = ["png"] }
 
 [[example]]
 name = "plotters"
