@@ -100,7 +100,7 @@ checksum = "f538837af36e6f6a9be0faa67f9a314f8119e4e4b5867c6ab40ed60360142519"
 [[package]]
 name = "appit"
 version = "0.2.0"
-source = "git+https://github.com/khonsulabs/appit#14a2957d6cd4cc8d1ac6e2ba54a177eec833e8ab"
+source = "git+https://github.com/khonsulabs/appit#36b8c1fc8b4175d77a879a69e5a8388990bfbc08"
 dependencies = [
  "winit",
 ]
@@ -671,7 +671,7 @@ dependencies = [
 [[package]]
 name = "figures"
 version = "0.2.2"
-source = "git+https://github.com/khonsulabs/figures#cadf8a2f50e465b743e8b6e8b6ccc1907d312db1"
+source = "git+https://github.com/khonsulabs/figures#dcfe2381e32e8528cb85262662f5b40d32c95dfa"
 dependencies = [
  "bytemuck",
  "euclid",
