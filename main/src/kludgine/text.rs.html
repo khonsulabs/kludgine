@@ -914,12 +914,6 @@
 <a href="#912" id="912">912</a>
 <a href="#913" id="913">913</a>
 <a href="#914" id="914">914</a>
-<a href="#915" id="915">915</a>
-<a href="#916" id="916">916</a>
-<a href="#917" id="917">917</a>
-<a href="#918" id="918">918</a>
-<a href="#919" id="919">919</a>
-<a href="#920" id="920">920</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
@@ -1163,10 +1157,7 @@
         key: cosmic_text::CacheKey,
         insert_fn: <span class="kw">impl </span>FnOnce() -&gt; <span class="prelude-ty">Option</span>&lt;(CollectedTexture, bool)&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;CachedGlyphHandle&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self
-            </span>.glyphs
-            .lock()
-            .map_or_else(PoisonError::into_inner, |g| g);
+        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self</span>.glyphs.lock().unwrap_or_else(PoisonError::into_inner);
         <span class="kw">let </span>cached = <span class="kw">match </span>data.entry(key) {
             hash_map::Entry::Occupied(cached) =&gt; {
                 <span class="kw">let </span>cached = cached.into_mut();
@@ -1191,10 +1182,7 @@
     }
 
     <span class="kw">fn </span>clear_unused(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self
-            </span>.glyphs
-            .lock()
-            .map_or_else(PoisonError::into_inner, |g| g);
+        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self</span>.glyphs.lock().unwrap_or_else(PoisonError::into_inner);
         data.retain(|<span class="kw">_</span>, glyph| glyph.ref_count &gt; <span class="number">0</span>);
     }
 }
@@ -1225,7 +1213,7 @@
 <span class="kw">impl </span>Clone <span class="kw">for </span>CachedGlyphHandle {
     <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="kw">if let </span><span class="prelude-val">Some</span>(glyphs) = <span class="self">self</span>.cache.upgrade() {
-            <span class="kw">let </span><span class="kw-2">mut </span>data = glyphs.lock().map_or_else(PoisonError::into_inner, |g| g);
+            <span class="kw">let </span><span class="kw-2">mut </span>data = glyphs.lock().unwrap_or_else(PoisonError::into_inner);
             <span class="kw">let </span>cached = data.get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.key).expect(<span class="string">"cached glyph missing"</span>);
             cached.ref_count += <span class="number">1</span>;
             drop(data);
@@ -1243,7 +1231,7 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span>CachedGlyphHandle {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(glyphs) = <span class="self">self</span>.cache.upgrade() {
-            <span class="kw">let </span><span class="kw-2">mut </span>data = glyphs.lock().map_or_else(PoisonError::into_inner, |g| g);
+            <span class="kw">let </span><span class="kw-2">mut </span>data = glyphs.lock().unwrap_or_else(PoisonError::into_inner);
             <span class="kw">let </span>cached = data.get_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.key).expect(<span class="string">"cached glyph missing"</span>);
             cached.ref_count -= <span class="number">1</span>;
         }
@@ -1767,7 +1755,7 @@
     /// Because whitespace does not have glyphs, this width may be useful in
     /// measuring whitespace at the end of a line.
     </span><span class="kw">pub </span>line_width: Px,
-    <span class="doccomment">/// Unicode BiDi embedding level, character is left-to-right if `level` is divisible by 2
+    <span class="doccomment">/// Unicode `BiDi` embedding level, character is left-to-right if `level` is divisible by 2
     </span><span class="kw">pub </span>level: unicode_bidi::Level,
     <span class="doccomment">/// Custom metadata set in [`cosmic_text::Attrs`].
     </span><span class="kw">pub </span>metadata: usize,

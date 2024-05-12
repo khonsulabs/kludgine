@@ -349,12 +349,6 @@
 <a href="#347" id="347">347</a>
 <a href="#348" id="348">348</a>
 <a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
-<a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::Div;
 <span class="kw">use </span>std::sync::{Arc, PoisonError, RwLock};
@@ -463,10 +457,7 @@
         size: Size&lt;UPx&gt;,
         graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics,
     ) -&gt; CollectedTexture {
-        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">self
-            </span>.data
-            .write()
-            .map_or_else(PoisonError::into_inner, |g| g);
+        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">self</span>.data.write().unwrap_or_else(PoisonError::into_inner);
         <span class="kw">let </span>signed_size = size.into_signed();
         <span class="kw">let </span>allocation = <span class="kw">loop </span>{
             <span class="kw">if let </span><span class="prelude-val">Some</span>(allocation) = this.rects.allocate(etagere::euclid::Size2D::new(
@@ -564,15 +555,12 @@
 
     <span class="doccomment">/// Returns the current size of the underlying texture.
     </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;UPx&gt; {
-        <span class="kw">let </span>data = <span class="self">self</span>.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        <span class="kw">let </span>data = <span class="self">self</span>.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.size()
     }
 
     <span class="kw">fn </span>free(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: LotId) {
-        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self
-            </span>.data
-            .write()
-            .map_or_else(PoisonError::into_inner, |g| g);
+        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self</span>.data.write().unwrap_or_else(PoisonError::into_inner);
         <span class="kw">let </span>allocation = data.textures.remove(id).expect(<span class="string">"invalid texture free"</span>);
         data.rects.deallocate(allocation.id);
     }
@@ -587,7 +575,7 @@
         </span>Unit: figures::Unit + Div&lt;i32, Output = Unit&gt;,
         Vertex&lt;Unit&gt;: bytemuck::Pod,
     {
-        <span class="kw">let </span>data = <span class="self">self</span>.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        <span class="kw">let </span>data = <span class="self">self</span>.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.prepare_partial(src, dest, graphics)
     }
 
@@ -604,7 +592,7 @@
         </span>Unit: figures::Unit,
         Vertex&lt;Unit&gt;: bytemuck::Pod,
     {
-        <span class="kw">let </span>data = <span class="self">self</span>.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        <span class="kw">let </span>data = <span class="self">self</span>.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.prepare(dest, graphics)
     }
 
@@ -619,7 +607,7 @@
     <span class="kw">fn </span>can_render_to(<span class="kw-2">&amp;</span><span class="self">self</span>, kludgine: <span class="kw-2">&amp;</span>Kludgine) -&gt; bool {
         <span class="self">self</span>.data
             .read()
-            .map_or_else(PoisonError::into_inner, |g| g)
+            .unwrap_or_else(PoisonError::into_inner)
             .texture
             .can_render_to(kludgine)
     }
@@ -629,22 +617,22 @@
 
 <span class="kw">impl </span>sealed::TextureSource <span class="kw">for </span>TextureCollection {
     <span class="kw">fn </span>bind_group(<span class="kw-2">&amp;</span><span class="self">self</span>, graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>sealed::KludgineGraphics) -&gt; Arc&lt;wgpu::BindGroup&gt; {
-        <span class="kw">let </span>data = <span class="self">self</span>.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        <span class="kw">let </span>data = <span class="self">self</span>.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.bind_group(graphics)
     }
 
     <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; sealed::TextureId {
-        <span class="kw">let </span>data = <span class="self">self</span>.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        <span class="kw">let </span>data = <span class="self">self</span>.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.id()
     }
 
     <span class="kw">fn </span>is_mask(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">let </span>data = <span class="self">self</span>.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        <span class="kw">let </span>data = <span class="self">self</span>.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.is_mask()
     }
 
     <span class="kw">fn </span>default_rect(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Rect&lt;UPx&gt; {
-        <span class="kw">let </span>data = <span class="self">self</span>.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        <span class="kw">let </span>data = <span class="self">self</span>.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.default_rect()
     }
 }
