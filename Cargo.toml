@@ -1,6 +1,6 @@
 [package]
 name = "kludgine"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2021"
 description = "A wgpu-powered 2d graphics library with optional windowing support"
 readme = "./README.md"
@@ -16,10 +16,7 @@ app = ["dep:appit"]
 plotters = ["dep:plotters", "dep:plotters-backend"]
 
 [dependencies]
-# appit = { version = "0.2.0", optional = true }
-appit = { git = "https://github.com/khonsulabs/appit", features = [
-    "rwh_06",
-], optional = true }
+appit = { version = "0.3.0", optional = true, features = ["rwh_06"] }
 wgpu = { version = "0.20.0" }
 pollster = "0.3.0"
 bytemuck = { version = "1.13.1", features = ["derive"] }
@@ -29,7 +26,7 @@ cosmic-text = { version = "0.11.2", optional = true }
 alot = "0.3.0"
 ahash = "0.8.3"
 etagere = "0.2.8"
-figures = { version = "0.2.0", git = "https://github.com/khonsulabs/figures", features = [
+figures = { version = "0.3.0", features = [
     "wgpu",
     "winit",
     "bytemuck",
