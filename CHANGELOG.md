@@ -39,10 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `WindowBehavior::touchpad_magnify` -> `WindowBehavior::pinch_gesture`
   - `WindowBehavior::smart_magnify` -> `WindowBehavior::double_tap_gesture`
 
-### Added
-
-- `WindowBeahvior::pan_gesture` is a new event provided by `winit`.
-
 ### Changed
 
 - All `&Appplication` bounds now are `?Sized`, enabling `&dyn Application`
@@ -51,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `WindowBeahvior::pan_gesture` is a new event provided by `winit`.
 - `Kludgine::id()` returns the instance's unique id.
 - `Kludgine::REQUIRED_FEATURES` specifies the `wgpu::Features`` that Kludgine uses.
 - `Kludgine::adjust_limits()` adjusts `wgpu::Limits` to ensure Kludgine will
