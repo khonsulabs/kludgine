@@ -106,10 +106,7 @@ impl TextureCollection {
         size: Size<UPx>,
         graphics: &impl KludgineGraphics,
     ) -> CollectedTexture {
-        let mut this = self
-            .data
-            .write()
-            .map_or_else(PoisonError::into_inner, |g| g);
+        let mut this = self.data.write().unwrap_or_else(PoisonError::into_inner);
         let signed_size = size.into_signed();
         let allocation = loop {
             if let Some(allocation) = this.rects.allocate(etagere::euclid::Size2D::new(
@@ -207,15 +204,12 @@ impl TextureCollection {
 
     /// Returns the current size of the underlying texture.
     pub fn size(&self) -> Size<UPx> {
-        let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        let data = self.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.size()
     }
 
     fn free(&mut self, id: LotId) {
-        let mut data = self
-            .data
-            .write()
-            .map_or_else(PoisonError::into_inner, |g| g);
+        let mut data = self.data.write().unwrap_or_else(PoisonError::into_inner);
         let allocation = data.textures.remove(id).expect("invalid texture free");
         data.rects.deallocate(allocation.id);
     }
@@ -230,7 +224,7 @@ impl TextureCollection {
         Unit: figures::Unit + Div<i32, Output = Unit>,
         Vertex<Unit>: bytemuck::Pod,
     {
-        let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        let data = self.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.prepare_partial(src, dest, graphics)
     }
 
@@ -247,7 +241,7 @@ impl TextureCollection {
         Unit: figures::Unit,
         Vertex<Unit>: bytemuck::Pod,
     {
-        let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        let data = self.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.prepare(dest, graphics)
     }
 
@@ -262,7 +256,7 @@ impl CanRenderTo for TextureCollection {
     fn can_render_to(&self, kludgine: &Kludgine) -> bool {
         self.data
             .read()
-            .map_or_else(PoisonError::into_inner, |g| g)
+            .unwrap_or_else(PoisonError::into_inner)
             .texture
             .can_render_to(kludgine)
     }
@@ -272,22 +266,22 @@ impl TextureSource for TextureCollection {}
 
 impl sealed::TextureSource for TextureCollection {
     fn bind_group(&self, graphics: &impl sealed::KludgineGraphics) -> Arc<wgpu::BindGroup> {
-        let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        let data = self.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.bind_group(graphics)
     }
 
     fn id(&self) -> sealed::TextureId {
-        let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        let data = self.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.id()
     }
 
     fn is_mask(&self) -> bool {
-        let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        let data = self.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.is_mask()
     }
 
     fn default_rect(&self) -> Rect<UPx> {
-        let data = self.data.read().map_or_else(PoisonError::into_inner, |g| g);
+        let data = self.data.read().unwrap_or_else(PoisonError::into_inner);
         data.texture.default_rect()
     }
 }

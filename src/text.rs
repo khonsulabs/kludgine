@@ -241,10 +241,7 @@ impl GlyphCache {
         key: cosmic_text::CacheKey,
         insert_fn: impl FnOnce() -> Option<(CollectedTexture, bool)>,
     ) -> Option<CachedGlyphHandle> {
-        let mut data = self
-            .glyphs
-            .lock()
-            .map_or_else(PoisonError::into_inner, |g| g);
+        let mut data = self.glyphs.lock().unwrap_or_else(PoisonError::into_inner);
         let cached = match data.entry(key) {
             hash_map::Entry::Occupied(cached) => {
                 let cached = cached.into_mut();
@@ -269,10 +266,7 @@ impl GlyphCache {
     }
 
     fn clear_unused(&mut self) {
-        let mut data = self
-            .glyphs
-            .lock()
-            .map_or_else(PoisonError::into_inner, |g| g);
+        let mut data = self.glyphs.lock().unwrap_or_else(PoisonError::into_inner);
         data.retain(|_, glyph| glyph.ref_count > 0);
     }
 }
@@ -303,7 +297,7 @@ impl Debug for CachedGlyphHandle {
 impl Clone for CachedGlyphHandle {
     fn clone(&self) -> Self {
         if let Some(glyphs) = self.cache.upgrade() {
-            let mut data = glyphs.lock().map_or_else(PoisonError::into_inner, |g| g);
+            let mut data = glyphs.lock().unwrap_or_else(PoisonError::into_inner);
             let cached = data.get_mut(&self.key).expect("cached glyph missing");
             cached.ref_count += 1;
             drop(data);
@@ -321,7 +315,7 @@ impl Clone for CachedGlyphHandle {
 impl Drop for CachedGlyphHandle {
     fn drop(&mut self) {
         if let Some(glyphs) = self.cache.upgrade() {
-            let mut data = glyphs.lock().map_or_else(PoisonError::into_inner, |g| g);
+            let mut data = glyphs.lock().unwrap_or_else(PoisonError::into_inner);
             let cached = data.get_mut(&self.key).expect("cached glyph missing");
             cached.ref_count -= 1;
         }
@@ -845,7 +839,7 @@ pub struct GlyphInfo {
     /// Because whitespace does not have glyphs, this width may be useful in
     /// measuring whitespace at the end of a line.
     pub line_width: Px,
-    /// Unicode BiDi embedding level, character is left-to-right if `level` is divisible by 2
+    /// Unicode `BiDi` embedding level, character is left-to-right if `level` is divisible by 2
     pub level: unicode_bidi::Level,
     /// Custom metadata set in [`cosmic_text::Attrs`].
     pub metadata: usize,
