@@ -26,7 +26,7 @@ cosmic-text = { version = "0.11.2", optional = true }
 alot = "0.3.0"
 ahash = "0.8.3"
 etagere = "0.2.8"
-figures = { git = "https://github.com/khonsulabs/figures", features = [
+figures = { version = "0.4.0", features = [
     "wgpu",
     "winit",
     "bytemuck",
