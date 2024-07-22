@@ -34,8 +34,8 @@ impl WindowBehavior for Test {
         );
         text.set_size(
             graphics.font_system(),
-            size.width.into_float(),
-            size.height.into_float(),
+            Some(size.width.into_float()),
+            Some(size.height.into_float()),
         );
         let mut editor = Editor::new(&mut text);
         editor.insert_string("Hello, ", None);
@@ -65,8 +65,8 @@ impl WindowBehavior for Test {
         let size = graphics.size();
         self.text.set_size(
             graphics.font_system(),
-            size.width.into_float(),
-            size.height.into_float(),
+            Some(size.width.into_float()),
+            Some(size.height.into_float()),
         );
         self.text.set_metrics(
             graphics.font_system(),

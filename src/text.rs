@@ -221,11 +221,7 @@ impl TextSystem {
             self.attrs.as_attrs(),
             cosmic_text::Shaping::Advanced, // TODO maybe this should be configurable?
         );
-        scratch.set_size(
-            &mut self.fonts,
-            width.map_or(f32::MAX, Cast::cast),
-            f32::MAX,
-        );
+        scratch.set_size(&mut self.fonts, width.map(Cast::cast), None);
         scratch.shape_until_scroll(&mut self.fonts, false);
     }
 }
