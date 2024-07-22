@@ -329,6 +329,13 @@ where
         wgpu::PowerPreference::default()
     }
 
+    /// Returns the memory hints to initialize `wgpu` with.
+    #[must_use]
+    #[allow(unused_variables)]
+    fn memory_hints(context: &Self::Context) -> wgpu::MemoryHints {
+        wgpu::MemoryHints::default()
+    }
+
     /// Returns the limits to apply for the `wgpu` instance.
     #[must_use]
     #[allow(unused_variables)]
@@ -848,22 +855,23 @@ impl<Behavior> KludgineWindow<Behavior> {
             (surface_view, None)
         };
 
+        let color_attachments = [Some(wgpu::RenderPassColorAttachment {
+            view: &view,
+            resolve_target: resolve_target.as_ref(),
+            ops: wgpu::Operations {
+                load: self
+                    .behavior
+                    .clear_color()
+                    .map_or(wgpu::LoadOp::Load, |color| {
+                        wgpu::LoadOp::Clear(color.into())
+                    }),
+                store: wgpu::StoreOp::Store,
+            },
+        })];
         let mut gfx = frame.render(
             &wgpu::RenderPassDescriptor {
                 label: None,
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    resolve_target: resolve_target.as_ref(),
-                    ops: wgpu::Operations {
-                        load: self
-                            .behavior
-                            .clear_color()
-                            .map_or(wgpu::LoadOp::Load, |color| {
-                                wgpu::LoadOp::Clear(color.into())
-                            }),
-                        store: wgpu::StoreOp::Store,
-                    },
-                })],
+                color_attachments: &color_attachments,
                 depth_stencil_attachment: None,
                 timestamp_writes: None,
                 occlusion_query_set: None,
@@ -930,6 +938,7 @@ where
                 label: None,
                 required_features: Kludgine::REQURED_FEATURES,
                 required_limits: Kludgine::adjust_limits(T::limits(adapter.limits(), &context)),
+                memory_hints: T::memory_hints(&context),
             },
             None,
         ))

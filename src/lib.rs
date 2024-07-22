@@ -291,7 +291,7 @@ impl Frame<'_> {
     #[must_use]
     pub fn render<'gfx, 'pass>(
         &'pass mut self,
-        pass: &wgpu::RenderPassDescriptor<'pass, '_>,
+        pass: &wgpu::RenderPassDescriptor<'_>,
         device: &'gfx wgpu::Device,
         queue: &'gfx wgpu::Queue,
     ) -> RenderingGraphics<'gfx, 'pass> {

@@ -389,5 +389,6 @@ pub fn new(
         depth_stencil: None,
         multisample,
         multiview: None,
+        cache: None,
     })
 }
