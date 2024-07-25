@@ -99,7 +99,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         i32: From<<Unit as IntoSigned>::Signed>,
     {
         let texture_rect = texture.default_rect();
-        let scaled_size = Size::<Unit>::from_upx(texture_rect.size, self.scale);
+        let scaled_size = Size::<Unit>::from_upx(texture_rect.size, self.effective_scale);
         self.draw_textured_shape(
             TextureBlit::new(
                 texture_rect,
@@ -316,7 +316,7 @@ mod text {
             Unit: figures::ScreenUnit,
         {
             let text = text.into();
-            let scale = self.graphics.scale;
+            let scale = self.graphics.effective_scale;
             self.update_scratch_buffer(text.text, text.wrap_at.map(|width| width.into_px(scale)));
             measure_text::<Unit, true>(
                 None,
@@ -339,7 +339,7 @@ mod text {
                 text.source.text,
                 text.source
                     .wrap_at
-                    .map(|width| width.into_px(self.graphics.scale)),
+                    .map(|width| width.into_px(self.graphics.effective_scale)),
             );
             self.draw_text_buffer_inner(
                 None,
@@ -414,7 +414,7 @@ mod text {
             Unit: ScreenUnit,
         {
             let text = text.into();
-            let scaling_factor = self.scale;
+            let scaling_factor = self.effective_scale;
             let translation = text.translation;
             let origin = match origin {
                 TextOrigin::TopLeft => Point::default(),
@@ -467,7 +467,7 @@ mod text {
         ) where
             Unit: ScreenUnit,
         {
-            let scaling_factor = self.scale;
+            let scaling_factor = self.effective_scale;
             map_each_glyph(
                 buffer,
                 default_color,

@@ -84,7 +84,9 @@ pub struct Kludgine {
     nearest_sampler: wgpu::Sampler,
     uniforms: Buffer<Uniforms>,
     size: Size<UPx>,
-    scale: Fraction,
+    dpi_scale: Fraction,
+    zoom: Fraction,
+    effective_scale: Fraction,
     #[cfg(feature = "cosmic-text")]
     text: text::TextSystem,
 }
@@ -176,7 +178,9 @@ impl Kludgine {
             linear_sampler,
             nearest_sampler,
             size: initial_size,
-            scale,
+            dpi_scale: scale,
+            zoom: Fraction::ONE,
+            effective_scale: scale,
 
             uniforms,
             binding_layout,
@@ -204,17 +208,41 @@ impl Kludgine {
     /// This function updates data stored in the GPU that affects how graphics
     /// are rendered. It should be called before calling `next_frame()` if the
     /// size or scale of the underlying surface has changed.
-    pub fn resize(&mut self, new_size: Size<UPx>, new_scale: f32, queue: &wgpu::Queue) {
-        let new_scale = Fraction::from(new_scale);
-        if self.size != new_size || self.scale != new_scale {
+    pub fn resize(
+        &mut self,
+        new_size: Size<UPx>,
+        new_scale: impl Into<Fraction>,
+        new_zoom: impl Into<Fraction>,
+        queue: &wgpu::Queue,
+    ) {
+        let new_scale = new_scale.into();
+        let new_zoom = new_zoom.into();
+        self.effective_scale = new_scale * new_zoom;
+        if self.size != new_size || self.dpi_scale != new_scale || self.zoom != new_zoom {
             self.size = new_size;
-            self.scale = new_scale;
+            self.dpi_scale = new_scale;
+            self.zoom = new_zoom;
             self.uniforms
-                .update(0, &[Uniforms::new(self.size, self.scale)], queue);
+                .update(0, &[Uniforms::new(self.size, self.effective_scale)], queue);
         }
 
         #[cfg(feature = "cosmic-text")]
-        self.text.scale_changed(self.scale);
+        self.text.scale_changed(self.effective_scale);
+    }
+
+    /// Sets the current zoom level.
+    ///
+    /// Zoom and DPI scale are multiplied to create an effective scale for all
+    /// DPI-scaled operations.
+    pub fn set_zoom(&mut self, new_zoom: impl Into<Fraction>, queue: &wgpu::Queue) {
+        self.resize(self.size, self.dpi_scale, new_zoom, queue);
+    }
+
+    /// Sets the current DPI scale.
+    ///
+    /// This scaling factor should come from the window server when possible.
+    pub fn set_dpi_scale(&mut self, new_scale: impl Into<Fraction>, queue: &wgpu::Queue) {
+        self.resize(self.size, new_scale, self.zoom, queue);
     }
 
     /// Begins rendering a new frame.
@@ -232,10 +260,14 @@ impl Kludgine {
         self.size
     }
 
-    /// Returns the current scaling factor for the display this instance is
-    /// rendering to.
+    /// Returns the effective scale to apply to graphics contexts.
     pub const fn scale(&self) -> Fraction {
-        self.scale
+        self.effective_scale
+    }
+
+    /// Returns the DPI scale of the underlying context.
+    pub const fn dpi_scale(&self) -> Fraction {
+        self.dpi_scale
     }
 }
 
@@ -566,6 +598,14 @@ impl<'gfx> Graphics<'gfx> {
     #[must_use]
     pub const fn clip_rect(&self) -> Rect<UPx> {
         self.clip.current.0
+    }
+
+    /// Sets the zoom level.
+    ///
+    /// The zoom level and DPI scale are multiplied to create an effective scale
+    /// for all DPI-scaled drawing operations.
+    pub fn set_zoom(&mut self, new_zoom: impl Into<Fraction>) {
+        self.kludgine.set_zoom(new_zoom, &self.queue);
     }
 }
 

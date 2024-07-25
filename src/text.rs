@@ -39,13 +39,16 @@ impl Kludgine {
     }
 
     pub(crate) fn update_scratch_buffer(&mut self, text: &str, width: Option<Px>) {
-        self.text.update_scratch_buffer(text, self.scale, width);
+        self.text
+            .update_scratch_buffer(text, self.effective_scale, width);
     }
 
     /// Sets the font size.
     pub fn set_font_size(&mut self, size: impl figures::ScreenScale<Lp = figures::units::Lp>) {
-        self.text
-            .set_font_size(figures::ScreenScale::into_lp(size, self.scale), self.scale);
+        self.text.set_font_size(
+            figures::ScreenScale::into_lp(size, self.effective_scale),
+            self.effective_scale,
+        );
     }
 
     /// Returns the current font size.
@@ -55,8 +58,10 @@ impl Kludgine {
 
     /// Sets the line height for multi-line layout.
     pub fn set_line_height(&mut self, size: impl figures::ScreenScale<Lp = figures::units::Lp>) {
-        self.text
-            .set_line_height(figures::ScreenScale::into_lp(size, self.scale), self.scale);
+        self.text.set_line_height(
+            figures::ScreenScale::into_lp(size, self.effective_scale),
+            self.effective_scale,
+        );
     }
 
     /// Returns the current line height.
@@ -586,7 +591,7 @@ where
     Unit: figures::ScreenUnit,
 {
     // TODO the returned type should be able to be drawn, so that we don't have to call update_scratch_buffer again.
-    let line_height = Unit::from_lp(kludgine.text.line_height, kludgine.scale);
+    let line_height = Unit::from_lp(kludgine.text.line_height, kludgine.effective_scale);
     let mut min = Point::new(Px::MAX, Px::MAX);
     let mut first_line_max_y = Px::MIN;
     let mut last_baseline = Px::MIN;
@@ -628,16 +633,17 @@ where
         }
     } else {
         if first_line_max_y == Px::MIN {
-            first_line_max_y = line_height.into_px(kludgine.scale);
+            first_line_max_y = line_height.into_px(kludgine.effective_scale);
         }
 
         MeasuredText {
-            ascent: line_height - Unit::from_px(min.y, kludgine.scale),
-            descent: line_height - Unit::from_px(first_line_max_y, kludgine.scale),
-            left: Unit::from_px(min.x, kludgine.scale),
+            ascent: line_height - Unit::from_px(min.y, kludgine.effective_scale),
+            descent: line_height - Unit::from_px(first_line_max_y, kludgine.effective_scale),
+            left: Unit::from_px(min.x, kludgine.effective_scale),
             size: Size {
-                width: Unit::from_px(max.x, kludgine.scale),
-                height: Unit::from_px(max.y.max(last_baseline), kludgine.scale).max(line_height),
+                width: Unit::from_px(max.x, kludgine.effective_scale),
+                height: Unit::from_px(max.y.max(last_baseline), kludgine.effective_scale)
+                    .max(line_height),
             },
             line_height,
             glyphs: measured_glyphs,

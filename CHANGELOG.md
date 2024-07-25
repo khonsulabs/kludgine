@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Breaking Changes
+
+- Added Zoom setting to [`Kludgine`], allowing a second scaling factor to be
+  applied to all scaled operations. This change has affected these APIs:
+
+  - [`Kludgine::resize()`]: Now takes an additional parameter `zoom`.
+  - [`Kludgine::scale()`]: Now returns an effective scale combining zoom and DPI
+        scaling.
+  - [`Kludgine::dpi_scale()`]: A new function returning the currently set DPI
+        scale.
+  - [`Kludgine::set_zoom()`]: A new function setting just the zoom value.
+  - [`Kludgine::set_dpi_scale()`]: A new function setting just the DPI scale.
+  - [`Graphics::set_zoom()]: A new function setting the zoom level for a
+        graphics context.
+
 ## v0.9.0 (2024-07-22)
 
 ### Breaking Changes

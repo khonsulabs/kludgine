@@ -140,6 +140,12 @@ where
         self.window.app()
     }
 
+    /// Returns a reference to the underlying winit window.
+    #[must_use]
+    pub fn winit(&self) -> &winit::window::Window {
+        self.window.winit()
+    }
+
     /// Closes this window as soon as control returns to `Kludgine`.
     pub fn close(&mut self) {
         self.window.close();
@@ -156,16 +162,15 @@ where
         self.window.set_position(position.into());
     }
 
+    /// Returns the current DPI scale of the window.
+    pub fn scale(&self) -> f64 {
+        self.window.scale()
+    }
+
     /// Returns the inner size of the window.
     #[must_use]
     pub fn inner_size(&self) -> Size<UPx> {
         self.window.inner_size().into()
-    }
-
-    /// Returns a reference to the underlying winit window.
-    #[must_use]
-    pub fn winit(&self) -> &winit::window::Window {
-        self.window.winit()
     }
 
     /// Sets the inner size of the window.
@@ -1056,6 +1061,7 @@ where
             self.kludgine.resize(
                 window.inner_size().into(),
                 window.scale().cast::<f32>(),
+                self.kludgine.zoom,
                 &self.queue,
             );
             window.set_needs_redraw();
