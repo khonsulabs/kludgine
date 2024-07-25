@@ -2431,6 +2431,11 @@
 <a href="#2431" id="2431">2431</a>
 <a href="#2432" id="2432">2432</a>
 <a href="#2433" id="2433">2433</a>
+<a href="#2434" id="2434">2434</a>
+<a href="#2435" id="2435">2435</a>
+<a href="#2436" id="2436">2436</a>
+<a href="#2437" id="2437">2437</a>
+<a href="#2438" id="2438">2438</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">"../README.md"</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -2701,6 +2706,11 @@
     <span class="doccomment">/// Returns the DPI scale of the underlying context.
     </span><span class="kw">pub const fn </span>dpi_scale(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Fraction {
         <span class="self">self</span>.dpi_scale
+    }
+
+    <span class="doccomment">/// Returns the current zoom applied.
+    </span><span class="kw">pub const fn </span>zoom(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Fraction {
+        <span class="self">self</span>.zoom
     }
 }
 
