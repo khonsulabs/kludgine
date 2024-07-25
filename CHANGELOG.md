@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
         scaling.
   - [`Kludgine::dpi_scale()`]: A new function returning the currently set DPI
         scale.
+  - [`Kludgine::zoom()`]: A new function returning the current zoom value.
   - [`Kludgine::set_zoom()`]: A new function setting just the zoom value.
   - [`Kludgine::set_dpi_scale()`]: A new function setting just the DPI scale.
   - [`Graphics::set_zoom()]: A new function setting the zoom level for a

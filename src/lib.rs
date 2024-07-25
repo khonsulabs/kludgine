@@ -269,6 +269,11 @@ impl Kludgine {
     pub const fn dpi_scale(&self) -> Fraction {
         self.dpi_scale
     }
+
+    /// Returns the current zoom applied.
+    pub const fn zoom(&self) -> Fraction {
+        self.zoom
+    }
 }
 
 /// The unique ID of a [`Kludgine`] instance.
