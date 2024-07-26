@@ -1529,12 +1529,31 @@
 <a href="#1529" id="1529">1529</a>
 <a href="#1530" id="1530">1530</a>
 <a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
+<a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
+<a href="#1546" id="1546">1546</a>
+<a href="#1547" id="1547">1547</a>
+<a href="#1548" id="1548">1548</a>
+<a href="#1549" id="1549">1549</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::{Add, Div, Mul, Neg, Sub};
 
 <span class="kw">use </span>figures::units::{Lp, Px, UPx};
 <span class="kw">use </span>figures::{
-    Angle, FloatConversion, FloatOrInt, PixelScaling, Point, Ranged, Rect, ScreenScale, Size, Zero,
+    Angle, FloatConversion, FloatOrInt, PixelScaling, Point, Ranged, Rect, Round, ScreenScale,
+    Size, Zero,
 };
 <span class="kw">use </span>lyon_tessellation::geom::Arc;
 <span class="kw">use </span>lyon_tessellation::{
@@ -3001,6 +3020,23 @@
             bottom_right: Unit::from_lp(lp.bottom_right, scale),
             bottom_left: Unit::from_lp(lp.bottom_left, scale),
         }
+    }
+}
+
+<span class="kw">impl</span>&lt;Unit&gt; Round <span class="kw">for </span>CornerRadii&lt;Unit&gt;
+<span class="kw">where
+    </span>Unit: Round,
+{
+    <span class="kw">fn </span>round(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.map(Round::round)
+    }
+
+    <span class="kw">fn </span>ceil(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.map(Round::ceil)
+    }
+
+    <span class="kw">fn </span>floor(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.map(Round::floor)
     }
 }
 
