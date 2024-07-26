@@ -3,7 +3,8 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use figures::units::{Lp, Px, UPx};
 use figures::{
-    Angle, FloatConversion, FloatOrInt, PixelScaling, Point, Ranged, Rect, ScreenScale, Size, Zero,
+    Angle, FloatConversion, FloatOrInt, PixelScaling, Point, Ranged, Rect, Round, ScreenScale,
+    Size, Zero,
 };
 use lyon_tessellation::geom::Arc;
 use lyon_tessellation::{
@@ -1470,6 +1471,23 @@ where
             bottom_right: Unit::from_lp(lp.bottom_right, scale),
             bottom_left: Unit::from_lp(lp.bottom_left, scale),
         }
+    }
+}
+
+impl<Unit> Round for CornerRadii<Unit>
+where
+    Unit: Round,
+{
+    fn round(self) -> Self {
+        self.map(Round::round)
+    }
+
+    fn ceil(self) -> Self {
+        self.map(Round::ceil)
+    }
+
+    fn floor(self) -> Self {
+        self.map(Round::floor)
     }
 }
 

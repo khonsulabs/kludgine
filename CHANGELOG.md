@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [`Graphics::set_zoom()]: A new function setting the zoom level for a
         graphics context.
 
+### Added
+
+- `CornerRadii` now implements `figures::Round`.
+
 ## v0.9.0 (2024-07-22)
 
 ### Breaking Changes
