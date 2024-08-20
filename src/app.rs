@@ -163,6 +163,7 @@ where
     }
 
     /// Returns the current DPI scale of the window.
+    #[must_use]
     pub fn scale(&self) -> f64 {
         self.window.scale()
     }

@@ -610,7 +610,7 @@ impl<'gfx> Graphics<'gfx> {
     /// The zoom level and DPI scale are multiplied to create an effective scale
     /// for all DPI-scaled drawing operations.
     pub fn set_zoom(&mut self, new_zoom: impl Into<Fraction>) {
-        self.kludgine.set_zoom(new_zoom, &self.queue);
+        self.kludgine.set_zoom(new_zoom, self.queue);
     }
 }
 
