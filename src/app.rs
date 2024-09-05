@@ -891,6 +891,7 @@ impl<Behavior> KludgineWindow<Behavior> {
         );
         drop(gfx);
         let id = frame.submit(&self.queue);
+        window.winit().pre_present_notify();
         surface.present();
         if let Some(id) = id {
             self.device.poll(wgpu::Maintain::WaitForSubmissionIndex(id));
