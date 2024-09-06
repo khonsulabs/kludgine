@@ -1751,6 +1751,10 @@
 <a href="#1751" id="1751">1751</a>
 <a href="#1752" id="1752">1752</a>
 <a href="#1753" id="1753">1753</a>
+<a href="#1754" id="1754">1754</a>
+<a href="#1755" id="1755">1755</a>
+<a href="#1756" id="1756">1756</a>
+<a href="#1757" id="1757">1757</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
@@ -1834,8 +1838,12 @@
                     }
                     AppEventKind::ListMonitors =&gt; {
                         AppResponse(AppResponseKind::Monitors(Monitors {
-                            primary: windows.primary_monitor(),
-                            available: windows.available_monitors(),
+                            primary: windows.primary_monitor().map(Monitor),
+                            available: windows
+                                .available_monitors()
+                                .into_iter()
+                                .map(Monitor)
+                                .collect(),
                         }))
                     }
                 }
@@ -1855,7 +1863,7 @@
     /// available after the event loop has started. For example, to enter an
     /// exclusive full screen mode, monitor information must be accessed which
     /// requires the event loop to have been started.
-    </span><span class="kw">pub fn </span>on_startup&lt;F&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, on_startup: F)
+    </span><span class="kw">pub fn </span>on_startup&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, on_startup: F)
     <span class="kw">where
         </span>F: FnOnce(ExecutingApp&lt;<span class="lifetime">'_</span>, WindowEvent&gt;) + Send + <span class="lifetime">'static</span>,
     {
@@ -2626,9 +2634,9 @@
 </span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>Monitors {
     <span class="doccomment">/// The primary monitor.
-    </span><span class="kw">pub </span>primary: <span class="prelude-ty">Option</span>&lt;MonitorHandle&gt;,
+    </span><span class="kw">pub </span>primary: <span class="prelude-ty">Option</span>&lt;Monitor&gt;,
     <span class="doccomment">/// All available monitors.
-    </span><span class="kw">pub </span>available: Vec&lt;MonitorHandle&gt;,
+    </span><span class="kw">pub </span>available: Vec&lt;Monitor&gt;,
 }
 
 <span class="doccomment">/// Information about a monitor connected to a device.
