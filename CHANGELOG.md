@@ -8,10 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Breaking Changes
+
+- `App` is a new type that replaces the previous type alias pointing to
+  `appit::App`. The previously exported type wasn't able to be used beyond
+  passing it as a parameter for opening additional windows. This new type
+  exposes additional winit information including monitor configurations.
+
 ### Fixed
 
 - `Window` now calls winit's `pre_present_notify()` before presenting the
   surface.
+
+### Added
+
+- `PendingApp::on_startup` executes a callback once the event loop has begun
+  executing.
+- `Monitors`, `Monitor`, and `VideoMode` are new types that offer information
+  about the monitor configurations available to the application. This
+  information can be retrieved from an `App` or `ExecutingApp`.
 
 ## v0.10.0 (2024-08-20)
 

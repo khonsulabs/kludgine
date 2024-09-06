@@ -10,12 +10,14 @@ use appit::winit::event::{
     AxisId, DeviceId, ElementState, Ime, KeyEvent, Modifiers, MouseButton, MouseScrollDelta, Touch,
     TouchPhase,
 };
+use appit::winit::event_loop::OwnedDisplayHandle;
 use appit::winit::keyboard::PhysicalKey;
+use appit::winit::monitor::{MonitorHandle, VideoModeHandle};
 use appit::winit::window::{ImePurpose, Theme, WindowId};
 pub use appit::{winit, Application, AsApplication, Message, WindowAttributes};
 use appit::{RunningWindow, WindowBehavior as _};
 use figures::units::{Px, UPx};
-use figures::{Point, Rect, Size};
+use figures::{Fraction, IntoSigned, Point, Rect, Size};
 use intentional::{Assert, Cast};
 
 use crate::drawing::{Drawing, Renderer};
@@ -24,11 +26,12 @@ use crate::{Color, Graphics, Kludgine, RenderingGraphics};
 /// A `Kludgine` application that enables opening multiple windows.
 pub struct PendingApp<WindowEvent = ()>(appit::PendingApp<AppEvent<WindowEvent>>)
 where
-    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface<'static>>;
+    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = AppResponse>;
 
 impl<WindowEvent> Default for PendingApp<WindowEvent>
 where
-    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface<'static>>,
+    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = AppResponse>,
+    WindowEvent: Send + 'static,
 {
     fn default() -> Self {
         Self::new()
@@ -37,7 +40,7 @@ where
 
 impl<WindowEvent> AsApplication<AppEvent<WindowEvent>> for PendingApp<WindowEvent>
 where
-    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface<'static>>,
+    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = AppResponse>,
 {
     fn as_application(&self) -> &dyn Application<AppEvent<WindowEvent>>
     where
@@ -56,20 +59,33 @@ where
 
 impl<WindowEvent> PendingApp<WindowEvent>
 where
-    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = wgpu::Surface<'static>>,
+    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = AppResponse>,
+    WindowEvent: Send + 'static,
 {
     /// Creates a new Kludgine application.
     #[must_use]
     #[allow(clippy::missing_panics_doc)] // The panics are in a closure that happens only after the app is running.
     pub fn new() -> Self {
         Self(appit::PendingApp::new_with_event_callback(
-            |request: AppEvent<WindowEvent>, windows: &appit::Windows<WindowEvent>| {
-                let window = windows.get(request.0.window).expect("window not found");
-                request
-                    .0
-                    .wgpu
-                    .create_surface(window)
-                    .expect("error creating surface")
+            |request: AppEvent<WindowEvent>,
+             windows: appit::ExecutingApp<'_, AppEvent<WindowEvent>>| {
+                match request.0 {
+                    AppEventKind::CreateSurface(request) => {
+                        let window = windows.get(request.window).expect("window not found");
+                        AppResponse(AppResponseKind::Surface(
+                            request
+                                .wgpu
+                                .create_surface(window)
+                                .expect("error creating surface"),
+                        ))
+                    }
+                    AppEventKind::ListMonitors => {
+                        AppResponse(AppResponseKind::Monitors(Monitors {
+                            primary: windows.primary_monitor(),
+                            available: windows.available_monitors(),
+                        }))
+                    }
+                }
             },
         ))
     }
@@ -77,7 +93,23 @@ where
     /// Returns a handle to the application that will be run.
     #[must_use]
     pub fn as_app(&self) -> App<WindowEvent> {
-        self.0.app()
+        App(self.0.app())
+    }
+
+    /// Executes `on_startup` once the app event loop has started.
+    ///
+    /// This is useful because some information provided by winit is only
+    /// available after the event loop has started. For example, to enter an
+    /// exclusive full screen mode, monitor information must be accessed which
+    /// requires the event loop to have been started.
+    pub fn on_startup<F>(&self, on_startup: F)
+    where
+        F: FnOnce(ExecutingApp<'_, WindowEvent>) + Send + 'static,
+    {
+        self.0
+            .on_startup(|app: appit::ExecutingApp<'_, AppEvent<WindowEvent>>| {
+                on_startup(ExecutingApp(app));
+            });
     }
 
     /// Begins running the application.
@@ -95,8 +127,95 @@ where
     }
 }
 
+/// A reference to an executing application and its event loop.
+pub struct ExecutingApp<'a, WindowEvent = ()>(appit::ExecutingApp<'a, AppEvent<WindowEvent>>)
+where
+    AppEvent<WindowEvent>: Message;
+
+impl<WindowEvent> ExecutingApp<'_, WindowEvent>
+where
+    AppEvent<WindowEvent>: Message,
+{
+    /// Returns the list of available monitors.
+    ///
+    /// This function will return an empty `Vec` if invoked before the
+    /// application has begun executing. This can occur if an app message is
+    /// sent before a `PendingApp` is run.
+    #[must_use]
+    pub fn available_monitors(&self) -> Vec<Monitor> {
+        self.0
+            .available_monitors()
+            .into_iter()
+            .map(Monitor)
+            .collect()
+    }
+
+    /// Returns a handle to the primary monitor.
+    ///
+    /// This function will return None if:
+    ///
+    /// - The application hasn't begun executing.
+    /// - The platform does not support determining a primary monitor.
+    #[must_use]
+    pub fn primary_monitor(&self) -> Option<Monitor> {
+        self.0.primary_monitor().map(Monitor)
+    }
+
+    /// Returns a handle to the underlying display.
+    #[must_use]
+    pub fn owned_display_handle(&self) -> OwnedDisplayHandle {
+        self.0.owned_display_handle()
+    }
+}
+
 /// A handle to a running Kludgine application.
-pub type App<WindowEvent = ()> = appit::App<AppEvent<WindowEvent>>;
+pub struct App<WindowEvent = ()>(appit::App<AppEvent<WindowEvent>>)
+where
+    WindowEvent: Send + 'static;
+
+impl<WindowEvent> App<WindowEvent>
+where
+    WindowEvent: Send + 'static,
+{
+    /// Returns a snapshot of information about the monitors on this device.
+    ///
+    /// This function will return None if the application has not started
+    /// running yet or the application has shut down.
+    pub fn monitors(&self) -> Option<Monitors> {
+        self.0
+            .send(AppEvent(AppEventKind::ListMonitors))
+            .map(AppResponse::expect_monitors)
+            .filter(|monitors| !monitors.available.is_empty())
+    }
+}
+
+impl<WindowEvent> Clone for App<WindowEvent>
+where
+    WindowEvent: Send + 'static,
+{
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<WindowEvent> AsApplication<AppEvent<WindowEvent>> for App<WindowEvent>
+where
+    WindowEvent: Send + 'static,
+{
+    fn as_application(&self) -> &dyn Application<AppEvent<WindowEvent>>
+    where
+        AppEvent<WindowEvent>: Message,
+    {
+        self.0.as_application()
+    }
+
+    fn as_application_mut(&mut self) -> &mut dyn Application<AppEvent<WindowEvent>>
+    where
+        AppEvent<WindowEvent>: Message,
+    {
+        self.0.as_application_mut()
+    }
+}
 
 /// An open window.
 pub struct Window<'window, WindowEvent = ()>
@@ -137,7 +256,7 @@ where
     /// application.
     #[must_use]
     pub fn app(&self) -> App<WindowEvent> {
-        self.window.app()
+        App(self.window.app())
     }
 
     /// Returns a reference to the underlying winit window.
@@ -723,7 +842,138 @@ where
 }
 
 /// A Kludgine application event.
-pub struct AppEvent<User>(CreateSurfaceRequest<User>);
+pub struct AppEvent<User>(AppEventKind<User>);
+
+enum AppEventKind<User> {
+    CreateSurface(CreateSurfaceRequest<User>),
+    ListMonitors,
+}
+
+/// A response to an [`AppEvent`].
+pub struct AppResponse(AppResponseKind);
+
+impl AppResponse {
+    fn expect_surface(self) -> wgpu::Surface<'static> {
+        let AppResponse(AppResponseKind::Surface(surface)) = self else {
+            unreachable!("unexpected response")
+        };
+        surface
+    }
+
+    fn expect_monitors(self) -> Monitors {
+        let AppResponse(AppResponseKind::Monitors(monitors)) = self else {
+            unreachable!("unexpected response")
+        };
+        monitors
+    }
+}
+
+/// A snapshot of information about monitors (displays) connected to this
+/// device.
+#[derive(Clone, Debug)]
+pub struct Monitors {
+    /// The primary monitor.
+    pub primary: Option<MonitorHandle>,
+    /// All available monitors.
+    pub available: Vec<MonitorHandle>,
+}
+
+/// Information about a monitor connected to a device.
+#[derive(Clone, Debug)]
+pub struct Monitor(MonitorHandle);
+
+impl Monitor {
+    /// Returns the name of the monitor, if available.
+    #[must_use]
+    pub fn name(&self) -> Option<String> {
+        self.0.name()
+    }
+
+    /// Returns the position of the top-left corner of the monitor.
+    #[must_use]
+    pub fn position(&self) -> Point<Px> {
+        self.0.position().into()
+    }
+
+    /// Returns the size of this monitor.
+    #[must_use]
+    pub fn size(&self) -> Size<UPx> {
+        self.0.size().into()
+    }
+
+    /// Returns a rectangle representing the position and size of this monitor.q
+    #[must_use]
+    pub fn region(&self) -> Rect<Px> {
+        Rect::new(self.position(), self.size().into_signed())
+    }
+
+    /// Returns the DPI scaling factor applied to this monitor.
+    #[allow(clippy::cast_possible_truncation)]
+    #[must_use]
+    pub fn scale_factor(&self) -> Fraction {
+        Fraction::from(self.0.scale_factor() as f32)
+    }
+
+    /// Returns the refresh rate of this display, in millihertz.
+    #[must_use]
+    pub fn refresh_rate_millihertz(&self) -> Option<u32> {
+        self.0.refresh_rate_millihertz()
+    }
+
+    /// Returns an iterator of the video modes supported by this monitor.
+    pub fn video_modes(&self) -> impl Iterator<Item = VideoMode> {
+        self.0.video_modes().map(VideoMode)
+    }
+
+    /// Returns a reference to the underlying handle.
+    #[must_use]
+    pub const fn handle(&self) -> &MonitorHandle {
+        &self.0
+    }
+}
+
+/// A specific video mode for a [`Monitor`].
+#[derive(Clone, Debug)]
+pub struct VideoMode(VideoModeHandle);
+
+impl VideoMode {
+    /// Returns a reference to the underlying handle.
+    #[must_use]
+    pub const fn handle(&self) -> &VideoModeHandle {
+        &self.0
+    }
+
+    /// Returns the color bit depth of this video mode.
+    ///
+    /// For most platforms this is generally 24 or 32 bits.
+    #[must_use]
+    pub fn bit_depth(&self) -> u16 {
+        self.0.bit_depth()
+    }
+
+    /// Returns the size the monitor will display at with this video mode.
+    #[must_use]
+    pub fn size(&self) -> Size<UPx> {
+        self.0.size().into()
+    }
+
+    /// Returns the refresh rate of this video mode.
+    #[must_use]
+    pub fn refresh_rate_millihertz(&self) -> u32 {
+        self.0.refresh_rate_millihertz()
+    }
+
+    /// Returns the monitor associated with this video mode.
+    #[must_use]
+    pub fn monitor(&self) -> Monitor {
+        Monitor(self.0.monitor())
+    }
+}
+
+enum AppResponseKind {
+    Surface(wgpu::Surface<'static>),
+    Monitors(Monitors),
+}
 
 struct CreateSurfaceRequest<User> {
     wgpu: Arc<wgpu::Instance>,
@@ -735,7 +985,7 @@ impl<User> Message for AppEvent<User>
 where
     User: Send + 'static,
 {
-    type Response = wgpu::Surface<'static>;
+    type Response = AppResponse;
     type Window = User;
 }
 
@@ -776,7 +1026,7 @@ impl<Behavior> KludgineWindow<Behavior> {
         window: &mut RunningWindow<AppEvent<User>>,
     ) -> Option<wgpu::SurfaceTexture>
     where
-        AppEvent<User>: Message<Response = wgpu::Surface<'static>>,
+        AppEvent<User>: Message<Response = AppResponse>,
     {
         loop {
             match self.surface.get_current_texture() {
@@ -791,12 +1041,15 @@ impl<Behavior> KludgineWindow<Behavior> {
                     }
                     wgpu::SurfaceError::Lost => {
                         self.surface = window
-                            .send(AppEvent(CreateSurfaceRequest {
-                                wgpu: self.wgpu.clone(),
-                                window: window.winit().id(),
-                                data: PhantomData,
-                            }))
-                            .expect("app not running");
+                            .send(AppEvent(AppEventKind::CreateSurface(
+                                CreateSurfaceRequest {
+                                    wgpu: self.wgpu.clone(),
+                                    window: window.winit().id(),
+                                    data: PhantomData,
+                                },
+                            )))
+                            .expect("app not running")
+                            .expect_surface();
                         self.surface.configure(&self.device, &self.config);
                     }
                     wgpu::SurfaceError::OutOfMemory => {
@@ -928,12 +1181,15 @@ where
     fn initialize(window: &mut RunningWindow<AppEvent<User>>, context: Self::Context) -> Self {
         let wgpu = Arc::new(new_wgpu_instance());
         let surface = window
-            .send(AppEvent(CreateSurfaceRequest {
-                wgpu: wgpu.clone(),
-                window: window.winit().id(),
-                data: PhantomData,
-            }))
-            .expect("app not running");
+            .send(AppEvent(AppEventKind::CreateSurface(
+                CreateSurfaceRequest {
+                    wgpu: wgpu.clone(),
+                    window: window.winit().id(),
+                    data: PhantomData,
+                },
+            )))
+            .expect("app not running")
+            .expect_surface();
         let adapter = pollster::block_on(wgpu.request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: T::power_preference(&context),
             force_fallback_adapter: false,
