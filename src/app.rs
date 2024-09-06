@@ -81,8 +81,12 @@ where
                     }
                     AppEventKind::ListMonitors => {
                         AppResponse(AppResponseKind::Monitors(Monitors {
-                            primary: windows.primary_monitor(),
-                            available: windows.available_monitors(),
+                            primary: windows.primary_monitor().map(Monitor),
+                            available: windows
+                                .available_monitors()
+                                .into_iter()
+                                .map(Monitor)
+                                .collect(),
                         }))
                     }
                 }
@@ -102,7 +106,7 @@ where
     /// available after the event loop has started. For example, to enter an
     /// exclusive full screen mode, monitor information must be accessed which
     /// requires the event loop to have been started.
-    pub fn on_startup<F>(&self, on_startup: F)
+    pub fn on_startup<F>(&mut self, on_startup: F)
     where
         F: FnOnce(ExecutingApp<'_, WindowEvent>) + Send + 'static,
     {
@@ -873,9 +877,9 @@ impl AppResponse {
 #[derive(Clone, Debug)]
 pub struct Monitors {
     /// The primary monitor.
-    pub primary: Option<MonitorHandle>,
+    pub primary: Option<Monitor>,
     /// All available monitors.
-    pub available: Vec<MonitorHandle>,
+    pub available: Vec<Monitor>,
 }
 
 /// Information about a monitor connected to a device.
