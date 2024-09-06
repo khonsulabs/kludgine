@@ -883,7 +883,7 @@ pub struct Monitors {
 }
 
 /// Information about a monitor connected to a device.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Monitor(MonitorHandle);
 
 impl Monitor {
