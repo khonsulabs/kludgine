@@ -644,6 +644,11 @@ where
     #[allow(unused_variables)]
     fn resized(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
+    /// The window has been moved. [`RunningWindow::position()`] returns the
+    /// current position.
+    #[allow(unused_variables)]
+    fn moved(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
+
     /// The window's theme has been updated. [`RunningWindow::theme()`]
     /// returns the current theme.
     #[allow(unused_variables)]
@@ -1329,6 +1334,17 @@ where
             window.set_needs_redraw();
         }
         self.behavior.resized(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            &mut self.kludgine,
+        );
+    }
+
+    fn moved(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
+        self.behavior.moved(
             Window::new(
                 window,
                 self.last_render.elapsed(),

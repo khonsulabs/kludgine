@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Monitors`, `Monitor`, and `VideoMode` are new types that offer information
   about the monitor configurations available to the application. This
   information can be retrieved from an `App` or `ExecutingApp`.
+- `WindowBehavior::moved` is invoked when the window is repositioned.
 
 ## v0.10.0 (2024-08-20)
 
