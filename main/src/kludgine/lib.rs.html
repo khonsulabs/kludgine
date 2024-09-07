@@ -2745,7 +2745,7 @@
     /// - [`Texture::prepare`]
     /// - [`Texture::prepare_partial`]
     /// - [`CollectedTexture::prepare`]
-    /// - [`Drawing::new_frame`](render::Drawing::new_frame)
+    /// - [`Drawing::new_frame`](drawing::Drawing::new_frame)
     ///
     /// The returned graphics provides access to the various types to update
     /// their representation on the GPU so that they can be rendered later.
@@ -2762,7 +2762,7 @@
     ///
     /// - [`PreparedGraphic`]
     /// - [`PreparedText`](text::PreparedText)
-    /// - [`Drawing`](render::Drawing)
+    /// - [`Drawing`](drawing::Drawing)
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>render&lt;<span class="lifetime">'gfx</span>, <span class="lifetime">'pass</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="kw-2">mut </span><span class="self">self</span>,
@@ -2791,7 +2791,7 @@
     ///
     /// - [`PreparedGraphic`]
     /// - [`PreparedText`](text::PreparedText)
-    /// - [`Drawing`](render::Drawing)
+    /// - [`Drawing`](drawing::Drawing)
     </span><span class="kw">pub fn </span>render_into&lt;<span class="lifetime">'gfx</span>, <span class="lifetime">'pass</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="kw-2">mut </span><span class="self">self</span>,
         texture: <span class="kw-2">&amp;</span><span class="lifetime">'pass </span>Texture,
@@ -2982,7 +2982,7 @@
 /// - [`Texture::prepare`]
 /// - [`Texture::prepare_partial`]
 /// - [`CollectedTexture::prepare`]
-/// - [`Drawing::new_frame`](render::Drawing::new_frame)
+/// - [`Drawing::new_frame`](drawing::Drawing::new_frame)
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Graphics&lt;<span class="lifetime">'gfx</span>&gt; {
     kludgine: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span><span class="kw-2">mut </span>Kludgine,
@@ -3096,7 +3096,7 @@
 ///
 /// - [`PreparedGraphic`]
 /// - [`PreparedText`](text::PreparedText)
-/// - [`Drawing`](render::Drawing)
+/// - [`Drawing`](drawing::Drawing)
 </span><span class="kw">pub struct </span>RenderingGraphics&lt;<span class="lifetime">'gfx</span>, <span class="lifetime">'pass</span>&gt; {
     pass: wgpu::RenderPass&lt;<span class="lifetime">'pass</span>&gt;,
     kludgine: <span class="kw-2">&amp;</span><span class="lifetime">'pass </span>Kludgine,

@@ -1755,6 +1755,28 @@
 <a href="#1755" id="1755">1755</a>
 <a href="#1756" id="1756">1756</a>
 <a href="#1757" id="1757">1757</a>
+<a href="#1758" id="1758">1758</a>
+<a href="#1759" id="1759">1759</a>
+<a href="#1760" id="1760">1760</a>
+<a href="#1761" id="1761">1761</a>
+<a href="#1762" id="1762">1762</a>
+<a href="#1763" id="1763">1763</a>
+<a href="#1764" id="1764">1764</a>
+<a href="#1765" id="1765">1765</a>
+<a href="#1766" id="1766">1766</a>
+<a href="#1767" id="1767">1767</a>
+<a href="#1768" id="1768">1768</a>
+<a href="#1769" id="1769">1769</a>
+<a href="#1770" id="1770">1770</a>
+<a href="#1771" id="1771">1771</a>
+<a href="#1772" id="1772">1772</a>
+<a href="#1773" id="1773">1773</a>
+<a href="#1774" id="1774">1774</a>
+<a href="#1775" id="1775">1775</a>
+<a href="#1776" id="1776">1776</a>
+<a href="#1777" id="1777">1777</a>
+<a href="#1778" id="1778">1778</a>
+<a href="#1779" id="1779">1779</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
@@ -2059,6 +2081,12 @@
         <span class="self">self</span>.window.set_inner_size(inner_size.into());
     }
 
+    <span class="doccomment">/// Returns the size of the window, including decorations.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>outer_size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;UPx&gt; {
+        <span class="self">self</span>.window.outer_size().into()
+    }
+
     <span class="doccomment">/// Returns true if the window is currently focused for keyboard input.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>focused(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
@@ -2074,7 +2102,7 @@
     <span class="doccomment">/// Returns true if the window is currenly not visible because it is
     /// completely hidden behind other windows, offcreen, or minimized.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub const fn </span>ocluded(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    </span><span class="kw">pub const fn </span>occluded(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.window.occluded()
     }
 
@@ -2333,8 +2361,8 @@
     ///
     /// # Errors
     ///
-    /// The only errors this funciton can return arise from
-    /// [`winit::window::WindowBuilder::build`].
+    /// The only errors this funciton can return arise from winit's
+    /// `create_window`.
     </span><span class="kw">fn </span>open&lt;App&gt;(app: <span class="kw-2">&amp;mut </span>App) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;WindowHandle&lt;WindowEvent&gt;&gt;, OsError&gt;
     <span class="kw">where
         </span>App: AsApplication&lt;AppEvent&lt;WindowEvent&gt;&gt; + <span class="question-mark">?</span>Sized,
@@ -2353,8 +2381,8 @@
     ///
     /// # Errors
     ///
-    /// The only errors this funciton can return arise from
-    /// [`winit::window::WindowBuilder::build`].
+    /// The only errors this funciton can return arise from winit's
+    /// `create_window`.
     </span><span class="kw">fn </span>open_with&lt;App&gt;(
         app: <span class="kw-2">&amp;mut </span>App,
         context: <span class="self">Self</span>::Context,
@@ -2381,28 +2409,33 @@
         <span class="bool-val">true
     </span>}
 
-    <span class="doccomment">/// The window has gained or lost keyboard focus.
-    /// [`RunningWindow::focused()`] returns the current state.
+    <span class="doccomment">/// The window has gained or lost keyboard focus. [`Window::focused()`]
+    /// returns the current state.
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>focus_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">'_</span>, WindowEvent&gt;, kludgine: <span class="kw-2">&amp;mut </span>Kludgine) {}
 
-    <span class="doccomment">/// The window has been occluded or revealed. [`RunningWindow::occluded()`]
-    /// returns the current state.
+    <span class="doccomment">/// The window has been occluded or revealed. [`Window::occluded()`] returns
+    /// the current state.
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>occlusion_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">'_</span>, WindowEvent&gt;, kludgine: <span class="kw-2">&amp;mut </span>Kludgine) {}
 
-    <span class="doccomment">/// The window's scale factor has changed. [`RunningWindow::scale()`]
-    /// returns the current scale.
+    <span class="doccomment">/// The window's scale factor has changed. [`Window::scale()`] returns the
+    /// current scale.
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>scale_factor_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">'_</span>, WindowEvent&gt;, kludgine: <span class="kw-2">&amp;mut </span>Kludgine) {}
 
-    <span class="doccomment">/// The window has been resized. [`RunningWindow::inner_size()`]
-    /// returns the current size.
+    <span class="doccomment">/// The window has been resized. [`Window::inner_size()`] returns the
+    /// current size.
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>resized(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">'_</span>, WindowEvent&gt;, kludgine: <span class="kw-2">&amp;mut </span>Kludgine) {}
 
-    <span class="doccomment">/// The window's theme has been updated. [`RunningWindow::theme()`]
-    /// returns the current theme.
+    <span class="doccomment">/// The window has been moved. [`Window::position()`] returns the current
+    /// position.
+    </span><span class="attr">#[allow(unused_variables)]
+    </span><span class="kw">fn </span>moved(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">'_</span>, WindowEvent&gt;, kludgine: <span class="kw-2">&amp;mut </span>Kludgine) {}
+
+    <span class="doccomment">/// The window's theme has been updated. [`Window::theme()`] returns the
+    /// current theme.
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>theme_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">'_</span>, WindowEvent&gt;, kludgine: <span class="kw-2">&amp;mut </span>Kludgine) {}
 
@@ -2453,8 +2486,8 @@
     ) {
     }
 
-    <span class="doccomment">/// The keyboard modifier keys have changed. [`RunningWindow::modifiers()`]
-    /// returns the current modifier keys state.
+    <span class="doccomment">/// The keyboard modifier keys have changed. [`Window::modifiers()`] returns
+    /// the current modifier keys state.
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>modifiers_changed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">'_</span>, WindowEvent&gt;, kludgine: <span class="kw-2">&amp;mut </span>Kludgine) {}
 
@@ -3086,6 +3119,17 @@
             window.set_needs_redraw();
         }
         <span class="self">self</span>.behavior.resized(
+            Window::new(
+                window,
+                <span class="self">self</span>.last_render.elapsed(),
+                <span class="self">self</span>.last_render_duration,
+            ),
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.kludgine,
+        );
+    }
+
+    <span class="kw">fn </span>moved(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
+        <span class="self">self</span>.behavior.moved(
             Window::new(
                 window,
                 <span class="self">self</span>.last_render.elapsed(),
