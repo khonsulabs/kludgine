@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `appit::App`. The previously exported type wasn't able to be used beyond
   passing it as a parameter for opening additional windows. This new type
   exposes additional winit information including monitor configurations.
+- `Window::ocluded` has had its spelling fixed and is now `Window::occluded`.
 
 ### Fixed
 
@@ -28,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   about the monitor configurations available to the application. This
   information can be retrieved from an `App` or `ExecutingApp`.
 - `WindowBehavior::moved` is invoked when the window is repositioned.
+- `Window::outer_size` is a new function that returns the window's size
+  including decorations.
 
 ## v0.10.0 (2024-08-20)
 

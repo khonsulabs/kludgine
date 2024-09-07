@@ -307,7 +307,7 @@ impl Frame<'_> {
     /// - [`Texture::prepare`]
     /// - [`Texture::prepare_partial`]
     /// - [`CollectedTexture::prepare`]
-    /// - [`Drawing::new_frame`](render::Drawing::new_frame)
+    /// - [`Drawing::new_frame`](drawing::Drawing::new_frame)
     ///
     /// The returned graphics provides access to the various types to update
     /// their representation on the GPU so that they can be rendered later.
@@ -324,7 +324,7 @@ impl Frame<'_> {
     ///
     /// - [`PreparedGraphic`]
     /// - [`PreparedText`](text::PreparedText)
-    /// - [`Drawing`](render::Drawing)
+    /// - [`Drawing`](drawing::Drawing)
     #[must_use]
     pub fn render<'gfx, 'pass>(
         &'pass mut self,
@@ -353,7 +353,7 @@ impl Frame<'_> {
     ///
     /// - [`PreparedGraphic`]
     /// - [`PreparedText`](text::PreparedText)
-    /// - [`Drawing`](render::Drawing)
+    /// - [`Drawing`](drawing::Drawing)
     pub fn render_into<'gfx, 'pass>(
         &'pass mut self,
         texture: &'pass Texture,
@@ -544,7 +544,7 @@ impl ClipStack {
 /// - [`Texture::prepare`]
 /// - [`Texture::prepare_partial`]
 /// - [`CollectedTexture::prepare`]
-/// - [`Drawing::new_frame`](render::Drawing::new_frame)
+/// - [`Drawing::new_frame`](drawing::Drawing::new_frame)
 #[derive(Debug)]
 pub struct Graphics<'gfx> {
     kludgine: &'gfx mut Kludgine,
@@ -658,7 +658,7 @@ impl sealed::Clipped for Graphics<'_> {}
 ///
 /// - [`PreparedGraphic`]
 /// - [`PreparedText`](text::PreparedText)
-/// - [`Drawing`](render::Drawing)
+/// - [`Drawing`](drawing::Drawing)
 pub struct RenderingGraphics<'gfx, 'pass> {
     pass: wgpu::RenderPass<'pass>,
     kludgine: &'pass Kludgine,

@@ -302,6 +302,12 @@ where
         self.window.set_inner_size(inner_size.into());
     }
 
+    /// Returns the size of the window, including decorations.
+    #[must_use]
+    pub fn outer_size(&self) -> Size<UPx> {
+        self.window.outer_size().into()
+    }
+
     /// Returns true if the window is currently focused for keyboard input.
     #[must_use]
     pub const fn focused(&self) -> bool {
@@ -317,7 +323,7 @@ where
     /// Returns true if the window is currenly not visible because it is
     /// completely hidden behind other windows, offcreen, or minimized.
     #[must_use]
-    pub const fn ocluded(&self) -> bool {
+    pub const fn occluded(&self) -> bool {
         self.window.occluded()
     }
 
@@ -576,8 +582,8 @@ where
     ///
     /// # Errors
     ///
-    /// The only errors this funciton can return arise from
-    /// [`winit::window::WindowBuilder::build`].
+    /// The only errors this funciton can return arise from winit's
+    /// `create_window`.
     fn open<App>(app: &mut App) -> Result<Option<WindowHandle<WindowEvent>>, OsError>
     where
         App: AsApplication<AppEvent<WindowEvent>> + ?Sized,
@@ -596,8 +602,8 @@ where
     ///
     /// # Errors
     ///
-    /// The only errors this funciton can return arise from
-    /// [`winit::window::WindowBuilder::build`].
+    /// The only errors this funciton can return arise from winit's
+    /// `create_window`.
     fn open_with<App>(
         app: &mut App,
         context: Self::Context,
@@ -624,33 +630,33 @@ where
         true
     }
 
-    /// The window has gained or lost keyboard focus.
-    /// [`RunningWindow::focused()`] returns the current state.
+    /// The window has gained or lost keyboard focus. [`Window::focused()`]
+    /// returns the current state.
     #[allow(unused_variables)]
     fn focus_changed(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
-    /// The window has been occluded or revealed. [`RunningWindow::occluded()`]
-    /// returns the current state.
+    /// The window has been occluded or revealed. [`Window::occluded()`] returns
+    /// the current state.
     #[allow(unused_variables)]
     fn occlusion_changed(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
-    /// The window's scale factor has changed. [`RunningWindow::scale()`]
-    /// returns the current scale.
+    /// The window's scale factor has changed. [`Window::scale()`] returns the
+    /// current scale.
     #[allow(unused_variables)]
     fn scale_factor_changed(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
-    /// The window has been resized. [`RunningWindow::inner_size()`]
-    /// returns the current size.
+    /// The window has been resized. [`Window::inner_size()`] returns the
+    /// current size.
     #[allow(unused_variables)]
     fn resized(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
-    /// The window has been moved. [`RunningWindow::position()`] returns the
-    /// current position.
+    /// The window has been moved. [`Window::position()`] returns the current
+    /// position.
     #[allow(unused_variables)]
     fn moved(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
-    /// The window's theme has been updated. [`RunningWindow::theme()`]
-    /// returns the current theme.
+    /// The window's theme has been updated. [`Window::theme()`] returns the
+    /// current theme.
     #[allow(unused_variables)]
     fn theme_changed(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 
@@ -701,8 +707,8 @@ where
     ) {
     }
 
-    /// The keyboard modifier keys have changed. [`RunningWindow::modifiers()`]
-    /// returns the current modifier keys state.
+    /// The keyboard modifier keys have changed. [`Window::modifiers()`] returns
+    /// the current modifier keys state.
     #[allow(unused_variables)]
     fn modifiers_changed(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
 

@@ -106,7 +106,7 @@ checksum = "10f00e1f6e58a40e807377c75c6a7f97bf9044fab57816f2414e6f5f4499d7b8"
 [[package]]
 name = "appit"
 version = "0.3.2"
-source = "git+https://github.com/khonsulabs/appit#90669b6b8ab18978955a2d148ccdd1abb0b38c49"
+source = "git+https://github.com/khonsulabs/appit#35e011dc9299d037539b7e48b1f61be5c07d528c"
 dependencies = [
  "winit",
 ]
