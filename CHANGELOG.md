@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   passing it as a parameter for opening additional windows. This new type
   exposes additional winit information including monitor configurations.
 - `Window::ocluded` has had its spelling fixed and is now `Window::occluded`.
+- `Window::position` has been renamed to `Window::outer_position`
+- `Window::set_position` has been renamed to `Window::set_outer_position`.
 
 ### Fixed
 
@@ -31,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `WindowBehavior::moved` is invoked when the window is repositioned.
 - `Window::outer_size` is a new function that returns the window's size
   including decorations.
+- `Window::inner_position` returns the position of the top-left of the content
+  area of the window.
 
 ## v0.10.0 (2024-08-20)
 

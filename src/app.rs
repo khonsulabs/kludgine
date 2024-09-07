@@ -274,15 +274,21 @@ where
         self.window.close();
     }
 
-    /// Returns the current position of the window.
+    /// Returns the current inner position of the window.
     #[must_use]
-    pub fn position(&self) -> Point<Px> {
-        self.window.position().into()
+    pub fn inner_position(&self) -> Point<Px> {
+        self.window.inner_position().into()
     }
 
-    /// Sets the current position of the window.
-    pub fn set_position(&self, position: Point<Px>) {
-        self.window.set_position(position.into());
+    /// Returns the current outer position of the window.
+    #[must_use]
+    pub fn outer_position(&self) -> Point<Px> {
+        self.window.outer_position().into()
+    }
+
+    /// Sets the current outer position of the window.
+    pub fn set_outer_position(&self, position: Point<Px>) {
+        self.window.set_outer_position(position.into());
     }
 
     /// Returns the current DPI scale of the window.
