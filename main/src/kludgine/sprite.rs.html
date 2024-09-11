@@ -1256,7 +1256,7 @@
             </span><span class="kw">let </span>key = frame.key.decode_if_needed();
             <span class="kw">let </span>name = key.split(<span class="string">'.'</span>).next().assert_expected();
             <span class="comment">// Split by _ or ' 'as per the documentation of this method.
-            </span><span class="kw">let </span>name_parts = name.split(|c| c == <span class="string">'_' </span>|| c == <span class="string">' '</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+            </span><span class="kw">let </span>name_parts = name.split([<span class="string">'_'</span>, <span class="string">' '</span>]).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
             <span class="kw">let </span>frame_number = name_parts[name_parts.len() - <span class="number">1</span>]
                 .parse::&lt;usize&gt;()
                 .or_else(|<span class="kw">_</span>| {
