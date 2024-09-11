@@ -1766,7 +1766,7 @@ where
 /// A handle to a window.
 ///
 /// This handle does not prevent the window from being closed.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct WindowHandle<Message = ()>(appit::Window<Message>);
 
 impl<Message> WindowHandle<Message> {
@@ -1781,5 +1781,11 @@ impl<Message> WindowHandle<Message> {
     /// If the window is already closed, this function returns `Err(message)`.
     pub fn send(&self, message: Message) -> Result<(), Message> {
         self.0.send(message)
+    }
+}
+
+impl<Message> Clone for WindowHandle<Message> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
     }
 }

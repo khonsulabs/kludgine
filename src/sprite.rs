@@ -271,7 +271,7 @@ impl Sprite {
             let key = frame.key.decode_if_needed();
             let name = key.split('.').next().assert_expected();
             // Split by _ or ' 'as per the documentation of this method.
-            let name_parts = name.split(|c| c == '_' || c == ' ').collect::<Vec<_>>();
+            let name_parts = name.split(['_', ' ']).collect::<Vec<_>>();
             let frame_number = name_parts[name_parts.len() - 1]
                 .parse::<usize>()
                 .or_else(|_| {
