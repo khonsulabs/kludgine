@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   including decorations.
 - `Window::inner_position` returns the position of the top-left of the content
   area of the window.
+- `App::prevent_shutdown()` returns a guard that prevents the application from
+  closing automatically when the final window is closed.
 
 ## v0.10.0 (2024-08-20)
 

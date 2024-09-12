@@ -191,7 +191,22 @@ where
             .map(AppResponse::expect_monitors)
             .filter(|monitors| !monitors.available.is_empty())
     }
+
+    /// Creates a guard that prevents this app from shutting down.
+    ///
+    /// If the app is not currently running, this function returns None.
+    ///
+    /// Once a guard is allocated the app will not be closed automatically when
+    /// the final window is closed. If the final shutdown guard is dropped while
+    /// no windows are open, the app will be closed.
+    #[allow(clippy::must_use_candidate)]
+    pub fn prevent_shutdown(&self) -> Option<ShutdownGuard<WindowEvent>> {
+        self.0.prevent_shutdown()
+    }
 }
+
+/// A guard preventing an [`App`] from shutting down.
+pub type ShutdownGuard<WindowEvent> = appit::ShutdownGuard<AppEvent<WindowEvent>>;
 
 impl<WindowEvent> Clone for App<WindowEvent>
 where
