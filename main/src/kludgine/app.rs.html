@@ -1789,6 +1789,21 @@
 <a href="#1789" id="1789">1789</a>
 <a href="#1790" id="1790">1790</a>
 <a href="#1791" id="1791">1791</a>
+<a href="#1792" id="1792">1792</a>
+<a href="#1793" id="1793">1793</a>
+<a href="#1794" id="1794">1794</a>
+<a href="#1795" id="1795">1795</a>
+<a href="#1796" id="1796">1796</a>
+<a href="#1797" id="1797">1797</a>
+<a href="#1798" id="1798">1798</a>
+<a href="#1799" id="1799">1799</a>
+<a href="#1800" id="1800">1800</a>
+<a href="#1801" id="1801">1801</a>
+<a href="#1802" id="1802">1802</a>
+<a href="#1803" id="1803">1803</a>
+<a href="#1804" id="1804">1804</a>
+<a href="#1805" id="1805">1805</a>
+<a href="#1806" id="1806">1806</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
@@ -1982,7 +1997,22 @@
             .map(AppResponse::expect_monitors)
             .filter(|monitors| !monitors.available.is_empty())
     }
+
+    <span class="doccomment">/// Creates a guard that prevents this app from shutting down.
+    ///
+    /// If the app is not currently running, this function returns None.
+    ///
+    /// Once a guard is allocated the app will not be closed automatically when
+    /// the final window is closed. If the final shutdown guard is dropped while
+    /// no windows are open, the app will be closed.
+    </span><span class="attr">#[allow(clippy::must_use_candidate)]
+    </span><span class="kw">pub fn </span>prevent_shutdown(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;ShutdownGuard&lt;WindowEvent&gt;&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.prevent_shutdown()
+    }
 }
+
+<span class="doccomment">/// A guard preventing an [`App`] from shutting down.
+</span><span class="kw">pub type </span>ShutdownGuard&lt;WindowEvent&gt; = appit::ShutdownGuard&lt;AppEvent&lt;WindowEvent&gt;&gt;;
 
 <span class="kw">impl</span>&lt;WindowEvent&gt; Clone <span class="kw">for </span>App&lt;WindowEvent&gt;
 <span class="kw">where

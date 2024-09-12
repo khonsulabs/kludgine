@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["run"],"struct":["App","AppEvent","AppResponse","ExecutingApp","Monitor","Monitors","PendingApp","VideoMode","Window","WindowAttributes","WindowHandle"],"trait":["Application","AsApplication","Message","WindowBehavior"]};
+window.SIDEBAR_ITEMS = {"fn":["run"],"struct":["App","AppEvent","AppResponse","ExecutingApp","Monitor","Monitors","PendingApp","VideoMode","Window","WindowAttributes","WindowHandle"],"trait":["Application","AsApplication","Message","WindowBehavior"],"type":["ShutdownGuard"]};
