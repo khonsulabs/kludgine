@@ -1804,6 +1804,21 @@
 <a href="#1804" id="1804">1804</a>
 <a href="#1805" id="1805">1805</a>
 <a href="#1806" id="1806">1806</a>
+<a href="#1807" id="1807">1807</a>
+<a href="#1808" id="1808">1808</a>
+<a href="#1809" id="1809">1809</a>
+<a href="#1810" id="1810">1810</a>
+<a href="#1811" id="1811">1811</a>
+<a href="#1812" id="1812">1812</a>
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
+<a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
@@ -2314,6 +2329,10 @@
     </span><span class="kw">fn </span>multisample_count(context: <span class="kw-2">&amp;</span><span class="self">Self</span>::Context) -&gt; NonZeroU32 {
         NonZeroU32::new(<span class="number">4</span>).assert(<span class="string">"4 is less than u32::MAX"</span>)
     }
+
+    <span class="doccomment">/// Executed once after the window has been fully initialized.
+    </span><span class="attr">#[allow(unused_variables)]
+    </span><span class="kw">fn </span>initialized(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">'_</span>, WindowEvent&gt;, kludgine: <span class="kw-2">&amp;mut </span>Kludgine) {}
 
     <span class="doccomment">/// Prepare the window to render.
     ///
@@ -3103,6 +3122,17 @@
             wgpu,
             multisample_count,
         }
+    }
+
+    <span class="kw">fn </span>initialized(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
+        <span class="self">self</span>.behavior.initialized(
+            Window::new(
+                window,
+                <span class="self">self</span>.last_render.elapsed(),
+                <span class="self">self</span>.last_render_duration,
+            ),
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.kludgine,
+        );
     }
 
     <span class="kw">fn </span>redraw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
