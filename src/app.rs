@@ -509,6 +509,10 @@ where
         NonZeroU32::new(4).assert("4 is less than u32::MAX")
     }
 
+    /// Executed once after the window has been fully initialized.
+    #[allow(unused_variables)]
+    fn initialized(&mut self, window: Window<'_, WindowEvent>, kludgine: &mut Kludgine) {}
+
     /// Prepare the window to render.
     ///
     /// This is called directly before [`render()`](Self::render()) and is a
@@ -1297,6 +1301,17 @@ where
             wgpu,
             multisample_count,
         }
+    }
+
+    fn initialized(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
+        self.behavior.initialized(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            &mut self.kludgine,
+        );
     }
 
     fn redraw(&mut self, window: &mut RunningWindow<AppEvent<User>>) {

@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   area of the window.
 - `App::prevent_shutdown()` returns a guard that prevents the application from
   closing automatically when the final window is closed.
+- `WindowBehavior::initialized` is invoked once the window has been fully
+  initialized.
 
 ## v0.10.0 (2024-08-20)
 
