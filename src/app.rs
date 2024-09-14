@@ -1112,10 +1112,6 @@ impl<Behavior> KludgineWindow<Behavior> {
         Behavior: WindowBehavior<User> + 'static,
         User: Send + 'static,
     {
-        let current_size = Size::<UPx>::from(window.inner_size());
-        if current_size != self.kludgine.size() {
-            self.resized(window);
-        }
         let mut frame = self.kludgine.next_frame();
         let elapsed = render_start - self.last_render;
 
@@ -1349,6 +1345,10 @@ where
 
     fn redraw(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
         if self.config.width > 0 && self.config.height > 0 {
+            let current_size = Size::<UPx>::from(window.inner_size());
+            if current_size != self.kludgine.size() {
+                self.resized(window);
+            }
             let Some(surface) = self.current_surface_texture(window) else {
                 return;
             };
