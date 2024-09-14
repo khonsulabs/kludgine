@@ -43,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   closing automatically when the final window is closed.
 - `WindowBehavior::initialized` is invoked once the window has been fully
   initialized.
+- `WindowBehavior::pre_initialize` is invoked before wgpu is initialized on the
+  window.
 
 ## v0.10.0 (2024-08-20)
 

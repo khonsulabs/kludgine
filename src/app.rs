@@ -471,6 +471,10 @@ where
         context: Self::Context,
     ) -> Self;
 
+    /// Invoked before wgpu is initialized for this window.
+    #[allow(unused_variables)]
+    fn pre_initialize(context: &Self::Context, winit: &winit::window::Window) {}
+
     /// Returns the window attributes to use when creating the window.
     #[must_use]
     #[allow(unused_variables)]
@@ -1248,6 +1252,7 @@ where
     type Context = T::Context;
 
     fn initialize(window: &mut RunningWindow<AppEvent<User>>, context: Self::Context) -> Self {
+        T::pre_initialize(&context, window.winit());
         let wgpu = Arc::new(new_wgpu_instance());
         let surface = window
             .send(AppEvent(AppEventKind::CreateSurface(
