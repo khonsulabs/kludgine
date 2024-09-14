@@ -1839,6 +1839,11 @@
 <a href="#1839" id="1839">1839</a>
 <a href="#1840" id="1840">1840</a>
 <a href="#1841" id="1841">1841</a>
+<a href="#1842" id="1842">1842</a>
+<a href="#1843" id="1843">1843</a>
+<a href="#1844" id="1844">1844</a>
+<a href="#1845" id="1845">1845</a>
+<a href="#1846" id="1846">1846</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
@@ -2311,6 +2316,10 @@
         graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">'_</span>&gt;,
         context: <span class="self">Self</span>::Context,
     ) -&gt; <span class="self">Self</span>;
+
+    <span class="doccomment">/// Invoked before wgpu is initialized for this window.
+    </span><span class="attr">#[allow(unused_variables)]
+    </span><span class="kw">fn </span>pre_initialize(context: <span class="kw-2">&amp;</span><span class="self">Self</span>::Context, winit: <span class="kw-2">&amp;</span>winit::window::Window) {}
 
     <span class="doccomment">/// Returns the window attributes to use when creating the window.
     </span><span class="attr">#[must_use]
@@ -3089,6 +3098,7 @@
     <span class="kw">type </span>Context = T::Context;
 
     <span class="kw">fn </span>initialize(window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;, context: <span class="self">Self</span>::Context) -&gt; <span class="self">Self </span>{
+        T::pre_initialize(<span class="kw-2">&amp;</span>context, window.winit());
         <span class="kw">let </span>wgpu = Arc::new(new_wgpu_instance());
         <span class="kw">let </span>surface = window
             .send(AppEvent(AppEventKind::CreateSurface(
