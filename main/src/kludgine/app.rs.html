@@ -2947,10 +2947,6 @@
         Behavior: WindowBehavior&lt;User&gt; + <span class="lifetime">'static</span>,
         User: Send + <span class="lifetime">'static</span>,
     {
-        <span class="kw">let </span>current_size = Size::&lt;UPx&gt;::from(window.inner_size());
-        <span class="kw">if </span>current_size != <span class="self">self</span>.kludgine.size() {
-            <span class="self">self</span>.resized(window);
-        }
         <span class="kw">let </span><span class="kw-2">mut </span>frame = <span class="self">self</span>.kludgine.next_frame();
         <span class="kw">let </span>elapsed = render_start - <span class="self">self</span>.last_render;
 
@@ -3184,6 +3180,10 @@
 
     <span class="kw">fn </span>redraw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
         <span class="kw">if </span><span class="self">self</span>.config.width &gt; <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.config.height &gt; <span class="number">0 </span>{
+            <span class="kw">let </span>current_size = Size::&lt;UPx&gt;::from(window.inner_size());
+            <span class="kw">if </span>current_size != <span class="self">self</span>.kludgine.size() {
+                <span class="self">self</span>.resized(window);
+            }
             <span class="kw">let </span><span class="prelude-val">Some</span>(surface) = <span class="self">self</span>.current_surface_texture(window) <span class="kw">else </span>{
                 <span class="kw">return</span>;
             };
