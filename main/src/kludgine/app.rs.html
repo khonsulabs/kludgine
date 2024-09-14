@@ -1819,6 +1819,20 @@
 <a href="#1819" id="1819">1819</a>
 <a href="#1820" id="1820">1820</a>
 <a href="#1821" id="1821">1821</a>
+<a href="#1822" id="1822">1822</a>
+<a href="#1823" id="1823">1823</a>
+<a href="#1824" id="1824">1824</a>
+<a href="#1825" id="1825">1825</a>
+<a href="#1826" id="1826">1826</a>
+<a href="#1827" id="1827">1827</a>
+<a href="#1828" id="1828">1828</a>
+<a href="#1829" id="1829">1829</a>
+<a href="#1830" id="1830">1830</a>
+<a href="#1831" id="1831">1831</a>
+<a href="#1832" id="1832">1832</a>
+<a href="#1833" id="1833">1833</a>
+<a href="#1834" id="1834">1834</a>
+<a href="#1835" id="1835">1835</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
@@ -2933,6 +2947,10 @@
         Behavior: WindowBehavior&lt;User&gt; + <span class="lifetime">'static</span>,
         User: Send + <span class="lifetime">'static</span>,
     {
+        <span class="kw">let </span>current_size = Size::&lt;UPx&gt;::from(window.inner_size());
+        <span class="kw">if </span>current_size != <span class="self">self</span>.kludgine.size() {
+            <span class="self">self</span>.resized(window);
+        }
         <span class="kw">let </span><span class="kw-2">mut </span>frame = <span class="self">self</span>.kludgine.next_frame();
         <span class="kw">let </span>elapsed = render_start - <span class="self">self</span>.last_render;
 
@@ -3030,6 +3048,35 @@
         flags,
         ..wgpu::InstanceDescriptor::default()
     })
+}
+
+<span class="kw">impl</span>&lt;T&gt; KludgineWindow&lt;T&gt; {
+    <span class="kw">fn </span>resized&lt;User&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;)
+    <span class="kw">where
+        </span>T: WindowBehavior&lt;User&gt; + <span class="lifetime">'static</span>,
+        User: Send + <span class="lifetime">'static</span>,
+    {
+        <span class="self">self</span>.config.width = window.inner_size().width;
+        <span class="self">self</span>.config.height = window.inner_size().height;
+        <span class="kw">if </span><span class="self">self</span>.config.width &gt; <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.config.height &gt; <span class="number">0 </span>{
+            <span class="self">self</span>.surface.configure(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.config);
+            <span class="self">self</span>.kludgine.resize(
+                window.inner_size().into(),
+                window.scale().cast::&lt;f32&gt;(),
+                <span class="self">self</span>.kludgine.zoom,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.queue,
+            );
+            window.set_needs_redraw();
+        }
+        <span class="self">self</span>.behavior.resized(
+            Window::new(
+                window,
+                <span class="self">self</span>.last_render.elapsed(),
+                <span class="self">self</span>.last_render_duration,
+            ),
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.kludgine,
+        );
+    }
 }
 
 <span class="kw">impl</span>&lt;T, User&gt; appit::WindowBehavior&lt;AppEvent&lt;User&gt;&gt; <span class="kw">for </span>KludgineWindow&lt;T&gt;
@@ -3184,26 +3231,7 @@
     }
 
     <span class="kw">fn </span>resized(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
-        <span class="self">self</span>.config.width = window.inner_size().width;
-        <span class="self">self</span>.config.height = window.inner_size().height;
-        <span class="kw">if </span><span class="self">self</span>.config.width &gt; <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.config.height &gt; <span class="number">0 </span>{
-            <span class="self">self</span>.surface.configure(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.config);
-            <span class="self">self</span>.kludgine.resize(
-                window.inner_size().into(),
-                window.scale().cast::&lt;f32&gt;(),
-                <span class="self">self</span>.kludgine.zoom,
-                <span class="kw-2">&amp;</span><span class="self">self</span>.queue,
-            );
-            window.set_needs_redraw();
-        }
-        <span class="self">self</span>.behavior.resized(
-            Window::new(
-                window,
-                <span class="self">self</span>.last_render.elapsed(),
-                <span class="self">self</span>.last_render_duration,
-            ),
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.kludgine,
-        );
+        <span class="self">self</span>.resized(window);
     }
 
     <span class="kw">fn </span>moved(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
