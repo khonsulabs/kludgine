@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   surface.
 - `WindowHandle`'s `Clone` implementation no longer requires its generic
   parameter to implement `Clone`.
+- Temporarily worked around a Wayland-only issue where window resize events are
+  not being generated from explicit window sizing requests.
 
 ### Added
 

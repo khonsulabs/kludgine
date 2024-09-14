@@ -1345,9 +1345,15 @@ where
 
     fn redraw(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
         if self.config.width > 0 && self.config.height > 0 {
-            let current_size = Size::<UPx>::from(window.inner_size());
-            if current_size != self.kludgine.size() {
-                self.resized(window);
+            #[cfg(target_os = "linux")]
+            {
+                // This is a wayland-only workaround caused by resize events not
+                // being generated from request_inner_size calls. See
+                // <https://github.com/rust-windowing/winit/issues/3919>.
+                let current_size = Size::<UPx>::from(window.inner_size());
+                if current_size != self.kludgine.size() {
+                    self.resized(window);
+                }
             }
             let Some(surface) = self.current_surface_texture(window) else {
                 return;
