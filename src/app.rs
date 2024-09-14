@@ -1112,6 +1112,10 @@ impl<Behavior> KludgineWindow<Behavior> {
         Behavior: WindowBehavior<User> + 'static,
         User: Send + 'static,
     {
+        let current_size = Size::<UPx>::from(window.inner_size());
+        if current_size != self.kludgine.size() {
+            self.resized(window);
+        }
         let mut frame = self.kludgine.next_frame();
         let elapsed = render_start - self.last_render;
 
@@ -1209,6 +1213,35 @@ fn new_wgpu_instance() -> wgpu::Instance {
         flags,
         ..wgpu::InstanceDescriptor::default()
     })
+}
+
+impl<T> KludgineWindow<T> {
+    fn resized<User>(&mut self, window: &mut RunningWindow<AppEvent<User>>)
+    where
+        T: WindowBehavior<User> + 'static,
+        User: Send + 'static,
+    {
+        self.config.width = window.inner_size().width;
+        self.config.height = window.inner_size().height;
+        if self.config.width > 0 && self.config.height > 0 {
+            self.surface.configure(&self.device, &self.config);
+            self.kludgine.resize(
+                window.inner_size().into(),
+                window.scale().cast::<f32>(),
+                self.kludgine.zoom,
+                &self.queue,
+            );
+            window.set_needs_redraw();
+        }
+        self.behavior.resized(
+            Window::new(
+                window,
+                self.last_render.elapsed(),
+                self.last_render_duration,
+            ),
+            &mut self.kludgine,
+        );
+    }
 }
 
 impl<T, User> appit::WindowBehavior<AppEvent<User>> for KludgineWindow<T>
@@ -1363,26 +1396,7 @@ where
     }
 
     fn resized(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
-        self.config.width = window.inner_size().width;
-        self.config.height = window.inner_size().height;
-        if self.config.width > 0 && self.config.height > 0 {
-            self.surface.configure(&self.device, &self.config);
-            self.kludgine.resize(
-                window.inner_size().into(),
-                window.scale().cast::<f32>(),
-                self.kludgine.zoom,
-                &self.queue,
-            );
-            window.set_needs_redraw();
-        }
-        self.behavior.resized(
-            Window::new(
-                window,
-                self.last_render.elapsed(),
-                self.last_render_duration,
-            ),
-            &mut self.kludgine,
-        );
+        self.resized(window);
     }
 
     fn moved(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
