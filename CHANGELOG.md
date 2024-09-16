@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Breaking Changes
+
+- `Window::set_inner_size` has been replaced with `Window::request_inner_size`.
+  This function now matches winit's underlying `request_inner_size` behavior.
+  The function returns an option containing the new size if the size was able to
+  be applied before the function returns.
+
+  This new function properly updates the `inner_size` and `outer_size` when the
+  underlying window is resized immediately. Notably, this happens on Wayland but
+  may happen on some other platforms as well.
+
+  Users who are using Kludgine directly should invoke `Kludgine::resize` to
+  apply the new size.
+- `WindowBehavior::prepare` now returns a `Result<(), Resized>`. This change is
+  to support applications resizing the window during the prepare function. On
+  platforms that immediately resize the window, an extra redraw can be avoided
+  by returning `Err(Resized)`. This allows Kludgine to restart the current
+  frame's redraw with the new size immediately.
 
 ## v0.11.0 (2024-09-14)
 

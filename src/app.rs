@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use std::marker::PhantomData;
 use std::num::NonZeroU32;
 use std::path::PathBuf;
@@ -319,8 +320,11 @@ where
     }
 
     /// Sets the inner size of the window.
-    pub fn set_inner_size(&self, inner_size: Size<UPx>) {
-        self.window.set_inner_size(inner_size.into());
+    #[must_use]
+    pub fn request_inner_size(&mut self, inner_size: Size<UPx>) -> Option<Size<UPx>> {
+        self.window
+            .request_inner_size(inner_size.into())
+            .map(Size::from)
     }
 
     /// Returns the size of the window, including decorations.
@@ -521,8 +525,20 @@ where
     ///
     /// This is called directly before [`render()`](Self::render()) and is a
     /// perfect place to update any prepared graphics as needed.
+    ///
+    /// # Errors
+    ///
+    /// If during the preparation of rendering, the window is resized,
+    /// `Err(Resized)` is returned and Kludgine will immediately resize the
+    /// graphics context and begin rendering again.
     #[allow(unused_variables)]
-    fn prepare(&mut self, window: Window<'_, WindowEvent>, graphics: &mut Graphics<'_>) {}
+    fn prepare(
+        &mut self,
+        window: Window<'_, WindowEvent>,
+        graphics: &mut Graphics<'_>,
+    ) -> Result<(), Resized> {
+        Ok(())
+    }
 
     /// Render the contents of the window.
     // TODO refactor away from bool return.
@@ -885,6 +901,16 @@ where
     }
 }
 
+/// The window was resized whlie preparing to render.
+#[derive(Default, Debug, Eq, PartialEq, Clone, Copy)]
+pub struct Resized;
+
+impl Display for Resized {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("the context was resized before preparing to render")
+    }
+}
+
 /// A Kludgine application event.
 pub struct AppEvent<User>(AppEventKind<User>);
 
@@ -1111,7 +1137,8 @@ impl<Behavior> KludgineWindow<Behavior> {
         surface: wgpu::SurfaceTexture,
         render_start: Instant,
         window: &mut RunningWindow<AppEvent<User>>,
-    ) where
+    ) -> Result<(), Resized>
+    where
         AppEvent<User>: Message,
         Behavior: WindowBehavior<User> + 'static,
         User: Send + 'static,
@@ -1122,7 +1149,7 @@ impl<Behavior> KludgineWindow<Behavior> {
         self.behavior.prepare(
             Window::new(window, elapsed, self.last_render_duration),
             &mut frame.prepare(&self.device, &self.queue),
-        );
+        )?;
 
         let surface_view = surface
             .texture
@@ -1196,6 +1223,7 @@ impl<Behavior> KludgineWindow<Behavior> {
         if close_after_frame {
             window.close();
         }
+        Ok(())
     }
 }
 
@@ -1350,26 +1378,42 @@ where
 
     fn redraw(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
         if self.config.width > 0 && self.config.height > 0 {
-            #[cfg(target_os = "linux")]
-            {
-                // This is a wayland-only workaround caused by resize events not
-                // being generated from request_inner_size calls. See
-                // <https://github.com/rust-windowing/winit/issues/3919>.
-                let current_size = Size::<UPx>::from(window.inner_size());
-                if current_size != self.kludgine.size() {
-                    self.resized(window);
-                }
+            // When using winit's request_inner_size, some platforms may
+            // immediately resize and not emit a Resized event through winit.
+            // This is unfortunately something we can't hide from users, but we
+            // can work around users not handling it correctly by detecting that
+            // the size isn't what we expected and manually emitting a resized
+            // event.
+            let current_size = Size::<UPx>::from(window.inner_size());
+            if current_size != self.kludgine.size() {
+                self.resized(window);
             }
-            let Some(surface) = self.current_surface_texture(window) else {
+
+            let mut render_start = None;
+            loop {
+                let Some(surface) = self.current_surface_texture(window) else {
+                    return;
+                };
+
+                let render_start = render_start.unwrap_or_else(|| {
+                    let now = Instant::now();
+                    render_start = Some(now);
+                    now
+                });
+
+                if let Err(Resized) = self.render_to_surface(surface, render_start, window) {
+                    self.kludgine.resize(
+                        window.inner_size().into(),
+                        self.kludgine.scale(),
+                        self.kludgine.zoom(),
+                        &self.queue,
+                    );
+                    continue;
+                }
+                self.last_render_duration = render_start.elapsed();
+                self.last_render = render_start;
                 return;
-            };
-
-            let render_start = Instant::now();
-
-            self.render_to_surface(surface, render_start, window);
-
-            self.last_render_duration = render_start.elapsed();
-            self.last_render = render_start;
+            }
         }
     }
 
@@ -1786,9 +1830,10 @@ where
         }
     }
 
-    fn prepare(&mut self, window: Window<'_>, graphics: &mut Graphics<'_>) {
+    fn prepare(&mut self, window: Window<'_>, graphics: &mut Graphics<'_>) -> Result<(), Resized> {
         let renderer = self.rendering.new_frame(graphics);
         self.keep_running = (self.callback)(renderer, window);
+        Ok(())
     }
 
     fn render<'pass>(
