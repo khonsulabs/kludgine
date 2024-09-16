@@ -1221,6 +1221,17 @@ impl<Unit> StrokeOptions<Unit> {
     }
 }
 
+impl StrokeOptions<UPx> {
+    /// Returns the default options with a line width of `px`.
+    #[must_use]
+    pub fn upx_wide(px: impl Into<UPx>) -> Self {
+        Self {
+            line_width: px.into(),
+            ..Self::default()
+        }
+    }
+}
+
 impl StrokeOptions<Px> {
     /// Returns the default options with a line width of `px`.
     #[must_use]

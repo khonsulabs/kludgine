@@ -26,6 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   by returning `Err(Resized)`. This allows Kludgine to restart the current
   frame's redraw with the new size immediately.
 
+### Added
+
+- `StrokeOptions::upx_wide` returns stroke options for a given unsigned pixel
+  stroke width.
+- `LazyTexture` now implements `PartialEq`.
+
 ## v0.11.0 (2024-09-14)
 
 ### Breaking Changes

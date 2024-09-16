@@ -1481,6 +1481,12 @@ impl sealed::TextureSource for LazyTexture {
     }
 }
 
+impl PartialEq for LazyTexture {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.data, &other.data)
+    }
+}
+
 #[derive(Debug)]
 struct LazyTextureData {
     id: sealed::TextureId,
