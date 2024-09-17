@@ -1547,6 +1547,17 @@
 <a href="#1547" id="1547">1547</a>
 <a href="#1548" id="1548">1548</a>
 <a href="#1549" id="1549">1549</a>
+<a href="#1550" id="1550">1550</a>
+<a href="#1551" id="1551">1551</a>
+<a href="#1552" id="1552">1552</a>
+<a href="#1553" id="1553">1553</a>
+<a href="#1554" id="1554">1554</a>
+<a href="#1555" id="1555">1555</a>
+<a href="#1556" id="1556">1556</a>
+<a href="#1557" id="1557">1557</a>
+<a href="#1558" id="1558">1558</a>
+<a href="#1559" id="1559">1559</a>
+<a href="#1560" id="1560">1560</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::{Add, Div, Mul, Neg, Sub};
 
@@ -2768,6 +2779,17 @@
         <span class="self">self</span>.miter_limit = limit;
         <span class="self">self
     </span>}
+}
+
+<span class="kw">impl </span>StrokeOptions&lt;UPx&gt; {
+    <span class="doccomment">/// Returns the default options with a line width of `px`.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>upx_wide(px: <span class="kw">impl </span>Into&lt;UPx&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            line_width: px.into(),
+            ..<span class="self">Self</span>::default()
+        }
+    }
 }
 
 <span class="kw">impl </span>StrokeOptions&lt;Px&gt; {
