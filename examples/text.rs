@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use appit::winit::error::EventLoopError;
 use figures::{Angle, FromComponents, Point};
-use kludgine::app::{Resized, Window, WindowBehavior};
+use kludgine::app::{Window, WindowBehavior};
 use kludgine::cosmic_text::{Attrs, AttrsList, Buffer, Edit, Editor, Metrics};
 use kludgine::figures::{FloatConversion, ScreenScale};
 use kludgine::text::{PreparedText, TextOrigin};
@@ -60,11 +60,7 @@ impl WindowBehavior for Test {
         }
     }
 
-    fn prepare(
-        &mut self,
-        _window: Window<'_>,
-        graphics: &mut kludgine::Graphics<'_>,
-    ) -> Result<(), Resized> {
+    fn prepare(&mut self, _window: Window<'_>, graphics: &mut kludgine::Graphics<'_>) {
         let scale = graphics.scale();
         let size = graphics.size();
         self.text.set_size(
@@ -79,7 +75,6 @@ impl WindowBehavior for Test {
         let mut editor = Editor::new(&mut self.text);
         editor.shape_as_needed(graphics.font_system(), true);
         self.prepared = graphics.prepare_text(&self.text, Color::WHITE, TextOrigin::Center);
-        Ok(())
     }
 
     fn render<'pass>(

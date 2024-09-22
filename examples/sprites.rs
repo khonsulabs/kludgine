@@ -4,7 +4,7 @@ use appit::winit::error::EventLoopError;
 use appit::winit::keyboard::{Key, NamedKey};
 use figures::units::{Px, UPx};
 use figures::Zero;
-use kludgine::app::{Resized, WindowBehavior};
+use kludgine::app::WindowBehavior;
 use kludgine::figures::Size;
 use kludgine::sprite::{
     AnimationMode, Sprite, SpriteAnimation, SpriteAnimations, SpriteFrame, SpriteSheet,
@@ -139,13 +139,12 @@ impl WindowBehavior for Sprites {
         &mut self,
         window: kludgine::app::Window<'_, ()>,
         graphics: &mut kludgine::Graphics<'_>,
-    ) -> Result<(), Resized> {
+    ) {
         self.current_frame = self
             .sprite
             .get_frame(Some(window.elapsed()))
             .ok()
             .map(|frame| frame.prepare(Size::squared(Px::new(64)).into(), graphics));
-        Ok(())
     }
 
     fn render<'pass>(

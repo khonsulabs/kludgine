@@ -1,4 +1,3 @@
-use std::fmt::Display;
 use std::marker::PhantomData;
 use std::num::NonZeroU32;
 use std::path::PathBuf;
@@ -525,20 +524,8 @@ where
     ///
     /// This is called directly before [`render()`](Self::render()) and is a
     /// perfect place to update any prepared graphics as needed.
-    ///
-    /// # Errors
-    ///
-    /// If during the preparation of rendering, the window is resized,
-    /// `Err(Resized)` is returned and Kludgine will immediately resize the
-    /// graphics context and begin rendering again.
     #[allow(unused_variables)]
-    fn prepare(
-        &mut self,
-        window: Window<'_, WindowEvent>,
-        graphics: &mut Graphics<'_>,
-    ) -> Result<(), Resized> {
-        Ok(())
-    }
+    fn prepare(&mut self, window: Window<'_, WindowEvent>, graphics: &mut Graphics<'_>) {}
 
     /// Render the contents of the window.
     // TODO refactor away from bool return.
@@ -901,16 +888,6 @@ where
     }
 }
 
-/// The window was resized whlie preparing to render.
-#[derive(Default, Debug, Eq, PartialEq, Clone, Copy)]
-pub struct Resized;
-
-impl Display for Resized {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("the context was resized before preparing to render")
-    }
-}
-
 /// A Kludgine application event.
 pub struct AppEvent<User>(AppEventKind<User>);
 
@@ -1137,7 +1114,7 @@ impl<Behavior> KludgineWindow<Behavior> {
         surface: wgpu::SurfaceTexture,
         render_start: Instant,
         window: &mut RunningWindow<AppEvent<User>>,
-    ) -> Result<(), Resized>
+    ) -> bool
     where
         AppEvent<User>: Message,
         Behavior: WindowBehavior<User> + 'static,
@@ -1146,10 +1123,12 @@ impl<Behavior> KludgineWindow<Behavior> {
         let mut frame = self.kludgine.next_frame();
         let elapsed = render_start - self.last_render;
 
+        let current_size = window.inner_size();
         self.behavior.prepare(
             Window::new(window, elapsed, self.last_render_duration),
             &mut frame.prepare(&self.device, &self.queue),
-        )?;
+        );
+        let resized = window.inner_size() != current_size;
 
         let surface_view = surface
             .texture
@@ -1223,7 +1202,7 @@ impl<Behavior> KludgineWindow<Behavior> {
         if close_after_frame {
             window.close();
         }
-        Ok(())
+        resized
     }
 }
 
@@ -1390,30 +1369,27 @@ where
             }
 
             let mut render_start = None;
-            loop {
-                let Some(surface) = self.current_surface_texture(window) else {
-                    return;
-                };
-
-                let render_start = render_start.unwrap_or_else(|| {
-                    let now = Instant::now();
-                    render_start = Some(now);
-                    now
-                });
-
-                if let Err(Resized) = self.render_to_surface(surface, render_start, window) {
-                    self.kludgine.resize(
-                        window.inner_size().into(),
-                        self.kludgine.scale(),
-                        self.kludgine.zoom(),
-                        &self.queue,
-                    );
-                    continue;
-                }
-                self.last_render_duration = render_start.elapsed();
-                self.last_render = render_start;
+            let Some(surface) = self.current_surface_texture(window) else {
                 return;
+            };
+
+            let render_start = render_start.unwrap_or_else(|| {
+                let now = Instant::now();
+                render_start = Some(now);
+                now
+            });
+
+            if self.render_to_surface(surface, render_start, window) {
+                self.kludgine.resize(
+                    window.inner_size().into(),
+                    self.kludgine.scale(),
+                    self.kludgine.zoom(),
+                    &self.queue,
+                );
+                window.set_needs_redraw();
             }
+            self.last_render_duration = render_start.elapsed();
+            self.last_render = render_start;
         }
     }
 
@@ -1830,10 +1806,9 @@ where
         }
     }
 
-    fn prepare(&mut self, window: Window<'_>, graphics: &mut Graphics<'_>) -> Result<(), Resized> {
+    fn prepare(&mut self, window: Window<'_>, graphics: &mut Graphics<'_>) {
         let renderer = self.rendering.new_frame(graphics);
         self.keep_running = (self.callback)(renderer, window);
-        Ok(())
     }
 
     fn render<'pass>(

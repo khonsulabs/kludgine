@@ -20,11 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   Users who are using Kludgine directly should invoke `Kludgine::resize` to
   apply the new size.
-- `WindowBehavior::prepare` now returns a `Result<(), Resized>`. This change is
-  to support applications resizing the window during the prepare function. On
-  platforms that immediately resize the window, an extra redraw can be avoided
-  by returning `Err(Resized)`. This allows Kludgine to restart the current
-  frame's redraw with the new size immediately.
 
 ### Added
 
