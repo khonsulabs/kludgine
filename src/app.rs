@@ -244,6 +244,7 @@ where
     window: &'window mut RunningWindow<AppEvent<WindowEvent>>,
     elapsed: Duration,
     last_frame_rendered_in: Duration,
+    pending_inner_size: Option<&'window mut Option<Size<UPx>>>,
 }
 
 impl<'window, WindowEvent> Window<'window, WindowEvent>
@@ -259,6 +260,21 @@ where
             window,
             elapsed,
             last_frame_rendered_in,
+            pending_inner_size: None,
+        }
+    }
+
+    fn new_in_frame(
+        window: &'window mut RunningWindow<AppEvent<WindowEvent>>,
+        elapsed: Duration,
+        last_frame_rendered_in: Duration,
+        pending_inner_size: &'window mut Option<Size<UPx>>,
+    ) -> Self {
+        Self {
+            window,
+            elapsed,
+            last_frame_rendered_in,
+            pending_inner_size: Some(pending_inner_size),
         }
     }
 
@@ -321,9 +337,23 @@ where
     /// Sets the inner size of the window.
     #[must_use]
     pub fn request_inner_size(&mut self, inner_size: Size<UPx>) -> Option<Size<UPx>> {
-        self.window
-            .request_inner_size(inner_size.into())
-            .map(Size::from)
+        if let Some(pending_inner_size) = &mut self.pending_inner_size {
+            // wgpu's wayland + vulkan stack seems to have issues when resizing
+            // while the swapchain has a frame currently allocated. Wayland is
+            // one of the few platforms where request_inner_size immediately
+            // applies the size and does not fire a Resize event. The attempts
+            // at handling this flow correctly all fail when a call to
+            // request_inner_size is made while kludgine's executing a window
+            // behavior's prepare(). In this situation, rather than passing it
+            // through to winit immediately, we store it and request the change
+            // after the frame.
+            **pending_inner_size = Some(inner_size);
+            None
+        } else {
+            self.window
+                .request_inner_size(inner_size.into())
+                .map(Size::from)
+        }
     }
 
     /// Returns the size of the window, including decorations.
@@ -1112,23 +1142,26 @@ impl<Behavior> KludgineWindow<Behavior> {
     fn render_to_surface<User>(
         &mut self,
         surface: wgpu::SurfaceTexture,
-        render_start: Instant,
+        elapsed: Duration,
         window: &mut RunningWindow<AppEvent<User>>,
-    ) -> bool
+    ) -> Option<Size<UPx>>
     where
         AppEvent<User>: Message,
         Behavior: WindowBehavior<User> + 'static,
         User: Send + 'static,
     {
         let mut frame = self.kludgine.next_frame();
-        let elapsed = render_start - self.last_render;
+        let mut pending_inner_size = None;
 
-        let current_size = window.inner_size();
         self.behavior.prepare(
-            Window::new(window, elapsed, self.last_render_duration),
+            Window::new_in_frame(
+                window,
+                elapsed,
+                self.last_render_duration,
+                &mut pending_inner_size,
+            ),
             &mut frame.prepare(&self.device, &self.queue),
         );
-        let resized = window.inner_size() != current_size;
 
         let surface_view = surface
             .texture
@@ -1189,7 +1222,12 @@ impl<Behavior> KludgineWindow<Behavior> {
             &self.queue,
         );
         let close_after_frame = !self.behavior.render(
-            Window::new(window, elapsed, self.last_render_duration),
+            Window::new_in_frame(
+                window,
+                elapsed,
+                self.last_render_duration,
+                &mut pending_inner_size,
+            ),
             &mut gfx,
         );
         drop(gfx);
@@ -1202,7 +1240,7 @@ impl<Behavior> KludgineWindow<Behavior> {
         if close_after_frame {
             window.close();
         }
-        resized
+        pending_inner_size
     }
 }
 
@@ -1308,11 +1346,7 @@ where
 
         let last_render = Instant::now();
         let behavior = T::initialize(
-            Window {
-                window,
-                elapsed: Duration::ZERO,
-                last_frame_rendered_in: Duration::ZERO,
-            },
+            Window::new(window, Duration::ZERO, Duration::ZERO),
             &mut graphics,
             context,
         );
@@ -1378,15 +1412,22 @@ where
                 render_start = Some(now);
                 now
             });
+            let elapsed = render_start - self.last_render;
 
-            if self.render_to_surface(surface, render_start, window) {
-                self.kludgine.resize(
-                    window.inner_size().into(),
-                    self.kludgine.scale(),
-                    self.kludgine.zoom(),
-                    &self.queue,
-                );
-                window.set_needs_redraw();
+            if let Some(new_inner_size) = self.render_to_surface(surface, elapsed, window) {
+                if let Some(applied_size) = window.request_inner_size(new_inner_size.into()) {
+                    self.kludgine.resize(
+                        applied_size.into(),
+                        self.kludgine.scale(),
+                        self.kludgine.zoom(),
+                        &self.queue,
+                    );
+                    window.set_needs_redraw();
+                    self.behavior.resized(
+                        Window::new(window, elapsed, self.last_render_duration),
+                        &mut self.kludgine,
+                    );
+                }
             }
             self.last_render_duration = render_start.elapsed();
             self.last_render = render_start;
