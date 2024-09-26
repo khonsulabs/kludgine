@@ -1905,6 +1905,57 @@
 <a href="#1905" id="1905">1905</a>
 <a href="#1906" id="1906">1906</a>
 <a href="#1907" id="1907">1907</a>
+<a href="#1908" id="1908">1908</a>
+<a href="#1909" id="1909">1909</a>
+<a href="#1910" id="1910">1910</a>
+<a href="#1911" id="1911">1911</a>
+<a href="#1912" id="1912">1912</a>
+<a href="#1913" id="1913">1913</a>
+<a href="#1914" id="1914">1914</a>
+<a href="#1915" id="1915">1915</a>
+<a href="#1916" id="1916">1916</a>
+<a href="#1917" id="1917">1917</a>
+<a href="#1918" id="1918">1918</a>
+<a href="#1919" id="1919">1919</a>
+<a href="#1920" id="1920">1920</a>
+<a href="#1921" id="1921">1921</a>
+<a href="#1922" id="1922">1922</a>
+<a href="#1923" id="1923">1923</a>
+<a href="#1924" id="1924">1924</a>
+<a href="#1925" id="1925">1925</a>
+<a href="#1926" id="1926">1926</a>
+<a href="#1927" id="1927">1927</a>
+<a href="#1928" id="1928">1928</a>
+<a href="#1929" id="1929">1929</a>
+<a href="#1930" id="1930">1930</a>
+<a href="#1931" id="1931">1931</a>
+<a href="#1932" id="1932">1932</a>
+<a href="#1933" id="1933">1933</a>
+<a href="#1934" id="1934">1934</a>
+<a href="#1935" id="1935">1935</a>
+<a href="#1936" id="1936">1936</a>
+<a href="#1937" id="1937">1937</a>
+<a href="#1938" id="1938">1938</a>
+<a href="#1939" id="1939">1939</a>
+<a href="#1940" id="1940">1940</a>
+<a href="#1941" id="1941">1941</a>
+<a href="#1942" id="1942">1942</a>
+<a href="#1943" id="1943">1943</a>
+<a href="#1944" id="1944">1944</a>
+<a href="#1945" id="1945">1945</a>
+<a href="#1946" id="1946">1946</a>
+<a href="#1947" id="1947">1947</a>
+<a href="#1948" id="1948">1948</a>
+<a href="#1949" id="1949">1949</a>
+<a href="#1950" id="1950">1950</a>
+<a href="#1951" id="1951">1951</a>
+<a href="#1952" id="1952">1952</a>
+<a href="#1953" id="1953">1953</a>
+<a href="#1954" id="1954">1954</a>
+<a href="#1955" id="1955">1955</a>
+<a href="#1956" id="1956">1956</a>
+<a href="#1957" id="1957">1957</a>
+<a href="#1958" id="1958">1958</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
@@ -1980,10 +2031,7 @@
                     AppEventKind::CreateSurface(request) =&gt; {
                         <span class="kw">let </span>window = windows.get(request.window).expect(<span class="string">"window not found"</span>);
                         AppResponse(AppResponseKind::Surface(
-                            request
-                                .wgpu
-                                .create_surface(window)
-                                .expect(<span class="string">"error creating surface"</span>),
+                            request.wgpu.create_surface(window),
                         ))
                     }
                     AppEventKind::ListMonitors =&gt; {
@@ -2415,6 +2463,18 @@
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>pre_initialize(context: <span class="kw-2">&amp;</span><span class="self">Self</span>::Context, winit: <span class="kw-2">&amp;</span>winit::window::Window) {}
 
+    <span class="doccomment">/// An unrecoverable error occurred.
+    ///
+    /// Due to winit's design restrictions, there is no way to bubble a
+    /// user-defined error to the main function. This function is invoked when
+    /// an error occurs that cannot be recovered from.
+    ///
+    /// Kludgine cannot recover from these errors. The default implementation
+    /// panics.
+    </span><span class="kw">fn </span>unrecoverable_error(error: UnrecoverableError) -&gt; ! {
+        <span class="macro">panic!</span>(<span class="string">"unrecoverable error: {error}"</span>)
+    }
+
     <span class="doccomment">/// Returns the window attributes to use when creating the window.
     </span><span class="attr">#[must_use]
     #[allow(unused_variables)]
@@ -2837,11 +2897,18 @@
 </span><span class="kw">pub struct </span>AppResponse(AppResponseKind);
 
 <span class="kw">impl </span>AppResponse {
-    <span class="kw">fn </span>expect_surface(<span class="self">self</span>) -&gt; wgpu::Surface&lt;<span class="lifetime">'static</span>&gt; {
+    <span class="kw">fn </span>expect_surface&lt;Behavior, Event&gt;(<span class="self">self</span>) -&gt; wgpu::Surface&lt;<span class="lifetime">'static</span>&gt;
+    <span class="kw">where
+        </span>Behavior: WindowBehavior&lt;Event&gt;,
+        Event: Send + <span class="lifetime">'static</span>,
+    {
         <span class="kw">let </span>AppResponse(AppResponseKind::Surface(surface)) = <span class="self">self </span><span class="kw">else </span>{
             <span class="macro">unreachable!</span>(<span class="string">"unexpected response"</span>)
         };
-        surface
+        <span class="kw">match </span>surface {
+            <span class="prelude-val">Ok</span>(surface) =&gt; surface,
+            <span class="prelude-val">Err</span>(err) =&gt; Behavior::unrecoverable_error(UnrecoverableError::Surface(err)),
+        }
     }
 
     <span class="kw">fn </span>expect_monitors(<span class="self">self</span>) -&gt; Monitors {
@@ -2955,7 +3022,7 @@
 }
 
 <span class="kw">enum </span>AppResponseKind {
-    Surface(wgpu::Surface&lt;<span class="lifetime">'static</span>&gt;),
+    Surface(<span class="prelude-ty">Result</span>&lt;wgpu::Surface&lt;<span class="lifetime">'static</span>&gt;, wgpu::CreateSurfaceError&gt;),
     Monitors(Monitors),
 }
 
@@ -3011,6 +3078,8 @@
     ) -&gt; <span class="prelude-ty">Option</span>&lt;wgpu::SurfaceTexture&gt;
     <span class="kw">where
         </span>AppEvent&lt;User&gt;: Message&lt;Response = AppResponse&gt;,
+        Behavior: WindowBehavior&lt;User&gt; + <span class="lifetime">'static</span>,
+        User: Send + <span class="lifetime">'static</span>,
     {
         <span class="kw">loop </span>{
             <span class="kw">match </span><span class="self">self</span>.surface.get_current_texture() {
@@ -3033,7 +3102,7 @@
                                 },
                             )))
                             .expect(<span class="string">"app not running"</span>)
-                            .expect_surface();
+                            .expect_surface::&lt;Behavior, <span class="kw">_</span>&gt;();
                         <span class="self">self</span>.surface.configure(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.config);
                     }
                     wgpu::SurfaceError::OutOfMemory =&gt; {
@@ -3215,14 +3284,17 @@
                 },
             )))
             .expect(<span class="string">"app not running"</span>)
-            .expect_surface();
-        <span class="kw">let </span>adapter = pollster::block_on(wgpu.request_adapter(<span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
-            power_preference: T::power_preference(<span class="kw-2">&amp;</span>context),
-            force_fallback_adapter: <span class="bool-val">false</span>,
-            compatible_surface: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>surface),
-        }))
-        .expect(<span class="string">"no compatible graphics adapters found"</span>);
-        <span class="kw">let </span>(device, queue) = pollster::block_on(adapter.request_device(
+            .expect_surface::&lt;T, <span class="kw">_</span>&gt;();
+        <span class="kw">let </span><span class="prelude-val">Some</span>(adapter) =
+            pollster::block_on(wgpu.request_adapter(<span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
+                power_preference: T::power_preference(<span class="kw-2">&amp;</span>context),
+                force_fallback_adapter: <span class="bool-val">false</span>,
+                compatible_surface: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>surface),
+            }))
+        <span class="kw">else </span>{
+            T::unrecoverable_error(UnrecoverableError::NoAdapter)
+        };
+        <span class="kw">let </span>(device, queue) = <span class="kw">match </span>pollster::block_on(adapter.request_device(
             <span class="kw-2">&amp;</span>wgpu::DeviceDescriptor {
                 label: <span class="prelude-val">None</span>,
                 required_features: Kludgine::REQURED_FEATURES,
@@ -3230,8 +3302,10 @@
                 memory_hints: T::memory_hints(<span class="kw-2">&amp;</span>context),
             },
             <span class="prelude-val">None</span>,
-        ))
-        .expect(<span class="string">"no compatible graphics devices found"</span>);
+        )) {
+            <span class="prelude-val">Ok</span>(dev) =&gt; dev,
+            <span class="prelude-val">Err</span>(err) =&gt; T::unrecoverable_error(UnrecoverableError::Device(err)),
+        };
 
         <span class="kw">let </span>swapchain_capabilities = surface.get_capabilities(<span class="kw-2">&amp;</span>adapter);
         <span class="kw">let </span>swapchain_format = swapchain_capabilities.formats[<span class="number">0</span>];
@@ -3812,4 +3886,32 @@
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.clone())
     }
 }
+
+<span class="doccomment">/// An unrecoverable error
+</span><span class="attr">#[derive(Debug, Clone)]
+#[non_exhaustive]
+</span><span class="kw">pub enum </span>UnrecoverableError {
+    <span class="doccomment">/// An error occurred while creating the wgpu surface.
+    </span>Surface(wgpu::CreateSurfaceError),
+    <span class="doccomment">/// An error occurred while requesting a compatible device for a surface.
+    </span>Device(wgpu::RequestDeviceError),
+    <span class="doccomment">/// No compatible graphics adapters are available.
+    </span>NoAdapter,
+}
+
+<span class="kw">impl </span>std::fmt::Display <span class="kw">for </span>UnrecoverableError {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
+            UnrecoverableError::Surface(create_surface_error) =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">"wgpu surface creation error: {create_surface_error}"</span>)
+            }
+            UnrecoverableError::Device(err) =&gt; {
+                <span class="macro">write!</span>(f, <span class="string">"wgpu device request error: {err}"</span>)
+            }
+            UnrecoverableError::NoAdapter =&gt; f.write_str(<span class="string">"no compatible graphics adapters found"</span>),
+        }
+    }
+}
+
+<span class="kw">impl </span>std::error::Error <span class="kw">for </span>UnrecoverableError {}
 </code></pre></div></section></main></body></html>
