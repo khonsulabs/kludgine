@@ -73,10 +73,7 @@ where
                     AppEventKind::CreateSurface(request) => {
                         let window = windows.get(request.window).expect("window not found");
                         AppResponse(AppResponseKind::Surface(
-                            request
-                                .wgpu
-                                .create_surface(window)
-                                .expect("error creating surface"),
+                            request.wgpu.create_surface(window),
                         ))
                     }
                     AppEventKind::ListMonitors => {
@@ -508,6 +505,18 @@ where
     #[allow(unused_variables)]
     fn pre_initialize(context: &Self::Context, winit: &winit::window::Window) {}
 
+    /// An unrecoverable error occurred.
+    ///
+    /// Due to winit's design restrictions, there is no way to bubble a
+    /// user-defined error to the main function. This function is invoked when
+    /// an error occurs that cannot be recovered from.
+    ///
+    /// Kludgine cannot recover from these errors. The default implementation
+    /// panics.
+    fn unrecoverable_error(error: UnrecoverableError) -> ! {
+        panic!("unrecoverable error: {error}")
+    }
+
     /// Returns the window attributes to use when creating the window.
     #[must_use]
     #[allow(unused_variables)]
@@ -930,11 +939,18 @@ enum AppEventKind<User> {
 pub struct AppResponse(AppResponseKind);
 
 impl AppResponse {
-    fn expect_surface(self) -> wgpu::Surface<'static> {
+    fn expect_surface<Behavior, Event>(self) -> wgpu::Surface<'static>
+    where
+        Behavior: WindowBehavior<Event>,
+        Event: Send + 'static,
+    {
         let AppResponse(AppResponseKind::Surface(surface)) = self else {
             unreachable!("unexpected response")
         };
-        surface
+        match surface {
+            Ok(surface) => surface,
+            Err(err) => Behavior::unrecoverable_error(UnrecoverableError::Surface(err)),
+        }
     }
 
     fn expect_monitors(self) -> Monitors {
@@ -1048,7 +1064,7 @@ impl VideoMode {
 }
 
 enum AppResponseKind {
-    Surface(wgpu::Surface<'static>),
+    Surface(Result<wgpu::Surface<'static>, wgpu::CreateSurfaceError>),
     Monitors(Monitors),
 }
 
@@ -1104,6 +1120,8 @@ impl<Behavior> KludgineWindow<Behavior> {
     ) -> Option<wgpu::SurfaceTexture>
     where
         AppEvent<User>: Message<Response = AppResponse>,
+        Behavior: WindowBehavior<User> + 'static,
+        User: Send + 'static,
     {
         loop {
             match self.surface.get_current_texture() {
@@ -1126,7 +1144,7 @@ impl<Behavior> KludgineWindow<Behavior> {
                                 },
                             )))
                             .expect("app not running")
-                            .expect_surface();
+                            .expect_surface::<Behavior, _>();
                         self.surface.configure(&self.device, &self.config);
                     }
                     wgpu::SurfaceError::OutOfMemory => {
@@ -1308,14 +1326,17 @@ where
                 },
             )))
             .expect("app not running")
-            .expect_surface();
-        let adapter = pollster::block_on(wgpu.request_adapter(&wgpu::RequestAdapterOptions {
-            power_preference: T::power_preference(&context),
-            force_fallback_adapter: false,
-            compatible_surface: Some(&surface),
-        }))
-        .expect("no compatible graphics adapters found");
-        let (device, queue) = pollster::block_on(adapter.request_device(
+            .expect_surface::<T, _>();
+        let Some(adapter) =
+            pollster::block_on(wgpu.request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: T::power_preference(&context),
+                force_fallback_adapter: false,
+                compatible_surface: Some(&surface),
+            }))
+        else {
+            T::unrecoverable_error(UnrecoverableError::NoAdapter)
+        };
+        let (device, queue) = match pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
                 required_features: Kludgine::REQURED_FEATURES,
@@ -1323,8 +1344,10 @@ where
                 memory_hints: T::memory_hints(&context),
             },
             None,
-        ))
-        .expect("no compatible graphics devices found");
+        )) {
+            Ok(dev) => dev,
+            Err(err) => T::unrecoverable_error(UnrecoverableError::Device(err)),
+        };
 
         let swapchain_capabilities = surface.get_capabilities(&adapter);
         let swapchain_format = swapchain_capabilities.formats[0];
@@ -1905,3 +1928,31 @@ impl<Message> Clone for WindowHandle<Message> {
         Self(self.0.clone())
     }
 }
+
+/// An unrecoverable error
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum UnrecoverableError {
+    /// An error occurred while creating the wgpu surface.
+    Surface(wgpu::CreateSurfaceError),
+    /// An error occurred while requesting a compatible device for a surface.
+    Device(wgpu::RequestDeviceError),
+    /// No compatible graphics adapters are available.
+    NoAdapter,
+}
+
+impl std::fmt::Display for UnrecoverableError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UnrecoverableError::Surface(create_surface_error) => {
+                write!(f, "wgpu surface creation error: {create_surface_error}")
+            }
+            UnrecoverableError::Device(err) => {
+                write!(f, "wgpu device request error: {err}")
+            }
+            UnrecoverableError::NoAdapter => f.write_str("no compatible graphics adapters found"),
+        }
+    }
+}
+
+impl std::error::Error for UnrecoverableError {}
