@@ -1864,6 +1864,47 @@
 <a href="#1864" id="1864">1864</a>
 <a href="#1865" id="1865">1865</a>
 <a href="#1866" id="1866">1866</a>
+<a href="#1867" id="1867">1867</a>
+<a href="#1868" id="1868">1868</a>
+<a href="#1869" id="1869">1869</a>
+<a href="#1870" id="1870">1870</a>
+<a href="#1871" id="1871">1871</a>
+<a href="#1872" id="1872">1872</a>
+<a href="#1873" id="1873">1873</a>
+<a href="#1874" id="1874">1874</a>
+<a href="#1875" id="1875">1875</a>
+<a href="#1876" id="1876">1876</a>
+<a href="#1877" id="1877">1877</a>
+<a href="#1878" id="1878">1878</a>
+<a href="#1879" id="1879">1879</a>
+<a href="#1880" id="1880">1880</a>
+<a href="#1881" id="1881">1881</a>
+<a href="#1882" id="1882">1882</a>
+<a href="#1883" id="1883">1883</a>
+<a href="#1884" id="1884">1884</a>
+<a href="#1885" id="1885">1885</a>
+<a href="#1886" id="1886">1886</a>
+<a href="#1887" id="1887">1887</a>
+<a href="#1888" id="1888">1888</a>
+<a href="#1889" id="1889">1889</a>
+<a href="#1890" id="1890">1890</a>
+<a href="#1891" id="1891">1891</a>
+<a href="#1892" id="1892">1892</a>
+<a href="#1893" id="1893">1893</a>
+<a href="#1894" id="1894">1894</a>
+<a href="#1895" id="1895">1895</a>
+<a href="#1896" id="1896">1896</a>
+<a href="#1897" id="1897">1897</a>
+<a href="#1898" id="1898">1898</a>
+<a href="#1899" id="1899">1899</a>
+<a href="#1900" id="1900">1900</a>
+<a href="#1901" id="1901">1901</a>
+<a href="#1902" id="1902">1902</a>
+<a href="#1903" id="1903">1903</a>
+<a href="#1904" id="1904">1904</a>
+<a href="#1905" id="1905">1905</a>
+<a href="#1906" id="1906">1906</a>
+<a href="#1907" id="1907">1907</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
@@ -2110,6 +2151,7 @@
     window: <span class="kw-2">&amp;</span><span class="lifetime">'window </span><span class="kw-2">mut </span>RunningWindow&lt;AppEvent&lt;WindowEvent&gt;&gt;,
     elapsed: Duration,
     last_frame_rendered_in: Duration,
+    pending_inner_size: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'window </span><span class="kw-2">mut </span><span class="prelude-ty">Option</span>&lt;Size&lt;UPx&gt;&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'window</span>, WindowEvent&gt; Window&lt;<span class="lifetime">'window</span>, WindowEvent&gt;
@@ -2125,6 +2167,21 @@
             window,
             elapsed,
             last_frame_rendered_in,
+            pending_inner_size: <span class="prelude-val">None</span>,
+        }
+    }
+
+    <span class="kw">fn </span>new_in_frame(
+        window: <span class="kw-2">&amp;</span><span class="lifetime">'window </span><span class="kw-2">mut </span>RunningWindow&lt;AppEvent&lt;WindowEvent&gt;&gt;,
+        elapsed: Duration,
+        last_frame_rendered_in: Duration,
+        pending_inner_size: <span class="kw-2">&amp;</span><span class="lifetime">'window </span><span class="kw-2">mut </span><span class="prelude-ty">Option</span>&lt;Size&lt;UPx&gt;&gt;,
+    ) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            window,
+            elapsed,
+            last_frame_rendered_in,
+            pending_inner_size: <span class="prelude-val">Some</span>(pending_inner_size),
         }
     }
 
@@ -2187,9 +2244,23 @@
     <span class="doccomment">/// Sets the inner size of the window.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>request_inner_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, inner_size: Size&lt;UPx&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Size&lt;UPx&gt;&gt; {
-        <span class="self">self</span>.window
-            .request_inner_size(inner_size.into())
-            .map(Size::from)
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(pending_inner_size) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.pending_inner_size {
+            <span class="comment">// wgpu's wayland + vulkan stack seems to have issues when resizing
+            // while the swapchain has a frame currently allocated. Wayland is
+            // one of the few platforms where request_inner_size immediately
+            // applies the size and does not fire a Resize event. The attempts
+            // at handling this flow correctly all fail when a call to
+            // request_inner_size is made while kludgine's executing a window
+            // behavior's prepare(). In this situation, rather than passing it
+            // through to winit immediately, we store it and request the change
+            // after the frame.
+            </span><span class="kw-2">**</span>pending_inner_size = <span class="prelude-val">Some</span>(inner_size);
+            <span class="prelude-val">None
+        </span>} <span class="kw">else </span>{
+            <span class="self">self</span>.window
+                .request_inner_size(inner_size.into())
+                .map(Size::from)
+        }
     }
 
     <span class="doccomment">/// Returns the size of the window, including decorations.
@@ -2978,23 +3049,26 @@
     <span class="kw">fn </span>render_to_surface&lt;User&gt;(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         surface: wgpu::SurfaceTexture,
-        render_start: Instant,
+        elapsed: Duration,
         window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
-    ) -&gt; bool
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Size&lt;UPx&gt;&gt;
     <span class="kw">where
         </span>AppEvent&lt;User&gt;: Message,
         Behavior: WindowBehavior&lt;User&gt; + <span class="lifetime">'static</span>,
         User: Send + <span class="lifetime">'static</span>,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>frame = <span class="self">self</span>.kludgine.next_frame();
-        <span class="kw">let </span>elapsed = render_start - <span class="self">self</span>.last_render;
+        <span class="kw">let </span><span class="kw-2">mut </span>pending_inner_size = <span class="prelude-val">None</span>;
 
-        <span class="kw">let </span>current_size = window.inner_size();
         <span class="self">self</span>.behavior.prepare(
-            Window::new(window, elapsed, <span class="self">self</span>.last_render_duration),
+            Window::new_in_frame(
+                window,
+                elapsed,
+                <span class="self">self</span>.last_render_duration,
+                <span class="kw-2">&amp;mut </span>pending_inner_size,
+            ),
             <span class="kw-2">&amp;mut </span>frame.prepare(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.queue),
         );
-        <span class="kw">let </span>resized = window.inner_size() != current_size;
 
         <span class="kw">let </span>surface_view = surface
             .texture
@@ -3055,7 +3129,12 @@
             <span class="kw-2">&amp;</span><span class="self">self</span>.queue,
         );
         <span class="kw">let </span>close_after_frame = !<span class="self">self</span>.behavior.render(
-            Window::new(window, elapsed, <span class="self">self</span>.last_render_duration),
+            Window::new_in_frame(
+                window,
+                elapsed,
+                <span class="self">self</span>.last_render_duration,
+                <span class="kw-2">&amp;mut </span>pending_inner_size,
+            ),
             <span class="kw-2">&amp;mut </span>gfx,
         );
         drop(gfx);
@@ -3068,7 +3147,7 @@
         <span class="kw">if </span>close_after_frame {
             window.close();
         }
-        resized
+        pending_inner_size
     }
 }
 
@@ -3174,11 +3253,7 @@
 
         <span class="kw">let </span>last_render = Instant::now();
         <span class="kw">let </span>behavior = T::initialize(
-            Window {
-                window,
-                elapsed: Duration::ZERO,
-                last_frame_rendered_in: Duration::ZERO,
-            },
+            Window::new(window, Duration::ZERO, Duration::ZERO),
             <span class="kw-2">&amp;mut </span>graphics,
             context,
         );
@@ -3244,15 +3319,22 @@
                 render_start = <span class="prelude-val">Some</span>(now);
                 now
             });
+            <span class="kw">let </span>elapsed = render_start - <span class="self">self</span>.last_render;
 
-            <span class="kw">if </span><span class="self">self</span>.render_to_surface(surface, render_start, window) {
-                <span class="self">self</span>.kludgine.resize(
-                    window.inner_size().into(),
-                    <span class="self">self</span>.kludgine.scale(),
-                    <span class="self">self</span>.kludgine.zoom(),
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.queue,
-                );
-                window.set_needs_redraw();
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(new_inner_size) = <span class="self">self</span>.render_to_surface(surface, elapsed, window) {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(applied_size) = window.request_inner_size(new_inner_size.into()) {
+                    <span class="self">self</span>.kludgine.resize(
+                        applied_size.into(),
+                        <span class="self">self</span>.kludgine.scale(),
+                        <span class="self">self</span>.kludgine.zoom(),
+                        <span class="kw-2">&amp;</span><span class="self">self</span>.queue,
+                    );
+                    window.set_needs_redraw();
+                    <span class="self">self</span>.behavior.resized(
+                        Window::new(window, elapsed, <span class="self">self</span>.last_render_duration),
+                        <span class="kw-2">&amp;mut </span><span class="self">self</span>.kludgine,
+                    );
+                }
             }
             <span class="self">self</span>.last_render_duration = render_start.elapsed();
             <span class="self">self</span>.last_render = render_start;
