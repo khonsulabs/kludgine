@@ -72,19 +72,23 @@ where
                 match request.0 {
                     AppEventKind::CreateSurface(request) => {
                         let window = windows.get(request.window).expect("window not found");
-                        AppResponse(AppResponseKind::Surface(
+                        AppResponse(Some(AppResponseKind::Surface(
                             request.wgpu.create_surface(window),
-                        ))
+                        )))
                     }
                     AppEventKind::ListMonitors => {
-                        AppResponse(AppResponseKind::Monitors(Monitors {
+                        AppResponse(Some(AppResponseKind::Monitors(Monitors {
                             primary: windows.primary_monitor().map(Monitor),
                             available: windows
                                 .available_monitors()
                                 .into_iter()
                                 .map(Monitor)
                                 .collect(),
-                        }))
+                        })))
+                    }
+                    AppEventKind::ExecuteOnEventLoop(mut callback) => {
+                        callback.execute(&ExecutingApp(windows));
+                        AppResponse(None)
                     }
                 }
             },
@@ -200,6 +204,18 @@ where
     pub fn prevent_shutdown(&self) -> Option<ShutdownGuard<WindowEvent>> {
         self.0.prevent_shutdown()
     }
+
+    /// Executes `callback` on the event loop.
+    pub fn execute<Callback>(&self, callback: Callback) -> bool
+    where
+        Callback: FnOnce(&ExecutingApp<'_, WindowEvent>) + Send + 'static,
+    {
+        self.0
+            .send(AppEvent(AppEventKind::ExecuteOnEventLoop(Box::new(Some(
+                callback,
+            )))))
+            .is_some()
+    }
 }
 
 /// A guard preventing an [`App`] from shutting down.
@@ -293,7 +309,7 @@ where
 
     /// Returns a reference to the underlying winit window.
     #[must_use]
-    pub fn winit(&self) -> &winit::window::Window {
+    pub fn winit(&self) -> &Arc<winit::window::Window> {
         self.window.winit()
     }
 
@@ -932,11 +948,30 @@ pub struct AppEvent<User>(AppEventKind<User>);
 
 enum AppEventKind<User> {
     CreateSurface(CreateSurfaceRequest<User>),
+    ExecuteOnEventLoop(Box<dyn EventLoopCallback<User>>),
     ListMonitors,
 }
 
+trait EventLoopCallback<User>: Send + 'static
+where
+    User: Send + 'static,
+{
+    fn execute(&mut self, event_loop: &ExecutingApp<'_, User>);
+}
+
+impl<T, User> EventLoopCallback<User> for Option<T>
+where
+    T: FnOnce(&ExecutingApp<'_, User>) + Send + 'static,
+    User: Send + 'static,
+{
+    fn execute(&mut self, event_loop: &ExecutingApp<'_, User>) {
+        let callback = self.take().expect("invoked once");
+        callback(event_loop);
+    }
+}
+
 /// A response to an [`AppEvent`].
-pub struct AppResponse(AppResponseKind);
+pub struct AppResponse(Option<AppResponseKind>);
 
 impl AppResponse {
     fn expect_surface<Behavior, Event>(self) -> wgpu::Surface<'static>
@@ -944,7 +979,7 @@ impl AppResponse {
         Behavior: WindowBehavior<Event>,
         Event: Send + 'static,
     {
-        let AppResponse(AppResponseKind::Surface(surface)) = self else {
+        let AppResponse(Some(AppResponseKind::Surface(surface))) = self else {
             unreachable!("unexpected response")
         };
         match surface {
@@ -954,7 +989,7 @@ impl AppResponse {
     }
 
     fn expect_monitors(self) -> Monitors {
-        let AppResponse(AppResponseKind::Monitors(monitors)) = self else {
+        let AppResponse(Some(AppResponseKind::Monitors(monitors))) = self else {
             unreachable!("unexpected response")
         };
         monitors
