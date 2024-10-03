@@ -2442,6 +2442,12 @@
 <a href="#2442" id="2442">2442</a>
 <a href="#2443" id="2443">2443</a>
 <a href="#2444" id="2444">2444</a>
+<a href="#2445" id="2445">2445</a>
+<a href="#2446" id="2446">2446</a>
+<a href="#2447" id="2447">2447</a>
+<a href="#2448" id="2448">2448</a>
+<a href="#2449" id="2449">2449</a>
+<a href="#2450" id="2450">2450</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">"../README.md"</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -4232,6 +4238,12 @@
     }
 }
 
+<span class="kw">impl </span>PartialEq <span class="kw">for </span>Texture {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="self">self</span>.id == other.id
+    }
+}
+
 <span class="doccomment">/// Loads a texture's bytes into the executable. This macro returns a result
 /// containing a [`LazyTexture`].
 ///
@@ -4527,7 +4539,7 @@
 /// This type is useful if you are designing a type that supports drawing a
 /// configurable texture, but you don't care whether it's a [`Texture`],
 /// [`SharedTexture`], [`TextureRegion`], or [`CollectedTexture`].
-</span><span class="attr">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug, PartialEq)]
 </span><span class="kw">pub enum </span>AnyTexture {
     <span class="doccomment">/// A [`Texture`].
     </span>Texture(Texture),

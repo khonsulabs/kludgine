@@ -347,6 +347,12 @@
 <a href="#347" id="347">347</a>
 <a href="#348" id="348">348</a>
 <a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::Div;
 <span class="kw">use </span>std::sync::{Arc, PoisonError, RwLock};
@@ -635,8 +641,14 @@
     }
 }
 
+<span class="kw">impl </span>PartialEq <span class="kw">for </span>TextureCollection {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        Arc::ptr_eq(<span class="kw-2">&amp;</span><span class="self">self</span>.data, <span class="kw-2">&amp;</span>other.data)
+    }
+}
+
 <span class="doccomment">/// A texture that is contained within a [`TextureCollection`].
-</span><span class="attr">#[derive(Clone)]
+</span><span class="attr">#[derive(Clone, PartialEq)]
 </span><span class="kw">pub struct </span>CollectedTexture {
     collection: TextureCollection,
     id: Arc&lt;LotId&gt;,
