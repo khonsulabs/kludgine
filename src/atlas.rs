@@ -286,8 +286,14 @@ impl sealed::TextureSource for TextureCollection {
     }
 }
 
+impl PartialEq for TextureCollection {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.data, &other.data)
+    }
+}
+
 /// A texture that is contained within a [`TextureCollection`].
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct CollectedTexture {
     collection: TextureCollection,
     id: Arc<LotId>,

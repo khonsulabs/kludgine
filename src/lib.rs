@@ -1788,6 +1788,12 @@ impl Texture {
     }
 }
 
+impl PartialEq for Texture {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
 /// Loads a texture's bytes into the executable. This macro returns a result
 /// containing a [`LazyTexture`].
 ///
@@ -2083,7 +2089,7 @@ impl From<ShareableTexture> for TextureRegion {
 /// This type is useful if you are designing a type that supports drawing a
 /// configurable texture, but you don't care whether it's a [`Texture`],
 /// [`SharedTexture`], [`TextureRegion`], or [`CollectedTexture`].
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum AnyTexture {
     /// A [`Texture`].
     Texture(Texture),
