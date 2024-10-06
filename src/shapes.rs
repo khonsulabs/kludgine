@@ -48,7 +48,7 @@ impl<Unit, const TEXTURED: bool> Default for Shape<Unit, TEXTURED> {
 
 impl<Unit: PixelScaling> Shape<Unit, false> {
     /// Returns a circle that is filled solid with `color`.
-    pub fn filled_circle(radius: Unit, color: Color, origin: Origin<Unit>) -> Shape<Unit, false>
+    pub fn filled_circle(radius: Unit, color: Color, origin: Origin<Unit>) -> Self
     where
         Unit: Default
             + Neg<Output = Unit>
@@ -80,7 +80,7 @@ impl<Unit: PixelScaling> Shape<Unit, false> {
         radius: Unit,
         origin: Origin<Unit>,
         options: impl Into<StrokeOptions<Unit>>,
-    ) -> Shape<Unit, false>
+    ) -> Self
     where
         Unit: Default
             + Neg<Output = Unit>
@@ -109,7 +109,7 @@ impl<Unit: PixelScaling> Shape<Unit, false> {
     }
 
     /// Returns a rectangle that is filled solid with `color`.
-    pub fn filled_rect(rect: Rect<Unit>, color: Color) -> Shape<Unit, false>
+    pub fn filled_rect(rect: Rect<Unit>, color: Color) -> Self
     where
         Unit: Add<Output = Unit> + Ord + FloatConversion<Float = f32> + Copy,
     {
@@ -124,10 +124,7 @@ impl<Unit: PixelScaling> Shape<Unit, false> {
 
     /// Returns a rectangle that has its outline stroked with `color` and
     /// `options`.
-    pub fn stroked_rect(
-        rect: Rect<Unit>,
-        options: impl Into<StrokeOptions<Unit>>,
-    ) -> Shape<Unit, false>
+    pub fn stroked_rect(rect: Rect<Unit>, options: impl Into<StrokeOptions<Unit>>) -> Self
     where
         Unit: Add<Output = Unit> + Ord + FloatConversion<Float = f32> + Copy,
     {
@@ -146,7 +143,7 @@ impl<Unit: PixelScaling> Shape<Unit, false> {
         rect: Rect<Unit>,
         corner_radius: impl Into<CornerRadii<Unit>>,
         color: Color,
-    ) -> Shape<Unit, false>
+    ) -> Self
     where
         Unit: Add<Output = Unit>
             + Sub<Output = Unit>
@@ -168,7 +165,7 @@ impl<Unit: PixelScaling> Shape<Unit, false> {
         rect: Rect<Unit>,
         corner_radius: impl Into<CornerRadii<Unit>>,
         options: impl Into<StrokeOptions<Unit>>,
-    ) -> Shape<Unit, false>
+    ) -> Self
     where
         Unit: Add<Output = Unit>
             + Sub<Output = Unit>
@@ -208,6 +205,88 @@ impl<Unit> Shape<Unit, true> {
     {
         sealed::ShapeSource::prepare(self, Some(texture), graphics)
     }
+
+    /// Returns a rounded rectangle with the specified corner radii that is
+    /// textured using the texture region and blending color.
+    pub fn textured_round_rect(
+        rect: Rect<Unit>,
+        corner_radius: impl Into<CornerRadii<Unit>>,
+        texture_region: Rect<UPx>,
+        color: Color,
+    ) -> Self
+    where
+        Unit: Add<Output = Unit>
+            + Sub<Output = Unit>
+            + Div<Output = Unit>
+            + Mul<f32, Output = Unit>
+            + TryFrom<i32>
+            + Ord
+            + FloatConversion<Float = f32>
+            + Copy
+            + PixelScaling,
+        Unit::Error: Debug,
+    {
+        let path = Path::textured_round_rect(rect, corner_radius, texture_region);
+        path.fill(color)
+    }
+
+    /// Returns a rectangle that is textured using the texture region and
+    /// blending color.
+    pub fn textured_rect(rect: Rect<Unit>, texture_region: Rect<UPx>, color: Color) -> Self
+    where
+        Unit: Add<Output = Unit> + Ord + FloatConversion<Float = f32> + Copy + PixelScaling,
+    {
+        let (p1, p2) = rect.extents();
+        let (tp1, tp2) = texture_region.extents();
+
+        let path = PathBuilder::new_textured(p1, tp1)
+            .line_to(Point::new(p2.x, p1.y), Point::new(tp2.x, tp1.y))
+            .line_to(p2, tp2)
+            .line_to(Point::new(p1.x, p2.y), Point::new(tp1.x, tp2.y))
+            .close();
+        path.fill(color)
+    }
+
+    /// Returns a circle that is textured using the texture region and blending
+    /// color.
+    pub fn textured_circle(
+        radius: Unit,
+        color: Color,
+        texture_region: Rect<UPx>,
+        origin: Origin<Unit>,
+    ) -> Self
+    where
+        Unit: Default
+            + Neg<Output = Unit>
+            + Add<Output = Unit>
+            + Ord
+            + FloatConversion<Float = f32>
+            + Copy
+            + PixelScaling,
+    {
+        let center = match origin {
+            Origin::TopLeft => Point::new(radius, radius),
+            Origin::Center => Point::default(),
+            Origin::Custom(pt) => pt,
+        };
+        let radius = radius.into_float();
+        let shape_region = Rect::new(
+            center.into_float() - Point::squared(radius),
+            Size::squared(radius * 2.),
+        );
+        let mut shape_builder =
+            ShapeBuilder::new(color).with_texture_region(shape_region, texture_region);
+        let mut tesselator = FillTessellator::new();
+        tesselator
+            .tessellate_circle(
+                lyon_tessellation::math::point(center.x.into_float(), center.y.into_float()),
+                radius,
+                &FillOptions::DEFAULT,
+                &mut shape_builder,
+            )
+            .assert("should not fail to tesselat4e a rect");
+        shape_builder.shape
+    }
 }
 
 impl<Unit, const TEXTURED: bool> ShapeSource<Unit, TEXTURED> for Shape<Unit, TEXTURED> where
@@ -233,6 +312,35 @@ where
 struct ShapeBuilder<Unit, const TEXTURED: bool> {
     shape: Shape<Unit, TEXTURED>,
     default_color: Color,
+    texture_region: Option<TextureRegions>,
+}
+
+struct TextureRegions {
+    shape_region: Rect<f32>,
+    texture_region: Rect<UPx>,
+}
+
+impl TextureRegions {
+    fn uv_coordinate(&self, point: lyon_tessellation::math::Point) -> Point<UPx> {
+        self.texture_region.origin
+            + Point::from(self.texture_region.size)
+                * ((Point::new(point.x, point.y) - self.shape_region.origin)
+                    / self.shape_region.size)
+    }
+}
+
+impl<Unit> ShapeBuilder<Unit, true>
+where
+    Unit: FloatConversion<Float = f32>,
+{
+    fn with_texture_region(mut self, shape_region: Rect<f32>, texture_region: Rect<UPx>) -> Self {
+        self.texture_region = Some(TextureRegions {
+            // TODO switch to into_float after next figures release
+            shape_region,
+            texture_region,
+        });
+        self
+    }
 }
 
 impl<Unit, const TEXTURED: bool> ShapeBuilder<Unit, TEXTURED>
@@ -243,6 +351,7 @@ where
         Self {
             shape: Shape::default(),
             default_color,
+            texture_region: None,
         }
     }
 
@@ -253,7 +362,10 @@ where
     ) -> Vertex<Unit> {
         let (texture, red, green, blue, alpha) = match attributes.len() {
             0 => (
-                Point::default(),
+                self.texture_region
+                    .as_ref()
+                    .map(|region| region.uv_coordinate(position))
+                    .unwrap_or_default(),
                 self.default_color.red_f32(),
                 self.default_color.green_f32(),
                 self.default_color.blue_f32(),
@@ -458,6 +570,94 @@ pub struct Path<Unit, const TEXTURED: bool> {
     /// A small-vec of path events. Contains enough stack space to contain the
     /// path of a hexagon, because it's the bestagon.
     events: SmallVec<[PathEvent<Unit>; 7]>,
+}
+
+impl<Unit> Path<Unit, true> {
+    /// Returns a path for a textured rounded rectangle with the given corner
+    /// radii.
+    ///
+    /// All radius's will be limited to half of the largest side of the
+    /// rectangle.
+    pub fn textured_round_rect(
+        rect: Rect<Unit>,
+        corner_radius: impl Into<CornerRadii<Unit>>,
+        texture_region: Rect<UPx>,
+    ) -> Path<Unit, true>
+    where
+        Unit: Add<Output = Unit>
+            + Sub<Output = Unit>
+            + Div<Output = Unit>
+            + Mul<f32, Output = Unit>
+            + TryFrom<i32>
+            + Ord
+            + FloatConversion<Float = f32>
+            + Copy,
+        Unit::Error: Debug,
+    {
+        const C: f32 = 0.551_915_02; // https://spencermortensen.com/articles/bezier-circle/
+        let (min_extent, max_extent) = rect.extents();
+        let top = min_extent.y;
+        let bottom = max_extent.y;
+        let left = min_extent.x;
+        let right = max_extent.x;
+
+        let min_dimension = if rect.size.width > rect.size.height {
+            rect.size.height
+        } else {
+            rect.size.width
+        };
+        let radii = corner_radius
+            .into()
+            .clamped(min_dimension / Unit::try_from(2).assert("two is always convertable"));
+
+        let drift = radii.map(|r| r * C);
+
+        let uv_coord = |pt: Point<Unit>| {
+            texture_region.origin
+                + Point::from(texture_region.size)
+                    * ((pt - min_extent).into_float() / rect.size.into_float())
+        };
+        let top_left = Point::new(left + radii.top_left, top);
+        let top_left_uv = uv_coord(top_left);
+        let top_right = Point::new(right - radii.top_right, top);
+        let right_top = Point::new(right, top + radii.top_right);
+        let right_bottom = Point::new(right, bottom - radii.bottom_right);
+        let bottom_right = Point::new(right - radii.bottom_right, bottom);
+        let bottom_left = Point::new(left + radii.bottom_left, bottom);
+        let left_bottom = Point::new(left, bottom - radii.bottom_left);
+        let left_top = Point::new(left, top + radii.top_left);
+
+        PathBuilder::new_textured(top_left, top_left_uv)
+            .line_to(top_right, uv_coord(top_right))
+            .cubic_curve_to(
+                Point::new(right + drift.top_right - radii.top_right, top),
+                Point::new(right, top + radii.top_right - drift.top_right),
+                right_top,
+                uv_coord(right_top),
+            )
+            .line_to(right_bottom, uv_coord(right_bottom))
+            .cubic_curve_to(
+                Point::new(right, bottom + drift.bottom_right - radii.bottom_right),
+                Point::new(right + drift.bottom_right - radii.bottom_right, bottom),
+                bottom_right,
+                uv_coord(bottom_right),
+            )
+            .line_to(bottom_left, uv_coord(bottom_left))
+            .cubic_curve_to(
+                Point::new(left + radii.bottom_left - drift.bottom_left, bottom),
+                Point::new(left, bottom + drift.bottom_left - radii.bottom_left),
+                left_bottom,
+                uv_coord(left_bottom),
+            )
+            .line_to(left_top, uv_coord(left_top))
+            .cubic_curve_to(
+                Point::new(left, top + radii.top_left - drift.top_left),
+                Point::new(left + radii.top_left - drift.top_left, top),
+                top_left,
+                top_left_uv,
+            )
+            .close()
+    }
 }
 
 impl<Unit> Path<Unit, false> {
