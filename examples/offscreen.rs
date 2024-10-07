@@ -75,9 +75,7 @@ impl WindowBehavior for Test {
         &'pass mut self,
         _window: Window<'_>,
         graphics: &mut RenderingGraphics<'_, 'pass>,
-    ) -> bool {
+    ) {
         self.prepared.render(graphics);
-
-        true
     }
 }

@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Users who are using Kludgine directly should invoke `Kludgine::resize` to
   apply the new size.
 - `Window::winit` now returns an `Arc`-wrapped winit Window.
+- `WindowBehavior::render` no longer returns a `bool`. Closing the window can be
+  done through the `RunningWindow` parameter.
 
 ### Added
 

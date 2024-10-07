@@ -42,13 +42,12 @@ impl WindowBehavior for Test {
         &'pass mut self,
         mut window: Window<'_>,
         graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
-    ) -> bool {
+    ) {
         window.redraw_in(Duration::from_millis(16));
         self.angle += Angle::degrees(180) * window.elapsed();
         self.texture
             .translate_by(Point::inches(1, 1))
             .rotate_by(self.angle)
             .render(graphics);
-        true
     }
 }

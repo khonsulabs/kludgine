@@ -47,7 +47,7 @@ impl WindowBehavior for Test {
         &'pass mut self,
         mut window: Window<'_>,
         graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
-    ) -> bool {
+    ) {
         window.redraw_in(Duration::from_millis(16));
         self.angle += window.elapsed().as_secs_f32() / 5.;
 
@@ -69,7 +69,5 @@ impl WindowBehavior for Test {
             .translate_by(Point::from(graphics.size().into_px(graphics.scale())) / 4 * 3)
             .rotate_by(self.angle)
             .render(graphics);
-
-        true
     }
 }

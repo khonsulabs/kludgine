@@ -151,7 +151,7 @@ impl WindowBehavior for Sprites {
         &'pass mut self,
         mut window: kludgine::app::Window<'_, ()>,
         graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
-    ) -> bool {
+    ) {
         if let Some(frame) = &self.current_frame {
             frame.render(graphics);
         }
@@ -161,7 +161,6 @@ impl WindowBehavior for Sprites {
                 .expect("valid tag")
                 .unwrap_or_default(),
         );
-        true
     }
 
     fn keyboard_input(

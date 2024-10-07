@@ -81,13 +81,12 @@ impl WindowBehavior for Test {
         &'pass mut self,
         mut window: Window<'_>,
         graphics: &mut kludgine::RenderingGraphics<'_, 'pass>,
-    ) -> bool {
+    ) {
         window.redraw_in(Duration::from_millis(16));
         self.angle += Angle::degrees(180) * window.elapsed() / 5;
         self.prepared
             .translate_by(Point::from_vec(graphics.size().into_px(graphics.scale())) / 2)
             .rotate_by(self.angle)
             .render(graphics);
-        true
     }
 }

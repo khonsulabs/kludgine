@@ -236,8 +236,6 @@ impl Sprite {
     ///
     /// Returns an error when `raw_json` does not match the expected format.
     #[allow(clippy::too_many_lines)]
-    // TODO refactor. Now that I know more about serde, this probably can be parsed
-    // with a complex serde type.
     pub fn load_aseprite_json(
         raw_json: &str,
         texture: impl Into<ShareableTexture>,

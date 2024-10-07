@@ -585,12 +585,11 @@ where
     fn prepare(&mut self, window: Window<'_, WindowEvent>, graphics: &mut Graphics<'_>) {}
 
     /// Render the contents of the window.
-    // TODO refactor away from bool return.
     fn render<'pass>(
         &'pass mut self,
         window: Window<'_, WindowEvent>,
         graphics: &mut RenderingGraphics<'_, 'pass>,
-    ) -> bool;
+    );
 
     /// Returns the swap chain present mode to use for this window.
     #[must_use]
@@ -1281,7 +1280,7 @@ impl<Behavior> KludgineWindow<Behavior> {
             &self.device,
             &self.queue,
         );
-        let close_after_frame = !self.behavior.render(
+        self.behavior.render(
             Window::new_in_frame(
                 window,
                 elapsed,
@@ -1296,9 +1295,6 @@ impl<Behavior> KludgineWindow<Behavior> {
         surface.present();
         if let Some(id) = id {
             self.device.poll(wgpu::Maintain::WaitForSubmissionIndex(id));
-        }
-        if close_after_frame {
-            window.close();
         }
         pending_inner_size
     }
@@ -1917,11 +1913,13 @@ where
 
     fn render<'pass>(
         &'pass mut self,
-        _window: Window<'_>,
+        mut window: Window<'_>,
         graphics: &mut RenderingGraphics<'_, 'pass>,
-    ) -> bool {
+    ) {
         self.rendering.render(1., graphics);
-        self.keep_running
+        if !self.keep_running {
+            window.close();
+        }
     }
 }
 
