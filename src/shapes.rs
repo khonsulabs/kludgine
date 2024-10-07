@@ -335,7 +335,6 @@ where
 {
     fn with_texture_region(mut self, shape_region: Rect<f32>, texture_region: Rect<UPx>) -> Self {
         self.texture_region = Some(TextureRegions {
-            // TODO switch to into_float after next figures release
             shape_region,
             texture_region,
         });
