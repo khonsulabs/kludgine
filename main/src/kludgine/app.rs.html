@@ -1991,6 +1991,11 @@
 <a href="#1991" id="1991">1991</a>
 <a href="#1992" id="1992">1992</a>
 <a href="#1993" id="1993">1993</a>
+<a href="#1994" id="1994">1994</a>
+<a href="#1995" id="1995">1995</a>
+<a href="#1996" id="1996">1996</a>
+<a href="#1997" id="1997">1997</a>
+<a href="#1998" id="1998">1998</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
@@ -2023,7 +2028,8 @@
 
 <span class="kw">impl</span>&lt;WindowEvent&gt; Default <span class="kw">for </span>PendingApp&lt;WindowEvent&gt;
 <span class="kw">where
-    </span>AppEvent&lt;WindowEvent&gt;: Message&lt;Window = WindowEvent, Response = AppResponse&gt;,
+    </span>AppEvent&lt;WindowEvent&gt;:
+        Message&lt;Window = WindowEvent, Response = AppResponse, Error = UnrecoverableError&gt;,
     WindowEvent: Send + <span class="lifetime">'static</span>,
 {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
@@ -2052,14 +2058,15 @@
 
 <span class="kw">impl</span>&lt;WindowEvent&gt; PendingApp&lt;WindowEvent&gt;
 <span class="kw">where
-    </span>AppEvent&lt;WindowEvent&gt;: Message&lt;Window = WindowEvent, Response = AppResponse&gt;,
+    </span>AppEvent&lt;WindowEvent&gt;:
+        Message&lt;Window = WindowEvent, Response = AppResponse, Error = UnrecoverableError&gt;,
     WindowEvent: Send + <span class="lifetime">'static</span>,
 {
     <span class="doccomment">/// Creates a new Kludgine application.
     </span><span class="attr">#[must_use]
     #[allow(clippy::missing_panics_doc)] </span><span class="comment">// The panics are in a closure that happens only after the app is running.
     </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(appit::PendingApp::new_with_event_callback(
+        <span class="kw">let </span><span class="kw-2">mut </span>app = appit::PendingApp::new_with_event_callback(
             |request: AppEvent&lt;WindowEvent&gt;,
              windows: appit::ExecutingApp&lt;<span class="lifetime">'_</span>, AppEvent&lt;WindowEvent&gt;&gt;| {
                 <span class="kw">match </span>request.<span class="number">0 </span>{
@@ -2085,13 +2092,25 @@
                     }
                 }
             },
-        ))
+        );
+        app.on_error(|err| <span class="macro">unreachable!</span>(<span class="string">"error opening window: {err}"</span>));
+        <span class="self">Self</span>(app)
     }
 
     <span class="doccomment">/// Returns a handle to the application that will be run.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>as_app(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; App&lt;WindowEvent&gt; {
         App(<span class="self">self</span>.<span class="number">0</span>.app())
+    }
+
+    <span class="doccomment">/// Installs a handler for unrecoverable errors.
+    ///
+    /// The default handler panics when an unrecoverable error occurs.
+    </span><span class="kw">pub fn </span>on_unrecoverable_error&lt;F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, on_unrecoverable_error: F)
+    <span class="kw">where
+        </span>F: FnMut(UnrecoverableError) + <span class="lifetime">'static</span>,
+    {
+        <span class="self">self</span>.<span class="number">0</span>.on_error(Box::new(on_unrecoverable_error));
     }
 
     <span class="doccomment">/// Executes `on_startup` once the app event loop has started.
@@ -2513,18 +2532,6 @@
     <span class="doccomment">/// Invoked before wgpu is initialized for this window.
     </span><span class="attr">#[allow(unused_variables)]
     </span><span class="kw">fn </span>pre_initialize(context: <span class="kw-2">&amp;</span><span class="self">Self</span>::Context, winit: <span class="kw-2">&amp;</span>winit::window::Window) {}
-
-    <span class="doccomment">/// An unrecoverable error occurred.
-    ///
-    /// Due to winit's design restrictions, there is no way to bubble a
-    /// user-defined error to the main function. This function is invoked when
-    /// an error occurs that cannot be recovered from.
-    ///
-    /// Kludgine cannot recover from these errors. The default implementation
-    /// panics.
-    </span><span class="kw">fn </span>unrecoverable_error(error: UnrecoverableError) -&gt; ! {
-        <span class="macro">panic!</span>(<span class="string">"unrecoverable error: {error}"</span>)
-    }
 
     <span class="doccomment">/// Returns the window attributes to use when creating the window.
     </span><span class="attr">#[must_use]
@@ -2967,18 +2974,11 @@
 </span><span class="kw">pub struct </span>AppResponse(<span class="prelude-ty">Option</span>&lt;AppResponseKind&gt;);
 
 <span class="kw">impl </span>AppResponse {
-    <span class="kw">fn </span>expect_surface&lt;Behavior, Event&gt;(<span class="self">self</span>) -&gt; wgpu::Surface&lt;<span class="lifetime">'static</span>&gt;
-    <span class="kw">where
-        </span>Behavior: WindowBehavior&lt;Event&gt;,
-        Event: Send + <span class="lifetime">'static</span>,
-    {
+    <span class="kw">fn </span>expect_surface(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;wgpu::Surface&lt;<span class="lifetime">'static</span>&gt;, UnrecoverableError&gt; {
         <span class="kw">let </span>AppResponse(<span class="prelude-val">Some</span>(AppResponseKind::Surface(surface))) = <span class="self">self </span><span class="kw">else </span>{
             <span class="macro">unreachable!</span>(<span class="string">"unexpected response"</span>)
         };
-        <span class="kw">match </span>surface {
-            <span class="prelude-val">Ok</span>(surface) =&gt; surface,
-            <span class="prelude-val">Err</span>(err) =&gt; Behavior::unrecoverable_error(UnrecoverableError::Surface(err)),
-        }
+        surface.map_err(UnrecoverableError::Surface)
     }
 
     <span class="kw">fn </span>expect_monitors(<span class="self">self</span>) -&gt; Monitors {
@@ -3106,6 +3106,7 @@
 <span class="kw">where
     </span>User: Send + <span class="lifetime">'static</span>,
 {
+    <span class="kw">type </span>Error = UnrecoverableError;
     <span class="kw">type </span>Response = AppResponse;
     <span class="kw">type </span>Window = User;
 }
@@ -3147,7 +3148,7 @@
         window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;wgpu::SurfaceTexture&gt;
     <span class="kw">where
-        </span>AppEvent&lt;User&gt;: Message&lt;Response = AppResponse&gt;,
+        </span>AppEvent&lt;User&gt;: Message&lt;Response = AppResponse, Error = UnrecoverableError&gt;,
         Behavior: WindowBehavior&lt;User&gt; + <span class="lifetime">'static</span>,
         User: Send + <span class="lifetime">'static</span>,
     {
@@ -3163,7 +3164,7 @@
                         </span><span class="kw">return </span><span class="prelude-val">None</span>;
                     }
                     wgpu::SurfaceError::Lost =&gt; {
-                        <span class="self">self</span>.surface = window
+                        <span class="kw">match </span>window
                             .send(AppEvent(AppEventKind::CreateSurface(
                                 CreateSurfaceRequest {
                                     wgpu: <span class="self">self</span>.wgpu.clone(),
@@ -3172,7 +3173,18 @@
                                 },
                             )))
                             .expect(<span class="string">"app not running"</span>)
-                            .expect_surface::&lt;Behavior, <span class="kw">_</span>&gt;();
+                            .expect_surface()
+                        {
+                            <span class="prelude-val">Ok</span>(surface) =&gt; {
+                                <span class="self">self</span>.surface = surface;
+                            }
+                            <span class="prelude-val">Err</span>(creation_error) =&gt; {
+                                <span class="kw">let _ </span>= window.app().send_error(creation_error);
+                                window.close();
+                                <span class="kw">return </span><span class="prelude-val">None</span>;
+                            }
+                        }
+
                         <span class="self">self</span>.surface.configure(<span class="kw-2">&amp;</span><span class="self">self</span>.device, <span class="kw-2">&amp;</span><span class="self">self</span>.config);
                     }
                     wgpu::SurfaceError::OutOfMemory =&gt; {
@@ -3342,7 +3354,10 @@
 {
     <span class="kw">type </span>Context = T::Context;
 
-    <span class="kw">fn </span>initialize(window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;, context: <span class="self">Self</span>::Context) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>initialize(
+        window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;,
+        context: <span class="self">Self</span>::Context,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, UnrecoverableError&gt; {
         T::pre_initialize(<span class="kw-2">&amp;</span>context, window.winit());
         <span class="kw">let </span>wgpu = Arc::new(new_wgpu_instance());
         <span class="kw">let </span>surface = window
@@ -3354,17 +3369,14 @@
                 },
             )))
             .expect(<span class="string">"app not running"</span>)
-            .expect_surface::&lt;T, <span class="kw">_</span>&gt;();
-        <span class="kw">let </span><span class="prelude-val">Some</span>(adapter) =
-            pollster::block_on(wgpu.request_adapter(<span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
-                power_preference: T::power_preference(<span class="kw-2">&amp;</span>context),
-                force_fallback_adapter: <span class="bool-val">false</span>,
-                compatible_surface: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>surface),
-            }))
-        <span class="kw">else </span>{
-            T::unrecoverable_error(UnrecoverableError::NoAdapter)
-        };
-        <span class="kw">let </span>(device, queue) = <span class="kw">match </span>pollster::block_on(adapter.request_device(
+            .expect_surface()<span class="question-mark">?</span>;
+        <span class="kw">let </span>adapter = pollster::block_on(wgpu.request_adapter(<span class="kw-2">&amp;</span>wgpu::RequestAdapterOptions {
+            power_preference: T::power_preference(<span class="kw-2">&amp;</span>context),
+            force_fallback_adapter: <span class="bool-val">false</span>,
+            compatible_surface: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>surface),
+        }))
+        .ok_or(UnrecoverableError::NoAdapter)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(device, queue) = pollster::block_on(adapter.request_device(
             <span class="kw-2">&amp;</span>wgpu::DeviceDescriptor {
                 label: <span class="prelude-val">None</span>,
                 required_features: Kludgine::REQURED_FEATURES,
@@ -3372,10 +3384,8 @@
                 memory_hints: T::memory_hints(<span class="kw-2">&amp;</span>context),
             },
             <span class="prelude-val">None</span>,
-        )) {
-            <span class="prelude-val">Ok</span>(dev) =&gt; dev,
-            <span class="prelude-val">Err</span>(err) =&gt; T::unrecoverable_error(UnrecoverableError::Device(err)),
-        };
+        ))
+        .map_err(UnrecoverableError::Device)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>swapchain_capabilities = surface.get_capabilities(<span class="kw-2">&amp;</span>adapter);
         <span class="kw">let </span>swapchain_format = swapchain_capabilities.formats[<span class="number">0</span>];
@@ -3414,7 +3424,7 @@
         };
         surface.configure(<span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>config);
 
-        <span class="self">Self </span>{
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             kludgine: state,
             last_render,
             last_render_duration: Duration::ZERO,
@@ -3426,7 +3436,7 @@
             queue,
             wgpu,
             multisample_count,
-        }
+        })
     }
 
     <span class="kw">fn </span>initialized(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: <span class="kw-2">&amp;mut </span>RunningWindow&lt;AppEvent&lt;User&gt;&gt;) {
