@@ -981,8 +981,6 @@
 <a href="#981" id="981">981</a>
 <a href="#982" id="982">982</a>
 <a href="#983" id="983">983</a>
-<a href="#984" id="984">984</a>
-<a href="#985" id="985">985</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{Debug, Display};
 <span class="kw">use </span>std::hash::Hash;
@@ -1221,8 +1219,6 @@
     ///
     /// Returns an error when `raw_json` does not match the expected format.
     </span><span class="attr">#[allow(clippy::too_many_lines)]
-    </span><span class="comment">// TODO refactor. Now that I know more about serde, this probably can be parsed
-    // with a complex serde type.
     </span><span class="kw">pub fn </span>load_aseprite_json(
         raw_json: <span class="kw-2">&amp;</span>str,
         texture: <span class="kw">impl </span>Into&lt;ShareableTexture&gt;,

@@ -1757,7 +1757,6 @@
 <a href="#1757" id="1757">1757</a>
 <a href="#1758" id="1758">1758</a>
 <a href="#1759" id="1759">1759</a>
-<a href="#1760" id="1760">1760</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::{Add, Div, Mul, Neg, Sub};
 
@@ -2095,8 +2094,7 @@
 {
     <span class="kw">fn </span>with_texture_region(<span class="kw-2">mut </span><span class="self">self</span>, shape_region: Rect&lt;f32&gt;, texture_region: Rect&lt;UPx&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.texture_region = <span class="prelude-val">Some</span>(TextureRegions {
-            <span class="comment">// TODO switch to into_float after next figures release
-            </span>shape_region,
+            shape_region,
             texture_region,
         });
         <span class="self">self

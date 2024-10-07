@@ -1994,8 +1994,6 @@
 <a href="#1994" id="1994">1994</a>
 <a href="#1995" id="1995">1995</a>
 <a href="#1996" id="1996">1996</a>
-<a href="#1997" id="1997">1997</a>
-<a href="#1998" id="1998">1998</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 <span class="kw">use </span>std::num::NonZeroU32;
 <span class="kw">use </span>std::path::PathBuf;
@@ -2583,12 +2581,11 @@
     </span><span class="kw">fn </span>prepare(<span class="kw-2">&amp;mut </span><span class="self">self</span>, window: Window&lt;<span class="lifetime">'_</span>, WindowEvent&gt;, graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">'_</span>&gt;) {}
 
     <span class="doccomment">/// Render the contents of the window.
-    </span><span class="comment">// TODO refactor away from bool return.
     </span><span class="kw">fn </span>render&lt;<span class="lifetime">'pass</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="kw-2">mut </span><span class="self">self</span>,
         window: Window&lt;<span class="lifetime">'_</span>, WindowEvent&gt;,
         graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">'_</span>, <span class="lifetime">'pass</span>&gt;,
-    ) -&gt; bool;
+    );
 
     <span class="doccomment">/// Returns the swap chain present mode to use for this window.
     </span><span class="attr">#[must_use]
@@ -3279,7 +3276,7 @@
             <span class="kw-2">&amp;</span><span class="self">self</span>.device,
             <span class="kw-2">&amp;</span><span class="self">self</span>.queue,
         );
-        <span class="kw">let </span>close_after_frame = !<span class="self">self</span>.behavior.render(
+        <span class="self">self</span>.behavior.render(
             Window::new_in_frame(
                 window,
                 elapsed,
@@ -3294,9 +3291,6 @@
         surface.present();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = id {
             <span class="self">self</span>.device.poll(wgpu::Maintain::WaitForSubmissionIndex(id));
-        }
-        <span class="kw">if </span>close_after_frame {
-            window.close();
         }
         pending_inner_size
     }
@@ -3915,11 +3909,13 @@
 
     <span class="kw">fn </span>render&lt;<span class="lifetime">'pass</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="kw-2">mut </span><span class="self">self</span>,
-        _window: Window&lt;<span class="lifetime">'_</span>&gt;,
+        <span class="kw-2">mut </span>window: Window&lt;<span class="lifetime">'_</span>&gt;,
         graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">'_</span>, <span class="lifetime">'pass</span>&gt;,
-    ) -&gt; bool {
+    ) {
         <span class="self">self</span>.rendering.render(<span class="number">1.</span>, graphics);
-        <span class="self">self</span>.keep_running
+        <span class="kw">if </span>!<span class="self">self</span>.keep_running {
+            window.close();
+        }
     }
 }
 
