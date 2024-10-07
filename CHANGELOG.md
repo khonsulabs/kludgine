@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stroke width.
 - `LazyTexture`, `CollectedTexture`, `AnyTexture`, `TextureCollection`, and
   `Texture` now implement `PartialEq`.
-- `WindowBehavior::unrecoverable_error` is a new function that allows
+- `PendingApp::on_unrecoverable_error` is a new function that allows
   applications to take control when an unrecoverable error occurs. Previously,
   these errors would panic, and the provided implementation is a panic.
 - `App::execute` executes a closure on the main event loop thread.

@@ -30,7 +30,8 @@ where
 
 impl<WindowEvent> Default for PendingApp<WindowEvent>
 where
-    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = AppResponse>,
+    AppEvent<WindowEvent>:
+        Message<Window = WindowEvent, Response = AppResponse, Error = UnrecoverableError>,
     WindowEvent: Send + 'static,
 {
     fn default() -> Self {
@@ -59,14 +60,15 @@ where
 
 impl<WindowEvent> PendingApp<WindowEvent>
 where
-    AppEvent<WindowEvent>: Message<Window = WindowEvent, Response = AppResponse>,
+    AppEvent<WindowEvent>:
+        Message<Window = WindowEvent, Response = AppResponse, Error = UnrecoverableError>,
     WindowEvent: Send + 'static,
 {
     /// Creates a new Kludgine application.
     #[must_use]
     #[allow(clippy::missing_panics_doc)] // The panics are in a closure that happens only after the app is running.
     pub fn new() -> Self {
-        Self(appit::PendingApp::new_with_event_callback(
+        let mut app = appit::PendingApp::new_with_event_callback(
             |request: AppEvent<WindowEvent>,
              windows: appit::ExecutingApp<'_, AppEvent<WindowEvent>>| {
                 match request.0 {
@@ -92,13 +94,25 @@ where
                     }
                 }
             },
-        ))
+        );
+        app.on_error(|err| unreachable!("error opening window: {err}"));
+        Self(app)
     }
 
     /// Returns a handle to the application that will be run.
     #[must_use]
     pub fn as_app(&self) -> App<WindowEvent> {
         App(self.0.app())
+    }
+
+    /// Installs a handler for unrecoverable errors.
+    ///
+    /// The default handler panics when an unrecoverable error occurs.
+    pub fn on_unrecoverable_error<F>(&mut self, on_unrecoverable_error: F)
+    where
+        F: FnMut(UnrecoverableError) + 'static,
+    {
+        self.0.on_error(Box::new(on_unrecoverable_error));
     }
 
     /// Executes `on_startup` once the app event loop has started.
@@ -520,18 +534,6 @@ where
     /// Invoked before wgpu is initialized for this window.
     #[allow(unused_variables)]
     fn pre_initialize(context: &Self::Context, winit: &winit::window::Window) {}
-
-    /// An unrecoverable error occurred.
-    ///
-    /// Due to winit's design restrictions, there is no way to bubble a
-    /// user-defined error to the main function. This function is invoked when
-    /// an error occurs that cannot be recovered from.
-    ///
-    /// Kludgine cannot recover from these errors. The default implementation
-    /// panics.
-    fn unrecoverable_error(error: UnrecoverableError) -> ! {
-        panic!("unrecoverable error: {error}")
-    }
 
     /// Returns the window attributes to use when creating the window.
     #[must_use]
@@ -974,18 +976,11 @@ where
 pub struct AppResponse(Option<AppResponseKind>);
 
 impl AppResponse {
-    fn expect_surface<Behavior, Event>(self) -> wgpu::Surface<'static>
-    where
-        Behavior: WindowBehavior<Event>,
-        Event: Send + 'static,
-    {
+    fn expect_surface(self) -> Result<wgpu::Surface<'static>, UnrecoverableError> {
         let AppResponse(Some(AppResponseKind::Surface(surface))) = self else {
             unreachable!("unexpected response")
         };
-        match surface {
-            Ok(surface) => surface,
-            Err(err) => Behavior::unrecoverable_error(UnrecoverableError::Surface(err)),
-        }
+        surface.map_err(UnrecoverableError::Surface)
     }
 
     fn expect_monitors(self) -> Monitors {
@@ -1113,6 +1108,7 @@ impl<User> Message for AppEvent<User>
 where
     User: Send + 'static,
 {
+    type Error = UnrecoverableError;
     type Response = AppResponse;
     type Window = User;
 }
@@ -1154,7 +1150,7 @@ impl<Behavior> KludgineWindow<Behavior> {
         window: &mut RunningWindow<AppEvent<User>>,
     ) -> Option<wgpu::SurfaceTexture>
     where
-        AppEvent<User>: Message<Response = AppResponse>,
+        AppEvent<User>: Message<Response = AppResponse, Error = UnrecoverableError>,
         Behavior: WindowBehavior<User> + 'static,
         User: Send + 'static,
     {
@@ -1170,7 +1166,7 @@ impl<Behavior> KludgineWindow<Behavior> {
                         return None;
                     }
                     wgpu::SurfaceError::Lost => {
-                        self.surface = window
+                        match window
                             .send(AppEvent(AppEventKind::CreateSurface(
                                 CreateSurfaceRequest {
                                     wgpu: self.wgpu.clone(),
@@ -1179,7 +1175,18 @@ impl<Behavior> KludgineWindow<Behavior> {
                                 },
                             )))
                             .expect("app not running")
-                            .expect_surface::<Behavior, _>();
+                            .expect_surface()
+                        {
+                            Ok(surface) => {
+                                self.surface = surface;
+                            }
+                            Err(creation_error) => {
+                                let _ = window.app().send_error(creation_error);
+                                window.close();
+                                return None;
+                            }
+                        }
+
                         self.surface.configure(&self.device, &self.config);
                     }
                     wgpu::SurfaceError::OutOfMemory => {
@@ -1349,7 +1356,10 @@ where
 {
     type Context = T::Context;
 
-    fn initialize(window: &mut RunningWindow<AppEvent<User>>, context: Self::Context) -> Self {
+    fn initialize(
+        window: &mut RunningWindow<AppEvent<User>>,
+        context: Self::Context,
+    ) -> Result<Self, UnrecoverableError> {
         T::pre_initialize(&context, window.winit());
         let wgpu = Arc::new(new_wgpu_instance());
         let surface = window
@@ -1361,17 +1371,14 @@ where
                 },
             )))
             .expect("app not running")
-            .expect_surface::<T, _>();
-        let Some(adapter) =
-            pollster::block_on(wgpu.request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: T::power_preference(&context),
-                force_fallback_adapter: false,
-                compatible_surface: Some(&surface),
-            }))
-        else {
-            T::unrecoverable_error(UnrecoverableError::NoAdapter)
-        };
-        let (device, queue) = match pollster::block_on(adapter.request_device(
+            .expect_surface()?;
+        let adapter = pollster::block_on(wgpu.request_adapter(&wgpu::RequestAdapterOptions {
+            power_preference: T::power_preference(&context),
+            force_fallback_adapter: false,
+            compatible_surface: Some(&surface),
+        }))
+        .ok_or(UnrecoverableError::NoAdapter)?;
+        let (device, queue) = pollster::block_on(adapter.request_device(
             &wgpu::DeviceDescriptor {
                 label: None,
                 required_features: Kludgine::REQURED_FEATURES,
@@ -1379,10 +1386,8 @@ where
                 memory_hints: T::memory_hints(&context),
             },
             None,
-        )) {
-            Ok(dev) => dev,
-            Err(err) => T::unrecoverable_error(UnrecoverableError::Device(err)),
-        };
+        ))
+        .map_err(UnrecoverableError::Device)?;
 
         let swapchain_capabilities = surface.get_capabilities(&adapter);
         let swapchain_format = swapchain_capabilities.formats[0];
@@ -1421,7 +1426,7 @@ where
         };
         surface.configure(&device, &config);
 
-        Self {
+        Ok(Self {
             kludgine: state,
             last_render,
             last_render_duration: Duration::ZERO,
@@ -1433,7 +1438,7 @@ where
             queue,
             wgpu,
             multisample_count,
-        }
+        })
     }
 
     fn initialized(&mut self, window: &mut RunningWindow<AppEvent<User>>) {
