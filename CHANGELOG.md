@@ -40,6 +40,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Shape::textured_rect`
   - `Shape::textured_circle`
 
+### Fixed
+
+- Plotters integration now strokes paths offsetting by half of the stroke width
+  to ensure proper subpixel alignment.
+- Plotters integration text drawing now honors anchor positioning, rotation, and
+  properly sets the line height based.
+
 ## v0.11.0 (2024-09-14)
 
 ### Breaking Changes

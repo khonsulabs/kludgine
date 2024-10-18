@@ -3,17 +3,18 @@ use std::convert::Infallible;
 
 use cosmic_text::{FamilyOwned, Style, Weight};
 use figures::units::{Px, UPx};
-use figures::{IntoUnsigned, Point, Rect, Size};
+use figures::{Angle, IntoUnsigned, Point, Rect, Round, Size, Zero};
 use intentional::Cast;
 use plotters::coord::Shift;
 use plotters::drawing::DrawingArea;
+use plotters_backend::text_anchor::{HPos, VPos};
 use plotters_backend::{
     BackendColor, BackendCoord, BackendStyle, BackendTextStyle, DrawingBackend, DrawingErrorKind,
-    FontFamily, FontStyle,
+    FontFamily, FontStyle, FontTransform,
 };
 
 use crate::shapes::{PathBuilder, Shape, StrokeOptions};
-use crate::text::Text;
+use crate::text::{Text, TextOrigin};
 use crate::{f32_component_to_u8, Color, DrawableExt, Origin, Texture};
 
 impl From<BackendColor> for Color {
@@ -76,6 +77,7 @@ impl<'render, 'gfx> super::Renderer<'render, 'gfx> {
     {
         self.set_font_family(font_family(&style.family()));
         self.set_font_size(Px::from(style.size().cast::<f32>()));
+        self.set_line_height(Px::from(style.size().cast::<f32>()));
         match style.style() {
             FontStyle::Normal => {
                 self.set_font_style(Style::Normal);
@@ -129,11 +131,17 @@ impl DrawingBackend for PlotterBackend<'_, '_, '_> {
         to: BackendCoord,
         style: &S,
     ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
+        let options = style.stroke_options();
+        if options.color.alpha() == 0 {
+            return Ok(());
+        }
+
+        let half_stroke = options.line_width / 2;
         self.0.borrow_mut().draw_shape(
-            &PathBuilder::new(pt(from))
-                .line_to(pt(to))
+            &PathBuilder::new(pt(from) + half_stroke)
+                .line_to(pt(to) + half_stroke)
                 .build()
-                .stroke(style.stroke_options()),
+                .stroke(options),
         );
         Ok(())
     }
@@ -151,9 +159,14 @@ impl DrawingBackend for PlotterBackend<'_, '_, '_> {
                 .borrow_mut()
                 .draw_shape(&Shape::filled_rect(rect, style.color().into()));
         } else {
-            self.0
-                .borrow_mut()
-                .draw_shape(&Shape::stroked_rect(rect, style.stroke_options()));
+            let options = style.stroke_options();
+            self.0.borrow_mut().draw_shape(&Shape::stroked_rect(
+                Rect::new(
+                    rect.origin - options.line_width / 2,
+                    rect.size + options.line_width,
+                ),
+                options,
+            ));
         }
         Ok(())
     }
@@ -168,16 +181,17 @@ impl DrawingBackend for PlotterBackend<'_, '_, '_> {
             return Ok(());
         }
 
+        let stroke_offset = Point::squared(options.line_width / 2);
+
         let mut path = path.into_iter();
 
         let Some(start) = path.next() else {
             return Ok(());
         };
 
-        let mut builder = PathBuilder::new(pt(start));
-
+        let mut builder = PathBuilder::new(pt(start) + stroke_offset);
         for point in path {
-            builder = builder.line_to(pt(point));
+            builder = builder.line_to(pt(point) + stroke_offset);
         }
 
         self.0
@@ -246,7 +260,28 @@ impl DrawingBackend for PlotterBackend<'_, '_, '_> {
         let mut gfx = self.0.borrow_mut();
         gfx.apply_text_style(style);
 
-        gfx.draw_text(Text::new(text, style.color().into()).translate_by(pt(pos)));
+        let text = gfx.measure_text::<Px>(Text::new(text, style.color().into()));
+        let x = match style.anchor().h_pos {
+            HPos::Left => Px::ZERO,
+            HPos::Right => text.size.width,
+            HPos::Center => text.size.width / 2,
+        };
+        let y = match style.anchor().v_pos {
+            VPos::Top => Px::ZERO,
+            VPos::Bottom => text.size.height,
+            VPos::Center => text.size.height / 2,
+        };
+        let angle = match style.transform() {
+            FontTransform::None => Angle::ZERO,
+            FontTransform::Rotate90 => Angle::degrees(90),
+            FontTransform::Rotate180 => Angle::degrees(180),
+            FontTransform::Rotate270 => Angle::degrees(270),
+        };
+
+        gfx.draw_measured_text(
+            text.translate_by(pt(pos)).rotate_by(angle),
+            TextOrigin::Custom(Point::new(x, y)),
+        );
         Ok(())
     }
 
@@ -257,7 +292,7 @@ impl DrawingBackend for PlotterBackend<'_, '_, '_> {
     ) -> Result<(u32, u32), DrawingErrorKind<Self::ErrorType>> {
         let mut gfx = self.0.borrow_mut();
         gfx.apply_text_style(style);
-        let size = gfx.measure_text::<Px>(text).size.into_unsigned();
+        let size = gfx.measure_text::<Px>(text).size.into_unsigned().ceil();
         Ok((size.width.get(), size.height.get()))
     }
 
