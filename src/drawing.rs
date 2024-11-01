@@ -1,4 +1,5 @@
 use std::collections::{hash_map, HashMap};
+use std::fmt::Debug;
 use std::ops::{Deref, DerefMut, Range};
 use std::sync::Arc;
 
@@ -56,9 +57,17 @@ impl<'gfx> DerefMut for Renderer<'_, 'gfx> {
 #[derive(Debug)]
 struct Command {
     clip_index: u32,
-    indices: Range<u32>,
-    constants: PushConstants,
-    texture: Option<sealed::TextureId>,
+    kind: CommandKind,
+}
+
+#[derive(Debug)]
+enum CommandKind {
+    BuiltIn {
+        indices: Range<u32>,
+        constants: PushConstants,
+        texture: Option<sealed::TextureId>,
+    },
+    Custom(RenderOperation),
 }
 
 impl<'render, 'gfx> Renderer<'render, 'gfx> {
@@ -196,9 +205,12 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         match self.data.commands.last_mut() {
             Some(Command {
                 clip_index,
-                texture: last_texture,
-                indices,
-                constants: last_constants,
+                kind:
+                    CommandKind::BuiltIn {
+                        texture: last_texture,
+                        indices,
+                        constants: last_constants,
+                    },
             }) if clip_index == &self.clip_index
                 && last_texture == &texture
                 && last_constants == &constants =>
@@ -214,20 +226,30 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
             _ => {
                 self.data.commands.push(Command {
                     clip_index: self.clip_index,
-                    indices: first_index_drawn
-                        .try_into()
-                        .expect("too many drawn verticies")
-                        ..self
-                            .data
-                            .indices
-                            .len()
+                    kind: CommandKind::BuiltIn {
+                        indices: first_index_drawn
                             .try_into()
-                            .expect("too many drawn verticies"),
-                    constants,
-                    texture,
+                            .expect("too many drawn verticies")
+                            ..self
+                                .data
+                                .indices
+                                .len()
+                                .try_into()
+                                .expect("too many drawn verticies"),
+                        constants,
+                        texture,
+                    },
                 });
             }
         }
+    }
+
+    /// Draws a custom rendering operation.
+    pub fn draw(&mut self, op: RenderOperation) {
+        self.data.commands.push(Command {
+            clip_index: self.clip_index,
+            kind: CommandKind::Custom(op),
+        });
     }
 
     /// Returns the number of vertexes that compose the drawing commands.
@@ -293,8 +315,8 @@ mod text {
     use intentional::Assert;
 
     use super::{
-        Angle, Color, Command, IntoSigned, Point, PushConstants, Renderer, Vertex, Zero,
-        FLAG_MASKED, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED, FLAG_TRANSLATE,
+        Angle, Color, Command, CommandKind, IntoSigned, Point, PushConstants, Renderer, Vertex,
+        Zero, FLAG_MASKED, FLAG_ROTATE, FLAG_SCALE, FLAG_TEXTURED, FLAG_TRANSLATE,
     };
     use crate::sealed::{ShaderScalableSealed, ShapeSource, TextureId, TextureSource};
     use crate::text::{
@@ -567,20 +589,29 @@ mod text {
         };
         let end_index = u32::try_from(indices.len()).expect("too many drawn indices");
         match commands.last_mut() {
-            Some(last_command)
-                if clip_index == last_command.clip_index
-                    && last_command.texture == Some(cached.texture.id())
-                    && last_command.constants == constants =>
+            Some(Command {
+                clip_index: command_clip,
+                kind:
+                    CommandKind::BuiltIn {
+                        texture,
+                        constants: command_constants,
+                        indices,
+                    },
+            }) if clip_index == *command_clip
+                && *texture == Some(cached.texture.id())
+                && constants == *command_constants =>
             {
                 // The last command was from the same texture source, we can stend the previous range to the new end.
-                last_command.indices.end = end_index;
+                indices.end = end_index;
             }
             _ => {
                 commands.push(Command {
                     clip_index,
-                    indices: start_index..end_index,
-                    constants,
-                    texture: Some(cached.texture.id()),
+                    kind: CommandKind::BuiltIn {
+                        indices: start_index..end_index,
+                        constants,
+                        texture: Some(cached.texture.id()),
+                    },
                 });
             }
         }
@@ -703,24 +734,6 @@ impl Drawing {
             let mut current_clip = graphics.clip.current.0;
 
             for command in &self.commands {
-                if let Some(texture_id) = &command.texture {
-                    if current_texture_id != Some(*texture_id) {
-                        needs_texture_binding = false;
-                        current_texture_id = Some(*texture_id);
-                        graphics.pass.set_bind_group(
-                            0,
-                            self.textures.get(texture_id).assert("texture missing"),
-                            &[],
-                        );
-                    }
-                } else if needs_texture_binding {
-                    needs_texture_binding = false;
-                    current_texture_id = None;
-                    graphics
-                        .pass
-                        .set_bind_group(0, &graphics.kludgine.default_bindings, &[]);
-                }
-
                 if current_clip_index != command.clip_index {
                     current_clip_index = command.clip_index;
                     current_clip = self.clips[command.clip_index as usize];
@@ -736,19 +749,87 @@ impl Drawing {
                     );
                 }
 
-                let mut constants = command.constants;
-                constants.opacity *= opacity;
-                constants.translation += current_clip.origin.into_signed().map(Px::into_unscaled);
-                if !constants.translation.is_zero() {
-                    constants.flags |= FLAG_TRANSLATE;
+                match &command.kind {
+                    CommandKind::BuiltIn {
+                        indices,
+                        constants,
+                        texture,
+                    } => {
+                        if let Some(texture_id) = texture {
+                            if current_texture_id != Some(*texture_id) {
+                                needs_texture_binding = false;
+                                current_texture_id = Some(*texture_id);
+                                graphics.pass.set_bind_group(
+                                    0,
+                                    self.textures.get(texture_id).assert("texture missing"),
+                                    &[],
+                                );
+                            }
+                        } else if needs_texture_binding {
+                            needs_texture_binding = false;
+                            current_texture_id = None;
+                            graphics.pass.set_bind_group(
+                                0,
+                                &graphics.kludgine.default_bindings,
+                                &[],
+                            );
+                        }
+
+                        let mut constants = *constants;
+                        constants.opacity *= opacity;
+                        constants.translation +=
+                            current_clip.origin.into_signed().map(Px::into_unscaled);
+                        if !constants.translation.is_zero() {
+                            constants.flags |= FLAG_TRANSLATE;
+                        }
+                        graphics.pass.set_push_constants(
+                            wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
+                            0,
+                            bytemuck::bytes_of(&constants),
+                        );
+                        graphics.pass.draw_indexed(indices.clone(), 0, 0..1);
+                    }
+                    CommandKind::Custom(render_operation) => {
+                        render_operation.0.render(opacity, graphics);
+                        needs_texture_binding = true;
+                    }
                 }
-                graphics.pass.set_push_constants(
-                    wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
-                    0,
-                    bytemuck::bytes_of(&constants),
-                );
-                graphics.pass.draw_indexed(command.indices.clone(), 0, 0..1);
             }
         }
+    }
+}
+
+/// A custom rendering operation.
+#[derive(Clone)]
+pub struct RenderOperation(Arc<dyn RenderOp>);
+
+impl RenderOperation {
+    /// Creates a new rendering operation that invokes `op` when executed.
+    pub fn new<Op: RenderOp>(op: Op) -> Self {
+        Self(Arc::new(op))
+    }
+}
+
+impl Debug for RenderOperation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Arc::as_ptr(&self.0).fmt(f)
+    }
+}
+
+/// A custom rendering operation.
+pub trait RenderOp: Send + Sync + 'static {
+    /// Render to `graphics` with `opacity`.
+    fn render<'pass>(&'pass self, opacity: f32, graphics: &mut RenderingGraphics<'_, 'pass>);
+}
+
+impl<F> RenderOp for F
+where
+    F: for<'a, 'context, 'pass> Fn(f32, &'a mut RenderingGraphics<'context, 'pass>)
+        + Send
+        + Sync
+        + 'static,
+{
+    fn render<'pass>(&'pass self, opacity: f32, graphics: &mut RenderingGraphics<'_, 'pass>) {
+        self(opacity, graphics);
     }
 }

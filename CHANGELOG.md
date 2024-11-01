@@ -39,6 +39,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Shape::textured_round_rect`
   - `Shape::textured_rect`
   - `Shape::textured_circle`
+- `Renderer::draw` is a new function that allows attaching arbitrary drawing
+  operations to a `Drawing`. The drawing calls will be clipped to the current
+  clipping rectangle.
+- `Kludgine::texture_format` and `Kludgine::multisample_state` are new functions
+  that return the configuration specified when Kludgine was initialized.
+- `RenderingGraphics::pass()` and `RenderingGraphics::pass_mut()` give access to
+  the underlying render pass.
 
 ### Fixed
 

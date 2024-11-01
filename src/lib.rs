@@ -76,6 +76,8 @@ pub use pipeline::{PreparedGraphic, ShaderScalable};
 #[derive(Debug)]
 pub struct Kludgine {
     id: KludgineId,
+    format: wgpu::TextureFormat,
+    multisample: wgpu::MultisampleState,
     default_bindings: wgpu::BindGroup,
     pipeline: wgpu::RenderPipeline,
     _shader: wgpu::ShaderModule,
@@ -162,6 +164,8 @@ impl Kludgine {
 
         Self {
             id,
+            format,
+            multisample,
             #[cfg(feature = "cosmic-text")]
             text: text::TextSystem::new(&ProtoGraphics {
                 id,
@@ -185,6 +189,18 @@ impl Kludgine {
             uniforms,
             binding_layout,
         }
+    }
+
+    /// Returns the texture format this instance was initialized with.
+    #[must_use]
+    pub const fn texture_format(&self) -> wgpu::TextureFormat {
+        self.format
+    }
+
+    /// Returns the multisample state this instance was initialized with.
+    #[must_use]
+    pub const fn multisample_state(&self) -> wgpu::MultisampleState {
+        self.multisample
     }
 
     /// Adjusts and returns the wgpu limits to support features used by
@@ -695,6 +711,18 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
     #[must_use]
     pub const fn queue(&self) -> &'gfx wgpu::Queue {
         self.queue
+    }
+
+    /// Returns the rendering pass for this context.
+    #[must_use]
+    pub const fn pass(&self) -> &wgpu::RenderPass<'pass> {
+        &self.pass
+    }
+
+    /// Returns an exclusive reference to the rendering pass for this context.
+    #[must_use]
+    pub fn pass_mut(&mut self) -> &mut wgpu::RenderPass<'pass> {
+        &mut self.pass
     }
 
     fn active_pipeline_if_needed(&mut self) -> bool {
