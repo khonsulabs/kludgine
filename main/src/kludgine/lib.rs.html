@@ -2448,6 +2448,34 @@
 <a href="#2448" id="2448">2448</a>
 <a href="#2449" id="2449">2449</a>
 <a href="#2450" id="2450">2450</a>
+<a href="#2451" id="2451">2451</a>
+<a href="#2452" id="2452">2452</a>
+<a href="#2453" id="2453">2453</a>
+<a href="#2454" id="2454">2454</a>
+<a href="#2455" id="2455">2455</a>
+<a href="#2456" id="2456">2456</a>
+<a href="#2457" id="2457">2457</a>
+<a href="#2458" id="2458">2458</a>
+<a href="#2459" id="2459">2459</a>
+<a href="#2460" id="2460">2460</a>
+<a href="#2461" id="2461">2461</a>
+<a href="#2462" id="2462">2462</a>
+<a href="#2463" id="2463">2463</a>
+<a href="#2464" id="2464">2464</a>
+<a href="#2465" id="2465">2465</a>
+<a href="#2466" id="2466">2466</a>
+<a href="#2467" id="2467">2467</a>
+<a href="#2468" id="2468">2468</a>
+<a href="#2469" id="2469">2469</a>
+<a href="#2470" id="2470">2470</a>
+<a href="#2471" id="2471">2471</a>
+<a href="#2472" id="2472">2472</a>
+<a href="#2473" id="2473">2473</a>
+<a href="#2474" id="2474">2474</a>
+<a href="#2475" id="2475">2475</a>
+<a href="#2476" id="2476">2476</a>
+<a href="#2477" id="2477">2477</a>
+<a href="#2478" id="2478">2478</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">"../README.md"</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -2526,6 +2554,8 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Kludgine {
     id: KludgineId,
+    format: wgpu::TextureFormat,
+    multisample: wgpu::MultisampleState,
     default_bindings: wgpu::BindGroup,
     pipeline: wgpu::RenderPipeline,
     _shader: wgpu::ShaderModule,
@@ -2612,6 +2642,8 @@
 
         <span class="self">Self </span>{
             id,
+            format,
+            multisample,
             <span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
             </span>text: text::TextSystem::new(<span class="kw-2">&amp;</span>ProtoGraphics {
                 id,
@@ -2635,6 +2667,18 @@
             uniforms,
             binding_layout,
         }
+    }
+
+    <span class="doccomment">/// Returns the texture format this instance was initialized with.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>texture_format(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::TextureFormat {
+        <span class="self">self</span>.format
+    }
+
+    <span class="doccomment">/// Returns the multisample state this instance was initialized with.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>multisample_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::MultisampleState {
+        <span class="self">self</span>.multisample
     }
 
     <span class="doccomment">/// Adjusts and returns the wgpu limits to support features used by
@@ -3145,6 +3189,18 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>queue(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Queue {
         <span class="self">self</span>.queue
+    }
+
+    <span class="doccomment">/// Returns the rendering pass for this context.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>pass(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::RenderPass&lt;<span class="lifetime">'pass</span>&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.pass
+    }
+
+    <span class="doccomment">/// Returns an exclusive reference to the rendering pass for this context.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>pass_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>wgpu::RenderPass&lt;<span class="lifetime">'pass</span>&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.pass
     }
 
     <span class="kw">fn </span>active_pipeline_if_needed(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; bool {

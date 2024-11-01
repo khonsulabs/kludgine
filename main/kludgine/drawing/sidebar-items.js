@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Drawing","PlotterBackend","Renderer"]};
+window.SIDEBAR_ITEMS = {"struct":["Drawing","PlotterBackend","RenderOperation","Renderer"],"trait":["RenderOp"]};
