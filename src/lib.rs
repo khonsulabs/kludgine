@@ -759,6 +759,12 @@ impl<'gfx, 'pass> RenderingGraphics<'gfx, 'pass> {
         self.clip.current.0.size
     }
 
+    /// Returns the current clipping rectangle in window coordinates.
+    #[must_use]
+    pub const fn clip_rect(&self) -> Rect<UPx> {
+        self.clip.current.0
+    }
+
     /// Returns the current scaling factor of the display being rendered to.
     #[must_use]
     pub const fn scale(&self) -> Fraction {

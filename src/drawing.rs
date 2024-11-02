@@ -1,3 +1,4 @@
+use std::any::{type_name, Any, TypeId};
 use std::collections::{hash_map, HashMap};
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut, Range};
@@ -67,7 +68,7 @@ enum CommandKind {
         constants: PushConstants,
         texture: Option<sealed::TextureId>,
     },
-    Custom(RenderOperation),
+    Custom(TypeId, usize),
 }
 
 impl<'render, 'gfx> Renderer<'render, 'gfx> {
@@ -245,10 +246,25 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
     }
 
     /// Draws a custom rendering operation.
-    pub fn draw(&mut self, op: RenderOperation) {
+    pub fn draw<Op>(&mut self, context: Op::DrawInfo)
+    where
+        Op: RenderOperation,
+    {
+        let op_id = TypeId::of::<Op>();
+        let state = self.data.custom.entry(op_id).or_insert_with(|| {
+            Box::new(RenderOperationState {
+                op: Op::new(self.graphics),
+                prepared: Vec::new(),
+            })
+        });
+        let prepared = state
+            .as_any_mut()
+            .downcast_mut::<RenderOperationState<Op>>()
+            .assert("type matched")
+            .prepare_push(context, self.graphics);
         self.data.commands.push(Command {
             clip_index: self.clip_index,
-            kind: CommandKind::Custom(op),
+            kind: CommandKind::Custom(op_id, prepared),
         });
     }
 
@@ -671,6 +687,7 @@ pub struct Drawing {
     indices: Vec<u32>,
     textures: HashMap<sealed::TextureId, Arc<wgpu::BindGroup>, DefaultHasher>,
     commands: Vec<Command>,
+    custom: HashMap<TypeId, Box<dyn RenderOpState>, DefaultHasher>,
     #[cfg(feature = "cosmic-text")]
     glyphs: HashMap<cosmic_text::CacheKey, crate::text::CachedGlyphHandle, DefaultHasher>,
 }
@@ -698,6 +715,9 @@ impl Drawing {
         self.clip_lookup.clear();
         self.clips.clear();
         self.get_or_lookup_clip(graphics.clip.current);
+        for state in self.custom.values_mut() {
+            state.clear();
+        }
         #[cfg(feature = "cosmic-text")]
         self.glyphs.clear();
 
@@ -789,8 +809,11 @@ impl Drawing {
                         );
                         graphics.pass.draw_indexed(indices.clone(), 0, 0..1);
                     }
-                    CommandKind::Custom(render_operation) => {
-                        render_operation.0.render(opacity, graphics);
+                    CommandKind::Custom(op_id, prepared) => {
+                        self.custom
+                            .get(op_id)
+                            .assert("op drawn")
+                            .render(*prepared, opacity, graphics);
                         needs_texture_binding = true;
                     }
                 }
@@ -799,37 +822,92 @@ impl Drawing {
     }
 }
 
-/// A custom rendering operation.
-#[derive(Clone)]
-pub struct RenderOperation(Arc<dyn RenderOp>);
-
-impl RenderOperation {
-    /// Creates a new rendering operation that invokes `op` when executed.
-    pub fn new<Op: RenderOp>(op: Op) -> Self {
-        Self(Arc::new(op))
-    }
-}
-
-impl Debug for RenderOperation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        Arc::as_ptr(&self.0).fmt(f)
-    }
-}
-
-/// A custom rendering operation.
-pub trait RenderOp: Send + Sync + 'static {
-    /// Render to `graphics` with `opacity`.
-    fn render<'pass>(&'pass self, opacity: f32, graphics: &mut RenderingGraphics<'_, 'pass>);
-}
-
-impl<F> RenderOp for F
+struct RenderOperationState<Op>
 where
-    F: for<'a, 'context, 'pass> Fn(f32, &'a mut RenderingGraphics<'context, 'pass>)
-        + Send
-        + Sync
-        + 'static,
+    Op: RenderOperation,
 {
-    fn render<'pass>(&'pass self, opacity: f32, graphics: &mut RenderingGraphics<'_, 'pass>) {
-        self(opacity, graphics);
+    op: Op,
+    prepared: Vec<Op::Prepared>,
+}
+
+impl<Op> RenderOperationState<Op>
+where
+    Op: RenderOperation,
+{
+    fn prepare_push(&mut self, context: Op::DrawInfo, graphics: &mut Graphics<'_>) -> usize {
+        let index = self.prepared.len();
+        self.prepared.push(self.op.prepare(context, graphics));
+        index
     }
+}
+
+impl<Op> Debug for RenderOperationState<Op>
+where
+    Op: RenderOperation,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct(type_name::<Op>())
+            .field("prepared", &self.prepared)
+            .finish_non_exhaustive()
+    }
+}
+
+trait RenderOpState: Debug + Send + Sync + 'static {
+    fn as_any_mut(&mut self) -> &mut dyn Any;
+
+    fn clear(&mut self);
+
+    fn render<'pass>(
+        &'pass self,
+        prepared: usize,
+        opacity: f32,
+        graphics: &mut RenderingGraphics<'_, 'pass>,
+    );
+}
+
+impl<Op> RenderOpState for RenderOperationState<Op>
+where
+    Op: RenderOperation,
+{
+    fn clear(&mut self) {
+        self.prepared.clear();
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+
+    fn render<'pass>(
+        &'pass self,
+        prepared: usize,
+        opacity: f32,
+        graphics: &mut RenderingGraphics<'_, 'pass>,
+    ) {
+        self.op.render(&self.prepared[prepared], opacity, graphics);
+    }
+}
+
+/// A custom rendering operation.
+pub trait RenderOperation: Send + Sync + 'static {
+    /// Data provided to the `prepare()` function. This value is passed through
+    /// from the draw call to the prepare call.
+    type DrawInfo;
+    /// Data created by the `prepare()` function that is passed to the
+    /// `render()` function when the [`Drawing`] is rendered.
+    type Prepared: Debug + Send + Sync + 'static;
+
+    /// Returns a new instance of this operation.
+    fn new(graphics: &mut Graphics<'_>) -> Self;
+
+    /// Prepare to draw this operation, returning any draw-call-specific
+    /// information that should be provided to `render()`.
+    fn prepare(&mut self, info: Self::DrawInfo, graphics: &mut Graphics<'_>) -> Self::Prepared;
+
+    /// Render the `prepared` operation to `graphics` with `opacity`.
+    fn render<'pass>(
+        &'pass self,
+        prepared: &Self::Prepared,
+        opacity: f32,
+        graphics: &mut RenderingGraphics<'_, 'pass>,
+    );
 }
