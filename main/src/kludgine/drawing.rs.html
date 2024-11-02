@@ -833,7 +833,86 @@
 <a href="#833" id="833">833</a>
 <a href="#834" id="834">834</a>
 <a href="#835" id="835">835</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{hash_map, HashMap};
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
+<a href="#869" id="869">869</a>
+<a href="#870" id="870">870</a>
+<a href="#871" id="871">871</a>
+<a href="#872" id="872">872</a>
+<a href="#873" id="873">873</a>
+<a href="#874" id="874">874</a>
+<a href="#875" id="875">875</a>
+<a href="#876" id="876">876</a>
+<a href="#877" id="877">877</a>
+<a href="#878" id="878">878</a>
+<a href="#879" id="879">879</a>
+<a href="#880" id="880">880</a>
+<a href="#881" id="881">881</a>
+<a href="#882" id="882">882</a>
+<a href="#883" id="883">883</a>
+<a href="#884" id="884">884</a>
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
+<a href="#889" id="889">889</a>
+<a href="#890" id="890">890</a>
+<a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
+<a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
+<a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::any::{type_name, Any, TypeId};
+<span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
 <span class="kw">use </span>std::sync::Arc;
@@ -902,7 +981,7 @@
         constants: PushConstants,
         texture: <span class="prelude-ty">Option</span>&lt;sealed::TextureId&gt;,
     },
-    Custom(RenderOperation),
+    Custom(TypeId, usize),
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'render</span>, <span class="lifetime">'gfx</span>&gt; Renderer&lt;<span class="lifetime">'render</span>, <span class="lifetime">'gfx</span>&gt; {
@@ -1080,10 +1159,25 @@
     }
 
     <span class="doccomment">/// Draws a custom rendering operation.
-    </span><span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, op: RenderOperation) {
+    </span><span class="kw">pub fn </span>draw&lt;Op&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: Op::DrawInfo)
+    <span class="kw">where
+        </span>Op: RenderOperation,
+    {
+        <span class="kw">let </span>op_id = TypeId::of::&lt;Op&gt;();
+        <span class="kw">let </span>state = <span class="self">self</span>.data.custom.entry(op_id).or_insert_with(|| {
+            Box::new(RenderOperationState {
+                op: Op::new(<span class="self">self</span>.graphics),
+                prepared: Vec::new(),
+            })
+        });
+        <span class="kw">let </span>prepared = state
+            .as_any_mut()
+            .downcast_mut::&lt;RenderOperationState&lt;Op&gt;&gt;()
+            .assert(<span class="string">"type matched"</span>)
+            .prepare_push(context, <span class="self">self</span>.graphics);
         <span class="self">self</span>.data.commands.push(Command {
             clip_index: <span class="self">self</span>.clip_index,
-            kind: CommandKind::Custom(op),
+            kind: CommandKind::Custom(op_id, prepared),
         });
     }
 
@@ -1506,6 +1600,7 @@
     indices: Vec&lt;u32&gt;,
     textures: HashMap&lt;sealed::TextureId, Arc&lt;wgpu::BindGroup&gt;, DefaultHasher&gt;,
     commands: Vec&lt;Command&gt;,
+    custom: HashMap&lt;TypeId, Box&lt;<span class="kw">dyn </span>RenderOpState&gt;, DefaultHasher&gt;,
     <span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
     </span>glyphs: HashMap&lt;cosmic_text::CacheKey, <span class="kw">crate</span>::text::CachedGlyphHandle, DefaultHasher&gt;,
 }
@@ -1533,6 +1628,9 @@
         <span class="self">self</span>.clip_lookup.clear();
         <span class="self">self</span>.clips.clear();
         <span class="self">self</span>.get_or_lookup_clip(graphics.clip.current);
+        <span class="kw">for </span>state <span class="kw">in </span><span class="self">self</span>.custom.values_mut() {
+            state.clear();
+        }
         <span class="attr">#[cfg(feature = <span class="string">"cosmic-text"</span>)]
         </span><span class="self">self</span>.glyphs.clear();
 
@@ -1624,8 +1722,11 @@
                         );
                         graphics.pass.draw_indexed(indices.clone(), <span class="number">0</span>, <span class="number">0</span>..<span class="number">1</span>);
                     }
-                    CommandKind::Custom(render_operation) =&gt; {
-                        render_operation.<span class="number">0</span>.render(opacity, graphics);
+                    CommandKind::Custom(op_id, prepared) =&gt; {
+                        <span class="self">self</span>.custom
+                            .get(op_id)
+                            .assert(<span class="string">"op drawn"</span>)
+                            .render(<span class="kw-2">*</span>prepared, opacity, graphics);
                         needs_texture_binding = <span class="bool-val">true</span>;
                     }
                 }
@@ -1634,38 +1735,93 @@
     }
 }
 
-<span class="doccomment">/// A custom rendering operation.
-</span><span class="attr">#[derive(Clone)]
-</span><span class="kw">pub struct </span>RenderOperation(Arc&lt;<span class="kw">dyn </span>RenderOp&gt;);
-
-<span class="kw">impl </span>RenderOperation {
-    <span class="doccomment">/// Creates a new rendering operation that invokes `op` when executed.
-    </span><span class="kw">pub fn </span>new&lt;Op: RenderOp&gt;(op: Op) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(Arc::new(op))
-    }
-}
-
-<span class="kw">impl </span>Debug <span class="kw">for </span>RenderOperation {
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
-        Arc::as_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>).fmt(f)
-    }
-}
-
-<span class="doccomment">/// A custom rendering operation.
-</span><span class="kw">pub trait </span>RenderOp: Send + Sync + <span class="lifetime">'static </span>{
-    <span class="doccomment">/// Render to `graphics` with `opacity`.
-    </span><span class="kw">fn </span>render&lt;<span class="lifetime">'pass</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="self">self</span>, opacity: f32, graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">'_</span>, <span class="lifetime">'pass</span>&gt;);
-}
-
-<span class="kw">impl</span>&lt;F&gt; RenderOp <span class="kw">for </span>F
+<span class="kw">struct </span>RenderOperationState&lt;Op&gt;
 <span class="kw">where
-    </span>F: <span class="kw">for</span>&lt;<span class="lifetime">'a</span>, <span class="lifetime">'context</span>, <span class="lifetime">'pass</span>&gt; Fn(f32, <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>RenderingGraphics&lt;<span class="lifetime">'context</span>, <span class="lifetime">'pass</span>&gt;)
-        + Send
-        + Sync
-        + <span class="lifetime">'static</span>,
+    </span>Op: RenderOperation,
 {
-    <span class="kw">fn </span>render&lt;<span class="lifetime">'pass</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="self">self</span>, opacity: f32, graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">'_</span>, <span class="lifetime">'pass</span>&gt;) {
-        <span class="self">self</span>(opacity, graphics);
+    op: Op,
+    prepared: Vec&lt;Op::Prepared&gt;,
+}
+
+<span class="kw">impl</span>&lt;Op&gt; RenderOperationState&lt;Op&gt;
+<span class="kw">where
+    </span>Op: RenderOperation,
+{
+    <span class="kw">fn </span>prepare_push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: Op::DrawInfo, graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">'_</span>&gt;) -&gt; usize {
+        <span class="kw">let </span>index = <span class="self">self</span>.prepared.len();
+        <span class="self">self</span>.prepared.push(<span class="self">self</span>.op.prepare(context, graphics));
+        index
     }
+}
+
+<span class="kw">impl</span>&lt;Op&gt; Debug <span class="kw">for </span>RenderOperationState&lt;Op&gt;
+<span class="kw">where
+    </span>Op: RenderOperation,
+{
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; std::fmt::Result {
+        f.debug_struct(type_name::&lt;Op&gt;())
+            .field(<span class="string">"prepared"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.prepared)
+            .finish_non_exhaustive()
+    }
+}
+
+<span class="kw">trait </span>RenderOpState: Debug + Send + Sync + <span class="lifetime">'static </span>{
+    <span class="kw">fn </span>as_any_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Any;
+
+    <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
+
+    <span class="kw">fn </span>render&lt;<span class="lifetime">'pass</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="self">self</span>,
+        prepared: usize,
+        opacity: f32,
+        graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">'_</span>, <span class="lifetime">'pass</span>&gt;,
+    );
+}
+
+<span class="kw">impl</span>&lt;Op&gt; RenderOpState <span class="kw">for </span>RenderOperationState&lt;Op&gt;
+<span class="kw">where
+    </span>Op: RenderOperation,
+{
+    <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.prepared.clear();
+    }
+
+    <span class="kw">fn </span>as_any_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Any {
+        <span class="self">self
+    </span>}
+
+    <span class="kw">fn </span>render&lt;<span class="lifetime">'pass</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="self">self</span>,
+        prepared: usize,
+        opacity: f32,
+        graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">'_</span>, <span class="lifetime">'pass</span>&gt;,
+    ) {
+        <span class="self">self</span>.op.render(<span class="kw-2">&amp;</span><span class="self">self</span>.prepared[prepared], opacity, graphics);
+    }
+}
+
+<span class="doccomment">/// A custom rendering operation.
+</span><span class="kw">pub trait </span>RenderOperation: Send + Sync + <span class="lifetime">'static </span>{
+    <span class="doccomment">/// Data provided to the `prepare()` function. This value is passed through
+    /// from the draw call to the prepare call.
+    </span><span class="kw">type </span>DrawInfo;
+    <span class="doccomment">/// Data created by the `prepare()` function that is passed to the
+    /// `render()` function when the [`Drawing`] is rendered.
+    </span><span class="kw">type </span>Prepared: Debug + Send + Sync + <span class="lifetime">'static</span>;
+
+    <span class="doccomment">/// Returns a new instance of this operation.
+    </span><span class="kw">fn </span>new(graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="self">Self</span>;
+
+    <span class="doccomment">/// Prepare to draw this operation, returning any draw-call-specific
+    /// information that should be provided to `render()`.
+    </span><span class="kw">fn </span>prepare(<span class="kw-2">&amp;mut </span><span class="self">self</span>, info: <span class="self">Self</span>::DrawInfo, graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="self">Self</span>::Prepared;
+
+    <span class="doccomment">/// Render the `prepared` operation to `graphics` with `opacity`.
+    </span><span class="kw">fn </span>render&lt;<span class="lifetime">'pass</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="self">self</span>,
+        prepared: <span class="kw-2">&amp;</span><span class="self">Self</span>::Prepared,
+        opacity: f32,
+        graphics: <span class="kw-2">&amp;mut </span>RenderingGraphics&lt;<span class="lifetime">'_</span>, <span class="lifetime">'pass</span>&gt;,
+    );
 }
 </code></pre></div></section></main></body></html>
