@@ -1,6 +1,7 @@
 struct PushConstants {
     flags: i32,
-    scale: f32,
+    scale_x: f32,
+    scale_y: f32,
     rotation: f32,
     opacity: f32,
     translation_x: i32,
@@ -90,7 +91,7 @@ fn vertex(input: VertexInput) -> VertexOutput {
         position = position * mat2x2<f32>(angle_cos, -angle_sin, angle_sin, angle_cos);
     }
     if (flags & flag_scale) != u32(0) {
-        position = position * pc.scale;
+        position = position * vec2<f32>(pc.scale_x, pc.scale_y);
     }
     if (flags & flag_translate) != u32(0) {
         position = position + vec2<f32>(

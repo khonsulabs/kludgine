@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Window::winit` now returns an `Arc`-wrapped winit Window.
 - `WindowBehavior::render` no longer returns a `bool`. Closing the window can be
   done through the `RunningWindow` parameter.
+- `DrawableExt::scale` now accepts a parameter that can be an `f32`, 
+  `(f32, f32)`, or `Point<f32>`. This change allows independent scaling of the x
+  and y axis.
 
 ### Added
 

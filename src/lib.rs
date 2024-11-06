@@ -2391,7 +2391,7 @@ pub struct Drawable<T, Unit> {
     /// Rotate the source before rendering.
     pub rotation: Option<Angle>,
     /// Scale the source before rendering.
-    pub scale: Option<f32>,
+    pub scale: Option<Point<f32>>,
     /// An opacity multiplier to apply to this drawable.
     pub opacity: Option<f32>,
 }
@@ -2434,7 +2434,7 @@ pub trait DrawableExt<Source, Unit> {
     /// Rotates `self` by `angle`.
     fn rotate_by(self, angle: Angle) -> Drawable<Source, Unit>;
     /// Scales `self` by `factor`.
-    fn scale(self, factor: f32) -> Drawable<Source, Unit>;
+    fn scale(self, factor: impl ScaleFactor) -> Drawable<Source, Unit>;
     /// Renders this drawable with `opacity`, ranged from 0.- to 1.0.
     fn opacity(self, opacity: f32) -> Drawable<Source, Unit>;
 }
@@ -2450,13 +2450,37 @@ impl<T, Unit> DrawableExt<T, Unit> for Drawable<T, Unit> {
         self
     }
 
-    fn scale(mut self, factor: f32) -> Drawable<T, Unit> {
-        self.scale = Some(factor);
+    fn scale(mut self, factor: impl ScaleFactor) -> Drawable<T, Unit> {
+        self.scale = Some(factor.into_scaling_vector());
         self
     }
 
     fn opacity(mut self, opacity: f32) -> Drawable<T, Unit> {
         self.opacity = Some(opacity.clamp(0., 1.));
+        self
+    }
+}
+
+/// A type representing an x and y scaling factor.
+pub trait ScaleFactor {
+    /// Returns a `Point` with an x and y scaling factor from `self`.
+    fn into_scaling_vector(self) -> Point<f32>;
+}
+
+impl ScaleFactor for f32 {
+    fn into_scaling_vector(self) -> Point<f32> {
+        Point::squared(self)
+    }
+}
+
+impl ScaleFactor for (f32, f32) {
+    fn into_scaling_vector(self) -> Point<f32> {
+        Point::new(self.0, self.1)
+    }
+}
+
+impl ScaleFactor for Point<f32> {
+    fn into_scaling_vector(self) -> Point<f32> {
         self
     }
 }
@@ -2474,7 +2498,7 @@ where
         Drawable::from(self).rotate_by(angle)
     }
 
-    fn scale(self, factor: f32) -> Drawable<T, Unit> {
+    fn scale(self, factor: impl ScaleFactor) -> Drawable<T, Unit> {
         Drawable::from(self).scale(factor)
     }
 

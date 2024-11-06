@@ -178,13 +178,13 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
         } else {
             None
         };
-        let scale = shape.scale.map_or(1., |scale| {
+        let scale = shape.scale.map_or(Point::squared(1.), |scale| {
             flags |= FLAG_SCALE;
             scale
         });
-        let rotation = shape.rotation.map_or(0., |scale| {
+        let rotation = shape.rotation.map_or(0., |rotation| {
             flags |= FLAG_ROTATE;
-            scale.into_raidans_f()
+            rotation.into_raidans_f()
         });
         if !shape.translation.is_zero() {
             flags |= FLAG_TRANSLATE;
@@ -500,7 +500,7 @@ mod text {
             origin: TextOrigin<Px>,
             translation: Point<Unit>,
             rotation: Option<Angle>,
-            scale: Option<f32>,
+            scale: Option<Point<f32>>,
             opacity: Option<f32>,
         ) where
             Unit: ScreenUnit,
@@ -549,7 +549,7 @@ mod text {
     fn render_one_glyph<Unit>(
         translation: Point<Unit>,
         rotation: Option<Angle>,
-        scale: Option<f32>,
+        scale: Option<Point<f32>>,
         opacity: Option<f32>,
         blit: TextureBlit<Px>,
         cached: &CachedGlyphHandle,
@@ -584,7 +584,7 @@ mod text {
         if cached.is_mask {
             flags |= FLAG_MASKED;
         }
-        let scale = scale.map_or(1., |scale| {
+        let scale = scale.map_or(Point::squared(1.), |scale| {
             flags |= FLAG_SCALE;
             scale
         });

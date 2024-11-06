@@ -73,7 +73,7 @@ pub(crate) const FLAG_MASKED: u32 = 1 << 5;
 #[repr(C)]
 pub(crate) struct PushConstants {
     pub flags: u32,
-    pub scale: f32,
+    pub scale: Point<f32>,
     pub rotation: f32,
     pub opacity: f32,
     pub translation: Point<i32>,
@@ -146,7 +146,7 @@ where
                     flags |= FLAG_MASKED;
                 }
             }
-            let scale = self.scale.map_or(1., |scale| {
+            let scale = self.scale.map_or(Point::squared(1.), |scale| {
                 flags |= FLAG_SCALE;
                 scale
             });
