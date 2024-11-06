@@ -467,7 +467,7 @@
 #[repr(C)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PushConstants {
     <span class="kw">pub </span>flags: u32,
-    <span class="kw">pub </span>scale: f32,
+    <span class="kw">pub </span>scale: Point&lt;f32&gt;,
     <span class="kw">pub </span>rotation: f32,
     <span class="kw">pub </span>opacity: f32,
     <span class="kw">pub </span>translation: Point&lt;i32&gt;,
@@ -540,7 +540,7 @@
                     flags |= FLAG_MASKED;
                 }
             }
-            <span class="kw">let </span>scale = <span class="self">self</span>.scale.map_or(<span class="number">1.</span>, |scale| {
+            <span class="kw">let </span>scale = <span class="self">self</span>.scale.map_or(Point::squared(<span class="number">1.</span>), |scale| {
                 flags |= FLAG_SCALE;
                 scale
             });

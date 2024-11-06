@@ -2482,6 +2482,30 @@
 <a href="#2482" id="2482">2482</a>
 <a href="#2483" id="2483">2483</a>
 <a href="#2484" id="2484">2484</a>
+<a href="#2485" id="2485">2485</a>
+<a href="#2486" id="2486">2486</a>
+<a href="#2487" id="2487">2487</a>
+<a href="#2488" id="2488">2488</a>
+<a href="#2489" id="2489">2489</a>
+<a href="#2490" id="2490">2490</a>
+<a href="#2491" id="2491">2491</a>
+<a href="#2492" id="2492">2492</a>
+<a href="#2493" id="2493">2493</a>
+<a href="#2494" id="2494">2494</a>
+<a href="#2495" id="2495">2495</a>
+<a href="#2496" id="2496">2496</a>
+<a href="#2497" id="2497">2497</a>
+<a href="#2498" id="2498">2498</a>
+<a href="#2499" id="2499">2499</a>
+<a href="#2500" id="2500">2500</a>
+<a href="#2501" id="2501">2501</a>
+<a href="#2502" id="2502">2502</a>
+<a href="#2503" id="2503">2503</a>
+<a href="#2504" id="2504">2504</a>
+<a href="#2505" id="2505">2505</a>
+<a href="#2506" id="2506">2506</a>
+<a href="#2507" id="2507">2507</a>
+<a href="#2508" id="2508">2508</a>
 </pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">"../README.md"</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
@@ -4875,7 +4899,7 @@
     <span class="doccomment">/// Rotate the source before rendering.
     </span><span class="kw">pub </span>rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
     <span class="doccomment">/// Scale the source before rendering.
-    </span><span class="kw">pub </span>scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+    </span><span class="kw">pub </span>scale: <span class="prelude-ty">Option</span>&lt;Point&lt;f32&gt;&gt;,
     <span class="doccomment">/// An opacity multiplier to apply to this drawable.
     </span><span class="kw">pub </span>opacity: <span class="prelude-ty">Option</span>&lt;f32&gt;,
 }
@@ -4918,7 +4942,7 @@
     <span class="doccomment">/// Rotates `self` by `angle`.
     </span><span class="kw">fn </span>rotate_by(<span class="self">self</span>, angle: Angle) -&gt; Drawable&lt;Source, Unit&gt;;
     <span class="doccomment">/// Scales `self` by `factor`.
-    </span><span class="kw">fn </span>scale(<span class="self">self</span>, factor: f32) -&gt; Drawable&lt;Source, Unit&gt;;
+    </span><span class="kw">fn </span>scale(<span class="self">self</span>, factor: <span class="kw">impl </span>ScaleFactor) -&gt; Drawable&lt;Source, Unit&gt;;
     <span class="doccomment">/// Renders this drawable with `opacity`, ranged from 0.- to 1.0.
     </span><span class="kw">fn </span>opacity(<span class="self">self</span>, opacity: f32) -&gt; Drawable&lt;Source, Unit&gt;;
 }
@@ -4934,13 +4958,37 @@
         <span class="self">self
     </span>}
 
-    <span class="kw">fn </span>scale(<span class="kw-2">mut </span><span class="self">self</span>, factor: f32) -&gt; Drawable&lt;T, Unit&gt; {
-        <span class="self">self</span>.scale = <span class="prelude-val">Some</span>(factor);
+    <span class="kw">fn </span>scale(<span class="kw-2">mut </span><span class="self">self</span>, factor: <span class="kw">impl </span>ScaleFactor) -&gt; Drawable&lt;T, Unit&gt; {
+        <span class="self">self</span>.scale = <span class="prelude-val">Some</span>(factor.into_scaling_vector());
         <span class="self">self
     </span>}
 
     <span class="kw">fn </span>opacity(<span class="kw-2">mut </span><span class="self">self</span>, opacity: f32) -&gt; Drawable&lt;T, Unit&gt; {
         <span class="self">self</span>.opacity = <span class="prelude-val">Some</span>(opacity.clamp(<span class="number">0.</span>, <span class="number">1.</span>));
+        <span class="self">self
+    </span>}
+}
+
+<span class="doccomment">/// A type representing an x and y scaling factor.
+</span><span class="kw">pub trait </span>ScaleFactor {
+    <span class="doccomment">/// Returns a `Point` with an x and y scaling factor from `self`.
+    </span><span class="kw">fn </span>into_scaling_vector(<span class="self">self</span>) -&gt; Point&lt;f32&gt;;
+}
+
+<span class="kw">impl </span>ScaleFactor <span class="kw">for </span>f32 {
+    <span class="kw">fn </span>into_scaling_vector(<span class="self">self</span>) -&gt; Point&lt;f32&gt; {
+        Point::squared(<span class="self">self</span>)
+    }
+}
+
+<span class="kw">impl </span>ScaleFactor <span class="kw">for </span>(f32, f32) {
+    <span class="kw">fn </span>into_scaling_vector(<span class="self">self</span>) -&gt; Point&lt;f32&gt; {
+        Point::new(<span class="self">self</span>.<span class="number">0</span>, <span class="self">self</span>.<span class="number">1</span>)
+    }
+}
+
+<span class="kw">impl </span>ScaleFactor <span class="kw">for </span>Point&lt;f32&gt; {
+    <span class="kw">fn </span>into_scaling_vector(<span class="self">self</span>) -&gt; Point&lt;f32&gt; {
         <span class="self">self
     </span>}
 }
@@ -4958,7 +5006,7 @@
         Drawable::from(<span class="self">self</span>).rotate_by(angle)
     }
 
-    <span class="kw">fn </span>scale(<span class="self">self</span>, factor: f32) -&gt; Drawable&lt;T, Unit&gt; {
+    <span class="kw">fn </span>scale(<span class="self">self</span>, factor: <span class="kw">impl </span>ScaleFactor) -&gt; Drawable&lt;T, Unit&gt; {
         Drawable::from(<span class="self">self</span>).scale(factor)
     }
 

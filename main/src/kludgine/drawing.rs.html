@@ -1091,13 +1091,13 @@
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>};
-        <span class="kw">let </span>scale = shape.scale.map_or(<span class="number">1.</span>, |scale| {
+        <span class="kw">let </span>scale = shape.scale.map_or(Point::squared(<span class="number">1.</span>), |scale| {
             flags |= FLAG_SCALE;
             scale
         });
-        <span class="kw">let </span>rotation = shape.rotation.map_or(<span class="number">0.</span>, |scale| {
+        <span class="kw">let </span>rotation = shape.rotation.map_or(<span class="number">0.</span>, |rotation| {
             flags |= FLAG_ROTATE;
-            scale.into_raidans_f()
+            rotation.into_raidans_f()
         });
         <span class="kw">if </span>!shape.translation.is_zero() {
             flags |= FLAG_TRANSLATE;
@@ -1413,7 +1413,7 @@
             origin: TextOrigin&lt;Px&gt;,
             translation: Point&lt;Unit&gt;,
             rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
-            scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+            scale: <span class="prelude-ty">Option</span>&lt;Point&lt;f32&gt;&gt;,
             opacity: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         ) <span class="kw">where
             </span>Unit: ScreenUnit,
@@ -1462,7 +1462,7 @@
     </span><span class="kw">fn </span>render_one_glyph&lt;Unit&gt;(
         translation: Point&lt;Unit&gt;,
         rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
-        scale: <span class="prelude-ty">Option</span>&lt;f32&gt;,
+        scale: <span class="prelude-ty">Option</span>&lt;Point&lt;f32&gt;&gt;,
         opacity: <span class="prelude-ty">Option</span>&lt;f32&gt;,
         blit: TextureBlit&lt;Px&gt;,
         cached: <span class="kw-2">&amp;</span>CachedGlyphHandle,
@@ -1497,7 +1497,7 @@
         <span class="kw">if </span>cached.is_mask {
             flags |= FLAG_MASKED;
         }
-        <span class="kw">let </span>scale = scale.map_or(<span class="number">1.</span>, |scale| {
+        <span class="kw">let </span>scale = scale.map_or(Point::squared(<span class="number">1.</span>), |scale| {
             flags |= FLAG_SCALE;
             scale
         });
