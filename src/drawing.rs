@@ -355,7 +355,11 @@ mod text {
         {
             let text = text.into();
             let scale = self.graphics.effective_scale;
-            self.update_scratch_buffer(text.text, text.wrap_at.map(|width| width.into_px(scale)));
+            self.update_scratch_buffer(
+                text.text,
+                text.wrap_at.map(|width| width.into_px(scale)),
+                text.align,
+            );
             measure_text::<Unit, true>(
                 None,
                 text.color,
@@ -378,6 +382,7 @@ mod text {
                 text.source
                     .wrap_at
                     .map(|width| width.into_px(self.graphics.effective_scale)),
+                text.source.align,
             );
             self.draw_text_buffer_inner(
                 None,

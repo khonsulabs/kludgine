@@ -3,7 +3,7 @@ use std::collections::{hash_map, HashMap};
 use std::fmt::{self, Debug};
 use std::sync::{Arc, Mutex, PoisonError, Weak};
 
-use cosmic_text::{Attrs, AttrsOwned, LayoutGlyph, SwashContent};
+use cosmic_text::{Align, Attrs, AttrsOwned, LayoutGlyph, SwashContent};
 use figures::units::{Lp, Px, UPx};
 use figures::{FloatConversion, Fraction, Point, Rect, Round, ScreenScale, Size, UPx2D, Zero};
 use intentional::Cast;
@@ -38,9 +38,14 @@ impl Kludgine {
         self.text.fonts = cosmic_text::FontSystem::new_with_locale_and_db(locale, db);
     }
 
-    pub(crate) fn update_scratch_buffer(&mut self, text: &str, width: Option<Px>) {
+    pub(crate) fn update_scratch_buffer(
+        &mut self,
+        text: &str,
+        width: Option<Px>,
+        align: Option<Align>,
+    ) {
         self.text
-            .update_scratch_buffer(text, self.effective_scale, width);
+            .update_scratch_buffer(text, self.effective_scale, width, align);
     }
 
     /// Sets the font size.
@@ -212,7 +217,13 @@ impl TextSystem {
         }
     }
 
-    pub fn update_scratch_buffer(&mut self, text: &str, scale: Fraction, width: Option<Px>) {
+    pub fn update_scratch_buffer(
+        &mut self,
+        text: &str,
+        scale: Fraction,
+        width: Option<Px>,
+        align: Option<Align>,
+    ) {
         if self.scratch.is_none() {
             let metrics = self.metrics(scale);
             let buffer = cosmic_text::Buffer::new(&mut self.fonts, metrics);
@@ -227,6 +238,9 @@ impl TextSystem {
             cosmic_text::Shaping::Advanced, // TODO maybe this should be configurable?
         );
         scratch.set_size(&mut self.fonts, width.map(Cast::cast), None);
+        for line in &mut scratch.lines {
+            line.set_align(align);
+        }
         scratch.shape_until_scroll(&mut self.fonts, false);
     }
 }
@@ -862,16 +876,16 @@ impl GlyphInfo {
 
 /// A text drawing command.
 #[derive(Clone, Copy, Debug)]
-#[non_exhaustive]
 pub struct Text<'a, Unit> {
     /// The text to be drawn.
-    pub text: &'a str,
+    pub(crate) text: &'a str,
     /// The color to draw the text using.
-    pub color: Color,
+    pub(crate) color: Color,
     /// The origin to draw the text around.
-    pub origin: TextOrigin<Unit>,
+    pub(crate) origin: TextOrigin<Unit>,
     /// The width to wrap the text at. If `None`, no wrapping is performed.
-    pub wrap_at: Option<Unit>,
+    pub(crate) wrap_at: Option<Unit>,
+    pub(crate) align: Option<Align>,
 }
 
 impl<'a, Unit> Text<'a, Unit> {
@@ -883,6 +897,7 @@ impl<'a, Unit> Text<'a, Unit> {
             color,
             origin: TextOrigin::TopLeft,
             wrap_at: None,
+            align: None,
         }
     }
 
@@ -897,6 +912,15 @@ impl<'a, Unit> Text<'a, Unit> {
     #[must_use]
     pub fn wrap_at(mut self, width: Unit) -> Self {
         self.wrap_at = Some(width);
+        self
+    }
+
+    /// Aligns this text using the specified alignment within the specified
+    /// layout width.
+    #[must_use]
+    pub fn align(mut self, align: Align, width: Unit) -> Self {
+        self.wrap_at = Some(width);
+        self.align = Some(align);
         self
     }
 }

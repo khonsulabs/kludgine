@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DrawableExt::scale` now accepts a parameter that can be an `f32`, 
   `(f32, f32)`, or `Point<f32>`. This change allows independent scaling of the x
   and y axis.
+- `Text` has made its fields private.
 
 ### Added
 
@@ -49,6 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that return the configuration specified when Kludgine was initialized.
 - `RenderingGraphics::pass()` and `RenderingGraphics::pass_mut()` give access to
   the underlying render pass.
+- `Text::align` allows specifying a `cosmic_text::Align` setting and a width to
+  perform the alignment within.
 
 ### Fixed
 
