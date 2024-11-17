@@ -911,6 +911,11 @@
 <a href="#911" id="911">911</a>
 <a href="#912" id="912">912</a>
 <a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::any::{type_name, Any, TypeId};
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::Debug;
@@ -1268,7 +1273,11 @@
         {
             <span class="kw">let </span>text = text.into();
             <span class="kw">let </span>scale = <span class="self">self</span>.graphics.effective_scale;
-            <span class="self">self</span>.update_scratch_buffer(text.text, text.wrap_at.map(|width| width.into_px(scale)));
+            <span class="self">self</span>.update_scratch_buffer(
+                text.text,
+                text.wrap_at.map(|width| width.into_px(scale)),
+                text.align,
+            );
             measure_text::&lt;Unit, <span class="bool-val">true</span>&gt;(
                 <span class="prelude-val">None</span>,
                 text.color,
@@ -1291,6 +1300,7 @@
                 text.source
                     .wrap_at
                     .map(|width| width.into_px(<span class="self">self</span>.graphics.effective_scale)),
+                text.source.align,
             );
             <span class="self">self</span>.draw_text_buffer_inner(
                 <span class="prelude-val">None</span>,

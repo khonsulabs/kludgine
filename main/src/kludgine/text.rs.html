@@ -914,12 +914,36 @@
 <a href="#914" id="914">914</a>
 <a href="#915" id="915">915</a>
 <a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::array;
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Debug};
 <span class="kw">use </span>std::sync::{Arc, Mutex, PoisonError, Weak};
 
-<span class="kw">use </span>cosmic_text::{Attrs, AttrsOwned, LayoutGlyph, SwashContent};
+<span class="kw">use </span>cosmic_text::{Align, Attrs, AttrsOwned, LayoutGlyph, SwashContent};
 <span class="kw">use </span>figures::units::{Lp, Px, UPx};
 <span class="kw">use </span>figures::{FloatConversion, Fraction, Point, Rect, Round, ScreenScale, Size, UPx2D, Zero};
 <span class="kw">use </span>intentional::Cast;
@@ -954,9 +978,14 @@
         <span class="self">self</span>.text.fonts = cosmic_text::FontSystem::new_with_locale_and_db(locale, db);
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>update_scratch_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, text: <span class="kw-2">&amp;</span>str, width: <span class="prelude-ty">Option</span>&lt;Px&gt;) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>update_scratch_buffer(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        text: <span class="kw-2">&amp;</span>str,
+        width: <span class="prelude-ty">Option</span>&lt;Px&gt;,
+        align: <span class="prelude-ty">Option</span>&lt;Align&gt;,
+    ) {
         <span class="self">self</span>.text
-            .update_scratch_buffer(text, <span class="self">self</span>.effective_scale, width);
+            .update_scratch_buffer(text, <span class="self">self</span>.effective_scale, width, align);
     }
 
     <span class="doccomment">/// Sets the font size.
@@ -1128,7 +1157,13 @@
         }
     }
 
-    <span class="kw">pub fn </span>update_scratch_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, text: <span class="kw-2">&amp;</span>str, scale: Fraction, width: <span class="prelude-ty">Option</span>&lt;Px&gt;) {
+    <span class="kw">pub fn </span>update_scratch_buffer(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        text: <span class="kw-2">&amp;</span>str,
+        scale: Fraction,
+        width: <span class="prelude-ty">Option</span>&lt;Px&gt;,
+        align: <span class="prelude-ty">Option</span>&lt;Align&gt;,
+    ) {
         <span class="kw">if </span><span class="self">self</span>.scratch.is_none() {
             <span class="kw">let </span>metrics = <span class="self">self</span>.metrics(scale);
             <span class="kw">let </span>buffer = cosmic_text::Buffer::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.fonts, metrics);
@@ -1143,6 +1178,9 @@
             cosmic_text::Shaping::Advanced, <span class="comment">// TODO maybe this should be configurable?
         </span>);
         scratch.set_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>.fonts, width.map(Cast::cast), <span class="prelude-val">None</span>);
+        <span class="kw">for </span>line <span class="kw">in </span><span class="kw-2">&amp;mut </span>scratch.lines {
+            line.set_align(align);
+        }
         scratch.shape_until_scroll(<span class="kw-2">&amp;mut </span><span class="self">self</span>.fonts, <span class="bool-val">false</span>);
     }
 }
@@ -1778,16 +1816,16 @@
 
 <span class="doccomment">/// A text drawing command.
 </span><span class="attr">#[derive(Clone, Copy, Debug)]
-#[non_exhaustive]
 </span><span class="kw">pub struct </span>Text&lt;<span class="lifetime">'a</span>, Unit&gt; {
     <span class="doccomment">/// The text to be drawn.
-    </span><span class="kw">pub </span>text: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) text: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
     <span class="doccomment">/// The color to draw the text using.
-    </span><span class="kw">pub </span>color: Color,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) color: Color,
     <span class="doccomment">/// The origin to draw the text around.
-    </span><span class="kw">pub </span>origin: TextOrigin&lt;Unit&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) origin: TextOrigin&lt;Unit&gt;,
     <span class="doccomment">/// The width to wrap the text at. If `None`, no wrapping is performed.
-    </span><span class="kw">pub </span>wrap_at: <span class="prelude-ty">Option</span>&lt;Unit&gt;,
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) wrap_at: <span class="prelude-ty">Option</span>&lt;Unit&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) align: <span class="prelude-ty">Option</span>&lt;Align&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Unit&gt; Text&lt;<span class="lifetime">'a</span>, Unit&gt; {
@@ -1799,6 +1837,7 @@
             color,
             origin: TextOrigin::TopLeft,
             wrap_at: <span class="prelude-val">None</span>,
+            align: <span class="prelude-val">None</span>,
         }
     }
 
@@ -1813,6 +1852,15 @@
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>wrap_at(<span class="kw-2">mut </span><span class="self">self</span>, width: Unit) -&gt; <span class="self">Self </span>{
         <span class="self">self</span>.wrap_at = <span class="prelude-val">Some</span>(width);
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Aligns this text using the specified alignment within the specified
+    /// layout width.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub fn </span>align(<span class="kw-2">mut </span><span class="self">self</span>, align: Align, width: Unit) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.wrap_at = <span class="prelude-val">Some</span>(width);
+        <span class="self">self</span>.align = <span class="prelude-val">Some</span>(align);
         <span class="self">self
     </span>}
 }
