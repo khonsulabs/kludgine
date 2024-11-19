@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `(f32, f32)`, or `Point<f32>`. This change allows independent scaling of the x
   and y axis.
 - `Text` has made its fields private.
+- `wgpu` has been updated to `23.0.0`
 
 ### Added
 

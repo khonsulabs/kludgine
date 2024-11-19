@@ -331,7 +331,7 @@ pub fn new(
         layout: Some(pipeline_layout),
         vertex: wgpu::VertexState {
             module: shader,
-            entry_point: "vertex",
+            entry_point: Some("vertex"),
             buffers: &[wgpu::VertexBufferLayout {
                 array_stride: size_of::<Vertex<Lp>>() as u64,
                 step_mode: wgpu::VertexStepMode::Vertex,
@@ -357,7 +357,7 @@ pub fn new(
         },
         fragment: Some(wgpu::FragmentState {
             module: shader,
-            entry_point: "fragment",
+            entry_point: Some("fragment"),
             targets: &[Some(wgpu::ColorTargetState {
                 format,
                 blend: Some(wgpu::BlendState {

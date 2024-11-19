@@ -786,7 +786,7 @@ impl Drawing {
                                 current_texture_id = Some(*texture_id);
                                 graphics.pass.set_bind_group(
                                     0,
-                                    self.textures.get(texture_id).assert("texture missing"),
+                                    &**self.textures.get(texture_id).assert("texture missing"),
                                     &[],
                                 );
                             }
