@@ -725,7 +725,7 @@
         layout: <span class="prelude-val">Some</span>(pipeline_layout),
         vertex: wgpu::VertexState {
             module: shader,
-            entry_point: <span class="string">"vertex"</span>,
+            entry_point: <span class="prelude-val">Some</span>(<span class="string">"vertex"</span>),
             buffers: <span class="kw-2">&amp;</span>[wgpu::VertexBufferLayout {
                 array_stride: size_of::&lt;Vertex&lt;Lp&gt;&gt;() <span class="kw">as </span>u64,
                 step_mode: wgpu::VertexStepMode::Vertex,
@@ -751,7 +751,7 @@
         },
         fragment: <span class="prelude-val">Some</span>(wgpu::FragmentState {
             module: shader,
-            entry_point: <span class="string">"fragment"</span>,
+            entry_point: <span class="prelude-val">Some</span>(<span class="string">"fragment"</span>),
             targets: <span class="kw-2">&amp;</span>[<span class="prelude-val">Some</span>(wgpu::ColorTargetState {
                 format,
                 blend: <span class="prelude-val">Some</span>(wgpu::BlendState {

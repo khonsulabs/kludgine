@@ -1704,7 +1704,7 @@
                                 current_texture_id = <span class="prelude-val">Some</span>(<span class="kw-2">*</span>texture_id);
                                 graphics.pass.set_bind_group(
                                     <span class="number">0</span>,
-                                    <span class="self">self</span>.textures.get(texture_id).assert(<span class="string">"texture missing"</span>),
+                                    <span class="kw-2">&amp;**</span><span class="self">self</span>.textures.get(texture_id).assert(<span class="string">"texture missing"</span>),
                                     <span class="kw-2">&amp;</span>[],
                                 );
                             }
