@@ -756,21 +756,21 @@ impl Drawing {
                 .set_index_buffer(buffers.index.as_slice(), wgpu::IndexFormat::Uint32);
 
             let mut current_clip_index = u32::MAX;
-            let mut current_clip = graphics.clip.current.0;
+            let original_clip = graphics.clip.current;
 
             for command in &self.commands {
                 if current_clip_index != command.clip_index {
                     current_clip_index = command.clip_index;
-                    current_clip = self.clips[command.clip_index as usize];
-                    if current_clip.size.is_zero() {
+                    graphics.clip.current.0 = self.clips[command.clip_index as usize];
+                    if graphics.clip.current.size.is_zero() {
                         continue;
                     }
 
                     graphics.pass.set_scissor_rect(
-                        current_clip.origin.x.into(),
-                        current_clip.origin.y.into(),
-                        current_clip.size.width.into(),
-                        current_clip.size.height.into(),
+                        graphics.clip.current.origin.x.into(),
+                        graphics.clip.current.origin.y.into(),
+                        graphics.clip.current.size.width.into(),
+                        graphics.clip.current.size.height.into(),
                     );
                 }
 
@@ -802,8 +802,12 @@ impl Drawing {
 
                         let mut constants = *constants;
                         constants.opacity *= opacity;
-                        constants.translation +=
-                            current_clip.origin.into_signed().map(Px::into_unscaled);
+                        constants.translation += graphics
+                            .clip
+                            .current
+                            .origin
+                            .into_signed()
+                            .map(Px::into_unscaled);
                         if !constants.translation.is_zero() {
                             constants.flags |= FLAG_TRANSLATE;
                         }
@@ -822,6 +826,8 @@ impl Drawing {
                         needs_texture_binding = true;
                     }
                 }
+
+                graphics.clip.current = original_clip;
             }
         }
     }
