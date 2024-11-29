@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/drawing.rs`."><title>drawing.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-492a78a4a87dcc01.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0 (f6e511eec 2024-10-15)" data-channel="1.82.0" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/drawing.rs`."><title>drawing.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-b0742ba02757f159.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0 (90b35a623 2024-11-26)" data-channel="1.83.0" data-search-js="search-f0d225181b97f9a4.js" data-settings-js="settings-805db61a62df4bd2.js" ><script src="../../static.files/storage-1d39b6787ed640ff.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-f070b9041d14864c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-0111fcff984fae8f.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">kludgine/</div>drawing.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -922,7 +923,19 @@
 <a href="#922" id="922">922</a>
 <a href="#923" id="923">923</a>
 <a href="#924" id="924">924</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::any::{type_name, Any, TypeId};
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::any::{type_name, Any, TypeId};
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
@@ -1110,7 +1123,10 @@
             flags |= FLAG_ROTATE;
             rotation.into_raidans_f()
         });
-        <span class="kw">if </span>!shape.translation.is_zero() {
+        <span class="kw">let </span>translation = (<span class="self">self</span>.clip.current.origin.into_signed()
+            + shape.translation.into_px(<span class="self">self</span>.graphics.scale()))
+        .map(Px::into_unscaled);
+        <span class="kw">if </span>!translation.is_zero() {
             flags |= FLAG_TRANSLATE;
         }
 
@@ -1121,10 +1137,7 @@
             opacity: shape
                 .opacity
                 .map_or(<span class="self">self</span>.opacity, |opacity| opacity * <span class="self">self</span>.opacity),
-            translation: shape
-                .translation
-                .into_px(<span class="self">self</span>.graphics.scale())
-                .map(Px::into_unscaled),
+            translation,
         };
 
         <span class="kw">match </span><span class="self">self</span>.data.commands.last_mut() {
@@ -1250,7 +1263,7 @@
     <span class="kw">use </span>std::collections::{hash_map, HashMap};
     <span class="kw">use </span>std::sync::Arc;
 
-    <span class="kw">use </span>figures::units::Px;
+    <span class="kw">use </span>figures::units::{Px, UPx};
     <span class="kw">use </span>figures::{Fraction, Round, ScreenScale, ScreenUnit, UnscaledUnit};
     <span class="kw">use </span>intentional::Assert;
 
@@ -1411,6 +1424,7 @@
                     blit,
                     cached,
                     <span class="self">self</span>.clip_index,
+                    <span class="self">self</span>.clip.current.origin,
                     scaling_factor,
                     <span class="self">self</span>.graphics,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.vertices,
@@ -1457,6 +1471,7 @@
                             blit,
                             <span class="kw-2">&amp;</span>cached,
                             <span class="self">self</span>.clip_index,
+                            <span class="self">self</span>.graphics.clip.current.origin,
                             scaling_factor,
                             <span class="kw-2">&amp;</span>ProtoGraphics::new(
                                 <span class="self">self</span>.graphics.device,
@@ -1483,6 +1498,7 @@
         blit: TextureBlit&lt;Px&gt;,
         cached: <span class="kw-2">&amp;</span>CachedGlyphHandle,
         clip_index: u32,
+        clip_origin: Point&lt;UPx&gt;,
         dpi_scale: Fraction,
         graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics,
         vertices: <span class="kw-2">&amp;mut </span>VertexCollection&lt;i32&gt;,
@@ -1492,7 +1508,8 @@
     ) <span class="kw">where
         </span>Unit: ScreenUnit,
     {
-        <span class="kw">let </span>translation = translation.into_px(dpi_scale).map(Px::into_unscaled);
+        <span class="kw">let </span>translation =
+            (clip_origin.into_signed() + translation.into_px(dpi_scale)).map(Px::into_unscaled);
         <span class="kw">let </span>corners: [u32; <span class="number">4</span>] = array::from_fn(|index| {
             <span class="kw">let </span>vertex = <span class="kw-2">&amp;</span>blit.verticies[index];
             vertices.get_or_insert(Vertex {
@@ -1671,6 +1688,12 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(buffers) = <span class="kw-2">&amp;</span><span class="self">self</span>.buffers {
             <span class="kw">let </span><span class="kw-2">mut </span>current_texture_id = <span class="prelude-val">None</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>needs_texture_binding = graphics.active_pipeline_if_needed();
+            <span class="kw">let </span>drawing_translation = graphics
+                .clip
+                .current
+                .origin
+                .into_signed()
+                .map(Px::into_unscaled);
 
             graphics
                 .pass
@@ -1686,7 +1709,9 @@
                 <span class="kw">if </span>current_clip_index != command.clip_index {
                     current_clip_index = command.clip_index;
                     graphics.clip.current.<span class="number">0 </span>= <span class="self">self</span>.clips[command.clip_index <span class="kw">as </span>usize];
-                    <span class="kw">if </span>graphics.clip.current.size.is_zero() {
+                    <span class="kw">if </span>graphics.clip.current.size.width == <span class="number">0
+                        </span>|| graphics.clip.current.size.height == <span class="number">0
+                    </span>{
                         <span class="kw">continue</span>;
                     }
 
@@ -1696,6 +1721,10 @@
                         graphics.clip.current.size.width.into(),
                         graphics.clip.current.size.height.into(),
                     );
+                } <span class="kw">else if </span>graphics.clip.current.size.width == <span class="number">0
+                    </span>|| graphics.clip.current.size.height == <span class="number">0
+                </span>{
+                    <span class="kw">continue</span>;
                 }
 
                 <span class="kw">match </span><span class="kw-2">&amp;</span>command.kind {
@@ -1726,13 +1755,10 @@
 
                         <span class="kw">let </span><span class="kw-2">mut </span>constants = <span class="kw-2">*</span>constants;
                         constants.opacity <span class="kw-2">*</span>= opacity;
-                        constants.translation += graphics
-                            .clip
-                            .current
-                            .origin
-                            .into_signed()
-                            .map(Px::into_unscaled);
-                        <span class="kw">if </span>!constants.translation.is_zero() {
+                        constants.translation += drawing_translation;
+                        <span class="kw">if </span>constants.translation.is_zero() {
+                            constants.flags ^= FLAG_TRANSLATE;
+                        } <span class="kw">else </span>{
                             constants.flags |= FLAG_TRANSLATE;
                         }
                         graphics.pass.set_push_constants(
