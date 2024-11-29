@@ -186,7 +186,10 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
             flags |= FLAG_ROTATE;
             rotation.into_raidans_f()
         });
-        if !shape.translation.is_zero() {
+        let translation = (self.clip.current.origin.into_signed()
+            + shape.translation.into_px(self.graphics.scale()))
+        .map(Px::into_unscaled);
+        if !translation.is_zero() {
             flags |= FLAG_TRANSLATE;
         }
 
@@ -197,10 +200,7 @@ impl<'render, 'gfx> Renderer<'render, 'gfx> {
             opacity: shape
                 .opacity
                 .map_or(self.opacity, |opacity| opacity * self.opacity),
-            translation: shape
-                .translation
-                .into_px(self.graphics.scale())
-                .map(Px::into_unscaled),
+            translation,
         };
 
         match self.data.commands.last_mut() {
@@ -326,7 +326,7 @@ mod text {
     use std::collections::{hash_map, HashMap};
     use std::sync::Arc;
 
-    use figures::units::Px;
+    use figures::units::{Px, UPx};
     use figures::{Fraction, Round, ScreenScale, ScreenUnit, UnscaledUnit};
     use intentional::Assert;
 
@@ -487,6 +487,7 @@ mod text {
                     blit,
                     cached,
                     self.clip_index,
+                    self.clip.current.origin,
                     scaling_factor,
                     self.graphics,
                     &mut self.data.vertices,
@@ -533,6 +534,7 @@ mod text {
                             blit,
                             &cached,
                             self.clip_index,
+                            self.graphics.clip.current.origin,
                             scaling_factor,
                             &ProtoGraphics::new(
                                 self.graphics.device,
@@ -559,6 +561,7 @@ mod text {
         blit: TextureBlit<Px>,
         cached: &CachedGlyphHandle,
         clip_index: u32,
+        clip_origin: Point<UPx>,
         dpi_scale: Fraction,
         graphics: &impl KludgineGraphics,
         vertices: &mut VertexCollection<i32>,
@@ -568,7 +571,8 @@ mod text {
     ) where
         Unit: ScreenUnit,
     {
-        let translation = translation.into_px(dpi_scale).map(Px::into_unscaled);
+        let translation =
+            (clip_origin.into_signed() + translation.into_px(dpi_scale)).map(Px::into_unscaled);
         let corners: [u32; 4] = array::from_fn(|index| {
             let vertex = &blit.verticies[index];
             vertices.get_or_insert(Vertex {
@@ -747,6 +751,12 @@ impl Drawing {
         if let Some(buffers) = &self.buffers {
             let mut current_texture_id = None;
             let mut needs_texture_binding = graphics.active_pipeline_if_needed();
+            let drawing_translation = graphics
+                .clip
+                .current
+                .origin
+                .into_signed()
+                .map(Px::into_unscaled);
 
             graphics
                 .pass
@@ -762,7 +772,9 @@ impl Drawing {
                 if current_clip_index != command.clip_index {
                     current_clip_index = command.clip_index;
                     graphics.clip.current.0 = self.clips[command.clip_index as usize];
-                    if graphics.clip.current.size.is_zero() {
+                    if graphics.clip.current.size.width == 0
+                        || graphics.clip.current.size.height == 0
+                    {
                         continue;
                     }
 
@@ -772,6 +784,10 @@ impl Drawing {
                         graphics.clip.current.size.width.into(),
                         graphics.clip.current.size.height.into(),
                     );
+                } else if graphics.clip.current.size.width == 0
+                    || graphics.clip.current.size.height == 0
+                {
+                    continue;
                 }
 
                 match &command.kind {
@@ -802,13 +818,10 @@ impl Drawing {
 
                         let mut constants = *constants;
                         constants.opacity *= opacity;
-                        constants.translation += graphics
-                            .clip
-                            .current
-                            .origin
-                            .into_signed()
-                            .map(Px::into_unscaled);
-                        if !constants.translation.is_zero() {
+                        constants.translation += drawing_translation;
+                        if constants.translation.is_zero() {
+                            constants.flags ^= FLAG_TRANSLATE;
+                        } else {
                             constants.flags |= FLAG_TRANSLATE;
                         }
                         graphics.pass.set_push_constants(
