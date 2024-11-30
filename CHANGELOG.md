@@ -53,6 +53,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the underlying render pass.
 - `Text::align` allows specifying a `cosmic_text::Align` setting and a width to
   perform the alignment within.
+- `TextureCollection` now automatically adds padding when multisampling is
+  enabled to ensure that multisampling does not sample neighboring pixels of
+  other textures in the collection.
+- `Drawing::draw_measured_text` now uses the correct offset when using
+  `TextOrigin::FirstBaseline`.
 
 ### Fixed
 

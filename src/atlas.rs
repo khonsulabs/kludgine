@@ -4,8 +4,8 @@ use std::sync::{Arc, PoisonError, RwLock};
 
 use alot::{LotId, Lots};
 use etagere::{Allocation, BucketedAtlasAllocator};
-use figures::units::UPx;
-use figures::{IntoSigned, IntoUnsigned, Point, Px2D, Rect, Size, UPx2D};
+use figures::units::{Px, UPx};
+use figures::{IntoSigned, IntoUnsigned, Point, Px2D, Rect, Size, UPx2D, Zero};
 
 use crate::pipeline::{PreparedGraphic, Vertex};
 use crate::{sealed, CanRenderTo, Graphics, Kludgine, KludgineGraphics, Texture, TextureSource};
@@ -38,6 +38,7 @@ struct Data {
     rects: BucketedAtlasAllocator,
     texture: Texture,
     textures: Lots<Allocation>,
+    padding: Px,
 }
 
 impl TextureCollection {
@@ -56,6 +57,12 @@ impl TextureCollection {
             filter_mode,
         );
 
+        let padding = if graphics.multisample_state().count > 1 {
+            Px::new(1)
+        } else {
+            Px::ZERO
+        };
+
         let initial_size = initial_size.into_signed();
         Self {
             format,
@@ -67,6 +74,7 @@ impl TextureCollection {
                 )),
                 texture,
                 textures: Lots::new(),
+                padding,
             })),
         }
     }
@@ -107,11 +115,11 @@ impl TextureCollection {
         graphics: &impl KludgineGraphics,
     ) -> CollectedTexture {
         let mut this = self.data.write().unwrap_or_else(PoisonError::into_inner);
-        let signed_size = size.into_signed();
+        let allocation_size = size.into_signed() + Size::squared(this.padding * 2);
         let allocation = loop {
             if let Some(allocation) = this.rects.allocate(etagere::euclid::Size2D::new(
-                signed_size.width.into(),
-                signed_size.height.into(),
+                allocation_size.width.get(),
+                allocation_size.height.get(),
             )) {
                 break allocation;
             }
@@ -143,7 +151,9 @@ impl TextureCollection {
         };
 
         let region = Rect::new(
-            Point::px(allocation.rectangle.min.x, allocation.rectangle.min.y).into_unsigned(),
+            (Point::px(allocation.rectangle.min.x, allocation.rectangle.min.y)
+                + Point::squared(this.padding))
+            .into_unsigned(),
             size,
         );
 

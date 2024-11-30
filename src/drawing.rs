@@ -465,7 +465,7 @@ mod text {
                     (Point::from(text.source.size).into_px(scaling_factor) / 2).round()
                 }
                 TextOrigin::FirstBaseline => {
-                    Point::new(Px::ZERO, text.source.ascent.into_px(scaling_factor))
+                    Point::new(Px::ZERO, text.source.line_height.into_px(scaling_factor))
                 }
                 TextOrigin::Custom(offset) => offset.into_px(scaling_factor),
             };

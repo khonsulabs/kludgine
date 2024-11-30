@@ -175,6 +175,7 @@ impl Kludgine {
                 linear_sampler: &linear_sampler,
                 nearest_sampler: &nearest_sampler,
                 uniforms: &uniforms.wgpu,
+                multisample,
             }),
             default_bindings,
             pipeline,
@@ -447,6 +448,7 @@ struct ProtoGraphics<'gfx> {
     linear_sampler: &'gfx wgpu::Sampler,
     nearest_sampler: &'gfx wgpu::Sampler,
     uniforms: &'gfx wgpu::Buffer,
+    multisample: wgpu::MultisampleState,
 }
 
 impl<'a> ProtoGraphics<'a> {
@@ -459,6 +461,7 @@ impl<'a> ProtoGraphics<'a> {
             linear_sampler: &kludgine.linear_sampler,
             nearest_sampler: &kludgine.nearest_sampler,
             uniforms: &kludgine.uniforms.wgpu,
+            multisample: kludgine.multisample_state(),
         }
     }
 }
@@ -493,6 +496,10 @@ impl sealed::KludgineGraphics for ProtoGraphics<'_> {
     fn linear_sampler(&self) -> &wgpu::Sampler {
         self.linear_sampler
     }
+
+    fn multisample_state(&self) -> wgpu::MultisampleState {
+        self.multisample
+    }
 }
 
 impl KludgineGraphics for Graphics<'_> {}
@@ -524,6 +531,10 @@ impl sealed::KludgineGraphics for Graphics<'_> {
 
     fn linear_sampler(&self) -> &wgpu::Sampler {
         &self.kludgine.linear_sampler
+    }
+
+    fn multisample_state(&self) -> wgpu::MultisampleState {
+        self.multisample
     }
 }
 

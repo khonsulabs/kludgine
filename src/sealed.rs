@@ -104,4 +104,5 @@ pub trait KludgineGraphics {
     fn uniforms(&self) -> &wgpu::Buffer;
     fn nearest_sampler(&self) -> &wgpu::Sampler;
     fn linear_sampler(&self) -> &wgpu::Sampler;
+    fn multisample_state(&self) -> wgpu::MultisampleState;
 }

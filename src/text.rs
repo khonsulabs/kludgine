@@ -5,7 +5,9 @@ use std::sync::{Arc, Mutex, PoisonError, Weak};
 
 use cosmic_text::{Align, Attrs, AttrsOwned, LayoutGlyph, SwashContent};
 use figures::units::{Lp, Px, UPx};
-use figures::{FloatConversion, Fraction, Point, Rect, Round, ScreenScale, Size, UPx2D, Zero};
+use figures::{
+    FloatConversion, Fraction, IntoSigned, Point, Rect, Round, ScreenScale, Size, UPx2D, Zero,
+};
 use intentional::Cast;
 use smallvec::SmallVec;
 
@@ -470,7 +472,7 @@ pub(crate) fn map_each_glyph(
                                     bytes_per_row: Some(image.placement.width),
                                     rows_per_image: None,
                                 },
-                                Size::upx(image.placement.width, image.placement.height).cast(),
+                                Size::upx(image.placement.width, image.placement.height),
                                 &ProtoGraphics {
                                     id: kludgine.id,
                                     device,
@@ -479,6 +481,7 @@ pub(crate) fn map_each_glyph(
                                     linear_sampler: &kludgine.linear_sampler,
                                     nearest_sampler: &kludgine.nearest_sampler,
                                     uniforms: &kludgine.uniforms.wgpu,
+                                    multisample: kludgine.multisample,
                                 },
                             ),
                             true,
@@ -494,7 +497,7 @@ pub(crate) fn map_each_glyph(
                                         bytes_per_row: Some(image.placement.width * 4),
                                         rows_per_image: None,
                                     },
-                                    Size::upx(image.placement.width, image.placement.height).cast(),
+                                    Size::upx(image.placement.width, image.placement.height),
                                     &ProtoGraphics {
                                         id: kludgine.id,
                                         device,
@@ -503,6 +506,7 @@ pub(crate) fn map_each_glyph(
                                         linear_sampler: &kludgine.linear_sampler,
                                         nearest_sampler: &kludgine.nearest_sampler,
                                         uniforms: &kludgine.uniforms.wgpu,
+                                        multisample: kludgine.multisample,
                                     },
                                 ),
                                 false,
@@ -523,16 +527,14 @@ pub(crate) fn map_each_glyph(
                         Rect::new(
                             (Point::new(physical.x, physical.y)).cast::<Px>()
                                 + Point::new(
-                                    image.placement.left,
-                                    metrics.line_height.cast::<i32>() - image.placement.top,
+                                    Px::new(image.placement.left),
+                                    Px::from(metrics.line_height) - image.placement.top,
                                 ),
                             Size::new(
-                                i32::try_from(image.placement.width)
-                                    .expect("width out of range of i32"),
-                                i32::try_from(image.placement.height)
-                                    .expect("height out of range of i32"),
+                                UPx::new(image.placement.width),
+                                UPx::new(image.placement.height),
                             )
-                            .cast(),
+                            .into_signed(),
                         ),
                         color,
                     ),
@@ -607,9 +609,11 @@ where
     // TODO the returned type should be able to be drawn, so that we don't have to call update_scratch_buffer again.
     let line_height = Unit::from_lp(kludgine.text.line_height, kludgine.effective_scale);
     let mut min = Point::new(Px::MAX, Px::MAX);
-    let mut first_line_max_y = Px::MIN;
     let mut last_baseline = Px::MIN;
     let mut max = Point::new(Px::MIN, Px::MIN);
+    let mut ascent = Px::ZERO;
+    let mut descent = Px::ZERO;
+    let mut first_baseline = Px::ZERO;
     let mut measured_glyphs = Vec::new();
     map_each_glyph(
         buffer,
@@ -625,7 +629,9 @@ where
             max.x = max.x.max(line_width);
             max.y = max.y.max(blit.bottom_right(baseline).y);
             if line_index == 0 {
-                first_line_max_y = first_line_max_y.max(blit.bottom_right(baseline).y);
+                first_baseline = baseline;
+                ascent = ascent.max(baseline - blit.top_left().y);
+                descent = descent.min(baseline - blit.bottom_right(baseline).y);
             }
             if COLLECT_GLYPHS {
                 measured_glyphs.push(MeasuredGlyph {
@@ -646,20 +652,16 @@ where
             glyphs: Vec::new(),
         }
     } else {
-        if first_line_max_y == Px::MIN {
-            first_line_max_y = line_height.into_px(kludgine.effective_scale);
-        }
-
         MeasuredText {
-            ascent: line_height - Unit::from_px(min.y, kludgine.effective_scale),
-            descent: line_height - Unit::from_px(first_line_max_y, kludgine.effective_scale),
+            ascent: Unit::from_px(ascent, kludgine.effective_scale),
+            descent: Unit::from_px(descent, kludgine.effective_scale),
             left: Unit::from_px(min.x, kludgine.effective_scale),
             size: Size {
                 width: Unit::from_px(max.x, kludgine.effective_scale),
                 height: Unit::from_px(max.y.max(last_baseline), kludgine.effective_scale)
                     .max(line_height),
             },
-            line_height,
+            line_height: Unit::from_px(first_baseline, kludgine.effective_scale),
             glyphs: measured_glyphs,
         }
     }
