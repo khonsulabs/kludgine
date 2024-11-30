@@ -2506,7 +2506,18 @@
 <a href="#2505" id="2505">2505</a>
 <a href="#2506" id="2506">2506</a>
 <a href="#2507" id="2507">2507</a>
-<a href="#2508" id="2508">2508</a></pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">"../README.md"</span>)]
+<a href="#2508" id="2508">2508</a>
+<a href="#2509" id="2509">2509</a>
+<a href="#2510" id="2510">2510</a>
+<a href="#2511" id="2511">2511</a>
+<a href="#2512" id="2512">2512</a>
+<a href="#2513" id="2513">2513</a>
+<a href="#2514" id="2514">2514</a>
+<a href="#2515" id="2515">2515</a>
+<a href="#2516" id="2516">2516</a>
+<a href="#2517" id="2517">2517</a>
+<a href="#2518" id="2518">2518</a>
+<a href="#2519" id="2519">2519</a></pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">"../README.md"</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
 </span><span class="attr">#![deny(unsafe_code)]
@@ -2683,6 +2694,7 @@
                 linear_sampler: <span class="kw-2">&amp;</span>linear_sampler,
                 nearest_sampler: <span class="kw-2">&amp;</span>nearest_sampler,
                 uniforms: <span class="kw-2">&amp;</span>uniforms.wgpu,
+                multisample,
             }),
             default_bindings,
             pipeline,
@@ -2955,6 +2967,7 @@
     linear_sampler: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Sampler,
     nearest_sampler: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Sampler,
     uniforms: <span class="kw-2">&amp;</span><span class="lifetime">'gfx </span>wgpu::Buffer,
+    multisample: wgpu::MultisampleState,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; ProtoGraphics&lt;<span class="lifetime">'a</span>&gt; {
@@ -2967,6 +2980,7 @@
             linear_sampler: <span class="kw-2">&amp;</span>kludgine.linear_sampler,
             nearest_sampler: <span class="kw-2">&amp;</span>kludgine.nearest_sampler,
             uniforms: <span class="kw-2">&amp;</span>kludgine.uniforms.wgpu,
+            multisample: kludgine.multisample_state(),
         }
     }
 }
@@ -3001,6 +3015,10 @@
     <span class="kw">fn </span>linear_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Sampler {
         <span class="self">self</span>.linear_sampler
     }
+
+    <span class="kw">fn </span>multisample_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::MultisampleState {
+        <span class="self">self</span>.multisample
+    }
 }
 
 <span class="kw">impl </span>KludgineGraphics <span class="kw">for </span>Graphics&lt;<span class="lifetime">'_</span>&gt; {}
@@ -3032,6 +3050,10 @@
 
     <span class="kw">fn </span>linear_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Sampler {
         <span class="kw-2">&amp;</span><span class="self">self</span>.kludgine.linear_sampler
+    }
+
+    <span class="kw">fn </span>multisample_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::MultisampleState {
+        <span class="self">self</span>.multisample
     }
 }
 

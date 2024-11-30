@@ -105,7 +105,8 @@
 <a href="#104" id="104">104</a>
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Deref;
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Deref;
 <span class="kw">use </span>std::sync::atomic::{<span class="self">self</span>, AtomicUsize};
 <span class="kw">use </span>std::sync::{Arc, OnceLock};
 
@@ -211,5 +212,6 @@
     <span class="kw">fn </span>uniforms(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Buffer;
     <span class="kw">fn </span>nearest_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Sampler;
     <span class="kw">fn </span>linear_sampler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgpu::Sampler;
+    <span class="kw">fn </span>multisample_state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgpu::MultisampleState;
 }
 </code></pre></div></section></main></body></html>

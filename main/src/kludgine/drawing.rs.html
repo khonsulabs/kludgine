@@ -1402,7 +1402,7 @@
                     (Point::from(text.source.size).into_px(scaling_factor) / <span class="number">2</span>).round()
                 }
                 TextOrigin::FirstBaseline =&gt; {
-                    Point::new(Px::ZERO, text.source.ascent.into_px(scaling_factor))
+                    Point::new(Px::ZERO, text.source.line_height.into_px(scaling_factor))
                 }
                 TextOrigin::Custom(offset) =&gt; offset.into_px(scaling_factor),
             };
