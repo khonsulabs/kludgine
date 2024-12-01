@@ -65,6 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to ensure proper subpixel alignment.
 - Plotters integration text drawing now honors anchor positioning, rotation, and
   properly sets the line height based.
+- `MeasuredText`'s metrics are now more accurate. The wrong value for the
+  baseline was being used, leading to slightly incorrect measurements.
 
 ## v0.11.0 (2024-09-14)
 
