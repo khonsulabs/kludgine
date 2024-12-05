@@ -34,7 +34,7 @@ the buffer has no color associated with text.</p>
     text: impl <a class="trait" href="https://doc.rust-lang.org/1.83.0/core/convert/trait.Into.html" title="trait core::convert::Into">Into</a>&lt;<a class="struct" href="../struct.Drawable.html" title="struct kludgine::Drawable">Drawable</a>&lt;&amp;'a <a class="struct" href="../text/struct.MeasuredText.html" title="struct kludgine::text::MeasuredText">MeasuredText</a>&lt;Unit&gt;, Unit&gt;&gt;,
     origin: <a class="enum" href="../text/enum.TextOrigin.html" title="enum kludgine::text::TextOrigin">TextOrigin</a>&lt;Unit&gt;,
 )<div class="where">where
-    Unit: ScreenUnit,</div></h4></section></summary><div class="docblock"><p>Prepares the text layout contained in <code>buffer</code> to be rendered.</p>
+    Unit: ScreenUnit + Round,</div></h4></section></summary><div class="docblock"><p>Prepares the text layout contained in <code>buffer</code> to be rendered.</p>
 <p>When the text in <code>buffer</code> has no color defined, <code>default_color</code> will be
 used.</p>
 <p><code>origin</code> allows controlling how the text will be drawn relative to the

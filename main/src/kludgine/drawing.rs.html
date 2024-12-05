@@ -932,10 +932,7 @@
 <a href="#931" id="931">931</a>
 <a href="#932" id="932">932</a>
 <a href="#933" id="933">933</a>
-<a href="#934" id="934">934</a>
-<a href="#935" id="935">935</a>
-<a href="#936" id="936">936</a>
-<a href="#937" id="937">937</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::any::{type_name, Any, TypeId};
+<a href="#934" id="934">934</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::any::{type_name, Any, TypeId};
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
@@ -1264,7 +1261,7 @@
     <span class="kw">use </span>std::sync::Arc;
 
     <span class="kw">use </span>figures::units::{Px, UPx};
-    <span class="kw">use </span>figures::{Fraction, Round, ScreenScale, ScreenUnit, UnscaledUnit};
+    <span class="kw">use </span>figures::{Round, ScreenScale, ScreenUnit, UnscaledUnit};
     <span class="kw">use </span>intentional::Assert;
 
     <span class="kw">use super</span>::{
@@ -1391,21 +1388,22 @@
             text: <span class="kw">impl </span>Into&lt;Drawable&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>MeasuredText&lt;Unit&gt;, Unit&gt;&gt;,
             origin: TextOrigin&lt;Unit&gt;,
         ) <span class="kw">where
-            </span>Unit: ScreenUnit,
+            </span>Unit: ScreenUnit + Round,
         {
             <span class="kw">let </span>text = text.into();
-            <span class="kw">let </span>scaling_factor = <span class="self">self</span>.effective_scale;
-            <span class="kw">let </span>translation = text.translation;
+            <span class="kw">let </span>translation = text.translation.into_px(<span class="self">self</span>.effective_scale);
             <span class="kw">let </span>origin = <span class="kw">match </span>origin {
                 TextOrigin::TopLeft =&gt; Point::default(),
                 TextOrigin::Center =&gt; {
-                    (Point::from(text.source.size).into_px(scaling_factor) / <span class="number">2</span>).round()
-                }
-                TextOrigin::FirstBaseline =&gt; {
-                    Point::new(Px::ZERO, text.source.line_height.into_px(scaling_factor))
-                }
-                TextOrigin::Custom(offset) =&gt; offset.into_px(scaling_factor),
-            };
+                    Point::from(text.source.size).into_px(<span class="self">self</span>.effective_scale) / <span class="number">2
+                </span>}
+                TextOrigin::FirstBaseline =&gt; Point::new(
+                    Px::ZERO,
+                    text.source.line_height.into_px(<span class="self">self</span>.effective_scale),
+                ),
+                TextOrigin::Custom(offset) =&gt; offset.into_px(<span class="self">self</span>.effective_scale),
+            }
+            .round();
             <span class="kw">for </span>glyph <span class="kw">in </span><span class="kw-2">&amp;</span>text.source.glyphs {
                 <span class="kw">let </span>GlyphBlit::Visible {
                     blit,
@@ -1425,7 +1423,6 @@
                     cached,
                     <span class="self">self</span>.clip_index,
                     <span class="self">self</span>.clip.current.origin,
-                    scaling_factor,
                     <span class="self">self</span>.graphics,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.vertices,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.indices,
@@ -1448,7 +1445,7 @@
         ) <span class="kw">where
             </span>Unit: ScreenUnit,
         {
-            <span class="kw">let </span>scaling_factor = <span class="self">self</span>.effective_scale;
+            <span class="kw">let </span>translation = translation.into_px(<span class="self">self</span>.effective_scale);
             map_each_glyph(
                 buffer,
                 default_color,
@@ -1472,7 +1469,6 @@
                             <span class="kw-2">&amp;</span>cached,
                             <span class="self">self</span>.clip_index,
                             <span class="self">self</span>.graphics.clip.current.origin,
-                            scaling_factor,
                             <span class="kw-2">&amp;</span>ProtoGraphics::new(
                                 <span class="self">self</span>.graphics.device,
                                 <span class="self">self</span>.graphics.queue,
@@ -1490,8 +1486,8 @@
     }
 
     <span class="attr">#[allow(clippy::too_many_arguments)]
-    </span><span class="kw">fn </span>render_one_glyph&lt;Unit&gt;(
-        translation: Point&lt;Unit&gt;,
+    </span><span class="kw">fn </span>render_one_glyph(
+        translation: Point&lt;Px&gt;,
         rotation: <span class="prelude-ty">Option</span>&lt;Angle&gt;,
         scale: <span class="prelude-ty">Option</span>&lt;Point&lt;f32&gt;&gt;,
         opacity: <span class="prelude-ty">Option</span>&lt;f32&gt;,
@@ -1499,17 +1495,15 @@
         cached: <span class="kw-2">&amp;</span>CachedGlyphHandle,
         clip_index: u32,
         clip_origin: Point&lt;UPx&gt;,
-        dpi_scale: Fraction,
         graphics: <span class="kw-2">&amp;</span><span class="kw">impl </span>KludgineGraphics,
         vertices: <span class="kw-2">&amp;mut </span>VertexCollection&lt;i32&gt;,
         indices: <span class="kw-2">&amp;mut </span>Vec&lt;u32&gt;,
         textures: <span class="kw-2">&amp;mut </span>HashMap&lt;TextureId, Arc&lt;wgpu::BindGroup&gt;, DefaultHasher&gt;,
         commands: <span class="kw-2">&amp;mut </span>Vec&lt;Command&gt;,
-    ) <span class="kw">where
-        </span>Unit: ScreenUnit,
-    {
-        <span class="kw">let </span>translation =
-            (clip_origin.into_signed() + translation.into_px(dpi_scale)).map(Px::into_unscaled);
+    ) {
+        <span class="kw">let </span>translation = (clip_origin.into_signed() + translation)
+            .round()
+            .map(Px::into_unscaled);
         <span class="kw">let </span>corners: [u32; <span class="number">4</span>] = array::from_fn(|index| {
             <span class="kw">let </span>vertex = <span class="kw-2">&amp;</span>blit.verticies[index];
             vertices.get_or_insert(Vertex {

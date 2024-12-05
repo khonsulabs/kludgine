@@ -1384,7 +1384,7 @@
 
     <span class="kw">let </span>buffer = buffer.unwrap_or_else(|| kludgine.text.scratch.as_ref().expect(<span class="string">"no buffer"</span>));
     <span class="kw">for </span>run <span class="kw">in </span>buffer.layout_runs() {
-        <span class="kw">let </span>run_origin = Point::new(Px::ZERO, Px::from(run.line_y)) - relative_to;
+        <span class="kw">let </span>run_origin = (Point::new(Px::ZERO, Px::from(run.line_y)) - relative_to).round();
         <span class="kw">for </span>glyph <span class="kw">in </span>run.glyphs {
             <span class="kw">let </span>physical =
                 glyph.physical((run_origin.x.into_float(), run_origin.y.into_float()), <span class="number">1.</span>);
