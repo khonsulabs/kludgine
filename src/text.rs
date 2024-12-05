@@ -442,7 +442,7 @@ pub(crate) fn map_each_glyph(
 
     let buffer = buffer.unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"));
     for run in buffer.layout_runs() {
-        let run_origin = Point::new(Px::ZERO, Px::from(run.line_y)) - relative_to;
+        let run_origin = (Point::new(Px::ZERO, Px::from(run.line_y)) - relative_to).round();
         for glyph in run.glyphs {
             let physical =
                 glyph.physical((run_origin.x.into_float(), run_origin.y.into_float()), 1.);

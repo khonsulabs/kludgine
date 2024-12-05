@@ -327,7 +327,7 @@ mod text {
     use std::sync::Arc;
 
     use figures::units::{Px, UPx};
-    use figures::{Fraction, Round, ScreenScale, ScreenUnit, UnscaledUnit};
+    use figures::{Round, ScreenScale, ScreenUnit, UnscaledUnit};
     use intentional::Assert;
 
     use super::{
@@ -454,21 +454,22 @@ mod text {
             text: impl Into<Drawable<&'a MeasuredText<Unit>, Unit>>,
             origin: TextOrigin<Unit>,
         ) where
-            Unit: ScreenUnit,
+            Unit: ScreenUnit + Round,
         {
             let text = text.into();
-            let scaling_factor = self.effective_scale;
-            let translation = text.translation;
+            let translation = text.translation.into_px(self.effective_scale);
             let origin = match origin {
                 TextOrigin::TopLeft => Point::default(),
                 TextOrigin::Center => {
-                    (Point::from(text.source.size).into_px(scaling_factor) / 2).round()
+                    Point::from(text.source.size).into_px(self.effective_scale) / 2
                 }
-                TextOrigin::FirstBaseline => {
-                    Point::new(Px::ZERO, text.source.line_height.into_px(scaling_factor))
-                }
-                TextOrigin::Custom(offset) => offset.into_px(scaling_factor),
-            };
+                TextOrigin::FirstBaseline => Point::new(
+                    Px::ZERO,
+                    text.source.line_height.into_px(self.effective_scale),
+                ),
+                TextOrigin::Custom(offset) => offset.into_px(self.effective_scale),
+            }
+            .round();
             for glyph in &text.source.glyphs {
                 let GlyphBlit::Visible {
                     blit,
@@ -488,7 +489,6 @@ mod text {
                     cached,
                     self.clip_index,
                     self.clip.current.origin,
-                    scaling_factor,
                     self.graphics,
                     &mut self.data.vertices,
                     &mut self.data.indices,
@@ -511,7 +511,7 @@ mod text {
         ) where
             Unit: ScreenUnit,
         {
-            let scaling_factor = self.effective_scale;
+            let translation = translation.into_px(self.effective_scale);
             map_each_glyph(
                 buffer,
                 default_color,
@@ -535,7 +535,6 @@ mod text {
                             &cached,
                             self.clip_index,
                             self.graphics.clip.current.origin,
-                            scaling_factor,
                             &ProtoGraphics::new(
                                 self.graphics.device,
                                 self.graphics.queue,
@@ -553,8 +552,8 @@ mod text {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn render_one_glyph<Unit>(
-        translation: Point<Unit>,
+    fn render_one_glyph(
+        translation: Point<Px>,
         rotation: Option<Angle>,
         scale: Option<Point<f32>>,
         opacity: Option<f32>,
@@ -562,17 +561,15 @@ mod text {
         cached: &CachedGlyphHandle,
         clip_index: u32,
         clip_origin: Point<UPx>,
-        dpi_scale: Fraction,
         graphics: &impl KludgineGraphics,
         vertices: &mut VertexCollection<i32>,
         indices: &mut Vec<u32>,
         textures: &mut HashMap<TextureId, Arc<wgpu::BindGroup>, DefaultHasher>,
         commands: &mut Vec<Command>,
-    ) where
-        Unit: ScreenUnit,
-    {
-        let translation =
-            (clip_origin.into_signed() + translation.into_px(dpi_scale)).map(Px::into_unscaled);
+    ) {
+        let translation = (clip_origin.into_signed() + translation)
+            .round()
+            .map(Px::into_unscaled);
         let corners: [u32; 4] = array::from_fn(|index| {
             let vertex = &blit.verticies[index];
             vertices.get_or_insert(Vertex {

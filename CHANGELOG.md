@@ -67,6 +67,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   properly sets the line height based.
 - `MeasuredText`'s metrics are now more accurate. The wrong value for the
   baseline was being used, leading to slightly incorrect measurements.
+- Drawing text now rounds the line origin and translations to the nearest whole
+  pixel to avoid subpixel rendering of text. While this removes a level of
+  fidelity that was possible, it seems like the most commonly desired behavior.
+  If subpixel text rendering is desired, please open an issue as this could be
+  something that could be re-enabled on `Text`.
 
 ## v0.11.0 (2024-09-14)
 
