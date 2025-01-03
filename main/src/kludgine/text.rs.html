@@ -1281,7 +1281,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'gfx</span>&gt; Graphics&lt;<span class="lifetime">'gfx</span>&gt; {
+<span class="kw">impl </span>Graphics&lt;<span class="lifetime">'_</span>&gt; {
     <span class="doccomment">/// Prepares the text layout contained in `buffer` to be rendered.
     ///
     /// When the text in `buffer` has no color defined, `default_color` will be
@@ -1881,5 +1881,5 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, Unit&gt; DrawableSource <span class="kw">for </span>Text&lt;<span class="lifetime">'a</span>, Unit&gt; {}
+<span class="kw">impl</span>&lt;Unit&gt; DrawableSource <span class="kw">for </span>Text&lt;<span class="lifetime">'_</span>, Unit&gt; {}
 </code></pre></div></section></main></body></html>

@@ -818,7 +818,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'ctx</span>, <span class="lifetime">'pass</span>&gt; DerefMut <span class="kw">for </span>LayerContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'ctx</span>, <span class="lifetime">'pass</span>&gt; {
+<span class="kw">impl </span>DerefMut <span class="kw">for </span>LayerContext&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
         <span class="self">self</span>.renderer
     }

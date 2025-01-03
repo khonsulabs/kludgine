@@ -2517,7 +2517,19 @@
 <a href="#2516" id="2516">2516</a>
 <a href="#2517" id="2517">2517</a>
 <a href="#2518" id="2518">2518</a>
-<a href="#2519" id="2519">2519</a></pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">"../README.md"</span>)]
+<a href="#2519" id="2519">2519</a>
+<a href="#2520" id="2520">2520</a>
+<a href="#2521" id="2521">2521</a>
+<a href="#2522" id="2522">2522</a>
+<a href="#2523" id="2523">2523</a>
+<a href="#2524" id="2524">2524</a>
+<a href="#2525" id="2525">2525</a>
+<a href="#2526" id="2526">2526</a>
+<a href="#2527" id="2527">2527</a>
+<a href="#2528" id="2528">2528</a>
+<a href="#2529" id="2529">2529</a>
+<a href="#2530" id="2530">2530</a>
+<a href="#2531" id="2531">2531</a></pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">"../README.md"</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
 </span><span class="attr">#![deny(unsafe_code)]
@@ -3112,6 +3124,18 @@
             device,
             queue,
         }
+    }
+
+    <span class="doccomment">/// Returns a reference to the underlying [`Kludgine`] graphics.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>kludgine(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Kludgine {
+        <span class="self">self</span>.kludgine
+    }
+
+    <span class="doccomment">/// Returns an exclusive reference to the underlying [`Kludgine`] graphics.
+    </span><span class="attr">#[must_use]
+    </span><span class="kw">pub const fn </span>kludgine_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Kludgine {
+        <span class="self">self</span>.kludgine
     }
 
     <span class="doccomment">/// Returns a reference to the underlying [`wgpu::Device`].
