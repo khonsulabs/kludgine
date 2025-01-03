@@ -339,7 +339,7 @@ impl Drop for CachedGlyphHandle {
     }
 }
 
-impl<'gfx> Graphics<'gfx> {
+impl Graphics<'_> {
     /// Prepares the text layout contained in `buffer` to be rendered.
     ///
     /// When the text in `buffer` has no color defined, `default_color` will be
@@ -939,4 +939,4 @@ impl<'a, Unit> From<&'a String> for Text<'a, Unit> {
     }
 }
 
-impl<'a, Unit> DrawableSource for Text<'a, Unit> {}
+impl<Unit> DrawableSource for Text<'_, Unit> {}

@@ -58,6 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   other textures in the collection.
 - `Drawing::draw_measured_text` now uses the correct offset when using
   `TextOrigin::FirstBaseline`.
+- `Graphics::kludgine` and `Graphics::kludgine_mut()` provide access to the
+  underlying `Kludgine` instance without using `Deref`/`DerefMut`.
 
 ### Fixed
 

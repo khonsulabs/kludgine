@@ -595,6 +595,18 @@ impl<'gfx> Graphics<'gfx> {
         }
     }
 
+    /// Returns a reference to the underlying [`Kludgine`] graphics.
+    #[must_use]
+    pub const fn kludgine(&self) -> &Kludgine {
+        self.kludgine
+    }
+
+    /// Returns an exclusive reference to the underlying [`Kludgine`] graphics.
+    #[must_use]
+    pub const fn kludgine_mut(&mut self) -> &mut Kludgine {
+        self.kludgine
+    }
+
     /// Returns a reference to the underlying [`wgpu::Device`].
     #[must_use]
     pub const fn device(&self) -> &'gfx wgpu::Device {

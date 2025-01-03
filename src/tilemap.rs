@@ -224,7 +224,7 @@ impl<'ctx, 'pass> Deref for LayerContext<'_, 'ctx, 'pass> {
     }
 }
 
-impl<'ctx, 'pass> DerefMut for LayerContext<'_, 'ctx, 'pass> {
+impl DerefMut for LayerContext<'_, '_, '_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.renderer
     }

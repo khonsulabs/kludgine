@@ -49,7 +49,7 @@ impl<'gfx> Deref for Renderer<'_, 'gfx> {
     }
 }
 
-impl<'gfx> DerefMut for Renderer<'_, 'gfx> {
+impl DerefMut for Renderer<'_, '_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.graphics
     }
@@ -71,7 +71,7 @@ enum CommandKind {
     Custom(TypeId, usize),
 }
 
-impl<'render, 'gfx> Renderer<'render, 'gfx> {
+impl Renderer<'_, '_> {
     /// Draws a shape at the origin, rotating and scaling as needed.
     pub fn draw_shape<'shape, Unit>(
         &mut self,
@@ -342,7 +342,7 @@ mod text {
         DefaultHasher, Drawable, KludgineGraphics, ProtoGraphics, TextureBlit, VertexCollection,
     };
 
-    impl<'gfx> Renderer<'_, 'gfx> {
+    impl Renderer<'_, '_> {
         /// Measures `text` using the current text settings.
         ///
         /// `default_color` does not affect the
@@ -857,7 +857,14 @@ where
 {
     fn prepare_push(&mut self, context: Op::DrawInfo, graphics: &mut Graphics<'_>) -> usize {
         let index = self.prepared.len();
-        self.prepared.push(self.op.prepare(context, graphics));
+        let prepared = self.op.prepare(context, graphics);
+        if let Some(last_prepared) = self.prepared.last_mut() {
+            if let Err(returned) = self.op.batch_prepared(last_prepared, prepared) {
+                self.prepared.push(returned);
+            }
+        } else {
+            self.prepared.push(prepared);
+        }
         index
     }
 }
@@ -931,4 +938,30 @@ pub trait RenderOperation: Send + Sync + 'static {
         opacity: f32,
         graphics: &mut RenderingGraphics<'_, 'pass>,
     );
+
+    /// Batches `other` into `self`, if possible.
+    ///
+    /// This function allows render operations to participate in automatic
+    /// batching performed by Kludgine. If the same render operation type is
+    /// drawn sequentially multiple times, this function is invoked with the
+    /// first and second results of the prepare function. If this function
+    /// returns `Ok(())`, `self` is expected to have been updated to draw both
+    /// the `self` and `other` operations.
+    ///
+    /// If this function returns `Err`, the returned preparation is enqueued.
+    ///
+    /// The provided implementation returns `Err(other)` which avoids batching.
+    ///
+    /// # Errors
+    ///
+    /// This function returns an error if the render operations cannot be
+    /// batched.
+    #[allow(unused_variables)]
+    fn batch_prepared(
+        &mut self,
+        first: &mut Self::Prepared,
+        other: Self::Prepared,
+    ) -> Result<(), Self::Prepared> {
+        Err(other)
+    }
 }
