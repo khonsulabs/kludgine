@@ -965,7 +965,22 @@
 <a href="#964" id="964">964</a>
 <a href="#965" id="965">965</a>
 <a href="#966" id="966">966</a>
-<a href="#967" id="967">967</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::any::{type_name, Any, TypeId};
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::any::{type_name, Any, TypeId};
 <span class="kw">use </span>std::collections::{hash_map, HashMap};
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::ops::{Deref, DerefMut, Range};
@@ -1609,6 +1624,9 @@
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>Renderer&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>state <span class="kw">in </span><span class="self">self</span>.data.custom.values_mut() {
+            state.finish(<span class="self">self</span>.graphics);
+        }
         <span class="kw">if </span>!<span class="self">self</span>.data.indices.is_empty() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(buffers) = <span class="kw-2">&amp;mut </span><span class="self">self</span>.data.buffers {
                 buffers.vertex.update(
@@ -1851,6 +1869,7 @@
     <span class="kw">fn </span>as_any_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Any;
 
     <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
+    <span class="kw">fn </span>finish(<span class="kw-2">&amp;mut </span><span class="self">self</span>, graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">'_</span>&gt;);
 
     <span class="kw">fn </span>render&lt;<span class="lifetime">'pass</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="self">self</span>,
@@ -1871,6 +1890,10 @@
     <span class="kw">fn </span>as_any_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>Any {
         <span class="self">self
     </span>}
+
+    <span class="kw">fn </span>finish(<span class="kw-2">&amp;mut </span><span class="self">self</span>, graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">'_</span>&gt;) {
+        <span class="self">self</span>.op.finish(<span class="kw-2">&amp;</span><span class="self">self</span>.prepared, graphics);
+    }
 
     <span class="kw">fn </span>render&lt;<span class="lifetime">'pass</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">'pass </span><span class="self">self</span>,
@@ -1897,6 +1920,13 @@
     <span class="doccomment">/// Prepare to draw this operation, returning any draw-call-specific
     /// information that should be provided to `render()`.
     </span><span class="kw">fn </span>prepare(<span class="kw-2">&amp;mut </span><span class="self">self</span>, info: <span class="self">Self</span>::DrawInfo, graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">'_</span>&gt;) -&gt; <span class="self">Self</span>::Prepared;
+
+    <span class="doccomment">/// Finish any operations needed before render operations begin.
+    ///
+    /// This function is invoked once after all `prepare` functions have been
+    /// invoked, but before the `render` functions begin.
+    </span><span class="attr">#[allow(unused_variables)]
+    </span><span class="kw">fn </span>finish(<span class="kw-2">&amp;mut </span><span class="self">self</span>, prepared: <span class="kw-2">&amp;</span>[<span class="self">Self</span>::Prepared], graphics: <span class="kw-2">&amp;mut </span>Graphics&lt;<span class="lifetime">'_</span>&gt;) {}
 
     <span class="doccomment">/// Render the `prepared` operation to `graphics` with `opacity`.
     </span><span class="kw">fn </span>render&lt;<span class="lifetime">'pass</span>&gt;(
