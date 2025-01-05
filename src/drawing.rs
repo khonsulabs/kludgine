@@ -642,6 +642,9 @@ mod text {
 
 impl Drop for Renderer<'_, '_> {
     fn drop(&mut self) {
+        for state in self.data.custom.values_mut() {
+            state.finish(self.graphics);
+        }
         if !self.data.indices.is_empty() {
             if let Some(buffers) = &mut self.data.buffers {
                 buffers.vertex.update(
@@ -884,6 +887,7 @@ trait RenderOpState: Debug + Send + Sync + 'static {
     fn as_any_mut(&mut self) -> &mut dyn Any;
 
     fn clear(&mut self);
+    fn finish(&mut self, graphics: &mut Graphics<'_>);
 
     fn render<'pass>(
         &'pass self,
@@ -903,6 +907,10 @@ where
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
+    }
+
+    fn finish(&mut self, graphics: &mut Graphics<'_>) {
+        self.op.finish(&self.prepared, graphics);
     }
 
     fn render<'pass>(
@@ -930,6 +938,13 @@ pub trait RenderOperation: Send + Sync + 'static {
     /// Prepare to draw this operation, returning any draw-call-specific
     /// information that should be provided to `render()`.
     fn prepare(&mut self, info: Self::DrawInfo, graphics: &mut Graphics<'_>) -> Self::Prepared;
+
+    /// Finish any operations needed before render operations begin.
+    ///
+    /// This function is invoked once after all `prepare` functions have been
+    /// invoked, but before the `render` functions begin.
+    #[allow(unused_variables)]
+    fn finish(&mut self, prepared: &[Self::Prepared], graphics: &mut Graphics<'_>) {}
 
     /// Render the `prepared` operation to `graphics` with `opacity`.
     fn render<'pass>(
