@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and y axis.
 - `Text` has made its fields private.
 - `wgpu` has been updated to `23.0.0`
+- The Minimum Supported Rust Version (MSRV) is now `1.76.0`.
 
 ### Added
 

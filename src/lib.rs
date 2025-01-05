@@ -603,7 +603,7 @@ impl<'gfx> Graphics<'gfx> {
 
     /// Returns an exclusive reference to the underlying [`Kludgine`] graphics.
     #[must_use]
-    pub const fn kludgine_mut(&mut self) -> &mut Kludgine {
+    pub fn kludgine_mut(&mut self) -> &mut Kludgine {
         self.kludgine
     }
 
