@@ -428,7 +428,7 @@ pub(crate) fn map_each_glyph(
         .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect("no buffer"))
         .metrics();
 
-    let line_height_offset = Point::new(Px::ZERO, Px::from(metrics.line_height));
+    let line_height_offset = Point::new(Px::ZERO, Px::from(metrics.line_height)).round();
     let relative_to = match origin {
         TextOrigin::Custom(point) => point,
         TextOrigin::TopLeft => Point::default(),
@@ -528,7 +528,7 @@ pub(crate) fn map_each_glyph(
                             (Point::new(physical.x, physical.y)).cast::<Px>()
                                 + Point::new(
                                     Px::new(image.placement.left),
-                                    Px::from(metrics.line_height) - image.placement.top,
+                                    line_height_offset.y - image.placement.top,
                                 ),
                             Size::new(
                                 UPx::new(image.placement.width),
