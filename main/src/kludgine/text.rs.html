@@ -1370,7 +1370,7 @@
         .unwrap_or_else(|| kludgine.text.scratch.as_ref().expect(<span class="string">"no buffer"</span>))
         .metrics();
 
-    <span class="kw">let </span>line_height_offset = Point::new(Px::ZERO, Px::from(metrics.line_height));
+    <span class="kw">let </span>line_height_offset = Point::new(Px::ZERO, Px::from(metrics.line_height)).round();
     <span class="kw">let </span>relative_to = <span class="kw">match </span>origin {
         TextOrigin::Custom(point) =&gt; point,
         TextOrigin::TopLeft =&gt; Point::default(),
@@ -1470,7 +1470,7 @@
                             (Point::new(physical.x, physical.y)).cast::&lt;Px&gt;()
                                 + Point::new(
                                     Px::new(image.placement.left),
-                                    Px::from(metrics.line_height) - image.placement.top,
+                                    line_height_offset.y - image.placement.top,
                                 ),
                             Size::new(
                                 UPx::new(image.placement.width),
