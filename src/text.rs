@@ -547,7 +547,7 @@ pub(crate) fn map_each_glyph(
                 }
             };
             map(
-                dbg!(blit),
+                blit,
                 glyph,
                 (run.line_top / metrics.line_height).round().cast::<usize>(),
                 Px::from(run.line_y),
