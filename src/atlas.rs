@@ -92,7 +92,7 @@ impl TextureCollection {
     pub fn push_texture(
         &mut self,
         data: &[u8],
-        data_layout: wgpu::ImageDataLayout,
+        data_layout: wgpu::TexelCopyBufferLayout,
         size: Size<UPx>,
         graphics: &Graphics<'_>,
     ) -> CollectedTexture {
@@ -102,7 +102,7 @@ impl TextureCollection {
     pub(crate) fn push_texture_generic(
         &mut self,
         data: &[u8],
-        data_layout: wgpu::ImageDataLayout,
+        data_layout: wgpu::TexelCopyBufferLayout,
         size: Size<UPx>,
         graphics: &impl KludgineGraphics,
     ) -> CollectedTexture {
@@ -148,7 +148,7 @@ impl TextureCollection {
         );
 
         graphics.queue().write_texture(
-            wgpu::ImageCopyTexture {
+            wgpu::TexelCopyTextureInfo {
                 texture: &this.texture.data.wgpu,
                 mip_level: 0,
                 origin: region.origin.into(),
@@ -192,7 +192,7 @@ impl TextureCollection {
         let image = image.to_rgba8();
         self.push_texture(
             image.as_raw(),
-            wgpu::ImageDataLayout {
+            wgpu::TexelCopyBufferLayout {
                 offset: 0,
                 bytes_per_row: Some(image.width() * 4),
                 rows_per_image: None,

@@ -1158,7 +1158,7 @@ impl<Behavior> KludgineWindow<Behavior> {
                 Ok(frame) => break Some(frame),
                 Err(other) => match other {
                     wgpu::SurfaceError::Timeout => continue,
-                    wgpu::SurfaceError::Outdated => {
+                    wgpu::SurfaceError::Outdated | wgpu::SurfaceError::Other => {
                         // Needs to be reconfigured. We do this automatically
                         // when the window is resized. We need to allow the
                         // event loop to catch up.
@@ -1310,7 +1310,7 @@ fn new_wgpu_instance() -> wgpu::Instance {
     {
         flags = wgpu::InstanceFlags::empty();
     }
-    wgpu::Instance::new(wgpu::InstanceDescriptor {
+    wgpu::Instance::new(&wgpu::InstanceDescriptor {
         flags,
         ..wgpu::InstanceDescriptor::default()
     })

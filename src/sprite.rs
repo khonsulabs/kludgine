@@ -275,7 +275,7 @@ impl Sprite {
                 .or_else(|_| {
                     if json["frames"]
                         .as_array()
-                        .map_or(false, |frames| frames.len() == 1)
+                        .is_some_and(|frames| frames.len() == 1)
                     {
                         Ok(0)
                     } else {

@@ -59,6 +59,7 @@ impl Kludgine {
     }
 
     /// Returns the current font size.
+    #[must_use]
     pub fn font_size(&self) -> figures::units::Lp {
         self.text.font_size
     }
@@ -72,6 +73,7 @@ impl Kludgine {
     }
 
     /// Returns the current line height.
+    #[must_use]
     pub fn line_height(&self) -> figures::units::Lp {
         self.text.line_height
     }
@@ -82,6 +84,7 @@ impl Kludgine {
     }
 
     /// Returns the current font family.
+    #[must_use]
     pub fn font_family(&self) -> cosmic_text::Family<'_> {
         self.text.attrs.family_owned.as_family()
     }
@@ -92,6 +95,7 @@ impl Kludgine {
     }
 
     /// Returns the current font style.
+    #[must_use]
     pub fn font_style(&self) -> cosmic_text::Style {
         self.text.attrs.style
     }
@@ -102,6 +106,7 @@ impl Kludgine {
     }
 
     /// Returns the current font weight.
+    #[must_use]
     pub fn font_weight(&self) -> cosmic_text::Weight {
         self.text.attrs.weight
     }
@@ -112,11 +117,13 @@ impl Kludgine {
     }
 
     /// Returns the current text stretch.
+    #[must_use]
     pub fn text_stretch(&self) -> cosmic_text::Stretch {
         self.text.attrs.stretch
     }
 
     /// Returns the current text attributes.
+    #[must_use]
     pub fn text_attrs(&self) -> cosmic_text::Attrs<'_> {
         self.text.attrs.as_attrs()
     }
@@ -467,7 +474,7 @@ pub(crate) fn map_each_glyph(
                         SwashContent::Mask => Some((
                             kludgine.text.alpha_text_atlas.push_texture_generic(
                                 &image.data,
-                                wgpu::ImageDataLayout {
+                                wgpu::TexelCopyBufferLayout {
                                     offset: 0,
                                     bytes_per_row: Some(image.placement.width),
                                     rows_per_image: None,
@@ -492,7 +499,7 @@ pub(crate) fn map_each_glyph(
                             Some((
                                 kludgine.text.color_text_atlas.push_texture_generic(
                                     &image.data,
-                                    wgpu::ImageDataLayout {
+                                    wgpu::TexelCopyBufferLayout {
                                         offset: 0,
                                         bytes_per_row: Some(image.placement.width * 4),
                                         rows_per_image: None,

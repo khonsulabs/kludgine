@@ -21,7 +21,7 @@ pub(crate) struct Uniforms {
 
 impl Uniforms {
     pub fn new(size: Size<UPx>, scale: Fraction) -> Self {
-        let scale = u32::from(scale.denominator().unsigned_abs()) << 16
+        let scale = (u32::from(scale.denominator().unsigned_abs()) << 16)
             | u32::try_from(scale.numerator()).expect("negative scaling ratio");
         Self {
             ortho: ScreenTransformation::ortho(

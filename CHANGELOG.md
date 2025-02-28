@@ -27,8 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `(f32, f32)`, or `Point<f32>`. This change allows independent scaling of the x
   and y axis.
 - `Text` has made its fields private.
-- `wgpu` has been updated to `23.0.0`
-- The Minimum Supported Rust Version (MSRV) is now `1.76.0`.
+- `wgpu` has been updated to `24.0.1`
+- The Minimum Supported Rust Version (MSRV) is now `1.81.0`.
 
 ### Added
 

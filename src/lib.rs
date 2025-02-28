@@ -273,21 +273,25 @@ impl Kludgine {
     }
 
     /// Returns the currently configured size to render.
+    #[must_use]
     pub const fn size(&self) -> Size<UPx> {
         self.size
     }
 
     /// Returns the effective scale to apply to graphics contexts.
+    #[must_use]
     pub const fn scale(&self) -> Fraction {
         self.effective_scale
     }
 
     /// Returns the DPI scale of the underlying context.
+    #[must_use]
     pub const fn dpi_scale(&self) -> Fraction {
         self.dpi_scale
     }
 
     /// Returns the current zoom applied.
+    #[must_use]
     pub const fn zoom(&self) -> Fraction {
         self.zoom
     }
@@ -934,7 +938,7 @@ impl Color {
     /// Returns a new color with the provided components.
     #[must_use]
     pub const fn new(red: u8, green: u8, blue: u8, alpha: u8) -> Self {
-        Self((red as u32) << 24 | (green as u32) << 16 | (blue as u32) << 8 | alpha as u32)
+        Self(((red as u32) << 24) | ((green as u32) << 16) | ((blue as u32) << 8) | alpha as u32)
     }
 
     /// Returns a new color by converting each component from its `0.0..=1.0`
@@ -1807,7 +1811,7 @@ impl Texture {
     /// Copies the contents of this texture into `destination`.
     pub fn copy_to_buffer(
         &self,
-        destination: wgpu::ImageCopyBuffer<'_>,
+        destination: wgpu::TexelCopyBufferInfo<'_>,
         encoder: &mut wgpu::CommandEncoder,
     ) {
         self.copy_rect_to_buffer(self.default_rect(), destination, encoder);
@@ -1817,11 +1821,11 @@ impl Texture {
     pub fn copy_rect_to_buffer(
         &self,
         source: Rect<UPx>,
-        destination: wgpu::ImageCopyBuffer<'_>,
+        destination: wgpu::TexelCopyBufferInfo<'_>,
         encoder: &mut wgpu::CommandEncoder,
     ) {
         encoder.copy_texture_to_buffer(
-            wgpu::ImageCopyTexture {
+            wgpu::TexelCopyTextureInfo {
                 texture: &self.data.wgpu,
                 mip_level: 0,
                 origin: source.origin.into(),
