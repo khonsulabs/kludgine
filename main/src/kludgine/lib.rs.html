@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.84.0 (9fc6b4312 2025-01-07)" data-channel="1.84.0" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">kludgine/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="kludgine" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0 (4d91de4e4 2025-02-17)" data-channel="1.85.0" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">kludgine/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -2529,7 +2529,11 @@
 <a href="#2528" id="2528">2528</a>
 <a href="#2529" id="2529">2529</a>
 <a href="#2530" id="2530">2530</a>
-<a href="#2531" id="2531">2531</a></pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">"../README.md"</span>)]
+<a href="#2531" id="2531">2531</a>
+<a href="#2532" id="2532">2532</a>
+<a href="#2533" id="2533">2533</a>
+<a href="#2534" id="2534">2534</a>
+<a href="#2535" id="2535">2535</a></pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">"../README.md"</span>)]
 </span><span class="comment">// This crate uses unsafe, but attempts to minimize its usage. All functions
 // that utilize unsafe must explicitly enable it.
 </span><span class="attr">#![deny(unsafe_code)]
@@ -2804,21 +2808,25 @@
     }
 
     <span class="doccomment">/// Returns the currently configured size to render.
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Size&lt;UPx&gt; {
         <span class="self">self</span>.size
     }
 
     <span class="doccomment">/// Returns the effective scale to apply to graphics contexts.
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>scale(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Fraction {
         <span class="self">self</span>.effective_scale
     }
 
     <span class="doccomment">/// Returns the DPI scale of the underlying context.
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>dpi_scale(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Fraction {
         <span class="self">self</span>.dpi_scale
     }
 
     <span class="doccomment">/// Returns the current zoom applied.
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>zoom(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Fraction {
         <span class="self">self</span>.zoom
     }
@@ -3465,7 +3473,7 @@
     <span class="doccomment">/// Returns a new color with the provided components.
     </span><span class="attr">#[must_use]
     </span><span class="kw">pub const fn </span>new(red: u8, green: u8, blue: u8, alpha: u8) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>((red <span class="kw">as </span>u32) &lt;&lt; <span class="number">24 </span>| (green <span class="kw">as </span>u32) &lt;&lt; <span class="number">16 </span>| (blue <span class="kw">as </span>u32) &lt;&lt; <span class="number">8 </span>| alpha <span class="kw">as </span>u32)
+        <span class="self">Self</span>(((red <span class="kw">as </span>u32) &lt;&lt; <span class="number">24</span>) | ((green <span class="kw">as </span>u32) &lt;&lt; <span class="number">16</span>) | ((blue <span class="kw">as </span>u32) &lt;&lt; <span class="number">8</span>) | alpha <span class="kw">as </span>u32)
     }
 
     <span class="doccomment">/// Returns a new color by converting each component from its `0.0..=1.0`
@@ -4338,7 +4346,7 @@
     <span class="doccomment">/// Copies the contents of this texture into `destination`.
     </span><span class="kw">pub fn </span>copy_to_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        destination: wgpu::ImageCopyBuffer&lt;<span class="lifetime">'_</span>&gt;,
+        destination: wgpu::TexelCopyBufferInfo&lt;<span class="lifetime">'_</span>&gt;,
         encoder: <span class="kw-2">&amp;mut </span>wgpu::CommandEncoder,
     ) {
         <span class="self">self</span>.copy_rect_to_buffer(<span class="self">self</span>.default_rect(), destination, encoder);
@@ -4348,11 +4356,11 @@
     </span><span class="kw">pub fn </span>copy_rect_to_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         source: Rect&lt;UPx&gt;,
-        destination: wgpu::ImageCopyBuffer&lt;<span class="lifetime">'_</span>&gt;,
+        destination: wgpu::TexelCopyBufferInfo&lt;<span class="lifetime">'_</span>&gt;,
         encoder: <span class="kw-2">&amp;mut </span>wgpu::CommandEncoder,
     ) {
         encoder.copy_texture_to_buffer(
-            wgpu::ImageCopyTexture {
+            wgpu::TexelCopyTextureInfo {
                 texture: <span class="kw-2">&amp;</span><span class="self">self</span>.data.wgpu,
                 mip_level: <span class="number">0</span>,
                 origin: source.origin.into(),
