@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Text` has made its fields private.
 - `wgpu` has been updated to `24.0.1`
 - The Minimum Supported Rust Version (MSRV) is now `1.81.0`.
+- `Kludgine::set_wrap_strategy` allows controlling the text wrapping strategy
+  applied by Kludgine. The default strategy before this release was
+  `Wrap::WordOrGlyph`, but the new default is `Wrap::Word`.
 
 ### Added
 

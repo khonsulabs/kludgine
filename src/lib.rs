@@ -262,6 +262,14 @@ impl Kludgine {
         self.resize(self.size, new_scale, self.zoom, queue);
     }
 
+    /// Sets the text wrapping strategy.
+    ///
+    /// Kludgine uses `Wrap::Word` by default.
+    #[cfg(feature = "cosmic-text")]
+    pub fn set_wrap_strategy(&mut self, wrap: cosmic_text::Wrap) {
+        self.text.set_wrap_strategy(wrap);
+    }
+
     /// Begins rendering a new frame.
     pub fn next_frame(&mut self) -> Frame<'_> {
         #[cfg(feature = "cosmic-text")]

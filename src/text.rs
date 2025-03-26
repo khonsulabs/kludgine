@@ -150,6 +150,7 @@ pub(crate) struct TextSystem {
     pub font_size: Lp,
     pub line_height: Lp,
     pub attrs: AttrsOwned,
+    pub wrap_style: cosmic_text::Wrap,
     glyphs: GlyphCache,
 }
 
@@ -190,6 +191,7 @@ impl TextSystem {
             font_size: DEFAULT_FONT_SIZE,
             line_height: DEFAULT_LINE_SIZE,
             glyphs: GlyphCache::default(),
+            wrap_style: cosmic_text::Wrap::Word,
             attrs: AttrsOwned::new(Attrs::new()),
         }
     }
@@ -219,6 +221,13 @@ impl TextSystem {
         self.update_buffer_metrics(scale);
     }
 
+    pub fn set_wrap_strategy(&mut self, wrap: cosmic_text::Wrap) {
+        self.wrap_style = wrap;
+        if let Some(scratch) = self.scratch.as_mut() {
+            scratch.set_wrap(&mut self.fonts, self.wrap_style);
+        }
+    }
+
     fn update_buffer_metrics(&mut self, scale: Fraction) {
         let metrics = self.metrics(scale);
         if let Some(buffer) = &mut self.scratch {
@@ -235,7 +244,8 @@ impl TextSystem {
     ) {
         if self.scratch.is_none() {
             let metrics = self.metrics(scale);
-            let buffer = cosmic_text::Buffer::new(&mut self.fonts, metrics);
+            let mut buffer = cosmic_text::Buffer::new(&mut self.fonts, metrics);
+            buffer.set_wrap(&mut self.fonts, self.wrap_style);
             self.scratch = Some(buffer);
         }
 
